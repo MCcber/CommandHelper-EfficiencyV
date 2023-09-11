@@ -1,0 +1,31 @@
+﻿<UserControl
+    x:Class="cbhk_environment.Generators.EntityGenerator.Components.UUIDListGenerator"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.Generators.EntityGenerator.Components"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressed.png" />
+    </UserControl.Resources>
+
+    <CustomControls:Accordion
+        Title="UUID"
+        Margin="10,2,10,0"
+        Background="#FFE5B663"
+        BorderThickness="0"
+        FreshForeground="Black"
+        FreshName="清除"
+        ModifyForeground="Black"
+        ModifyName="添加"
+        Style="{DynamicResource AccordionStyle}"
+        TitleForeground="Black">
+        <StackPanel Background="#2F2F2F" />
+    </CustomControls:Accordion>
+</UserControl>

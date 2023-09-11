@@ -1,0 +1,1437 @@
+﻿<local_window:CommonWindow
+    x:Class="cbhk_environment.Generators.VillagerGenerator.Villager"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:GeneralTools="clr-namespace:cbhk_environment.GeneralTools"
+    xmlns:VirtualizingWrapPanel="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.Generators.VillagerGenerator"
+    xmlns:local_datacontext="clr-namespace:cbhk_environment.Generators.VillagerGenerator"
+    xmlns:local_window="clr-namespace:cbhk_environment.WindowDictionaries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="村民生成器"
+    Width="1120"
+    Height="715"
+    MinWidth="1120"
+    MinHeight="715"
+    Background="#2F2F2F"
+    Icon="/cbhk_environment;component/resources/common/images/spawnerIcons/IconVillagers.png"
+    ResizeMode="CanResizeWithGrip"
+    WindowStyle="None"
+    mc:Ignorable="d">
+
+    <Window.DataContext>
+        <local_datacontext:villager_datacontext />
+    </Window.DataContext>
+
+    <Window.Resources>
+        <GeneralTools:UriToBitmapImage x:Key="UriToBitmapImage" />
+        <CollectionViewSource x:Key="BagItemSource" Source="{Binding BagItems, IsAsync=True}" />
+        <CollectionViewSource x:Key="CustomItemSource" Source="{Binding CustomItems, IsAsync=True}" />
+        <ImageBrush x:Key="EditBox" ImageSource="/cbhk_environment;component/resources/common/images/TextEditBox.png" />
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressed.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowRight.png" />
+        <ImageBrush x:Key="CloseWhite" ImageSource="/cbhk_environment;component/resources/common/images/CloseWhite.png" />
+        <ImageBrush x:Key="CloseWhiteHover" ImageSource="/cbhk_environment;component/resources/common/images/CloseWhiteHover.png" />
+        <ImageBrush x:Key="WhiteEdit" ImageSource="/cbhk_environment;component/resources/common/images/WhiteEdit.png" />
+        <ImageBrush x:Key="BlackEdit" ImageSource="/cbhk_environment;component/resources/common/images/BlackEdit.png" />
+        <ImageBrush x:Key="SaveIcon" ImageSource="/cbhk_environment;component/resources/common/images/Save.png" />
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding RunCommand}" />
+        <KeyBinding
+            Key="Esc"
+            Command="{Binding ReturnCommand}"
+            CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local_window:CommonWindow}}" />
+    </Window.InputBindings>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="10*" />
+        </Grid.RowDefinitions>
+        <DockPanel
+            Grid.Row="0"
+            Grid.Column="0"
+            Background="Transparent">
+            <CustomControls:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource LeftArrow}"
+                BorderThickness="0"
+                Command="{Binding ReturnCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local_window:CommonWindow}}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControls:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="ESC:返回主页"
+                        Foreground="White" />
+                </CustomControls:IconTextButtons.ToolTip>
+            </CustomControls:IconTextButtons>
+            <CustomControls:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource RightArrow}"
+                BorderThickness="0"
+                Command="{Binding RunCommand}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControls:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="F5:运行"
+                        Foreground="White" />
+                </CustomControls:IconTextButtons.ToolTip>
+            </CustomControls:IconTextButtons>
+            <TextBlock
+                Margin="10,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                FontSize="15"
+                Foreground="White"
+                Text="版本"
+                TextAlignment="Center" />
+            <ComboBox
+                Width="100"
+                HorizontalAlignment="Left"
+                FontSize="20"
+                ItemsSource="{Binding VersionSource}"
+                SelectedIndex="1"
+                SelectedItem="{Binding SelectedVersion, Mode=OneWay}"
+                Style="{DynamicResource TextComboBoxStyle}" />
+            <CustomControls:IconTextButtons
+                Width="25"
+                Height="25"
+                Margin="5,0,0,0"
+                HorizontalAlignment="Left"
+                Background="{StaticResource SaveIcon}"
+                Command="{Binding Save}"
+                Style="{DynamicResource IconTextButton}" />
+            <CustomControls:IconTextButtons
+                Margin="5,0,0,0"
+                Padding="5"
+                Background="{StaticResource ButtonNormal}"
+                Command="{Binding ImportFromClipboard}"
+                Content="从剪切板导入"
+                PressedBackground="{StaticResource ButtonPressed}"
+                Style="{DynamicResource IconTextButton}" />
+            <CustomControls:IconTextButtons
+                Margin="5,0,0,0"
+                Padding="5"
+                Background="{StaticResource ButtonNormal}"
+                Command="{Binding ImportFromFile}"
+                Content="从文件导入"
+                PressedBackground="{StaticResource ButtonPressed}"
+                Style="{DynamicResource IconTextButton}" />
+            <CustomControls:RadiusToggleButtons
+                Margin="5,5,0,0"
+                Foreground="White"
+                IsChecked="{Binding ShowResult, Mode=OneWayToSource}"
+                SelectedToggleText="显示结果"
+                Style="{DynamicResource RadiusToggleButton}"
+                ToggleHeight="26"
+                ToggleWidth="46"
+                UnSelectedToggleText="隐藏结果" />
+        </DockPanel>
+        <Grid
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            Background="#323232">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" MinHeight="600" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="350" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid
+                Grid.Row="0"
+                Grid.Column="0"
+                Margin="10,0,10,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="50" />
+                    <RowDefinition Height="10*" />
+                </Grid.RowDefinitions>
+                <DockPanel Grid.Row="0" Margin="0,20,0,0">
+                    <TextBlock
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        FontSize="25"
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="交易" />
+                    <CustomControls:IconTextButtons
+                        Width="30"
+                        Padding="0,-5,0,0"
+                        HorizontalAlignment="Right"
+                        Background="{StaticResource CloseWhite}"
+                        Command="{Binding ClearTransactionItem}"
+                        DockPanel.Dock="Right"
+                        FontSize="25"
+                        IconColor="Black"
+                        PressedBackground="{StaticResource CloseWhiteHover}"
+                        Style="{DynamicResource IconTextButton}" />
+                    <CustomControls:IconTextButtons
+                        Width="30"
+                        Height="30"
+                        Margin="0,0,10,0"
+                        Padding="0,-5,0,0"
+                        HorizontalAlignment="Right"
+                        Background="{StaticResource WhiteEdit}"
+                        Command="{Binding AddTransactionItem}"
+                        DockPanel.Dock="Right"
+                        IconColor="Black"
+                        RenderOptions.BitmapScalingMode="NearestNeighbor"
+                        RenderOptions.EdgeMode="Aliased"
+                        Style="{DynamicResource IconTextButton}" />
+                </DockPanel>
+                <ScrollViewer
+                    Grid.Row="1"
+                    Margin="0,5,0,0"
+                    VerticalAlignment="Stretch"
+                    Background="#555956"
+                    DockPanel.Dock="Top"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                        <ItemsControl Background="Transparent" ItemsSource="{Binding transactionItems}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                        <StackPanel Background="#555956" Visibility="{Binding TransactionDataGridVisibility, Mode=OneWay}">
+                            <CustomControls:IconTextButtons
+                                Width="30"
+                                Height="30"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Background="{StaticResource CloseWhite}"
+                                Command="{Binding CloseTransactionDataGrid}"
+                                DockPanel.Dock="Right"
+                                IconColor="Black"
+                                PressedBackground="{StaticResource CloseWhiteHover}"
+                                Style="{DynamicResource IconTextButton}" />
+                            <Grid Margin="10,20,10,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Slider
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Width="50"
+                                    Height="25"
+                                    Margin="0,5,0,0"
+                                    HorizontalAlignment="Right"
+                                    Maximum="64"
+                                    Minimum="1"
+                                    Style="{DynamicResource NumberBoxStyle}"
+                                    Value="{Binding CurrentItem.BuyCount, Mode=TwoWay}" />
+                                <Slider
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    Width="50"
+                                    Height="25"
+                                    Margin="0,5,0,0"
+                                    HorizontalAlignment="Right"
+                                    Maximum="64"
+                                    Minimum="1"
+                                    Style="{DynamicResource NumberBoxStyle}"
+                                    Value="{Binding CurrentItem.BuyBCount, Mode=TwoWay}" />
+                                <Slider
+                                    Grid.Row="1"
+                                    Grid.Column="3"
+                                    Width="50"
+                                    Height="25"
+                                    Margin="0,5,0,0"
+                                    HorizontalAlignment="Center"
+                                    Maximum="64"
+                                    Minimum="1"
+                                    Style="{DynamicResource NumberBoxStyle}"
+                                    Value="{Binding CurrentItem.SellCount, Mode=TwoWay}" />
+                                <Image
+                                    Grid.Column="0"
+                                    Width="45"
+                                    Height="45"
+                                    Margin="30,0,0,0"
+                                    Panel.ZIndex="0"
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                    Source="/cbhk_environment;component/resources/common/images/itemFrame.png" />
+                                <Image
+                                    Grid.Column="0"
+                                    Width="45"
+                                    Height="45"
+                                    Margin="30,0,0,0"
+                                    Panel.ZIndex="1"
+                                    Source="{Binding BuyItemIcon, Mode=OneWay}"
+                                    Tag="{Binding BuyItemData, Mode=OneWay}" />
+                                <Image
+                                    Grid.Column="1"
+                                    Width="45"
+                                    Height="45"
+                                    Margin="30,0,0,0"
+                                    Panel.ZIndex="0"
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                    Source="/cbhk_environment;component/resources/common/images/itemFrame.png" />
+                                <Image
+                                    Grid.Column="1"
+                                    Width="45"
+                                    Height="45"
+                                    Margin="30,0,0,0"
+                                    Panel.ZIndex="1"
+                                    Source="{Binding BuyBItemIcon, Mode=OneWay}"
+                                    Tag="{Binding BuyBItemData, Mode=OneWay}" />
+                                <Image
+                                    Grid.Column="2"
+                                    Width="45"
+                                    Height="45"
+                                    Margin="20,0,0,0"
+                                    HorizontalAlignment="Center"
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                    RenderOptions.ClearTypeHint="Enabled"
+                                    Source="/cbhk_environment;component/resources/common/images/TradeRightArrow.png" />
+                                <Image
+                                    Grid.Column="3"
+                                    Width="45"
+                                    Height="45"
+                                    Panel.ZIndex="0"
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                    Source="/cbhk_environment;component/resources/common/images/itemFrame.png" />
+                                <Image
+                                    Grid.Column="3"
+                                    Width="45"
+                                    Height="45"
+                                    Panel.ZIndex="1"
+                                    Source="{Binding SellItemIcon, Mode=OneWay}"
+                                    Tag="{Binding SellItemData, Mode=OneWay}" />
+                            </Grid>
+                            <ScrollViewer
+                                Margin="5,0"
+                                HorizontalScrollBarVisibility="Auto"
+                                VerticalScrollBarVisibility="Auto">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <CustomControls:RadiusToggleButtons
+                                        Grid.Row="0"
+                                        Height="30"
+                                        Margin="0,2,0,0"
+                                        HorizontalAlignment="Center"
+                                        Cursor="Hand"
+                                        Foreground="White"
+                                        IsChecked="{Binding CurrentItem.RewardExp, Mode=TwoWay}"
+                                        SelectedToggleText="rewardExp"
+                                        Style="{DynamicResource RadiusToggleButton}"
+                                        ToggleHeight="30"
+                                        ToggleWidth="55"
+                                        ToolTipService.BetweenShowDelay="0"
+                                        ToolTipService.InitialShowDelay="0"
+                                        UnSelectedToggleText="rewardExp">
+                                        <CustomControls:RadiusToggleButtons.ToolTip>
+                                            <ToolTip
+                                                Background="#424242"
+                                                Content="1 或 0 (true/false) - true代表交易会提供经验球。Java版中所有自然生成的村民的交易都会给予经验球。"
+                                                Foreground="White" />
+                                        </CustomControls:RadiusToggleButtons.ToolTip>
+                                    </CustomControls:RadiusToggleButtons>
+                                    <Grid Grid.Row="1" HorizontalAlignment="Left">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            Grid.Row="0"
+                                            Grid.Column="0"
+                                            Margin="0,0,5,0"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="White"
+                                            Text="maxUses"
+                                            ToolTipService.BetweenShowDelay="0"
+                                            ToolTipService.InitialShowDelay="0">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip
+                                                    Background="#424242"
+                                                    Content="代表在交易选项失效前能进行的最大交易次数。当交易被刷新时，以2到12的随机数增加。"
+                                                    Foreground="White" />
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                        <Slider
+                                            Grid.Row="0"
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Stretch"
+                                            AllowDrop="False"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Foreground="White"
+                                            Maximum="2147483647"
+                                            Minimum="0"
+                                            Style="{DynamicResource NumberBoxStyle}"
+                                            Value="{Binding CurrentItem.MaxUses, Mode=TwoWay}" />
+                                        <TextBlock
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Margin="0,0,5,0"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="White"
+                                            Text="uses"
+                                            ToolTipService.BetweenShowDelay="0"
+                                            ToolTipService.InitialShowDelay="0">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip
+                                                    Background="#424242"
+                                                    Content="已经交易的次数，如果大于或等于maxUses，该交易将失效。"
+                                                    Foreground="White" />
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                        <Slider
+                                            Grid.Row="1"
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Stretch"
+                                            AllowDrop="False"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Foreground="White"
+                                            Maximum="2147483647"
+                                            Minimum="0"
+                                            Style="{DynamicResource NumberBoxStyle}"
+                                            Value="{Binding CurrentItem.Uses, Mode=TwoWay}" />
+                                        <TextBlock
+                                            Grid.Row="2"
+                                            Grid.Column="0"
+                                            Margin="0,0,5,0"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="White"
+                                            Text="xp"
+                                            ToolTipService.BetweenShowDelay="0"
+                                            ToolTipService.InitialShowDelay="0">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip
+                                                    Background="#424242"
+                                                    Content="村民从此交易选项中能获得的经验值。"
+                                                    Foreground="White" />
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                        <Slider
+                                            Grid.Row="2"
+                                            Grid.Column="1"
+                                            Width="170"
+                                            Height="30"
+                                            HorizontalAlignment="Right"
+                                            AllowDrop="False"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Foreground="White"
+                                            Maximum="2147483647"
+                                            Minimum="0"
+                                            Style="{DynamicResource NumberBoxStyle}"
+                                            Value="{Binding CurrentItem.Xp, Mode=TwoWay}" />
+                                        <TextBlock
+                                            Grid.Row="3"
+                                            Grid.Column="0"
+                                            Margin="0,0,5,0"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="White"
+                                            Text="demand"
+                                            ToolTipService.BetweenShowDelay="0"
+                                            ToolTipService.InitialShowDelay="0">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip
+                                                    Background="#424242"
+                                                    Content="根据需求确定的第一个收购物品的价格调节。当村民重新供应后更新此字段。"
+                                                    Foreground="White" />
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                        <Slider
+                                            Grid.Row="3"
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Stretch"
+                                            AllowDrop="False"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Foreground="White"
+                                            Maximum="2147483647"
+                                            Minimum="-2147483648"
+                                            Style="{DynamicResource NumberBoxStyle}"
+                                            Value="{Binding CurrentItem.Demand, Mode=TwoWay}" />
+                                        <TextBlock
+                                            Grid.Row="4"
+                                            Grid.Column="0"
+                                            Margin="0,0,5,0"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="White"
+                                            Text="specialPrice"
+                                            ToolTipService.BetweenShowDelay="0"
+                                            ToolTipService.InitialShowDelay="0">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip
+                                                    Background="#424242"
+                                                    Content="添加到第一个收购物品的价格调节。"
+                                                    Foreground="White" />
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                        <Slider
+                                            Grid.Row="4"
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Stretch"
+                                            AllowDrop="False"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Foreground="White"
+                                            Maximum="2147483647"
+                                            Minimum="-2147483648"
+                                            Style="{DynamicResource NumberBoxStyle}"
+                                            Value="{Binding CurrentItem.SpecialPrice, Mode=TwoWay}" />
+                                        <TextBlock
+                                            Grid.Row="5"
+                                            Grid.Column="0"
+                                            Margin="0,0,5,0"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="White"
+                                            Text="priceMultiplier"
+                                            ToolTipService.BetweenShowDelay="0"
+                                            ToolTipService.InitialShowDelay="0">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip
+                                                    Background="#424242"
+                                                    Content="当前应用到此交易选项价格的乘数。"
+                                                    Foreground="White" />
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                        <Slider
+                                            Grid.Row="5"
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Stretch"
+                                            AllowDrop="False"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Foreground="White"
+                                            Maximum="2147483647"
+                                            Minimum="-2147483648"
+                                            Style="{DynamicResource NumberBoxStyle}"
+                                            Value="{Binding CurrentItem.PriceMultiplier, Mode=TwoWay}" />
+                                    </Grid>
+                                </Grid>
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+            <Grid Grid.Row="0" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="50" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="2.4*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <DockPanel
+                    Grid.Row="0"
+                    Margin="10,20,0,0"
+                    LastChildFill="False">
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        FontSize="15"
+                        Foreground="White"
+                        Text="种类" />
+                    <ComboBox
+                        Width="105"
+                        Margin="0,0,5,0"
+                        HorizontalAlignment="Left"
+                        VerticalContentAlignment="Center"
+                        AllowDrop="False"
+                        FontSize="18"
+                        ItemsSource="{Binding VillagerTypeSource}"
+                        SelectedIndex="0"
+                        SelectedItem="{Binding VillagerType, Mode=TwoWay}"
+                        Style="{DynamicResource TextComboBoxStyle}" />
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        FontSize="15"
+                        Foreground="White"
+                        Text="职业" />
+                    <ComboBox
+                        Width="120"
+                        Margin="0,0,5,0"
+                        HorizontalAlignment="Left"
+                        VerticalContentAlignment="Center"
+                        AllowDrop="False"
+                        FontSize="18"
+                        ItemsSource="{Binding VillagerProfessionTypeSource}"
+                        SelectedIndex="0"
+                        SelectedItem="{Binding VillagerProfessionType, Mode=TwoWay}"
+                        Style="{DynamicResource TextComboBoxStyle}" />
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        FontSize="15"
+                        Foreground="White"
+                        Text="交易等级" />
+                    <ComboBox
+                        Width="50"
+                        Margin="0,0,5,0"
+                        HorizontalAlignment="Left"
+                        VerticalContentAlignment="Center"
+                        AllowDrop="False"
+                        FontSize="18"
+                        ItemsSource="{Binding VillagerLevelSource}"
+                        SelectedIndex="0"
+                        SelectedItem="{Binding VillagerLevel, Mode=TwoWay}"
+                        Style="{DynamicResource TextComboBoxStyle}" />
+                    <CustomControls:TextToggleButtons
+                        Height="30"
+                        Margin="5,0"
+                        Padding="10,0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        Content="愿意交配"
+                        FontSize="15"
+                        IsChecked="{Binding Willing, Mode=TwoWay}"
+                        Style="{DynamicResource TextToggleButtonsStyle}" />
+                    <CustomControls:TextToggleButtons
+                        Height="30"
+                        Margin="5,0"
+                        Padding="10,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        Content="开启言论"
+                        FontSize="15"
+                        IsChecked="{Binding CanEditGossips, Mode=TwoWay}"
+                        IsHitTestVisible="{Binding CanTouchGossips, Mode=OneWay}"
+                        Style="{DynamicResource TextToggleButtonsStyle}" />
+                    <CustomControls:TextToggleButtons
+                        Height="30"
+                        Margin="5,0"
+                        Padding="10,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        Content="开启记忆"
+                        FontSize="15"
+                        IsChecked="{Binding CanEditBrain, Mode=TwoWay}"
+                        IsHitTestVisible="{Binding CanTouchBrain, Mode=OneWay}"
+                        Style="{DynamicResource TextToggleButtonsStyle}" />
+                </DockPanel>
+                <!--  记忆，言论  -->
+                <Grid
+                    Grid.Row="1"
+                    Margin="0,5,0,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top"
+                    Background="#555956"
+                    Visibility="{Binding OnlyEditItem, Mode=TwoWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel
+                        Grid.Column="0"
+                        Margin="0,0,10,0"
+                        Visibility="{Binding IsEditGossips, Mode=OneWay}">
+                        <DockPanel Margin="0,5" HorizontalAlignment="Stretch">
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="150,0,0,0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="20"
+                                FontWeight="Bold"
+                                Foreground="White"
+                                Text="言论" />
+                            <CustomControls:IconTextButtons
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Width="30"
+                                Height="30"
+                                Background="{StaticResource CloseWhite}"
+                                Command="{Binding ClearGossipItem}"
+                                DockPanel.Dock="Right"
+                                PressedBackground="{StaticResource CloseWhiteHover}"
+                                Style="{DynamicResource IconTextButton}" />
+                            <CustomControls:IconTextButtons
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Width="28"
+                                Height="28"
+                                Margin="90,0,0,0"
+                                Background="{StaticResource WhiteEdit}"
+                                Command="{Binding AddGossipItem}"
+                                DockPanel.Dock="Right"
+                                Style="{DynamicResource IconTextButton}" />
+                        </DockPanel>
+                        <ScrollViewer
+                            Height="215"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto">
+                            <behavior:Interaction.Triggers>
+                                <behavior:EventTrigger EventName="Loaded">
+                                    <behavior:CallMethodAction MethodName="GossipViewerLoaded" TargetObject="{Binding}" />
+                                </behavior:EventTrigger>
+                            </behavior:Interaction.Triggers>
+                            <ItemsControl
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top"
+                                ItemsSource="{Binding gossipItems}"
+                                Visibility="{Binding IsEditGossips, Mode=OneWay}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        Visibility="{Binding IsEditBrain, Mode=OneWay}">
+                        <TextBlock
+                            Grid.Row="0"
+                            Margin="0,5"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="White"
+                            Text="记忆" />
+                        <Grid Grid.Row="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                FontSize="15"
+                                Foreground="White"
+                                Text="聚集点" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="X" />
+                            <Slider
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Height="30"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontSize="15"
+                                Foreground="White"
+                                Maximum="2147483647"
+                                Minimum="-2147483648"
+                                Style="{DynamicResource NumberBoxStyle}"
+                                Value="{Binding MeetingPointX, Mode=TwoWay}" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="Y" />
+                            <Slider
+                                Grid.Row="1"
+                                Grid.Column="3"
+                                Height="30"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontSize="15"
+                                Foreground="White"
+                                Maximum="2147483647"
+                                Minimum="-2147483648"
+                                Style="{DynamicResource NumberBoxStyle}"
+                                Value="{Binding MeetingPointY, Mode=TwoWay}" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="4"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="Z" />
+                            <Slider
+                                Grid.Row="1"
+                                Grid.Column="5"
+                                Height="30"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontSize="15"
+                                Foreground="White"
+                                Maximum="2147483647"
+                                Minimum="-2147483648"
+                                Style="{DynamicResource NumberBoxStyle}"
+                                Value="{Binding MeetingPointZ, Mode=TwoWay}" />
+                            <TextBlock
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="15"
+                                Foreground="White"
+                                Text="维度"
+                                ToolTip="维度" />
+                            <ComboBox
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Grid.ColumnSpan="5"
+                                Height="25"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="White"
+                                SelectedIndex="0"
+                                SelectedItem="{Binding MeetingPointDimension, Mode=TwoWay}"
+                                Style="{DynamicResource TextComboBoxStyle}">
+                                <behavior:Interaction.Triggers>
+                                    <behavior:EventTrigger EventName="Loaded">
+                                        <behavior:CallMethodAction MethodName="DimensionTypeLoaded" TargetObject="{Binding}" />
+                                    </behavior:EventTrigger>
+                                </behavior:Interaction.Triggers>
+                            </ComboBox>
+                            <TextBlock
+                                Grid.Row="3"
+                                Grid.Column="0"
+                                HorizontalAlignment="Left"
+                                FontSize="15"
+                                Foreground="White"
+                                Text="床位置" />
+                            <TextBlock
+                                Grid.Row="4"
+                                Grid.Column="0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="X" />
+                            <Slider
+                                Grid.Row="4"
+                                Grid.Column="1"
+                                Height="30"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontSize="15"
+                                Foreground="White"
+                                Maximum="2147483647"
+                                Minimum="-2147483648"
+                                Style="{DynamicResource NumberBoxStyle}"
+                                Value="{Binding HomeX, Mode=TwoWay}" />
+                            <TextBlock
+                                Grid.Row="4"
+                                Grid.Column="2"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="Y" />
+                            <Slider
+                                Grid.Row="4"
+                                Grid.Column="3"
+                                Height="30"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontSize="15"
+                                Foreground="White"
+                                Maximum="2147483647"
+                                Minimum="-2147483648"
+                                Style="{DynamicResource NumberBoxStyle}"
+                                Value="{Binding HomeY, Mode=TwoWay}" />
+                            <TextBlock
+                                Grid.Row="4"
+                                Grid.Column="4"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="Z" />
+                            <Slider
+                                Grid.Row="4"
+                                Grid.Column="5"
+                                Height="30"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontSize="15"
+                                Foreground="White"
+                                Maximum="2147483647"
+                                Minimum="-2147483648"
+                                Style="{DynamicResource NumberBoxStyle}"
+                                Value="{Binding HomeZ, Mode=TwoWay}" />
+                            <TextBlock
+                                Grid.Row="5"
+                                Grid.Column="0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="15"
+                                Foreground="White"
+                                Text="维度"
+                                ToolTip="维度" />
+                            <ComboBox
+                                Grid.Row="5"
+                                Grid.Column="1"
+                                Grid.ColumnSpan="5"
+                                Height="25"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="White"
+                                SelectedIndex="0"
+                                SelectedItem="{Binding HomeDimension, Mode=TwoWay}"
+                                Style="{DynamicResource TextComboBoxStyle}">
+                                <behavior:Interaction.Triggers>
+                                    <behavior:EventTrigger EventName="Loaded">
+                                        <behavior:CallMethodAction MethodName="DimensionTypeLoaded" TargetObject="{Binding}" />
+                                    </behavior:EventTrigger>
+                                </behavior:Interaction.Triggers>
+                            </ComboBox>
+                            <TextBlock
+                                Grid.Row="6"
+                                HorizontalAlignment="Left"
+                                FontSize="15"
+                                Foreground="White"
+                                Text="工作站点" />
+                            <TextBlock
+                                Grid.Row="7"
+                                Grid.Column="0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="X" />
+                            <Slider
+                                Grid.Row="7"
+                                Grid.Column="1"
+                                Height="30"
+                                Margin="0,0,5,0"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="White"
+                                Maximum="2147483647"
+                                Minimum="-2147483648"
+                                Style="{DynamicResource NumberBoxStyle}"
+                                Value="{Binding JobSiteX, Mode=TwoWay}" />
+                            <TextBlock
+                                Grid.Row="7"
+                                Grid.Column="2"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="Y" />
+                            <Slider
+                                Grid.Row="7"
+                                Grid.Column="3"
+                                Height="30"
+                                Margin="0,0,5,0"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="White"
+                                Maximum="2147483647"
+                                Minimum="-2147483648"
+                                Style="{DynamicResource NumberBoxStyle}"
+                                Value="{Binding JobSiteY, Mode=TwoWay}" />
+                            <TextBlock
+                                Grid.Row="7"
+                                Grid.Column="4"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                FontSize="15"
+                                Foreground="White"
+                                Text="Z" />
+                            <Slider
+                                Grid.Row="7"
+                                Grid.Column="5"
+                                Height="30"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="White"
+                                Maximum="2147483647"
+                                Minimum="-2147483648"
+                                Style="{DynamicResource NumberBoxStyle}"
+                                Value="{Binding JobSiteZ, Mode=TwoWay}" />
+                            <TextBlock
+                                Grid.Row="8"
+                                Grid.Column="0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="15"
+                                Foreground="White"
+                                Text="维度" />
+                            <ComboBox
+                                Grid.Row="8"
+                                Grid.Column="1"
+                                Grid.ColumnSpan="5"
+                                Height="25"
+                                HorizontalAlignment="Stretch"
+                                AllowDrop="False"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="White"
+                                SelectedIndex="0"
+                                SelectedItem="{Binding JobSiteDimension, Mode=TwoWay}"
+                                Style="{DynamicResource TextComboBoxStyle}">
+                                <behavior:Interaction.Triggers>
+                                    <behavior:EventTrigger EventName="Loaded">
+                                        <behavior:CallMethodAction MethodName="DimensionTypeLoaded" TargetObject="{Binding}" />
+                                    </behavior:EventTrigger>
+                                </behavior:Interaction.Triggers>
+                            </ComboBox>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+                <!--  原版背包  -->
+                <TabControl
+                    Grid.Row="2"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    SelectedIndex="0"
+                    Style="{DynamicResource TabControlWithScrollBar}">
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="Loaded">
+                            <behavior:CallMethodAction MethodName="ItemsLoaded" TargetObject="{Binding}" />
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
+                    <CustomControls:TextTabItems
+                        Background="#48382C"
+                        BorderThickness="5,5,5,0"
+                        Foreground="White"
+                        Header="原版物品库"
+                        LeftBorderTexture="{StaticResource TabItemLeft}"
+                        RightBorderTexture="{StaticResource TabItemRight}"
+                        SelectedBackground="#CC6B23"
+                        SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                        SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                        SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                        Style="{DynamicResource TextTabItemStyle}"
+                        TopBorderTexture="{StaticResource TabItemTop}">
+                        <ListView
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            BorderThickness="0"
+                            IsSynchronizedWithCurrentItem="True"
+                            ItemsSource="{Binding Source={StaticResource BagItemSource}, IsAsync=True}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                            Style="{DynamicResource ListBoxScrollViewerStyle}"
+                            VirtualizingPanel.IsVirtualizing="true"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Image
+                                        x:Name="contentImage"
+                                        Width="70"
+                                        Height="70"
+                                        RenderOptions.BitmapScalingMode="HighQuality"
+                                        RenderOptions.ClearTypeHint="Enabled"
+                                        RenderOptions.EdgeMode="Aliased"
+                                        SnapsToDevicePixels="True"
+                                        Source="{Binding Path=ImagePath, Converter={StaticResource UriToBitmapImage}, Mode=OneWay, IsAsync=True}"
+                                        ToolTipService.BetweenShowDelay="0"
+                                        ToolTipService.InitialShowDelay="0"
+                                        UseLayoutRounding="True">
+                                        <Image.ToolTip>
+                                            <ToolTip
+                                                Background="#424242"
+                                                Content="{Binding Path=IDAndName, Mode=OneWay, IsAsync=True}"
+                                                Foreground="White" />
+                                        </Image.ToolTip>
+                                    </Image>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingWrapPanel:VirtualizingWrapPanel
+                                        Background="#555956"
+                                        ScrollViewer.CanContentScroll="True"
+                                        VirtualizingPanel.CacheLength="250 250"
+                                        VirtualizingPanel.CacheLengthUnit="Pixel"
+                                        VirtualizingPanel.IsVirtualizing="True" />
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                        </ListView>
+                    </CustomControls:TextTabItems>
+                    <CustomControls:TextTabItems
+                        Background="#48382C"
+                        BorderThickness="5,5,5,0"
+                        Foreground="White"
+                        Header="自定义物品库"
+                        LeftBorderTexture="{StaticResource TabItemLeft}"
+                        RightBorderTexture="{StaticResource TabItemRight}"
+                        SelectedBackground="#CC6B23"
+                        SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                        SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                        SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                        Style="{DynamicResource TextTabItemStyle}"
+                        TopBorderTexture="{StaticResource TabItemTop}">
+                        <ListView
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            BorderThickness="0"
+                            IsSynchronizedWithCurrentItem="True"
+                            ItemsSource="{Binding Source={StaticResource CustomItemSource}}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                            Style="{DynamicResource ListBoxScrollViewerStyle}"
+                            VirtualizingPanel.IsVirtualizing="true"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Image
+                                        x:Name="contentImage"
+                                        Width="70"
+                                        Height="70"
+                                        RenderOptions.BitmapScalingMode="HighQuality"
+                                        RenderOptions.ClearTypeHint="Enabled"
+                                        SnapsToDevicePixels="True"
+                                        Source="{Binding Path=ImagePath, Converter={StaticResource UriToBitmapImage}, Mode=OneWay, IsAsync=True}"
+                                        Tag="{Binding Path=NBT, Mode=OneWay, IsAsync=True}"
+                                        ToolTipService.BetweenShowDelay="0"
+                                        ToolTipService.InitialShowDelay="0"
+                                        UseLayoutRounding="True">
+                                        <Image.ToolTip>
+                                            <ToolTip
+                                                Background="#424242"
+                                                Content="{Binding Path=IDAndName, Mode=OneWay, IsAsync=True}"
+                                                Foreground="White" />
+                                        </Image.ToolTip>
+                                    </Image>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingWrapPanel:VirtualizingWrapPanel
+                                        Background="#555956"
+                                        ScrollViewer.CanContentScroll="True"
+                                        VirtualizingPanel.CacheLength="200 200"
+                                        VirtualizingPanel.CacheLengthUnit="Pixel"
+                                        VirtualizingPanel.IsVirtualizing="True" />
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                        </ListView>
+                    </CustomControls:TextTabItems>
+                </TabControl>
+                <Grid
+                    Grid.Row="3"
+                    Margin="0,5,0,8"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Bottom">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <!--  普通属性  -->
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="15"
+                        Foreground="White"
+                        Text="搜索言论类型" />
+                    <ComboBox
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        FontSize="15"
+                        Foreground="White"
+                        SelectedIndex="0"
+                        Style="{DynamicResource TextComboBoxStyle}">
+                        <behavior:Interaction.Triggers>
+                            <behavior:EventTrigger EventName="Loaded">
+                                <behavior:CallMethodAction MethodName="GossipSearchTypeLoaded" TargetObject="{Binding}" />
+                            </behavior:EventTrigger>
+                        </behavior:Interaction.Triggers>
+                    </ComboBox>
+                    <TextBox
+                        Grid.Row="0"
+                        Grid.Column="2"
+                        Margin="2.5,0"
+                        BorderBrush="#424242"
+                        BorderThickness="1"
+                        CaretBrush="White"
+                        FontSize="15"
+                        Foreground="White">
+                        <behavior:Interaction.Triggers>
+                            <behavior:EventTrigger EventName="TextChanged">
+                                <behavior:CallMethodAction MethodName="SearchGossipsTextChanged" TargetObject="{Binding}" />
+                            </behavior:EventTrigger>
+                            <behavior:EventTrigger EventName="Loaded">
+                                <behavior:CallMethodAction MethodName="GossipSearchTargetLoaded" TargetObject="{Binding}" />
+                            </behavior:EventTrigger>
+                        </behavior:Interaction.Triggers>
+                        <TextBox.Resources>
+                            <VisualBrush
+                                x:Key="BackgroundBrush"
+                                AlignmentX="Left"
+                                AlignmentY="Center"
+                                Stretch="UniformToFill">
+                                <VisualBrush.Visual>
+                                    <Grid
+                                        Width="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualWidth}"
+                                        Height="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualHeight}"
+                                        Background="#383838">
+                                        <TextBlock
+                                            Margin="5,0,0,0"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Background="Transparent"
+                                            FontSize="12"
+                                            Foreground="#D6D6D6"
+                                            Text="搜索言论目标"
+                                            TextAlignment="Center" />
+                                    </Grid>
+                                </VisualBrush.Visual>
+                            </VisualBrush>
+                        </TextBox.Resources>
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="Background" Value="{StaticResource EditBox}" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="TextBox">
+                                            <Border
+                                                x:Name="border"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                SnapsToDevicePixels="True">
+                                                <ScrollViewer
+                                                    x:Name="PART_ContentHost"
+                                                    Focusable="False"
+                                                    HorizontalScrollBarVisibility="Hidden"
+                                                    VerticalScrollBarVisibility="Hidden" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="BorderBrush" Value="#424242" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="BorderBrush" Value="#424242" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                    <TextBox
+                        Grid.Row="0"
+                        Grid.Column="3"
+                        Margin="2.5,0"
+                        HorizontalAlignment="Stretch"
+                        BorderBrush="#424242"
+                        BorderThickness="1"
+                        CaretBrush="White"
+                        FontSize="15"
+                        Foreground="White"
+                        Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                        <behavior:Interaction.Triggers>
+                            <behavior:EventTrigger EventName="GotFocus">
+                                <behavior:CallMethodAction MethodName="TextBox_GotFocus" TargetObject="{Binding}" />
+                            </behavior:EventTrigger>
+                        </behavior:Interaction.Triggers>
+                        <TextBox.Resources>
+                            <VisualBrush
+                                x:Key="BackgroundBrush"
+                                AlignmentX="Left"
+                                AlignmentY="Center"
+                                Stretch="UniformToFill">
+                                <VisualBrush.Visual>
+                                    <Grid
+                                        Width="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualWidth}"
+                                        Height="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualHeight}"
+                                        Background="#383838">
+                                        <TextBlock
+                                            Margin="5,0,0,0"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Background="Transparent"
+                                            FontSize="12"
+                                            Foreground="#D6D6D6"
+                                            Text="搜索物品"
+                                            TextAlignment="Center" />
+                                    </Grid>
+                                </VisualBrush.Visual>
+                            </VisualBrush>
+                        </TextBox.Resources>
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="Background" Value="{StaticResource EditBox}" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="TextBox">
+                                            <Border
+                                                x:Name="border"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                SnapsToDevicePixels="True">
+                                                <ScrollViewer
+                                                    x:Name="PART_ContentHost"
+                                                    Focusable="False"
+                                                    HorizontalScrollBarVisibility="Hidden"
+                                                    VerticalScrollBarVisibility="Hidden" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="BorderBrush" Value="#424242" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="BorderBrush" Value="#424242" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                    <!--  普通属性  -->
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="15"
+                        Foreground="White"
+                        Text="LastRestock"
+                        ToolTip="此村民最后一次前往工作站点重新供应交易的刻。"
+                        ToolTipService.InitialShowDelay="0"
+                        ToolTipService.ShowDuration="1000" />
+                    <Slider
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        AllowDrop="False"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="White"
+                        Maximum="2147483647"
+                        Minimum="-2147483648"
+                        Style="{DynamicResource NumberBoxStyle}"
+                        Value="{Binding LastRestock, Mode=TwoWay}" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="15"
+                        Foreground="White"
+                        Text="Xp"
+                        ToolTip="此村民当前的经验值。"
+                        ToolTipService.InitialShowDelay="0"
+                        ToolTipService.ShowDuration="1000" />
+                    <Slider
+                        Grid.Row="1"
+                        Grid.Column="3"
+                        Margin="2.5,0"
+                        HorizontalAlignment="Stretch"
+                        AllowDrop="False"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="White"
+                        Maximum="2147483647"
+                        Minimum="-2147483648"
+                        Style="{DynamicResource NumberBoxStyle}"
+                        Value="{Binding Xp, Mode=TwoWay}" />
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</local_window:CommonWindow>

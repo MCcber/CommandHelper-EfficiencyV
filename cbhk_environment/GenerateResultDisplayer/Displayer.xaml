@@ -1,0 +1,30 @@
+﻿<local_window:CommonWindow
+    x:Class="cbhk_environment.GenerateResultDisplayer.Displayer"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local_window="clr-namespace:cbhk_environment.WindowDictionaries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="生成结果"
+    Width="700"
+    Height="440"
+    MinWidth="700"
+    MinHeight="440"
+    Background="#2F2F2F"
+    Closing="CommonWindow_Closing"
+    ResizeMode="CanResizeWithGrip"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
+
+    <Grid>
+        <TabControl
+            x:Name="ResultTabControl"
+            Background="Transparent"
+            BorderBrush="#3D3D3D"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            ScrollViewer.VerticalScrollBarVisibility="Auto"
+            Style="{DynamicResource TabControlWithScrollBar}" />
+    </Grid>
+
+</local_window:CommonWindow>

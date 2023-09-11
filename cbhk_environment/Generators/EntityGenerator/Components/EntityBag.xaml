@@ -1,0 +1,72 @@
+﻿<UserControl
+    x:Class="cbhk_environment.Generators.EntityGenerator.Components.EntityBag"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.Generators.EntityGenerator.Components"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressed.png" />
+        <ImageBrush x:Key="CloseWhite" ImageSource="/cbhk_environment;component/resources/common/images/CloseWhite.png" />
+        <ImageBrush x:Key="CloseWhiteHover" ImageSource="/cbhk_environment;component/resources/common/images/CloseWhiteHover.png" />
+    </UserControl.Resources>
+
+    <DockPanel Height="30" LastChildFill="False">
+        <Border
+            x:Name="ItemIcon"
+            BorderBrush="#FFE5B663"
+            BorderThickness="1">
+            <Image Grid.Column="0" Width="30" />
+        </Border>
+        <CustomControls:StereoTextButton
+            x:Name="ImportFromClipboard"
+            Grid.Column="1"
+            Background="#EFF2F1"
+            BorderThickness="3.5,3,3.5,7"
+            BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+            Click="ImportFromClipboard_Click"
+            Content="从剪切板导入"
+            LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+            PressedBorderThickness="4"
+            PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+            PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+            PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+            PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+            RenderOptions.BitmapScalingMode="NearestNeighbor"
+            RightBorderTexture="{StaticResource ButtonNormalRight}"
+            Style="{DynamicResource StereoTextButton}"
+            TopBorderTexture="{StaticResource ButtonNormalTop}" />
+        <CustomControls:StereoTextButton
+            x:Name="ImportFromFile"
+            Grid.Column="2"
+            Background="#EFF2F1"
+            BorderThickness="3.5,3,3.5,7"
+            BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+            Click="ImportFromFile_Click"
+            Content="从文件导入"
+            LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+            PressedBorderThickness="4"
+            PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+            PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+            PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+            PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+            RenderOptions.BitmapScalingMode="NearestNeighbor"
+            RightBorderTexture="{StaticResource ButtonNormalRight}"
+            Style="{DynamicResource StereoTextButton}"
+            TopBorderTexture="{StaticResource ButtonNormalTop}" />
+        <CustomControls:IconTextButtons
+            Width="20"
+            Height="20"
+            Background="{StaticResource CloseWhite}"
+            Click="IconTextButtons_Click"
+            PressedBackground="{StaticResource CloseWhiteHover}"
+            RenderOptions.BitmapScalingMode="NearestNeighbor"
+            Style="{DynamicResource IconTextButton}" />
+    </DockPanel>
+</UserControl>

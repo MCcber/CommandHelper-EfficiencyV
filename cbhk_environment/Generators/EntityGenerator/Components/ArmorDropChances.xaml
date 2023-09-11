@@ -1,0 +1,93 @@
+﻿<UserControl
+    x:Class="cbhk_environment.Generators.EntityGenerator.Components.ArmorDropChances"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.Generators.EntityGenerator.Components"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <CustomControls:RadiusToggleButtons
+            x:Name="EnableButton"
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="0,5,0,0"
+            Foreground="White"
+            SelectedToggleText="启用"
+            Style="{DynamicResource RadiusToggleButton}"
+            ToggleHeight="25"
+            ToggleWidth="45"
+            UnSelectedToggleText="禁用" />
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Foreground="White"
+            Text="靴子掉落率" />
+        <Slider
+            x:Name="boots"
+            Grid.Row="1"
+            Grid.Column="1"
+            Height="25"
+            Maximum="100"
+            Minimum="0"
+            Style="{DynamicResource NumberBoxStyle}" />
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Foreground="White"
+            Text="护腿掉落率" />
+        <Slider
+            x:Name="legs"
+            Grid.Row="2"
+            Grid.Column="1"
+            Height="25"
+            Maximum="100"
+            Minimum="0"
+            Style="{DynamicResource NumberBoxStyle}" />
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Foreground="White"
+            Text="胸甲掉落率" />
+        <Slider
+            x:Name="chest"
+            Grid.Row="3"
+            Grid.Column="1"
+            Height="25"
+            Maximum="100"
+            Minimum="0"
+            Style="{DynamicResource NumberBoxStyle}" />
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Foreground="White"
+            Text="头盔掉落率" />
+        <Slider
+            x:Name="helmet"
+            Grid.Row="4"
+            Grid.Column="1"
+            Height="25"
+            Maximum="100"
+            Minimum="0"
+            Style="{DynamicResource NumberBoxStyle}" />
+    </Grid>
+</UserControl>

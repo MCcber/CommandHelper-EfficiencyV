@@ -1,0 +1,195 @@
+﻿<Window
+    x:Class="cbhk_environment.More.NoticeToUsers"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.More"
+    xmlns:local_window="clr-namespace:cbhk_environment.WindowDictionaries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="用户须知"
+    Width="800"
+    Height="450"
+    MinWidth="800"
+    MinHeight="450"
+    Background="#2F2F2F"
+    ResizeMode="NoResize"
+    WindowChrome.WindowChrome="{DynamicResource WindowChromeKey}"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
+
+    <Window.Resources>
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressed.png" />
+        <!--  窗体标题栏无白条  -->
+        <WindowChrome
+            x:Key="WindowChromeKey"
+            CaptionHeight="0"
+            CornerRadius="0"
+            GlassFrameThickness="0">
+            <WindowChrome.ResizeBorderThickness>
+                <Thickness>0</Thickness>
+            </WindowChrome.ResizeBorderThickness>
+        </WindowChrome>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <RichTextBox
+            Grid.Row="0"
+            Background="Transparent"
+            BorderThickness="0"
+            Foreground="White"
+            IsHitTestVisible="False"
+            IsReadOnly="True"
+            IsReadOnlyCaretVisible="False">
+            <FlowDocument>
+                <Paragraph
+                    Margin="0,10,0,0"
+                    FontSize="20"
+                    FontWeight="Bold"
+                    TextAlignment="Center">
+                    <Run Text="本应用适用人群" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="1.有基本编程能力" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="2.对Minecraft原版技术体系有相对完整认知" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="3.设备的系统为win10或更新" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="4.上述1~3项需满足任意两项或全部" />
+                </Paragraph>
+                <Paragraph
+                    FontSize="20"
+                    FontWeight="Bold"
+                    TextAlignment="Center">
+                    <Run Text="本应用主体服务内容" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="1.Oocs" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="2.Datapacks" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="3.ArmorStand" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="4.WrittenBook" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="5.Spawners" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="6.Recipes" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="7.Villagers" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="8.Tags" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="9.Items" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="10.Fireworks" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="11.Entities" />
+                </Paragraph>
+            </FlowDocument>
+        </RichTextBox>
+        <DockPanel
+            Grid.Row="1"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            LastChildFill="False">
+            <CustomControls:TextCheckBoxs
+                x:Name="donotShowNextTime"
+                Grid.Row="1"
+                Height="25"
+                Margin="0,0,10,10"
+                Background="{StaticResource ButtonNormal}"
+                Click="donotShowNextTime_Click"
+                Foreground="White"
+                HeaderHeight="20"
+                HeaderText="下次不再显示本窗体"
+                HeaderWidth="20"
+                Style="{DynamicResource TextCheckBox}" />
+            <TextBlock
+                x:Name="browseTimeBlock"
+                Margin="0,0,10,10"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="5s" />
+            <CustomControls:TextButtons
+                x:Name="understandButton"
+                Grid.Row="1"
+                Width="45"
+                Height="25"
+                Margin="0,0,10,10"
+                Background="{StaticResource ButtonNormal}"
+                Click="understandButton_Click"
+                Content="已了解"
+                IsEnabled="False"
+                MouseLeftDownBackground="{StaticResource ButtonPressed}"
+                MouseOverBackground="{StaticResource ButtonNormal}"
+                Style="{DynamicResource TextButtonsStyle}" />
+        </DockPanel>
+    </Grid>
+</Window>

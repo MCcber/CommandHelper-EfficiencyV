@@ -1,0 +1,52 @@
+﻿<local_window:CommonWindow
+    x:Class="cbhk_environment.More.DonateUs"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.More"
+    xmlns:local_window="clr-namespace:cbhk_environment.WindowDictionaries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="赞助我们"
+    Width="763"
+    Height="418"
+    MinWidth="763"
+    MinHeight="418"
+    mc:Ignorable="d">
+    <DataGrid
+        x:Name="grid"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        AutoGenerateColumns="False"
+        HorizontalScrollBarVisibility="Disabled"
+        IsHitTestVisible="False"
+        IsReadOnly="True"
+        RowHeight="100"
+        VerticalScrollBarVisibility="Auto">
+        <DataGrid.Columns>
+            <DataGridTemplateColumn Width="150" Header="头像">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Image
+                            Height="100"
+                            RenderOptions.BitmapScalingMode="NearestNeighbor"
+                            Source="{Binding Icon, Mode=OneTime}" />
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn Binding="{Binding Description, Mode=OneTime}" Header="描述" />
+            <DataGridTemplateColumn Header="赞助码">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Image
+                                Width="100"
+                                Height="100"
+                                Source="{Binding Donate, Mode=OneTime}" />
+                            <TextBlock Text="因本人要求，不接受赞助" Visibility="{Binding NoRequired, Mode=OneTime}" />
+                        </Grid>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+        </DataGrid.Columns>
+    </DataGrid>
+</local_window:CommonWindow>

@@ -1,0 +1,100 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls">
+
+    <BitmapImage x:Key="Slot" UriSource="pack://application:,,,/cbhk_environment;component/resources/common/images/Slot.png" />
+
+    <Style x:Key="DisplayDataStyle" TargetType="CustomControls:RichToolTip">
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="MinWidth" Value="250" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CustomControls:RichToolTip">
+                    <Border
+                        Padding="5"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="#5454FC"
+                        BorderThickness="1"
+                        CornerRadius="5">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="3" ShadowDepth="0" />
+                        </Border.Effect>
+                        <StackPanel>
+                            <DockPanel>
+                                <Grid>
+                                    <Image
+                                        Width="50"
+                                        Height="50"
+                                        Margin="5,5,0,0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Panel.ZIndex="0"
+                                        Source="{StaticResource Slot}" />
+                                    <Image
+                                        Width="50"
+                                        Height="50"
+                                        Margin="5,5,0,0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Panel.ZIndex="1"
+                                        Source="{TemplateBinding ContentIcon}" />
+                                </Grid>
+                                <Border
+                                    Margin="5,0,0,0"
+                                    Padding="5"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Background="#1F1F1F"
+                                    BorderThickness="0"
+                                    CornerRadius="5">
+                                    <TextBlock
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Foreground="{TemplateBinding Foreground}"
+                                        Text="{TemplateBinding DisplayID}" />
+                                </Border>
+                            </DockPanel>
+                            <DockPanel>
+                                <Border
+                                    Margin="0,5,5,0"
+                                    Padding="5"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Background="#1F1F1F"
+                                    BorderThickness="0"
+                                    CornerRadius="5">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Foreground="{TemplateBinding Foreground}"
+                                        Text="CustomName" />
+                                </Border>
+                                <TextBlock
+                                    Margin="0,5,0,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    Text="{TemplateBinding CustomName}"
+                                    TextWrapping="Wrap" />
+                            </DockPanel>
+                            <RichTextBox
+                                x:Name="Box"
+                                MinWidth="245"
+                                Margin="2"
+                                VerticalAlignment="Top"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{TemplateBinding Foreground}">
+                                <FlowDocument>
+                                    <Paragraph TextAlignment="Left" />
+                                </FlowDocument>
+                            </RichTextBox>
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

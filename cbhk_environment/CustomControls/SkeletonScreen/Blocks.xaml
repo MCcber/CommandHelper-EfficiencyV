@@ -1,0 +1,35 @@
+﻿<UserControl
+    x:Class="cbhk_environment.CustomControls.SkeletonScreen.Blocks"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.CustomControls.SkeletonScreen"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <ColorAnimation
+                        AutoReverse="True"
+                        RepeatBehavior="Forever"
+                        Storyboard.TargetName="Block"
+                        Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                        To="#7F4A4A4A"
+                        Duration="0:0:0.5" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+
+    <Border
+        x:Name="Block"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        Background="#7F313131"
+        CornerRadius="10" />
+
+</UserControl>

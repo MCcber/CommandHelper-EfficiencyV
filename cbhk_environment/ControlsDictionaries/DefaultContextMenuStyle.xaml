@@ -1,0 +1,103 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style TargetType="{x:Type ContextMenu}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:mwt="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib"
+                    TargetType="ContextMenu">
+                    <mwt:SystemDropShadowChrome
+                        Name="Shdw"
+                        SnapsToDevicePixels="True"
+                        Color="Transparent">
+                        <Border
+                            Name="ContextMenuBorder"
+                            Background="Transparent"
+                            BorderBrush="{TemplateBinding Border.BorderBrush}"
+                            BorderThickness="0">
+                            <ScrollViewer
+                                Name="ContextMenuScrollViewer"
+                                Grid.ColumnSpan="2"
+                                Margin="1,0,1,0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Style="{DynamicResource {ComponentResourceKey TypeInTargetAssembly=FrameworkElement,
+                                                                              ResourceId=MenuScrollViewer}}">
+                                <Grid Background="Transparent" RenderOptions.ClearTypeHint="Enabled">
+                                    <Canvas
+                                        Width="0"
+                                        Height="0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Background="Transparent">
+                                        <Rectangle
+                                            Name="OpaqueRect"
+                                            Width="Auto"
+                                            Height="Auto"
+                                            Fill="{x:Null}" />
+                                    </Canvas>
+                                    <Rectangle
+                                        Width="28"
+                                        Margin="1,2,1,2"
+                                        HorizontalAlignment="Left"
+                                        Fill="Transparent"
+                                        RadiusX="2"
+                                        RadiusY="2" />
+                                    <Rectangle
+                                        Width="1"
+                                        Margin="29,2,0,2"
+                                        HorizontalAlignment="Left"
+                                        Fill="#FFE2E3E3" />
+                                    <Rectangle
+                                        Width="1"
+                                        Margin="30,2,0,2"
+                                        HorizontalAlignment="Left"
+                                        Fill="#FFFFFFFF" />
+                                    <ItemsPresenter
+                                        Name="ItemsPresenter"
+                                        Margin="{TemplateBinding Control.Padding}"
+                                        KeyboardNavigation.DirectionalNavigation="Cycle"
+                                        SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
+                                </Grid>
+                            </ScrollViewer>
+                        </Border>
+                    </mwt:SystemDropShadowChrome>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="ContextMenuService.HasDropShadow">
+                            <Setter TargetName="Shdw" Property="FrameworkElement.Margin">
+                                <Setter.Value>
+                                    <Thickness>0,0,5,5</Thickness>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter TargetName="Shdw" Property="mwt:SystemDropShadowChrome.Color">
+                                <Setter.Value>
+                                    <Color>#71000000</Color>
+                                </Setter.Value>
+                            </Setter>
+                            <Trigger.Value>
+                                <s:Boolean>True</s:Boolean>
+                            </Trigger.Value>
+                        </Trigger>
+                        <Trigger SourceName="ContextMenuScrollViewer" Property="ScrollViewer.CanContentScroll">
+                            <Setter TargetName="OpaqueRect" Property="Canvas.Top">
+                                <Setter.Value>
+                                    <Binding ElementName="ContextMenuScrollViewer" Path="VerticalOffset" />
+                                </Setter.Value>
+                            </Setter>
+                            <Setter TargetName="OpaqueRect" Property="Canvas.Left">
+                                <Setter.Value>
+                                    <Binding ElementName="ContextMenuScrollViewer" Path="HorizontalOffset" />
+                                </Setter.Value>
+                            </Setter>
+                            <Trigger.Value>
+                                <s:Boolean>False</s:Boolean>
+                            </Trigger.Value>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

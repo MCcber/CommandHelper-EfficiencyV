@@ -1,0 +1,49 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ImageBrush x:Key="ButtonNormalBottom" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormalBottom.png" />
+    <ImageBrush x:Key="ButtonNormalTop" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormalTop.png" />
+    <ImageBrush x:Key="ButtonNormalLeft" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormalLeft.png" />
+    <ImageBrush x:Key="ButtonNormalRight" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormalRight.png" />
+    <ImageBrush x:Key="ButtonFrame" ImageSource="/cbhk_environment;component/resources/common/images/ButtonFrame.png" />
+    <ImageBrush x:Key="ButtonPressedBottom" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressedBottom.png" />
+    <ImageBrush x:Key="ButtonPressedTop" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressedTop.png" />
+    <ImageBrush x:Key="ButtonPressedLeft" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressedLeft.png" />
+    <ImageBrush x:Key="ButtonPressedRight" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressedRight.png" />
+    <ImageBrush x:Key="TabFront" ImageSource="/cbhk_environment;component/resources/common/images/TabFront.png" />
+    <ImageBrush x:Key="TabBack" ImageSource="/cbhk_environment;component/resources/common/images/TabBack.png" />
+    <ImageBrush x:Key="SelectedTabItemLeft" ImageSource="/cbhk_environment;component/resources/common/images/SelectedTabItemLeft.png" />
+    <ImageBrush x:Key="SelectedTabItemRight" ImageSource="/cbhk_environment;component/resources/common/images/SelectedTabItemRight.png" />
+    <ImageBrush x:Key="SelectedTabItemTop" ImageSource="/cbhk_environment;component/resources/common/images/SelectedTabItemTop.png" />
+    <ImageBrush x:Key="TabItemLeft" ImageSource="/cbhk_environment;component/resources/common/images/TabItemLeft.png" />
+    <ImageBrush x:Key="TabItemRight" ImageSource="/cbhk_environment;component/resources/common/images/TabItemRight.png" />
+    <ImageBrush x:Key="TabItemTop" ImageSource="/cbhk_environment;component/resources/common/images/TabItemTop.png" />
+    <ImageBrush x:Key="TextToggleButtonFalseBottomFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonFalseBottomFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonFalseTopFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonFalseTopFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonFalseLeftFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonFalseLeftFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonFalseRightFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonFalseRightFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonTrueBottomFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonTrueBottomFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonTrueTopFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonTrueTopFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonTrueLeftFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonTrueLeftFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonTrueRightFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonTrueRightFrame.png" />
+
+    <DrawingImage x:Key="InfomationIcon">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="#18a216" Geometry="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+    <DrawingImage x:Key="ErrorIcon">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="#ab0707" Geometry="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+    <DrawingImage x:Key="WarnIcon">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="#afa90e" Geometry="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+</ResourceDictionary>

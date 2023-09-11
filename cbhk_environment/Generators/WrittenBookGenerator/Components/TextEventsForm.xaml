@@ -1,0 +1,190 @@
+﻿<UserControl
+    x:Class="cbhk_environment.Generators.WrittenBookGenerator.Components.TextEventsForm"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.Generators.WrittenBookGenerator.Components"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <Grid Width="230" MaxHeight="360">
+        <StackPanel>
+            <DockPanel>
+                <StackPanel>
+                    <TextBlock
+                        FontSize="15"
+                        Foreground="White"
+                        Text="全部开启" />
+                    <CustomControls:RadiusToggleButtons
+                        x:Name="AllEnable"
+                        Height="30"
+                        HorizontalAlignment="Center"
+                        Click="AllEnableClick"
+                        Foreground="White"
+                        SelectedToggleText=""
+                        Style="{DynamicResource RadiusToggleButton}"
+                        ToggleHeight="30"
+                        ToggleWidth="55"
+                        UnSelectedToggleText="" />
+                </StackPanel>
+                <StackPanel>
+                    <!--  IsChecked="{Binding EnableEditClickEvent, Mode=OneWayToSource}"  -->
+                    <CustomControls:RadiusToggleButtons
+                        x:Name="EnableClickEvent"
+                        Height="30"
+                        HorizontalAlignment="Center"
+                        Checked="EnableClickEventChecked"
+                        Click="EnableClickEventClick"
+                        Foreground="White"
+                        SelectedToggleText="点击事件"
+                        Style="{DynamicResource RadiusToggleButton}"
+                        ToggleHeight="30"
+                        ToggleWidth="55"
+                        UnSelectedToggleText="点击事件"
+                        Unchecked="EnableClickEventUnchecked" />
+                    <!--  IsChecked="{Binding EnableEditHoverEvent, Mode=OneWayToSource}"  -->
+                    <CustomControls:RadiusToggleButtons
+                        x:Name="EnableHoverEvent"
+                        Height="30"
+                        HorizontalAlignment="Center"
+                        Checked="EnableHoverEventChecked"
+                        Click="EnableHoverEventClick"
+                        Foreground="White"
+                        SelectedToggleText="悬浮事件"
+                        Style="{DynamicResource RadiusToggleButton}"
+                        ToggleHeight="30"
+                        ToggleWidth="55"
+                        UnSelectedToggleText="悬浮事件"
+                        Unchecked="EnableHoverEventUnchecked" />
+                    <!--  IsChecked="{Binding EnableEditInsertion, Mode=OneWayToSource}"  -->
+                    <CustomControls:RadiusToggleButtons
+                        x:Name="EnableInsertion"
+                        Height="30"
+                        HorizontalAlignment="Center"
+                        Checked="EnableInsertionChecked"
+                        Click="EnableInsertionClick"
+                        Foreground="White"
+                        SelectedToggleText="插入文本"
+                        Style="{DynamicResource RadiusToggleButton}"
+                        ToggleHeight="30"
+                        ToggleWidth="55"
+                        UnSelectedToggleText="插入文本"
+                        Unchecked="EnableInsertionUnchecked" />
+                </StackPanel>
+            </DockPanel>
+            <StackPanel x:Name="ClickEventPanel" Margin="0,5">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="20"
+                    Foreground="White"
+                    Text="点击事件" />
+                <DockPanel Margin="0,5,0,0">
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        FontSize="20"
+                        Foreground="White"
+                        Text="action"
+                        ToolTip="该事件的行为"
+                        ToolTipService.InitialShowDelay="0"
+                        ToolTipService.ShowDuration="1000" />
+                    <ComboBox
+                        x:Name="ClickEventActionBox"
+                        Height="30"
+                        Background="Black"
+                        FontSize="20"
+                        Foreground="White"
+                        Loaded="ClickEventsLoaded"
+                        Style="{DynamicResource TextComboBoxStyle}" />
+                </DockPanel>
+                <DockPanel Margin="0,5,0,0">
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        FontSize="20"
+                        Foreground="White"
+                        Text="value"
+                        ToolTip="该事件的值"
+                        ToolTipService.InitialShowDelay="0"
+                        ToolTipService.ShowDuration="1000" />
+                    <TextBox
+                        x:Name="ClickEventValueBox"
+                        Background="Transparent"
+                        BorderBrush="Black"
+                        FontSize="20"
+                        Foreground="White" />
+                </DockPanel>
+            </StackPanel>
+            <StackPanel x:Name="HoverEventPanel" Margin="0,5">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="20"
+                    Foreground="White"
+                    Text="悬浮事件" />
+                <DockPanel Margin="0,5,0,0">
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        FontSize="20"
+                        Foreground="White"
+                        Text="action"
+                        ToolTip="该事件的行为"
+                        ToolTipService.InitialShowDelay="0"
+                        ToolTipService.ShowDuration="1000" />
+                    <ComboBox
+                        x:Name="HoverEventActionBox"
+                        Height="30"
+                        Background="Black"
+                        FontSize="20"
+                        Foreground="White"
+                        Loaded="HoverEventsLoaded"
+                        Style="{DynamicResource TextComboBoxStyle}" />
+                </DockPanel>
+                <DockPanel Margin="0,5,0,0">
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        FontSize="20"
+                        Foreground="White"
+                        Text="value"
+                        ToolTip="该事件的值"
+                        ToolTipService.InitialShowDelay="0"
+                        ToolTipService.ShowDuration="1000" />
+                    <TextBox
+                        x:Name="HoverEventValueBox"
+                        Background="Transparent"
+                        BorderBrush="Black"
+                        FontSize="20"
+                        Foreground="White" />
+                </DockPanel>
+            </StackPanel>
+            <StackPanel x:Name="InsertionPanel" Margin="0,5">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="20"
+                    Foreground="White"
+                    Text="插入" />
+                <DockPanel Margin="0,5,0,0">
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        FontSize="20"
+                        Foreground="White"
+                        Text="value"
+                        ToolTip="该事件的值"
+                        ToolTipService.InitialShowDelay="0"
+                        ToolTipService.ShowDuration="1000" />
+                    <TextBox
+                        x:Name="InsertionValueBox"
+                        Background="Transparent"
+                        BorderBrush="Black"
+                        FontSize="20"
+                        Foreground="White" />
+                </DockPanel>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

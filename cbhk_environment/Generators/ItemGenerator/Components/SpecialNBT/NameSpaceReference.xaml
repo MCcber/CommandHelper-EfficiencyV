@@ -1,0 +1,55 @@
+﻿<UserControl
+    x:Class="cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT.NameSpaceReference"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ImageBrush x:Key="Save" ImageSource="/cbhk_environment;component/resources/common/images/Save.png" />
+        <ImageBrush x:Key="IssueIcon" ImageSource="/cbhk_environment;component/resources/common/images/Issue.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowRight.png" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBox
+            x:Name="ReferenceBox"
+            Grid.Column="0"
+            Height="25"
+            Padding="0,2,0,0"
+            VerticalAlignment="Top"
+            BorderBrush="Black"
+            FontSize="15"
+            Foreground="White" />
+        <CustomControls:IconTextButtons
+            Grid.Column="1"
+            Height="25"
+            Padding="5"
+            VerticalAlignment="Top"
+            Background="{DynamicResource ButtonNormal}"
+            Click="Reference_Click"
+            Content="引用"
+            PressedBackground="{DynamicResource ButtonPressed}"
+            Style="{DynamicResource IconTextButton}" />
+        <CustomControls:IconTextButtons
+            Grid.Column="2"
+            Width="25"
+            Height="25"
+            VerticalAlignment="Top"
+            Background="{DynamicResource CloseButtonNormal}"
+            Click="IconTextButtons_Click"
+            PressedBackground="{DynamicResource CloseButtonHightLight}"
+            Style="{DynamicResource IconTextButton}" />
+    </Grid>
+</UserControl>

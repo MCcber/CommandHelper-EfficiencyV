@@ -1,0 +1,119 @@
+﻿<UserControl
+    x:Class="cbhk_environment.Generators.ItemGenerator.Components.AttributeItems"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.Generators.ItemGenerator.Components"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    Loaded="AttributeItems_Loaded"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressed.png" />
+        <ImageBrush x:Key="CloseWhite" ImageSource="/cbhk_environment;component/resources/common/images/CloseWhite.png" />
+        <ImageBrush x:Key="CloseWhiteHover" ImageSource="/cbhk_environment;component/resources/common/images/CloseWhiteHover.png" />
+    </UserControl.Resources>
+
+    <StackPanel>
+        <DockPanel Height="30">
+            <TextBlock
+                Margin="5,0"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="属性名" />
+            <ComboBox
+                x:Name="AttributeNameBox"
+                Width="100"
+                HorizontalAlignment="Left"
+                VerticalContentAlignment="Center"
+                Loaded="AttributeIdsLoaded"
+                SelectedIndex="0"
+                SelectedItem="{Binding AttributeID, Mode=TwoWay}"
+                Style="{DynamicResource TextComboBoxStyle}" />
+            <TextBlock
+                Margin="5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="生效槽位" />
+            <ComboBox
+                x:Name="Slot"
+                Width="60"
+                HorizontalAlignment="Left"
+                VerticalContentAlignment="Center"
+                Loaded="AttributeSlotsLoaded"
+                SelectedIndex="0"
+                SelectedItem="{Binding AttributeSlot, Mode=TwoWay}"
+                Style="{DynamicResource TextComboBoxStyle}" />
+            <TextBlock
+                Margin="5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="值类型" />
+            <ComboBox
+                x:Name="Operations"
+                Width="100"
+                Height="30"
+                HorizontalAlignment="Left"
+                VerticalContentAlignment="Center"
+                Loaded="AttributeValueTypesLoaded"
+                SelectedIndex="0"
+                Style="{DynamicResource TextComboBoxStyle}" />
+            <CustomControls:IconTextButtons
+                Width="24"
+                Height="24"
+                Padding="0,-5,0,0"
+                HorizontalAlignment="Left"
+                Background="{StaticResource CloseWhite}"
+                Click="Delete_Click"
+                FontSize="30"
+                Foreground="Black"
+                PressedBackground="{StaticResource CloseWhiteHover}"
+                Style="{DynamicResource IconTextButton}" />
+        </DockPanel>
+        <DockPanel>
+            <TextBlock
+                Margin="5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="值" />
+            <Slider
+                x:Name="Amount"
+                Height="25"
+                Margin="30,0,0,0"
+                HorizontalAlignment="Stretch"
+                Background="Transparent"
+                BorderThickness="0"
+                Foreground="White"
+                Maximum="2147483647"
+                Minimum="-2147483648"
+                Style="{DynamicResource NumberBoxStyle}"
+                Value="{Binding AttributeValue, Mode=TwoWay}" />
+        </DockPanel>
+        <DockPanel>
+            <TextBlock
+                Margin="5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="名称" />
+            <TextBox
+                x:Name="NameBox"
+                Height="25"
+                Margin="15,0,0,0"
+                Padding="0,2,0,0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                BorderBrush="Black"
+                BorderThickness="1"
+                Foreground="White"
+                Text="{Binding AttributeName, Mode=TwoWay}" />
+        </DockPanel>
+    </StackPanel>
+</UserControl>
