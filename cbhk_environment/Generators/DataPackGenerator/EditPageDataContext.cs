@@ -3,7 +3,7 @@ using cbhk_environment.GeneralTools;
 using cbhk_environment.Generators.DataPackGenerator.Components.EditPage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ICSharpCode.AvalonEdit;
+using Syncfusion.Windows.Edit;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -559,13 +559,12 @@ namespace cbhk_environment.Generators.DataPackGenerator
                     Header = Path.GetFileName(currentItem.Uid),
                     IsContentSaved = true
                 };
-                TextEditor textEditor = new()
+                EditControl textEditor = new()
                 {
-                    ShowLineNumbers = true,
+                    ShowLineNumber = true,
                     Background = transparentBrush,
                     Foreground = whiteBrush,
                     BorderThickness = new Thickness(0),
-                    WordWrap = true,
                     Text = fileContent,
                     HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
                     VerticalScrollBarVisibility = ScrollBarVisibility.Auto
@@ -585,7 +584,7 @@ namespace cbhk_environment.Generators.DataPackGenerator
         /// <param name="e"></param>
         private async void TextEditor_KeyDown(object sender, KeyEventArgs e)
         {
-            TextEditor textEditor = sender as TextEditor;
+            EditControl textEditor = sender as EditControl;
             RichTabItems parent = textEditor.Parent as RichTabItems;
             Datapack datapack = Window.GetWindow(parent) as Datapack;
             #region 保存
@@ -608,9 +607,9 @@ namespace cbhk_environment.Generators.DataPackGenerator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void TextEditor_TextChanged(object sender, System.EventArgs e)
+        private void TextEditor_TextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            TextEditor textEditor = sender as TextEditor;
+            EditControl textEditor = d as EditControl;
             RichTabItems parent = textEditor.Parent as RichTabItems;
             parent.IsContentSaved = false;
         }

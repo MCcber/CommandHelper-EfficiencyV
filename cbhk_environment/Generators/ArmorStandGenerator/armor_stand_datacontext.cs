@@ -1876,7 +1876,7 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
 
         public void ThreeAxisMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            YAxisValue += e.Delta > 0 ? 1f : (-1f);
+            YAxisValue += e.Delta > 0 ? 2.5f : (-2.5f);
             YAxisValue = YAxisValue > 180 ?180:(YAxisValue<-180)?-180:YAxisValue;
             YAxis.Tag = YAxisValue;
         }
@@ -1909,10 +1909,10 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
                     TextCheckBoxs textCheckBox = new()
                     {
                         Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-                        Margin = new Thickness(10,0,0,0),
+                        Margin = new Thickness(0,0,0,10),
                         HeaderText = item,
-                        HeaderHeight = 20,
-                        HeaderWidth = 20,
+                        HeaderHeight = 15,
+                        HeaderWidth = 15,
                         HorizontalAlignment = HorizontalAlignment.Left,
                         VerticalAlignment = VerticalAlignment.Center,
                         Style = (NBTList.Children[0] as TextCheckBoxs).Style

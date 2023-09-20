@@ -1,22 +1,22 @@
 ﻿using System.Diagnostics;
+using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace cbhk_environment.CommandClasses
+namespace cbhk_environment.CustomControls
 {
     /// <summary>
-    /// ClassicAndNew.xaml 的交互逻辑
+    /// Tutorials.xaml 的交互逻辑
     /// </summary>
-    public partial class ClassicAndNew
+    public partial class Tutorials : UserControl
     {
-        public ClassicAndNew(int index)
+        public Tutorials()
         {
             InitializeComponent();
-            class_tab.SelectedIndex = index;
         }
 
         private void OpenBasicClasses(object sender, MouseButtonEventArgs e)
         {
-            Process.Start("explorer.exe","https://commandtutorials.neocities.org/");
+            Process.Start("explorer.exe", "https://commandtutorials.neocities.org/");
         }
 
         private void OpenAdvanceClasses(object sender, MouseButtonEventArgs e)

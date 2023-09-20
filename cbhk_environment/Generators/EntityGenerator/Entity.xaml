@@ -25,12 +25,6 @@
         <local_datacontext:entity_datacontext />
     </Window.DataContext>
 
-    <behaviros:Interaction.Triggers>
-        <behaviros:EventTrigger EventName="Loaded">
-            <behaviros:CallMethodAction MethodName="EntityLoaded" TargetObject="{Binding}" />
-        </behaviros:EventTrigger>
-    </behaviros:Interaction.Triggers>
-
     <Window.InputBindings>
         <KeyBinding
             Key="F5"

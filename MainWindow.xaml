@@ -100,42 +100,9 @@
         <tb:TaskbarIcon
             x:Key="cbhkTaskbar"
             ContextMenu="{StaticResource SysTrayMenu}"
-            DoubleClickCommand="{Binding ShowWindowCommand}"
             IconSource="cb.ico"
+            LeftClickCommand="{Binding ShowWindowCommand}"
             ToolTipText="命令管家" />
-
-        <!--<DataTemplate x:Key="MinimizeHover">
-            <Grid>
-                <Image
-                    Width="10"
-                    Height="10"
-                    Source="/cbhk_environment;component/resources/common/images/MinimizeHover.png" />
-            </Grid>
-        </DataTemplate>
-        <DataTemplate x:Key="CloseHover">
-            <Grid UseLayoutRounding="True">
-                <Image
-                    Width="12"
-                    Height="12"
-                    Source="/cbhk_environment;component/resources/common/images/CloseHover.png" />
-            </Grid>
-        </DataTemplate>
-        <DataTemplate x:Key="MinimizeWhite">
-            <Grid>
-                <Image
-                    Width="12"
-                    Height="12"
-                    Source="/cbhk_environment;component/resources/common/images/Minimize.png" />
-            </Grid>
-        </DataTemplate>
-        <DataTemplate x:Key="CloseBtn">
-            <Grid UseLayoutRounding="True">
-                <Image
-                    Width="12"
-                    Height="12"
-                    Source="/cbhk_environment;component/resources/common/images/Close.png" />
-            </Grid>
-        </DataTemplate>-->
 
     </Window.Resources>
 

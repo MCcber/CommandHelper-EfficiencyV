@@ -55,9 +55,6 @@ namespace cbhk_environment.Generators.SpawnerGenerator
         #endregion
 
         #region 字段与引用
-        //控件面板
-        public Grid componentsGrid = null;
-        public TabControl spawnerPageContainer = null;
         //刷怪笼标签页集合
         public ObservableCollection<RichTabItems> SpawnerPages { get; set; } = new() { new RichTabItems() { Header = "刷怪笼",
                 IsContentSaved = true,
@@ -75,6 +72,11 @@ namespace cbhk_environment.Generators.SpawnerGenerator
 
         //本生成器的图标路径
         string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconSpawner.png";
+
+        /// <summary>
+        /// 已选中的刷怪笼
+        /// </summary>
+        public RichTabItems SelectedItem { get; set; }
         #endregion
 
         public spawner_datacontext()
@@ -92,16 +94,6 @@ namespace cbhk_environment.Generators.SpawnerGenerator
             #region 初始化数据
             SpawnerPages[0].Content = new SpawnerPage() { FontWeight = FontWeights.Normal };
             #endregion
-        }
-
-        /// <summary>
-        /// 载入刷怪笼标签页容器
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SpawnerTabControl_Loaded(object sender,RoutedEventArgs e)
-        {
-            spawnerPageContainer = sender as TabControl;
         }
 
         /// <summary>
@@ -126,7 +118,7 @@ namespace cbhk_environment.Generators.SpawnerGenerator
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
             });
-            spawnerPageContainer.SelectedIndex = SpawnerPages.Count - 1;
+            SelectedItem = SpawnerPages[^1];
         }
 
         /// <summary>
@@ -185,12 +177,11 @@ namespace cbhk_environment.Generators.SpawnerGenerator
         /// <summary>
         /// 执行生成
         /// </summary>
-        private async void run_command()
+        private void run_command()
         {
             Result = new();
-            Spawner spawner = Window.GetWindow(spawnerPageContainer) as Spawner;
-            await spawner.Dispatcher.InvokeAsync(() =>
-            {
+            //await Task.Run(() =>
+            //{
                 foreach (RichTabItems item in SpawnerPages)
                 {
                     SpawnerPage spawnerPage = item.Content as SpawnerPage;
@@ -199,7 +190,7 @@ namespace cbhk_environment.Generators.SpawnerGenerator
                     context.run_command();
                     Result.Append(context.Result + "\r\n");
                 }
-            });
+            //});
 
             #region 显示生成结果
             if (ShowResult)
@@ -222,14 +213,8 @@ namespace cbhk_environment.Generators.SpawnerGenerator
         /// </summary>
         private async void SaveAllCommand()
         {
-            await GenerateAllSpawnerAndSave();
-        }
-
-        private async Task GenerateAllSpawnerAndSave()
-        {
-            List<string> Results = new();
-            Spawner spawner = Window.GetWindow(spawnerPageContainer) as Spawner;
-            await spawner.Dispatcher.InvokeAsync(() =>
+            List<string> Results = [];
+            await Task.Run(() =>
             {
                 foreach (RichTabItems item in SpawnerPages)
                 {
@@ -248,18 +233,18 @@ namespace cbhk_environment.Generators.SpawnerGenerator
                     ShowNewFolderButton = true,
                     UseDescriptionForTitle = true
                 };
-                if(folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     int index = 0;
                     foreach (string item in Results)
                     {
                         string entityID = "";
-                        if(item.Contains('{'))
+                        if (item.Contains('{'))
                         {
                             if (JObject.Parse(item).SelectToken("SpawnData.entity.id") is JToken id)
                                 entityID = id.ToString().Replace("minecraft:", "");
                         }
-                        File.WriteAllTextAsync(folderBrowserDialog.SelectedPath + "spawner"+entityID+index+".command",item);
+                        File.WriteAllTextAsync(folderBrowserDialog.SelectedPath + "spawner" + entityID + index + ".command", item);
                         index++;
                     }
                 }

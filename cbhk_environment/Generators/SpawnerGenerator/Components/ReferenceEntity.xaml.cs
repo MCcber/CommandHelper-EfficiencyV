@@ -132,11 +132,11 @@ namespace cbhk_environment.Generators.SpawnerGenerator.Components
             pageContext.UseForTool = true;
             if (entity.ShowDialog().Value)
             {
-                string data = ExternalDataImportManager.GetEntityDataHandler(pageContext.Result,false);
+                string data = ExternalDataImportManager.GetEntityDataHandler(pageContext.Result, false);
                 Tag = pageContext.Result;
                 string id = JObject.Parse(data)["id"].ToString().Replace("minecraft:", "");
                 string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + id + ".png";
-                if(!File.Exists(iconPath))
+                if (!File.Exists(iconPath))
                     iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + id + "_spawn_egg.png";
                 if (File.Exists(iconPath))
                     EntityIcon.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));

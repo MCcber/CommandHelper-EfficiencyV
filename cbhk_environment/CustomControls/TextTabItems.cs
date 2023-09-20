@@ -149,18 +149,34 @@ namespace cbhk_environment.CustomControls
                     {
                         TextTabItems new_select_item = new()
                         {
+                            BorderThickness = select_item.BorderThickness,
                             Header = selectedItemHeaderText,
                             Content = select_item.Content,
+                            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                            SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                            LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
+                            RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
+                            TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
+                            SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
+                            SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
+                            SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush,
                             Foreground = selectedItemForeground,
-                            Background = selectedItemBackground,
                             Style = selectedItemStyle
                         };
                         TextTabItems new_current_item = new()
                         {
+                            BorderThickness = current_item.BorderThickness,
                             Header = currentItemHeaderText,
                             Content = current_item.Content,
                             Foreground = currentItemForeground,
-                            Background = currentItemBackground,
+                            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                            SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                            LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
+                            RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
+                            TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
+                            SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
+                            SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
+                            SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush,
                             Style = currentItemStyle
                         };
                         new_select_item.MouseLeftButtonUp += TabItem_MouseLeftButtonUp;

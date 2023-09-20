@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Text;
 using System.IO;
@@ -7,34 +8,34 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.SettingForm
+namespace cbhk_environment.CustomControls
 {
     /// <summary>
-    /// IndividualizationForm.xaml 的交互逻辑
+    /// Settings.xaml 的交互逻辑
     /// </summary>
-    public partial class IndividualizationForm
+    public partial class Settings : UserControl
     {
         List<FontStructure> fontStructureList = new();
         PrivateFontCollection privateFontCollection = new();
         InstalledFontCollection systemFonts = new();
         List<string> fontList = new();
 
-        public IndividualizationForm()
+        public Settings()
         {
             InitializeComponent();
-
+            StateComboBox.ItemsSource = new ObservableCollection<string> { "保持不变", "最小化", "关闭" };
 
             #region 获取自定义字体库
             string fontListDirectory = AppDomain.CurrentDomain.BaseDirectory + "resources\\Fonts";
-            string[] fontListFolder = Directory.GetFiles(fontListDirectory,"*ttf",SearchOption.AllDirectories);
+            string[] fontListFolder = Directory.GetFiles(fontListDirectory, "*ttf", SearchOption.AllDirectories);
             foreach (string fontFile in fontListFolder)
             {
-                bool HaveFamily = privateFontCollection.Families.Any(item=>item.Name == Path.GetFileNameWithoutExtension(fontFile));
-                if(!HaveFamily)
+                bool HaveFamily = privateFontCollection.Families.Any(item => item.Name == Path.GetFileNameWithoutExtension(fontFile));
+                if (!HaveFamily)
                 {
                     privateFontCollection.AddFontFile(fontFile);
                     if (!fontList.Contains(privateFontCollection.Families[^1].Name))
-                    fontList.Add(privateFontCollection.Families[^1].Name);
+                        fontList.Add(privateFontCollection.Families[^1].Name);
                     fontStructureList.Add(new FontStructure() { FontName = privateFontCollection.Families[^1].Name, FilePath = fontFile });
                 }
             }
@@ -51,6 +52,7 @@ namespace cbhk_environment.SettingForm
             FontBox.ItemsSource = fontList;
             FontBox.SelectedIndex = 0;
             FontBox.SelectionChanged += FontBox_SelectionChanged;
+            CloseToTray.IsChecked = MainWindowProperties.CloseToTray;
         }
 
         /// <summary>
@@ -61,10 +63,9 @@ namespace cbhk_environment.SettingForm
         private void FontBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             string selectedFont = FontBox.SelectedItem.ToString();
-            FontFamily fontFamily = null; 
-            fontFamily = privateFontCollection.Families.Where(item=>item.Name == selectedFont).First();
-            if (fontFamily == null)
-                fontFamily = new(fontList[FontBox.SelectedIndex]);
+            FontFamily fontFamily = null;
+            fontFamily = privateFontCollection.Families.Where(item => item.Name == selectedFont).First();
+            fontFamily ??= new(fontList[FontBox.SelectedIndex]);
 
             try
             {
@@ -76,26 +77,11 @@ namespace cbhk_environment.SettingForm
             catch { }
         }
 
-        /// <summary>
-        /// 打开轮播图设置窗体
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SetLinks(object sender, RoutedEventArgs e)
+        private void CloseToTray_Click(object sender, RoutedEventArgs e)
         {
-            SetRoatationChart setRoatationChart = new();
-            if(setRoatationChart.ShowDialog() == true)
-            {
-
-            }
-        }
-
-        private void SettingForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            DialogResult = true;
+            MainWindowProperties.CloseToTray = (sender as CheckBox).IsChecked.Value;
         }
     }
-
 
     public class FontStructure
     {

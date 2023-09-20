@@ -275,6 +275,7 @@
                                     BorderThickness="1"
                                     Command="{Binding HeadThreeAxisCommand}"
                                     CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                                    PressedBackground="{StaticResource ButtonPressed}"
                                     Style="{DynamicResource IconTextButton}">
                                     <behaviors:Interaction.Triggers>
                                         <behaviors:EventTrigger EventName="MouseLeave">
@@ -1892,12 +1893,10 @@
                         <ScrollViewer
                             Height="180"
                             Margin="5,0"
+                            Background="#565A57"
                             HorizontalScrollBarVisibility="Auto"
                             RenderOptions.BitmapScalingMode="NearestNeighbor"
                             VerticalScrollBarVisibility="Auto">
-                            <ScrollViewer.Background>
-                                <ImageBrush ImageSource="/cbhk_environment;component/resources/common/images/Frame.png" />
-                            </ScrollViewer.Background>
                             <StackPanel>
                                 <behaviors:Interaction.Triggers>
                                     <behaviors:EventTrigger EventName="Loaded">

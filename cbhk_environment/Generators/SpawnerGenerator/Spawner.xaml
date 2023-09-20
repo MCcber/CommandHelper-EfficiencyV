@@ -142,12 +142,7 @@
             BorderThickness="0"
             ItemsSource="{Binding SpawnerPages}"
             SelectedIndex="0"
-            Style="{DynamicResource TabControlWithScrollBar}">
-            <behavior:Interaction.Triggers>
-                <behavior:EventTrigger EventName="Loaded">
-                    <behavior:CallMethodAction MethodName="SpawnerTabControl_Loaded" TargetObject="{Binding}" />
-                </behavior:EventTrigger>
-            </behavior:Interaction.Triggers>
-        </TabControl>
+            SelectedItem="{Binding SelectedItem}"
+            Style="{DynamicResource TabControlWithScrollBar}" />
     </Grid>
 </local_window:CommonWindow>

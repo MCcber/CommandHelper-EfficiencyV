@@ -92,41 +92,25 @@ namespace cbhk_environment.Generators.EntityGenerator
                 EntityIdTable = await dataCommunicator.GetData("SELECT * FROM Entities");
             });
             #endregion
-        }
-
-        /// <summary>
-        /// 载入预设实体数据
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void EntityLoaded(object sender, RoutedEventArgs e)
-        {
-            Dispatcher dispatcher = (sender as Window).Dispatcher;
-            object obj = new();
-            BindingOperations.EnableCollectionSynchronization(EntityPageList, obj);
-            await Task.Run(async () =>
+            #region 载入实体预设数据
+            EntityPageList.Add(new RichTabItems()
             {
-                await dispatcher.InvokeAsync(() =>
-                {
-                    EntityPageList.Add(new RichTabItems()
-                    {
-                        Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                        Header = "实体",
-                        FontWeight = FontWeights.Normal,
-                        IsContentSaved = true,
-                        BorderThickness = new(4, 3, 4, 0),
-                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                        SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                        LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                        RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                        TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                        SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                        SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                        SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
-                    });
-                    EntityPageList[0].Content = new EntityPages();
-                });
+                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
+                Header = "实体",
+                FontWeight = FontWeights.Normal,
+                IsContentSaved = true,
+                BorderThickness = new(4, 3, 4, 0),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
+                RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
+                TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
+                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
+                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
             });
+            EntityPageList[0].Content = new EntityPages();
+            #endregion
         }
 
         /// <summary>
@@ -170,7 +154,7 @@ namespace cbhk_environment.Generators.EntityGenerator
         /// <summary>
         /// 添加实体
         /// </summary>
-        private void AddEntityCommand()
+        public void AddEntityCommand()
         {
             RichTabItems richTabItems = new()
             {
@@ -193,6 +177,7 @@ namespace cbhk_environment.Generators.EntityGenerator
             if (EntityPageList.Count == 1)
             {
                 TabControl tabControl = richTabItems.FindParent<TabControl>();
+                if(tabControl != null)
                 tabControl.SelectedIndex = 0;
             }
         }

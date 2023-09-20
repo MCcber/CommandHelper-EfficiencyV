@@ -58,8 +58,7 @@ namespace cbhk_environment.WindowDictionaries
 
         private void CloseWindow(object sender, ExecutedRoutedEventArgs e)
         {
-            Close();
-            //SystemCommands.CloseWindow(this);
+            SystemCommands.CloseWindow(this);
         }
 
         private void MaximizeWindow(object sender, ExecutedRoutedEventArgs e)

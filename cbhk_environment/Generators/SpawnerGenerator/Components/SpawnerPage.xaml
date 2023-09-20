@@ -49,7 +49,7 @@
                 </CustomControls:IconTextButtons.ToolTip>
             </CustomControls:IconTextButtons>
             <TextBlock
-                Margin="5,0,0,0"
+                Margin="5,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Foreground="White"
@@ -395,6 +395,7 @@
                 Fresh="{Binding ClearSpawnPotential}"
                 FreshForeground="Black"
                 FreshName="清除"
+                IsExpanded="True"
                 Modify="{Binding AddSpawnPotential}"
                 ModifyForeground="Black"
                 ModifyName="添加"

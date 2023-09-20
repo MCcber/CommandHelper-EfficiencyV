@@ -1,0 +1,156 @@
+﻿<UserControl
+    x:Class="cbhk_environment.Generators.SignGenerator.Components.SignPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk_environment.Generators.SignGenerator.Components"
+    xmlns:localContext="clr-namespace:cbhk_environment.Generators.SignGenerator.Components"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowRight.png" />
+        <ImageBrush x:Key="SaveAll" ImageSource="/cbhk_environment;component/resources/common/images/Save.png" />
+    </UserControl.Resources>
+
+    <UserControl.DataContext>
+        <localContext:SignPageDataContext />
+    </UserControl.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" LastChildFill="False">
+            <CustomControls:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource RightArrow}"
+                BorderThickness="0"
+                Command="{Binding Run}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControls:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="F5:运行"
+                        Foreground="White" />
+                </CustomControls:IconTextButtons.ToolTip>
+            </CustomControls:IconTextButtons>
+            <TextBlock
+                Margin="5,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="版本" />
+            <ComboBox
+                Width="100"
+                ItemsSource="{Binding VersionSource}"
+                SelectedIndex="0"
+                SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+                Style="{DynamicResource TextComboBoxStyle}" />
+            <CustomControls:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource SaveAll}"
+                BorderThickness="0"
+                Command="{Binding SaveAll}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControls:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="保存"
+                        Foreground="White" />
+                </CustomControls:IconTextButtons.ToolTip>
+            </CustomControls:IconTextButtons>
+            <CustomControls:RadiusToggleButtons
+                Margin="5,0"
+                Foreground="White"
+                IsChecked="{Binding IsWaxed, Mode=OneWayToSource}"
+                SelectedToggleText="已裱"
+                Style="{DynamicResource RadiusToggleButton}"
+                ToggleHeight="25"
+                ToggleWidth="45"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0"
+                UnSelectedToggleText="未裱">
+                <CustomControls:RadiusToggleButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="已裱的告示牌无法编辑内容"
+                        Foreground="White" />
+                </CustomControls:RadiusToggleButtons.ToolTip>
+            </CustomControls:RadiusToggleButtons>
+            <CustomControls:RadiusToggleButtons
+                Margin="5,0"
+                Foreground="White"
+                IsChecked="{Binding IsBack, Mode=OneWayToSource}"
+                SelectedToggleText="反面"
+                Style="{DynamicResource RadiusToggleButton}"
+                ToggleHeight="25"
+                ToggleWidth="45"
+                UnSelectedToggleText="正面" />
+            <CustomControls:RadiusToggleButtons
+                Margin="5,0"
+                Foreground="White"
+                IsChecked="{Binding IsFrontGlowing, Mode=OneWayToSource}"
+                SelectedToggleText="正面发光"
+                Style="{DynamicResource RadiusToggleButton}"
+                ToggleHeight="25"
+                ToggleWidth="45"
+                UnSelectedToggleText="正面发光" />
+            <CustomControls:RadiusToggleButtons
+                Margin="5,0"
+                Foreground="White"
+                IsChecked="{Binding IsBackGlowing, Mode=OneWayToSource}"
+                SelectedToggleText="反面发光"
+                Style="{DynamicResource RadiusToggleButton}"
+                ToggleHeight="25"
+                ToggleWidth="45"
+                UnSelectedToggleText="反面发光" />
+            <CustomControls:RadiusToggleButtons
+                Margin="5,0"
+                Foreground="White"
+                IsChecked="{Binding ShowResult, Mode=OneWayToSource}"
+                SelectedToggleText="显示结果"
+                Style="{DynamicResource RadiusToggleButton}"
+                ToggleHeight="25"
+                ToggleWidth="45"
+                UnSelectedToggleText="隐藏结果" />
+        </DockPanel>
+        <Image
+            Grid.Row="1"
+            Grid.RowSpan="4"
+            Panel.ZIndex="0"
+            Source="{Binding SignPanelSource, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+            Stretch="Uniform" />
+        <RichTextBox
+            Grid.Row="1"
+            Margin="0,20,0,0"
+            Background="Transparent"
+            BorderThickness="0"
+            CaretBrush="White"
+            FontSize="45">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="Loaded">
+                    <behaviors:CallMethodAction MethodName="SignTextEditor_Loaded" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
+        </RichTextBox>
+    </Grid>
+</UserControl>

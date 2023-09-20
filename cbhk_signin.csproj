@@ -58,11 +58,6 @@
     <Page Remove="cbhk_environment\**" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="cb.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -101,9 +96,6 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.3</Version>
-    </PackageReference>
-    <PackageReference Include="NLog">
-      <Version>5.2.4</Version>
     </PackageReference>
     <PackageReference Include="Prism.Wpf">
       <Version>8.1.97</Version>

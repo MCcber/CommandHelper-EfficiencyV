@@ -1,5 +1,7 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using cbhk_environment.Generators.SignGenerator;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System;
 using System.Windows;
 
 namespace cbhk_environment.Distributor
@@ -20,6 +22,7 @@ namespace cbhk_environment.Distributor
         public RelayCommand StartVillagers { get; set; }
         public RelayCommand StartWrittenBook { get; set; }
         public RelayCommand StartDatapack { get; set; }
+        public RelayCommand StartSign { get; set; }
         #endregion
 
         public GeneratorFunction(MainWindow win)
@@ -37,6 +40,7 @@ namespace cbhk_environment.Distributor
             StartVillagers = new(StartVillagersGeneratorCommand);
             StartWrittenBook = new(StartWrittenBooksGeneratorCommand);
             StartDatapack = new(StartDatapacksGeneratorCommand);
+            StartSign = new(StartSignCommand);
             #endregion
         }
 
@@ -179,11 +183,21 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartDatapacksGeneratorCommand()
         {
-            Generators.DataPackGenerator.Datapack dataPack = new Generators.DataPackGenerator.Datapack(cbhk);
+            Generators.DataPackGenerator.Datapack dataPack = new(cbhk);
             SetCBHKState();
             dataPack.Topmost = true;
             dataPack.Show();
             dataPack.Topmost = false;
+        }
+
+        private void StartSignCommand()
+        {
+            Generators.SignGenerator.Sign sign = new();
+            SignDataContext context = sign.DataContext as SignDataContext;
+            context.home = cbhk;
+            SetCBHKState();
+            sign.Show();
+            sign.Focus();
         }
     }
 }

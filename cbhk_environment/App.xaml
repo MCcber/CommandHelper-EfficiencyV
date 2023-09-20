@@ -46,6 +46,7 @@
                 <ResourceDictionary Source="/cbhk_environment;component/ControlsDictionaries/TabControlWithScrollBar.xaml" />
                 <ResourceDictionary Source="/cbhk_environment;component/ControlsDictionaries/NumberBox.xaml" />
                 <ResourceDictionary Source="/cbhk_environment;component/Generators/DataPackGenerator/Dictionaries/Icons.xaml" />
+                <ResourceDictionary Source="/cbhk_environment;component/resources/cbhk_form/dictionary/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

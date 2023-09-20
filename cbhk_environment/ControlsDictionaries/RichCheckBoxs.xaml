@@ -60,7 +60,7 @@
                             Margin="{TemplateBinding ImageMargin}"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            RenderOptions.BitmapScalingMode="HighQuality"
+                            RenderOptions.BitmapScalingMode="NearestNeighbor"
                             RenderOptions.ClearTypeHint="Enabled"
                             Source="{TemplateBinding ContentImage}"
                             Visibility="{TemplateBinding ImageVisibility}" />

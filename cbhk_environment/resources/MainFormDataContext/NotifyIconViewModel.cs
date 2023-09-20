@@ -23,22 +23,20 @@ namespace cbhk_environment.resources.MainFormDataContext
         public NotifyIconViewModel(MainWindow window)
         {
             win = window;
-            ShowWindowCommand = new RelayCommand(show_window_command);
-            ExitApplicationCommand = new RelayCommand(exit_application_command);
+            ShowWindowCommand = new RelayCommand(showWindowCommand);
+            ExitApplicationCommand = new RelayCommand(exitApplicationCommand);
         }
 
-        private void show_window_command()
+        private void showWindowCommand()
         {
             win.ShowInTaskbar = true;
-            win.Opacity = 1.0;
             win.WindowState = WindowState.Normal;
             win.Topmost = true;
             win.Show();
-            win.Focus();
             win.Topmost = false;
         }
 
-        private void exit_application_command()
+        private void exitApplicationCommand()
         {
             win.taskbarButton.Visibility = Visibility.Collapsed;
             System.Environment.Exit(0);

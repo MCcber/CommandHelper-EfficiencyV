@@ -232,7 +232,7 @@ namespace cbhk_environment.Generators.TagGenerator
                 #region 物品
                 DataTable ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
                 string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                Dictionary<string, TagItemTemplate> ItemData = new();
+                Dictionary<string, TagItemTemplate> ItemData = [];
                 foreach (DataRow item in ItemTable.Rows)
                 {
                     string id = item["id"].ToString();
