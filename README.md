@@ -6,7 +6,7 @@ This is a software for the Windows platform that is about to be developed. The c
 
 # CommandHelper-EfficiencyV
 
-![Home](https://github.com/MCcber/CommandHelper-EfficiencyV/assets/45808036/bf6328b7-7706-4d2d-b7a2-5945fb4356ae)
+![Home](https://github.com/MCcber/CommandHelper-EfficiencyV/assets/45808036/dda6f413-7930-45ba-ad67-7090e48362cd)
 
 
 ![enter image description here](https://s1.ax1x.com/2023/08/29/pPdnQrq.png)
