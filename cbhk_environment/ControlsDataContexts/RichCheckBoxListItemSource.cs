@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.ControlsDataContexts
+namespace cbhk.ControlsDataContexts
 {
     public class RichCheckBoxListItemSource: ObservableObject
     {

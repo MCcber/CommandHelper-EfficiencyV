@@ -1,7 +1,7 @@
 ﻿using System.Windows.Controls;
 
 
-namespace cbhk_environment.CustomControls.TimeLines
+namespace cbhk.CustomControls.TimeLines
 {
     /// <summary>
     /// TimelineMark.xaml 的交互逻辑

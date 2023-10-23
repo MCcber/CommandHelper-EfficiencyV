@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace cbhk_environment.ControlsDataContexts
+namespace cbhk.ControlsDataContexts
 {
     public class ConverterIntToString : IValueConverter
     {

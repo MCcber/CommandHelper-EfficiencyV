@@ -1,12 +1,12 @@
 ﻿<UserControl
-    x:Class="cbhk_environment.Generators.ItemGenerator.Components.ItemPages"
+    x:Class="cbhk.Generators.ItemGenerator.Components.ItemPages"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
-    xmlns:Special="clr-namespace:cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT"
+    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:Special="clr-namespace:cbhk.Generators.ItemGenerator.Components.SpecialNBT"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk_environment.Generators.ItemGenerator.Components"
+    xmlns:local="clr-namespace:cbhk.Generators.ItemGenerator.Components"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -28,10 +28,10 @@
         <Geometry x:Key="DeleteIcon">
             M10 104 c0 -4 10 -15 22 -25 l21 -19 -23 -20 c-13 -11 -20 -23 -17 -27 4 -3 16 4 27 17 l20 23 20 -23 c11 -13 23 -20 27 -17 3 4 -4 16 -17 27 l-23 20 23 20 c13 11 20 23 17 27 -4 3 -16 -4 -27 -17 l-20 -23 -19 21 c-18 22 -31 28 -31 16z
         </Geometry>
-        <ImageBrush x:Key="Save" ImageSource="/cbhk_environment;component/resources/common/images/Save.png" />
-        <ImageBrush x:Key="IssueIcon" ImageSource="/cbhk_environment;component/resources/common/images/Issue.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowRight.png" />
+        <ImageBrush x:Key="Save" ImageSource="/cbhk;component/resources/common/images/Save.png" />
+        <ImageBrush x:Key="IssueIcon" ImageSource="/cbhk;component/resources/common/images/Issue.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowRight.png" />
     </UserControl.Resources>
 
     <UserControl.InputBindings>
@@ -86,6 +86,7 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 FontSize="15"
+                IsReadOnly="True"
                 ItemsSource="{Binding VersionSource, IsAsync=True}"
                 SelectedIndex="1"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Drawing;
 using System.Drawing.Text;
 using System.IO;
@@ -8,7 +9,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
     /// <summary>
     /// Settings.xaml 的交互逻辑

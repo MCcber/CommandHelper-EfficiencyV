@@ -1,8 +1,8 @@
-﻿using cbhk_environment.ControlsDataContexts;
-using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.GenerateResultDisplayer;
+﻿using cbhk.ControlsDataContexts;
+using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.GenerateResultDisplayer;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -23,9 +23,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.EntityGenerator.Components
+namespace cbhk.Generators.EntityGenerator.Components
 {
-    public partial class entityPagesDataContext : ObservableObject
+    public partial class EntityPagesDataContext : ObservableObject
     {
         #region 运行指令、保存等指令
         public RelayCommand RunCommand { get; set; }
@@ -287,9 +287,9 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
         #endregion
 
         #region 路径
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconEntities.png";
-        string buttonNormalImage = "pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonNormal.png";
-        string buttonPressedImage = "pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonPressed.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconEntities.png";
+        string buttonNormalImage = "pack://application:,,,/cbhk;component/resources/common/images/ButtonNormal.png";
+        string buttonPressedImage = "pack://application:,,,/cbhk;component/resources/common/images/ButtonPressed.png";
         ImageBrush buttonNormalBrush;
         ImageBrush buttonPressedBrush;
         string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Entity\\data\\";
@@ -360,7 +360,7 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
         public string Result { get; set; }
         #endregion
 
-        public entityPagesDataContext()
+        public EntityPagesDataContext()
         {
             #region 连接指令
             RunCommand = new RelayCommand(run_command);
@@ -411,7 +411,7 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
             if (currentEntityPage != null) return;
             currentEntityPage = sender as EntityPages;
             Window window = Window.GetWindow(currentEntityPage);
-            entity_datacontext context = window.DataContext as entity_datacontext;
+            EntityDataContext context = window.DataContext as EntityDataContext;
             string SpecialData = File.ReadAllText(SpecialNBTStructureFilePath);
             JArray specialArray = JArray.Parse(SpecialData);
             string entityImageFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";

@@ -2,7 +2,7 @@
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
     public class RepeatButtonWithBackground:RepeatButton
     {

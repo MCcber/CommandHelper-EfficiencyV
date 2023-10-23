@@ -1,10 +1,8 @@
-﻿using cbhk_environment.Generators.SignGenerator;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
 using System.Windows;
 
-namespace cbhk_environment.Distributor
+namespace cbhk.Distributor
 {
     public class GeneratorFunction: ObservableObject
     {
@@ -49,7 +47,7 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void SetCBHKState()
         {
-            cbhk.WindowState = MainWindow.cbhk_visibility switch
+            cbhk.WindowState = MainWindow.cbhkVisibility switch
             {
                 MainWindowProperties.Visibility.MinState => WindowState.Minimized,
                 MainWindowProperties.Visibility.KeepState => WindowState.Normal,
@@ -63,11 +61,12 @@ namespace cbhk_environment.Distributor
         /// </summary>
         public void StartOnlyOneCommandGeneratorCommand()
         {
-            Generators.OnlyOneCommandGenerator.OnlyOneCommand ooc_window = new(cbhk);
+            Generators.OnlyOneCommandGenerator.OnlyOneCommand ooc = new();
+            Generators.OnlyOneCommandGenerator.OnlyOneCommandDataContext context = ooc.DataContext as Generators.OnlyOneCommandGenerator.OnlyOneCommandDataContext;
             SetCBHKState();
-            ooc_window.Topmost = true;
-            ooc_window.Show();
-            ooc_window.Topmost = false;
+            context.home = cbhk;
+            ooc.Show();
+            ooc.Focus();
         }
 
         /// <summary>
@@ -75,11 +74,12 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartSpawnerGeneratorCommand()
         {
-            Generators.SpawnerGenerator.Spawner s_window = new Generators.SpawnerGenerator.Spawner(cbhk);
+            Generators.SpawnerGenerator.Spawner spawner = new();
             SetCBHKState();
-            s_window.Topmost = true;
-            s_window.Show();
-            s_window.Topmost = false;
+            Generators.SpawnerGenerator.SpawnerDataContext context = spawner.DataContext as Generators.SpawnerGenerator.SpawnerDataContext;
+            context.home = cbhk;
+            spawner.Show();
+            spawner.Focus();
         }
 
         /// <summary>
@@ -87,11 +87,12 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartArmorStandsGeneratorCommand()
         {
-            Generators.ArmorStandGenerator.ArmorStand as_window = new Generators.ArmorStandGenerator.ArmorStand(cbhk);
+            Generators.ArmorStandGenerator.ArmorStand armorStand = new();
+            Generators.ArmorStandGenerator.ArmorStandDataContext context = armorStand.DataContext as Generators.ArmorStandGenerator.ArmorStandDataContext;
+            context.home = cbhk;
             SetCBHKState();
-            as_window.Topmost = true;
-            as_window.Show();
-            as_window.Topmost = false;
+            armorStand.Show();
+            armorStand.Focus();
         }
 
         /// <summary>
@@ -99,11 +100,12 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartTagsGeneratorCommand()
         {
-            Generators.TagGenerator.Tag tag_window = new Generators.TagGenerator.Tag(cbhk);
+            Generators.TagGenerator.Tag tag = new();
+            Generators.TagGenerator.TagDataContext context = tag.DataContext as Generators.TagGenerator.TagDataContext;
+            context.home = cbhk;
             SetCBHKState();
-            tag_window.Topmost = true;
-            tag_window.Show();
-            tag_window.Topmost = false;
+            tag.Show();
+            tag.Focus();
         }
 
         /// <summary>
@@ -111,11 +113,12 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartItemsGeneratorCommand()
         {
-            Generators.ItemGenerator.Item item_window = new Generators.ItemGenerator.Item(cbhk);
+            Generators.ItemGenerator.Item item = new();
+            Generators.ItemGenerator.ItemDataContext context = item.DataContext as Generators.ItemGenerator.ItemDataContext;
+            context.home = cbhk;
             SetCBHKState();
-            item_window.Topmost = true;
-            item_window.Show();
-            item_window.Topmost = false;
+            item.Show();
+            item.Focus();
         }
 
         /// <summary>
@@ -123,11 +126,12 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartEntitiesGeneratorCommand()
         {
-            Generators.EntityGenerator.Entity entity_window = new(cbhk);
+            Generators.EntityGenerator.Entity entity = new();
+            Generators.EntityGenerator.EntityDataContext context = entity.DataContext as Generators.EntityGenerator.EntityDataContext;
+            context.home = cbhk;
             SetCBHKState();
-            entity_window.Topmost = true;
-            entity_window.Show();
-            entity_window.Topmost = false;
+            entity.Show();
+            entity.Focus();
         }
 
         /// <summary>
@@ -135,11 +139,12 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartFireworksGeneratorCommand()
         {
-            Generators.FireworkRocketGenerator.FireworkRocket fireworkRocket = new Generators.FireworkRocketGenerator.FireworkRocket(cbhk);
+            Generators.FireworkRocketGenerator.FireworkRocket fireworkRocket = new();
+            Generators.FireworkRocketGenerator.FireworkRocketDataContext context = fireworkRocket.DataContext as Generators.FireworkRocketGenerator.FireworkRocketDataContext;
+            context.home = cbhk;
             SetCBHKState();
-            fireworkRocket.Topmost = true;
             fireworkRocket.Show();
-            fireworkRocket.Topmost = false;
+            fireworkRocket.Focus();
         }
 
         /// <summary>
@@ -147,11 +152,12 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartRecipesGeneratorCommand()
         {
-            Generators.RecipeGenerator.Recipe recipe = new Generators.RecipeGenerator.Recipe(cbhk);
+            Generators.RecipeGenerator.Recipe recipe = new();
+            Generators.RecipeGenerator.RecipeDataContext context = recipe.DataContext as Generators.RecipeGenerator.RecipeDataContext;
+            context.home = cbhk;
             SetCBHKState();
-            recipe.Topmost = true;
             recipe.Show();
-            recipe.Topmost = false;
+            recipe.Focus();
         }
 
         /// <summary>
@@ -159,11 +165,12 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartVillagersGeneratorCommand()
         {
-            Generators.VillagerGenerator.Villager villager = new Generators.VillagerGenerator.Villager(cbhk);
+            Generators.VillagerGenerator.Villager villager = new();
+            Generators.VillagerGenerator.VillagerDataContext context = villager.DataContext as Generators.VillagerGenerator.VillagerDataContext;
+            context.home = cbhk;
             SetCBHKState();
-            villager.Topmost = true;
             villager.Show();
-            villager.Topmost = false;
+            villager.Focus();
         }
 
         /// <summary>
@@ -171,11 +178,12 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartWrittenBooksGeneratorCommand()
         {
-            Generators.WrittenBookGenerator.WrittenBook writtenBook = new Generators.WrittenBookGenerator.WrittenBook(cbhk);
+            Generators.WrittenBookGenerator.WrittenBook writtenBook = new();
+            Generators.WrittenBookGenerator.WrittenBookDataContext context = writtenBook.DataContext as Generators.WrittenBookGenerator.WrittenBookDataContext;
+            context.home = cbhk;
             SetCBHKState();
-            writtenBook.Topmost = true;
             writtenBook.Show();
-            writtenBook.Topmost = false;
+            writtenBook.Focus();
         }
 
         /// <summary>
@@ -183,21 +191,50 @@ namespace cbhk_environment.Distributor
         /// </summary>
         private void StartDatapacksGeneratorCommand()
         {
-            Generators.DataPackGenerator.Datapack dataPack = new(cbhk);
+            Generators.DataPackGenerator.Datapack dataPack = new();
             SetCBHKState();
-            dataPack.Topmost = true;
             dataPack.Show();
-            dataPack.Topmost = false;
+            dataPack.Focus();
         }
 
         private void StartSignCommand()
         {
             Generators.SignGenerator.Sign sign = new();
-            SignDataContext context = sign.DataContext as SignDataContext;
+            Generators.SignGenerator.SignDataContext context = sign.DataContext as Generators.SignGenerator.SignDataContext;
             context.home = cbhk;
             SetCBHKState();
             sign.Show();
             sign.Focus();
+        }
+    }
+
+    public static class GeneratorClickEvent
+    {
+        /// <summary>
+        /// 为生成器按钮分配方法
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="function"></param>
+        /// <returns></returns>
+        public static RelayCommand Set(string id, GeneratorFunction function)
+        {
+            RelayCommand result = id switch
+            {
+                "ooc" => function.StartOoc,
+                "datapack" => function.StartDatapack,
+                "armorstand" => function.StartArmorStand,
+                "writtenbook" => function.StartWrittenBook,
+                "spawners" => function.StartSpawner,
+                "recipes" => function.StartRecipes,
+                "villagers" => function.StartVillagers,
+                "tags" => function.StartTags,
+                "items" => function.StartItems,
+                "fireworks" => function.StartFireworks,
+                "entities" => function.StartEntities,
+                "signs" => function.StartSign,
+                _ => null
+            };
+            return result;
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
     public class RichToolTip:ToolTip
     {

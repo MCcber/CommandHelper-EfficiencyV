@@ -1,5 +1,5 @@
-﻿using cbhk_environment.GeneralTools.Displayer;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.GeneralTools.Displayer;
+using cbhk.GeneralTools;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -16,9 +16,9 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Data;
-using cbhk_environment.GeneralTools.MessageTip;
+using cbhk.GeneralTools.MessageTip;
 
-namespace cbhk_environment.Generators.RecipeGenerator.Components
+namespace cbhk.Generators.RecipeGenerator.Components
 {
     /// <summary>
     /// Smoker.xaml 的交互逻辑

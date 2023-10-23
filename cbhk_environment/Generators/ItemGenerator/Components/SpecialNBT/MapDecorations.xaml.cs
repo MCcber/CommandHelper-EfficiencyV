@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Controls;
 
-namespace cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT
+namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// MapDecorations.xaml 的交互逻辑

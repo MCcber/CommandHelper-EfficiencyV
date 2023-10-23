@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.CustomControls.ColorPickers.Media
+namespace cbhk.CustomControls.ColorPickers.Media
 {
     /// <summary>
     /// 实用工具

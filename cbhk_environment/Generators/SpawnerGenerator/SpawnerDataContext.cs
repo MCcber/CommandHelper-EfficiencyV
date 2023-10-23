@@ -1,9 +1,9 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.GenerateResultDisplayer;
-using cbhk_environment.Generators.SpawnerGenerator.Components;
-using cbhk_environment.WindowDictionaries;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.GenerateResultDisplayer;
+using cbhk.Generators.SpawnerGenerator.Components;
+using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -14,12 +14,11 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace cbhk_environment.Generators.SpawnerGenerator
+namespace cbhk.Generators.SpawnerGenerator
 {
-    public class spawner_datacontext: ObservableObject
+    public class SpawnerDataContext: ObservableObject
     {
         #region 返回和运行等指令
         public RelayCommand<CommonWindow> Return { get; set; }
@@ -55,6 +54,10 @@ namespace cbhk_environment.Generators.SpawnerGenerator
         #endregion
 
         #region 字段与引用
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public Window home = null;
         //刷怪笼标签页集合
         public ObservableCollection<RichTabItems> SpawnerPages { get; set; } = new() { new RichTabItems() { Header = "刷怪笼",
                 IsContentSaved = true,
@@ -71,15 +74,20 @@ namespace cbhk_environment.Generators.SpawnerGenerator
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,} };
 
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconSpawner.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconSpawner.png";
 
-        /// <summary>
-        /// 已选中的刷怪笼
-        /// </summary>
-        public RichTabItems SelectedItem { get; set; }
+        #region 已选中的刷怪笼
+        private RichTabItems selectedItem = null;
+        public RichTabItems SelectedItem
+        {
+            get => selectedItem;
+            set => SetProperty(ref selectedItem,value);
+        }
         #endregion
 
-        public spawner_datacontext()
+        #endregion
+
+        public SpawnerDataContext()
         {
             #region 绑定指令
             Return = new RelayCommand<CommonWindow>(return_command);
@@ -101,7 +109,7 @@ namespace cbhk_environment.Generators.SpawnerGenerator
         /// </summary>
         private void AddSpawnerCommand()
         {
-            SpawnerPages.Add(new RichTabItems()
+            RichTabItems richTabItems = new()
             {
                 Header = "刷怪笼",
                 Content = new SpawnerPage() { FontWeight = FontWeights.Normal },
@@ -117,8 +125,10 @@ namespace cbhk_environment.Generators.SpawnerGenerator
                 SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
-            });
-            SelectedItem = SpawnerPages[^1];
+            };
+            SpawnerPages.Add(richTabItems);
+            if(SpawnerPages.Count == 1)
+            SelectedItem = richTabItems;
         }
 
         /// <summary>
@@ -166,11 +176,10 @@ namespace cbhk_environment.Generators.SpawnerGenerator
         /// <param name="win"></param>
         private void return_command(CommonWindow win)
         {
-            Spawner.cbhk.Topmost = true;
-            Spawner.cbhk.WindowState = WindowState.Normal;
-            Spawner.cbhk.Show();
-            Spawner.cbhk.Topmost = false;
-            Spawner.cbhk.ShowInTaskbar = true;
+            home.WindowState = WindowState.Normal;
+            home.Show();
+            home.ShowInTaskbar = true;
+            home.Focus();
             win.Close();
         }
 
@@ -185,7 +194,7 @@ namespace cbhk_environment.Generators.SpawnerGenerator
                 foreach (RichTabItems item in SpawnerPages)
                 {
                     SpawnerPage spawnerPage = item.Content as SpawnerPage;
-                    spawnerPageDataContext context = spawnerPage.DataContext as spawnerPageDataContext;
+                    SpawnerPageDataContext context = spawnerPage.DataContext as SpawnerPageDataContext;
                     context.ShowResult = false;
                     context.run_command();
                     Result.Append(context.Result + "\r\n");
@@ -218,11 +227,14 @@ namespace cbhk_environment.Generators.SpawnerGenerator
             {
                 foreach (RichTabItems item in SpawnerPages)
                 {
-                    SpawnerPage spawnerPage = item.Content as SpawnerPage;
-                    spawnerPageDataContext context = spawnerPage.DataContext as spawnerPageDataContext;
-                    context.ShowResult = false;
-                    context.run_command();
-                    Results.Add(context.Result);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        SpawnerPage spawnerPage = item.Content as SpawnerPage;
+                        SpawnerPageDataContext context = spawnerPage.DataContext as SpawnerPageDataContext;
+                        context.ShowResult = false;
+                        context.run_command();
+                        Results.Add(context.Result);
+                    });
                 }
 
                 System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new()

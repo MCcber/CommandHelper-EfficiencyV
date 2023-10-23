@@ -25,6 +25,7 @@
                         <ScrollViewer
                             Focusable="false"
                             VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
                             VirtualizingPanel.VirtualizationMode="Recycling">
                             <ItemsPresenter
                                 x:Name="itemPresenter"

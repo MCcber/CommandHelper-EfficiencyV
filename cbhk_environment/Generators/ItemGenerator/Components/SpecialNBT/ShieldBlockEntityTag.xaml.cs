@@ -1,4 +1,4 @@
-﻿using cbhk_environment.CustomControls;
+﻿using cbhk.CustomControls;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT
+namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// ShieldBlockEntityTag.xaml 的交互逻辑

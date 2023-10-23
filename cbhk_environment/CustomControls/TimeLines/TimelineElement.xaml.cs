@@ -1,7 +1,7 @@
 ﻿using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace cbhk_environment.CustomControls.TimeLines
+namespace cbhk.CustomControls.TimeLines
 {
     /// <summary>
     /// TimelineElement.xaml 的交互逻辑

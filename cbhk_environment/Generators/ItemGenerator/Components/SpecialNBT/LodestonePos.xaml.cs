@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT
+namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// LodestonePos.xaml 的交互逻辑

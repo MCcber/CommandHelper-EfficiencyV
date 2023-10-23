@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     public class ConvertJsonToTreeView
     {

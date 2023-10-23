@@ -1,6 +1,6 @@
-﻿using cbhk_environment.ControlsDataContexts;
-using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.ControlsDataContexts;
+using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 
-namespace cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT
+namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
 {
     public class ComponentEvents
     {
@@ -604,7 +604,7 @@ namespace cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT
             StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
             if(BlockTable == null)
             {
-                item_datacontext context = Window.GetWindow(accordion).DataContext as item_datacontext;
+                ItemDataContext context = Window.GetWindow(accordion).DataContext as ItemDataContext;
                 BlockTable = context.BlockTable;
             }
             string currentID;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.ControlsDataContexts
+namespace cbhk.ControlsDataContexts
 {
     public static class NumberBoxInputLimit
     {

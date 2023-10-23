@@ -1,5 +1,5 @@
-﻿using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.Displayer;
+﻿using cbhk.GeneralTools;
+using cbhk.GeneralTools.Displayer;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Data;
@@ -10,7 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.VillagerGenerator.Components
+namespace cbhk.Generators.VillagerGenerator.Components
 {
     /// <summary>
     /// TransactionItems.xaml 的交互逻辑
@@ -186,7 +186,7 @@ namespace cbhk_environment.Generators.VillagerGenerator.Components
         /// <summary>
         /// 空图像路径
         /// </summary>
-        string emptyIcon = "pack://application:,,,/cbhk_environment;component/resources/cbhk_form/images/empty.png";
+        string emptyIcon = "pack://application:,,,/cbhk;component/resources/cbhk_form/images/empty.png";
 
         DataTable ItemTable = null;
 
@@ -202,7 +202,7 @@ namespace cbhk_environment.Generators.VillagerGenerator.Components
         /// <param name="e"></param>
         private void TransactionItems_Loaded(object sender, RoutedEventArgs e)
         {
-            villager_datacontext context = Window.GetWindow(this).DataContext as villager_datacontext;
+            VillagerDataContext context = Window.GetWindow(this).DataContext as VillagerDataContext;
             ItemTable = context.ItemTable;
         }
 
@@ -321,7 +321,7 @@ namespace cbhk_environment.Generators.VillagerGenerator.Components
         {
             Button iconTextButtons = sender as Button;
             TransactionItems template_parent = iconTextButtons.FindParent<TransactionItems>();
-            villager_datacontext context = (Window.GetWindow(iconTextButtons) as Villager).DataContext as villager_datacontext;
+            VillagerDataContext context = (Window.GetWindow(iconTextButtons) as Villager).DataContext as VillagerDataContext;
             context.transactionItems.Remove(template_parent);
         }
 
@@ -332,7 +332,7 @@ namespace cbhk_environment.Generators.VillagerGenerator.Components
         /// <param name="e"></param>
         private void Edit_Click(object sender, RoutedEventArgs e)
         {
-            villager_datacontext context = Window.GetWindow(sender as Button).DataContext as villager_datacontext;
+            VillagerDataContext context = Window.GetWindow(sender as Button).DataContext as VillagerDataContext;
             context.TransactionDataGridVisibility = Visibility.Visible;
             context.BuyItemIcon = Buy.Source;
             context.BuyBItemIcon = BuyB.Source;

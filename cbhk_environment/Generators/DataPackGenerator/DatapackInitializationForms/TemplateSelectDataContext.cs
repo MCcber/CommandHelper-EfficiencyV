@@ -1,10 +1,12 @@
-﻿using cbhk_environment.Generators.DataPackGenerator.Components.TemplateSelectPage;
+﻿using cbhk.GeneralTools;
+using cbhk.Generators.DataPackGenerator.Components.TemplateSelectPage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,9 +19,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 
-namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationForms
+namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
 {
-    public class TemplateSelectDataContext: ObservableObject
+    public partial class TemplateSelectDataContext: ObservableObject
     {
         #region 字段
         /// <summary>
@@ -33,15 +35,15 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         /// <summary>
         /// 解决方案模板数组对象
         /// </summary>
-        private JArray SolutionTemplateArray = new();
+        private JArray SolutionTemplateArray = [];
         /// <summary>
         /// 近期使用的模板存放路径
         /// </summary>
         private string RecentTemplateDataFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Datapack\\data\\RecentTemplates";
         /// <summary>
-        /// 包版本映射表路径
+        /// 数据库文件路径
         /// </summary>
-        private string PackVersionMapFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Datapack\\data\\VersionList.ini";
+        private string databaseFilePath = AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db";
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
         private SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#3D3D3D"));
@@ -49,16 +51,14 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         /// 载入完毕
         /// </summary>
         private bool Loaded = false;
-        #endregion
-
         /// <summary>
         /// 近期使用的解决方案模板数据源
         /// </summary>
-        public ObservableCollection<RecentSolutionTemplateItems> RecentSolutionTemplateList { get; set; } = new();
+        public ObservableCollection<RecentSolutionTemplateItems> RecentSolutionTemplateList { get; set; } = [];
         /// <summary>
         /// 包模板数据源
         /// </summary>
-        public ObservableCollection<SolutionTemplateItems> SolutionTemplateList { get; set; } = new();
+        public ObservableCollection<SolutionTemplateItems> SolutionTemplateList { get; set; } = [];
         /// <summary>
         /// 解决方案视图集合对象
         /// </summary>
@@ -66,15 +66,19 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         /// <summary>
         /// 存放版本列表
         /// </summary>
-        public ObservableCollection<string> VersionList { get; set; } = new();
+        public ObservableCollection<string> VersionList { get; set; } = [];
         /// <summary>
         /// 存放模板类型列表
         /// </summary>
-        public ObservableCollection<string> DeveloperNameList { get; set; } = new();
+        public ObservableCollection<string> DeveloperNameList { get; set; } = [];
         /// <summary>
         /// 包功能类型列表
         /// </summary>
-        public ObservableCollection<string> FunctionTypeList { get; set; } = new();
+        public ObservableCollection<string> FunctionTypeList { get; set; } = [];
+
+        [GeneratedRegex(@"(?<=包版本-)[0-9]+")]
+        private static partial Regex packVersionComparer();
+        #endregion
 
         #region 存储已选择的版本
         private string selectedVersion = "";
@@ -192,9 +196,9 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         {
             await Task.Run(() =>
             {
-                dataPack.Dispatcher.InvokeAsync(() =>
+                dataPack.Dispatcher.InvokeAsync(async () =>
                 {
-                    datapack_datacontext context = dataPack.DataContext as datapack_datacontext;
+                    DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
                     SolutionTemplateSource = context.templateSelectPage.FindResource("SolutionTemplateSource") as CollectionViewSource;
                     #region 清除数据
                     VersionList.Clear();
@@ -206,11 +210,14 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
                     FunctionTypeList.Add("全部");
                     #endregion
                     #region 载入版本
-                    if (File.Exists(PackVersionMapFilePath))
+                    if (File.Exists(databaseFilePath))
                     {
-                        string[] versions = File.ReadAllLines(PackVersionMapFilePath);
-                        for (int i = versions.Length - 1; i >= 0; i--)
-                            VersionList.Add(versions[i]);
+                        DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
+                        DataTable versionTable = await dataCommunicator.GetData("SELECT * FROM DatapackVersions");
+                        for (int i = versionTable.Rows.Count - 1; i >= 0 ; i--)
+                        {
+                            VersionList.Add(versionTable.Rows[i]["value"].ToString());
+                        }
                     }
                     #endregion
                     #region 载入解决方案模板
@@ -250,9 +257,9 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
                                         solutionTemplateItems.Description.Text = description.ToString();
                                     string versionData = "";
                                     if (data.SelectToken("Version") is JToken version)
-                                        versionData += version.ToString();
+                                        versionData += "包版本-"+ version.ToString();
                                     if (data.SelectToken("SolutionVersion") is JToken solutionVersion)
-                                        versionData += "-" + solutionVersion.ToString();
+                                        versionData += " 方案版本-" + solutionVersion.ToString();
                                     solutionTemplateItems.Version.Text = versionData;
                                     if (data.SelectToken("Developer") is JToken developer)
                                     {
@@ -313,7 +320,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         /// </summary>
         private async Task NavigationToGenerateSetupPage()
         {
-            datapack_datacontext context = dataPack.DataContext as datapack_datacontext;
+            DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
             await dataPack.Dispatcher.InvokeAsync(() =>
             {
                 context.datapackGenerateSetupPage ??= new();
@@ -341,7 +348,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         /// <param name="page"></param>
         private void TemplateLastStepCommand(Page page)
         {
-            datapack_datacontext context = dataPack.DataContext as datapack_datacontext;
+            DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
             NavigationService.GetNavigationService(context.frame).Navigate(context.homePage);
         }
 
@@ -365,7 +372,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
             SolutionTemplateItems solutionTemplateItems = e.Item as SolutionTemplateItems;
             bool name = false;
             bool description = false;
-            bool version;
+            bool version = false;
             string versionValue = RealSelectedVersion + "";
             string currentVersion = solutionTemplateItems.Version.Text;
             if (currentVersion == "Version") return;
@@ -374,9 +381,10 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
                 name = solutionTemplateItems.SolutionName.Text.StartsWith(SearchText) || solutionTemplateItems.SolutionName.Text.Contains(SearchText);
                 description = solutionTemplateItems.Description.Text.StartsWith(SearchText) || solutionTemplateItems.Description.Text.Contains(SearchText);
             }
-            version = versionValue == currentVersion[..currentVersion.IndexOf('-')] || SelectedVersion == "全部";
+            //if(solutionTemplateItems.CurrentType == SolutionTemplateItems.ItemTypes.Datapack)
+            version = versionValue == packVersionComparer().Match(currentVersion).ToString() || SelectedVersion == "全部";
             string developerValue = solutionTemplateItems.Developer.Text;
-            List<string> typeValue = new();
+            List<string> typeValue = [];
             foreach (Border item in solutionTemplateItems.TypePanel.Children)
             {
                 if (item.Child is TextBlock textBlock)
@@ -384,11 +392,11 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
             }
             bool developer = false;
             if(SelectedDeveloperName != null)
-            developer = SelectedDeveloperName == "全部" ? true : SelectedDeveloperName.StartsWith(developerValue) || SelectedDeveloperName.Contains(developerValue);
+            developer = SelectedDeveloperName == "全部" || SelectedDeveloperName.StartsWith(developerValue) || SelectedDeveloperName.Contains(developerValue);
             bool type = false;
             if(SelectedFunctionType != null)
-            type = SelectedFunctionType == "全部" ? true : typeValue.Contains(SelectedFunctionType);
-            e.Accepted = SearchText.Length > 0?((name || description) && version && developer && type) : (name || description || (version && developer && type));
+            type = SelectedFunctionType == "全部" || typeValue.Contains(SelectedFunctionType);
+            e.Accepted = SearchText.Length > 0?((name || description) && version && developer && type) : version && developer && type;
         }
 
         /// <summary>

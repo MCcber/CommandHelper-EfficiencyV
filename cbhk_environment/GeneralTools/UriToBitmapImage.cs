@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     public class UriToBitmapImage : IValueConverter
     {

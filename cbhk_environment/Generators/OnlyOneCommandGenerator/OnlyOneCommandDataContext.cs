@@ -1,5 +1,5 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.WindowDictionaries;
+﻿using cbhk.CustomControls;
+using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Syncfusion.Windows.Edit;
@@ -8,7 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Cyotek.Data.Nbt;
 using System.Collections.ObjectModel;
-using cbhk_environment.GeneralTools.MessageTip;
+using cbhk.GeneralTools.MessageTip;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Text;
@@ -18,9 +18,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System;
 
-namespace cbhk_environment.Generators.OnlyOneCommandGenerator
+namespace cbhk.Generators.OnlyOneCommandGenerator
 {
-    public partial class only_one_command_datacontext : ObservableObject
+    public partial class OnlyOneCommandDataContext : ObservableObject
     {
         #region 生成、返回等命令
         /// <summary>
@@ -55,7 +55,7 @@ namespace cbhk_environment.Generators.OnlyOneCommandGenerator
         #endregion
 
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconCommandBlock.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconCommandBlock.png";
 
         SolidColorBrush tranparentBrush = Brushes.Transparent;
         SolidColorBrush textBrush = Brushes.White;
@@ -74,6 +74,11 @@ namespace cbhk_environment.Generators.OnlyOneCommandGenerator
         /// OOC标签页数据源
         /// </summary>
         public ObservableCollection<RichTabItems> OocTabSource { get; set; } = new();
+
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public Window home = null;
 
         #region 当前选中的标签页
         private RichTabItems selectedItem = null;
@@ -94,14 +99,14 @@ namespace cbhk_environment.Generators.OnlyOneCommandGenerator
         private static partial Regex GetCommand();
 
         OnlyOneCommand onlyOneCommand = null;
-        public only_one_command_datacontext()
+        public OnlyOneCommandDataContext()
         {
             #region 绑定指令
             RunCommand = new RelayCommand(run_command);
             ReturnCommand = new RelayCommand<CommonWindow>(return_command);
             AddOneCommandPage = new RelayCommand(AddOneCommandPageCommand);
             ClearCommandPage = new RelayCommand(ClearCommandPageCommand);
-            ImportFormClipBoard = new RelayCommand(ImportFormClipBoardCommand);
+            //ImportFormClipBoard = new RelayCommand(ImportFormClipBoardCommand);
             ImportFromFile = new RelayCommand(ImportFromFileCommand);
             #endregion
         }
@@ -171,8 +176,8 @@ namespace cbhk_environment.Generators.OnlyOneCommandGenerator
         /// <summary>
         /// 从剪切板导入
         /// </summary>
-        private async void ImportFormClipBoardCommand()
-        {
+        //private async void ImportFormClipBoardCommand()
+        //{
             //string nbt = Clipboard.GetText();
             //await Task.Run(async () =>
             //{
@@ -191,7 +196,7 @@ namespace cbhk_environment.Generators.OnlyOneCommandGenerator
             //            (SelectedItem.Content as EditControl).Text = commandContent.ToString();
             //    });
             //});
-        }
+        //}
 
         /// <summary>
         /// 初始化标签页
@@ -266,11 +271,10 @@ namespace cbhk_environment.Generators.OnlyOneCommandGenerator
         /// <param name="obj"></param>
         private void return_command(CommonWindow win)
         {
-            OnlyOneCommand.cbhk.Topmost = true;
-            OnlyOneCommand.cbhk.WindowState = WindowState.Normal;
-            OnlyOneCommand.cbhk.Show();
-            OnlyOneCommand.cbhk.Topmost = false;
-            OnlyOneCommand.cbhk.ShowInTaskbar = true;
+            home.WindowState = WindowState.Normal;
+            home.Show();
+            home.ShowInTaskbar = true;
+            home.Focus();
             win.Close();
         }
 

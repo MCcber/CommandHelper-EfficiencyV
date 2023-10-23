@@ -1,4 +1,4 @@
-﻿using cbhk_environment.CustomControls;
+﻿using cbhk.CustomControls;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace cbhk_environment.GeneralTools.TreeViewComponentsHelper
+namespace cbhk.GeneralTools.TreeViewComponentsHelper
 {
     /// <summary>
     /// 负责JSON数据转换为TreeView成员

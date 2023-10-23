@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace cbhk_environment.CustomControls.SkeletonScreen
+namespace cbhk.CustomControls.SkeletonScreen
 {
     /// <summary>
     /// Lines.xaml 的交互逻辑

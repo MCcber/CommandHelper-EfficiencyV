@@ -1,5 +1,5 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT
+namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// InlineItems.xaml 的交互逻辑
@@ -85,7 +85,7 @@ namespace cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT
         private void ReferenceIndex_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             Slider slider = sender as Slider;
-            item_datacontext itemContext = (Window.GetWindow(slider) as Item).DataContext as item_datacontext;
+            ItemDataContext itemContext = (Window.GetWindow(slider) as Item).DataContext as ItemDataContext;
             RichTabItems richTabItems = this.FindParent<RichTabItems>();
             int currentIndex = itemContext.ItemPageList.IndexOf(richTabItems);
             int index = int.Parse(slider.Value.ToString());

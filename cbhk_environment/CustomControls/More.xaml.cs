@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
     /// <summary>
     /// More.xaml 的交互逻辑
@@ -26,19 +26,19 @@ namespace cbhk_environment.CustomControls
             [
                 new DonateDataItem()
                 {
-                    Icon = new(new System.Uri("pack://application:,,,/cbhk_environment;component/resources/cbhk_form/images/more/thanks/9Hover.png",System.UriKind.Absolute)),
+                    Icon = new(new System.Uri("pack://application:,,,/cbhk;component/resources/cbhk_form/images/more/thanks/9Hover.png",System.UriKind.Absolute)),
                     Description = "觉得本项目美术不错？/很喜欢本项目的美术？可以考虑赞助此开发者！",
                     NoRequired = Visibility.Visible
                 },
                 new DonateDataItem()
                 {
-                    Icon = new(new System.Uri("pack://application:,,,/cbhk_environment;component/resources/cbhk_form/images/more/thanks/7Hover.png",System.UriKind.Absolute)),
+                    Icon = new(new System.Uri("pack://application:,,,/cbhk;component/resources/cbhk_form/images/more/thanks/7Hover.png",System.UriKind.Absolute)),
                     Description = "觉得本项目数据源齐全？/很喜欢本项目的数据源？可以考虑赞助此开发者！",
                     NoRequired = Visibility.Visible
                 },
                 new DonateDataItem()
                 {
-                    Icon = new(new System.Uri("pack://application:,,,/cbhk_environment;component/resources/cbhk_form/images/more/thanks/1Hover.png",System.UriKind.Absolute)),
+                    Icon = new(new System.Uri("pack://application:,,,/cbhk;component/resources/cbhk_form/images/more/thanks/1Hover.png",System.UriKind.Absolute)),
                     Description = "觉得本项目程序很牛？/很喜欢本项目的程序？可以考虑赞助此开发者！",
                     NoRequired = Visibility.Visible
                 }
@@ -74,7 +74,7 @@ namespace cbhk_environment.CustomControls
         {
             var psi = new ProcessStartInfo
             {
-                FileName = "https://github.com/MCcber/Minecraft/issues",
+                FileName = "https://github.com/MCcber/CommandHelper-EfficiencyV/issues",
                 UseShellExecute = true
             };
             Process.Start(psi);

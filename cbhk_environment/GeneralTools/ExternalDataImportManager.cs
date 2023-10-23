@@ -1,13 +1,13 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools.Displayer;
-using cbhk_environment.GeneralTools.Information;
-using cbhk_environment.Generators.FireworkRocketGenerator.Components;
-using cbhk_environment.Generators.ItemGenerator.Components;
-using cbhk_environment.Generators.RecipeGenerator;
-using cbhk_environment.Generators.RecipeGenerator.Components;
-using cbhk_environment.Generators.SpawnerGenerator.Components;
-using cbhk_environment.Generators.TagGenerator;
-using cbhk_environment.Generators.VillagerGenerator;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools.Displayer;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.Generators.FireworkRocketGenerator.Components;
+using cbhk.Generators.ItemGenerator.Components;
+using cbhk.Generators.RecipeGenerator;
+using cbhk.Generators.RecipeGenerator.Components;
+using cbhk.Generators.SpawnerGenerator.Components;
+using cbhk.Generators.TagGenerator;
+using cbhk.Generators.VillagerGenerator;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     public static class ExternalDataImportManager
     {
@@ -39,10 +39,10 @@ namespace cbhk_environment.GeneralTools
         }
 
         #region 处理导入外部标签
-        public static void ImportTagDataHandler(string filePathOrData, ref ObservableCollection<TagItemTemplate> itemList,ref tag_datacontext context, bool IsPath = true)
+        public static void ImportTagDataHandler(string filePathOrData, ref ObservableCollection<TagItemTemplate> itemList,ref TagDataContext context, bool IsPath = true)
         {
-            MessageDisplayer messageDisplayer = new();
-            messageDisplayerDataContext displayContext = messageDisplayer.DataContext as messageDisplayerDataContext;
+
+            
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
             try
@@ -85,19 +85,16 @@ namespace cbhk_environment.GeneralTools
             }
             catch
             {
-                displayContext.DisplayInfomation = "文件内容格式不合法";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                displayContext.MessageTitle = "导入失败";
-                _ = messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！文件内容格式不合法");
             }
         }
         #endregion
 
         #region 处理导入外部配方
-        public static void ImportRecipeDataHandler(string filePathOrData, ref recipe_datacontext recipeContext, bool IsPath = true)
+        public static void ImportRecipeDataHandler(string filePathOrData, ref RecipeDataContext recipeContext, bool IsPath = true)
         {
-            MessageDisplayer messageDisplayer = new();
-            messageDisplayerDataContext displayContext = messageDisplayer.DataContext as messageDisplayerDataContext;
+
+            
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
             try
             {
@@ -109,7 +106,7 @@ namespace cbhk_environment.GeneralTools
                         case "crafting_shaped":
                         case "crafting_shapeness":
                             {
-                                recipe_datacontext.RecipeType type = recipe_datacontext.RecipeType.CraftingTable;
+                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.CraftingTable;
                                 CraftingTable craftingTable = recipeContext.AddRecipeCommand(type) as CraftingTable;
                                 craftingTableDataContext context = craftingTable.DataContext as craftingTableDataContext;
                                 context.ImportMode = true;
@@ -119,7 +116,7 @@ namespace cbhk_environment.GeneralTools
                         case "smithing_transform":
                         case "smithing_trim":
                             {
-                                recipe_datacontext.RecipeType type = recipe_datacontext.RecipeType.SmithingTable;
+                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.SmithingTable;
                                 SmithingTable smithingTable = recipeContext.AddRecipeCommand(type) as SmithingTable;
                                 smithingTableDataContext context = smithingTable.DataContext as smithingTableDataContext;
                                 context.ImportMode = true;
@@ -128,7 +125,7 @@ namespace cbhk_environment.GeneralTools
                             break;
                         case "blasting":
                             {
-                                recipe_datacontext.RecipeType type = recipe_datacontext.RecipeType.BlastFurnace;
+                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.BlastFurnace;
                                 BlastFurnace blastFurnace = recipeContext.AddRecipeCommand(type) as BlastFurnace;
                                 blastFurnaceDataContext context = blastFurnace.DataContext as blastFurnaceDataContext;
                                 context.ImportMode = true;
@@ -137,7 +134,7 @@ namespace cbhk_environment.GeneralTools
                             break;
                         case "campfire_cooking":
                             {
-                                recipe_datacontext.RecipeType type = recipe_datacontext.RecipeType.Campfire;
+                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Campfire;
                                 Campfire campfire = recipeContext.AddRecipeCommand(type) as Campfire;
                                 campfireDataContext context = campfire.DataContext as campfireDataContext;
                                 context.ImportMode = true;
@@ -146,7 +143,7 @@ namespace cbhk_environment.GeneralTools
                             break;
                         case "smelting":
                             {
-                                recipe_datacontext.RecipeType type = recipe_datacontext.RecipeType.Furnace;
+                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Furnace;
                                 Furnace furnace = recipeContext.AddRecipeCommand(type) as Furnace;
                                 furnaceDataContext context = furnace.DataContext as furnaceDataContext;
                                 context.ImportMode = true;
@@ -155,7 +152,7 @@ namespace cbhk_environment.GeneralTools
                             break;
                         case "smoker":
                             {
-                                recipe_datacontext.RecipeType type = recipe_datacontext.RecipeType.Smoker;
+                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Smoker;
                                 Smoker smoker = recipeContext.AddRecipeCommand(type) as Smoker;
                                 smokerDataContext context = smoker.DataContext as smokerDataContext;
                                 context.ImportMode = true;
@@ -164,7 +161,7 @@ namespace cbhk_environment.GeneralTools
                             break;
                         case "stonecutting":
                             {
-                                recipe_datacontext.RecipeType type = recipe_datacontext.RecipeType.Stonecutter;
+                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Stonecutter;
                                 Stonecutter stonecutter = recipeContext.AddRecipeCommand(type) as Stonecutter;
                                 stonecutterDataContext context = stonecutter.DataContext as stonecutterDataContext;
                                 context.ImportMode = true;
@@ -176,10 +173,7 @@ namespace cbhk_environment.GeneralTools
             }
             catch
             {
-                displayContext.DisplayInfomation = "文件内容格式不合法";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                displayContext.MessageTitle = "导入失败";
-                _ = messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！文件内容格式不合法");
             }
         }
         #endregion
@@ -187,8 +181,8 @@ namespace cbhk_environment.GeneralTools
         #region 处理导入外部刷怪笼
         public static void ImportSpawnerDataHandler(string filePathOrData, ref ObservableCollection<RichTabItems> itemPageList, bool IsPath = true)
         {
-            MessageDisplayer messageDisplayer = new();
-            messageDisplayerDataContext displayContext = messageDisplayer.DataContext as messageDisplayerDataContext;
+
+            
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
             #region 提取可用NBT数据
@@ -210,10 +204,7 @@ namespace cbhk_environment.GeneralTools
             }
             catch
             {
-                displayContext.DisplayInfomation = "文件内容格式不合法";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                displayContext.MessageTitle = "导入失败";
-                _ = messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！文件内容格式不合法");
             }
         }
         public static string GetSpawnerDataHandler(string filePathOrData, bool IsPath = true)
@@ -254,7 +245,7 @@ namespace cbhk_environment.GeneralTools
                 Content = spawnerPage,
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style
             };
-            spawnerPageDataContext context = spawnerPage.DataContext as spawnerPageDataContext;
+            SpawnerPageDataContext context = spawnerPage.DataContext as SpawnerPageDataContext;
             itemPageList.Add(richTabItems);
             context.SelectedVersion = version;
 
@@ -343,8 +334,8 @@ namespace cbhk_environment.GeneralTools
             string result = "";
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
             string entityID = "";
-            MessageDisplayer messageDisplayer = new();
-            messageDisplayerDataContext displayContext = messageDisplayer.DataContext as messageDisplayerDataContext;
+
+            
 
             //召唤实体物品
             if (Regex.IsMatch(data, @"^/?summon"))
@@ -375,10 +366,7 @@ namespace cbhk_environment.GeneralTools
                 }
                 catch
                 {
-                    displayContext.DisplayInfomation = "文件内容格式不合法";
-                    messageDisplayer.Icon = displayContext.errorIcon;
-                    displayContext.MessageTitle = "导入失败";
-                    _ = messageDisplayer.ShowDialog();
+                    Message.PushMessage("导入失败！文件内容格式不合法");
                 }
                 #endregion
             }
@@ -390,11 +378,11 @@ namespace cbhk_environment.GeneralTools
         /// <summary>
         /// 导入村民数据
         /// </summary>
-        public static void ImportVillagerDataHandler(string filePathOrData,villager_datacontext context, bool IsPath = true)
+        public static void ImportVillagerDataHandler(string filePathOrData,VillagerDataContext context, bool IsPath = true)
         {
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
-            MessageDisplayer messageDisplayer = new();
-            messageDisplayerDataContext displayContext = messageDisplayer.DataContext as messageDisplayerDataContext;
+
+            
 
             #region 提取可用NBT数据和村民ID
             string nbtData = "";
@@ -415,10 +403,7 @@ namespace cbhk_environment.GeneralTools
             }
             catch
             {
-                displayContext.DisplayInfomation = "文件内容格式不合法";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                displayContext.MessageTitle = "导入失败";
-                _ = messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！文件内容格式不合法");
             }
         }
 
@@ -427,7 +412,7 @@ namespace cbhk_environment.GeneralTools
         /// </summary>
         /// <param name="nbtObj"></param>
         /// <param name="context"></param>
-        private static void AddVillagerData(JObject nbtObj,villager_datacontext context)
+        private static void AddVillagerData(JObject nbtObj,VillagerDataContext context)
         {
             #region 处理交易数据
             if(nbtObj.SelectToken("Offers.Recipes") is JArray Recipes)
@@ -604,41 +589,42 @@ namespace cbhk_environment.GeneralTools
         {
             string GeneratorMode = "Summon";
             bool version1_12 = false;
-            MessageDisplayer messageDisplayer = new();
-            messageDisplayerDataContext displayContext = messageDisplayer.DataContext as messageDisplayerDataContext;
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
             #region 提取可用NBT数据和实体ID
             string nbtData = "", entityID = "";
-            nbtData = data[data.IndexOf('{')..(data.LastIndexOf('}') + 1)];
-            //补齐缺失双引号对的key
-            nbtData = Regex.Replace(nbtData, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
-            //清除数值型数据的单位
-            nbtData = Regex.Replace(nbtData, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
+            try
+            {
+                nbtData = data[data.IndexOf('{')..(data.LastIndexOf('}') + 1)];
+                //补齐缺失双引号对的key
+                nbtData = Regex.Replace(nbtData, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
+                //清除数值型数据的单位
+                nbtData = Regex.Replace(nbtData, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
 
-            //召唤实体
-            if (Regex.IsMatch(data, @"^/?summon"))
-            {
-                GeneratorMode = "Summon";
-                entityID = Regex.Match(data, @"(?<=/?summon\s)([\w:]+)").ToString();
+                //召唤实体
+                if (Regex.IsMatch(data, @"^/?summon"))
+                {
+                    GeneratorMode = "Summon";
+                    entityID = Regex.Match(data, @"(?<=/?summon\s)([\w:]+)").ToString();
+                }
+                else//给予怪物蛋
+                    if (Regex.IsMatch(data, @"^/?give (@[apesr])|(\w+) ([\w]+_)?spawn_egg"))
+                {
+                    GeneratorMode = "Give";
+                    bool v1_13 = Regex.IsMatch(data, @"(?<=/?give\s@[apesr]\s)(\w+)(?=_spawn_egg)");
+                    entityID = Regex.Match(data, @"(?<=/?give\s@[apesr]\s)(\w+)(?=_spawn_egg)").ToString();
+                    if (!v1_13)
+                        version1_12 = true;
+                }
+                else
+                {
+                    Message.PushMessage("导入失败！文件内容格式不合法");
+                    return;
+                }
             }
-            else//给予怪物蛋
-                if (Regex.IsMatch(data, @"^/?give (@[apesr])|(\w+) ([\w]+_)?spawn_egg"))
+            catch(Exception e)
             {
-                GeneratorMode = "Give";
-                bool v1_13 = Regex.IsMatch(data, @"(?<=/?give\s@[apesr]\s)(\w+)(?=_spawn_egg)");
-                entityID = Regex.Match(data, @"(?<=/?give\s@[apesr]\s)(\w+)(?=_spawn_egg)").ToString();
-                if (!v1_13)
-                    version1_12 = true;
-            }
-            else
-            {
-                displayContext.DisplayInfomation = "该指令内容与实体生成无关";
-                displayContext.MessageTitle = "导入失败";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                _ = messageDisplayer.ShowDialog();
-                itemPageList.RemoveAt(itemPageList.Count - 1);
-                return;
+                Message.PushMessage(e.Message,MessageBoxImage.Error);
             }
 
             try
@@ -651,10 +637,7 @@ namespace cbhk_environment.GeneralTools
             }
             catch
             {
-                displayContext.DisplayInfomation = "文件内容格式不合法";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                displayContext.MessageTitle = "导入失败";
-                _ = messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！文件内容格式不合法");
                 return;
             }
             #endregion
@@ -673,10 +656,7 @@ namespace cbhk_environment.GeneralTools
             }
             catch
             {
-                displayContext.DisplayInfomation = "文件内容格式不合法";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                displayContext.MessageTitle = "导入失败";
-                _ = messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！文件内容格式不合法",MessageBoxImage.Error);
             }
         }
 
@@ -694,7 +674,7 @@ namespace cbhk_environment.GeneralTools
             Generators.EntityGenerator.Components.EntityPages entityPages = new() { FontWeight = FontWeights.Normal };
             if (externData != null)
             {
-                Generators.EntityGenerator.Components.entityPagesDataContext context = entityPages.DataContext as Generators.EntityGenerator.Components.entityPagesDataContext;
+                Generators.EntityGenerator.Components.EntityPagesDataContext context = entityPages.DataContext as Generators.EntityGenerator.Components.EntityPagesDataContext;
                 context.Give = mode != "Summon";
                 context.ImportMode = true;
                 if (filePath.Length > 0 && File.Exists(filePath))
@@ -763,8 +743,8 @@ namespace cbhk_environment.GeneralTools
         {
             string GeneratorMode = "";
             bool version1_12 = false;
-            MessageDisplayer messageDisplayer = new();
-            messageDisplayerDataContext displayContext = messageDisplayer.DataContext as messageDisplayerDataContext;
+
+            
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
             #region 提取可用NBT数据和实体ID
@@ -794,11 +774,7 @@ namespace cbhk_environment.GeneralTools
             else
             if (nbtData.Length == 0)
             {
-                displayContext.DisplayInfomation = "该指令内容与物品生成无关";
-                displayContext.MessageTitle = "导入失败";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                _ = messageDisplayer.ShowDialog();
-                itemPageList.RemoveAt(itemPageList.Count - 1);
+                Message.PushMessage("导入失败！文件内容格式不合法");
                 return;
             }
 
@@ -813,10 +789,7 @@ namespace cbhk_environment.GeneralTools
             }
             catch
             {
-                displayContext.DisplayInfomation = "文件内容格式不合法";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                displayContext.MessageTitle = "导入失败";
-                _ = messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！文件内容格式不合法");
                 return;
             }
             #endregion
@@ -836,10 +809,7 @@ namespace cbhk_environment.GeneralTools
             }
             catch
             {
-                displayContext.DisplayInfomation = "文件内容格式不合法";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                displayContext.MessageTitle = "导入失败";
-                _ = messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！文件内容格式不合法");
             }
         }
 
@@ -884,8 +854,8 @@ namespace cbhk_environment.GeneralTools
         {
             string GeneratorMode;
             bool version1_12 = false;
-            MessageDisplayer messageDisplayer = new();
-            messageDisplayerDataContext displayContext = messageDisplayer.DataContext as messageDisplayerDataContext;
+
+            
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
             #region 提取可用NBT数据和烟花ID
@@ -910,11 +880,8 @@ namespace cbhk_environment.GeneralTools
             }
             else
             {
-                displayContext.DisplayInfomation = "该指令内容与烟花生成无关";
-                displayContext.MessageTitle = "导入失败";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                _ = messageDisplayer.ShowDialog();
-                if(itemPageList.Count > 0)
+                Message.PushMessage("导入失败！文件内容格式不合法");
+                if (itemPageList.Count > 0)
                 itemPageList.RemoveAt(itemPageList.Count - 1);
                 return;
             }
@@ -925,10 +892,7 @@ namespace cbhk_environment.GeneralTools
             }
             catch
             {
-                displayContext.DisplayInfomation = "文件内容格式不合法";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                displayContext.MessageTitle = "导入失败";
-                _ = messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！文件内容格式不合法");
                 return;
             }
             #endregion
@@ -941,10 +905,7 @@ namespace cbhk_environment.GeneralTools
             }
             catch
             {
-                displayContext.DisplayInfomation = "文件内容格式不合法";
-                messageDisplayer.Icon = displayContext.errorIcon;
-                displayContext.MessageTitle = "导入失败";
-                _ = messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！文件内容格式不合法");
             }
         }
 

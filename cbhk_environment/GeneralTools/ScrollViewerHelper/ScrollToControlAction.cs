@@ -3,7 +3,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.GeneralTools.ScrollViewerHelper
+namespace cbhk.GeneralTools.ScrollViewerHelper
 {
     /// <summary>
     /// 用于静态布局的ScrollView精确滚动
@@ -38,7 +38,7 @@ namespace cbhk_environment.GeneralTools.ScrollViewerHelper
 
         protected override void Invoke(object parameter)
         {
-            //TargetControl = Generators.TagGenerator.tag_datacontext.TargetBox;
+            //TargetControl = Generators.TagGenerator.TagDataContext.TargetBox;
             if (TargetControl == null || ScrollViewer == null)
             {
                 throw new ArgumentNullException($"{ScrollViewer} or {TargetControl} cannot be null");

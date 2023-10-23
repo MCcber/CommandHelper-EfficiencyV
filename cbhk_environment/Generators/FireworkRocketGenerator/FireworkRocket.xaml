@@ -1,13 +1,13 @@
 ﻿<local_window:CommonWindow
-    x:Class="cbhk_environment.Generators.FireworkRocketGenerator.FireworkRocket"
+    x:Class="cbhk.Generators.FireworkRocketGenerator.FireworkRocket"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk_environment.Generators.FireworkRocketGenerator"
-    xmlns:local_context="clr-namespace:cbhk_environment.Generators.FireworkRocketGenerator"
-    xmlns:local_window="clr-namespace:cbhk_environment.WindowDictionaries"
+    xmlns:local="clr-namespace:cbhk.Generators.FireworkRocketGenerator"
+    xmlns:local_context="clr-namespace:cbhk.Generators.FireworkRocketGenerator"
+    xmlns:local_window="clr-namespace:cbhk.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="烟花火箭生成器"
     Width="1290"
@@ -15,22 +15,22 @@
     MinWidth="1290"
     MinHeight="690"
     Background="#2F2F2F"
-    Icon="/cbhk_environment;component/resources/common/images/spawnerIcons/IconFireworks.png"
+    Icon="/cbhk;component/resources/common/images/spawnerIcons/IconFireworks.png"
     ResizeMode="CanResizeWithGrip"
     WindowStyle="None"
     mc:Ignorable="d">
 
     <Window.DataContext>
-        <local_context:firework_rocket_datacontext />
+        <local_context:FireworkRocketDataContext />
     </Window.DataContext>
 
     <Window.Resources>
-        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormal.png" />
-        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressed.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowRight.png" />
-        <ImageBrush x:Key="Save" ImageSource="/cbhk_environment;component/resources/common/images/Save.png" />
-        <BitmapImage x:Key="GlassScope" UriSource="/cbhk_environment;component/resources/common/images/spyglass_scope.png" />
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk;component/resources/common/images/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk;component/resources/common/images/ButtonPressed.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowRight.png" />
+        <ImageBrush x:Key="Save" ImageSource="/cbhk;component/resources/common/images/Save.png" />
+        <BitmapImage x:Key="GlassScope" UriSource="/cbhk;component/resources/common/images/spyglass_scope.png" />
     </Window.Resources>
 
     <Window.InputBindings>

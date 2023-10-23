@@ -5,7 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
-namespace cbhk_environment.CustomControls.TimeLines
+namespace cbhk.CustomControls.TimeLines
 {
     /// <summary>
     /// TimeLine.xaml 的交互逻辑

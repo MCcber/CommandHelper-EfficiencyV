@@ -1,5 +1,5 @@
-﻿using cbhk_environment.ControlsDataContexts;
-using cbhk_environment.CustomControls;
+﻿using cbhk.ControlsDataContexts;
+using cbhk.CustomControls;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
 using System;
@@ -15,7 +15,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.EntityGenerator.Components
+namespace cbhk.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// BlockState.xaml 的交互逻辑
@@ -33,8 +33,8 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
         #endregion
 
         #region 字段
-        private ImageBrush buttonNormal = new(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonNormal.png", UriKind.RelativeOrAbsolute)));
-        private ImageBrush buttonPressed = new(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonPressed.png", UriKind.RelativeOrAbsolute)));
+        private ImageBrush buttonNormal = new(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/ButtonNormal.png", UriKind.RelativeOrAbsolute)));
+        private ImageBrush buttonPressed = new(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/ButtonPressed.png", UriKind.RelativeOrAbsolute)));
         DataTable BlockTable = null;
         DataTable BlockStateTable = null;
         #endregion
@@ -86,7 +86,7 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
             ClearAttribute = new RelayCommand<FrameworkElement>(ClearAttributeCommand);
             AttributeAccordion.Fresh = ClearAttribute;
             AttributeAccordion.Modify = AddAttribute;
-            entity_datacontext context = Window.GetWindow(sender as UserControl).DataContext as entity_datacontext;
+            EntityDataContext context = Window.GetWindow(sender as UserControl).DataContext as EntityDataContext;
             BlockTable = context.BlockTable;
             BlockStateTable = context.BlockStateTable;
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";

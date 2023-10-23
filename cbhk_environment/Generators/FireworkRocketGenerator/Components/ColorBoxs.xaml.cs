@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace cbhk_environment.Generators.FireworkRocketGenerator.Components
+namespace cbhk.Generators.FireworkRocketGenerator.Components
 {
     /// <summary>
     /// ColorBoxs.xaml 的交互逻辑

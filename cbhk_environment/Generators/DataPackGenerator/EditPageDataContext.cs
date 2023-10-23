@@ -1,6 +1,6 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.Generators.DataPackGenerator.Components.EditPage;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.Generators.DataPackGenerator.Components.EditPage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Syncfusion.Windows.Edit;
@@ -17,7 +17,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace cbhk_environment.Generators.DataPackGenerator
+namespace cbhk.Generators.DataPackGenerator
 {
     public class EditPageDataContext : ObservableObject
     {
@@ -89,6 +89,7 @@ namespace cbhk_environment.Generators.DataPackGenerator
         #region 画刷
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
+        private SolidColorBrush darkGrayBrush = new((Color)ColorConverter.ConvertFromString("#1E1E1E"));
         #endregion
 
         private Window editForm = null;
@@ -127,7 +128,17 @@ namespace cbhk_environment.Generators.DataPackGenerator
                 FontSize = 12,
                 Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
                 Header = "欢迎使用",
-                IsContentSaved = true
+                FontWeight = FontWeights.Normal,
+                IsContentSaved = true,
+                BorderThickness = new(4, 3, 4, 0),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
+                RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
+                TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
+                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
+                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
             };
             FunctionModifyTabItems.Add(richTabItem);
             FlowDocument document = richTabItem.FindParent<Page>().FindResource("WelcomeDocument") as FlowDocument;
@@ -298,7 +309,7 @@ namespace cbhk_environment.Generators.DataPackGenerator
                             Header = datapackTreeItems,
                             Uid = SolutionViewSelectedItem.Uid + "\\" + context.NewFileName
                         };
-                        newViewItem.MouseDoubleClick += DoubleClickAnalysisAndOpen;
+                        newViewItem.MouseDoubleClick += DoubleClickAnalysisAndOpenAsync;
                         SolutionViewSelectedItem.Items.Add(newViewItem);
                     }
                 }
@@ -364,7 +375,7 @@ namespace cbhk_environment.Generators.DataPackGenerator
                     Uid = newUid,
                     Header = datapackTreeItems
                 };
-                folderItem.MouseDoubleClick += DoubleClickAnalysisAndOpen;
+                folderItem.MouseDoubleClick += DoubleClickAnalysisAndOpenAsync;
                 SolutionViewSelectedItem.Items.Add(folderItem);
             }
         }
@@ -534,18 +545,9 @@ namespace cbhk_environment.Generators.DataPackGenerator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void DoubleClickAnalysisAndOpen(object sender, MouseButtonEventArgs e)
+        public async void DoubleClickAnalysisAndOpenAsync(object sender, MouseButtonEventArgs e)
         {
-            await DoubleClickAnalysisAndOpenAsync(sender as TreeViewItem);
-        }
-
-        /// <summary>
-        /// 异步执行文件分析与打开任务
-        /// </summary>
-        /// <param name="currentItem"></param>
-        /// <returns></returns>
-        private async Task DoubleClickAnalysisAndOpenAsync(TreeViewItem currentItem)
-        {
+            TreeViewItem currentItem = sender as TreeViewItem;
             Datapack datapack = Window.GetWindow(currentItem) as Datapack;
             await datapack.Dispatcher.InvokeAsync(() =>
             {
@@ -557,13 +559,25 @@ namespace cbhk_environment.Generators.DataPackGenerator
                     FontSize = 12,
                     Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
                     Header = Path.GetFileName(currentItem.Uid),
-                    IsContentSaved = true
+                    IsContentSaved = true,
+                    FontWeight = FontWeights.Normal,
+                    BorderThickness = new(4, 3, 4, 0),
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                    SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                    LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
+                    RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
+                    TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
+                    SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
+                    SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
+                    SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
                 };
                 EditControl textEditor = new()
                 {
                     ShowLineNumber = true,
                     Background = transparentBrush,
                     Foreground = whiteBrush,
+                    LineNumberTextForeground = whiteBrush,
+                    LineNumberAreaBackground = darkGrayBrush,
                     BorderThickness = new Thickness(0),
                     Text = fileContent,
                     HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,

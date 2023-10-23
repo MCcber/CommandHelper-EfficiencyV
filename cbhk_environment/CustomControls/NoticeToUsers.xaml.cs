@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace cbhk_environment.More
+namespace cbhk.CustomControls
 {
     /// <summary>
     /// NoticeToUsers.xaml 的交互逻辑

@@ -1,4 +1,4 @@
-﻿using cbhk_environment.GeneralTools;
+﻿using cbhk.GeneralTools;
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.Generators.ItemGenerator.Components
+namespace cbhk.Generators.ItemGenerator.Components
 {
     /// <summary>
     /// AttributeItems.xaml 的交互逻辑
@@ -81,7 +81,7 @@ namespace cbhk_environment.Generators.ItemGenerator.Components
 
         private void AttributeItems_Loaded(object sender, RoutedEventArgs e)
         {
-            item_datacontext context = Window.GetWindow(this).DataContext as item_datacontext;
+            ItemDataContext context = Window.GetWindow(this).DataContext as ItemDataContext;
             AttributeTable = context.AttributeTable;
             AttributeSlotTable = context.AttributeSlotTable;
             AttributeValueTypeTable = context.AttributeValueTypeTable;

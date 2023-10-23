@@ -1,10 +1,10 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.Generators.EntityGenerator.Components
+namespace cbhk.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// SuspectsEntities.xaml 的交互逻辑

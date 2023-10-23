@@ -1,8 +1,8 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.Generators.FireworkRocketGenerator.Components;
-using cbhk_environment.WindowDictionaries;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.Generators.FireworkRocketGenerator.Components;
+using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -17,9 +17,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
-namespace cbhk_environment.Generators.FireworkRocketGenerator
+namespace cbhk.Generators.FireworkRocketGenerator
 {
-    public class firework_rocket_datacontext: ObservableObject
+    public class FireworkRocketDataContext: ObservableObject
     {
         #region 返回和运行等指令
         public RelayCommand<CommonWindow> Return { get; set; }
@@ -46,7 +46,12 @@ namespace cbhk_environment.Generators.FireworkRocketGenerator
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconFireworks.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconFireworks.png";
+
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public Window home = null;
 
         #region 正方体侧面、上面和下面的纹理，烟花火箭纹理
         public BitmapImage GrassBlockSide { get; set; }
@@ -77,7 +82,7 @@ namespace cbhk_environment.Generators.FireworkRocketGenerator
         /// </summary>
         public Viewport3D viewport3D = null;
 
-        public firework_rocket_datacontext()
+        public FireworkRocketDataContext()
         {
             #region 连接指令
             Return = new RelayCommand<CommonWindow>(return_command);
@@ -176,11 +181,10 @@ namespace cbhk_environment.Generators.FireworkRocketGenerator
         /// <param name="win"></param>
         private void return_command(CommonWindow win)
         {
-            FireworkRocket.cbhk.Topmost = true;
-            FireworkRocket.cbhk.WindowState = WindowState.Normal;
-            FireworkRocket.cbhk.Show();
-            FireworkRocket.cbhk.Topmost = false;
-            FireworkRocket.cbhk.ShowInTaskbar = true;
+            home.WindowState = WindowState.Normal;
+            home.Show();
+            home.ShowInTaskbar = true;
+            home.Focus();
             win.Close();
         }
 
@@ -301,7 +305,6 @@ namespace cbhk_environment.Generators.FireworkRocketGenerator
             viewport3D = sender as Viewport3D;
         }
     }
-
     public class GaussianRandom : Random
     {
         private double nextGaussian;

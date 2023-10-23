@@ -1,11 +1,11 @@
-﻿using cbhk_environment.GeneralTools;
+﻿using cbhk.GeneralTools;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
     public class TextTabItems:TabItem
     {

@@ -2,10 +2,10 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:local_context="clr-namespace:cbhk_environment.ControlsDataContexts">
+    xmlns:local_context="clr-namespace:cbhk.ControlsDataContexts">
 
     <SolidColorBrush x:Key="ResizeGripBackgroundColorBrush" Color="Transparent" />
-    <ImageBrush x:Key="BoxBackground" ImageSource="/cbhk_environment;component/resources/common/images/TextEditBox.png" />
+    <ImageBrush x:Key="BoxBackground" ImageSource="/cbhk;component/resources/common/images/TextEditBox.png" />
 
     <local_context:ResizableTextBoxHander x:Key="ResizableTextBoxHander" />
 

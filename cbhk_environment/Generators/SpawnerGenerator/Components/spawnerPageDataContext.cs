@@ -1,7 +1,7 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.GenerateResultDisplayer;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.GenerateResultDisplayer;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -12,9 +12,9 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.Generators.SpawnerGenerator.Components
+namespace cbhk.Generators.SpawnerGenerator.Components
 {
-    public class spawnerPageDataContext:ObservableObject
+    public class SpawnerPageDataContext:ObservableObject
     {
         #region 保存与运行等指令
         public RelayCommand Run { get; set; }
@@ -65,10 +65,10 @@ namespace cbhk_environment.Generators.SpawnerGenerator.Components
         public bool ImportMode { get; set; } = false;
 
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconSpawner.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconSpawner.png";
         #endregion
 
-        public spawnerPageDataContext()
+        public SpawnerPageDataContext()
         {
             #region 绑定指令
             Run = new RelayCommand(run_command);

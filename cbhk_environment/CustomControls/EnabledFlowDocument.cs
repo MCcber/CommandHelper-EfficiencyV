@@ -1,6 +1,6 @@
 ﻿using System.Windows.Documents;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
     public class EnabledFlowDocument:FlowDocument
     {

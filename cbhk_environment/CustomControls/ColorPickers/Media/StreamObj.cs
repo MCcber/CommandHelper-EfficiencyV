@@ -2,7 +2,7 @@
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.CustomControls.ColorPickers.Media
+namespace cbhk.CustomControls.ColorPickers.Media
 {
     public class StreamObj
     {

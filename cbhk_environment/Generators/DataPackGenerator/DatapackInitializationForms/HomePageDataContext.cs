@@ -1,8 +1,8 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools.Information;
-using cbhk_environment.GeneralTools.Time;
-using cbhk_environment.Generators.DataPackGenerator.Components;
-using cbhk_environment.Generators.DataPackGenerator.Components.HomePage;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.GeneralTools.Time;
+using cbhk.Generators.DataPackGenerator.Components;
+using cbhk.Generators.DataPackGenerator.Components.HomePage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -20,7 +20,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
 
-namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationForms
+namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
 {
     public class HomePageDataContext:ObservableObject
     {
@@ -187,7 +187,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         {
             TextBlock textBlock = sender as TextBlock;
             dataPack = Window.GetWindow(textBlock) as Datapack;
-            datapack_datacontext context = dataPack.DataContext as datapack_datacontext;
+            DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
             //未加载过模板窗体说明需要载入近期解决方案
             if(context.templateSelectPage == null)
             await RecentSolutionsLoaded();
@@ -209,7 +209,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         /// <returns></returns>
         private async Task RecentSolutionsLoaded()
         {
-            datapack_datacontext context = dataPack.DataContext as datapack_datacontext;
+            DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
             BindingOperations.EnableCollectionSynchronization(RecentContentDateItemList, RecentContentLoadLock);
             await Task.Run(() =>
             {
@@ -320,7 +320,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
             {
                 List<TreeViewItem> result = ContentReader.ReadTheContentOfTheSpecifiedPath(treeViewItem.Uid);
                 NavigationToEditPage();
-                datapack_datacontext context = dataPack.DataContext as datapack_datacontext;
+                DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
                 EditPageDataContext editContext = context.editPage.DataContext as EditPageDataContext;
                 foreach (var item in result)
                     editContext.DatapackTreeViewItems.Add(item);
@@ -333,19 +333,12 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
             }
             else
             {
-                MessageDisplayer messageDisplayer = new();
-                messageDisplayerDataContext displayContext = messageDisplayer.DataContext as messageDisplayerDataContext;
-                messageDisplayer.Icon = displayContext.errorIcon;
-                messageDisplayer.Title = "无法打开";
-                displayContext.DisplayInfomation = "所选解决方案不存在,是否删除?";
-                if(messageDisplayer.ShowDialog().Value)
-                {
-                    File.Delete(RecentSolutionsFolderPath + "\\" + recentTreeItem.Title.Text);
-                    TreeViewItem timeMarkerItem = treeViewItem.Parent as TreeViewItem;
-                    timeMarkerItem.Items.Remove(treeViewItem);
-                    if (timeMarkerItem.Items.Count == 0)
-                        timeMarkerItem.Visibility = Visibility.Collapsed;
-                }
+                Message.PushMessage("无法打开！所选解决方案不存在,已删除");
+                File.Delete(RecentSolutionsFolderPath + "\\" + recentTreeItem.Title.Text);
+                TreeViewItem timeMarkerItem = treeViewItem.Parent as TreeViewItem;
+                timeMarkerItem.Items.Remove(treeViewItem);
+                if (timeMarkerItem.Items.Count == 0)
+                    timeMarkerItem.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -365,7 +358,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         /// </summary>
         private async void NavigationToEditPage()
         {
-            datapack_datacontext context = dataPack.DataContext as datapack_datacontext;
+            DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
             context.editPage ??= new();
             NavigationService.GetNavigationService(context.frame).Navigate(context.editPage);
             await ReCalculateSolutionPath();
@@ -409,7 +402,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         private async Task LoadLocalFileLoop(string[] filePathes)
         {
             NavigationToEditPage();
-            datapack_datacontext context = dataPack.DataContext as datapack_datacontext;
+            DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
             EditPageDataContext editContext = context.editPage.DataContext as EditPageDataContext;
             await dataPack.Dispatcher.InvokeAsync(() =>
             {
@@ -418,7 +411,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
                     string externsion = Path.GetExtension(fileName);
                     if ((!File.Exists(fileName) || !ContentReader.ReadableFileExtensionList.Contains(externsion)) && !Directory.Exists(fileName))
                         continue;
-                    List<TreeViewItem> result = ContentReader.ReadTheContentOfTheSpecifiedPath(fileName);
+                    List<TreeViewItem> result = ContentReader.ReadTheContentOfTheSpecifiedPath(fileName,editContext);
                     foreach (var item in result)
                         editContext.DatapackTreeViewItems.Add(item);
                 }
@@ -458,7 +451,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
             };
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK && Directory.Exists(folderBrowserDialog.SelectedPath))
             {
-                string[] files = new string[] { folderBrowserDialog.SelectedPath };
+                string[] files = Directory.GetFileSystemEntries(folderBrowserDialog.SelectedPath);
                 await LoadLocalFileLoop(files);
             }
         }
@@ -480,7 +473,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK && File.Exists(openFileDialog.FileName))
             {
                 dataPack.Hide();
-                datapack_datacontext context = dataPack.DataContext as datapack_datacontext;
+                DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
                 context.editPage ??= new EditPage();
                 EditPageDataContext editContext = context.editPage.DataContext as EditPageDataContext;
                 NavigationToEditPage();
@@ -488,7 +481,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
                 foreach (var item in result)
                 {
                     if(File.Exists(item.Uid))
-                    item.MouseDoubleClick += editContext.DoubleClickAnalysisAndOpen;
+                    item.MouseDoubleClick += editContext.DoubleClickAnalysisAndOpenAsync;
                     editContext.DatapackTreeViewItems.Add(item);
                 }
                 dataPack.Width = 1024;
@@ -505,7 +498,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         /// <exception cref="NotImplementedException"></exception>
         private void CreateLocalDataPackCommand()
         {
-            datapack_datacontext context = dataPack.DataContext as datapack_datacontext;
+            DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
             context.templateSelectPage ??= new();
             NavigationService.GetNavigationService(context.frame)?.Navigate(context.templateSelectPage);
         }

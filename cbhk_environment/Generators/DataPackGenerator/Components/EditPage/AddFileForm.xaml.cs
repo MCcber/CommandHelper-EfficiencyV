@@ -12,7 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace cbhk_environment.Generators.DataPackGenerator.Components.EditPage
+namespace cbhk.Generators.DataPackGenerator.Components.EditPage
 {
     /// <summary>
     /// AddFileForm.xaml 的交互逻辑

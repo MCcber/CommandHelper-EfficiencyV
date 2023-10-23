@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     public class OpenFolderThenSelectFiles
     {

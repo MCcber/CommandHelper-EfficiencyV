@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     class AutoStart
     {

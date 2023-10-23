@@ -2,19 +2,17 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace cbhk_environment.ControlsDataContexts
+namespace cbhk.ControlsDataContexts
 {
     public class TextComboBoxSearchDataContext
     {
-        public Popup pop = new Popup();
+        public Popup pop = new();
 
         ComboBox current_box;
         public void ItemSearcher(object sender, KeyEventArgs e)
@@ -44,27 +42,25 @@ namespace cbhk_environment.ControlsDataContexts
                 #region 搜索目标成员
                 IEnumerable<string> item_source = current_box.ItemsSource as IEnumerable<string>;
                 IEnumerable<string> select_item = item_source.Where(item => item.StartsWith(box.Text.Trim()));
-                if (select_item.Count() == 1)
-                    current_box.SelectedItem = select_item.First();
                 #endregion
             }
         }
 
         public Popup CreatePop(Popup pop, IEnumerable<string> listSource, FrameworkElement element, DataTemplate display_template)
         {
-            Border border = new Border
+            Border border = new()
             {
                 BorderBrush = new SolidColorBrush(Colors.Black),
                 BorderThickness = new Thickness(0)
             };
 
-            ScrollViewer viewer = new ScrollViewer()
+            ScrollViewer viewer = new()
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto
             };
 
-            ListBox listbox = new ListBox
+            ListBox listbox = new()
             {
                 Background = null,
                 Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),

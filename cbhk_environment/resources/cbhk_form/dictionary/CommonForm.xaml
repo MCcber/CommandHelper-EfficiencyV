@@ -1,5 +1,5 @@
 ﻿<ResourceDictionary
-    x:Class="cbhk_environment.resources.cbhk_form.dictionary.CommonForm"
+    x:Class="cbhk.resources.cbhk_form.dictionary.CommonForm"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--  菜单按钮组模板  -->

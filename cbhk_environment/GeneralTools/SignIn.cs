@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_signin.resources.Tools
+namespace cbhk.GeneralTools
 {
     public class SignIn
     {
@@ -70,7 +70,13 @@ namespace cbhk_signin.resources.Tools
 			return true;
 		}
 
-        public static bool DownLoadUserHead(string target_url, string target_file_path)
+		/// <summary>
+		/// 下载用户头像到本地指定路径
+		/// </summary>
+		/// <param name="target_url"></param>
+		/// <param name="target_file_path"></param>
+		/// <returns></returns>
+        public async static Task<bool> DownLoadUserImage(string target_url, string target_file_path)
         {
             //验证服务器证书回调自动验证
             ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(CheckValidationResult);
@@ -84,12 +90,12 @@ namespace cbhk_signin.resources.Tools
             //接受返回
             try
             {
-                HttpWebResponse Myrp = (HttpWebResponse)Myrq.GetResponse();
+                HttpWebResponse Myrp = await Myrq.GetResponseAsync() as HttpWebResponse;
 
                 if (Myrp.StatusCode != HttpStatusCode.OK)
                 { return false; }
 
-                FileStream fs = new FileStream(target_file_path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);//展开一个流
+                FileStream fs = new(target_file_path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);//展开一个流
                 Myrp.GetResponseStream().CopyTo(fs);//复制到当前文件夹
                 Myrp.Close();
                 fs.Close();

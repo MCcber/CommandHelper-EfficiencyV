@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk_environment.Generators.EntityGenerator.Components
+namespace cbhk.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// EntityPages.xaml 的交互逻辑

@@ -1,10 +1,10 @@
-﻿using cbhk_environment.CustomControls;
+﻿using cbhk.CustomControls;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.Generators.VillagerGenerator.Components
+namespace cbhk.Generators.VillagerGenerator.Components
 {
     /// <summary>
     /// GossipsItems.xaml 的交互逻辑
@@ -42,13 +42,13 @@ namespace cbhk_environment.Generators.VillagerGenerator.Components
         private void TypeLoaded(object sender, RoutedEventArgs e)
         {
             TextComboBoxs textComboBoxs = sender as TextComboBoxs;
-            villager_datacontext context = Window.GetWindow(textComboBoxs).DataContext as villager_datacontext;
+            VillagerDataContext context = Window.GetWindow(textComboBoxs).DataContext as VillagerDataContext;
             textComboBoxs.ItemsSource = context.GossipTypes;
         }
 
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            villager_datacontext context = (Window.GetWindow(sender as IconTextButtons) as Villager).DataContext as villager_datacontext;
+            VillagerDataContext context = (Window.GetWindow(sender as IconTextButtons) as Villager).DataContext as VillagerDataContext;
             context.gossipItems.Remove(this);
             context.compositionIndex--;
         }
@@ -61,7 +61,7 @@ namespace cbhk_environment.Generators.VillagerGenerator.Components
         private void Edit_Click(object sender, RoutedEventArgs e)
         {
             Button currentButton = sender as Button;
-            villager_datacontext context = Window.GetWindow(currentButton).DataContext as villager_datacontext;
+            VillagerDataContext context = Window.GetWindow(currentButton).DataContext as VillagerDataContext;
             //创建字典，让字典的键来自动匹配对应的值，自动执行搜索和带入公式两个行为
             Dictionary<string, int> currentGossipTypes = new();
             //已处理的标记

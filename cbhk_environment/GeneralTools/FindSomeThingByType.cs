@@ -1,7 +1,7 @@
 ﻿using System.Windows.Media;
 using System.Windows;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     public static class FindSomeThingByType
     {

@@ -1,4 +1,4 @@
-﻿using cbhk_environment.Distributor;
+﻿using cbhk.Distributor;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,14 +6,13 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Hardcodet.Wpf.TaskbarNotification;
-using cbhk_environment.More;
-using cbhk_environment.GeneralTools;
+using cbhk.GeneralTools;
 using System.Data;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using cbhk.CustomControls;
 
-namespace cbhk_environment
+namespace cbhk
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -23,21 +22,17 @@ namespace cbhk_environment
         /// <summary>
         /// 主页可见性
         /// </summary>
-        public static MainWindowProperties.Visibility cbhk_visibility = MainWindowProperties.Visibility.MinState;
+        public static MainWindowProperties.Visibility cbhkVisibility = MainWindowProperties.Visibility.MinState;
 
-        public TaskbarIcon taskbarButton = null;
-
-        //用户数据
+        /// <summary>
+        /// 用户数据
+        /// </summary>
         Dictionary<string, string> UserData = new();
 
-        public MainWindow(Dictionary<string,string> userInfo,TaskbarIcon taskbarButton)
+        public MainWindow(Dictionary<string,string> userInfo)
         {
             InitializeComponent();
             UserData = userInfo;
-            #region 初始化托盘
-            this.taskbarButton = taskbarButton;
-            this.taskbarButton.DataContext = new resources.MainFormDataContext.NotifyIconViewModel(this);
-            #endregion
         }
 
         /// <summary>
@@ -77,7 +72,7 @@ namespace cbhk_environment
         /// <summary>
         /// 读取启动器配置
         /// </summary>
-        private async Task ReadDataSource()
+        private static async Task ReadDataSource()
         {
             //case "AutoStart":
             //    {
@@ -93,7 +88,7 @@ namespace cbhk_environment
             {
                 DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
                 DataTable dataTable = await dataCommunicator.GetData("SELECT * FROM EnvironmentConfigs");
-                cbhk_visibility = dataTable.Rows[0]["Visibility"].ToString() switch
+                cbhkVisibility = dataTable.Rows[0]["Visibility"].ToString() switch
                 {
                     "KeepState" => MainWindowProperties.Visibility.KeepState,
                     "MinState" => MainWindowProperties.Visibility.MinState,
@@ -115,16 +110,27 @@ namespace cbhk_environment
         private async Task InitUIData()
         {
             #region 加载用户数据
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\userHead.png"))
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\userHead.png"))
             {
                 Dispatcher.Invoke(() =>
                 {
-                    userHead.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\userHead.png", UriKind.Absolute));
-                    userHead.MouseLeftButtonUp += (a, b) => { if (UserData.TryGetValue("UserID", out string value)) System.Diagnostics.Process.Start("explorer.exe", "https://mc.metamo.cn/u/" + value); };
+                    userHead.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\userHead.png", UriKind.Absolute));
+                    if(UserData.TryGetValue("UserID", out string value))
+                    userHead.MouseLeftButtonUp += (a, b) => { System.Diagnostics.Process.Start("explorer.exe", "https://mc.metamo.cn/u/" + value); };
                 });
             }
-            #endregion
 
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (UserData.TryGetValue("UserID", out string UserID))
+                    userId.Text = UserID;
+                if(UserData.TryGetValue("description",out string description))
+                userDescription.Text = description;
+                if(File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\userBackground.png"))
+                userBackground.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\userBackground.png"));
+            });
+            #endregion
+            #region 载入生成器按钮
             if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
             {
                 DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
@@ -151,7 +157,7 @@ namespace cbhk_environment
                         string imagePath = baseImagePath + currentId + ".png";
                         if (File.Exists(imagePath))
                             button.Background = new ImageBrush(new BitmapImage(new Uri(imagePath, UriKind.Absolute)));
-                        RelayCommand behavior = SetGeneratorClickEvent(currentId, generatorFunction);
+                        RelayCommand behavior = GeneratorClickEvent.Set(currentId, generatorFunction);
                         button.Command = behavior;
                         GeneratorTable.Children.Add(button);
                         if (columnIndex > GeneratorTable.ColumnDefinitions.Count - 1)
@@ -167,34 +173,7 @@ namespace cbhk_environment
                 });
                 #endregion
             }
-        }
-
-        /// <summary>
-        /// 为生成器按钮分配方法
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="function"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        private RelayCommand SetGeneratorClickEvent(string id, GeneratorFunction function)
-        {
-            RelayCommand result = id switch
-            {
-                "ooc" => function.StartOoc,
-                "datapack" => function.StartDatapack,
-                "armorstand" => function.StartArmorStand,
-                "writtenbook" => function.StartWrittenBook,
-                "spawners" => function.StartSpawner,
-                "recipes" => function.StartRecipes,
-                "villagers" => function.StartVillagers,
-                "tags" => function.StartTags,
-                "items" => function.StartItems,
-                "fireworks" => function.StartFireworks,
-                "entities" => function.StartEntities,
-                "signs" => function.StartSign,
-                _ => null
-            };
-            return result;
+            #endregion
         }
 
         /// <summary>
@@ -212,9 +191,39 @@ namespace cbhk_environment
             }
             else
             {
-                taskbarButton.Visibility = Visibility.Collapsed;
+                cbhkTaskbar.Visibility = Visibility.Collapsed;
+                WindowState = WindowState.Minimized;
                 Environment.Exit(0);
             }
+        }
+
+        /// <summary>
+        /// 显示管家
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ShowWindowCommand(object sender,RoutedEventArgs e)
+        {
+            ShowInTaskbar = true;
+            WindowState = WindowState.Normal;
+            Show();
+            Focus();
+        }
+
+        /// <summary>
+        /// 关闭管家
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ExitApplicationCommand(object sender, RoutedEventArgs e)
+        {
+            cbhkTaskbar.Visibility = Visibility.Collapsed;
+            Environment.Exit(0);
+        }
+
+        private void cbhkTaskbar_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            ShowWindowCommand(null,null);
         }
     }
 
@@ -231,7 +240,7 @@ namespace cbhk_environment
         /// <summary>
         /// 关闭后缩小到托盘
         /// </summary>
-        public static bool CloseToTray { get; set; } = true;
+        public static bool CloseToTray { get; set; } = false;
 
         /// <summary>
         /// 轮播图播放延迟

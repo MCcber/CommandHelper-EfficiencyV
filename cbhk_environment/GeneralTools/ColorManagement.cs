@@ -3,7 +3,7 @@ using System.Collections;
 using System.Drawing;
 using System.Reflection;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     public static class ColorManagement
     {

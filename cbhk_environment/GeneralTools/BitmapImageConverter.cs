@@ -6,7 +6,7 @@ using System.Windows.Interop;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     public partial class BitmapImageConverter
     {

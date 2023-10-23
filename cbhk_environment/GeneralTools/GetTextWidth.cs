@@ -1,11 +1,11 @@
-﻿using cbhk_environment.CustomControls;
+﻿using cbhk.CustomControls;
 using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     public class GetTextWidth
     {

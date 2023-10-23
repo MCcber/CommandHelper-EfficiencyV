@@ -1,11 +1,11 @@
 ﻿using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Collections.ObjectModel;
-using cbhk_environment.GeneralTools.Displayer;
+using cbhk.GeneralTools.Displayer;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     public class GenerateBubbleChart
     {

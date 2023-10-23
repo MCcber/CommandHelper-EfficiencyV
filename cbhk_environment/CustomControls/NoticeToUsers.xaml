@@ -1,11 +1,9 @@
 ﻿<Window
-    x:Class="cbhk_environment.More.NoticeToUsers"
+    x:Class="cbhk.CustomControls.NoticeToUsers"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk_environment.More"
-    xmlns:local_window="clr-namespace:cbhk_environment.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="用户须知"
     Width="800"
@@ -20,8 +18,8 @@
     mc:Ignorable="d">
 
     <Window.Resources>
-        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormal.png" />
-        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressed.png" />
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk;component/resources/common/images/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk;component/resources/common/images/ButtonPressed.png" />
         <!--  窗体标题栏无白条  -->
         <WindowChrome
             x:Key="WindowChromeKey"
@@ -119,37 +117,43 @@
                     Margin="10,0,0,0"
                     FontSize="15"
                     TextAlignment="Left">
-                    <Run Text="6.Recipes" />
+                    <Run Text="6.Signs" />
                 </Paragraph>
                 <Paragraph
                     Margin="10,0,0,0"
                     FontSize="15"
                     TextAlignment="Left">
-                    <Run Text="7.Villagers" />
+                    <Run Text="7.Recipes" />
                 </Paragraph>
                 <Paragraph
                     Margin="10,0,0,0"
                     FontSize="15"
                     TextAlignment="Left">
-                    <Run Text="8.Tags" />
+                    <Run Text="8.Villagers" />
                 </Paragraph>
                 <Paragraph
                     Margin="10,0,0,0"
                     FontSize="15"
                     TextAlignment="Left">
-                    <Run Text="9.Items" />
+                    <Run Text="9.Tags" />
                 </Paragraph>
                 <Paragraph
                     Margin="10,0,0,0"
                     FontSize="15"
                     TextAlignment="Left">
-                    <Run Text="10.Fireworks" />
+                    <Run Text="10.Items" />
                 </Paragraph>
                 <Paragraph
                     Margin="10,0,0,0"
                     FontSize="15"
                     TextAlignment="Left">
-                    <Run Text="11.Entities" />
+                    <Run Text="11.Fireworks" />
+                </Paragraph>
+                <Paragraph
+                    Margin="10,0,0,0"
+                    FontSize="15"
+                    TextAlignment="Left">
+                    <Run Text="12.Entities" />
                 </Paragraph>
             </FlowDocument>
         </RichTextBox>

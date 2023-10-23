@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
     public class TextTreeView:TreeView
     {

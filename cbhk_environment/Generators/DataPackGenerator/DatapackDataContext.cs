@@ -1,10 +1,10 @@
-﻿using cbhk_environment.Generators.DataPackGenerator.DatapackInitializationForms;
+﻿using cbhk.Generators.DataPackGenerator.DatapackInitializationForms;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows;
 
-namespace cbhk_environment.Generators.DataPackGenerator
+namespace cbhk.Generators.DataPackGenerator
 {
-    public class datapack_datacontext:ObservableObject
+    public class DatapackDataContext:ObservableObject
     {
         #region 主页，模板设置页，属性设置页，数据上下文的引用
         /// <summary>

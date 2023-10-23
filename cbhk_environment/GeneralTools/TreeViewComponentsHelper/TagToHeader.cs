@@ -1,4 +1,4 @@
-﻿using cbhk_environment.CustomControls;
+﻿using cbhk.CustomControls;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace cbhk_environment.GeneralTools.TreeViewComponentsHelper
+namespace cbhk.GeneralTools.TreeViewComponentsHelper
 {
     /// <summary>
     /// 处理当前节点的Tag属性向控件的转换

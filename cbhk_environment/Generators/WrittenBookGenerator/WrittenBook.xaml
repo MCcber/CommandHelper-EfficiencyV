@@ -1,33 +1,33 @@
 ﻿<local_window:CommonWindow
-    x:Class="cbhk_environment.Generators.WrittenBookGenerator.WrittenBook"
+    x:Class="cbhk.Generators.WrittenBookGenerator.WrittenBook"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:ColorPicker="clr-namespace:cbhk_environment.CustomControls.ColorPickers"
-    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
+    xmlns:ColorPicker="clr-namespace:cbhk.CustomControls.ColorPickers"
+    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk_environment.Generators.WrittenBookGenerator"
-    xmlns:local_datacontext="clr-namespace:cbhk_environment.Generators.WrittenBookGenerator"
-    xmlns:local_window="clr-namespace:cbhk_environment.WindowDictionaries"
+    xmlns:local="clr-namespace:cbhk.Generators.WrittenBookGenerator"
+    xmlns:local_datacontext="clr-namespace:cbhk.Generators.WrittenBookGenerator"
+    xmlns:local_window="clr-namespace:cbhk.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="成书生成器"
-    Width="450"
+    Width="490"
     Height="700"
     ContextMenu="{x:Null}"
-    Icon="/cbhk_environment;component/resources/common/images/spawnerIcons/IconWrittenBook.png"
+    Icon="/cbhk;component/resources/common/images/spawnerIcons/IconWrittenBook.png"
     ResizeMode="CanMinimize"
     mc:Ignorable="d">
 
     <Window.DataContext>
-        <local_datacontext:written_book_datacontext />
+        <local_datacontext:WrittenBookDataContext />
     </Window.DataContext>
 
     <Window.Resources>
-        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormal.png" />
-        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressed.png" />
-        <ImageBrush x:Key="Issue" ImageSource="/cbhk_environment;component/resources/common/images/Issue.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowRight.png" />
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk;component/resources/common/images/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk;component/resources/common/images/ButtonPressed.png" />
+        <ImageBrush x:Key="Issue" ImageSource="/cbhk;component/resources/common/images/Issue.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowRight.png" />
     </Window.Resources>
 
     <Window.InputBindings>
@@ -104,7 +104,7 @@
                 <CustomControls:IconTextButtons.ToolTip>
                     <ToolTip
                         Background="#424242"
-                        Content="设置选定文本粗体"
+                        Content="粗体"
                         Foreground="White" />
                 </CustomControls:IconTextButtons.ToolTip>
                 <TextBlock FontWeight="Bold" Text="B" />
@@ -126,7 +126,7 @@
                 <CustomControls:IconTextButtons.ToolTip>
                     <ToolTip
                         Background="#424242"
-                        Content="设置选定文本斜体"
+                        Content="斜体"
                         Foreground="White" />
                 </CustomControls:IconTextButtons.ToolTip>
                 <TextBlock FontStyle="Italic" Text="i" />
@@ -147,7 +147,7 @@
                 <CustomControls:IconTextButtons.ToolTip>
                     <ToolTip
                         Background="#424242"
-                        Content="设置选定文本下划线"
+                        Content="下划线"
                         Foreground="White" />
                 </CustomControls:IconTextButtons.ToolTip>
                 <TextBlock Text="U">
@@ -172,7 +172,7 @@
                 <CustomControls:IconTextButtons.ToolTip>
                     <ToolTip
                         Background="#424242"
-                        Content="设置选定文本删除线"
+                        Content="删除线"
                         Foreground="White" />
                 </CustomControls:IconTextButtons.ToolTip>
                 <TextBlock Text="S">
@@ -198,24 +198,21 @@
                 <CustomControls:IconTextButtons.ToolTip>
                     <ToolTip
                         Background="#424242"
-                        Content="设置选定文本混淆文字"
+                        Content="混淆"
                         Foreground="White" />
                 </CustomControls:IconTextButtons.ToolTip>
             </CustomControls:IconTextButtons>
-            <Grid
-                Width="36"
-                Height="36"
-                HorizontalAlignment="Left">
-                <TextBlock
-                    VerticalAlignment="Center"
-                    Panel.ZIndex="1"
-                    Foreground="White"
-                    IsHitTestVisible="False"
-                    Text="Color"
-                    TextAlignment="Center" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
                 <CustomControls:IconTextButtons
+                    Grid.Column="0"
+                    Width="40"
+                    Height="40"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
+                    VerticalAlignment="Center"
                     Panel.ZIndex="0"
                     Background="{StaticResource ButtonNormal}"
                     ClickMode="Press"
@@ -224,14 +221,27 @@
                     Foreground="Black"
                     PressedBackground="{StaticResource ButtonPressed}"
                     Style="{DynamicResource IconTextButton}"
-                    ToolTip="重置选定文本样式"
                     ToolTipService.InitialShowDelay="0"
-                    ToolTipService.ShowDuration="1000" />
+                    ToolTipService.ShowDuration="0">
+                    <CustomControls:IconTextButtons.ToolTip>
+                        <ToolTip
+                            Background="#424242"
+                            Content="重置选定文本样式"
+                            Foreground="White" />
+                    </CustomControls:IconTextButtons.ToolTip>
+                </CustomControls:IconTextButtons>
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Panel.ZIndex="1"
+                    Foreground="White"
+                    IsHitTestVisible="False"
+                    Text="Color"
+                    TextAlignment="Center" />
                 <ColorPicker:ColorPickers
-                    Width="55"
-                    Height="50"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
+                    Grid.Column="1"
+                    Width="40"
+                    Height="40"
                     Panel.ZIndex="0"
                     Background="Black"
                     SelectColor="{Binding SelectionColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -314,13 +324,13 @@
                 Grid.Row="0"
                 HorizontalAlignment="Stretch"
                 Background="#EFF2F1"
-                BorderThickness="10,5,10,11"
+                BorderThickness="10,4,10,10"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
                 Content="署名并关闭"
                 FontSize="20"
                 Foreground="Black"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4 6 4 6"
+                PressedBorderThickness="10 4 10 5"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
                 PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
                 PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
@@ -339,12 +349,12 @@
                 Grid.Row="1"
                 HorizontalAlignment="Stretch"
                 Background="#EFF2F1"
-                BorderThickness="10,5,10,11"
+                BorderThickness="10,4,10,10"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
                 Content="取消"
                 FontSize="20"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4 6 4 6"
+                PressedBorderThickness="10 4 10 5"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
                 PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
                 PressedRightBorderTexture="{StaticResource ButtonPressedRight}"

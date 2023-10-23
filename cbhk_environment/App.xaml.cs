@@ -1,96 +1,98 @@
-﻿using System.Text;
-using System.Threading.Tasks;
-using System;
+﻿using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Threading;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Media;
-using System.IO;
-using System.Drawing.Text;
+using Serilog;
+using SingleInstanceCore;
 
-namespace cbhk_environment
+namespace cbhk
 {
     /// <summary>
     /// App.xaml 的交互逻辑
     /// </summary>
-    public partial class App : Application
+    public partial class App : Application,ISingleInstance
     {
-        public static string targetFamilyFilePath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + "resources\\Fonts\\Selected.ttf";
-        public static string targetSystemFamilyIndexFilePath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + "resources\\Fonts\\Selected.txt";
-
-        static App()
+        public void OnInstanceInvoked(string[] args)
         {
-            //Register Syncfusion license
-            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("MjY2ODU3MUAzMjMyMmUzMDJlMzBqY25rMHdhOHVCV056R2RXYTRscUhrb0JQNmNQSXFVcnFFOGRnVUt4b3NVPQ==");
-            if (File.Exists(targetFamilyFilePath))
-            {
-                FontFamily family = new(targetFamilyFilePath);
-                TextElement.FontFamilyProperty.OverrideMetadata(typeof(TextElement), new FrameworkPropertyMetadata(family));
-                TextBlock.FontFamilyProperty.OverrideMetadata(typeof(TextBlock), new FrameworkPropertyMetadata(family));
-            }
-            else
-            if(File.Exists(targetSystemFamilyIndexFilePath))
-            {
-                InstalledFontCollection fontCollection = new();
-                FontFamily fontFamily = new(fontCollection.Families[int.Parse(File.ReadAllText(targetSystemFamilyIndexFilePath))].Name);
-                TextElement.FontFamilyProperty.OverrideMetadata(typeof(TextElement), new FrameworkPropertyMetadata(fontFamily));
-                TextBlock.FontFamilyProperty.OverrideMetadata(typeof(TextBlock), new FrameworkPropertyMetadata(fontFamily));
-            }
-        }
-        void App_Startup(object sender, StartupEventArgs e)
-        {
-            //UI线程未捕获异常处理事件
-            DispatcherUnhandledException += new DispatcherUnhandledExceptionEventHandler(App_DispatcherUnhandledException);
-            //Task线程内未捕获异常处理事件
-            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-            //非UI线程未捕获异常处理事件
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            Exit += App_Exit;   
         }
 
-        void App_Exit(object sender, ExitEventArgs e)
+        private void App_Exit(object sender, ExitEventArgs e)
         {
+            SingleInstance.Cleanup();
         }
 
-        void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        protected override void OnStartup(StartupEventArgs e)
         {
-            try
+            bool isFirstInstance = this.InitializeAsFirstInstance("CommandHelper-EfficiencyV");
+            if (!isFirstInstance)
             {
-                e.Handled = true; //把 Handled 属性设为true，表示此异常已处理，程序可以继续运行，不会强制退出      
-            }
-            catch (Exception ex)
-            {
-                //此时程序出现严重异常，将强制结束退出
-                System.IO.File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "test.log", ex.Message);
-                MessageBox.Show("UI线程发生致命错误！");
+                MessageBox.Show("CommandHelper-EfficiencyV is already Running!", "CommandHelper-EfficiencyV", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                var currentProcess = Process.GetCurrentProcess();
+                var processes = Process.GetProcessesByName(currentProcess.ProcessName);
+
+                foreach (var process in processes)
+                {
+                    if (process.Id != currentProcess.Id && process.MainModule.FileName == currentProcess.MainModule.FileName)
+                    {
+                        IntPtr hWnd = NativeMethods.FindWindow(null, process.MainWindowTitle);
+                        NativeMethods.ShowWindow(hWnd, 9); // SW_RESTORE = 9
+                        NativeMethods.SetForegroundWindow(hWnd);
+                        break;
+                    }
+                }
+
+                Current.Shutdown();
             }
 
+            SetupExceptionHandling();
+            base.OnStartup(e);
+            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NHaF5cXmpCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdgWH9edXRSRmBdVUR2WEs=");
         }
 
-        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        /// <summary>
+        /// Serilog捕获异常输出日志
+        /// </summary>
+        private void SetupExceptionHandling()
         {
-            StringBuilder sbEx = new StringBuilder();
-            if (e.IsTerminating)
-            {
-                sbEx.Append("非UI线程发生致命错误");
-            }
-            sbEx.Append("非UI线程异常：");
-            if (e.ExceptionObject is Exception)
-            {
-                sbEx.Append(((Exception)e.ExceptionObject).Message);
-            }
-            else
-            {
-                sbEx.Append(e.ExceptionObject);
-            }
-            MessageBox.Show(sbEx.ToString());
-        }
+            // 设置日志输出到文件
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.File(AppDomain.CurrentDomain.BaseDirectory + "Logs\\"+DateTime.Now.ToString("yyyy.MM.dd")+"\\"+DateTime.Now.ToString("HH-mm-ss") +".txt")
+                .CreateLogger();
 
-        void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
-        {
-            //task线程内未处理捕获
-            MessageBox.Show("Task线程异常：" + e.Exception.Message);
-            e.SetObserved();//设置该异常已察觉（这样处理后就不会引起程序崩溃）
+            // 全局异常监控
+            AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
+            {
+                if((ev.ExceptionObject as Exception).Message.Trim().Length > 0)
+                {
+                    Log.Fatal(ev.ExceptionObject as Exception, "Oops!An exception occurred");
+                    Log.CloseAndFlush();
+                }
+            };
+
+            // 异常捕获监控
+            DispatcherUnhandledException += (s, ev) =>
+            {
+                if(ev.Exception.Message.Length > 0)
+                {
+                    Log.Error(ev.Exception, "Oops!An UI exception occurred");
+                    ev.Handled = true;
+                    Log.CloseAndFlush();
+                }
+            };
         }
+    }
+
+    public static class NativeMethods
+    {
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
     }
 }

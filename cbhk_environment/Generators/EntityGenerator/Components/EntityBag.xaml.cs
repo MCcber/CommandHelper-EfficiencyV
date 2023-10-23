@@ -1,5 +1,6 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -7,7 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.EntityGenerator.Components
+namespace cbhk.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// EntityBag.xaml 的交互逻辑
@@ -27,14 +28,20 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
         private void ImportFromClipboard_Click(object sender, RoutedEventArgs e)
         {
             string itemData = ExternalDataImportManager.GetItemDataHandler(Clipboard.GetText(),false);
-            JObject nbtData = JObject.Parse(itemData);
-            JToken itemID = nbtData.SelectToken("Item.id");
-            if (itemID == null)
-                itemID = nbtData.SelectToken("id");
-            ItemIcon.Tag = nbtData;
-            string uri = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.ToString() + ".png";
-            if(File.Exists(uri))
-            (ItemIcon.Child as Image).Source = new BitmapImage(new Uri(uri, UriKind.Absolute));
+            try
+            {
+                JObject nbtData = JObject.Parse(itemData);
+                JToken itemID = nbtData.SelectToken("Item.id");
+                itemID ??= nbtData.SelectToken("id");
+                ItemIcon.Tag = nbtData;
+                string uri = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.ToString() + ".png";
+                if (File.Exists(uri))
+                    (ItemIcon.Child as Image).Source = new BitmapImage(new Uri(uri, UriKind.Absolute));
+            }
+            catch(Exception exception)
+            {
+                Message.PushMessage(exception.Message,MessageBoxImage.Error);
+            }
         }
 
         /// <summary>

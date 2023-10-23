@@ -1,26 +1,23 @@
-﻿using cbhk_environment.CustomControls;
+﻿using cbhk.Generators.WrittenBookGenerator;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.Generators.WrittenBookGenerator.Components
+namespace cbhk.CustomControls
 {
     /// <summary>
-    /// TextEventsForm.xaml 的交互逻辑
+    /// TextEvent.xaml 的交互逻辑
     /// </summary>
-    public partial class TextEventsForm : UserControl
+    public partial class TextEvent : UserControl
     {
         #region 允许编辑点击事件
         private bool enableEditClickEvent = false;
         public bool EnableEditClickEvent
         {
-            get
-            {
-                return enableEditClickEvent;
-            }
+            get => enableEditClickEvent;
             set
             {
                 enableEditClickEvent = value;
-                ClickEventPanel.Visibility = EnableEditClickEvent ?Visibility.Visible:Visibility.Collapsed;
+                ClickEventPanel.Visibility = EnableEditClickEvent ? Visibility.Visible : Visibility.Collapsed;
             }
         }
         #endregion
@@ -29,10 +26,7 @@ namespace cbhk_environment.Generators.WrittenBookGenerator.Components
         private bool enableEditHoverEvent = false;
         public bool EnableEditHoverEvent
         {
-            get
-            {
-                return enableEditHoverEvent;
-            }
+            get => enableEditHoverEvent;
             set
             {
                 enableEditHoverEvent = value;
@@ -45,10 +39,7 @@ namespace cbhk_environment.Generators.WrittenBookGenerator.Components
         private bool enableEditInsertion = false;
         public bool EnableEditInsertion
         {
-            get
-            {
-                return enableEditInsertion;
-            }
+            get => enableEditInsertion;
             set
             {
                 enableEditInsertion = value;
@@ -57,9 +48,10 @@ namespace cbhk_environment.Generators.WrittenBookGenerator.Components
         }
         #endregion
 
-        public TextEventsForm()
+        public TextEvent()
         {
             InitializeComponent();
+            ClickEventPanel.Visibility = HoverEventPanel.Visibility = InsertionPanel.Visibility = Visibility.Collapsed;
         }
 
         /// <summary>
@@ -70,7 +62,7 @@ namespace cbhk_environment.Generators.WrittenBookGenerator.Components
         private void ClickEventsLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox textComboBoxs = sender as ComboBox;
-            textComboBoxs.ItemsSource = written_book_datacontext.clickEventSource;
+            textComboBoxs.ItemsSource = WrittenBookDataContext.clickEventSource;
             textComboBoxs.SelectedIndex = 0;
         }
 
@@ -82,7 +74,7 @@ namespace cbhk_environment.Generators.WrittenBookGenerator.Components
         private void HoverEventsLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox textComboBoxs = sender as ComboBox;
-            textComboBoxs.ItemsSource = written_book_datacontext.hoverEventSource;
+            textComboBoxs.ItemsSource = WrittenBookDataContext.hoverEventSource;
             textComboBoxs.SelectedIndex = 0;
         }
 
@@ -131,7 +123,7 @@ namespace cbhk_environment.Generators.WrittenBookGenerator.Components
         /// <param name="e"></param>
         private void EnableClickEventChecked(object sender, RoutedEventArgs e)
         {
-            EnableClickEventClick(sender,null);
+            EnableClickEventClick(sender, null);
         }
 
         /// <summary>
@@ -151,7 +143,7 @@ namespace cbhk_environment.Generators.WrittenBookGenerator.Components
         /// <param name="e"></param>
         private void EnableHoverEventChecked(object sender, RoutedEventArgs e)
         {
-            EnableHoverEventClick(sender,null);
+            EnableHoverEventClick(sender, null);
         }
 
         /// <summary>
@@ -171,7 +163,7 @@ namespace cbhk_environment.Generators.WrittenBookGenerator.Components
         /// <param name="e"></param>
         private void EnableInsertionChecked(object sender, RoutedEventArgs e)
         {
-            EnableInsertionClick(sender,null);
+            EnableInsertionClick(sender, null);
         }
 
         /// <summary>

@@ -1,7 +1,7 @@
-﻿using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.Information;
-using cbhk_environment.Generators.EntityGenerator;
-using cbhk_environment.Generators.EntityGenerator.Components;
+﻿using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.Generators.EntityGenerator;
+using cbhk.Generators.EntityGenerator.Components;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.SpawnerGenerator.Components
+namespace cbhk.Generators.SpawnerGenerator.Components
 {
     /// <summary>
     /// ReferenceEntity.xaml 的交互逻辑
@@ -60,14 +60,7 @@ namespace cbhk_environment.Generators.SpawnerGenerator.Components
             }
             catch
             {
-                MessageDisplayer messageDisplayer = new()
-                {
-                    Icon = spawner.Icon,
-                    Title = "导入失败"
-                };
-                messageDisplayerDataContext context = messageDisplayer.DataContext as messageDisplayerDataContext;
-                context.DisplayInfomation = "剪切板内容与实体无关或内容有误";
-                messageDisplayer.ShowDialog();
+                Message.PushMessage("导入失败！剪切板内容与实体无关或内容有误");
             }
         }
 
@@ -106,14 +99,7 @@ namespace cbhk_environment.Generators.SpawnerGenerator.Components
                     {
                         Button button = sender as Button;
                         Spawner spawner = Window.GetWindow(button) as Spawner;
-                        MessageDisplayer messageDisplayer = new()
-                        {
-                            Icon = spawner.Icon,
-                            Title = "导入失败"
-                        };
-                        messageDisplayerDataContext context = messageDisplayer.DataContext as messageDisplayerDataContext;
-                        context.DisplayInfomation = "剪切板内容与实体无关或内容有误";
-                        messageDisplayer.ShowDialog();
+                        Message.PushMessage("导入失败！剪切板内容与实体无关或内容有误");
                     }
                 }
             }
@@ -127,8 +113,8 @@ namespace cbhk_environment.Generators.SpawnerGenerator.Components
         private void Spawn_Click(object sender, RoutedEventArgs e)
         {
             Entity entity = new();
-            entity_datacontext context = entity.DataContext as entity_datacontext;
-            entityPagesDataContext pageContext = (context.EntityPageList[0].Content as EntityPages).DataContext as entityPagesDataContext;
+            EntityDataContext context = entity.DataContext as EntityDataContext;
+            EntityPagesDataContext pageContext = (context.EntityPageList[0].Content as EntityPages).DataContext as EntityPagesDataContext;
             pageContext.UseForTool = true;
             if (entity.ShowDialog().Value)
             {

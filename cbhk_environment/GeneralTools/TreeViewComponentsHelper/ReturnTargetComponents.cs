@@ -1,4 +1,4 @@
-﻿using cbhk_environment.CustomControls;
+﻿using cbhk.CustomControls;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.GeneralTools.TreeViewComponentsHelper
+namespace cbhk.GeneralTools.TreeViewComponentsHelper
 {
     /// <summary>
     /// 处理每一层控件由Tag转向控件的实际逻辑
@@ -92,7 +92,7 @@ namespace cbhk_environment.GeneralTools.TreeViewComponentsHelper
                         Margin = new Thickness(5, 0, 0, 0),
                         Style = Application.Current.Resources["IconTextButton"] as Style,
                         Foreground = blackBrush,
-                        Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/Issue.png", UriKind.RelativeOrAbsolute))),
+                        Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/Issue.png", UriKind.RelativeOrAbsolute))),
                         ToolTip = value
                     };
                     ToolTipService.SetInitialShowDelay(description,0);
@@ -209,8 +209,8 @@ namespace cbhk_environment.GeneralTools.TreeViewComponentsHelper
                                 Padding = new Thickness(5),
                                 Style = Application.Current.Resources["IconTextButton"] as Style,
                                 Foreground = blackBrush,
-                                Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonNormal.png", UriKind.RelativeOrAbsolute))),
-                                PressedBackground = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonPressed.png", UriKind.RelativeOrAbsolute))),
+                                Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/ButtonNormal.png", UriKind.RelativeOrAbsolute))),
+                                PressedBackground = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/ButtonPressed.png", UriKind.RelativeOrAbsolute))),
                                 FontSize = 12,
                                 ClickMode = ClickMode.Release,
                                 Content = "+"
@@ -232,8 +232,8 @@ namespace cbhk_environment.GeneralTools.TreeViewComponentsHelper
                         Padding = new Thickness(5),
                         Style = Application.Current.Resources["IconTextButton"] as Style,
                         Foreground = blackBrush,
-                        Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonNormal.png", UriKind.RelativeOrAbsolute))),
-                        PressedBackground = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonPressed.png", UriKind.RelativeOrAbsolute))),
+                        Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/ButtonNormal.png", UriKind.RelativeOrAbsolute))),
+                        PressedBackground = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/ButtonPressed.png", UriKind.RelativeOrAbsolute))),
                         FontSize = 12,
                         ClickMode = ClickMode.Release,
                         Content = "+"
@@ -276,8 +276,8 @@ namespace cbhk_environment.GeneralTools.TreeViewComponentsHelper
                 Padding = new Thickness(5),
                 Style = currentButton.Style,
                 Foreground = blackBrush,
-                Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonNormal.png", UriKind.RelativeOrAbsolute))),
-                PressedBackground = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonPressed.png", UriKind.RelativeOrAbsolute))),
+                Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/ButtonNormal.png", UriKind.RelativeOrAbsolute))),
+                PressedBackground = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/ButtonPressed.png", UriKind.RelativeOrAbsolute))),
                 FontSize = 12,
                 ClickMode = ClickMode.Release,
                 Content = "-"
@@ -387,8 +387,8 @@ namespace cbhk_environment.GeneralTools.TreeViewComponentsHelper
                         IconTextButtons deleteButton = new()
                         {
                             Padding = new Thickness(3),
-                            Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonNormal.png", UriKind.RelativeOrAbsolute))),
-                            PressedBackground = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonPressed.png", UriKind.RelativeOrAbsolute))),
+                            Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/ButtonNormal.png", UriKind.RelativeOrAbsolute))),
+                            PressedBackground = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/ButtonPressed.png", UriKind.RelativeOrAbsolute))),
                             Style = Application.Current.Resources["IconTextButton"] as Style,
                             FontSize = 12,
                             Foreground = whiteBrush,

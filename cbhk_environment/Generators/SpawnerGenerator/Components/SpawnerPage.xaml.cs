@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace cbhk_environment.Generators.SpawnerGenerator.Components
+namespace cbhk.Generators.SpawnerGenerator.Components
 {
     /// <summary>
     /// SpawnerPage.xaml 的交互逻辑

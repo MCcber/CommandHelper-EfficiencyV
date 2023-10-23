@@ -1,5 +1,6 @@
-﻿using cbhk_environment.CustomControls;
+﻿using cbhk.CustomControls;
 using System;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,7 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.GenerateResultDisplayer
+namespace cbhk.GenerateResultDisplayer
 {
     /// <summary>
     /// Displayer.xaml 的交互逻辑
@@ -59,17 +60,17 @@ namespace cbhk_environment.GenerateResultDisplayer
         /// 生成结果
         /// </summary>
         /// <param name="Overlying">是否覆盖</param>
-        /// <param name="spawn_result">数据集</param>
-        /// <param name="header_text">数据头</param>
+        /// <param name="spawnResult">数据集</param>
+        /// <param name="headerText">数据头</param>
         /// <param name="head_image_pathes">所表示的生成器图标</param>
-        public void GeneratorResult(string spawn_result, string header_text, string head_image_path)
+        public void GeneratorResult(string spawnResult, string headerText, string headImagePath)
         {
             #region 遍历当前标签页对象，查找是否有相同类型的
             bool ExistSamePage = false;
             RichTabItems currentTabItem = null;
             foreach (RichTabItems tab in ResultTabControl.Items)
             {
-                ExistSamePage = tab.Header.ToString() == header_text;
+                ExistSamePage = tab.Header.ToString() == headerText;
                 if (ExistSamePage)
                 {
                     currentTabItem = tab;
@@ -92,16 +93,17 @@ namespace cbhk_environment.GenerateResultDisplayer
                 #region 显示生成器图标
                 Paragraph firstParagraph = new() { FontSize = 15, TextAlignment = TextAlignment.Center };
                 firstParagraph.Inlines.Add(new Run("------------ "));
-                firstParagraph.Inlines.Add(new Image()
-                {
-                    Source = new BitmapImage(new Uri(head_image_path, UriKind.Absolute)),
-                    Width = 20,
-                    Height = 20
-                });
+                if (File.Exists(headImagePath) || (headImagePath.StartsWith("pack") && Application.GetResourceStream(new Uri(headImagePath, UriKind.RelativeOrAbsolute)) is not null))
+                    firstParagraph.Inlines.Add(new Image()
+                    {
+                        Source = new BitmapImage(new Uri(headImagePath, UriKind.RelativeOrAbsolute)),
+                        Width = 20,
+                        Height = 20
+                    });
                 firstParagraph.Inlines.Add(new Run(" ------------"));
                 #endregion
                 Paragraph paragraph = new() { TextAlignment = TextAlignment.Left };
-                Run newResult = new() { ToolTip = toolTip, Text = spawn_result, FontFamily = fontFamily,Cursor = Cursors.Hand };
+                Run newResult = new() { ToolTip = toolTip, Text = spawnResult, FontFamily = fontFamily,Cursor = Cursors.Hand };
                 ToolTipService.SetBetweenShowDelay(newResult, 0);
                 ToolTipService.SetInitialShowDelay(newResult, 0);
                 newResult.MouseEnter += (a, b) =>
@@ -114,7 +116,7 @@ namespace cbhk_environment.GenerateResultDisplayer
                     Run run = a as Run;
                     run.TextDecorations = null;
                 };
-                newResult.MouseLeftButtonDown += (a, b) => { Clipboard.SetText(spawn_result); };
+                newResult.MouseLeftButtonDown += (a, b) => { Clipboard.SetText(spawnResult); };
                 paragraph.Inlines.Add(newResult);
                 flowDocument.Blocks.Add(firstParagraph);
                 flowDocument.Blocks.Add(paragraph);
@@ -139,7 +141,7 @@ namespace cbhk_environment.GenerateResultDisplayer
                 {
                     IsContentSaved = true,
                     Content = result_box,
-                    Header = header_text,
+                    Header = headerText,
                     BorderThickness = new(4, 4, 4, 0),
                     Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
                     SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
@@ -165,8 +167,8 @@ namespace cbhk_environment.GenerateResultDisplayer
                 splitParagraph.Inlines.Add(splitRun);
                 #endregion
                 Paragraph newParagraph = new() { TextAlignment = TextAlignment.Left };
-                Run newResult = new() { ToolTip = toolTip, FontFamily = fontFamily,Cursor = Cursors.Hand,Text = spawn_result };
-                newResult.MouseLeftButtonDown += (a, b) => { Clipboard.SetText(spawn_result); };
+                Run newResult = new() { ToolTip = toolTip, FontFamily = fontFamily,Cursor = Cursors.Hand,Text = spawnResult };
+                newResult.MouseLeftButtonDown += (a, b) => { Clipboard.SetText(spawnResult); };
                 newResult.MouseEnter += (a, b) =>
                 {
                     Run run = a as Run;

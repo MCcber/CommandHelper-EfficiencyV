@@ -1,8 +1,8 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.Generators.EntityGenerator.Components;
-using cbhk_environment.WindowDictionaries;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.Generators.EntityGenerator.Components;
+using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -16,13 +16,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Media;
-using System.Windows.Threading;
 
-namespace cbhk_environment.Generators.EntityGenerator
+namespace cbhk.Generators.EntityGenerator
 {
-    public class entity_datacontext : ObservableObject
+    public class EntityDataContext : ObservableObject
     {
         #region 返回和运行指令等指令
         public RelayCommand<CommonWindow> ReturnCommand { get; set; }
@@ -47,10 +45,30 @@ namespace cbhk_environment.Generators.EntityGenerator
         #endregion
 
         #region 字段与引用
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public MainWindow home = null;
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconEntities.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconEntities.png";
         //实体标签页的数据源
-        public ObservableCollection<RichTabItems> EntityPageList { get; set; } = new();
+        public ObservableCollection<RichTabItems> EntityPageList { get; set; } = new() {
+            new RichTabItems()
+            {
+                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
+                Header = "实体",
+                FontWeight = FontWeights.Normal,
+                IsContentSaved = true,
+                BorderThickness = new(4, 3, 4, 0),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
+                RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
+                TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
+                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
+                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+            } };
         //实体标签页数量,用于为共通标签提供数据
         private int passengerMaxIndex = 0;
         public int PassengerMaxIndex
@@ -70,7 +88,7 @@ namespace cbhk_environment.Generators.EntityGenerator
         public DataTable EntityIdTable = null;
         #endregion
 
-        public entity_datacontext()
+        public EntityDataContext()
         {
             #region 连接指令
             ReturnCommand = new RelayCommand<CommonWindow>(return_command);
@@ -93,23 +111,13 @@ namespace cbhk_environment.Generators.EntityGenerator
             });
             #endregion
             #region 载入实体预设数据
-            EntityPageList.Add(new RichTabItems()
+            Task.Run(async () =>
             {
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                Header = "实体",
-                FontWeight = FontWeights.Normal,
-                IsContentSaved = true,
-                BorderThickness = new(4, 3, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    EntityPageList[0].Content = new EntityPages();
+                });
             });
-            EntityPageList[0].Content = new EntityPages();
             #endregion
         }
 
@@ -188,11 +196,10 @@ namespace cbhk_environment.Generators.EntityGenerator
         /// <param name="win"></param>
         private void return_command(CommonWindow win)
         {
-            Entity.cbhk.Topmost = true;
-            Entity.cbhk.WindowState = WindowState.Normal;
-            Entity.cbhk.Show();
-            Entity.cbhk.Topmost = false;
-            Entity.cbhk.ShowInTaskbar = true;
+            home.WindowState = WindowState.Normal;
+            home.Show();
+            home.ShowInTaskbar = true;
+            home.Focus();
             win.Close();
         }
 
@@ -207,7 +214,7 @@ namespace cbhk_environment.Generators.EntityGenerator
                 await entityPage.Dispatcher.InvokeAsync(() =>
                 {
                     EntityPages entityPages = entityPage.Content as EntityPages;
-                    entityPagesDataContext pageContext = entityPages.DataContext as entityPagesDataContext;
+                    EntityPagesDataContext pageContext = entityPages.DataContext as EntityPagesDataContext;
                     string result = pageContext.run_command(false) + "\r\n";
                     Result.Append(result);
                 });
@@ -247,7 +254,7 @@ namespace cbhk_environment.Generators.EntityGenerator
                 await entityPage.Dispatcher.InvokeAsync(() =>
                 {
                     EntityPages entityPages = entityPage.Content as EntityPages;
-                    entityPagesDataContext pageContext = entityPages.DataContext as entityPagesDataContext;
+                    EntityPagesDataContext pageContext = entityPages.DataContext as EntityPagesDataContext;
                     string result = pageContext.run_command(false);
                     string nbt = "";
                     if (result.Contains('{'))

@@ -1,4 +1,4 @@
-﻿namespace cbhk_environment.Generators.SignGenerator
+﻿namespace cbhk.Generators.SignGenerator
 {
     /// <summary>
     /// Sign.xaml 的交互逻辑

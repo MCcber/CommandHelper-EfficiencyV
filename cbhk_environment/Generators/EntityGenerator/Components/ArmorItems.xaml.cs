@@ -1,7 +1,7 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.Generators.ItemGenerator;
-using cbhk_environment.Generators.ItemGenerator.Components;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.Generators.ItemGenerator;
+using cbhk.Generators.ItemGenerator.Components;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.EntityGenerator.Components
+namespace cbhk.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// ArmorItems.xaml 的交互逻辑
@@ -113,9 +113,12 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
         private void generator_Click(object sender, RoutedEventArgs e)
         {
             IconTextButtons iconTextButtons = sender as IconTextButtons;
+            Entity entity = Window.GetWindow(iconTextButtons) as Entity;
+            EntityDataContext entityContext = entity.DataContext as EntityDataContext;
             int currentRow = Grid.GetRow(iconTextButtons);
-            Item item = new(Entity.cbhk);
-            item_datacontext context = item.DataContext as item_datacontext;
+            Item item = new();
+            ItemDataContext context = item.DataContext as ItemDataContext;
+            context.home = entityContext.home;
             if(item.ShowDialog().Value)
             {
                 Image currentImage = null;

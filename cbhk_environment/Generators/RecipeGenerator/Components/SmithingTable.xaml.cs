@@ -1,5 +1,5 @@
-﻿using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.Displayer;
+﻿using cbhk.GeneralTools;
+using cbhk.GeneralTools.Displayer;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -12,9 +12,9 @@ using System.Windows.Input;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Data;
-using cbhk_environment.GeneralTools.MessageTip;
+using cbhk.GeneralTools.MessageTip;
 
-namespace cbhk_environment.Generators.RecipeGenerator.Components
+namespace cbhk.Generators.RecipeGenerator.Components
 {
     /// <summary>
     /// SmithingTable.xaml 的交互逻辑

@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
     public class TextButtons:Button
     {

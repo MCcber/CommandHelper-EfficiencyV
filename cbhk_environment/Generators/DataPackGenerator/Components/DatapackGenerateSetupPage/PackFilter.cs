@@ -1,4 +1,4 @@
-﻿namespace cbhk_environment.Generators.DataPackGenerator.Components.DatapackGenerateSetupPage
+﻿namespace cbhk.Generators.DataPackGenerator.Components.DatapackGenerateSetupPage
 {
     /// <summary>
     /// 包过滤器数据结构

@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationForms
+namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
 {
     public class TemplateSelectPageHeightConverter:IValueConverter
     {

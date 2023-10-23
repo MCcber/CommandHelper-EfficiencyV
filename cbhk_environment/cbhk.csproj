@@ -26,6 +26,7 @@
   <PropertyGroup>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+    <PackageIcon></PackageIcon>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <OutputPath>bin\x86\Debug\</OutputPath>
@@ -48,6 +49,7 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
+    <Resource Include="cb.ico" />
     <Resource Include="Generators\RecipeGenerator\Images\Cell.png" />
     <Resource Include="Generators\RecipeGenerator\Images\CraftingTable.png" />
     <Resource Include="Generators\RecipeGenerator\Images\Arrow.png" />
@@ -58,19 +60,23 @@
     <Resource Include="resources\cbhk_form\images\Error.png">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
+    <Resource Include="resources\cbhk_form\images\eyeHide.png" />
+    <Resource Include="resources\cbhk_form\images\eyeShow.png" />
     <Resource Include="resources\cbhk_form\images\Info.png">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
+    <Resource Include="resources\cbhk_form\images\login.jpg" />
+    <Resource Include="resources\cbhk_form\images\LoginMinimize.png" />
+    <Resource Include="resources\cbhk_form\images\LoginText.png" />
+    <Resource Include="resources\cbhk_form\images\LoginX.png" />
     <Resource Include="resources\cbhk_form\images\more\github.png" />
+    <Resource Include="resources\cbhk_form\images\SignInBackground.png" />
     <Resource Include="resources\common\fonts\MinecraftAE.ttf" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="resources\cbhk_form\images\cbhk_group.jpg" />
     <Resource Include="resources\cbhk_form\images\my_qq.png" />
     <Resource Include="resources\cbhk_form\images\special_thanks.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="cb.ico" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">
@@ -131,10 +137,10 @@
       <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="SharpCompress" Version="0.34.0" />
-    <PackageReference Include="Syncfusion.Edit.WPF" Version="23.1.36" />
-    <PackageReference Include="Syncfusion.Licensing" Version="23.1.36" />
-    <PackageReference Include="Syncfusion.SfRichTextBoxAdv.WPF" Version="23.1.36" />
+    <PackageReference Include="SharpCompress" Version="0.34.1" />
+    <PackageReference Include="SingleInstanceCore" Version="2.2.2" />
+    <PackageReference Include="Syncfusion.Edit.WPF" Version="23.1.41" />
+    <PackageReference Include="Syncfusion.Licensing" Version="23.1.41" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
     <PackageReference Include="System.Runtime.WindowsRuntime.UI.Xaml">
@@ -148,9 +154,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.5" />
     <PackageReference Include="WriteableBitmapEx" Version="1.6.8" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="resources\cbhk_form\images\cb.ico" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="resources\cbhk_form\images\empty.png" />
@@ -375,6 +378,7 @@
     <Compile Remove="System.Diagnostics.CodeAnalysi\NotNullIfNotNullAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="cb.ico" />
     <None Remove="GeneralTools\jsonReader - v1.3.js" />
     <None Remove="Generators\RecipeGenerator\cell.png" />
     <None Remove="Generators\RecipeGenerator\Components\Empty.png" />
@@ -387,8 +391,15 @@
     <None Remove="Generators\RecipeGenerator\Images\SmithingTable.png" />
     <None Remove="Generators\RecipeGenerator\Images\smoker.png" />
     <None Remove="resources\cbhk_form\images\Error.png" />
+    <None Remove="resources\cbhk_form\images\eyeHide.png" />
+    <None Remove="resources\cbhk_form\images\eyeShow.png" />
     <None Remove="resources\cbhk_form\images\Info.png" />
+    <None Remove="resources\cbhk_form\images\login.jpg" />
+    <None Remove="resources\cbhk_form\images\LoginMinimize.png" />
+    <None Remove="resources\cbhk_form\images\LoginText.png" />
+    <None Remove="resources\cbhk_form\images\LoginX.png" />
     <None Remove="resources\cbhk_form\images\more\github.png" />
+    <None Remove="resources\cbhk_form\images\SigninBackground.png" />
     <None Remove="resources\common\images\BlackEdit.png" />
     <None Remove="resources\common\images\ButtonFrame.png" />
     <None Remove="resources\common\images\ButtonNormalBottom.png" />
@@ -421,5 +432,8 @@
     <None Remove="resources\common\images\TextToggleButtonTrueLeftFrame.png" />
     <None Remove="resources\common\images\TextToggleButtonTrueRightFrame.png" />
     <None Remove="resources\common\images\TextToggleButtonTrueTopFrame.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
 </Project>

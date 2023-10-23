@@ -1,7 +1,7 @@
 ﻿using Syncfusion.Windows.Edit;
 using System.Windows.Media;
 
-namespace cbhk_environment.GeneralTools.Mcfunctrion
+namespace cbhk.GeneralTools.Mcfunctrion
 {
     public class McfunctionLanguage: ProceduralLanguageBase
     {

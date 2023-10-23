@@ -1,6 +1,6 @@
-﻿using cbhk_environment.ControlsDataContexts;
-using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.ControlsDataContexts;
+using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT
+namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// CustomPotionEffects.xaml 的交互逻辑

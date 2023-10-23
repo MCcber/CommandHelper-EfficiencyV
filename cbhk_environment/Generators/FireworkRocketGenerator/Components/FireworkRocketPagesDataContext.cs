@@ -1,7 +1,7 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.CustomControls.ColorPickers;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.GenerateResultDisplayer;
+﻿using cbhk.CustomControls;
+using cbhk.CustomControls.ColorPickers;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.GenerateResultDisplayer;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -20,7 +20,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
-namespace cbhk_environment.Generators.FireworkRocketGenerator.Components
+namespace cbhk.Generators.FireworkRocketGenerator.Components
 {
     public class FireworkRocketPagesDataContext:ObservableObject
     {
@@ -480,7 +480,7 @@ namespace cbhk_environment.Generators.FireworkRocketGenerator.Components
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconFireworks.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconFireworks.png";
         /// <summary>
         /// 原版颜色映射库
         /// </summary>
@@ -662,7 +662,7 @@ namespace cbhk_environment.Generators.FireworkRocketGenerator.Components
         {
             if (MainColors.Count + FadeColors.Count == 0) return;
             FireworkRocket fireworkRocket = Window.GetWindow(colorpicker) as FireworkRocket;
-            firework_rocket_datacontext context = fireworkRocket.DataContext as firework_rocket_datacontext;
+            FireworkRocketDataContext context = fireworkRocket.DataContext as FireworkRocketDataContext;
 
             //烟花火箭模型引用
             TranslateTransform3D fireworkModel = fireworkRocket.FireworkModel;
@@ -706,7 +706,7 @@ namespace cbhk_environment.Generators.FireworkRocketGenerator.Components
         private async void FireworkExploded(object sender, EventArgs e)
         {
             FireworkRocket fireworkRocket = Window.GetWindow(colorpicker) as FireworkRocket;
-            firework_rocket_datacontext context = fireworkRocket.DataContext as firework_rocket_datacontext;
+            FireworkRocketDataContext context = fireworkRocket.DataContext as FireworkRocketDataContext;
             await fireworkRocket.Dispatcher.InvokeAsync(() =>
             {
                 #region 获取相关引用、实例化网格模型

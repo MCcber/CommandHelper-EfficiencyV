@@ -1,5 +1,5 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.EntityGenerator.Components
+namespace cbhk.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// PassengerItems.xaml 的交互逻辑
@@ -99,20 +99,20 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
         private void ReferenceIndex_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             Slider slider = sender as Slider;
-            entity_datacontext entityContext = (Window.GetWindow(slider) as Entity).DataContext as entity_datacontext;
+            EntityDataContext entityContext = (Window.GetWindow(slider) as Entity).DataContext as EntityDataContext;
             RichTabItems richTabItems = this.FindParent<RichTabItems>();
             int currentIndex = entityContext.EntityPageList.IndexOf(richTabItems);
             int index = int.Parse(slider.Value.ToString());
             if (index >= 0 && index < entityContext.EntityPageList.Count)
             {
-                entityPagesDataContext pageContext = (entityContext.EntityPageList[index].Content as EntityPages).DataContext as entityPagesDataContext;
+                EntityPagesDataContext pageContext = (entityContext.EntityPageList[index].Content as EntityPages).DataContext as EntityPagesDataContext;
                 if (ReferenceMode.IsChecked.Value)
                 {
                     pageContext.UseForReference = true;
                     if (slider.Value < entityContext.EntityPageList.Count && currentIndex != index)
                     {
                         DisplayEntity.Tag = pageContext.run_command(false);
-                        (DisplayEntity.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\entityImages\\" + pageContext.SelectedEntityIdString + "_spawn_egg.png", UriKind.RelativeOrAbsolute));
+                        (DisplayEntity.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + pageContext.SelectedEntityIdString + "_spawn_egg.png", UriKind.RelativeOrAbsolute));
                     }
                     else
                     {

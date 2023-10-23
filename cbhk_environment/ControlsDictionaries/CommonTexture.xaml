@@ -1,29 +1,29 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <ImageBrush x:Key="ButtonNormalBottom" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormalBottom.png" />
-    <ImageBrush x:Key="ButtonNormalTop" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormalTop.png" />
-    <ImageBrush x:Key="ButtonNormalLeft" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormalLeft.png" />
-    <ImageBrush x:Key="ButtonNormalRight" ImageSource="/cbhk_environment;component/resources/common/images/ButtonNormalRight.png" />
-    <ImageBrush x:Key="ButtonFrame" ImageSource="/cbhk_environment;component/resources/common/images/ButtonFrame.png" />
-    <ImageBrush x:Key="ButtonPressedBottom" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressedBottom.png" />
-    <ImageBrush x:Key="ButtonPressedTop" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressedTop.png" />
-    <ImageBrush x:Key="ButtonPressedLeft" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressedLeft.png" />
-    <ImageBrush x:Key="ButtonPressedRight" ImageSource="/cbhk_environment;component/resources/common/images/ButtonPressedRight.png" />
-    <ImageBrush x:Key="TabFront" ImageSource="/cbhk_environment;component/resources/common/images/TabFront.png" />
-    <ImageBrush x:Key="TabBack" ImageSource="/cbhk_environment;component/resources/common/images/TabBack.png" />
-    <ImageBrush x:Key="SelectedTabItemLeft" ImageSource="/cbhk_environment;component/resources/common/images/SelectedTabItemLeft.png" />
-    <ImageBrush x:Key="SelectedTabItemRight" ImageSource="/cbhk_environment;component/resources/common/images/SelectedTabItemRight.png" />
-    <ImageBrush x:Key="SelectedTabItemTop" ImageSource="/cbhk_environment;component/resources/common/images/SelectedTabItemTop.png" />
-    <ImageBrush x:Key="TabItemLeft" ImageSource="/cbhk_environment;component/resources/common/images/TabItemLeft.png" />
-    <ImageBrush x:Key="TabItemRight" ImageSource="/cbhk_environment;component/resources/common/images/TabItemRight.png" />
-    <ImageBrush x:Key="TabItemTop" ImageSource="/cbhk_environment;component/resources/common/images/TabItemTop.png" />
-    <ImageBrush x:Key="TextToggleButtonFalseBottomFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonFalseBottomFrame.png" />
-    <ImageBrush x:Key="TextToggleButtonFalseTopFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonFalseTopFrame.png" />
-    <ImageBrush x:Key="TextToggleButtonFalseLeftFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonFalseLeftFrame.png" />
-    <ImageBrush x:Key="TextToggleButtonFalseRightFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonFalseRightFrame.png" />
-    <ImageBrush x:Key="TextToggleButtonTrueBottomFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonTrueBottomFrame.png" />
-    <ImageBrush x:Key="TextToggleButtonTrueTopFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonTrueTopFrame.png" />
-    <ImageBrush x:Key="TextToggleButtonTrueLeftFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonTrueLeftFrame.png" />
-    <ImageBrush x:Key="TextToggleButtonTrueRightFrame" ImageSource="/cbhk_environment;component/resources/common/images/TextToggleButtonTrueRightFrame.png" />
+    <ImageBrush x:Key="ButtonNormalBottom" ImageSource="/cbhk;component/resources/common/images/ButtonNormalBottom.png" />
+    <ImageBrush x:Key="ButtonNormalTop" ImageSource="/cbhk;component/resources/common/images/ButtonNormalTop.png" />
+    <ImageBrush x:Key="ButtonNormalLeft" ImageSource="/cbhk;component/resources/common/images/ButtonNormalLeft.png" />
+    <ImageBrush x:Key="ButtonNormalRight" ImageSource="/cbhk;component/resources/common/images/ButtonNormalRight.png" />
+    <ImageBrush x:Key="ButtonFrame" ImageSource="/cbhk;component/resources/common/images/ButtonFrame.png" />
+    <ImageBrush x:Key="ButtonPressedBottom" ImageSource="/cbhk;component/resources/common/images/ButtonPressedBottom.png" />
+    <ImageBrush x:Key="ButtonPressedTop" ImageSource="/cbhk;component/resources/common/images/ButtonPressedTop.png" />
+    <ImageBrush x:Key="ButtonPressedLeft" ImageSource="/cbhk;component/resources/common/images/ButtonPressedLeft.png" />
+    <ImageBrush x:Key="ButtonPressedRight" ImageSource="/cbhk;component/resources/common/images/ButtonPressedRight.png" />
+    <ImageBrush x:Key="TabFront" ImageSource="/cbhk;component/resources/common/images/TabFront.png" />
+    <ImageBrush x:Key="TabBack" ImageSource="/cbhk;component/resources/common/images/TabBack.png" />
+    <ImageBrush x:Key="SelectedTabItemLeft" ImageSource="/cbhk;component/resources/common/images/SelectedTabItemLeft.png" />
+    <ImageBrush x:Key="SelectedTabItemRight" ImageSource="/cbhk;component/resources/common/images/SelectedTabItemRight.png" />
+    <ImageBrush x:Key="SelectedTabItemTop" ImageSource="/cbhk;component/resources/common/images/SelectedTabItemTop.png" />
+    <ImageBrush x:Key="TabItemLeft" ImageSource="/cbhk;component/resources/common/images/TabItemLeft.png" />
+    <ImageBrush x:Key="TabItemRight" ImageSource="/cbhk;component/resources/common/images/TabItemRight.png" />
+    <ImageBrush x:Key="TabItemTop" ImageSource="/cbhk;component/resources/common/images/TabItemTop.png" />
+    <ImageBrush x:Key="TextToggleButtonFalseBottomFrame" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonFalseBottomFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonFalseTopFrame" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonFalseTopFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonFalseLeftFrame" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonFalseLeftFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonFalseRightFrame" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonFalseRightFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonTrueBottomFrame" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonTrueBottomFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonTrueTopFrame" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonTrueTopFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonTrueLeftFrame" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonTrueLeftFrame.png" />
+    <ImageBrush x:Key="TextToggleButtonTrueRightFrame" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonTrueRightFrame.png" />
 
     <DrawingImage x:Key="InfomationIcon">
         <DrawingImage.Drawing>

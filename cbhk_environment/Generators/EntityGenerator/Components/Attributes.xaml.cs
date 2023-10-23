@@ -1,5 +1,5 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Data;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.Generators.EntityGenerator.Components
+namespace cbhk.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// Attributes.xaml 的交互逻辑
@@ -37,7 +37,7 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
         public Attributes()
         {
             InitializeComponent();
-            entity_datacontext context = Window.GetWindow(this).DataContext as entity_datacontext;
+            EntityDataContext context = Window.GetWindow(this).DataContext as EntityDataContext;
             MobAttributeTable = context.MobAttributeTable;
         }
 

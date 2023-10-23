@@ -5,7 +5,7 @@ using System.Linq;
 using System.Windows.Controls;
 using System.Windows;
 
-namespace cbhk_environment.Generators.ItemGenerator.Components
+namespace cbhk.Generators.ItemGenerator.Components
 {
     /// <summary>
     /// Common.xaml 的交互逻辑

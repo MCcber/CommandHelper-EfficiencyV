@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
     /// <summary>
     /// Tutorials.xaml 的交互逻辑

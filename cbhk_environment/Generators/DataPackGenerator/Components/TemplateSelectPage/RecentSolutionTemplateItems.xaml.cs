@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace cbhk_environment.Generators.DataPackGenerator.Components.TemplateSelectPage
+namespace cbhk.Generators.DataPackGenerator.Components.TemplateSelectPage
 {
     /// <summary>
     /// RecentSolutionTemplateItems.xaml 的交互逻辑

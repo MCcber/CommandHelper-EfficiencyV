@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,10 +12,13 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
-using Hardcodet.Wpf.TaskbarNotification;
-using cbhk_environment.GeneralTools.Information;
+using cbhk.GeneralTools.MessageTip;
+using System.Data;
+using cbhk.GeneralTools;
+using System.Data.SQLite;
+using System.Data.Common;
 
-namespace cbhk_signin
+namespace cbhk
 {
     public class SignInDataContext: ObservableObject
     {
@@ -58,7 +60,12 @@ namespace cbhk_signin
         public bool SaveUserPassword
         {
             get => saveUserPassword; 
-            set => SetProperty(ref saveUserPassword, value);
+            set
+            {
+                SetProperty(ref saveUserPassword, value);
+                if (SaveUserPassword)
+                    SaveUserAccount = true;
+            }
         }
 
         private bool saveUserAccount = false;
@@ -80,46 +87,80 @@ namespace cbhk_signin
 
         //载入前台窗体引用
         Window FrontWindow = null;
-        /// <summary>
-        /// 托盘图标
-        /// </summary>
-        TaskbarIcon taskbarIcon = null;
 
         //计时器
-        DispatcherTimer SignInTimer = new DispatcherTimer()
+        DispatcherTimer SignInTimer = new()
         {
             Interval = new TimeSpan(2000),
             IsEnabled = false
         };
 
-        //登录功能
+        /// <summary>
+        /// 登录功能
+        /// </summary>
         public RelayCommand SignIn { get; set; }
+
+        /// <summary>
+        /// 忘记密码
+        /// </summary>
+        public RelayCommand ForgotPassword { get; set; }
+
+        /// <summary>
+        /// 最小化窗体
+        /// </summary>
+        public RelayCommand<Window> MinimizeWindow { get; set; }
+
+        /// <summary>
+        /// 关闭窗体
+        /// </summary>
+        public RelayCommand<Window> CloseWindow { get; set; }
+
+        /// <summary>
+        /// 存储用户信息
+        /// </summary>
+        Dictionary<string, string> userInfomation = [];
 
         public SignInDataContext()
         {
-            //登录功能
-            SignIn = new RelayCommand(SignInCommand);
-            //初始化用户设置
+            #region 链接命令
+            SignIn = new(SignInCommand);
+            ForgotPassword = new(ForgotPasswordCommand);
+            MinimizeWindow = new RelayCommand<Window>(MinimizeWindowCommand);
+            CloseWindow = new RelayCommand<Window>(CloseWindowCommand);
+            #endregion
             ReadUserData();
-
         }
+
+        /// <summary>
+        /// 最小化窗体
+        /// </summary>
+        /// <param name="window"></param>
+        private void MinimizeWindowCommand(Window window) => window.WindowState = WindowState.Minimized;
+
+        /// <summary>
+        /// 关闭窗体
+        /// </summary>
+        /// <param name="window"></param>
+        private void CloseWindowCommand(Window window) => window.Close();
 
         #region 用户服务
         /// <summary>
         /// 读取用户数据
         /// </summary>
-        private void ReadUserData()
+        private async void ReadUserData()
         {
-            Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\signin_configs");
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\signin_configs\\user_info.ini"))
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
             {
-                string[] user_info = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + "resources\\signin_configs\\user_info.ini");
-                if (user_info != null)
+                DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
+                DataTable dataTable = await dataCommunicator.GetData("SELECT * FROM UserData");
+                if (dataTable != null && dataTable.Rows.Count > 0)
                 {
-                    UserAccount = user_info.Length >= 1 ? Regex.Match(user_info[0], @".*").ToString() : "";
-                    UserPassword = user_info.Length == 2 ? Regex.Match(user_info[1], @".*").ToString() : "";
-                    SaveUserAccount = UserAccount != "";
-                    SaveUserPassword = UserPassword != "";
+                    if (dataTable.Rows[0]["account"] is string account)
+                        UserAccount = account;
+                    if (dataTable.Rows[0]["password"] is string password)
+                        UserPassword = password;
+                    SaveUserAccount = UserAccount.Trim() != "";
+                    SaveUserPassword = UserPassword.Trim() != "";
                 }
             }
         }
@@ -132,32 +173,24 @@ namespace cbhk_signin
         public void SignInWindowLoaded(object sender, RoutedEventArgs e)
         {
             FrontWindow = sender as Window;
-            taskbarIcon = FrontWindow.Resources["cbhkTaskbar"] as TaskbarIcon;
-            taskbarIcon.Visibility = Visibility.Collapsed;
-            //自动登录
+
+            #region 自动登录
             //SignInTimer.Tick += ThreadTimerCallback;
             //SignInTimer.IsEnabled = SaveUserPassword;
             //IsOpenSignIn = !SaveUserPassword;
             //if (Environment.OSVersion.Version.Major < 10)
-            //{
-            //    MessageDisplayer messageBox = new();
-            //    messageDisplayerDataContext context = messageBox.DataContext as messageDisplayerDataContext;
-            //    context.DisplayInfomation = "检测到系统为win10以下，如果系统版本过旧，可能无法登录成功";
-            //    messageBox.ShowDialog();
-            //}
+            //    Message.PushMessage("检测到系统为win10以下，如果系统版本过旧，可能无法登录成功", MessageBoxImage.Error);
+            #endregion
 
             #region 调试
-            FrontWindow.ShowInTaskbar = false;
-            FrontWindow.WindowState = WindowState.Minimized;
-            FrontWindow.Opacity = 0;
-            taskbarIcon.Visibility = Visibility.Visible;
-            cbhk_environment.MainWindow CBHK = new(StatsUserInfomation(), taskbarIcon);
-            CBHK.Show();
-            CBHK.WindowState = WindowState.Normal;
-            CBHK.Topmost = true;
+            MainWindow CBHK = new(StatsUserInfomation())
+            {
+                WindowState = WindowState.Normal
+            };
+            CBHK.cbhkTaskbar.Visibility = Visibility.Visible;
             CBHK.Show();
             CBHK.Focus();
-            CBHK.Topmost = false;
+            FrontWindow.Close();
             #endregion
         }
 
@@ -177,16 +210,16 @@ namespace cbhk_signin
         /// </summary>
         private Dictionary<string, string> StatsUserInfomation()
         {
-            Dictionary<string, string> user_information = new Dictionary<string, string> { };
             if(UserNameString != "")
-            user_information.Add("user_name", UserNameString);
+            userInfomation.Add("UserName", UserNameString);
             if(UserID != "")
-            user_information.Add("UserID", UserID);
+            userInfomation.Add("UserID", UserID);
             if(GameID != "")
-            user_information.Add("mc_id", GameID);
-            user_information.Add("Account", UserAccount);
-            user_information.Add("Password",UserPassword);
-            return user_information;
+            userInfomation.Add("McId", GameID);
+            userInfomation.Add("Account", UserAccount);
+            userInfomation.Add("Password",UserPassword);
+            
+            return userInfomation;
         }
 
         /// <summary>
@@ -197,7 +230,6 @@ namespace cbhk_signin
         {
             UserNameString = result["data"]["name"].ToString();
             UserID = result["data"]["id"].ToString();
-            //GameID = result["data"]["mc_id"].ToString();
             return result;
         }
 
@@ -217,17 +249,18 @@ namespace cbhk_signin
         private async void SignInCommand()
         {
             IsOpenSignIn = false;
-            Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\signin_configs");
             if (UserAccount.Trim() == "")
             {
-                MessageBox.Show("账号不存在");
+                Message.PushMessage("账号不存在",MessageBoxImage.Error);
                 UserAccount = "";
+                IsOpenSignIn = true;
                 return;
             }
             if (UserPassword.Trim() == "")
             {
-                MessageBox.Show("密码不能为空");
+                Message.PushMessage("密码不能为空", MessageBoxImage.Error);
                 UserPassword = "";
+                IsOpenSignIn = true;
                 return;
             }
 
@@ -237,30 +270,50 @@ namespace cbhk_signin
             #region 保存账号和密码
             if (SaveUserAccount || SaveUserPassword)
             {
-                string user_info = "";
-                if (SaveUserAccount)
-                    user_info += UserAccount + "\r\n";
-                if (SaveUserPassword)
-                    user_info += Regex.Escape(UserPassword) + "\r\n";
-                byte[] user_pwd_bytes = Encoding.UTF8.GetBytes(user_info);
-                if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\signin_configs\\user_info.ini"))
-                    File.CreateText(AppDomain.CurrentDomain.BaseDirectory + "resources\\signin_configs\\user_info.ini").Close();
+                SQLiteConnection connection = new("Data Source=" + AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db");
+                await connection.OpenAsync();
+                SQLiteParameter account = new("@account", UserAccount);
+                SQLiteParameter password = new("@password", UserPassword);
+                DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
 
-                using FileStream name_pwd_stream = new(AppDomain.CurrentDomain.BaseDirectory + "resources\\signin_configs\\user_info.ini", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
-                name_pwd_stream.Write(user_pwd_bytes, 0, user_pwd_bytes.Length);
+                SQLiteCommand HaveAccountCmd = new("SELECT * FROM UserData Where account = @account", connection);
+                HaveAccountCmd.Parameters.Add(account);
+                SQLiteCommand UpdateAccountCmd = new("Update UserData Set account = @account", connection);
+                UpdateAccountCmd.Parameters.Add(account);
+                SQLiteCommand InsertAccountCmd = new("Insert Into UserData (account) Values(@account);", connection);
+                InsertAccountCmd.Parameters.Add(account);
+                SQLiteCommand UpdatePasswordCmd = new("Update UserData Set password = @password Where account = @account", connection);
+                UpdatePasswordCmd.Parameters.Add(password);
+                UpdatePasswordCmd.Parameters.Add(account);
+
+                DbDataReader dbDataReader = await HaveAccountCmd.ExecuteReaderAsync();
+                DataTable dataTable = new();
+                dataTable.Load(dbDataReader);
+
+                if (dataTable.Rows.Count > 0)
+                    if (SaveUserAccount)
+                        await UpdateAccountCmd.ExecuteNonQueryAsync();
+                    else
+                    if (SaveUserAccount && dataTable.Rows.Count == 0)
+                        await InsertAccountCmd.ExecuteNonQueryAsync();
+
+                if (SaveUserPassword && dataTable.Rows.Count > 0)
+                    await UpdatePasswordCmd.ExecuteNonQueryAsync();
+                await connection.CloseAsync();
             }
             #endregion
 
             #region 进行登录
-            JObject result = new();
+            JObject result = [];
             try
             {
                 string account = Regex.Match(uriencode(Regex.Match(UserAccount, "(.*)").ToString()),@"(.*)").ToString();
                 string pwd = Regex.Match(uriencode(Regex.Match(UserPassword, "(.*)").ToString()), @"(.*)").ToString();
-                result = JsonConvert.DeserializeObject(resources.Tools.SignIn.GetDataByPost(account, pwd)) as JObject;
+                result = JsonConvert.DeserializeObject(GeneralTools.SignIn.GetDataByPost(account, pwd)) as JObject;
             }
-            catch
+            catch(Exception e)
             {
+                Message.PushMessage(e.Message, MessageBoxImage.Error);
             }
             if (result["code"].ToString() == "200")
             {
@@ -268,31 +321,29 @@ namespace cbhk_signin
                     MessageBox.Show("密码错误");
                 else
                 {
-                    if (result["data"]["avatar"].ToString() != null && result["data"]["avatar"].ToString().Contains("?") && !File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\user_head.png"))
-                        await Task.Run(() => { resources.Tools.SignIn.DownLoadUserHead(result["data"]["avatar"].ToString(), AppDomain.CurrentDomain.BaseDirectory + "resources\\user_head.png"); });
-
-                    FrontWindow.ShowInTaskbar = false;
-                    FrontWindow.WindowState = WindowState.Minimized;
-                    FrontWindow.Opacity = 0;
-                    FrontWindow.Visibility = Visibility.Collapsed;
-                    FrontWindow.WindowState = WindowState.Minimized;
+                    if (result.SelectToken("data.avatar") is JObject avatar && result.SelectToken("data.avatar").ToString().Contains('?'))
+                        await Task.Run(async () => { await GeneralTools.SignIn.DownLoadUserImage(avatar.ToString(), AppDomain.CurrentDomain.BaseDirectory + "resources\\userHead.png"); });
+                    userInfomation.Add("description", result.SelectToken("data.intro").ToString());
                     SaveUserInfo(result);
-                    cbhk_environment.MainWindow CBHK = new(StatsUserInfomation(),taskbarIcon);
+                    MainWindow CBHK = new(StatsUserInfomation());
+
+                    if(result.SelectToken("data.bg_bar") is JToken background)
+                    await Task.Run(async () =>
+                    {
+                        await GeneralTools.SignIn.DownLoadUserImage(background.ToString(), AppDomain.CurrentDomain.BaseDirectory + "resources\\userBackground.png");
+                    });
+                    FrontWindow.Close();
 
                     #region 显示管家主窗体
-                    taskbarIcon.Visibility = Visibility.Visible;
-                    CBHK.ShowInTaskbar = true;
-                    CBHK.Opacity = 1.0;
+                    CBHK.cbhkTaskbar.Visibility = Visibility.Visible;
                     CBHK.WindowState = WindowState.Normal;
-                    CBHK.Topmost = true;
                     CBHK.Show();
                     CBHK.Focus();
-                    CBHK.Topmost = false;
                     #endregion
                 }
             }
             else
-                MessageBox.Show(result["message"].ToString());
+                Message.PushMessage(result["message"].ToString(),MessageBoxImage.Error);
             #endregion
             IsOpenSignIn = true;
         }
@@ -300,9 +351,9 @@ namespace cbhk_signin
         /// <summary>
         /// 忘记密码
         /// </summary>
-        public void ForgotPasswordCommand(object sender, MouseButtonEventArgs e)
+        private void ForgotPasswordCommand()
         {
-            Process.Start("explorer.exe", "https://mc.metamo.cn/u/login/");
+            Process.Start(@"explorer.exe", "https://mc.metamo.cn/u/login/");
         }
         #endregion
 
@@ -311,7 +362,7 @@ namespace cbhk_signin
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void UserAccountBoxKeyDown(object sender, KeyEventArgs e)
+        public void UserAccountBoxKeyUp(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && IsOpenSignIn)
                 SignInCommand();
@@ -322,7 +373,7 @@ namespace cbhk_signin
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void UserPasswordBoxKeyDown(object sender, KeyEventArgs e)
+        public void UserPasswordBoxKeyUp(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && IsOpenSignIn)
                 SignInCommand();

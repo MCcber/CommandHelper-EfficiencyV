@@ -1,7 +1,6 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.WindowDictionaries;
+﻿using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -16,10 +15,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 
-namespace cbhk_environment.Generators.TagGenerator
+namespace cbhk.Generators.TagGenerator
 {
-    public partial class tag_datacontext: ObservableObject
+    public partial class TagDataContext: ObservableObject
     {
         #region 生成、返回等指令
         public RelayCommand RunCommand { get; set; }
@@ -38,11 +38,11 @@ namespace cbhk_environment.Generators.TagGenerator
         #endregion
 
         #region 存储最终生成的列表
-        public List<string> Blocks = new();
-        public List<string> Items = new();
-        public List<string> Entities = new();
-        public List<string> GameEvent = new();
-        public List<string> Biomes = new();
+        public List<string> Blocks = [];
+        public List<string> Items = [];
+        public List<string> Entities = [];
+        public List<string> GameEvent = [];
+        public List<string> Biomes = [];
         #endregion
 
         #region 搜索内容
@@ -67,8 +67,10 @@ namespace cbhk_environment.Generators.TagGenerator
         }
         #endregion
 
-        //标签容器
+        #region 字段
         ListView TagZone = null;
+        SolidColorBrush LightOrangeBrush = new((Color)ColorConverter.ConvertFromString("#F0D08C"));
+        #endregion
 
         #region 当前选中的值成员
         private TagItemTemplate selectedItem = null;
@@ -102,14 +104,21 @@ namespace cbhk_environment.Generators.TagGenerator
             set
             {
                 selectedAll = value;
+                SetProperty(ref selectedAll,value);
+                SolidColorBrush brush;
+                if (selectedAll)
+                    brush = LightOrangeBrush;
+                else
+                    brush = null;
                 if (TagViewSource != null)
                 {
                     foreach (TagItemTemplate tagItemTemplate in TagViewSource.View)
                     {
                         if (tagItemTemplate.DisplayId.Trim().Length > 0)
                         {
-                            string itemString = tagItemTemplate.DisplayId.Contains(' ')? tagItemTemplate.DisplayId[..tagItemTemplate.DisplayId.IndexOf(' ')]: tagItemTemplate.DisplayId;
+                            string itemString = tagItemTemplate.DisplayId;
                             tagItemTemplate.BeChecked = selectedAll;
+                            tagItemTemplate.Background = brush;
 
                             if (tagItemTemplate.BeChecked.Value)
                             {
@@ -149,13 +158,11 @@ namespace cbhk_environment.Generators.TagGenerator
         private bool reverseAll = false;
         public bool ReverseAll
         {
-            get
-            {
-                return reverseAll;
-            }
+            get => reverseAll;
             set
             {
                 reverseAll = value;
+                SetProperty(ref reverseAll,value);
                 if (TagViewSource != null)
                 {
                     foreach (TagItemTemplate tagItemTemplate in TagViewSource.View)
@@ -164,6 +171,10 @@ namespace cbhk_environment.Generators.TagGenerator
                         {
                             string itemString = tagItemTemplate.DisplayId.Contains(' ') ? tagItemTemplate.DisplayId[..tagItemTemplate.DisplayId.IndexOf(' ')] : tagItemTemplate.DisplayId;
                             tagItemTemplate.BeChecked = !tagItemTemplate.BeChecked.Value;
+                            if (tagItemTemplate.BeChecked.Value)
+                                tagItemTemplate.Background = LightOrangeBrush;
+                            else
+                                tagItemTemplate.Background = null;
                             if (tagItemTemplate.BeChecked.Value)
                             {
                                 if (tagItemTemplate.DataType == "Item" && !Items.Contains("\"minecraft:" + itemString + "\","))
@@ -205,15 +216,17 @@ namespace cbhk_environment.Generators.TagGenerator
         }
         #endregion
 
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public Window home = null;
+
         //对象数据源
         CollectionViewSource TagViewSource = null;
         //标签生成器的过滤类型数据源
-        public ObservableCollection<string> TypeItemSource = new();
+        public ObservableCollection<string> TypeItemSource = [];
 
-        [GeneratedRegex("[a-zA-z_]+")]
-        private static partial Regex GetDisplayText();
-
-        public tag_datacontext()
+        public TagDataContext()
         {
             #region 链接指令
             RunCommand = new RelayCommand(run_command);
@@ -340,7 +353,7 @@ namespace cbhk_environment.Generators.TagGenerator
         private void ImportFromClipboardCommand()
         {
             ObservableCollection<TagItemTemplate> items = TagItems;
-            tag_datacontext context = this;
+            TagDataContext context = this;
             ExternalDataImportManager.ImportTagDataHandler(Clipboard.GetText(),ref items,ref context,false);
         }
 
@@ -350,7 +363,7 @@ namespace cbhk_environment.Generators.TagGenerator
         private void ImportFromFileCommand()
         {
             ObservableCollection<TagItemTemplate> items = TagItems;
-            tag_datacontext context = this;
+            TagDataContext context = this;
             OpenFileDialog dialog = new()
             {
                 Filter = "Json文件|*.json;",
@@ -428,11 +441,10 @@ namespace cbhk_environment.Generators.TagGenerator
         /// <param name="win"></param>
         private void return_command(CommonWindow win)
         {
-            Tag.cbhk.Topmost = true;
-            Tag.cbhk.WindowState = WindowState.Normal;
-            Tag.cbhk.Show();
-            Tag.cbhk.Topmost = false;
-            Tag.cbhk.ShowInTaskbar = true;
+            home.WindowState = WindowState.Normal;
+            home.Show();
+            home.ShowInTaskbar = true;
+            home.Focus();
             win.Close();
         }
 
@@ -477,9 +489,7 @@ namespace cbhk_environment.Generators.TagGenerator
                 if(SelectedItem == null && LastSelectedIndex > 0 && LastSelectedIndex < TagZone.Items.Count)
                 SelectedItem = TagZone.Items[LastSelectedIndex] as TagItemTemplate;
             if (SelectedItem != null)
-            {
                 ReverseValue(SelectedItem);
-            }
         }
 
         /// <summary>
@@ -503,49 +513,43 @@ namespace cbhk_environment.Generators.TagGenerator
         /// <param name="CurrentItem"></param>
         private void ReverseValue(TagItemTemplate CurrentItem)
         {
-            if (TagZone.ItemContainerGenerator.ContainerFromItem(CurrentItem) is ListViewItem listViewItem)
+            string itemString = CurrentItem.DisplayId;
+            if (itemString.Trim().Length > 0)
             {
-                ContentPresenter contentPresenter = ChildrenHelper.FindVisualChild<ContentPresenter>(listViewItem);
-                RichCheckBoxs iconCheckBoxs = contentPresenter.ContentTemplate.FindName("checkbox", contentPresenter) as RichCheckBoxs;
-                string displayText = CurrentItem.DisplayId;
-                string itemString;
-                if (displayText.Trim().Length > 0)
+                CurrentItem.BeChecked = !CurrentItem.BeChecked;
+                if (CurrentItem.BeChecked.Value)
+                    CurrentItem.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F0D08C"));
+                else
+                    CurrentItem.Background = null;
+                if (CurrentItem.BeChecked.Value)
                 {
-                    itemString = displayText.Contains(' ') ? displayText[..displayText.IndexOf(' ')] : displayText;
-                    if (GetDisplayText().IsMatch(displayText.Trim()))
-                    {
-                        iconCheckBoxs.IsChecked = !iconCheckBoxs.IsChecked.Value;
-                        if (iconCheckBoxs.IsChecked.Value)
-                        {
-                            if (CurrentItem.DataType == "Item" && !Items.Contains("\"minecraft:" + itemString + "\","))
-                                Items.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (CurrentItem.DataType == "Entity" && !Entities.Contains("\"minecraft:" + itemString + "\","))
-                                Entities.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (CurrentItem.DataType == "Block&Item" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
-                                Blocks.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (CurrentItem.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
-                                Biomes.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (CurrentItem.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                                GameEvent.Add("\"minecraft:" + itemString + "\",");
-                        }
-                        else
-                        {
-                            if (CurrentItem.DataType == "Item" && Items.Contains("\"minecraft:" + itemString + "\","))
-                                Items.Remove("\"minecraft:" + itemString + "\",");
-                            if (CurrentItem.DataType == "Entity" && Entities.Contains("\"minecraft:" + itemString + "\","))
-                                Entities.Remove("\"minecraft:" + itemString + "\",");
-                            if (CurrentItem.DataType == "Block&Item" && Blocks.Contains("\"minecraft:" + itemString + "\","))
-                                Blocks.Remove("\"minecraft:" + itemString + "\",");
-                            if (CurrentItem.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
-                                Biomes.Remove("\"minecraft:" + itemString + "\",");
-                            if (CurrentItem.DataType == "GameEvent" && GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                                GameEvent.Remove("\"minecraft:" + itemString + "\",");
-                        }
-                    }
+                    if (CurrentItem.DataType == "Item" && !Items.Contains("\"minecraft:" + itemString + "\","))
+                        Items.Add("\"minecraft:" + itemString + "\",");
+                    else
+                    if (CurrentItem.DataType == "Entity" && !Entities.Contains("\"minecraft:" + itemString + "\","))
+                        Entities.Add("\"minecraft:" + itemString + "\",");
+                    else
+                    if (CurrentItem.DataType == "Block&Item" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
+                        Blocks.Add("\"minecraft:" + itemString + "\",");
+                    else
+                    if (CurrentItem.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
+                        Biomes.Add("\"minecraft:" + itemString + "\",");
+                    else
+                    if (CurrentItem.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
+                        GameEvent.Add("\"minecraft:" + itemString + "\",");
+                }
+                else
+                {
+                    if (CurrentItem.DataType == "Item" && Items.Contains("\"minecraft:" + itemString + "\","))
+                        Items.Remove("\"minecraft:" + itemString + "\",");
+                    if (CurrentItem.DataType == "Entity" && Entities.Contains("\"minecraft:" + itemString + "\","))
+                        Entities.Remove("\"minecraft:" + itemString + "\",");
+                    if (CurrentItem.DataType == "Block&Item" && Blocks.Contains("\"minecraft:" + itemString + "\","))
+                        Blocks.Remove("\"minecraft:" + itemString + "\",");
+                    if (CurrentItem.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
+                        Biomes.Remove("\"minecraft:" + itemString + "\",");
+                    if (CurrentItem.DataType == "GameEvent" && GameEvent.Contains("\"minecraft:" + itemString + "\","))
+                        GameEvent.Remove("\"minecraft:" + itemString + "\",");
                 }
             }
         }
@@ -556,6 +560,13 @@ namespace cbhk_environment.Generators.TagGenerator
     /// </summary
     public class TagItemTemplate:ObservableObject
     {
+        private SolidColorBrush background = null;
+        public SolidColorBrush Background
+        {
+            get => background;
+            set => SetProperty(ref background, value);
+        }
+
         public Uri Icon { get; set; }
         public string DataType { get; set; }
         public string DisplayId { get; set; }

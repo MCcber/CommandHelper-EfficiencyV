@@ -1,17 +1,19 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.Generators.DataPackGenerator.Components.EditPage;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.Generators.DataPackGenerator.Components.EditPage;
 using Newtonsoft.Json.Linq;
+using Syncfusion.Windows.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace cbhk_environment.Generators.DataPackGenerator.Components
+namespace cbhk.Generators.DataPackGenerator.Components
 {
     public class ContentReader
     {
@@ -157,11 +159,11 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components
         /// 读取指定路径的内容
         /// </summary>
         /// <returns></returns>
-        public static List<TreeViewItem> ReadTheContentOfTheSpecifiedPath(string targetPath)
+        public static List<TreeViewItem> ReadTheContentOfTheSpecifiedPath(string targetPath, EditPageDataContext editContext = null)
         {
-            List<TreeViewItem> result = new();
-            List<TreeViewItem> folderResult = new();
-            List<TreeViewItem> fileResult = new();
+            List<TreeViewItem> result = [];
+            List<TreeViewItem> folderResult = [];
+            List<TreeViewItem> fileResult = [];
             ContentType contentType = JudgeTheTypeOfReadContent(targetPath);
             switch (contentType)
             {
@@ -225,7 +227,10 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components
                         foreach (string item in subContent)
                         {
                             DatapackTreeItems headerItems = new();
-                            headerItems.HeadText.Text = item;
+                            if (File.Exists(item))
+                                headerItems.HeadText.Text = Path.GetFileName(item);
+                            else
+                                headerItems.HeadText.Text = item[(item.LastIndexOf('\\') + 1)..];
                             headerItems.DatapackMarker.Visibility = Visibility.Collapsed;
                             headerItems.Icon.Visibility = Visibility.Visible;
                             if(Directory.Exists(item))
@@ -233,7 +238,6 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components
                             RichTreeViewItems richTreeViewItems = new()
                             {
                                 Margin = new Thickness(0, 2, 0, 2),
-                                Header = headerItems,
                                 Foreground = whiteBrush,
                                 Uid = item
                             };
@@ -246,7 +250,13 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components
                             if (Directory.Exists(item))
                                 folderResult.Add(richTreeViewItems);
                             else
+                            {
+                                headerItems.HeadText.Text = Path.GetFileName(item);
                                 fileResult.Add(richTreeViewItems);
+                                if (editContext != null)
+                                    richTreeViewItems.MouseDoubleClick += editContext.DoubleClickAnalysisAndOpenAsync;
+                            }
+                            richTreeViewItems.Header = headerItems;
                         }
                     }
                     break;
@@ -272,6 +282,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components
                             Foreground = whiteBrush,
                             Uid = targetPath
                         };
+                        richTreeViewItems.MouseDoubleClick += editContext.DoubleClickAnalysisAndOpenAsync;
                         fileResult.Add(richTreeViewItems);
                     }
                     break;
@@ -292,8 +303,8 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components
         {
             TreeViewItem currentItem = sender as TreeViewItem;
             Window window = Window.GetWindow(currentItem);
-            List<TreeViewItem> folderResult = new();
-            List<TreeViewItem> fileResult = new();
+            List<TreeViewItem> folderResult = [];
+            List<TreeViewItem> fileResult = [];
             //退订，返回
             if (currentItem.Items.Count > 0 && (currentItem.Items[0] as TreeViewItem).Header != null)
             {
@@ -302,6 +313,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components
             }
             else
                 currentItem.Items.Clear();
+
             #region 处理子数据
             string targetPath = currentItem.Uid;
             ContentType contentType = JudgeTheTypeOfReadContent(targetPath);
@@ -345,7 +357,10 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components
                             foreach (string item in subContent)
                             {
                                 DatapackTreeItems headerItems = new();
-                                headerItems.HeadText.Text = item[(item.LastIndexOf('\\') + 1)..];
+                                if (File.Exists(item))
+                                    headerItems.HeadText.Text = Path.GetFileName(item);
+                                else
+                                    headerItems.HeadText.Text = item[(item.LastIndexOf('\\') + 1)..];
                                 headerItems.DatapackMarker.Visibility = Visibility.Collapsed;
                                 headerItems.Icon.Visibility = Visibility.Visible;
                                 TreeViewItem richTreeViewItems = new()
@@ -364,9 +379,9 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components
                                     if (extersionIndex != -1)
                                     {
                                         headerItems.Icon.Source = Application.Current.Resources[ReadableFileExtensionList[extersionIndex]] as ImageSource;
-                                        datapack_datacontext datapackContext = Window.GetWindow(currentItem).DataContext as datapack_datacontext;
+                                        DatapackDataContext datapackContext = Window.GetWindow(currentItem).DataContext as DatapackDataContext;
                                         EditPageDataContext editContext = datapackContext.editPage.DataContext as EditPageDataContext;
-                                        richTreeViewItems.MouseDoubleClick += editContext.DoubleClickAnalysisAndOpen;
+                                        richTreeViewItems.MouseDoubleClick += editContext.DoubleClickAnalysisAndOpenAsync;
                                     }
                                 }
                                 else
@@ -385,31 +400,31 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components
                         }
                         break;
                     case ContentType.File:
-                        //{
-                        //    DatapackTreeItems headerItems = new();
-                        //    headerItems.HeadText.Text = Path.GetFileName(targetPath);
-                        //    headerItems.DatapackMarker.Visibility = Visibility.Collapsed;
-                        //    headerItems.Icon.Visibility = Visibility.Visible;
-                        //    if (File.Exists(targetPath))
-                        //    {
-                        //        string extension = Path.GetExtension(targetPath);
-                        //        if (extension != ".mcfunction")
-                        //            headerItems.Icon.Source = Application.Current.Resources["UnknownFile"] as ImageSource;
-                        //        int extersionIndex = ReadableFileExtensionList.IndexOf(extension);
-                        //        if (extersionIndex != -1)
-                        //            headerItems.Icon.Source = Application.Current.Resources[ReadableFileExtensionList[extersionIndex]] as ImageSource;
-                        //    }
-                        //    TreeViewItem richTreeViewItems = new()
-                        //    {
-                        //        Margin = new Thickness(0,2,0,2),
-                        //        Header = headerItems,
-                        //        Foreground = whiteBrush,
-                        //        Uid = targetPath
-                        //    };
-                        //    EditPageDataContext context = currentItem.FindParent<DataPackGenerator.EditPage>().DataContext as EditPageDataContext;
-                        //    richTreeViewItems.MouseDoubleClick += context.DoubleClickAnalysisAndOpen;
-                        //    currentItem.Items.Add(richTreeViewItems);
-                        //}
+                        {
+                            DatapackTreeItems headerItems = new();
+                            headerItems.HeadText.Text = Path.GetFileName(targetPath);
+                            headerItems.DatapackMarker.Visibility = Visibility.Collapsed;
+                            headerItems.Icon.Visibility = Visibility.Visible;
+                            if (File.Exists(targetPath))
+                            {
+                                string extension = Path.GetExtension(targetPath);
+                                if (extension != ".mcfunction")
+                                    headerItems.Icon.Source = Application.Current.Resources["UnknownFile"] as ImageSource;
+                                int extersionIndex = ReadableFileExtensionList.IndexOf(extension);
+                                if (extersionIndex != -1)
+                                    headerItems.Icon.Source = Application.Current.Resources[ReadableFileExtensionList[extersionIndex]] as ImageSource;
+                            }
+                            TreeViewItem richTreeViewItems = new()
+                            {
+                                Margin = new Thickness(0, 2, 0, 2),
+                                Header = headerItems,
+                                Foreground = whiteBrush,
+                                Uid = targetPath
+                            };
+                            EditPageDataContext context = currentItem.FindParent<DataPackGenerator.EditPage>().DataContext as EditPageDataContext;
+                            richTreeViewItems.MouseDoubleClick += context.DoubleClickAnalysisAndOpenAsync;
+                            currentItem.Items.Add(richTreeViewItems);
+                        }
                         break;
                 }
                 foreach (var item in folderResult)

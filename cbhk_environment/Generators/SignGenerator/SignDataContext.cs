@@ -1,15 +1,17 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.Generators.SignGenerator.Components;
+﻿using cbhk.CustomControls;
+using cbhk.Generators.SignGenerator.Components;
+using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.SignGenerator
+namespace cbhk.Generators.SignGenerator
 {
     public class SignDataContext:ObservableObject
     {
@@ -46,6 +48,11 @@ namespace cbhk_environment.Generators.SignGenerator
         /// 已选中的告示牌
         /// </summary>
         public RichTabItems SelectedItem { get; set; }
+        #endregion
+
+        #region 运行、返回等命令
+        public RelayCommand Run { get; set; }
+        public RelayCommand<CommonWindow> Return { get; set; }
 
         /// <summary>
         /// 添加告示牌
@@ -57,15 +64,46 @@ namespace cbhk_environment.Generators.SignGenerator
         /// </summary>
         public RelayCommand ClearSigns { get; set; }
 
+        /// <summary>
+        /// 清除指定告示牌
+        /// </summary>
         public RelayCommand<FrameworkElement> ClearSign { get; set; }
         #endregion
 
         public SignDataContext()
         {
-            Signs[0].Content = new SignPage() { FontWeight = FontWeights.Normal };
+            Task.Run(async () =>
+            {
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    Signs[0].Content = new SignPage() { FontWeight = FontWeights.Normal };
+                });
+            });
             AddSign = new RelayCommand<FrameworkElement>(AddSignCommand);
             ClearSigns = new(ClearSignsCommand);
             ClearSign = new RelayCommand<FrameworkElement>(ClearSignCommand);
+            Run = new(runCommand);
+            Return = new RelayCommand<CommonWindow>(ReturnCommand);
+        }
+
+        /// <summary>
+        /// 返回主页
+        /// </summary>
+        /// <param name="win"></param>
+        private void ReturnCommand(CommonWindow win)
+        {
+            home.WindowState = WindowState.Normal;
+            home.Show();
+            home.ShowInTaskbar = true;
+            home.Focus();
+            win.Close();
+        }
+
+        /// <summary>
+        /// 生成所有告示牌
+        /// </summary>
+        private void runCommand()
+        {
         }
 
         /// <summary>
@@ -108,6 +146,10 @@ namespace cbhk_environment.Generators.SignGenerator
             Signs.Add(richTabItems);
         }
 
+        /// <summary>
+        /// 清除指定类型的告示牌
+        /// </summary>
+        /// <param name="element"></param>
         private void ClearSignCommand(FrameworkElement element)
         {
             if(element is MenuItem menuItem)
@@ -124,10 +166,10 @@ namespace cbhk_environment.Generators.SignGenerator
             }
         }
 
-        private void ClearSignsCommand()
-        {
-         
-        }
+        /// <summary>
+        /// 清空告示牌
+        /// </summary>
+        private void ClearSignsCommand() => Signs.Clear();
 
 
         /// <summary>

@@ -1,9 +1,9 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk_environment.Generators.SpawnerGenerator.Components
+namespace cbhk.Generators.SpawnerGenerator.Components
 {
     /// <summary>
     /// SpawnPotential.xaml 的交互逻辑
@@ -104,7 +104,7 @@ namespace cbhk_environment.Generators.SpawnerGenerator.Components
         private void IconTextButtons_Click(object sender, RoutedEventArgs e)
         {
             IconTextButtons iconTextButtons = sender as IconTextButtons;
-            spawnerPageDataContext context = iconTextButtons.FindParent<SpawnerPage>().DataContext as spawnerPageDataContext;
+            SpawnerPageDataContext context = iconTextButtons.FindParent<SpawnerPage>().DataContext as SpawnerPageDataContext;
             context.SpawnPotentials.Remove(this);
         }
     }

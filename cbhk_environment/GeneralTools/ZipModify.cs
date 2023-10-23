@@ -5,7 +5,7 @@ using System.IO.Compression;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.GeneralTools
+namespace cbhk.GeneralTools
 {
     public static class ZipModify
     {

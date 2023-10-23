@@ -1,6 +1,6 @@
 ﻿using System.Windows.Media;
 
-namespace cbhk_environment.CustomControls.ColorPickers.Media
+namespace cbhk.CustomControls.ColorPickers.Media
 {
     public class RgbaColor
     {

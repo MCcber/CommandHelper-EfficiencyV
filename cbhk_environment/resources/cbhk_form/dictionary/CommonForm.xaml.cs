@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Input;
 
-namespace cbhk_environment.resources.cbhk_form.dictionary
+namespace cbhk.resources.cbhk_form.dictionary
 {
     public partial class CommonForm
     {

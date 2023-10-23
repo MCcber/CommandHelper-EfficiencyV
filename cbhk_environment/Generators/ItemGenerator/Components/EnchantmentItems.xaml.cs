@@ -1,6 +1,6 @@
-﻿using cbhk_environment.ControlsDataContexts;
-using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.ControlsDataContexts;
+using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
@@ -10,7 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.ItemGenerator.Components
+namespace cbhk.Generators.ItemGenerator.Components
 {
     /// <summary>
     /// EnchantmentItems.xaml 的交互逻辑
@@ -43,7 +43,7 @@ namespace cbhk_environment.Generators.ItemGenerator.Components
         {
             ComboBox comboBoxs = sender as ComboBox;
             if (comboBoxs.ItemsSource != null) return;
-            item_datacontext context = Window.GetWindow(this).DataContext as item_datacontext;
+            ItemDataContext context = Window.GetWindow(this).DataContext as ItemDataContext;
             EnchantmentTable = context.EnchantmentTable;
             ObservableCollection<IconComboBoxItem> source = new();
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";

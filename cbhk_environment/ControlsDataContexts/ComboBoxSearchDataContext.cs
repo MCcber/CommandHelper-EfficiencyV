@@ -10,7 +10,7 @@ using System.Windows.Media;
 using System;
 using System.Text.RegularExpressions;
 
-namespace cbhk_environment.ControlsDataContexts
+namespace cbhk.ControlsDataContexts
 {
     public class ComboBoxSearchDataContext
     {
@@ -33,23 +33,31 @@ namespace cbhk_environment.ControlsDataContexts
 
                 #region 打开下拉框
                 ObservableCollection<IconComboBoxItem> dataGroup = current_box.ItemsSource as ObservableCollection<IconComboBoxItem>;
-                string[] searchList = box.Text.Split(' ');
-                bool HaveIDAndName = false;
-                if(searchList.Length > 1)
-                if (Regex.IsMatch(searchList[0], @"[a-zA-Z0-9_]+") && Regex.IsMatch(searchList[1], @"[\u4e00-\u9fa5]+"))
-                    HaveIDAndName = true;
+                string itemName = Regex.Match(box.Text, @"(?<=name:)\w+").ToString();
+                string itemId = Regex.Match(box.Text, @"(?<=id:)[a-zA-Z0-9_\-]+").ToString();
+                bool HaveIDAndName = itemName.Length > 0 && itemId.Length > 0;
+                IEnumerable<IconComboBoxItem> targetDataGroups = [];
 
-                var target_data_groups = dataGroup.Where(item => (HaveIDAndName && item.ComboBoxItemId.StartsWith(searchList[0]) && item.ComboBoxItemText.StartsWith(searchList[1])) || item.ComboBoxItemId.StartsWith(box.Text.Trim()) || item.ComboBoxItemText.StartsWith(box.Text.Trim()) || item.ComboBoxItemId.Contains(box.Text.Trim()) || item.ComboBoxItemText.Contains(box.Text.Trim()));
-                if (target_data_groups.Count() > 1 && box.Text.Trim().Length > 0)
+                if (HaveIDAndName)
                 {
-                    pop = CreatePop(pop, target_data_groups, current_box, current_box.ItemTemplate);
-                    pop.IsOpen = true;
+                    targetDataGroups = dataGroup.Where(item => (item.ComboBoxItemId == itemId && item.ComboBoxItemText == itemName) || (item.ComboBoxItemId.StartsWith(itemId) && item.ComboBoxItemText.StartsWith(itemName)));
                 }
                 else
-                    if(target_data_groups.Count() == 1 && box.Text.Trim().Length > 0)
+                if (itemId.Length > 0)
                 {
-                    current_box.SelectedItem = target_data_groups.First();
-                    pop.IsOpen = false;
+                    targetDataGroups = dataGroup.Where(item => item.ComboBoxItemId == itemId || item.ComboBoxItemId.StartsWith(itemId));
+                }
+                else
+                {
+                    if (itemName.Length == 0)
+                        itemName = box.Text;
+                    targetDataGroups = dataGroup.Where(item => item.ComboBoxItemText == itemName || item.ComboBoxItemText.StartsWith(itemName));
+                }
+
+                if (targetDataGroups.Any() && box.Text.Trim().Length > 0)
+                {
+                    pop = CreatePop(pop, targetDataGroups, current_box, current_box.ItemTemplate);
+                    pop.IsOpen = true;
                 }
                 #endregion
             }
@@ -81,7 +89,7 @@ namespace cbhk_environment.ControlsDataContexts
 
             ListBox listbox = new()
             {
-                Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk_environment;component/resources/common/images/Frame.png"))),
+                Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/Frame.png"))),
                 Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 MinWidth = 200,
                 MaxHeight = 250,

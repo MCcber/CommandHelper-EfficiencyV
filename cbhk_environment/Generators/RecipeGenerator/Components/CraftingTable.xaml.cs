@@ -1,6 +1,6 @@
-﻿using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.Displayer;
-using cbhk_environment.GeneralTools.MessageTip;
+﻿using cbhk.GeneralTools;
+using cbhk.GeneralTools.Displayer;
+using cbhk.GeneralTools.MessageTip;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -19,7 +19,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.RecipeGenerator.Components
+namespace cbhk.Generators.RecipeGenerator.Components
 {
     /// <summary>
     /// CraftingTable.xaml 的交互逻辑
@@ -266,7 +266,7 @@ namespace cbhk_environment.Generators.RecipeGenerator.Components
             MultiMaterialSource = craftingTable.Resources["MultiModeItemViewSource"] as CollectionViewSource;
             MultiMaterialSource.Filter += MultiMaterialSource_Filter;
 
-            recipe_datacontext context = Window.GetWindow(MultiMaterialGrid).DataContext as recipe_datacontext;
+            RecipeDataContext context = Window.GetWindow(MultiMaterialGrid).DataContext as RecipeDataContext;
             ItemTable = context.ItemTable;
         }
 

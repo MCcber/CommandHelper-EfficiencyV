@@ -1,8 +1,8 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.Generators.ItemGenerator.Components;
-using cbhk_environment.WindowDictionaries;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.Generators.ItemGenerator.Components;
+using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -18,11 +18,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
-using System.Windows.Threading;
 
-namespace cbhk_environment.Generators.ItemGenerator
+namespace cbhk.Generators.ItemGenerator
 {
-    public class item_datacontext:ObservableObject
+    public class ItemDataContext:ObservableObject
     {
         #region 返回、运行和保存等指令
         public RelayCommand<CommonWindow> ReturnCommand { get; set; }
@@ -44,8 +43,30 @@ namespace cbhk_environment.Generators.ItemGenerator
         #endregion
 
         #region 字段
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public Window home = null;
         //物品页数据源
-        public ObservableCollection<RichTabItems> ItemPageList { get; set; } = new();
+        public ObservableCollection<RichTabItems> ItemPageList { get; set; } = new()
+        {
+            new RichTabItems()
+                    {
+                        Style = Application.Current.Resources["RichTabItemStyle"] as Style,
+                        Header = "物品",
+                        FontWeight = FontWeights.Normal,
+                        IsContentSaved = true,
+                        BorderThickness = new(4, 3, 4, 0),
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                        SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                        LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
+                        RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
+                        TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
+                        SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
+                        SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
+                        SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+                    }
+        };
 
         #region 当前选中的物品页
         private TabItem selectedItemPage = null;
@@ -59,7 +80,7 @@ namespace cbhk_environment.Generators.ItemGenerator
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconItems.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconItems.png";
         #endregion
 
         #region 数据表
@@ -74,7 +95,7 @@ namespace cbhk_environment.Generators.ItemGenerator
         public DataTable HideInfomationTable = null;
         #endregion
 
-        public item_datacontext()
+        public ItemDataContext()
         {
             #region 链接指令
             RunCommand = new RelayCommand(run_command);
@@ -100,41 +121,17 @@ namespace cbhk_environment.Generators.ItemGenerator
                 HideInfomationTable = await dataCommunicator.GetData("SELECT * FROM HideInfomation");
             });
             #endregion
-        }
-
-        /// <summary>
-        /// 初始化成员
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void ItemLoaded(object sender,RoutedEventArgs e)
-        {
-            Dispatcher dispatcher = (sender as Window).Dispatcher;
+            #region 初始化物品页
             object obj = new();
             BindingOperations.EnableCollectionSynchronization(ItemPageList, obj);
-            await Task.Run(async () =>
+            Task.Run(async () =>
             {
-                await dispatcher.InvokeAsync(() =>
+                await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    ItemPageList.Add(new RichTabItems()
-                    {
-                        Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                        Header = "物品",
-                        FontWeight = FontWeights.Normal,
-                        IsContentSaved = true,
-                        BorderThickness = new(4, 3, 4, 0),
-                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                        SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                        LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                        RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                        TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                        SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                        SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                        SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
-                    });
                     ItemPageList[0].Content = new ItemPages();
                 });
             });
+            #endregion
         }
 
         /// <summary>
@@ -268,12 +265,11 @@ namespace cbhk_environment.Generators.ItemGenerator
         /// <param name="win"></param>
         private void return_command(CommonWindow win)
         {
+            home.WindowState = WindowState.Normal;
+            home.Show();
+            home.ShowInTaskbar = true;
+            home.Focus();
             win.Close();
-            Item.cbhk.Topmost = true;
-            Item.cbhk.WindowState = WindowState.Normal;
-            Item.cbhk.Show();
-            Item.cbhk.Topmost = false;
-            Item.cbhk.ShowInTaskbar = true;
         }
 
         /// <summary>

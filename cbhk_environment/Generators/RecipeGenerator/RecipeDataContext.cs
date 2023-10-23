@@ -1,10 +1,10 @@
-﻿using cbhk_environment.ControlsDataContexts;
-using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.Displayer;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.Generators.RecipeGenerator.Components;
-using cbhk_environment.WindowDictionaries;
+﻿using cbhk.ControlsDataContexts;
+using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.GeneralTools.Displayer;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.Generators.RecipeGenerator.Components;
+using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -14,7 +14,6 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,9 +22,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.RecipeGenerator
+namespace cbhk.Generators.RecipeGenerator
 {
-    public class recipe_datacontext : ObservableObject
+    public class RecipeDataContext : ObservableObject
     {
         #region 返回、运行与导入等指令
         public RelayCommand<CommonWindow> Return { get; set; }
@@ -62,6 +61,11 @@ namespace cbhk_environment.Generators.RecipeGenerator
         }
         #endregion
 
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public Window home = null;
+
         //被抓取的物品
         public static Image GrabedImage = new Image();
 
@@ -69,7 +73,7 @@ namespace cbhk_environment.Generators.RecipeGenerator
         public static bool IsGrabingItem = false;
 
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconRecipes.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconRecipes.png";
         //原版物品库视图引用
         public ListView originalItemViewer = null;
         //自定义物品库视图引用
@@ -134,7 +138,7 @@ namespace cbhk_environment.Generators.RecipeGenerator
 
         public DataTable ItemTable = null;
 
-        public recipe_datacontext()
+        public RecipeDataContext()
         {
             #region 链接命令
             Return = new RelayCommand<CommonWindow>(return_command);
@@ -407,7 +411,7 @@ namespace cbhk_environment.Generators.RecipeGenerator
         /// </summary>
         private void ImportFromClipboardCommand()
         {
-            recipe_datacontext context = this;
+            RecipeDataContext context = this;
             ExternalDataImportManager.ImportRecipeDataHandler(Clipboard.GetText(), ref context,false);
         }
 
@@ -427,7 +431,7 @@ namespace cbhk_environment.Generators.RecipeGenerator
             };
             if (openFileDialog.ShowDialog().Value)
             {
-                recipe_datacontext context = this;
+                RecipeDataContext context = this;
                 ExternalDataImportManager.ImportRecipeDataHandler(openFileDialog.FileName,ref context);
             }
         }
@@ -452,11 +456,10 @@ namespace cbhk_environment.Generators.RecipeGenerator
 
         private void return_command(CommonWindow win)
         {
-            Recipe.cbhk.Topmost = true;
-            Recipe.cbhk.WindowState = WindowState.Normal;
-            Recipe.cbhk.Show();
-            Recipe.cbhk.Topmost = false;
-            Recipe.cbhk.ShowInTaskbar = true;
+            home.WindowState = WindowState.Normal;
+            home.Show();
+            home.ShowInTaskbar = true;
+            home.Focus();
             win.Close();
         }
 

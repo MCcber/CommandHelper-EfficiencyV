@@ -1,6 +1,6 @@
-﻿using cbhk_environment.ControlsDataContexts;
-using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
+﻿using cbhk.ControlsDataContexts;
+using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 
-namespace cbhk_environment.Generators.EntityGenerator.Components
+namespace cbhk.Generators.EntityGenerator.Components
 {
     public partial class ComponentEvents
     {
@@ -32,7 +32,7 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
             int currentIndex = 0;
             EntityPages entityPages = parent.FindParent<EntityPages>();
             if (entityPages == null) return;
-            entityPagesDataContext specialContext = entityPages.DataContext as entityPagesDataContext;
+            EntityPagesDataContext specialContext = entityPages.DataContext as EntityPagesDataContext;
             PropertyPath propertyPath = null;
             Binding valueBinder = new()
             {
@@ -612,7 +612,7 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
         private void AddPassengerClick(FrameworkElement sender)
         {
             Accordion accordion = sender as Accordion;
-            entityPagesDataContext context = accordion.FindParent<EntityPages>().DataContext as entityPagesDataContext;
+            EntityPagesDataContext context = accordion.FindParent<EntityPages>().DataContext as EntityPagesDataContext;
             StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
             context.CommonResult.Add(new NBTDataStructure());
             int currentIndex = context.CommonResult.Count - 1;
@@ -1118,7 +1118,7 @@ namespace cbhk_environment.Generators.EntityGenerator.Components
                 dataStructure.Result = textBox.Name + ":" + textBox.Text + "l";
             else
                 dataStructure.Result = "";
-            entityPagesDataContext context = textBox.FindParent<EntityPages>().DataContext as entityPagesDataContext;
+            EntityPagesDataContext context = textBox.FindParent<EntityPages>().DataContext as EntityPagesDataContext;
         }
 
         /// <summary>

@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace cbhk_environment.Generators.DataPackGenerator.Components.EditPage
+namespace cbhk.Generators.DataPackGenerator.Components.EditPage
 {
     /// <summary>
     /// DatapackTreeItems.xaml 的交互逻辑
@@ -15,6 +15,11 @@ namespace cbhk_environment.Generators.DataPackGenerator.Components.EditPage
             FileNameEditor.KeyDown += FileNameEditor_KeyDown;
         }
 
+        /// <summary>
+        /// 文件重命名
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void FileNameEditor_KeyDown(object sender, KeyEventArgs e)
         {
             TreeViewItem parent = Parent as TreeViewItem;

@@ -1,15 +1,13 @@
-﻿using cbhk_environment.CustomControls;
-using cbhk_environment.CustomControls.ColorPickers;
-using cbhk_environment.CustomControls.TimeLines;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.Generators.ItemGenerator;
-using cbhk_environment.Generators.ItemGenerator.Components;
+﻿using cbhk.CustomControls;
+using cbhk.CustomControls.TimeLines;
+using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.Generators.ItemGenerator;
+using cbhk.Generators.ItemGenerator.Components;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HelixToolkit.Wpf;
 using Newtonsoft.Json.Linq;
-using Syncfusion.Windows.Tools.Controls;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -28,9 +26,9 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
-namespace cbhk_environment.Generators.ArmorStandGenerator
+namespace cbhk.Generators.ArmorStandGenerator
 {
-    public class armor_stand_datacontext: ObservableObject
+    public class ArmorStandDataContext: ObservableObject
     {
         #region 所有3D视图对象
         public GeometryModel3D HeadModel { get; set; }
@@ -114,6 +112,11 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
             set => SetProperty(ref previewMenuVisibility,value);
         }
         #endregion
+
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public Window home = null;
 
         /// <summary>
         /// 当前视图模型
@@ -208,12 +211,12 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
         {
             get
             {
-                string result = "";
-                result = custom_name != "" ? "CustomName:'{\"text\":\"" + custom_name + "\"" + (CustomNameColor != null ? ",\"color\":\"" + CustomNameColor.ToString().Remove(1, 2) + "\"" : "") + "}'," : "";
-                return result;
+                CustomNameString = custom_name != "" ? "CustomName:'{\"text\":\"" + custom_name + "\"" + (CustomNameColor != null ? ",\"color\":\"" + CustomNameColor.ToString().Remove(1, 2) + "\"" : "") + "}'," : "";
+                return custom_name;
             }
             set => SetProperty(ref custom_name, value);
         }
+        private string CustomNameString = "";
         #endregion
 
         #region as名称可见性
@@ -242,19 +245,18 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
                 if (tag != null && tag.Length > 0)
                 {
                     string[] tag_string = tag.Split(',');
-                    string result = "Tags:[";
+                    TagString = "Tags:[";
                     for (int i = 0; i < tag_string.Length; i++)
                     {
-                        result += "\"" + tag_string[i] + "\",";
+                        TagString += "\"" + tag_string[i] + "\",";
                     }
-                    result = result.TrimEnd(',') + "],";
-                    return result;
+                    TagString = TagString.TrimEnd(',') + "],";
                 }
-                else
-                    return "";
+                return tag;
             }
             set => SetProperty(ref tag, value);
         }
+        private string TagString = "";
         #endregion
 
         #region 名称颜色
@@ -1188,12 +1190,12 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
         #endregion
 
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconArmorStand.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconArmorStand.png";
 
         //前台窗体引用
         ArmorStand armorStand = null;
 
-        public armor_stand_datacontext()
+        public ArmorStandDataContext()
         {
             #region 绑定指令
             RunCommand = new RelayCommand(run_command);
@@ -1266,6 +1268,7 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
             HorizontalAngle = initHorizontalAngle;
             VerticalAngle = initVerticalAngle;
             lastMousePosX = lastMousePosY = deltaMoveX = deltaMoveY = horizontalAngleDelta = verticalAngleDelta = 0;
+            armorStand.mainCamera.Position = new(0,0,0);
         }
 
         /// <summary>
@@ -1273,9 +1276,14 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
         /// </summary>
         private void SetItemCommand(FrameworkElement element)
         {
-            IconTextButtons iconTextButtons = element as IconTextButtons;
-            Item item = new(ArmorStand.cbhk);
-            item_datacontext itemContext = item.DataContext as item_datacontext;
+            Button iconTextButtons = element as Button;
+            Item item = new();
+            ItemDataContext itemContext = item.DataContext as ItemDataContext;
+            ItemPages itemPages = new();
+            ItemPageDataContext pageContext = itemPages.DataContext as ItemPageDataContext;
+            pageContext.UseForTool = true;
+            itemContext.ItemPageList[0].Content = itemPages;
+            itemContext.home = home;
 
             #region 如果已有数据，则导入
             switch (iconTextButtons.Uid)
@@ -1287,7 +1295,7 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
                         ExternalDataImportManager.ImportItemDataHandler(HeadItem, ref richTabItems, false);
                         itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                         string HeadData = ExternalDataImportManager.GetItemDataHandler(HeadItem,false);
-                        ((itemContext.ItemPageList[0].Content as ItemPages).DataContext as ItemPageDataContext).ExternallyReadEntityData = JObject.Parse(HeadData);
+                        pageContext.ExternallyReadEntityData = JObject.Parse(HeadData);
                     }
                     break;
                 case "Body":
@@ -1297,7 +1305,7 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
                         ExternalDataImportManager.ImportItemDataHandler(BodyItem, ref richTabItems, false);
                         itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                         string BodyData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                        ((itemContext.ItemPageList[0].Content as ItemPages).DataContext as ItemPageDataContext).ExternallyReadEntityData = JObject.Parse(BodyData);
+                        pageContext.ExternallyReadEntityData = JObject.Parse(BodyData);
                     }
                     break;
                 case "LeftHand":
@@ -1307,7 +1315,7 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
                         ExternalDataImportManager.ImportItemDataHandler(LeftHandItem, ref richTabItems, false);
                         itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                         string LeftHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                        ((itemContext.ItemPageList[0].Content as ItemPages).DataContext as ItemPageDataContext).ExternallyReadEntityData = JObject.Parse(LeftHandData);
+                        pageContext.ExternallyReadEntityData = JObject.Parse(LeftHandData);
                     }
                     break;
                 case "RightHand":
@@ -1317,7 +1325,7 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
                         ExternalDataImportManager.ImportItemDataHandler(RightHandItem, ref richTabItems, false);
                         itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                         string RightHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                        ((itemContext.ItemPageList[0].Content as ItemPages).DataContext as ItemPageDataContext).ExternallyReadEntityData = JObject.Parse(RightHandData);
+                        pageContext.ExternallyReadEntityData = JObject.Parse(RightHandData);
                     }
                     break;
                 case "Legs":
@@ -1327,7 +1335,7 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
                         ExternalDataImportManager.ImportItemDataHandler(LegsItem, ref richTabItems, false);
                         itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                         string LegsData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                        ((itemContext.ItemPageList[0].Content as ItemPages).DataContext as ItemPageDataContext).ExternallyReadEntityData = JObject.Parse(LegsData);
+                        pageContext.ExternallyReadEntityData = JObject.Parse(LegsData);
                     }
                     break;
                 case "Feet":
@@ -1337,19 +1345,17 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
                         ExternalDataImportManager.ImportItemDataHandler(FeetItem, ref richTabItems, false);
                         itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                         string FeetData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                        ((itemContext.ItemPageList[0].Content as ItemPages).DataContext as ItemPageDataContext).ExternallyReadEntityData = JObject.Parse(FeetData);
+                        pageContext.ExternallyReadEntityData = JObject.Parse(FeetData);
                     }
                     break;
             }
             #endregion
 
             #region 设置已生成的数据
-            ItemPageDataContext itemPages = ((itemContext.ItemPageList[0].Content as ItemPages)).DataContext as ItemPageDataContext;
-            itemPages.UseForTool = true;
             string Result = "";
             if (item.ShowDialog().Value)
             {
-                Result = itemPages.Result;
+                Result = pageContext.Result;
                 switch (iconTextButtons.Uid)
                 {
                     case "Head":
@@ -1381,7 +1387,7 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
             string itemID = data.SelectToken("id").ToString();
             JToken itemName = data.SelectToken("tag.display.Name");
             JToken itemNameValue = itemName != null ? JObject.Parse(itemName.ToString()).SelectToken("text") : null;
-            List<Run> runs = new();
+            List<Run> runs = [];
 
             #region 处理描述
             if (data.SelectToken("tag.display.Lore") is JArray itemLoreArray)
@@ -1507,11 +1513,10 @@ namespace cbhk_environment.Generators.ArmorStandGenerator
         /// </summary>
         private void return_command(Window win)
         {
-            ArmorStand.cbhk.Topmost = true;
-            ArmorStand.cbhk.WindowState = WindowState.Normal;
-            ArmorStand.cbhk.Show();
-            ArmorStand.cbhk.Topmost = false;
-            ArmorStand.cbhk.ShowInTaskbar = true;
+            home.WindowState = WindowState.Normal;
+            home.Show();
+            home.ShowInTaskbar = true;
+            home.Focus();
             win.Close();
         }
 

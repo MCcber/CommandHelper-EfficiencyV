@@ -1,4 +1,4 @@
-﻿using cbhk_environment.CustomControls.ColorPickers.Media;
+﻿using cbhk.CustomControls.ColorPickers.Media;
 using System;
 using System.ComponentModel;
 using System.Windows;
@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
-namespace cbhk_environment.CustomControls.ColorPickers
+namespace cbhk.CustomControls.ColorPickers
 {
     /// <summary>
     /// ColorPickers.xaml 的交互逻辑

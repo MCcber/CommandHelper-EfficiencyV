@@ -1,5 +1,4 @@
-﻿using cbhk_environment.ControlsDataContexts;
-using cbhk_environment.Generators.WrittenBookGenerator;
+﻿using cbhk.Generators.WrittenBookGenerator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +7,7 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Input;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
     public class RichRun:Run
     {
@@ -33,7 +32,7 @@ namespace cbhk_environment.CustomControls
         private string uid = "";
         public string UID
         {
-            get { return uid; }
+            get => uid;
             set
             {
                 uid = value;
@@ -63,7 +62,7 @@ namespace cbhk_environment.CustomControls
 
         public bool HasClickEvent
         {
-            get { return hasClickEvent; }
+            get => hasClickEvent;
             set
             {
                 hasClickEvent = value;
@@ -145,11 +144,11 @@ namespace cbhk_environment.CustomControls
             get
             {
                 string result = "";
-                string clickEventAction = written_book_datacontext.EventDataBase.Where(item => item.Value == ClickEventActionItem.Trim()).First().Key;
+                string clickEventAction = WrittenBookDataContext.EventDataBase.Where(item => item.Value == ClickEventActionItem.Trim()).First().Key;
                 string ClickEventString = HasClickEvent ? ",\"clickEvent\":{\"action\":\"" + clickEventAction + "\",\"value\":\"" + (clickEventAction.Trim() == "open_url"? "http://" : "") + ClickEventValue + "\"}" : "";
 
-                string HoverEventString = HasHoverEvent ? ",\"hoverEvent\":{\"action\":\"" + (written_book_datacontext.EventDataBase.Where(item => item.Value == HoverEventActionItem.Trim()).First().Key) + "\",\"value\":\"" + HoverEventValue + "\"}" : "";
-                string InsertionString = HasInsertion ? ",\"insertion\":{\"action\":\"" + (written_book_datacontext.EventDataBase.Where(item => item.Value == HoverEventActionItem.Trim()).First().Key) + "\",\"value\":\"" + HoverEventValue + "\"}" : "";
+                string HoverEventString = HasHoverEvent ? ",\"hoverEvent\":{\"action\":\"" + (WrittenBookDataContext.EventDataBase.Where(item => item.Value == HoverEventActionItem.Trim()).First().Key) + "\",\"value\":\"" + HoverEventValue + "\"}" : "";
+                string InsertionString = HasInsertion ? ",\"insertion\":{\"action\":\"" + (WrittenBookDataContext.EventDataBase.Where(item => item.Value == HoverEventActionItem.Trim()).First().Key) + "\",\"value\":\"" + HoverEventValue + "\"}" : "";
                 result = ClickEventString + HoverEventString + InsertionString;
                 return result;
             }
@@ -188,7 +187,7 @@ namespace cbhk_environment.CustomControls
         /// </summary>
         public RichRun()
         {
-            Obfuscates = written_book_datacontext.obfuscates;
+            Obfuscates = WrittenBookDataContext.obfuscates;
             ObfuscateTimer.Tick += ObfuscateTick;
             MouseEnter += ObfuscateTextMouseEnter;
             MouseLeave += ObfuscateTextMouseLeave;

@@ -1,15 +1,13 @@
-﻿using System;
-using System.Linq;
-using System.Management;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Diagnostics;
 
-namespace cbhk_environment.CustomControls
+namespace cbhk.CustomControls
 {
-    public class RichBorder:Border
+    public class RichBorder : Border
     {
         public Brush LeftBorderBrush
         {
@@ -51,12 +49,52 @@ namespace cbhk_environment.CustomControls
         public static readonly DependencyProperty BottomBorderBrushProperty =
             DependencyProperty.Register("BottomBorderBrush", typeof(Brush), typeof(RichBorder), new PropertyMetadata(null));
 
-        public RichBorder()
+        public double LeftBorderThickness
         {
-            RenderOptions.SetCachingHint(this,CachingHint.Cache);
-            RenderOptions.SetClearTypeHint(this,ClearTypeHint.Auto);
+            get { return (double)GetValue(LeftBorderThicknessProperty); }
+            set { SetValue(LeftBorderThicknessProperty, value); }
         }
 
+        public static readonly DependencyProperty LeftBorderThicknessProperty =
+            DependencyProperty.Register("LeftBorderThickness", typeof(double), typeof(RichBorder), new PropertyMetadata(default(double)));
+
+        public double RightBorderThickness
+        {
+            get { return (double)GetValue(RightBorderThicknessProperty); }
+            set { SetValue(RightBorderThicknessProperty, value); }
+        }
+
+        public static readonly DependencyProperty RightBorderThicknessProperty =
+            DependencyProperty.Register("RightBorderThickness", typeof(double), typeof(RichBorder), new PropertyMetadata(default(double)));
+
+        public double TopBorderThickness
+        {
+            get { return (double)GetValue(TopBorderThicknessProperty); }
+            set { SetValue(TopBorderThicknessProperty, value); }
+        }
+
+        public static readonly DependencyProperty TopBorderThicknessProperty =
+            DependencyProperty.Register("TopBorderThickness", typeof(double), typeof(RichBorder), new PropertyMetadata(default(double)));
+
+        public double BottomBorderThickness
+        {
+            get { return (double)GetValue(BottomBorderThicknessProperty); }
+            set { SetValue(BottomBorderThicknessProperty, value); }
+        }
+
+        public static readonly DependencyProperty BottomBorderThicknessProperty =
+            DependencyProperty.Register("BottomBorderThickness", typeof(double), typeof(RichBorder), new PropertyMetadata(default(double)));
+
+        public RichBorder()
+        {
+            RenderOptions.SetCachingHint(this, CachingHint.Cache);
+            RenderOptions.SetClearTypeHint(this, ClearTypeHint.Auto);
+        }
+
+        /// <summary>
+        /// 绘制四条边
+        /// </summary>
+        /// <param name="dc"></param>
         protected override void OnRender(DrawingContext dc)
         {
             base.OnRender(dc);
@@ -67,19 +105,27 @@ namespace cbhk_environment.CustomControls
             bool flag = !DoubleUtil.IsZero(topLeft);
             Brush borderBrush = null;
 
-            Pen pen =  new();
-                borderBrush = LeftBorderBrush;
-                pen.Brush = LeftBorderBrush;
+            Pen pen = new();
+            borderBrush = LeftBorderBrush;
+            pen.Brush = LeftBorderBrush;
 
+            //Stopwatch stopwatch = new();
+            //stopwatch.Start();
+            //double result = 0;
             if (DoubleUtil.GreaterThan(borderThickness.Top, 0.0))
             {
+                //stopwatch.Stop();
+                //result = stopwatch.Elapsed.TotalMilliseconds;
                 pen = new Pen
                 {
                     Brush = TopBorderBrush
                 };
                 if (useLayoutRounding)
                 {
-                    pen.Thickness = UlementEx.RoundLayoutValue(borderThickness.Top, DoubleUtil.DpiScaleY);
+                    //stopwatch.Start();
+                    pen.Thickness = BorderThickness.Top;/*UlementEx.RoundLayoutValue(borderThickness.Top, DoubleUtil.DpiScaleY);*/
+                    //stopwatch.Stop();
+                    //result = stopwatch.Elapsed.TotalMilliseconds;
                 }
                 else
                 {
@@ -103,7 +149,7 @@ namespace cbhk_environment.CustomControls
                 };
                 if (useLayoutRounding)
                 {
-                    pen.Thickness = UlementEx.RoundLayoutValue(borderThickness.Bottom, DoubleUtil.DpiScaleY);
+                    pen.Thickness = BorderThickness.Bottom;/*UlementEx.RoundLayoutValue(borderThickness.Bottom, DoubleUtil.DpiScaleY);*/
                 }
                 else
                 {
@@ -127,7 +173,7 @@ namespace cbhk_environment.CustomControls
                 };
                 if (useLayoutRounding)
                 {
-                    pen.Thickness = UlementEx.RoundLayoutValue(borderThickness.Left, DoubleUtil.DpiScaleX);
+                    pen.Thickness = BorderThickness.Left;/*UlementEx.RoundLayoutValue(borderThickness.Left, DoubleUtil.DpiScaleX);*/
                 }
                 else
                 {
@@ -151,7 +197,7 @@ namespace cbhk_environment.CustomControls
                 };
                 if (useLayoutRounding)
                 {
-                    pen.Thickness = UlementEx.RoundLayoutValue(borderThickness.Right, DoubleUtil.DpiScaleX);
+                    pen.Thickness = BorderThickness.Right;/*UlementEx.RoundLayoutValue(borderThickness.Right, DoubleUtil.DpiScaleX);*/
                 }
                 else
                 {
@@ -176,10 +222,12 @@ namespace cbhk_environment.CustomControls
             {
                 get
                 {
-                    GetDPI(out int dx, out int dy);
+                    int dx = 0;
+                    int dy = 0;
+                    GetDPI(out dx, out dy);
                     if (dx != 96)
                     {
-                        return dx / 96.0;
+                        return (double)dx / 96.0;
                     }
                     return 1.0;
                 }
@@ -189,10 +237,12 @@ namespace cbhk_environment.CustomControls
             {
                 get
                 {
-                    GetDPI(out int dx, out int dy);
+                    int dx = 0;
+                    int dy = 0;
+                    GetDPI(out dx, out dy);
                     if (dy != 96)
                     {
-                        return dy / 96.0;
+                        return (double)dy / 96.0;
                     }
                     return 1.0;
                 }
@@ -202,18 +252,22 @@ namespace cbhk_environment.CustomControls
             {
                 dpix = 0;
                 dpiy = 0;
-                using ManagementClass mc = new("Win32_DesktopMonitor");
-                using ManagementObjectCollection moc = mc.GetInstances();
-
-                foreach (ManagementObject each in moc.Cast<ManagementObject>())
+                using (System.Management.ManagementClass mc = new System.Management.ManagementClass("Win32_DesktopMonitor"))
                 {
-                    dpix = int.Parse((each.Properties["PixelsPerXLogicalInch"].Value.ToString()));
-                    dpiy = int.Parse((each.Properties["PixelsPerYLogicalInch"].Value.ToString()));
+                    using (System.Management.ManagementObjectCollection moc = mc.GetInstances())
+                    {
+
+                        foreach (System.Management.ManagementObject each in moc)
+                        {
+                            dpix = int.Parse((each.Properties["PixelsPerXLogicalInch"].Value.ToString()));
+                            dpiy = int.Parse((each.Properties["PixelsPerYLogicalInch"].Value.ToString()));
+                        }
+                    }
                 }
             }
             public static bool GreaterThan(double value1, double value2)
             {
-                return value1 > value2 && !DoubleUtil.AreClose(value1, value2);
+                return value1 > value2 && !AreClose(value1, value2);
             }
 
             public static bool AreClose(double value1, double value2)
@@ -243,12 +297,15 @@ namespace cbhk_environment.CustomControls
 
             public static bool IsNaN(double value)
             {
-                NanUnion nanUnion = default;
+                DoubleUtil.NanUnion nanUnion = default(DoubleUtil.NanUnion);
                 nanUnion.DoubleValue = value;
                 ulong num = nanUnion.UintValue & 18442240474082181120uL;
                 ulong num2 = nanUnion.UintValue & 4503599627370495uL;
                 return (num == 9218868437227405312uL || num == 18442240474082181120uL) && num2 != 0uL;
             }
+
+
+
         }
 
         public static class UlementEx

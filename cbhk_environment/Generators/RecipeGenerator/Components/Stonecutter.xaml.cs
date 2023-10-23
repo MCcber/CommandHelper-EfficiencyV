@@ -1,6 +1,6 @@
-﻿using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.Displayer;
-using cbhk_environment.GeneralTools.MessageTip;
+﻿using cbhk.GeneralTools;
+using cbhk.GeneralTools.Displayer;
+using cbhk.GeneralTools.MessageTip;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -18,7 +18,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.RecipeGenerator.Components
+namespace cbhk.Generators.RecipeGenerator.Components
 {
     /// <summary>
     /// Stonecutter.xaml 的交互逻辑

@@ -5,8 +5,8 @@ using System.Windows.Input;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using cbhk_environment.Generators.VillagerGenerator.Components;
-using cbhk_environment.WindowDictionaries;
+using cbhk.Generators.VillagerGenerator.Components;
+using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.Input;
 using System.IO;
 using System.Collections.ObjectModel;
@@ -14,16 +14,16 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Threading.Tasks;
-using cbhk_environment.GeneralTools.Displayer;
-using cbhk_environment.CustomControls;
+using cbhk.GeneralTools.Displayer;
+using cbhk.CustomControls;
 using Newtonsoft.Json.Linq;
-using cbhk_environment.GeneralTools;
+using cbhk.GeneralTools;
 using System.Data;
-using cbhk_environment.GeneralTools.MessageTip;
+using cbhk.GeneralTools.MessageTip;
 
-namespace cbhk_environment.Generators.VillagerGenerator
+namespace cbhk.Generators.VillagerGenerator
 {
-    public class villager_datacontext:ObservableObject
+    public class VillagerDataContext:ObservableObject
     {
         public DataTable ItemTable = null;
         #region 处理拖拽
@@ -71,9 +71,13 @@ namespace cbhk_environment.Generators.VillagerGenerator
         #endregion
 
         #region 字段与引用
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public Window home = null;
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconVillagers.png";
-        string emptyIcon = "pack://application:,,,/cbhk_environment;component/resources/cbhk_form/images/empty.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconVillagers.png";
+        string emptyIcon = "pack://application:,,,/cbhk;component/resources/cbhk_form/images/empty.png";
         string GossipTypesFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Villager\\data\\GossipTypes.ini";
         SolidColorBrush orangeBrush = new((Color)ColorConverter.ConvertFromString("#D77933"));
         SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
@@ -771,7 +775,7 @@ namespace cbhk_environment.Generators.VillagerGenerator
         public RelayCommand ClearGossipItem { get; set; }
         #endregion
 
-        public villager_datacontext()
+        public VillagerDataContext()
         {
             #region 初始化主、副、结果空图像
             BuyItemIcon = BuyBItemIcon = SellItemIcon = new BitmapImage(new Uri(emptyIcon));
@@ -1046,11 +1050,10 @@ namespace cbhk_environment.Generators.VillagerGenerator
         /// <param name="win"></param>
         private void return_command(CommonWindow win)
         {
-            Villager.cbhk.Topmost = true;
-            Villager.cbhk.WindowState = WindowState.Normal;
-            Villager.cbhk.Show();
-            Villager.cbhk.Topmost = false;
-            Villager.cbhk.ShowInTaskbar = true;
+            home.WindowState = WindowState.Normal;
+            home.Show();
+            home.ShowInTaskbar = true;
+            home.Focus();
             win.Close();
         }
 

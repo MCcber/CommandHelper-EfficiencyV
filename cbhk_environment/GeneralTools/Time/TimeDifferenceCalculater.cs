@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace cbhk_environment.GeneralTools.Time
+namespace cbhk.GeneralTools.Time
 {
     class TimeDifferenceCalculater
     {

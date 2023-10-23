@@ -1,9 +1,9 @@
-﻿using cbhk_environment.ControlsDataContexts;
-using cbhk_environment.CustomControls;
-using cbhk_environment.GeneralTools;
-using cbhk_environment.GeneralTools.MessageTip;
-using cbhk_environment.GenerateResultDisplayer;
-using cbhk_environment.Generators.ItemGenerator.Components.SpecialNBT;
+﻿using cbhk.ControlsDataContexts;
+using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using cbhk.GeneralTools.MessageTip;
+using cbhk.GenerateResultDisplayer;
+using cbhk.Generators.ItemGenerator.Components.SpecialNBT;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -22,7 +22,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk_environment.Generators.ItemGenerator.Components
+namespace cbhk.Generators.ItemGenerator.Components
 {
     public class ItemPageDataContext:ObservableObject
     {
@@ -137,8 +137,8 @@ namespace cbhk_environment.Generators.ItemGenerator.Components
         SolidColorBrush orangeBrush = new((Color)ColorConverter.ConvertFromString("#FFE5B663"));
         //存储外部读取进来的实体数据
         public JObject ExternallyReadEntityData { get; set; } = null;
-        string buttonNormalImage = "pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonNormal.png";
-        string buttonPressedImage = "pack://application:,,,/cbhk_environment;component/resources/common/images/ButtonPressed.png";
+        string buttonNormalImage = "pack://application:,,,/cbhk;component/resources/common/images/ButtonNormal.png";
+        string buttonPressedImage = "pack://application:,,,/cbhk;component/resources/common/images/ButtonPressed.png";
         ImageBrush buttonNormalBrush;
         ImageBrush buttonPressedBrush;
         #endregion
@@ -162,7 +162,7 @@ namespace cbhk_environment.Generators.ItemGenerator.Components
         public string Result { get; set; }
 
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk_environment;component/resources/common/images/spawnerIcons/IconItems.png";
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconItems.png";
         //Data页
         public Data data = null;
         //Function页
@@ -197,7 +197,7 @@ namespace cbhk_environment.Generators.ItemGenerator.Components
         public async void ItemPages_Loaded(object sender, RoutedEventArgs e)
         {
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            item_datacontext context = Window.GetWindow(sender as ItemPages).DataContext as item_datacontext;
+            ItemDataContext context = Window.GetWindow(sender as ItemPages).DataContext as ItemDataContext;
             ItemTable = context.ItemTable;
             BlockTable = context.BlockTable;
             EffectTable = context.EffectTable;
@@ -257,7 +257,7 @@ namespace cbhk_environment.Generators.ItemGenerator.Components
         {
             TabControl tabControl = sender as TabControl;
             Item window = Window.GetWindow(tabControl) as Item;
-            item_datacontext datacontext = window.DataContext as item_datacontext;
+            ItemDataContext datacontext = window.DataContext as ItemDataContext;
             foreach (TabItem item in tabControl.Items)
             {
                 if (item.Uid == "Common")
@@ -266,7 +266,7 @@ namespace cbhk_environment.Generators.ItemGenerator.Components
                     {
                         HideInfomationTable = datacontext.HideInfomationTable
                     };
-                    ObservableCollection<string> HideFlagsSource = new();
+                    ObservableCollection<string> HideFlagsSource = [];
                     (item.Content as ScrollViewer).Content = common;
                     foreach (DataRow row in datacontext.HideInfomationTable.Rows)
                     {
@@ -354,9 +354,8 @@ namespace cbhk_environment.Generators.ItemGenerator.Components
             {
                 Displayer displayer = Displayer.GetContentDisplayer();
                 displayer.GeneratorResult(Result, "实体", icon_path);
-                displayer.Topmost = true;
                 displayer.Show();
-                displayer.Topmost = false;
+                displayer.Focus();
             }
         }
 

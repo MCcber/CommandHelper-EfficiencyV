@@ -1,6 +1,6 @@
-﻿using cbhk_environment.GeneralTools.Information;
-using cbhk_environment.Generators.DataPackGenerator.Components;
-using cbhk_environment.Generators.DataPackGenerator.Components.EditPage;
+﻿using cbhk.GeneralTools.MessageTip;
+using cbhk.Generators.DataPackGenerator.Components;
+using cbhk.Generators.DataPackGenerator.Components.EditPage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -13,7 +13,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 
-namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationForms
+namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
 {
     /// <summary>
     /// 属性设置窗体逻辑处理
@@ -62,14 +62,14 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
 
         #region 生成路径、描述等数据
         public string SolutionTemplatePath = "";
-        public ObservableCollection<string> GeneratorPathList { get; set; } = new();
+        public ObservableCollection<string> GeneratorPathList { get; set; } = [];
         public string Description { get; set; } = "";
 
-        string DatapackGeneratorFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Datapack\\data\\GeneratorPathes.ini";
+        private readonly string DatapackGeneratorFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Datapack\\data\\GeneratorPathes.ini";
         /// <summary>
         /// 空白解决方案路径
         /// </summary>
-        private string BlankSolutionFolder = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Datapack\\data\\Templates";
+        private readonly string BlankSolutionFolder = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Datapack\\data\\Templates";
         #endregion
 
         public DatapackGenerateSetupDataContext()
@@ -80,7 +80,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
             SetSolutionPath = new RelayCommand(SetSolutionPathCommand);
             #endregion
             #region 初始化数据
-            List<string> generatorList = File.ReadAllLines(DatapackGeneratorFilePath).ToList();
+            List<string> generatorList = [.. File.ReadAllLines(DatapackGeneratorFilePath)];
             foreach (var item in generatorList)
                 GeneratorPathList.Add(item);
             #endregion
@@ -127,13 +127,10 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         private async void AttributeNextStepCommand(FrameworkElement ele)
         {
             #region 解决方案无名称不生成
-            if (SolutionName.Trim().Length == 0)
+            if (SolutionName.Trim().Length == 0 || GeneratorPathList.Count == 0)
             {
-                MessageDisplayer messageDisplayer = new();
-                messageDisplayerDataContext displayContext = messageDisplayer.DataContext as messageDisplayerDataContext;
-                messageDisplayer.Icon = displayContext.errorIcon;
-                messageDisplayer.Title = "生成失败";
-                displayContext.DisplayInfomation = "解决方案未设置名称";
+                Message.PushMessage("生成失败！解决方案未设置名称",MessageBoxImage.Error);
+                return;
             }
             #endregion
             #region 复制解决方案到指定目录,并转移数据包，新建编辑页数据包节点
@@ -142,7 +139,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
 
             string solutionContent = File.ReadAllText(SolutionTemplatePath);
             Datapack datapack = Window.GetWindow(ele) as Datapack;
-            datapack_datacontext context = datapack.DataContext as datapack_datacontext;
+            DatapackDataContext context = datapack.DataContext as DatapackDataContext;
             context.editPage ??= new();
             EditPageDataContext editContext = context.editPage.DataContext as EditPageDataContext;
             if (solutionContent.Length > 0)
@@ -154,16 +151,16 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
                     if (Datapacks.Count == 0)
                     {
                         string solutionName = Path.GetFileNameWithoutExtension(SolutionTemplatePath);
-                        CopyFolder(Path.GetDirectoryName(SolutionTemplatePath) + "\\" + solutionName, SelectedSolutionPath + "\\" + solutionName);
+                        CopyFolder(Path.GetDirectoryName(SolutionTemplatePath) + "\\" + solutionName, SelectedSolutionPath + "\\" + SolutionName);
                         #region 为编辑页添加数据包节点
                         DatapackTreeItems datapackTreeItems = new();
-                        datapackTreeItems.HeadText.Text = solutionName;
+                        datapackTreeItems.HeadText.Text = SolutionName;
                         TreeViewItem treeViewItem = new()
                         {
                             Header = datapackTreeItems,
-                            Uid = SelectedSolutionPath + "\\" + solutionName
+                            Uid = SelectedSolutionPath + "\\" + SolutionName
                         };
-                        if (Directory.GetFileSystemEntries(SelectedSolutionPath + "\\" + solutionName).Length > 0)
+                        if (Directory.GetFileSystemEntries(SelectedSolutionPath + "\\" + SolutionName).Length > 0)
                         {
                             treeViewItem.Items.Add(new TreeViewItem());
                             treeViewItem.Expanded += ContentReader.DatapackTreeItems_Expanded;
@@ -180,16 +177,16 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
                             if (DatapackName.Trim().Length == 0)
                                 DatapackName = "Datapack";
                             //把数据包转移到生成目录
-                            CopyFolder(solutionPath, SelectedSolutionPath + "\\" + DatapackName);
+                            CopyFolder(solutionPath, SelectedSolutionPath + "\\" + SolutionName);
                             #region 为编辑页添加数据包节点
                             DatapackTreeItems datapackTreeItems = new();
-                            datapackTreeItems.HeadText.Text = DatapackName;
+                            datapackTreeItems.HeadText.Text = SolutionName;
                             TreeViewItem treeViewItem = new()
                             {
                                 Header = datapackTreeItems,
-                                Uid = SelectedSolutionPath + "\\" + DatapackName
+                                Uid = SelectedSolutionPath + "\\" + SolutionName
                             };
-                            if (Directory.GetFileSystemEntries(SelectedSolutionPath + "\\" + DatapackName).Length > 0)
+                            if (Directory.GetFileSystemEntries(SelectedSolutionPath + "\\" + SolutionName).Length > 0)
                             {
                                 treeViewItem.Items.Add(new TreeViewItem());
                                 treeViewItem.Expanded += ContentReader.DatapackTreeItems_Expanded;
@@ -215,7 +212,7 @@ namespace cbhk_environment.Generators.DataPackGenerator.DatapackInitializationFo
         {
             //返回模板选择页
             Datapack datapack = Window.GetWindow(ele) as Datapack;
-            datapack_datacontext context = datapack.DataContext as datapack_datacontext;
+            DatapackDataContext context = datapack.DataContext as DatapackDataContext;
             NavigationService.GetNavigationService(context.frame).Navigate(context.templateSelectPage);
         }
 

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace cbhk_environment
+namespace cbhk
 {
     public class FilePathComparator
     {

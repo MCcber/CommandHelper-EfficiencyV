@@ -1,15 +1,15 @@
 ﻿<local_window:CommonWindow
-    x:Class="cbhk_environment.Generators.RecipeGenerator.Recipe"
+    x:Class="cbhk.Generators.RecipeGenerator.Recipe"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk_environment.CustomControls"
-    xmlns:ImageConverter="clr-namespace:cbhk_environment.GeneralTools"
+    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:ImageConverter="clr-namespace:cbhk.GeneralTools"
     xmlns:VirtualizingWrapPanel="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk_environment.Generators.RecipeGenerator"
-    xmlns:local_datacontext="clr-namespace:cbhk_environment.Generators.RecipeGenerator"
-    xmlns:local_window="clr-namespace:cbhk_environment.WindowDictionaries"
+    xmlns:local="clr-namespace:cbhk.Generators.RecipeGenerator"
+    xmlns:local_datacontext="clr-namespace:cbhk.Generators.RecipeGenerator"
+    xmlns:local_window="clr-namespace:cbhk.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="配方生成器"
     Width="900"
@@ -17,21 +17,21 @@
     MinWidth="900"
     MinHeight="550"
     Background="#2F2F2F"
-    Icon="/cbhk_environment;component/resources/common/images/spawnerIcons/IconRecipes.png"
+    Icon="/cbhk;component/resources/common/images/spawnerIcons/IconRecipes.png"
     ResizeMode="CanResizeWithGrip"
     mc:Ignorable="d">
 
     <Window.DataContext>
-        <local_datacontext:recipe_datacontext />
+        <local_datacontext:RecipeDataContext />
     </Window.DataContext>
 
     <Window.Resources>
         <CollectionViewSource x:Key="OriginalItemSource" Source="{Binding originalItemsSource, IsAsync=True}" />
         <CollectionViewSource x:Key="CustomItemSource" Source="{Binding customItemSource, IsAsync=True}" />
         <ImageConverter:UriToBitmapConverter x:Key="UriToBitmapImage" />
-        <ImageBrush x:Key="EditBox" ImageSource="/cbhk_environment;component/resources/common/images/TextEditBox.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk_environment;component/resources/common/images/IconArrowRight.png" />
+        <ImageBrush x:Key="EditBox" ImageSource="/cbhk;component/resources/common/images/TextEditBox.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowRight.png" />
     </Window.Resources>
 
     <Window.InputBindings>
@@ -474,7 +474,10 @@
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        Style="{DynamicResource ListBoxScrollViewerStyle}">
+                        Style="{DynamicResource ListBoxScrollViewerStyle}"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.ScrollUnit="Pixel"
+                        VirtualizingPanel.VirtualizationMode="Recycling">
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingWrapPanel:VirtualizingWrapPanel
@@ -489,10 +492,9 @@
                             <DataTemplate>
                                 <DockPanel>
                                     <Image
-                                        Width="50"
-                                        Height="50"
-                                        RenderOptions.BitmapScalingMode="HighQuality"
-                                        RenderOptions.ClearTypeHint="Enabled"
+                                        Width="60"
+                                        Height="60"
+                                        RenderOptions.BitmapScalingMode="NearestNeighbor"
                                         SnapsToDevicePixels="True"
                                         Source="{Binding Path=ImagePath, IsAsync=True, Converter={StaticResource UriToBitmapImage}, Mode=OneWay}"
                                         ToolTipService.BetweenShowDelay="0"
@@ -530,7 +532,10 @@
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        Style="{DynamicResource ListBoxScrollViewerStyle}">
+                        Style="{DynamicResource ListBoxScrollViewerStyle}"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.ScrollUnit="Pixel"
+                        VirtualizingPanel.VirtualizationMode="Recycling">
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingWrapPanel:VirtualizingWrapPanel
@@ -545,9 +550,9 @@
                             <DataTemplate>
                                 <DockPanel>
                                     <Image
-                                        Width="50"
-                                        Height="50"
-                                        RenderOptions.BitmapScalingMode="HighQuality"
+                                        Width="60"
+                                        Height="60"
+                                        RenderOptions.BitmapScalingMode="NearestNeighbor"
                                         RenderOptions.ClearTypeHint="Enabled"
                                         SnapsToDevicePixels="True"
                                         Source="{Binding Path=ImagePath, IsAsync=True, Converter={StaticResource UriToBitmapImage}, Mode=OneWay}"
