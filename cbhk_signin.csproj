@@ -52,16 +52,10 @@
     <UseWindowsForms>True</UseWindowsForms>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="cbhk_environment\**" />
-    <EmbeddedResource Remove="cbhk_environment\**" />
-    <None Remove="cbhk_environment\**" />
-    <Page Remove="cbhk_environment\**" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="cb.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="cbhk_environment\cbhk_environment.csproj" />
+    <ProjectReference Include="cbhk\cbhk.csproj" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8">

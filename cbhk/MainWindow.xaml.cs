@@ -27,7 +27,7 @@ namespace cbhk
         /// <summary>
         /// 用户数据
         /// </summary>
-        Dictionary<string, string> UserData = new();
+        Dictionary<string, string> UserData = [];
 
         public MainWindow(Dictionary<string,string> userInfo)
         {

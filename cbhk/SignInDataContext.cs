@@ -175,22 +175,22 @@ namespace cbhk
             FrontWindow = sender as Window;
 
             #region 自动登录
-            //SignInTimer.Tick += ThreadTimerCallback;
-            //SignInTimer.IsEnabled = SaveUserPassword;
-            //IsOpenSignIn = !SaveUserPassword;
-            //if (Environment.OSVersion.Version.Major < 10)
-            //    Message.PushMessage("检测到系统为win10以下，如果系统版本过旧，可能无法登录成功", MessageBoxImage.Error);
+            SignInTimer.Tick += ThreadTimerCallback;
+            SignInTimer.IsEnabled = SaveUserPassword;
+            IsOpenSignIn = !SaveUserPassword;
+            if (Environment.OSVersion.Version.Major < 10)
+                Message.PushMessage("检测到系统为win10以下，如果系统版本过旧，可能无法登录成功", MessageBoxImage.Error);
             #endregion
 
             #region 调试
-            MainWindow CBHK = new(StatsUserInfomation())
-            {
-                WindowState = WindowState.Normal
-            };
-            CBHK.cbhkTaskbar.Visibility = Visibility.Visible;
-            CBHK.Show();
-            CBHK.Focus();
-            FrontWindow.Close();
+            //MainWindow CBHK = new(StatsUserInfomation())
+            //{
+            //    WindowState = WindowState.Normal
+            //};
+            //CBHK.cbhkTaskbar.Visibility = Visibility.Visible;
+            //CBHK.Show();
+            //CBHK.Focus();
+            //FrontWindow.Close();
             #endregion
         }
 
