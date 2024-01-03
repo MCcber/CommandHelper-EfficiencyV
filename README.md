@@ -4,8 +4,6 @@
 
 This is a software for the Windows platform that is about to be developed. The core function is to help Minecraft Java Edition players solve the efficiency problems encountered when developing the related functions of the original version. Below is some screenshot of the homepage and functions.
 
-# CommandHelper-EfficiencyV
-
 ![Home](https://github.com/MCcber/CommandHelper-EfficiencyV/assets/45808036/dda6f413-7930-45ba-ad67-7090e48362cd)
 
 
