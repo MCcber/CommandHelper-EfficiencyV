@@ -3,13 +3,19 @@ using cbhk.GeneralTools;
 using cbhk.Generators.DataPackGenerator.Components.EditPage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Syncfusion.Windows.Edit;
+using ICSharpCode.AvalonEdit;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,8 +25,13 @@ using System.Windows.Media;
 
 namespace cbhk.Generators.DataPackGenerator
 {
-    public class EditPageDataContext : ObservableObject
+    public partial class EditPageDataContext : ObservableObject
     {
+        #region 命令
+        public RelayCommand Return { get; set; }
+        public RelayCommand BackToHomePage { get; set; }
+        #endregion
+
         #region 数据包搜索文本框内容
         private string datapackSeacherValue = "";
         public string DatapackSeacherValue
@@ -35,9 +46,9 @@ namespace cbhk.Generators.DataPackGenerator
         #endregion
 
         #region 文本编辑器标签页数据源、数据包管理器树视图等数据源
-        public ObservableCollection<RichTabItems> FunctionModifyTabItems { get; set; } = new();
-        public ObservableCollection<TreeViewItem> DatapackTreeViewItems { get; set; } = new();
-        public ObservableCollection<TreeViewItem> DatapackTreeViewSearchResult { get; set; } = new();
+        public ObservableCollection<RichTabItems> FunctionModifyTabItems { get; set; } = [];
+        public ObservableCollection<TreeViewItem> DatapackTreeViewItems { get; set; } = [];
+        public ObservableCollection<TreeViewItem> DatapackTreeViewSearchResult { get; set; } = [];
         #endregion
 
         #region 文本编辑器标签页容器可见性
@@ -73,6 +84,117 @@ namespace cbhk.Generators.DataPackGenerator
         public RelayCommand Attribute { get; set; }
         #endregion
 
+        #region 初始标签页
+        private RichTabItems WelComeTab = new()
+        {
+            Style = Application.Current.Resources["RichTabItemStyle"] as Style,
+            Uid = "DemonstrationPage",
+            FontSize = 12,
+            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
+            Header = "欢迎使用",
+            FontWeight = FontWeights.Normal,
+            IsContentSaved = true,
+            BorderThickness = new(4, 3, 4, 0),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+            SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+            LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
+            RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
+            TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
+            SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
+            SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
+            SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+        };
+        #endregion
+
+        #region 符号数据文件路径
+        /// <summary>
+        /// 符号结构文件
+        /// </summary>
+        private string symbolStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + "SymbolStructure.json";
+        private string databaseFilePath = AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db";
+        /// <summary>
+        /// 语法字典
+        /// </summary>
+        public Dictionary<string, Dictionary<string, List<SyntaxTreeItem>>> SyntaxItemDicionary = [];
+        #endregion
+
+        #region 初始化数据结构所需标记
+        /// <summary>
+        /// 初始化语法字典记录命令部首
+        /// </summary>
+        public string initRadical = "";
+        /// <summary>
+        /// 记录递归前存储的键长度
+        /// </summary>
+        public int initKeyLength = 0;
+        /// <summary>
+        /// 语法树数组
+        /// </summary>
+        public JArray DataArray = [];
+        #endregion
+
+        #region 画刷
+        private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+        private SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
+        private SolidColorBrush darkGrayBrush = new((Color)ColorConverter.ConvertFromString("#1E1E1E"));
+        #endregion
+
+        #region 语言客户端
+        private const int port = 5500;
+        private const string ipString = "127.0.0.1";
+        // 创建一个Socket对象
+        public readonly Socket client = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        #endregion
+
+        #region 补全数据中的常量
+        [GeneratedRegex(@"(?<={)[0-9\-]+(?=})")]
+        private static partial Regex ItemSlotMatcher();
+        public Dictionary<string, string> CodeSnippetList = new() { { "dataModifyStorageFromSelf", "data modify storage id path set from entity @s path" },
+            { "executeIfScoreSet","execute if score score_holder objective = score_holder objective" },
+            { "scoreboardPlayersOperation","scoreboard players operation target_score_holder target_objective += source_score_holder source_objective" },
+            { "scoreboardPlayersSet","scoreboard players set score_holder objective 0"},
+            { "summonAec","summon minecraft:area_effect_cloud ~ ~ ~ {Age: -2147483648, Duration: -1, WaitTime: -2147483648, Tags: [\"tag\"]}"},
+            { "summonMarker","summon minecraft:marker ~ ~ ~ {data:{}}"},
+            { "tagAdd","tag target add tag"},
+            { "tagRemove","tag target remove tag"},
+            { "param","### <param name=\"sender\"></param>"} };
+        public Dictionary<string, List<string>> ResourceFilePathes = new() { { "advancementValue", [] }, { "predicateValue", [] } };
+        public List<string> ParticleIds = [];
+        public List<string> TeamColors = [];
+        public List<string> BossbarColors = [];
+        public List<string> BossbarStyles = [];
+        public List<string> ScoreboardTypes = [];
+        public List<string> ScoreboardCustomIds = [];
+        public List<string> DamageTypes = [];
+        public List<string> Enchantments = [];
+        public List<string> Effects = [];
+        public List<string> ItemSlots = [];
+        public List<string> LootTools = [];
+        public List<string> ItemIds = [];
+        public List<string> BlockIds = [];
+        public List<string> EntityIds = [];
+        public List<string> SoundFilePath = [];
+        public List<string> selectors = ["@a", "@e", "@p", "@r", "@s"];
+        public List<string> singleSelectors = ["@a[limit=1]", "@e[limit=1]", "@p", "@r", "@s"];
+        public List<string> SelectorParameterValueTypes = ["Number", "PositiveNumber", "Double", "DoubleInterval", "PositiveDouble", "PositiveDoubleInterval", "IntInterval", "AdvancementsValue", "ScoresValue", "Int", "TagValue", "TeamValue", "NameValue", "EntityId", "FileReferrerValue", "JsonValue"];
+        public List<byte> bytes = [0, 255];
+        public List<short> shorts = [-32768, 0, 32767];
+        public List<int> ints = [-2147483648, 2147483647];
+        public List<long> longs = [-9223372036854775808, 9223372036854775807];
+        public List<float> floats = [0.0f];
+        public List<double> doubles = [0.0];
+        public List<string> dataTypes = ["byte", "double", "float", "int", "long", "short"];
+        public List<string> axesTypes = ["x", "y", "z", "xy", "xz", "yz", "xyz"];
+        public List<string> pos3DTypes = ["~", "~ ~", "~ ~ ~", "^", "^ ^", "^ ^ ^"];
+        public List<string> pos2DTypes = ["~", "~ ~", "^", "^ ^"];
+        public List<string> mobAttributes = [];
+        public List<string> dimensionIds = [];
+        public Dictionary<string, string> SelectorParameterValues = [];
+        public List<string> SelectorParameters = [];
+        public List<string> CompoundSelectorParameters = ["advancements", "scores"];
+        public Dictionary<string, GameruleItem> gamerules = [];
+        #endregion
+
         /// <summary>
         /// 记录剪切状态
         /// </summary>
@@ -86,13 +208,9 @@ namespace cbhk.Generators.DataPackGenerator
         /// </summary>
         TreeViewItem SolutionViewSelectedItem { get; set; } = null;
 
-        #region 画刷
-        private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-        private SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
-        private SolidColorBrush darkGrayBrush = new((Color)ColorConverter.ConvertFromString("#1E1E1E"));
-        #endregion
+        private Datapack datapack = null;
 
-        private Window editForm = null;
+        public Dictionary<string, Dictionary<int, string>> RuntimeVariables { get; set; } = new() { { "bossbarID", [] }, { "storageID", [] }, { "targetObjective", [] }, { "tagValue", [] }, { "triggerObjective", [] }, { "teamID", [] } };
 
         public EditPageDataContext()
         {
@@ -109,7 +227,41 @@ namespace cbhk.Generators.DataPackGenerator
             OpenWithTerminal = new RelayCommand(OpenWithTerminalCommand);
             Delete = new RelayCommand(DeleteCommand);
             Attribute = new RelayCommand(AttributeCommand);
+
+            Return = new(ReturnCommand);
+            BackToHomePage = new(BackToHomePageCommand);
             #endregion
+            #region 客户端连接语言服务器
+            client.Connect(new IPEndPoint(IPAddress.Parse(ipString), port));
+            #endregion
+        }
+
+        /// <summary>
+        /// 返回主页
+        /// </summary>
+        private void ReturnCommand()
+        {
+            DatapackDataContext context = datapack.DataContext as DatapackDataContext;
+            context.home.WindowState = WindowState.Normal;
+            context.home.Show();
+            context.home.ShowInTaskbar = true;
+            context.home.Focus();
+            datapack.Close();
+        }
+
+        /// <summary>
+        /// 返回起始页
+        /// </summary>
+        private async void BackToHomePageCommand()
+        {
+            DatapackDataContext context = datapack.DataContext as DatapackDataContext;
+            await datapack.Dispatcher.InvokeAsync(() =>
+            {
+                context.datapackGenerateSetupPage ??= new();
+                DatapackTreeViewItems.Clear();
+                FunctionModifyTabItems.Clear();
+                System.Windows.Navigation.NavigationService.GetNavigationService(context.frame).Navigate(context.homePage);
+            });
         }
 
         /// <summary>
@@ -119,45 +271,346 @@ namespace cbhk.Generators.DataPackGenerator
         /// <param name="e"></param>
         public void InitDataLoaded(object sender, RoutedEventArgs e)
         {
-            editForm = Window.GetWindow(sender as Page);
+            datapack = Window.GetWindow(sender as Page) as Datapack;
+
             #region 文本编辑区
-            RichTabItems richTabItem = new()
+            if(WelComeTab.Content is null)
             {
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                Uid = "DemonstrationPage",
-                FontSize = 12,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
-                Header = "欢迎使用",
-                FontWeight = FontWeights.Normal,
-                IsContentSaved = true,
-                BorderThickness = new(4, 3, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
-            };
-            FunctionModifyTabItems.Add(richTabItem);
-            FlowDocument document = richTabItem.FindParent<Page>().FindResource("WelcomeDocument") as FlowDocument;
-            RichTextBox richTextBox = new()
+                FunctionModifyTabItems.Add(WelComeTab);
+                FlowDocument document = WelComeTab.FindParent<Page>().FindResource("WelcomeDocument") as FlowDocument;
+                RichTextBox richTextBox = new()
+                {
+                    Document = document,
+                    IsReadOnly = true,
+                    HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
+                    BorderThickness = new Thickness(0),
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"))
+                };
+                WelComeTab.Content = richTextBox;
+            }
+            else
             {
-                Document = document,
-                IsReadOnly = true,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
-                BorderThickness = new Thickness(0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"))
-            };
-            richTabItem.Content = richTextBox;
+                FunctionModifyTabItems.Add(WelComeTab);
+                FunctionModifyTabControlVisibility = Visibility.Visible;
+                SelectedFileItem = FunctionModifyTabItems[0];
+            }
             #endregion
-            #region 数据包管理器树
-            TreeViewItem item = new();
-            DatapackTreeViewItems.Add(item);
-            DatapackTreeViewItems.Remove(item);
+
+            #region 构建数据结构
+            Task.Run(() =>
+            {
+                if (File.Exists(symbolStructureFilePath))
+                {
+                    DataArray = JArray.Parse(File.ReadAllText(symbolStructureFilePath));
+
+                    if (DataArray is not null)
+                    {
+                        InitSyntaxTree(DataArray, new StringBuilder());
+                        DataArray.Clear();
+                    }
+                }
+            });
             #endregion
+
+            #region 从数据库中读取所需变量
+            Task.Run(async () =>
+            {
+                if (File.Exists(databaseFilePath))
+                {
+                    DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
+
+                    #region 添加物品槽位编号
+                    DataTable itemSlotTable = await dataCommunicator.GetData("Select * From ItemSlots");
+                    foreach (DataRow row in itemSlotTable.Rows)
+                    {
+                        if (row["value"] is string value)
+                        {
+                            string subContent = ItemSlotMatcher().Match(value).ToString();
+                            if (subContent is not null && subContent.Length > 0)
+                            {
+                                #region 处理区间,与后面引用的数据拼接成完整的数据
+                                string prefix = value[..(value.LastIndexOf('.') + 1)];
+                                int dashIndex = subContent.IndexOf('-');
+                                int start = int.Parse(subContent[..dashIndex]);
+                                int end = int.Parse(subContent[(dashIndex + 1)..]);
+                                for (int i = start; i <= end; i++)
+                                    ItemSlots.Add(prefix + i);
+                                #endregion
+                            }
+                            else
+                                ItemSlots.Add(value);
+                        }
+                    }
+                    #endregion
+                    #region 添加附魔ID
+                    DataTable enchantmentIdTable = await dataCommunicator.GetData("Select * From Enchantments");
+                    foreach (DataRow row in enchantmentIdTable.Rows)
+                    {
+                        if (row["id"] is string value)
+                            Enchantments.Add(value);
+                    }
+                    #endregion
+                    #region 添加伤害类型
+                    DataTable damageTypeTable = await dataCommunicator.GetData("Select * From DamageTypes");
+                    foreach (DataRow row in damageTypeTable.Rows)
+                    {
+                        if (row["value"] is string value)
+                            DamageTypes.Add(value);
+                    }
+                    #endregion
+                    #region 添加维度
+                    dimensionIds.Add("minecraft:over_world");
+                    dimensionIds.Add("minecraft:nether");
+                    dimensionIds.Add("minecraft:the_end");
+                    #endregion
+                    #region 添加选择器参数
+                    DataTable selectorParameterTable = await dataCommunicator.GetData("Select * From SelectorParameters");
+                    foreach (DataRow row in selectorParameterTable.Rows)
+                    {
+                        if (row["value"] is string value)
+                            SelectorParameters.Add(value);
+                    }
+                    #endregion
+                    #region 添加选择器参数值
+                    DataTable selectorParameterValueTable = await dataCommunicator.GetData("Select * From SelectorParameterValues");
+                    foreach (DataRow row in selectorParameterValueTable.Rows)
+                    {
+                        if (row["name"] is string name && row["value"] is string value)
+                            SelectorParameterValues.Add(name, value);
+                    }
+                    #endregion
+                    #region 添加游戏规则名称
+                    DataTable gameruleTable = await dataCommunicator.GetData("Select * From GameRules");
+                    foreach (DataRow row in gameruleTable.Rows)
+                    {
+                        if (row["name"] is string name)
+                        {
+                            GameruleItem gameruleItem = new();
+                            gamerules.Add(name, gameruleItem);
+                            if (row["description"] is string description)
+                                gameruleItem.Description = description;
+                            if (row["defaultValue"] is string defaultValue)
+                                gameruleItem.Value = defaultValue;
+                            if (row["dataType"] is string dataType)
+                                gameruleItem.ItemType = dataType == "Bool" ? GameruleItem.DataType.Bool : GameruleItem.DataType.Int;
+                        }
+                    }
+                    #endregion
+                    #region 添加队伍颜色
+                    DataTable teamColorTable = await dataCommunicator.GetData("Select * From TeamColors");
+                    foreach (DataRow row in teamColorTable.Rows)
+                    {
+                        if (row["value"] is string value)
+                            TeamColors.Add(value);
+                    }
+                    #endregion
+                    #region 添加bossbar颜色
+                    DataTable bossbarColorTable = await dataCommunicator.GetData("Select * From BossbarColors");
+                    foreach (DataRow row in bossbarColorTable.Rows)
+                    {
+                        if (row["value"] is string value)
+                            BossbarColors.Add(value);
+                    }
+                    #endregion
+                    #region 添加bossbar样式
+                    DataTable bossbarStyleTable = await dataCommunicator.GetData("Select * From BossbarStyles");
+                    foreach (DataRow row in bossbarStyleTable.Rows)
+                    {
+                        if (row["value"] is string value)
+                            BossbarStyles.Add(value);
+                    }
+                    #endregion
+                    #region 添加物品Id
+                    DataTable itemIdTable = await dataCommunicator.GetData("Select * From Items");
+                    foreach (DataRow row in itemIdTable.Rows)
+                    {
+                        if (row["id"] is string id)
+                            ItemIds.Add(id);
+                    }
+                    #endregion
+                    #region 添加方块Id
+                    DataTable blockIdTable = await dataCommunicator.GetData("Select * From Blocks");
+                    foreach (DataRow row in blockIdTable.Rows)
+                    {
+                        if (row["id"] is string id)
+                            BlockIds.Add(id);
+                    }
+                    #endregion
+                    #region 添加实体Id
+                    DataTable entityIdTable = await dataCommunicator.GetData("Select * From Entities");
+                    foreach (DataRow row in entityIdTable.Rows)
+                    {
+                        if (row["id"] is string id)
+                            EntityIds.Add(id);
+                    }
+                    #endregion
+                    #region 添加粒子路径
+                    DataTable particleTable = await dataCommunicator.GetData("Select * From Particles");
+                    foreach (DataRow row in particleTable.Rows)
+                    {
+                        if (row["value"] is string value)
+                            ParticleIds.Add(value);
+                    }
+                    #endregion
+                    #region 添加音效路径
+                    DataTable soundFilePathTable = await dataCommunicator.GetData("Select * From Sounds");
+                    foreach (DataRow row in soundFilePathTable.Rows)
+                    {
+                        if (row["id"] is string id)
+                            SoundFilePath.Add(id);
+                    }
+                    #endregion
+                    #region 添加生物属性
+                    DataTable mobAttributeTable = await dataCommunicator.GetData("Select * From MobAttributes");
+                    foreach (DataRow row in mobAttributeTable.Rows)
+                    {
+                        if (row["id"] is string id)
+                            mobAttributes.Add(id);
+                    }
+                    #endregion
+                    #region 添加药水id/生物状态
+                    DataTable mobEffectTable = await dataCommunicator.GetData("Select * From MobEffects");
+                    foreach (DataRow row in mobEffectTable.Rows)
+                    {
+                        if (row["id"] is string id)
+                            Effects.Add(id);
+                    }
+                    #endregion
+                    #region 添加进度列表
+                    DataTable advancementTable = await dataCommunicator.GetData("Select * From Advancements");
+                    foreach (DataRow row in advancementTable.Rows)
+                    {
+                        if (row["value"] is string value)
+                            ResourceFilePathes["advancementValue"].Add("minecraft:" + value);
+                    }
+                    #endregion
+                    #region 添加战利品表工具
+                    LootTools.Add("mainhand");
+                    LootTools.Add("offhand");
+                    LootTools.AddRange([.. ItemIds]);
+                    #endregion
+                    #region 添加记分板准则
+                    DataTable scoreboardIdTable = await dataCommunicator.GetData("Select * From ScoreboardTypes");
+                    foreach (DataRow row in scoreboardIdTable.Rows)
+                    {
+                        if (row["value"] is string value)
+                            ScoreboardTypes.Add(value);
+                    }
+                    #endregion
+                    #region 添加custom命令空间下的ID
+                    DataTable scoreboardCustomIdTable = await dataCommunicator.GetData("Select * From ScoreboardCustomIds");
+                    foreach (DataRow row in scoreboardCustomIdTable.Rows)
+                    {
+                        if (row["value"] is string value)
+                            ScoreboardCustomIds.Add(value);
+                    }
+                    #endregion
+                }
+            });
+            #endregion
+
+            //#region 数据包管理器树
+            //TreeViewItem item = new();
+            //DatapackTreeViewItems.Add(item);
+            //DatapackTreeViewItems.Remove(item);
+            //#endregion
+        }
+
+        /// <summary>
+        /// 初始化语法树
+        /// </summary>
+        /// <param name="currentArray"></param>
+        /// <param name="parent"></param>
+        private void InitSyntaxTree(JArray currentArray, StringBuilder currentKey, SyntaxTreeItem currentTreeItem = null)
+        {
+            string value = "";
+            currentKey ??= new();
+            for (int i = 0; i < currentArray.Count; i++)
+            {
+                if (currentArray[i] is JObject jobject)
+                {
+                    #region 检查是否为部首
+                    SyntaxTreeItem.SyntaxTreeItemType type = SyntaxTreeItem.SyntaxTreeItemType.Literal;
+                    if (jobject["radical"] is JToken radical)
+                    {
+                        value = radical.ToString();
+                        initRadical = value + "Radical";
+                        if (!currentKey.ToString().StartsWith("commands."))
+                            currentKey.Append("commands.");
+                        currentKey.Append(radical.ToString() + '.');
+                        if (!SyntaxItemDicionary.ContainsKey(initRadical))
+                            SyntaxItemDicionary.Add(initRadical, []);
+                    }
+                    else
+                    if (jobject["path"] is JToken token)
+                        value = token.ToString();
+                    #endregion
+                    #region 确定节点的类型
+                    if (jobject.ContainsKey("radical"))
+                        type = SyntaxTreeItem.SyntaxTreeItemType.Radical;
+                    else
+                    if (jobject.ContainsKey("type"))
+                    {
+                        if (jobject["type"]!.ToString() == "reference")
+                            type = SyntaxTreeItem.SyntaxTreeItemType.Reference;
+                        else
+                            if (jobject["type"]!.ToString() == "dataType")
+                            type = SyntaxTreeItem.SyntaxTreeItemType.DataType;
+                        else
+                            if (jobject["type"]!.ToString() == "redirect")
+                            type = SyntaxTreeItem.SyntaxTreeItemType.Redirect;
+                    }
+                    #endregion
+                    #region 把key或path添加进语法字典当作键
+                    SyntaxTreeItem syntaxTreeItem = new()
+                    {
+                        Text = value,
+                        Type = type,
+                        Children = []
+                    };
+
+                    if (jobject["key"] is JToken key)
+                    {
+                        syntaxTreeItem.Key = key.ToString();
+                        currentKey.Append(key.ToString() + ".");
+                    }
+                    else
+                        if (jobject["path"] is JToken path)
+                    {
+                        currentKey.Append(path.ToString() + ".");
+                    }
+                    if (jobject["format"] is JToken format)
+                        syntaxTreeItem.Description = format.ToString();
+                    #endregion
+                    #region 添加子级作为父级的补全数据并加入语法字典
+                    if (SyntaxItemDicionary.TryGetValue(initRadical, out Dictionary<string, List<SyntaxTreeItem>>? parameterDictionaries))
+                    {
+                        if (!parameterDictionaries.ContainsKey(currentKey.ToString()))
+                            parameterDictionaries.Add(currentKey.ToString(), [syntaxTreeItem]);
+                        else
+                            parameterDictionaries[currentKey.ToString()].Add(syntaxTreeItem);
+                        currentTreeItem?.Children.Add(syntaxTreeItem);
+                    }
+                    #endregion
+                    #region 处理递归
+                    if (currentArray[i]["children"] is JArray subChildren)
+                    {
+                        initKeyLength = currentKey.Length;
+                        InitSyntaxTree(subChildren, currentKey, syntaxTreeItem);
+                    }
+                    #endregion
+                    #region 不执行递归时把最后一层的key删掉避免错误的拼接
+                    if (currentKey.Length > 0)
+                        currentKey.Remove(currentKey.Length - 1, 1);
+                    int lastDotIndex = currentKey.ToString().LastIndexOf('.') + 1;
+                    if (lastDotIndex != -1)
+                        currentKey.Remove(lastDotIndex, currentKey.Length - lastDotIndex);
+                    else
+                        currentKey.Clear();
+                    #endregion
+                }
+            }
         }
 
         /// <summary>
@@ -185,13 +638,16 @@ namespace cbhk.Generators.DataPackGenerator
         /// </summary>
         private async void SearchForSpecifyDatapackNode()
         {
-            if(editForm != null)
+            if (datapack != null)
             {
-                List<string> allSolutionEntries = new();
-                List<string> searchResult = new();
+                List<string> allSolutionEntries = [];
+                List<string> searchResult = [];
                 // Collect all file system entries
                 foreach (TreeViewItem item in DatapackTreeViewItems)
-                    allSolutionEntries.AddRange(Directory.GetFileSystemEntries(item.Uid, "*.*", SearchOption.AllDirectories));
+                {
+                    if (Directory.Exists(item.Uid) || File.Exists(item.Uid))
+                        allSolutionEntries.AddRange(Directory.GetFileSystemEntries(item.Uid, "*.*", SearchOption.AllDirectories));
+                }
                 // Search for matching items
                 foreach (string item in allSolutionEntries)
                 {
@@ -199,7 +655,6 @@ namespace cbhk.Generators.DataPackGenerator
                         searchResult.Add(item);
                 }
                 await SearchForSpecifyDatapackNodeAsync(searchResult);
-
             }
         }
 
@@ -212,9 +667,9 @@ namespace cbhk.Generators.DataPackGenerator
             await Task.Run(() =>
             {
                 // Invoke UI-related logic on the UI thread
-                editForm.Dispatcher.Invoke(() =>
+                datapack.Dispatcher.Invoke(() =>
                 {
-                    List<TreeViewItem> nodesToDisplay = new();
+                    List<TreeViewItem> nodesToDisplay = [];
 
                     // Perform breadth-first search
                     Queue<TreeViewItem> queue = new(DatapackTreeViewItems);
@@ -252,7 +707,6 @@ namespace cbhk.Generators.DataPackGenerator
                 });
             });
         }
-
 
         /// <summary>
         /// 判断节点是否可以显示
@@ -549,46 +1003,46 @@ namespace cbhk.Generators.DataPackGenerator
         {
             TreeViewItem currentItem = sender as TreeViewItem;
             Datapack datapack = Window.GetWindow(currentItem) as Datapack;
-            await datapack.Dispatcher.InvokeAsync(() =>
-            {
-                string fileContent = File.ReadAllText(currentItem.Uid);
-                RichTabItems item = new()
+            if (File.Exists(currentItem.Uid))
+                await datapack.Dispatcher.InvokeAsync(() =>
                 {
-                    Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                    Uid = currentItem.Uid,
-                    FontSize = 12,
-                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
-                    Header = Path.GetFileName(currentItem.Uid),
-                    IsContentSaved = true,
-                    FontWeight = FontWeights.Normal,
-                    BorderThickness = new(4, 3, 4, 0),
-                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                    SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                    LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                    RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                    TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                    SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                    SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                    SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
-                };
-                EditControl textEditor = new()
-                {
-                    ShowLineNumber = true,
-                    Background = transparentBrush,
-                    Foreground = whiteBrush,
-                    LineNumberTextForeground = whiteBrush,
-                    LineNumberAreaBackground = darkGrayBrush,
-                    BorderThickness = new Thickness(0),
-                    Text = fileContent,
-                    HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto
-                };
-                textEditor.TextChanged += TextEditor_TextChanged;
-                textEditor.KeyDown += TextEditor_KeyDown;
-                item.Content = textEditor;
-                FunctionModifyTabItems.Add(item);
-                SelectedFileItem = item;
-            });
+                    string fileContent = File.ReadAllText(currentItem.Uid);
+                    RichTabItems item = new()
+                    {
+                        Style = Application.Current.Resources["RichTabItemStyle"] as Style,
+                        Uid = currentItem.Uid,
+                        FontSize = 12,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
+                        Header = Path.GetFileName(currentItem.Uid),
+                        IsContentSaved = true,
+                        FontWeight = FontWeights.Normal,
+                        BorderThickness = new(4, 3, 4, 0),
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                        SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                        LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
+                        RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
+                        TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
+                        SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
+                        SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
+                        SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+                    };
+                    McfunctionIntellisenseCodeEditor textEditor = new()
+                    {
+                        ShowLineNumbers = true,
+                        Background = transparentBrush,
+                        Foreground = whiteBrush,
+                        LineNumbersForeground = whiteBrush,
+                        BorderThickness = new Thickness(0),
+                        Text = fileContent,
+                        HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                        VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+                    };
+                    textEditor.TextChanged += TextEditor_TextChanged;
+                    textEditor.KeyDown += TextEditor_KeyDown;
+                    item.Content = textEditor;
+                    FunctionModifyTabItems.Add(item);
+                    SelectedFileItem = item;
+                });
         }
 
         /// <summary>
@@ -598,7 +1052,7 @@ namespace cbhk.Generators.DataPackGenerator
         /// <param name="e"></param>
         private async void TextEditor_KeyDown(object sender, KeyEventArgs e)
         {
-            EditControl textEditor = sender as EditControl;
+            TextEditor textEditor = sender as TextEditor;
             RichTabItems parent = textEditor.Parent as RichTabItems;
             Datapack datapack = Window.GetWindow(parent) as Datapack;
             #region 保存
@@ -621,9 +1075,9 @@ namespace cbhk.Generators.DataPackGenerator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void TextEditor_TextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private void TextEditor_TextChanged(object sender, EventArgs e)
         {
-            EditControl textEditor = d as EditControl;
+            TextEditor textEditor = sender as TextEditor;
             RichTabItems parent = textEditor.Parent as RichTabItems;
             parent.IsContentSaved = false;
         }

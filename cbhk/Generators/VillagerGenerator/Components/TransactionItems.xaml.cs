@@ -186,7 +186,7 @@ namespace cbhk.Generators.VillagerGenerator.Components
         /// <summary>
         /// 空图像路径
         /// </summary>
-        string emptyIcon = "pack://application:,,,/cbhk;component/resources/cbhk_form/images/empty.png";
+        string emptyIcon = "pack://application:,,,/cbhk;component/resources/cbhk/images/empty.png";
 
         DataTable ItemTable = null;
 
@@ -286,7 +286,7 @@ namespace cbhk.Generators.VillagerGenerator.Components
             //如果最终价格不同于原价则开启打折效果
             if (price != original_price)
             {
-                TextDecorationCollection textDecorationCollection = new();
+                TextDecorationCollection textDecorationCollection = [];
                 TextDecoration textDecoration = new(TextDecorationLocation.Baseline,new Pen(new SolidColorBrush((Color)ColorConverter.ConvertFromString("#BA370F")),2),-5,TextDecorationUnit.Pixel,TextDecorationUnit.Pixel);
                 textDecorationCollection.Add(textDecoration);
                 BuyCountDisplay.TextDecorations = textDecorationCollection;

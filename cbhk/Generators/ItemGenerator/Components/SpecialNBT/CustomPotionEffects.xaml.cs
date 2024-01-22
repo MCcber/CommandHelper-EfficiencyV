@@ -1,10 +1,13 @@
 ﻿using cbhk.ControlsDataContexts;
 using cbhk.CustomControls;
+using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -14,7 +17,7 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
     /// <summary>
     /// CustomPotionEffects.xaml 的交互逻辑
     /// </summary>
-    public partial class CustomPotionEffects : UserControl
+    public partial class CustomPotionEffects : UserControl,IVersionUpgrader
     {
         DataTable EffectTable = null;
 
@@ -30,88 +33,79 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         #endregion
 
         #region 合并数据
-        private bool HaveResult = true;
-        public string Result
+        int currentVersion = 0;
+        private string id = "";
+        async Task<string> IVersionUpgrader.Result()
         {
-            get
+            await Upgrade(currentVersion);
+            string result = "";
+            List<string> Data = [];
+            List<string> FactorCalculationList = [];
+            foreach (FrameworkElement component in EffectListPanel.Children)
             {
-                if (HaveResult)
+                if (component is DockPanel)
                 {
-                    string result = "";
-                    List<string> Data = new();
-                    List<string> FactorCalculationList = new();
-                    foreach (FrameworkElement component in EffectListPanel.Children)
+                    DockPanel dockPanel = component as DockPanel;
+                    foreach (FrameworkElement subChild in dockPanel.Children)
                     {
-                        if (component is DockPanel)
+                        if (subChild is Slider)
                         {
-                            DockPanel dockPanel = component as DockPanel;
-                            foreach (FrameworkElement subChild in dockPanel.Children)
-                            {
-                                if (subChild is Slider)
-                                {
-                                    Slider slider = subChild as Slider;
-                                    Data.Add(slider.Uid + ":" + slider.Value);
-                                }
-                                if (subChild is TextCheckBoxs)
-                                {
-                                    TextCheckBoxs textCheckBoxs = subChild as TextCheckBoxs;
-                                    if (textCheckBoxs.IsChecked.Value)
-                                        Data.Add(textCheckBoxs.Uid + ":1b");
-                                }
-                                if (subChild is ComboBox)
-                                {
-                                    ComboBox comboBox = subChild as ComboBox;
-                                    IconComboBoxItem item = comboBox.SelectedItem as IconComboBoxItem;
-                                    string currentID = item.ComboBoxItemId;
-                                    Data.Add(comboBox.Uid + ":\"minecraft:" + currentID + "\"");
-                                }
-                            }
+                            Slider slider = subChild as Slider;
+                            Data.Add(slider.Uid + ":" + slider.Value);
                         }
-                        else
-                        if (component is TextCheckBoxs)
+                        if (subChild is TextCheckBoxs)
                         {
-                            TextCheckBoxs textCheckBoxs = component as TextCheckBoxs;
+                            TextCheckBoxs textCheckBoxs = subChild as TextCheckBoxs;
                             if (textCheckBoxs.IsChecked.Value)
                                 Data.Add(textCheckBoxs.Uid + ":1b");
                         }
-                        else
-                        if (component is Slider)
+                        if (subChild is ComboBox)
                         {
-                            Slider slider = component as Slider;
-                            if (slider.Value > 0)
-                                Data.Add(slider.Uid + ":" + slider.Value + (Equals(slider.Maximum, float.MaxValue) ? "f" : ""));
+                            Data.Add("Id:" + id);
                         }
                     }
-                    foreach (FrameworkElement component in FactorCalculationDataGrid.Children)
-                    {
-                        if (component is TextCheckBoxs)
-                        {
-                            TextCheckBoxs textCheckBoxs = component as TextCheckBoxs;
-                            if (textCheckBoxs.IsChecked.Value)
-                                FactorCalculationList.Add(textCheckBoxs.Uid + ":1b");
-                        }
-                        else
-                        if (component is Slider)
-                        {
-                            Slider slider = component as Slider;
-                            if (slider.Value > 0)
-                                FactorCalculationList.Add(slider.Uid + ":" + slider.Value + (Equals(slider.Maximum, float.MaxValue) ? "f" : ""));
-                        }
-                    }
-                    result = "{" + string.Join(",", Data) + (FactorCalculationList.Count > 0 ? ",FactorCalculationData:{" + string.Join(",", FactorCalculationList) + "}" : "") + "}";
-                    if (result == "{}")
-                        result = "";
-                    return result;
                 }
-                return "";
+                else
+                if (component is TextCheckBoxs)
+                {
+                    TextCheckBoxs textCheckBoxs = component as TextCheckBoxs;
+                    if (textCheckBoxs.IsChecked.Value)
+                        Data.Add(textCheckBoxs.Uid + ":1b");
+                }
+                else
+                if (component is Slider)
+                {
+                    Slider slider = component as Slider;
+                    if (slider.Value > 0)
+                        Data.Add(slider.Uid + ":" + slider.Value + (Equals(slider.Maximum, float.MaxValue) ? "f" : ""));
+                }
             }
+            foreach (FrameworkElement component in FactorCalculationDataGrid.Children)
+            {
+                if (component is TextCheckBoxs)
+                {
+                    TextCheckBoxs textCheckBoxs = component as TextCheckBoxs;
+                    if (textCheckBoxs.IsChecked.Value)
+                        FactorCalculationList.Add(textCheckBoxs.Uid + ":1b");
+                }
+                else
+                if (component is Slider)
+                {
+                    Slider slider = component as Slider;
+                    if (slider.Value > 0)
+                        FactorCalculationList.Add(slider.Uid + ":" + slider.Value + (Equals(slider.Maximum, float.MaxValue) ? "f" : ""));
+                }
+            }
+            result = "{" + string.Join(",", Data) + (FactorCalculationList.Count > 0 ? ",FactorCalculationData:{" + string.Join(",", FactorCalculationList) + "}" : "") + "}";
+            if (result == "{}")
+                result = "";
+            return result;
         }
         #endregion
 
         public CustomPotionEffects()
         {
             InitializeComponent();
-            DataContext = this;
             EffectAccordion.Fresh = new CommunityToolkit.Mvvm.Input.RelayCommand<FrameworkElement>(CloseEffectCommand);
         }
 
@@ -121,10 +115,11 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         /// <param name="obj"></param>
         private void CloseEffectCommand(FrameworkElement obj)
         {
+            ItemPageDataContext itemPageDataContext = obj.FindParent<ItemPages>().DataContext as ItemPageDataContext;
             StackPanel stackPanel = Parent as StackPanel;
             stackPanel.Children.Remove(this);
             stackPanel.FindParent<Accordion>().FindChild<IconButtons>().Focus();
-            HaveResult = false;
+            itemPageDataContext.VersionComponents.Remove(this);
         }
 
         /// <summary>
@@ -132,11 +127,12 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void EffectID_Loaded(object sender, RoutedEventArgs e)
+        public async void EffectID_Loaded(object sender, RoutedEventArgs e)
         {
             ComboBox comboBox = sender as ComboBox;
+            ObservableCollection<IconComboBoxItem> source = [];
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            ObservableCollection<IconComboBoxItem> source = new();
+            EffectTable = (Window.GetWindow(this).DataContext as ItemDataContext).EffectTable;
             foreach (DataRow row in EffectTable.Rows)
             {
                 string id = row["id"].ToString();
@@ -147,9 +143,27 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                     ComboBoxItemIcon = new BitmapImage(new Uri(imagePath,UriKind.Absolute)),
                     ComboBoxItemId = id,
                     ComboBoxItemText = name
-                }); ;
+                });
             }
             comboBox.ItemsSource = source;
+            comboBox.SelectedIndex = 0;
+
+            await Upgrade(1202);
+        }
+
+        public async Task Upgrade(int version)
+        {
+            currentVersion = version;
+            await Task.Delay(0);
+            id = "";
+            if (version < 116)
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (ID.SelectedItem is not null)
+                        id = EffectTable.Select("id='" + (ID.SelectedItem as IconComboBoxItem).ComboBoxItemId + "'").First()["number"].ToString();
+                });
+            else
+                id = "\"minecraft:" + id + "\"";
         }
     }
 }

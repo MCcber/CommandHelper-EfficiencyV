@@ -39,7 +39,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         }
 
         //数据源
-        private ObservableCollection<string> VersionSource = new ObservableCollection<string> { "1.12-", "1.13+" };
+        private ObservableCollection<string> VersionSource = ["1.12-", "1.13+"];
         #endregion
 
         #region 生成行为
@@ -308,7 +308,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         #endregion
 
         #region 已选择颜色
-        private SolidColorBrush selectedColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF0000"));
+        private SolidColorBrush selectedColor = new((Color)ColorConverter.ConvertFromString("#FF0000"));
         public SolidColorBrush SelectedColor
         {
             get
@@ -360,7 +360,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         #endregion
 
         #region 主颜色库
-        private ObservableCollection<Border> mainColors = new ObservableCollection<Border> { };
+        private ObservableCollection<Border> mainColors = [];
         public ObservableCollection<Border> MainColors
         {
             get
@@ -376,7 +376,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         #endregion
 
         #region 备选颜色库
-        private ObservableCollection<Border> fadeColors = new ObservableCollection<Border> { };
+        private ObservableCollection<Border> fadeColors = [];
         public ObservableCollection<Border> FadeColors
         {
             get
@@ -456,7 +456,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         /// <summary>
         /// 形状数据源
         /// </summary>
-        public ObservableCollection<string> ShapeList { get; set; } = new ObservableCollection<string> { };
+        public ObservableCollection<string> ShapeList { get; set; } = [];
         /// <summary>
         /// 外部数据
         /// </summary>
@@ -464,7 +464,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         /// <summary>
         /// 预览效果的粒子集合
         /// </summary>
-        public List<ModelVisual3D> Particles { get; set; } = new();
+        public List<ModelVisual3D> Particles { get; set; } = [];
         /// <summary>
         /// 原版颜色库路径
         /// </summary>
@@ -484,7 +484,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         /// <summary>
         /// 原版颜色映射库
         /// </summary>
-        private Dictionary<string, string> OriginColorDictionary = new() { };
+        private Dictionary<string, string> OriginColorDictionary = [];
         /// <summary>
         /// 原版颜色库面板
         /// </summary>
@@ -493,16 +493,30 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         /// 拾色器
         /// </summary>
         ColorPickers colorpicker = null;
-        //烟花粒子纹理文件路径
+        /// <summary>
+        /// 烟花粒子纹理文件路径
+        /// </summary>
         BitmapImage particleTexture = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\FireworkRocket\\images\\x.png", UriKind.Absolute)) { CacheOption = BitmapCacheOption.OnLoad };
-        //烟花粒子尺寸
-        double particleScale = 1;
-        //烟上升高度倍率
+        /// <summary>
+        /// 烟花粒子尺寸
+        /// </summary>
+        double particleScale = 0.5;
+        /// <summary>
+        /// 烟上升高度倍率
+        /// </summary>
         int fireworkFlyHeight = 10;
-        //烟花爆炸持续时间
+        /// <summary>
+        /// 烟花爆炸持续时间
+        /// </summary>
         double fireworkExplosionDuration = 0.1;
-        //烟花爆炸粒子渲染组
+        /// <summary>
+        /// 烟花爆炸粒子渲染组
+        /// </summary>
         Model3DGroup particleContainer = new();
+        /// <summary>
+        /// 淡入和淡出的粒子数量
+        /// </summary>
+        private int particleCount = 350;
 
         public FireworkRocketPagesDataContext()
         {
@@ -521,7 +535,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                 string[] shapes = File.ReadAllLines(shapePath);
                 foreach (string shape in shapes)
                 {
-                    ShapeList.Add(shape.Substring(shape.LastIndexOf(':') + 1));
+                    ShapeList.Add(shape[(shape.LastIndexOf(':') + 1)..]);
                 }
             }
             #endregion
@@ -543,13 +557,8 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                     JArray Explosions = ExternallyReadEntityData.SelectToken("Item.tag.Fireworks.Explosions") as JArray;
                     GeneratorFireStar = Explosion != null;
 
-                    string rootPath = "";
                     if (Give)
                     {
-                        if (generatorFireStar)
-                            rootPath = "Item.tag";
-                        else
-                            rootPath = "Item.tag.Fireworks";
                         Explosion = ExternallyReadEntityData.SelectToken("Explosion") as JObject;
                         Explosions = ExternallyReadEntityData.SelectToken("Fireworks.Explosions") as JArray;
                     }
@@ -609,9 +618,9 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                     if (flight != null)
                         Duration = double.Parse(flight.ToString());
                     if (flicker != null)
-                        Flicker = flicker.ToString() == "1" || flicker.ToString().ToLower() == "true";
+                        Flicker = flicker.ToString() == "1" || flicker.ToString().Equals("true", StringComparison.CurrentCultureIgnoreCase);
                     if (trail != null)
-                        Trail = trail.ToString() == "1" || trail.ToString().ToLower() == "true";
+                        Trail = trail.ToString() == "1" || trail.ToString().Equals("true", StringComparison.CurrentCultureIgnoreCase);
                     if (type != null)
                         SelectedShape = int.Parse(type.ToString());
 
@@ -622,7 +631,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                         if (lifeTime != null)
                             LifeTime = double.Parse(lifeTime.ToString());
                         if (shotAtAngle != null)
-                            FlyAngle = shotAtAngle.ToString() == "1" || shotAtAngle.ToString().ToLower() == "true";
+                            FlyAngle = shotAtAngle.ToString() == "1" || shotAtAngle.ToString().Equals("true", StringComparison.CurrentCultureIgnoreCase);
                     }
                     #endregion
                 }
@@ -690,7 +699,6 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                 FillBehavior = FillBehavior.Stop
             };
             #endregion
-
             #region 执行动画
             fireworkRocketAnimation.Completed += FireworkExploded;
             userCamera.BeginAnimation(TranslateTransform3D.OffsetYProperty, cameraAnimation);
@@ -718,8 +726,8 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                 //模型顶点、顶点索引、纹理uv坐标数据
                 MeshGeometry3D meshGeometry3D = new()
                 {
-                    Positions = new Point3DCollection(new List<Point3D> { new Point3D(0, 0, 0), new Point3D(particleScale, 0, 0), new Point3D(particleScale, particleScale, 0), new Point3D(0, particleScale, 0) }),
-                    TextureCoordinates = new PointCollection(new List<Point> { new Point(0, 1), new Point(1, 1), new Point(1, 0), new Point(0, 0) }),
+                    Positions = new Point3DCollection(new List<Point3D> { new(0, 0, 0), new(particleScale, 0, 0), new(particleScale, particleScale, 0), new(0, particleScale, 0) }),
+                    TextureCoordinates = new PointCollection(new List<Point> { new(0, 1), new(1, 1), new(1, 0), new(0, 0) }),
                     TriangleIndices = new Int32Collection(new List<int> { 0, 1, 2, 0, 2, 3 }) 
                 };
 
@@ -728,23 +736,36 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                 Random random = new();
                 #endregion
 
-                for (int i = 0; i < 350; i++)
+                //计算对应的图像点阵坐标
+                List<Vector3D> results = [];
+                switch (SelectedShape)
                 {
-                    //实例化变换属性
-                    Vector3D randomPos = context.GetSphereRandom(new float[] { (float)random.NextDouble(), (float)random.NextDouble() }, 1);
+                    case 2:
+                        results = context.GenerateStars(particleCount,1,0.38);
+                        break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                    default:
+                        results = context.GenerateFibonacciSphere(particleCount, 1);
+                        break;
+                }
+                for (int i = 0; i < particleCount; i++)
+                {
+                    Vector3D randomPos = results[i];
                     //实例化纹理笔刷
                     ImageBrush imageBrush = new();
 
                     #region 初始化设置
                     //设置为点过滤模式，让像素纹理高清
-                    RenderOptions.SetBitmapScalingMode(imageBrush, BitmapScalingMode.HighQuality);
+                    RenderOptions.SetBitmapScalingMode(imageBrush, BitmapScalingMode.NearestNeighbor);
                     //开启抗锯齿
                     RenderOptions.SetEdgeMode(imageBrush, EdgeMode.Aliased);
                     #endregion
 
                     #region 构造法线信息，执行光反射，让纹理深度信息更清晰
-                    // Calculate the normal vectors for each vertex
-                    var normals = new Vector3DCollection();
+                    Vector3DCollection normals = [];
                     for (int j = 0; j < meshGeometry3D.Positions.Count; j++)
                     {
                         var normal = CalculateNormal(meshGeometry3D, j);
@@ -784,7 +805,10 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                     #endregion
 
                     #region 处理淡入颜色变换
+                    if(MainColors.Count > 0)
                         imageBrush.ImageSource = ColoringBitmapImage(particleTexture, new SolidColorBrush((Color)ColorConverter.ConvertFromString(MainColors[random.Next(0,MainColors.Count - 1)].Background.ToString())));
+                    else
+                        imageBrush.ImageSource = ColoringBitmapImage(particleTexture, new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")));
                     #endregion
 
                     #region 应用模型，设置几何数据和材质数据、执行爆炸动画
@@ -846,13 +870,15 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         /// <param name="e"></param>
         private void FireworkPosAnimationCompleted()
         {
-            //粒子颜色迭代索引
-            //int particleColorIndex = 0;
+            if (FadeColors.Count == 0)
+                return;
             Random random = new();
-            for (int i = 0; i < particleContainer.Children.Count; i++)
+            particleCount = FadeColors.Count < particleCount ? FadeColors.Count : 350;
+            for (int i = 0; i < particleCount; i++)
             {
-                #region 处理烟花粒子缓降动画
-                TranslateTransform3D translateTransform3D = (particleContainer.Children[i].Transform as Transform3DGroup).Children[^1] as TranslateTransform3D;
+                #region 处理烟花粒子缓降和淡出颜色变换动画
+                Transform3DGroup transform3DGroup = particleContainer.Children[i].Transform as Transform3DGroup;
+                TranslateTransform3D translateTransform3D = transform3DGroup.Children[^1] as TranslateTransform3D;
                 DoubleAnimation posYAnimation = new()
                 {
                     From = translateTransform3D.OffsetY,
@@ -866,7 +892,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                 //实例化纹理笔刷
                 ImageBrush imageBrush = new()
                 {
-                    ImageSource = ColoringBitmapImage(particleTexture, new SolidColorBrush((Color)ColorConverter.ConvertFromString(FadeColors[random.Next(0, MainColors.Count - 1)].Background.ToString())))
+                    ImageSource = ColoringBitmapImage(particleTexture, new SolidColorBrush((Color)ColorConverter.ConvertFromString(FadeColors[random.Next(0, particleCount - 1)].Background.ToString())))
                 };
                 (particleContainer.Children[i] as GeometryModel3D).Material = new DiffuseMaterial() { Brush = imageBrush };
                 translateTransform3D.BeginAnimation(TranslateTransform3D.OffsetYProperty, posYAnimation);
@@ -1012,7 +1038,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                     ViewScale -= 0.1;
                 else
                     ViewScale += 0.1;
-                ScaleTransform scaleTransform = new ScaleTransform
+                ScaleTransform scaleTransform = new()
                 {
                     ScaleX = ViewScale
                 };
@@ -1120,7 +1146,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                 if (item.Contains("dye"))
                 {
                     string colorName = Path.GetFileNameWithoutExtension(item);
-                    colorName = colorName.Substring(0, colorName.LastIndexOf('_'));
+                    colorName = colorName[..colorName.LastIndexOf('_')];
                     BitmapImage bitmapImage = new(new Uri(item, UriKind.Absolute));
                     IconCheckBoxs iconCheckBoxs = new()
                     {
@@ -1148,8 +1174,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
             {
                 colorID = item.Split(':')[0];
                 colorString = item.Split(':')[1];
-                if(!OriginColorDictionary.ContainsKey(colorID))
-                OriginColorDictionary.Add(colorID, colorString);
+                OriginColorDictionary.TryAdd(colorID, colorString);
             }
         }
 

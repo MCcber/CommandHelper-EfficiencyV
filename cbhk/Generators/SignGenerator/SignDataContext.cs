@@ -1,10 +1,13 @@
 ﻿using cbhk.CustomControls;
+using cbhk.GenerateResultDisplayer;
 using cbhk.Generators.SignGenerator.Components;
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,11 +27,10 @@ namespace cbhk.Generators.SignGenerator
         /// <summary>
         /// 告示牌数据源
         /// </summary>
-        public ObservableCollection<RichTabItems> Signs { get; set; } = new() {
+        public ObservableCollection<RichTabItems> Signs { get; set; } = [
             new RichTabItems()
             {
-                Uid = "oak",
-                Header = "oak",
+                Header = "acacia",
                 IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
@@ -42,12 +44,25 @@ namespace cbhk.Generators.SignGenerator
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
             }
-        };
+        ];
 
         /// <summary>
         /// 已选中的告示牌
         /// </summary>
         public RichTabItems SelectedItem { get; set; }
+
+        ImageSource icon = new BitmapImage();
+
+        string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\Sign\images\icon.png";
+
+        private bool showResult;
+
+        public bool ShowResult
+        {
+            get => showResult;
+            set => SetProperty(ref showResult, value);
+        }
+
         #endregion
 
         #region 运行、返回等命令
@@ -57,17 +72,12 @@ namespace cbhk.Generators.SignGenerator
         /// <summary>
         /// 添加告示牌
         /// </summary>
-        public RelayCommand<FrameworkElement> AddSign { get; set; }
+        public RelayCommand AddSign { get; set; }
 
         /// <summary>
         /// 清空告示牌
         /// </summary>
         public RelayCommand ClearSigns { get; set; }
-
-        /// <summary>
-        /// 清除指定告示牌
-        /// </summary>
-        public RelayCommand<FrameworkElement> ClearSign { get; set; }
         #endregion
 
         public SignDataContext()
@@ -79,9 +89,10 @@ namespace cbhk.Generators.SignGenerator
                     Signs[0].Content = new SignPage() { FontWeight = FontWeights.Normal };
                 });
             });
-            AddSign = new RelayCommand<FrameworkElement>(AddSignCommand);
+            if (File.Exists(iconPath))
+                icon = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+            AddSign = new RelayCommand(AddSignCommand);
             ClearSigns = new(ClearSignsCommand);
-            ClearSign = new RelayCommand<FrameworkElement>(ClearSignCommand);
             Run = new(runCommand);
             Return = new RelayCommand<CommonWindow>(ReturnCommand);
         }
@@ -102,36 +113,46 @@ namespace cbhk.Generators.SignGenerator
         /// <summary>
         /// 生成所有告示牌
         /// </summary>
-        private void runCommand()
+        private async void runCommand()
         {
+            Displayer displayer = Displayer.GetContentDisplayer();
+            StringBuilder result = new();
+            await Task.Run(async () =>
+            {
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    foreach (var item in Signs)
+                    {
+                        SignPage signPage = item.Content as SignPage;
+                        SignPageDataContext signPageDataContext = signPage.DataContext as SignPageDataContext;
+                        signPageDataContext.RunCommand();
+                        if (!ShowResult)
+                            result.Append(signPageDataContext.Result + "\r\n");
+                        displayer.GeneratorResult(signPageDataContext.Result, "告示牌", iconPath);
+                    }
+                });
+            });
+            if (ShowResult)
+                displayer.Show();
+            else
+                Clipboard.SetText(result.ToString());
         }
 
         /// <summary>
         /// 添加告示牌
         /// </summary>
         /// <param name="element"></param>
-        private void AddSignCommand(FrameworkElement element)
+        private void AddSignCommand()
         {
-            MenuItem menuItem = element as MenuItem;
-            string uid = menuItem.Uid;
-            int index = uid.IndexOf('_');
-            if (index != -1)
-            {
-                string target = uid[(index + 1)..(index + 2)];
-                _ = uid.Replace('_' + target, target.ToUpper());
-            }
-
-            string signPanelPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + uid + "SignPanel.png";
+            string signPanelPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\acaciaSignPanel.png";
             SignPage signPage = new() { FontWeight = FontWeights.Normal };
             SignPageDataContext pageContext = signPage.DataContext as SignPageDataContext;
             pageContext.SignPanelSource = new BitmapImage(new Uri(signPanelPath, UriKind.Absolute));
             RichTabItems richTabItems = new()
             {
-                Uid = menuItem.Uid,
                 Content = signPage,
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                Header = uid,
-                //HeaderImage = new BitmapImage(new Uri(signPanelPath, UriKind.Absolute)),
+                Header = "acacia",
                 IsContentSaved = true,
                 BorderThickness = new(4, 3, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
@@ -144,26 +165,6 @@ namespace cbhk.Generators.SignGenerator
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
             };
             Signs.Add(richTabItems);
-        }
-
-        /// <summary>
-        /// 清除指定类型的告示牌
-        /// </summary>
-        /// <param name="element"></param>
-        private void ClearSignCommand(FrameworkElement element)
-        {
-            if(element is MenuItem menuItem)
-            {
-                string uid = menuItem.Uid;
-                for (int i = 0; i < Signs.Count; i++)
-                {
-                    if (Signs[i].Uid == uid)
-                    {
-                        Signs.RemoveAt(i);
-                        i--;
-                    }
-                }
-            }
         }
 
         /// <summary>

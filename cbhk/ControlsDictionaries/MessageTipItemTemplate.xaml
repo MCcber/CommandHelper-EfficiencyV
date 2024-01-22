@@ -8,8 +8,8 @@
                 </Grid.ColumnDefinitions>
                 <Image
                     Grid.Column="0"
-                    Width="30"
-                    Height="30"
+                    Width="15"
+                    Height="15"
                     Margin="5"
                     Source="{Binding Icon}" />
                 <TextBlock
@@ -17,7 +17,7 @@
                     Margin="5,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
-                    FontSize="30"
+                    FontSize="20"
                     Foreground="White"
                     Text="{Binding MessageString}"
                     TextWrapping="WrapWithOverflow" />

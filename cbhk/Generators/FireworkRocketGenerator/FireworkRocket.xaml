@@ -172,6 +172,7 @@
             Margin="0,-5,0,0"
             Background="Transparent"
             BorderThickness="0"
+            Cursor=""
             ItemsSource="{Binding FireworkRocketPageList}"
             SelectedIndex="0"
             Style="{DynamicResource TabControlWithScrollBar}"

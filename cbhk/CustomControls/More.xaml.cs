@@ -12,7 +12,7 @@ namespace cbhk.CustomControls
     /// </summary>
     public partial class More : UserControl
     {
-        private List<string> LinkTargetList = new() { "https://space.bilibili.com/333868639", "https://space.bilibili.com/170651403/?spm_id_from=333.999.0.0", "https://space.bilibili.com/521673619/?spm_id_from=333.999.0.0", "https://space.bilibili.com/67131398/?spm_id_from=333.999.0.0", "https://space.bilibili.com/350848639/?spm_id_from=333.999.0.0", "https://space.bilibili.com/15174905/?spm_id_from=333.999.0.0", "https://space.bilibili.com/57030021/?spm_id_from=333.999.0.0", "https://space.bilibili.com/590541175?spm_id_from=333.337.0.0", "https://space.bilibili.com/413164365/?spm_id_from=333.999.0.0" };
+        private List<string> LinkTargetList = ["https://space.bilibili.com/333868639", "https://space.bilibili.com/170651403/?spm_id_from=333.999.0.0", "https://space.bilibili.com/521673619/?spm_id_from=333.999.0.0", "https://space.bilibili.com/67131398/?spm_id_from=333.999.0.0", "https://space.bilibili.com/350848639/?spm_id_from=333.999.0.0", "https://space.bilibili.com/15174905/?spm_id_from=333.999.0.0", "https://space.bilibili.com/57030021/?spm_id_from=333.999.0.0", "https://space.bilibili.com/590541175?spm_id_from=333.337.0.0", "https://space.bilibili.com/413164365/?spm_id_from=333.999.0.0"];
         public RelayCommand<IconTextButtons> LinkCommand { get; set; }
         int ColumnCount = 3;
 
@@ -21,29 +21,6 @@ namespace cbhk.CustomControls
             InitializeComponent();
             DataContext = this;
             LinkCommand = new RelayCommand<IconTextButtons>(GoToWebSite);
-
-            List<DonateDataItem> donateDataItems =
-            [
-                new DonateDataItem()
-                {
-                    Icon = new(new System.Uri("pack://application:,,,/cbhk;component/resources/cbhk_form/images/more/thanks/9Hover.png",System.UriKind.Absolute)),
-                    Description = "觉得本项目美术不错？/很喜欢本项目的美术？可以考虑赞助此开发者！",
-                    NoRequired = Visibility.Visible
-                },
-                new DonateDataItem()
-                {
-                    Icon = new(new System.Uri("pack://application:,,,/cbhk;component/resources/cbhk_form/images/more/thanks/7Hover.png",System.UriKind.Absolute)),
-                    Description = "觉得本项目数据源齐全？/很喜欢本项目的数据源？可以考虑赞助此开发者！",
-                    NoRequired = Visibility.Visible
-                },
-                new DonateDataItem()
-                {
-                    Icon = new(new System.Uri("pack://application:,,,/cbhk;component/resources/cbhk_form/images/more/thanks/1Hover.png",System.UriKind.Absolute)),
-                    Description = "觉得本项目程序很牛？/很喜欢本项目的程序？可以考虑赞助此开发者！",
-                    NoRequired = Visibility.Visible
-                }
-            ];
-            donateGrid.ItemsSource = donateDataItems;
         }
 
         private void GoToWebSite(IconTextButtons btn)

@@ -5,6 +5,7 @@ using cbhk.Generators.FireworkRocketGenerator.Components;
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -63,7 +64,7 @@ namespace cbhk.Generators.FireworkRocketGenerator
         /// <summary>
         /// 烟花火箭标签页
         /// </summary>
-        public ObservableCollection<RichTabItems> FireworkRocketPageList { get; set; } = new() { new RichTabItems() { Header = "烟花",
+        public ObservableCollection<RichTabItems> FireworkRocketPageList { get; set; } = [ new RichTabItems() { Header = "烟花",
                 IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
@@ -75,7 +76,7 @@ namespace cbhk.Generators.FireworkRocketGenerator
                 TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
                 SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush, } };
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush, } ];
 
         /// <summary>
         /// 三维视图
@@ -226,8 +227,8 @@ namespace cbhk.Generators.FireworkRocketGenerator
 
         private async Task GeneratorAndSaveAllFireworks()
         {
-            List<string> Result = new();
-            List<string> FileNameList = new();
+            List<string> Result = [];
+            List<string> FileNameList = [];
 
             foreach (var itemPage in FireworkRocketPageList)
             {
@@ -235,43 +236,79 @@ namespace cbhk.Generators.FireworkRocketGenerator
                 {
                     FireworkRocketPagesDataContext context = (itemPage.Content as FireworkRocketPages).DataContext as FireworkRocketPagesDataContext;
                     string result = context.run_command(false);
-                    //string nbt = "";
-                    //if (result.Contains('{'))
-                    //{
-                    //    nbt = result[result.IndexOf('{')..(result.IndexOf('}') + 1)];
-                    //    //补齐缺失双引号对的key
-                    //    nbt = Regex.Replace(nbt, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
-                    //    //清除数值型数据的单位
-                    //    nbt = Regex.Replace(nbt, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
-                    //}
                     FileNameList.Add(context.Give? "FireworkStar" : "FireworkRocket");
                     Result.Add(result);
                 });
             }
-            System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new()
+            OpenFolderDialog openFolderDialog = new()
             {
-                Description = "请选择要保存的目录",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                Title = "请选择要保存的目录",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                ShowHiddenItems = true
             };
-            if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (openFolderDialog.ShowDialog().Value)
             {
-                if (Directory.Exists(folderBrowserDialog.SelectedPath))
+                if (Directory.Exists(openFolderDialog.FolderName))
                     for (int i = 0; i < Result.Count; i++)
-                        File.WriteAllText(folderBrowserDialog.SelectedPath + FileNameList[i] + ".command", Result[i]);
+                        File.WriteAllText(openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
             }
         }
 
         /// <summary>
-        /// 生成一个球体表面坐标
+        /// 斐波那契网格采样算法，用于生成球状烟花爆炸粒子的坐标
         /// </summary>
-        /// <param name="random"></param>
+        /// <param name="count">需要生成的坐标数量</param>
+        /// <param name="r">球体半径</param>
         /// <returns></returns>
-        public Vector3D GetSphereRandom(float[] random, double radius)
+        public List<Vector3D> GenerateFibonacciSphere(int count, double r)
         {
-            double phi = 2 * Math.PI * random[0];
-            double cosTheta = 1 - 2 * random[1];
-            double sinTheta = Math.Sqrt(1 - cosTheta * cosTheta);
-            return new Vector3D(radius * sinTheta * Math.Cos(phi), radius * sinTheta * Math.Sin(phi), radius * cosTheta);
+            List<Vector3D> points = [];
+            float phi = (float)(Math.PI * (3 - Math.Sqrt(5))); // 黄金角
+            float y;
+            float radius;
+            float theta;
+
+            for (int i = 0; i < count; i++)
+            {
+                y = 1 - (i / (float)(count - 1)) * 2; // y值在[-1, 1]之间
+                radius = (float)Math.Sqrt(1 - y * y); // 半径
+
+                theta = phi * i; // 角度
+
+                double x = (float)Math.Cos(theta) * radius * r;
+                double z = (float)Math.Sin(theta) * radius * r;
+
+                points.Add(new Vector3D(x, y * r, z));
+            }
+            return points;
+        }
+
+        /// <summary>
+        /// 五角星算法，生成三个相互之间夹角一致位置重叠的五角星
+        /// </summary>
+        /// <param name="numPoints"></param>
+        /// <param name="innerAngle"></param>
+        /// <param name="center"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public List<Vector3D> GenerateStars(int numPoints, double outerRadius, double innerRadius)
+        {
+            List<Vector3D> vertices = [];
+            float angleStep = (float)(Math.PI * 2 / numPoints);
+            float angle = (float)(-Math.PI / 2);
+
+            for (int i = 0; i < numPoints; i++)
+            {
+                // Outer vertex
+                vertices.Add(new Vector3D(outerRadius * Math.Cos(angle), outerRadius * Math.Sin(angle), 0));
+                angle += angleStep / 2;
+
+                // Inner vertex
+                vertices.Add(new Vector3D(innerRadius * Math.Cos(angle), innerRadius * Math.Sin(angle), 0));
+                angle += angleStep / 2;
+            }
+
+            return vertices;
         }
 
         /// <summary>
@@ -283,14 +320,6 @@ namespace cbhk.Generators.FireworkRocketGenerator
         public Vector3D GetCreeperFaceRandom(int numPoints, double radius)
         {
             Vector3D result = new();
-            GaussianRandom random = new();
-
-            double x = random.NextDouble() * radius;
-            double y = random.NextDouble() * radius;
-            double z = random.NextDouble() * radius;
-
-            if (Math.Abs(x) < radius / 2 && Math.Abs(y) < radius / 2 && Math.Abs(z) < radius / 2)
-                result = new Vector3D(x, y, z);
 
             return result;
         }
@@ -303,34 +332,6 @@ namespace cbhk.Generators.FireworkRocketGenerator
         public void GetViewport3DLoaded(object sender,RoutedEventArgs e)
         {
             viewport3D = sender as Viewport3D;
-        }
-    }
-    public class GaussianRandom : Random
-    {
-        private double nextGaussian;
-        private bool hasNextGaussian = false;
-
-        public override double NextDouble()
-        {
-            if (hasNextGaussian)
-            {
-                hasNextGaussian = false;
-                return nextGaussian;
-            }
-            else
-            {
-                double v1, v2, s;
-                do
-                {
-                    v1 = 2 * base.NextDouble() - 1; // between -1.0 and 1.0
-                    v2 = 2 * base.NextDouble() - 1; // between -1.0 and 1.0
-                    s = v1 * v1 + v2 * v2;
-                } while (s >= 1 || s == 0);
-                double multiplier = Math.Sqrt(-2 * Math.Log(s) / s);
-                nextGaussian = v2 * multiplier;
-                hasNextGaussian = true;
-                return v1 * multiplier;
-            }
         }
     }
 }

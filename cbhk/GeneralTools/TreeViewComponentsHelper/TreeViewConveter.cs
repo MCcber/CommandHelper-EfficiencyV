@@ -28,7 +28,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         public static ObservableCollection<RichTreeViewItems> Handler(string data)
         {
             //返回结果
-            ObservableCollection<RichTreeViewItems> result = new();
+            ObservableCollection<RichTreeViewItems> result = [];
             //解析第一层数据
             JToken rootToken = JToken.Parse(data);
             JArray rootArray = null;

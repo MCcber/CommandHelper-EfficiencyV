@@ -24,7 +24,7 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         {
             get
             {
-                string result = "{Color:" + Color.SelectedIndex + (Pattern.SelectedItem != null? ",Pattern:\"" + (Pattern.SelectedItem as IconComboBoxItem).ComboBoxItemText : "") + "\"}";
+                string result = "{Color:" + Color.SelectedIndex + (Pattern.SelectedItem != null ? ",Pattern:\"" + (Pattern.SelectedItem as IconComboBoxItem).ComboBoxItemText : "") + "\"}";
                 return result;
             }
         }
@@ -34,7 +34,7 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         {
             InitializeComponent();
             List<string> patternKeys = File.ReadAllLines(patternKeysFilePath).ToList();
-            List<IconComboBoxItem> patterns = new();
+            List<IconComboBoxItem> patterns = [];
             for (int i = 0; i < patternKeys.Count; i++)
                 patterns.Add(new IconComboBoxItem() { ComboBoxItemIcon = new BitmapImage(new Uri(patternImagesFolderPath + "white_banner_" + i + ".png", UriKind.Absolute)), ComboBoxItemText = patternKeys[i] });
             Color.ItemsSource = File.ReadAllLines(patternColorFilePath).ToList();

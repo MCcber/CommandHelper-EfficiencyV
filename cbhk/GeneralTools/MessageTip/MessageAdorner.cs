@@ -14,7 +14,7 @@ namespace cbhk.GeneralTools.MessageTip
     public class MessageAdorner : Adorner
     {
         private ListBox listBox;
-        private ObservableCollection<MessageData> source { get; set; } = new();
+        private ObservableCollection<MessageData> source { get; set; } = [];
         private UIElement _child;
         private FrameworkElement adornedElement;
         public MessageAdorner(UIElement adornedElement) : base(adornedElement)

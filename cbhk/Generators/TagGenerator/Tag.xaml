@@ -254,10 +254,7 @@
             VirtualizingPanel.VirtualizationMode="Recycling">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <Grid
-                        Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}, Path=ActualWidth}"
-                        Background="{Binding Background, Mode=OneWay}"
-                        IsHitTestVisible="False">
+                    <Grid Background="{Binding Background, Mode=OneWay}" IsHitTestVisible="False">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />

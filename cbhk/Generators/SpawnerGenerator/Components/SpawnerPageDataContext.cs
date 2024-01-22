@@ -4,6 +4,7 @@ using cbhk.GeneralTools.MessageTip;
 using cbhk.GenerateResultDisplayer;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.ObjectModel;
@@ -43,7 +44,7 @@ namespace cbhk.Generators.SpawnerGenerator.Components
             get => selectedVersion;
             set => SetProperty(ref selectedVersion, value);
         }
-        public ObservableCollection<string> VersionSource { get; set; } = new() { "1.13+", "1.12-" };
+        public ObservableCollection<string> VersionSource { get; set; } = ["1.13+", "1.12-"];
         #endregion
 
         #region 字段与引用
@@ -53,7 +54,7 @@ namespace cbhk.Generators.SpawnerGenerator.Components
         public Grid componentsGrid = null;
 
         //潜在实体数据源
-        public ObservableCollection<SpawnPotential> SpawnPotentials { get; set; } = new();
+        public ObservableCollection<SpawnPotential> SpawnPotentials { get; set; } = [];
 
         /// <summary>
         /// 存储外部数据
@@ -152,21 +153,19 @@ namespace cbhk.Generators.SpawnerGenerator.Components
         {
             ShowResult = false;
             run_command();
-            System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new()
+            OpenFolderDialog openFolderDialog = new()
             {
-                Description = "请选择要保存的目录",
+                Title = "请选择要保存的目录",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                ShowHiddenFiles = true,
-                ShowNewFolderButton = true,
-                UseDescriptionForTitle = true
+                ShowHiddenItems = true
             };
-            if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (openFolderDialog.ShowDialog().Value)
             {
                 string entityID = "";
                 string data = ExternalDataImportManager.GetSpawnerDataHandler(Result, false);
                 if (JObject.Parse(data).SelectToken("SpawnData.entity.id") is JToken id)
                     entityID = id.ToString().Replace("minecraft:", "");
-                File.WriteAllTextAsync(folderBrowserDialog.SelectedPath + entityID + "Spawner" + ".command", Result);
+                File.WriteAllTextAsync(openFolderDialog.FolderName + entityID + "Spawner" + ".command", Result);
             }
         }
 

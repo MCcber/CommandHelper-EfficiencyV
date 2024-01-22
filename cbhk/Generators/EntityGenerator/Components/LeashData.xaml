@@ -57,29 +57,6 @@
             IsChecked="True"
             Style="{DynamicResource TextCheckBox}" />
         <TextBlock
-            x:Name="tractorDisplayText"
-            Grid.Row="2"
-            Grid.Column="0"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Foreground="White"
-            Text="牵绳者"
-            ToolTipService.BetweenShowDelay="0"
-            ToolTipService.InitialShowDelay="0"
-            Visibility="Collapsed">
-            <TextBlock.ToolTip>
-                <ToolTip
-                    Background="#484848"
-                    Content="拴绳连接到的实体的UUID。"
-                    Foreground="White" />
-            </TextBlock.ToolTip>
-        </TextBlock>
-        <local:UUIDOrPosGroup
-            x:Name="tractor"
-            Grid.Row="2"
-            Grid.Column="1"
-            Visibility="Collapsed" />
-        <TextBlock
             x:Name="fenceDisplayText"
             Grid.Row="3"
             Grid.Column="0"

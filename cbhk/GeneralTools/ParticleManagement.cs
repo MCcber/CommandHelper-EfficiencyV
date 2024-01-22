@@ -56,7 +56,7 @@ namespace cbhk.GeneralTools
             sizeMax = _maxRadius;
             containerParticles = _containerParticles;
             random = new Random();
-            particles = new List<Particle>();
+            particles = [];
             GenerateParticle();
         }
 

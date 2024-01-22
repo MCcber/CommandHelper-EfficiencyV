@@ -17,7 +17,7 @@
             Background="#FFE5B663"
             Fresh="{Binding ClearSyspectsEntities}"
             FreshForeground="Black"
-            FreshName="清空"
+            FreshName="清除"
             Modify="{Binding AddSuspectsEntities}"
             ModifyForeground="Black"
             ModifyName="添加"

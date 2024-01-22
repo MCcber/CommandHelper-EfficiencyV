@@ -181,7 +181,8 @@
                             Margin="2,2,2,0"
                             Background="#FFE5B663"
                             FreshVisibility="Collapsed"
-                            ModifyVisibility="Collapsed"
+                            ModifyName=""
+                            ModifyVisibility="Hidden"
                             Style="{DynamicResource AccordionStyle}"
                             TitleForeground="Black">
                             <StackPanel Background="#2F2F2F">
@@ -282,7 +283,7 @@
                                 Text="类型" />
                             <ComboBox
                                 x:Name="VibrationMonitorTypeBox"
-                                Margin="30,0,0,0"
+                                Margin="29,0,0,0"
                                 Style="{DynamicResource TextComboBoxStyle}" />
                         </DockPanel>
                         <DockPanel x:Name="BlockGroup" Margin="2,2,2,0">
@@ -293,7 +294,7 @@
                             <local:UUIDOrPosGroup
                                 x:Name="pos"
                                 Uid="pos"
-                                Margin="15,0,0,0"
+                                Margin="14,0,0,0"
                                 IsUUID="False" />
                         </DockPanel>
                         <DockPanel
@@ -309,7 +310,7 @@
                                 Uid="type"
                                 Grid.Column="0"
                                 Width="80"
-                                Margin="5,0,0,0"
+                                Margin="10,0,0,0"
                                 SelectionChanged="VibrationMonitorsSourceType_SelectionChanged"
                                 Style="{DynamicResource TextComboBoxStyle}" />
                             <Grid>
@@ -376,7 +377,7 @@
                                 Grid.Column="1"
                                 Grid.ColumnSpan="2"
                                 Height="25"
-                                Margin="10,0,0,0"
+                                Margin="12,0,0,0"
                                 Loaded="Slider_Loaded"
                                 Style="{DynamicResource NumberBoxStyle}" />
                             <CustomControls:TextToggleButtons

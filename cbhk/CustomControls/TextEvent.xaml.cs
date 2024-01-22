@@ -1,5 +1,4 @@
-﻿using cbhk.Generators.WrittenBookGenerator;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 
 namespace cbhk.CustomControls
@@ -62,7 +61,7 @@ namespace cbhk.CustomControls
         private void ClickEventsLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox textComboBoxs = sender as ComboBox;
-            textComboBoxs.ItemsSource = WrittenBookDataContext.clickEventSource;
+            textComboBoxs.ItemsSource = RichRun.clickEventSource;
             textComboBoxs.SelectedIndex = 0;
         }
 
@@ -74,7 +73,7 @@ namespace cbhk.CustomControls
         private void HoverEventsLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox textComboBoxs = sender as ComboBox;
-            textComboBoxs.ItemsSource = WrittenBookDataContext.hoverEventSource;
+            textComboBoxs.ItemsSource = RichRun.hoverEventSource;
             textComboBoxs.SelectedIndex = 0;
         }
 

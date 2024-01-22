@@ -70,7 +70,7 @@ namespace cbhk.Generators.DataPackGenerator.Components.HomePage
                 //保存当前内容节点
                 RichTreeViewItems currentContentItem = border.FindParent<RichTreeViewItems>();
                 //更新动态路径
-                currentContentItem.Uid = context.StableRecentSolutionsFolderPath + "\\" + System.IO.Path.GetFileName(currentContentItem.Tag.ToString());
+                currentContentItem.Uid = context.RecentSolutionsFolderPath + "\\" + System.IO.Path.GetFileName(currentContentItem.Tag.ToString());
                 //保存当前时间节点
                 TreeViewItem currentDateItem = currentContentItem.Parent as TreeViewItem;
                 currentDateItem.Items.Remove(currentContentItem);
@@ -99,6 +99,8 @@ namespace cbhk.Generators.DataPackGenerator.Components.HomePage
                     if(item.Header.ToString() == timeMarker)
                     {
                         item.Visibility = Visibility.Visible;
+                        TreeViewItem oldParent = currentContentItem.Parent as TreeViewItem;
+                        oldParent?.Items.Remove(currentContentItem);
                         item.Items.Add(currentContentItem);
                     }
                 }

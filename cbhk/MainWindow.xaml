@@ -8,12 +8,12 @@
     xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tb="http://www.hardcodet.net/taskbar"
-    Title="CommandHelper-EfficiencyV v1.20.1pre1"
-    Width="905"
+    Title="CommandHelper-EfficiencyV v1.20.2pre1"
+    Width="910"
     Height="652"
-    MinWidth="905"
+    MinWidth="910"
     MinHeight="652"
-    Background="Transparent"
+    Background="#2F2F2F"
     Closing="MainWindow_Closing"
     Icon="/cb.ico"
     Loaded="Window_Loaded"
@@ -44,6 +44,25 @@
                 Header="退出" />
         </ContextMenu>
 
+        <VisualBrush
+            x:Key="BackgroundBrush"
+            AlignmentX="Center"
+            AlignmentY="Center"
+            Stretch="None">
+            <VisualBrush.Visual>
+                <Grid>
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        FontSize="12"
+                        Foreground="#D6D6D6"
+                        Text="正以开发者模式运行"
+                        TextAlignment="Center" />
+                </Grid>
+            </VisualBrush.Visual>
+        </VisualBrush>
+
     </Window.Resources>
 
     <Grid>
@@ -55,17 +74,13 @@
             ToolTipText="命令管家"
             Visibility="Collapsed" />
         <TabControl
-            Grid.Row="1"
-            Grid.Column="1"
-            Panel.ZIndex="1"
-            Background="Transparent"
             BorderThickness="0"
             SelectedIndex="0"
             Style="{DynamicResource TabControlWithScrollBar}"
             TabStripPlacement="Left">
             <CustomControls:IconTabItems
-                Width="40"
-                Height="40"
+                Width="45"
+                Height="45"
                 Background="#2F2F2F"
                 BorderThickness="0"
                 Selectedbackground="#595959"
@@ -73,9 +88,10 @@
                 <TabItem.HeaderTemplate>
                     <ItemContainerTemplate>
                         <Image
-                            Width="25"
-                            Height="25"
-                            Source="/cbhk;component/resources/cbhk_form/images/IconHome.png" />
+                            Width="35"
+                            Height="35"
+                            RenderOptions.BitmapScalingMode="NearestNeighbor"
+                            Source="/cbhk;component/resources/cbhk/images/IconHome.png" />
                     </ItemContainerTemplate>
                 </TabItem.HeaderTemplate>
                 <Grid Background="#2F2F2F">
@@ -702,8 +718,8 @@
             </CustomControls:IconTabItems>
             <CustomControls:IconTabItems
                 x:Name="TutorialPage"
-                Width="40"
-                Height="40"
+                Width="45"
+                Height="45"
                 Background="#2F2F2F"
                 BorderThickness="0"
                 Selectedbackground="#595959"
@@ -711,17 +727,17 @@
                 <TabItem.HeaderTemplate>
                     <ItemContainerTemplate>
                         <Image
-                            Width="25"
-                            Height="25"
-                            Source="{StaticResource BookWithBookMark}" />
+                            Width="35"
+                            Height="35"
+                            Source="/cbhk;component/resources/cbhk/images/IconTeach.png" />
                     </ItemContainerTemplate>
                 </TabItem.HeaderTemplate>
                 <CustomControls:Tutorials />
             </CustomControls:IconTabItems>
             <CustomControls:IconTabItems
                 x:Name="MorePage"
-                Width="40"
-                Height="40"
+                Width="45"
+                Height="45"
                 Background="#2F2F2F"
                 BorderThickness="0"
                 Selectedbackground="#595959"
@@ -729,17 +745,17 @@
                 <TabItem.HeaderTemplate>
                     <ItemContainerTemplate>
                         <Image
-                            Width="25"
-                            Height="25"
-                            Source="{StaticResource MoreDots}" />
+                            Width="35"
+                            Height="35"
+                            Source="/cbhk;component/resources/cbhk/images/IconMore.png" />
                     </ItemContainerTemplate>
                 </TabItem.HeaderTemplate>
                 <CustomControls:More />
             </CustomControls:IconTabItems>
             <CustomControls:IconTabItems
                 x:Name="SettingsPage"
-                Width="40"
-                Height="40"
+                Width="45"
+                Height="45"
                 Background="#2F2F2F"
                 BorderThickness="0"
                 Selectedbackground="#595959"
@@ -747,17 +763,17 @@
                 <TabItem.HeaderTemplate>
                     <ItemContainerTemplate>
                         <Image
-                            Width="25"
-                            Height="25"
-                            Source="{StaticResource Settings}" />
+                            Width="35"
+                            Height="35"
+                            Source="/cbhk;component/resources/cbhk/images/IconSetting.png" />
                     </ItemContainerTemplate>
                 </TabItem.HeaderTemplate>
                 <CustomControls:Settings x:Name="settings" />
             </CustomControls:IconTabItems>
             <CustomControls:IconTabItems
                 x:Name="UserPage"
-                Width="40"
-                Height="40"
+                Width="45"
+                Height="45"
                 Background="#2F2F2F"
                 BorderThickness="0"
                 Selectedbackground="#595959"
@@ -765,12 +781,12 @@
                 <TabItem.HeaderTemplate>
                     <ItemContainerTemplate>
                         <Image
-                            Width="25"
-                            Height="25"
-                            Source="{StaticResource UserHead}" />
+                            Width="35"
+                            Height="35"
+                            Source="/cbhk;component/resources/cbhk/images/IconUser.png" />
                     </ItemContainerTemplate>
                 </TabItem.HeaderTemplate>
-                <Grid Margin="5">
+                <Grid x:Name="UserGrid" Margin="5">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="50" />
                         <RowDefinition Height="*" />
@@ -790,8 +806,7 @@
                         HorizontalAlignment="Left"
                         Panel.ZIndex="1"
                         Cursor="Hand"
-                        RenderOptions.BitmapScalingMode="HighQuality"
-                        Source="resources/cbhk_form/images/cb.ico">
+                        RenderOptions.BitmapScalingMode="HighQuality">
                         <Image.Clip>
                             <EllipseGeometry
                                 Center="25,25"
@@ -808,7 +823,6 @@
                         VerticalAlignment="Top"
                         Panel.ZIndex="0"
                         RenderOptions.BitmapScalingMode="HighQuality"
-                        Source="resources/cbhk_form/images/cb.ico"
                         Stretch="Uniform" />
                     <TextBlock
                         x:Name="userId"
@@ -819,7 +833,7 @@
                         VerticalAlignment="Center"
                         FontSize="30"
                         Foreground="White"
-                        Text="0"
+                        Text=""
                         TextAlignment="Left" />
                     <TextBlock
                         x:Name="userName"
@@ -830,7 +844,7 @@
                         VerticalAlignment="Center"
                         FontSize="30"
                         Foreground="White"
-                        Text="hhtc" />
+                        Text="" />
                     <TextBlock
                         x:Name="userDescription"
                         Grid.Row="1"
@@ -841,7 +855,7 @@
                         VerticalAlignment="Top"
                         FontSize="25"
                         Foreground="White"
-                        Text="cber"
+                        Text=""
                         TextTrimming="CharacterEllipsis" />
                 </Grid>
             </CustomControls:IconTabItems>

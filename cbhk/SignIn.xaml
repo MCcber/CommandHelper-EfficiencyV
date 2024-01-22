@@ -24,7 +24,7 @@
     </Window.DataContext>
 
     <Window.Resources>
-        <ImageBrush x:Key="backGround" ImageSource="/cbhk;component/resources/cbhk_form/images/SignInBackground.png" />
+        <ImageBrush x:Key="backGround" ImageSource="/cbhk;component/resources/cbhk/images/SignInBackground.png" />
         <WindowChrome
             x:Key="windowChrome"
             CornerRadius="0"

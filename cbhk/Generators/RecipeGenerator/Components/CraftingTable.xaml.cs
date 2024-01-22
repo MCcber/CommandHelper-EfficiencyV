@@ -98,13 +98,13 @@ namespace cbhk.Generators.RecipeGenerator.Components
         /// <summary>
         /// 9个槽位的合成材料的多选列表
         /// </summary>
-        public Dictionary<int, ObservableCollection<ItemStructure>> MaterialMap = new();
+        public Dictionary<int, ObservableCollection<ItemStructure>> MaterialMap = [];
         /// <summary>
         /// 多选模式材料视图数据源
         /// </summary>
         private CollectionViewSource MultiMaterialSource = new();
         #region 用于为前台绑定多选模式下的物品视图数据源
-        private ObservableCollection<ItemStructure> currentMaterialCollection = new();
+        private ObservableCollection<ItemStructure> currentMaterialCollection = [];
         public ObservableCollection<ItemStructure> CurrentMaterialCollection
         {
             get => currentMaterialCollection;
@@ -112,7 +112,7 @@ namespace cbhk.Generators.RecipeGenerator.Components
         }
         #endregion
         #region 9个槽位的key
-        private ObservableCollection<string> materialKeys = new() { };
+        private ObservableCollection<string> materialKeys = [];
         public ObservableCollection<string> MaterialKeys
         {
             get => materialKeys;
@@ -128,7 +128,7 @@ namespace cbhk.Generators.RecipeGenerator.Components
         #endregion
         #endregion
         #region 9个槽位的Tag
-        private Dictionary<int, ObservableCollection<string>> materialTag = new() { };
+        private Dictionary<int, ObservableCollection<string>> materialTag = [];
         public Dictionary<int, ObservableCollection<string>> MaterialTag
         {
             get => materialTag;
@@ -236,9 +236,9 @@ namespace cbhk.Generators.RecipeGenerator.Components
             #region 初始化数据
             for (int i = 0; i < 9; i++)
             {
-                MaterialMap.Add(i, new ObservableCollection<ItemStructure>());
+                MaterialMap.Add(i, []);
                 MaterialKeys.Add("");
-                ObservableCollection<string> tags = new() { "" };
+                ObservableCollection<string> tags = [""];
                 MaterialTag.Add(i, tags);
             }
             #endregion

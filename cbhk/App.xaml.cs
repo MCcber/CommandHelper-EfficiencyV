@@ -42,13 +42,12 @@ namespace cbhk
                         break;
                     }
                 }
-
                 Current.Shutdown();
             }
 
             SetupExceptionHandling();
             base.OnStartup(e);
-            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NHaF5cXmpCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdgWH9edXRSRmBdVUR2WEs=");
+            new MainWindow([]).Show();
         }
 
         /// <summary>
@@ -74,7 +73,7 @@ namespace cbhk
             // 异常捕获监控
             DispatcherUnhandledException += (s, ev) =>
             {
-                if(ev.Exception.Message.Length > 0)
+                if(ev.Exception.Message.Trim().Length > 0)
                 {
                     Log.Error(ev.Exception, "Oops!An UI exception occurred");
                     ev.Handled = true;
@@ -84,15 +83,17 @@ namespace cbhk
         }
     }
 
-    public static class NativeMethods
+    public static partial class NativeMethods
     {
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+        [LibraryImport("user32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+        public static partial IntPtr FindWindow(string lpClassName, string lpWindowName);
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static partial bool SetForegroundWindow(IntPtr hWnd);
 
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
     }
 }

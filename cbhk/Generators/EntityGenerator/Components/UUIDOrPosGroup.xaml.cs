@@ -1,5 +1,7 @@
-﻿using System;
+﻿using cbhk.CustomControls.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -8,21 +10,21 @@ namespace cbhk.Generators.EntityGenerator.Components
     /// <summary>
     /// UUIDOrPosGroup.xaml 的交互逻辑
     /// </summary>
-    public partial class UUIDOrPosGroup : UserControl
+    public partial class UUIDOrPosGroup : UserControl,IVersionUpgrader
     {
         private bool isUUID = false;
         public bool IsUUID
         {
-            get
-            {
-                return isUUID;
-            }
+            get => isUUID;
             set
             {
                 isUUID = value;
                 number3.Visibility = isUUID?Visibility.Visible:Visibility.Collapsed;
             }
         }
+
+        string UUIDString = "";
+
         public UUIDOrPosGroup()
         {
             InitializeComponent();
@@ -39,7 +41,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         {
             if (EnableButton.IsChecked.Value)
             {
-                List<int> ints = new();
+                List<int> ints = [];
                 Random random = new();
                 ints.Add(random.Next(int.MinValue, int.MaxValue));
                 ints.Add(random.Next(int.MinValue, int.MaxValue));
@@ -51,6 +53,22 @@ namespace cbhk.Generators.EntityGenerator.Components
                 number2.Value = ints[2];
                 number3.Value = ints[3];
             }
+        }
+
+        public async Task Upgrade(int version)
+        {
+            await Task.Delay(0);
+            Random random = new();
+            if (version < 116)
+                UUIDString = "UUIDLeast:" + random.NextInt64() + ",UUIDMost:" + random.NextInt64();
+            else
+                UUIDString = "UUID:[I;" + random.Next() + "," + random.Next() + "," + random.Next() + "," + random.Next() + "]";
+        }
+
+        public async Task<string> Result()
+        {
+            await Task.Delay(0);
+            return UUIDString;
         }
     }
 }

@@ -23,10 +23,6 @@ namespace cbhk
     public class SignInDataContext: ObservableObject
     {
         /// <summary>
-        /// 是否放行
-        /// </summary>
-        private bool through;
-        /// <summary>
         /// 保存接口信息中的用户名
         /// </summary>
         private string UserNameString = "";
@@ -120,6 +116,7 @@ namespace cbhk
         /// </summary>
         Dictionary<string, string> userInfomation = [];
 
+        [Obsolete]
         public SignInDataContext()
         {
             #region 链接命令
@@ -181,17 +178,6 @@ namespace cbhk
             if (Environment.OSVersion.Version.Major < 10)
                 Message.PushMessage("检测到系统为win10以下，如果系统版本过旧，可能无法登录成功", MessageBoxImage.Error);
             #endregion
-
-            #region 调试
-            //MainWindow CBHK = new(StatsUserInfomation())
-            //{
-            //    WindowState = WindowState.Normal
-            //};
-            //CBHK.cbhkTaskbar.Visibility = Visibility.Visible;
-            //CBHK.Show();
-            //CBHK.Focus();
-            //FrontWindow.Close();
-            #endregion
         }
 
         /// <summary>
@@ -199,6 +185,7 @@ namespace cbhk
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        [Obsolete]
         private void ThreadTimerCallback(object sender, EventArgs e)
         {
             SignInCommand();
@@ -246,6 +233,7 @@ namespace cbhk
         /// <summary>
         /// 登录
         /// </summary>
+        [Obsolete]
         private async void SignInCommand()
         {
             IsOpenSignIn = false;
@@ -322,16 +310,17 @@ namespace cbhk
                 else
                 {
                     if (result.SelectToken("data.avatar") is JObject avatar && result.SelectToken("data.avatar").ToString().Contains('?'))
-                        await Task.Run(async () => { await GeneralTools.SignIn.DownLoadUserImage(avatar.ToString(), AppDomain.CurrentDomain.BaseDirectory + "resources\\userHead.png"); });
+                    {
+                        bool haveHead = await GeneralTools.SignIn.DownLoadUserImage(avatar.ToString(), AppDomain.CurrentDomain.BaseDirectory + "resources\\userHead.png");
+                        if (!haveHead && File.Exists(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\command_block.png"))
+                            File.Copy(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\command_block.png", AppDomain.CurrentDomain.BaseDirectory + "resources\\userHead.png");
+                    }
                     userInfomation.Add("description", result.SelectToken("data.intro").ToString());
                     SaveUserInfo(result);
                     MainWindow CBHK = new(StatsUserInfomation());
 
                     if(result.SelectToken("data.bg_bar") is JToken background)
-                    await Task.Run(async () =>
-                    {
                         await GeneralTools.SignIn.DownLoadUserImage(background.ToString(), AppDomain.CurrentDomain.BaseDirectory + "resources\\userBackground.png");
-                    });
                     FrontWindow.Close();
 
                     #region 显示管家主窗体

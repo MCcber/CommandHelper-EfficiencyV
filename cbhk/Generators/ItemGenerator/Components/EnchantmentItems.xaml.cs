@@ -1,33 +1,38 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
+﻿using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
-using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.ItemGenerator.Components
 {
     /// <summary>
     /// EnchantmentItems.xaml 的交互逻辑
     /// </summary>
-    public partial class EnchantmentItems : UserControl
+    public partial class EnchantmentItems : UserControl, IVersionUpgrader
     {
         DataTable EnchantmentTable = null;
-        public string Result
+        ItemPageDataContext dataContext = null;
+
+        #region 合并结果
+        string id = "";
+        int currentVersion = 1202;
+        async Task<string> IVersionUpgrader.Result()
         {
-            get
+            await Upgrade(currentVersion);
+            if (id.Length > 0)
             {
-                string result;
-                string id = EnchantmentTable.Select("name='" + ID.SelectedValue.ToString() + "'").First()["id"].ToString();
-                result = "{id:\"minecraft:"+id+"\",lvl:"+Level.Value+"s}";
+                string result = "{id:" + id + ",lvl:" + Level.Value + "s}";
                 return result;
             }
+            else
+                return "";
         }
+        #endregion
 
         public EnchantmentItems()
         {
@@ -39,27 +44,26 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void EnchantmentIdLoaded(object sender, RoutedEventArgs e)
+        private async void EnchantmentIdLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox comboBoxs = sender as ComboBox;
             if (comboBoxs.ItemsSource != null) return;
+            dataContext = this.FindParent<ItemPages>().DataContext as ItemPageDataContext;
             ItemDataContext context = Window.GetWindow(this).DataContext as ItemDataContext;
             EnchantmentTable = context.EnchantmentTable;
-            ObservableCollection<IconComboBoxItem> source = new();
+            ObservableCollection<string> source = [];
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            foreach (DataRow row in EnchantmentTable.Rows)
+
+            await Task.Run(() =>
             {
-                string id = row["id"].ToString();
-                string name = row["name"].ToString();
-                string imagePath = id + ".png";
-                if (File.Exists(currentPath + imagePath))
-                    source.Add(new IconComboBoxItem()
-                    {
-                        ComboBoxItemIcon = new BitmapImage(new Uri(currentPath + imagePath, UriKind.Absolute)),
-                        ComboBoxItemId = id,
-                        ComboBoxItemText = name
-                    });
-            }
+                foreach (DataRow row in EnchantmentTable.Rows)
+                {
+                    string id = row["id"].ToString();
+                    string name = row["name"].ToString();
+                    string imagePath = id + ".png";
+                    source.Add(name);
+                }
+            });
             comboBoxs.ItemsSource = source;
         }
 
@@ -70,10 +74,56 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// <param name="e"></param>
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            StackPanel parent = this.FindParent<StackPanel>();
+            ItemsControl parent = this.FindParent<ItemsControl>();
             //删除自己
-            parent.Children.Remove(this);
-            parent.FindParent<Accordion>().FindChild<IconButtons>().Focus();
+            ObservableCollection<EnchantmentItems> items = parent.ItemsSource as ObservableCollection<EnchantmentItems>;
+            if(items is not null)
+            items.Remove(this);
+            else
+            {
+                StackPanel parentPanel = Parent as StackPanel;
+                parentPanel.Children.Remove(this);
+            }
+            (sender as Button).Focus();
+        }
+
+        private async void EnchantmentID_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            id = "";
+            ItemPageDataContext itemPageDataContext = this.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            await Upgrade(itemPageDataContext.CurrentMinVersion);
+        }
+
+        /// <summary>
+        /// 用于根据版本更新ID
+        /// </summary>
+        /// <param name="version"></param>
+        public async Task Upgrade(int version)
+        {
+            currentVersion = version;
+            await Task.Run(() =>
+            {
+                id = "";
+                if (version < 113)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        object numberResult = EnchantmentTable.Select("name='" + ID.SelectedValue.ToString() + "'").First()?["number"];
+                        if (numberResult is not null)
+                            id = numberResult.ToString();
+                    });
+                }
+                else
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        if (ID.SelectedItem is not null)
+                        {
+                            id = "\"minecraft:" + EnchantmentTable.Select("name='" + ID.SelectedValue.ToString() + "'").First()?["id"].ToString() + "\"";
+                        }
+                    });
+                }
+            });
         }
     }
 }

@@ -51,6 +51,7 @@ namespace cbhk.GeneralTools
             // done :-)
             return nearest_color;
         }
+
         /// <summary>
         /// Returns an ArrayList filled with "Hex"
         /// </summary>
@@ -60,7 +61,7 @@ namespace cbhk.GeneralTools
         {
             Type color = (typeof(Color));
             PropertyInfo[] propertyInfos = color.GetProperties(BindingFlags.Public | BindingFlags.Static);
-            ArrayList colors = new ArrayList();
+            ArrayList colors = [];
             foreach (PropertyInfo pi in propertyInfos)
             {
                 if (pi.PropertyType.Equals(typeof(Color)))

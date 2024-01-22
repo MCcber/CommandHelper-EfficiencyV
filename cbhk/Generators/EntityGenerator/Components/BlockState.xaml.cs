@@ -43,27 +43,27 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// <summary>
         /// 存储方块的所有属性
         /// </summary>
-        public ObservableCollection<string> BlockAttributes { get; set; } = new();
+        public ObservableCollection<string> BlockAttributes { get; set; } = [];
         /// <summary>
         /// 存储方块属性对应的键与值集合
         /// </summary>
-        public ObservableCollection<Dictionary<string, List<string>>> AttributeKeyValuePairs { get; set; } = new();
+        public ObservableCollection<Dictionary<string, List<string>>> AttributeKeyValuePairs { get; set; } = [];
         /// <summary>
         /// 存储方块的所有属性键
         /// </summary>
-        public ObservableCollection<string> AttributeKeys { get; set; } = new();
+        public ObservableCollection<string> AttributeKeys { get; set; } = [];
         /// <summary>
         /// 方块列表
         /// </summary>
-        public ObservableCollection<IconComboBoxItem> BlockList { get; set; } = new();
+        public ObservableCollection<IconComboBoxItem> BlockList { get; set; } = [];
         /// <summary>
         /// 已选中的方块键集合
         /// </summary>
-        public ObservableCollection<string> SelectedAttributeKeys { get; set; } = new();
+        public ObservableCollection<string> SelectedAttributeKeys { get; set; } = [];
         /// <summary>
         /// 已选中的方块值集合
         /// </summary>
-        public ObservableCollection<string> SelectedAttributeValues { get; set; } = new();
+        public ObservableCollection<string> SelectedAttributeValues { get; set; } = [];
 
         /// <summary>
         /// 选中的方块属性
@@ -129,10 +129,10 @@ namespace cbhk.Generators.EntityGenerator.Components
                     foreach (JProperty property in currentProperties.Properties())
                     {
                         SelectedAttributeKeys.Add(property.Name);
-                        AttributeKeyValuePairs.Add(new Dictionary<string, List<string>>());
+                        AttributeKeyValuePairs.Add([]);
                         JArray valueArray = JArray.Parse(currentProperties[property.Name].ToString());
                         AttributeKeys.Add(property.Name);
-                        AttributeKeyValuePairs[^1].Add(property.Name, new List<string>());
+                        AttributeKeyValuePairs[^1].Add(property.Name, []);
                         for (int i = 0; i < valueArray.Count; i++)
                             AttributeKeyValuePairs[^1][property.Name].Add(valueArray[i].ToString());
                     }

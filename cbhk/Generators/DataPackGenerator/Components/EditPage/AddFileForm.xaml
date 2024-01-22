@@ -194,9 +194,12 @@
                 </TreeViewItem>
             </TreeViewItem>
         </TreeView>
-        <DockPanel Grid.Row="0" Grid.Column="1">
+        <DockPanel
+            Grid.Row="0"
+            Grid.Column="1"
+            LastChildFill="False">
             <TextBlock
-                Margin="5,5,0,0"
+                Margin="5,8,0,0"
                 Foreground="White"
                 Text="排序依据:" />
             <ComboBox
@@ -211,36 +214,6 @@
                 ItemsSource="{Binding SortBySource}"
                 SelectedIndex="0"
                 Style="{DynamicResource TextComboBoxStyle}" />
-            <CustomControls:TextButtons
-                Grid.Row="0"
-                Grid.Column="1"
-                Width="20"
-                Height="20"
-                Margin="10,5,0,0"
-                Padding="0,0,0,2"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Background="{StaticResource ButtonNormal}"
-                Content="a"
-                Foreground="Black"
-                MouseLeftDownBackground="{StaticResource ButtonPressed}"
-                MouseOverBackground="{StaticResource ButtonNormal}"
-                Style="{DynamicResource TextButtonsStyle}" />
-            <CustomControls:TextButtons
-                Grid.Row="0"
-                Grid.Column="1"
-                Width="20"
-                Height="20"
-                Margin="5,5,0,0"
-                Padding="0,0,0,2"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Background="{StaticResource ButtonNormal}"
-                Content="A"
-                Foreground="Black"
-                MouseLeftDownBackground="{StaticResource ButtonPressed}"
-                MouseOverBackground="{StaticResource ButtonNormal}"
-                Style="{DynamicResource TextButtonsStyle}" />
         </DockPanel>
         <ListView
             Grid.Row="0"

@@ -58,6 +58,7 @@
             Grid.Column="1"
             Height="25"
             VerticalAlignment="Center"
+            Loaded="EffectID_Loaded"
             SelectedIndex="0"
             Style="{DynamicResource IconComboBoxStyle}" />
     </Grid>

@@ -29,7 +29,7 @@ namespace cbhk
         /// </summary>
         Dictionary<string, string> UserData = [];
 
-        public MainWindow(Dictionary<string,string> userInfo)
+        public MainWindow(Dictionary<string, string> userInfo)
         {
             InitializeComponent();
             UserData = userInfo;
@@ -115,8 +115,8 @@ namespace cbhk
                 Dispatcher.Invoke(() =>
                 {
                     userHead.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\userHead.png", UriKind.Absolute));
-                    if(UserData.TryGetValue("UserID", out string value))
-                    userHead.MouseLeftButtonUp += (a, b) => { System.Diagnostics.Process.Start("explorer.exe", "https://mc.metamo.cn/u/" + value); };
+                    if (UserData.TryGetValue("UserID", out string value))
+                        userHead.MouseLeftButtonUp += (a, b) => { System.Diagnostics.Process.Start("explorer.exe", "https://mc.metamo.cn/u/" + value); };
                 });
             }
 
@@ -124,17 +124,18 @@ namespace cbhk
             {
                 if (UserData.TryGetValue("UserID", out string UserID))
                     userId.Text = UserID;
-                if(UserData.TryGetValue("description",out string description))
-                userDescription.Text = description;
-                if(File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\userBackground.png"))
-                userBackground.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\userBackground.png"));
+                if (UserData.TryGetValue("description", out string description))
+                    userDescription.Text = description;
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\userBackground.png"))
+                    userBackground.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\userBackground.png"));
+                if (userId.Text.Length == 0)
+                    UserGrid.Background = Resources["BackgroundBrush"] as Brush;
             });
             #endregion
             #region 载入生成器按钮
             if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
             {
                 DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-                #region 初始化生成器按钮
                 await Dispatcher.Invoke(async () =>
                 {
                     DataTable generatorTable = await dataCommunicator.GetData("SELECT * FROM Generators");
@@ -149,14 +150,24 @@ namespace cbhk
                     GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
                     foreach (DataRow row in generatorTable.Rows)
                     {
-                        Button button = new()
+                        GeneratorButtons button = new()
                         {
-                            Style = Application.Current.Resources["StrokeButton"] as Style
+                            Style = Application.Current.Resources["GeneratorButtons"] as Style,
+                            BorderThickness = new Thickness(0)
                         };
                         string currentId = row["id"].ToString();
+                        currentId = currentId[0].ToString().ToUpper() + currentId[1..];
+                        string currentName = row["zh"].ToString();
                         string imagePath = baseImagePath + currentId + ".png";
+                        BitmapImage bitmapImage = new(new Uri("pack://application:,,,/cbhk;component/resources/cbhk/images/GeneratorButtonBackground.png",UriKind.RelativeOrAbsolute));
+                        if (bitmapImage is not null)
+                            button.Background = new ImageBrush(bitmapImage);
                         if (File.Exists(imagePath))
-                            button.Background = new ImageBrush(new BitmapImage(new Uri(imagePath, UriKind.Absolute)));
+                            button.Icon = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
+                        if (currentId is not null)
+                            button.Title = currentName;
+                        if (currentName is not null)
+                            button.SubTitle = currentId;
                         RelayCommand behavior = GeneratorClickEvent.Set(currentId, generatorFunction);
                         button.Command = behavior;
                         GeneratorTable.Children.Add(button);
@@ -171,7 +182,6 @@ namespace cbhk
                         columnIndex++;
                     }
                 });
-                #endregion
             }
             #endregion
         }
@@ -184,7 +194,7 @@ namespace cbhk
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = MainWindowProperties.CloseToTray;
-            if(e.Cancel)
+            if (e.Cancel)
             {
                 ShowInTaskbar = false;
                 WindowState = WindowState.Minimized;
@@ -202,7 +212,7 @@ namespace cbhk
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ShowWindowCommand(object sender,RoutedEventArgs e)
+        public void ShowWindowCommand(object sender, RoutedEventArgs e)
         {
             ShowInTaskbar = true;
             WindowState = WindowState.Normal;
@@ -223,7 +233,7 @@ namespace cbhk
 
         private void cbhkTaskbar_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            ShowWindowCommand(null,null);
+            ShowWindowCommand(null, null);
         }
     }
 

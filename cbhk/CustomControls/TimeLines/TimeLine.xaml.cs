@@ -12,8 +12,8 @@ namespace cbhk.CustomControls.TimeLines
     /// </summary>
     public partial class TimeLine : UserControl
     {
-        List<TimelineMark> TMarks = new List<TimelineMark>();
-        public List<TimelineElement> TElements = new List<TimelineElement>();
+        List<TimelineMark> TMarks = [];
+        public List<TimelineElement> TElements = [];
         int width;
         int height;
         int innerHeight;

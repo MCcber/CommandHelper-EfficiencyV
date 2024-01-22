@@ -15,6 +15,14 @@ namespace cbhk.CustomControls
     public class RichTabItems:TabItem
     {
         #region DependencyProperties
+        public bool IsCloseable
+        {
+            get { return (bool)GetValue(IsCloseableProperty); }
+            set { SetValue(IsCloseableProperty, value); }
+        }
+
+        public static readonly DependencyProperty IsCloseableProperty =
+            DependencyProperty.Register("IsCloseable", typeof(bool), typeof(RichTabItems), new PropertyMetadata(default(bool)));
 
         public Brush LeftBorderTexture
         {
@@ -177,17 +185,29 @@ namespace cbhk.CustomControls
         /// 对应某个树视图的节点的父级，用于快速得知当前标签页对应的项目文件是否被包括
         /// </summary>
         public RichTreeViewItems mappingParentItem = null;
+        private bool MouseHover = false;
 
         public RichTabItems()
         {
             PreviewMouseLeftButtonDown += TabItem_PreviewMouseLeftButtonDown;
             MouseLeftButtonUp += TabItem_MouseLeftButtonUp;
             MouseEnter += TabItem_MouseEnter;
+            IsCloseable = true;
+        }
+
+        public void TabHeader_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (MouseHover && e.MiddleButton == MouseButtonState.Pressed && IsCloseable)
+                CloseRichTabItemsClick(sender,null);
         }
 
         public void CloseRichTabItemsClick(object sender, RoutedEventArgs e)
         {
-            RichTabItems item = (sender as Button).TemplatedParent as RichTabItems;
+            if (!IsCloseable)
+            {
+                return;
+            }
+            RichTabItems item = (sender as FrameworkElement).TemplatedParent as RichTabItems;
             TabControl parent = item.FindParent<TabControl>();
             if(parent.ItemsSource == null)
             parent.Items.Remove(item);
@@ -197,6 +217,10 @@ namespace cbhk.CustomControls
                 richTabItems.Remove(item);
             }
         }
+
+        public void TabHeader_MouseEnter(object sender, MouseEventArgs e) => MouseHover = true;
+
+        public void TabHeader_MouseLeave(object sender, MouseEventArgs e) => MouseHover = false;
 
         #region 处理拖拽互换位置
         private void TabItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

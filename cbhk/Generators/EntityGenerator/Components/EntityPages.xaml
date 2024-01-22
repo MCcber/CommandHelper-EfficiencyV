@@ -16,7 +16,7 @@
 
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
-            <behavior:CallMethodAction MethodName="EntityPageLoaded" TargetObject="{Binding}" />
+            <behavior:CallMethodAction MethodName="EntityPages_Loaded" TargetObject="{Binding}" />
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
 
@@ -91,15 +91,21 @@
                 Text="版本"
                 TextAlignment="Center" />
             <ComboBox
-                Width="60"
+                Width="95"
                 Height="25"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 IsReadOnly="True"
-                ItemsSource="{Binding VersionSource}"
-                SelectedIndex="1"
+                ItemsSource="{Binding VersionSource, Mode=TwoWay}"
+                SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}" />
+                Style="{DynamicResource TextComboBoxStyle}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="SelectionChanged">
+                        <behavior:CallMethodAction MethodName="Version_SelectionChanged" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </ComboBox>
             <TextBlock
                 Margin="2.5,0"
                 HorizontalAlignment="Left"
@@ -113,7 +119,7 @@
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
                 Foreground="White"
-                ItemsSource="{Binding EntityIds, Mode=TwoWay, IsAsync=True}"
+                ItemsSource="{Binding EntityIds, Mode=TwoWay}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedEntityId, Mode=TwoWay}"
                 Style="{DynamicResource IconComboBoxStyle}" />
@@ -133,7 +139,7 @@
                 UnSelectedToggleText="召唤" />
             <CustomControls:StereoToggleButton
                 HorizontalAlignment="Left"
-                VerticalAlignment="Center"
+                VerticalAlignment="Bottom"
                 Background="#D77A34"
                 BorderThickness="4,4,4,5"
                 BottomBorderTexture="{StaticResource TextToggleButtonFalseBottomFrame}"
@@ -151,9 +157,9 @@
                 TrueTopBorderTexture="{StaticResource TextToggleButtonTrueTopFrame}" />
             <CustomControls:StereoTextButton
                 HorizontalAlignment="Left"
-                VerticalAlignment="Center"
+                VerticalAlignment="Bottom"
                 Background="#EFF2F1"
-                BorderThickness="3,1,3,5"
+                BorderThickness="4,2,4,5"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
                 Command="{Binding ClearUnnecessaryData}"
                 Content="冻结数据"
@@ -279,11 +285,18 @@
             </CustomControls:TextTabItems>
             <CustomControls:TextTabItems
                 Uid="number"
-                Background="{StaticResource TabBack}"
+                Background="#48382C"
+                BorderThickness="4,4,4,0"
                 Foreground="White"
                 Header="数值"
-                SelectedBackground="{StaticResource TabFront}"
-                Style="{DynamicResource TextTabItemStyle}">
+                LeftBorderTexture="{StaticResource TabItemLeft}"
+                RightBorderTexture="{StaticResource TabItemRight}"
+                SelectedBackground="#CC6B23"
+                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                Style="{DynamicResource TextTabItemStyle}"
+                TopBorderTexture="{StaticResource TabItemTop}">
                 <ScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
@@ -299,11 +312,18 @@
             </CustomControls:TextTabItems>
             <CustomControls:TextTabItems
                 Uid="boolean"
-                Background="{StaticResource TabBack}"
+                Background="#48382C"
+                BorderThickness="4,4,4,0"
                 Foreground="White"
                 Header="是/否"
-                SelectedBackground="{StaticResource TabFront}"
-                Style="{DynamicResource TextTabItemStyle}">
+                LeftBorderTexture="{StaticResource TabItemLeft}"
+                RightBorderTexture="{StaticResource TabItemRight}"
+                SelectedBackground="#CC6B23"
+                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                Style="{DynamicResource TextTabItemStyle}"
+                TopBorderTexture="{StaticResource TabItemTop}">
                 <ScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"

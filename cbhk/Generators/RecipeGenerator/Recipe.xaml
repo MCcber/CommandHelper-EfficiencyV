@@ -26,8 +26,8 @@
     </Window.DataContext>
 
     <Window.Resources>
-        <CollectionViewSource x:Key="OriginalItemSource" Source="{Binding originalItemsSource, IsAsync=True}" />
-        <CollectionViewSource x:Key="CustomItemSource" Source="{Binding customItemSource, IsAsync=True}" />
+        <CollectionViewSource x:Key="OriginalItemView" Source="{Binding OriginalItemSource, IsAsync=True}" />
+        <CollectionViewSource x:Key="CustomItemView" Source="{Binding CustomItemSource, IsAsync=True}" />
         <ImageConverter:UriToBitmapConverter x:Key="UriToBitmapImage" />
         <ImageBrush x:Key="EditBox" ImageSource="/cbhk;component/resources/common/images/TextEditBox.png" />
         <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowLeft.png" />
@@ -360,11 +360,6 @@
                 FontSize="20"
                 Foreground="White"
                 Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
-                <behavior:Interaction.Triggers>
-                    <behavior:EventTrigger EventName="GotFocus">
-                        <behavior:CallMethodAction MethodName="SearchBox_GotFocus" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
-                </behavior:Interaction.Triggers>
                 <TextBox.Resources>
                     <VisualBrush
                         x:Key="BackgroundBrush"
@@ -448,12 +443,8 @@
                 HorizontalAlignment="Stretch"
                 Background="Transparent"
                 BorderThickness="0"
+                SelectedIndex="{Binding SelectedItemListIndex, Mode=OneWayToSource}"
                 Style="{DynamicResource TabControlWithScrollBar}">
-                <behavior:Interaction.Triggers>
-                    <behavior:EventTrigger EventName="Loaded">
-                        <behavior:CallMethodAction MethodName="ItemsLoaded" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
-                </behavior:Interaction.Triggers>
                 <CustomControls:TextTabItems
                     Background="#48382C"
                     BorderThickness="4,4,4,0"
@@ -470,7 +461,7 @@
                     <ListView
                         HorizontalAlignment="Stretch"
                         BorderBrush="Black"
-                        ItemsSource="{Binding Source={StaticResource OriginalItemSource}}"
+                        ItemsSource="{Binding Source={StaticResource OriginalItemView}}"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -510,6 +501,11 @@
                                 </DockPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>
+                        <behavior:Interaction.Triggers>
+                            <behavior:EventTrigger EventName="Loaded">
+                                <behavior:CallMethodAction MethodName="OriginalListView_Loaded" TargetObject="{Binding}" />
+                            </behavior:EventTrigger>
+                        </behavior:Interaction.Triggers>
                     </ListView>
                 </CustomControls:TextTabItems>
                 <CustomControls:TextTabItems
@@ -528,7 +524,7 @@
                     <ListView
                         HorizontalAlignment="Stretch"
                         BorderBrush="Black"
-                        ItemsSource="{Binding Source={StaticResource CustomItemSource}}"
+                        ItemsSource="{Binding Source={StaticResource CustomItemView}}"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -569,8 +565,18 @@
                                 </DockPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>
+                        <behavior:Interaction.Triggers>
+                            <behavior:EventTrigger EventName="Loaded">
+                                <behavior:CallMethodAction MethodName="CustomListView_Loaded" TargetObject="{Binding}" />
+                            </behavior:EventTrigger>
+                        </behavior:Interaction.Triggers>
                     </ListView>
                 </CustomControls:TextTabItems>
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Loaded">
+                        <behavior:CallMethodAction MethodName="Items_Loaded" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
             </TabControl>
         </Grid>
     </Grid>

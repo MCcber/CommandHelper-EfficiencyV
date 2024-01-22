@@ -39,16 +39,18 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         {
             if (EnableButton.IsChecked.Value)
             {
-                List<int> ints = new();
+                List<int> ints = [];
                 Random random = new();
                 ints.Add(random.Next(int.MinValue, int.MaxValue));
                 ints.Add(random.Next(int.MinValue, int.MaxValue));
                 ints.Add(random.Next(int.MinValue, int.MaxValue));
+                if(IsUUID)
                 ints.Add(random.Next(int.MinValue, int.MaxValue));
                 ints.Sort((x, y) => -x.CompareTo(y));
                 number0.Value = ints[0];
                 number1.Value = ints[1];
                 number2.Value = ints[2];
+                if(IsUUID)
                 number3.Value = ints[3];
             }
         }

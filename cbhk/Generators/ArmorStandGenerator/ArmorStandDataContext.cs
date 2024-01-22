@@ -1,5 +1,4 @@
 ﻿using cbhk.CustomControls;
-using cbhk.CustomControls.TimeLines;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.ItemGenerator;
@@ -16,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -28,31 +28,9 @@ using System.Windows.Media.Media3D;
 
 namespace cbhk.Generators.ArmorStandGenerator
 {
-    public class ArmorStandDataContext: ObservableObject
+    public partial class ArmorStandDataContext: ObservableObject
     {
-        #region 所有3D视图对象
-        public GeometryModel3D HeadModel { get; set; }
-        public ModelVisual3D LeftArmModel { get; set; }
-        public ModelVisual3D RightArmModel { get; set; }
-        public GeometryModel3D LeftLegModel { get; set; }
-        public GeometryModel3D RightLegModel { get; set; }
-        public GeometryModel3D TopModel { get; set; }
-        public GeometryModel3D BottomModel { get; set; }
-        public GeometryModel3D LeftModel { get; set; }
-        public GeometryModel3D RightModel { get; set; }
-        public ModelVisual3D BasePlateModel { get; set; }
-        public ModelVisual3D ArmGroup { get; set; }
-
-        public ModelVisual3D ModelGroup { get; set; }
-
-        private double lastMousePosX = 0.0;
-
-        private double lastMousePosY = 0.0;
-
-        private double deltaMoveX;
-
-        private double deltaMoveY;
-        #endregion
+        #region 字段
 
         #region 是否拥有副手权限
         //版本切换锁,防止属性之间无休止更新
@@ -95,13 +73,14 @@ namespace cbhk.Generators.ArmorStandGenerator
         #endregion
 
         #region 为盔甲架和坐标轴映射纹理
-        public BitmapImage woodenImage { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\images\\oak_planks.png"));
-        public BitmapImage stone { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\images\\smooth_stone.png"));
-        public BitmapImage stoneSide { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\images\\stoneSide.png"));
-        public BitmapImage axisRed { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\images\\axisRed.png"));
-        public BitmapImage axisGreen { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\images\\axisGreen.png"));
-        public BitmapImage axisBlue { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\images\\axisBlue.png"));
-        public BitmapImage axisGray { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\images\\axisGray.png"));
+        public BitmapImage woodenImage { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\ArmorStand\images\oak_planks.png"));
+        public BitmapImage horizontalImage { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\ArmorStand\images\HorizontalPlanks.png"));
+        public BitmapImage stone { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\ArmorStand\images\smooth_stone.png"));
+        public BitmapImage stoneSide { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\ArmorStand\images\stoneSide.png"));
+        public BitmapImage axisRed { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\ArmorStand\images\axisRed.png"));
+        public BitmapImage axisGreen { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\ArmorStand\images\axisGreen.png"));
+        public BitmapImage axisBlue { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\ArmorStand\images\axisBlue.png"));
+        public BitmapImage axisGray { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\ArmorStand\images\axisGray.png"));
         #endregion
 
         #region 预览功能菜单可见性
@@ -111,6 +90,17 @@ namespace cbhk.Generators.ArmorStandGenerator
             get => previewMenuVisibility;
             set => SetProperty(ref previewMenuVisibility,value);
         }
+        #endregion
+
+        #region Tags
+        private string tags;
+
+        public string Tags
+        {
+            get => tags;
+            set => SetProperty(ref tags, value);
+        }
+
         #endregion
 
         /// <summary>
@@ -124,77 +114,12 @@ namespace cbhk.Generators.ArmorStandGenerator
         private Viewport3D ArmorStandViewer = null;
 
         //as的所有NBT项
-        List<string> as_nbts = new () { };
-
-        public RelayCommand PreviewMenuVisibilitySwitcher { get; set; }
-
-        /// <summary>
-        /// 生成盔甲架数据
-        /// </summary>
-        public RelayCommand RunCommand { get; set; }
-
-        /// <summary>
-        /// 返回主页
-        /// </summary>
-        public RelayCommand<Window> ReturnCommand { get; set; }
-
-        /// <summary>
-        /// 重置摄像机状态
-        /// </summary>
-        public RelayCommand ResetCameraState { get; set; }
-
-        /// <summary>
-        /// 重置所有动作
-        /// </summary>
-        public RelayCommand ResetAllPoseCommand { get; set; }
-
-        /// <summary>
-        /// 重置头部动作
-        /// </summary>
-        public RelayCommand ResetHeadPoseCommand { get; set; }
-
-        /// <summary>
-        /// 重置身体动作
-        /// </summary>
-        public RelayCommand ResetBodyPoseCommand { get; set; }
-
-        /// <summary>
-        /// 重置左臂动作
-        /// </summary>
-        public RelayCommand ResetLArmPoseCommand { get; set; }
-
-        /// <summary>
-        /// 重置右臂动作
-        /// </summary>
-        public RelayCommand ResetRArmPoseCommand { get; set; }
-
-        /// <summary>
-        /// 重置左腿动作
-        /// </summary>
-        public RelayCommand ResetLLegPoseCommand { get; set; }
-
-        /// <summary>
-        /// 重置右腿动作
-        /// </summary>
-        public RelayCommand ResetRLegPoseCommand { get; set; }
-
-        /// <summary>
-        /// 播放动画
-        /// </summary>
-        public RelayCommand<IconTextButtons> PlayAnimation { get; set; }
+        List<string> as_nbts = [];
 
         /// <summary>
         /// 正在播放
         /// </summary>
         private bool IsPlaying = false;
-
-        /// <summary>
-        /// 动画时间轴
-        /// </summary>
-        TimeLine tl = new(380, 200)
-        {
-            Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0))
-        };
 
         #region 显示结果
         private bool showGeneratorResult = false;
@@ -209,11 +134,7 @@ namespace cbhk.Generators.ArmorStandGenerator
         private string custom_name;
         public string CustomName
         {
-            get
-            {
-                CustomNameString = custom_name != "" ? "CustomName:'{\"text\":\"" + custom_name + "\"" + (CustomNameColor != null ? ",\"color\":\"" + CustomNameColor.ToString().Remove(1, 2) + "\"" : "") + "}'," : "";
-                return custom_name;
-            }
+            get => custom_name;
             set => SetProperty(ref custom_name, value);
         }
         private string CustomNameString = "";
@@ -257,15 +178,6 @@ namespace cbhk.Generators.ArmorStandGenerator
             set => SetProperty(ref tag, value);
         }
         private string TagString = "";
-        #endregion
-
-        #region 名称颜色
-        private SolidColorBrush custom_name_color = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-        public SolidColorBrush CustomNameColor
-        {
-            get => custom_name_color;
-            set => SetProperty(ref custom_name_color,value);
-        }
         #endregion
 
         #region BoolNBTs
@@ -884,15 +796,6 @@ namespace cbhk.Generators.ArmorStandGenerator
         }
         #endregion
 
-        #region 三轴合一
-        public RelayCommand<Button> HeadThreeAxisCommand { get; set; }
-        public RelayCommand<Button> BodyThreeAxisCommand { get; set; }
-        public RelayCommand<Button> LArmThreeAxisCommand { get; set; }
-        public RelayCommand<Button> RArmThreeAxisCommand { get; set; }
-        public RelayCommand<Button> LLegThreeAxisCommand { get; set; }
-        public RelayCommand<Button> RLegThreeAxisCommand { get; set; }
-        #endregion
-
         /// <summary>
         /// 开始三轴合一
         /// </summary>
@@ -920,7 +823,7 @@ namespace cbhk.Generators.ArmorStandGenerator
         private Point CurrentButtonCenter;
 
         // 布尔型NBT链表
-        List<string> BoolTypeNBT = new(){ };
+        List<string> BoolTypeNBT = [];
 
         //禁止移除或改变总值
         private int CannotTakeOrReplceSum;
@@ -929,13 +832,49 @@ namespace cbhk.Generators.ArmorStandGenerator
         //禁止添加总值
         private int CannotPlaceSum;
 
-        #region 设置各部位装备
-        public RelayCommand<FrameworkElement> SetHeadItem { get; set; }
-        public RelayCommand<FrameworkElement> SetBodyItem { get; set; }
-        public RelayCommand<FrameworkElement> SetLeftHandItem { get; set; }
-        public RelayCommand<FrameworkElement> SetRightHandItem { get; set; }
-        public RelayCommand<FrameworkElement> SetLegsItem { get; set; }
-        public RelayCommand<FrameworkElement> SetFeetItem { get; set; }
+        #region 各部位装备图像源
+        private ImageSource leftHandItemImage;
+
+        public ImageSource LeftHandItemImage
+        {
+            get => leftHandItemImage;
+            set => SetProperty(ref leftHandItemImage, value);
+        }
+        private ImageSource rightHandItemImage;
+
+        public ImageSource RightHandItemImage
+        {
+            get => rightHandItemImage;
+            set => SetProperty(ref rightHandItemImage, value);
+        }
+        private ImageSource headItemImage;
+
+        public ImageSource HeadItemImage
+        {
+            get => headItemImage;
+            set => SetProperty(ref headItemImage, value);
+        }
+        private ImageSource chestItemImage;
+
+        public ImageSource ChestItemImage
+        {
+            get => chestItemImage;
+            set => SetProperty(ref chestItemImage, value);
+        }
+        private ImageSource legItemImage;
+
+        public ImageSource LegItemImage
+        {
+            get => legItemImage;
+            set => SetProperty(ref legItemImage, value);
+        }
+        private ImageSource feetItemImage;
+
+        public ImageSource FeetItemImage
+        {
+            get => feetItemImage;
+            set => SetProperty(ref feetItemImage, value);
+        }
         #endregion
 
         #region 禁止移除或改变头部、身体、手部、腿部、脚部装备
@@ -1171,60 +1110,74 @@ namespace cbhk.Generators.ArmorStandGenerator
         /// <summary>
         /// 版本数据源
         /// </summary>
-        public ObservableCollection<string> VersionSource { get; set; } = new() { "1.9+", "1.8-" };
+        public ObservableCollection<string> VersionSource { get; set; } = ["1.13+","1.9-1.12", "1.8-"];
 
         #region 已选择的版本
         private string selectedVersion = "";
         public string SelectedVersion
         {
-            get
-            {
-                return selectedVersion;
-            }
+            get => selectedVersion;
             set
             {
-                selectedVersion = value;
-                OnPropertyChanged();
+                SetProperty(ref selectedVersion, value);
+                CurrentMinVersion = int.Parse(SelectedVersion.Replace(".", "").Replace("+", "").Split('-')[0]);
             }
+        }
+
+        private int currentMinVersion = 1202;
+        public int CurrentMinVersion
+        {
+            get => currentMinVersion;
+            set => currentMinVersion = value;
         }
         #endregion
 
         //本生成器的图标路径
         string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconArmorStand.png";
+        #endregion
 
-        //前台窗体引用
+        #region 引用
+        /// <summary>
+        /// 前台窗体引用
+        /// </summary>
         ArmorStand armorStand = null;
+        /// <summary>
+        /// 样式化文本框引用
+        /// </summary>
+        StylizedTextBox stylizedTextBox = null;
+        /// <summary>
+        /// 标签文本框
+        /// </summary>
+        TagRichTextBox tagRichTextBox = null;
+
+        #region 所有3D视图对象
+        public GeometryModel3D HeadModel { get; set; }
+        public ModelVisual3D LeftArmModel { get; set; }
+        public ModelVisual3D RightArmModel { get; set; }
+        public GeometryModel3D LeftLegModel { get; set; }
+        public GeometryModel3D RightLegModel { get; set; }
+        public GeometryModel3D TopModel { get; set; }
+        public GeometryModel3D BottomModel { get; set; }
+        public GeometryModel3D LeftModel { get; set; }
+        public GeometryModel3D RightModel { get; set; }
+        public ModelVisual3D BasePlateModel { get; set; }
+        public ModelVisual3D ArmGroup { get; set; }
+
+        public ModelVisual3D ModelGroup { get; set; }
+
+        private double lastMousePosX = 0.0;
+
+        private double lastMousePosY = 0.0;
+
+        private double deltaMoveX;
+
+        private double deltaMoveY;
+        #endregion
+
+        #endregion
 
         public ArmorStandDataContext()
         {
-            #region 绑定指令
-            RunCommand = new RelayCommand(run_command);
-            ReturnCommand = new RelayCommand<Window>(return_command);
-            ResetCameraState = new RelayCommand(ResetCameraStateCommand);
-            ResetAllPoseCommand = new RelayCommand(reset_all_pose_command);
-            ResetHeadPoseCommand = new RelayCommand(reset_head_pose_command);
-            ResetBodyPoseCommand = new RelayCommand(reset_body_pose_command);
-            ResetLArmPoseCommand = new RelayCommand(reset_larm_pose_command);
-            ResetRArmPoseCommand = new RelayCommand(reset_rarm_pose_command);
-            ResetLLegPoseCommand = new RelayCommand(reset_lleg_pose_command);
-            ResetRLegPoseCommand = new RelayCommand(reset_rleg_pose_command);
-            PlayAnimation = new RelayCommand<IconTextButtons>(play_animation);
-            HeadThreeAxisCommand = new RelayCommand<Button>(head_three_axis_command);
-            BodyThreeAxisCommand = new RelayCommand<Button>(body_three_axis_command);
-            LArmThreeAxisCommand = new RelayCommand<Button>(larm_three_axis_command);
-            RArmThreeAxisCommand = new RelayCommand<Button>(rarm_three_axis_command);
-            LLegThreeAxisCommand = new RelayCommand<Button>(lleg_three_axis_command);
-            RLegThreeAxisCommand = new RelayCommand<Button>(rleg_three_axis_command);
-
-            SetHeadItem = new RelayCommand<FrameworkElement>(SetItemCommand);
-            SetBodyItem = new RelayCommand<FrameworkElement>(SetItemCommand);
-            SetLeftHandItem = new RelayCommand<FrameworkElement>(SetItemCommand);
-            SetRightHandItem = new RelayCommand<FrameworkElement>(SetItemCommand);
-            SetLegsItem = new RelayCommand<FrameworkElement>(SetItemCommand);
-            SetFeetItem = new RelayCommand<FrameworkElement>(SetItemCommand);
-
-            PreviewMenuVisibilitySwitcher = new(PreviewMenuVisibilitySwitcherCommand);
-            #endregion
             #region 连接三个轴的上下文
             XAxis.DataContext = this;
             YAxis.DataContext = this;
@@ -1232,10 +1185,58 @@ namespace cbhk.Generators.ArmorStandGenerator
             #endregion
         }
 
-        private void PreviewMenuVisibilitySwitcherCommand()
+        #region Events
+        /// <summary>
+        /// 载入名称文本框
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void CustomNameBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            stylizedTextBox = sender as StylizedTextBox;
+            stylizedTextBox.IsPresetMode = true;
+        }
+
+        /// <summary>
+        /// 载入标签文本框
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void TagRichTextBox_Loaded(object sender, RoutedEventArgs e) => tagRichTextBox = sender as TagRichTextBox;
+
+        /// <summary>
+        /// 检测名称文本框内容为空
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void StylizedTextBox_PreviewKeyUp(object sender, KeyEventArgs e)
+        {
+            if((e.Key == Key.Back || e.Key == Key.Delete))
+            {
+                if (stylizedTextBox.richTextBox.Document.Blocks.FirstBlock is null)
+                    stylizedTextBox.richTextBox.Document.Blocks.Add(new RichParagraph());
+                else
+                {
+                    Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
+                    if (paragraph.Inlines.Count == 1)
+                    {
+                        Run run = paragraph.Inlines.FirstInline as Run;
+                        run = new RichRun() { Text = run.Text };
+                    }
+                    else
+                    if (paragraph.Inlines.Count == 0)
+                    {
+                        paragraph.Inlines.Add(new RichRun());
+                    }
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void PreviewMenuVisibilitySwitcher()
         {
             if (PreviewMenuVisibility == Visibility.Visible)
-                PreviewMenuVisibility = Visibility.Hidden;
+                PreviewMenuVisibility = Visibility.Collapsed;
             else
                 PreviewMenuVisibility = Visibility.Visible;
         }
@@ -1245,25 +1246,20 @@ namespace cbhk.Generators.ArmorStandGenerator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void HelixViewport3D_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            e.Handled = true;
-        }
+        public void HelixViewport3D_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e) => e.Handled = true;
 
         /// <summary>
         /// 禁用Gizmo自带的缩放
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void HelixViewport3D_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            e.Handled = true;
-        }
+        public void HelixViewport3D_PreviewMouseWheel(object sender, MouseWheelEventArgs e) => e.Handled = true;
 
+        [RelayCommand]
         /// <summary>
         /// 重置摄像机状态
         /// </summary>
-        private void ResetCameraStateCommand()
+        private void ResetCameraState()
         {
             HorizontalAngle = initHorizontalAngle;
             VerticalAngle = initVerticalAngle;
@@ -1271,187 +1267,138 @@ namespace cbhk.Generators.ArmorStandGenerator
             armorStand.mainCamera.Position = new(0,0,0);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 设置盔甲架的装备
         /// </summary>
-        private void SetItemCommand(FrameworkElement element)
+        private void SetItem(FrameworkElement element)
         {
             Button iconTextButtons = element as Button;
             Item item = new();
             ItemDataContext itemContext = item.DataContext as ItemDataContext;
-            ItemPages itemPages = new();
-            ItemPageDataContext pageContext = itemPages.DataContext as ItemPageDataContext;
-            pageContext.UseForTool = true;
-            itemContext.ItemPageList[0].Content = itemPages;
-            itemContext.home = home;
-
-            #region 如果已有数据，则导入
-            switch (iconTextButtons.Uid)
-            {
-                case "Head":
-                    if (HeadItem != null && HeadItem.Length > 0)
-                    {
-                        ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
-                        ExternalDataImportManager.ImportItemDataHandler(HeadItem, ref richTabItems, false);
-                        itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                        string HeadData = ExternalDataImportManager.GetItemDataHandler(HeadItem,false);
-                        pageContext.ExternallyReadEntityData = JObject.Parse(HeadData);
-                    }
-                    break;
-                case "Body":
-                    if (BodyItem != null && BodyItem.Length > 0)
-                    {
-                        ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
-                        ExternalDataImportManager.ImportItemDataHandler(BodyItem, ref richTabItems, false);
-                        itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                        string BodyData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                        pageContext.ExternallyReadEntityData = JObject.Parse(BodyData);
-                    }
-                    break;
-                case "LeftHand":
-                    if (LeftHandItem != null && LeftHandItem.Length > 0)
-                    {
-                        ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
-                        ExternalDataImportManager.ImportItemDataHandler(LeftHandItem, ref richTabItems, false);
-                        itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                        string LeftHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                        pageContext.ExternallyReadEntityData = JObject.Parse(LeftHandData);
-                    }
-                    break;
-                case "RightHand":
-                    if (RightHandItem != null && RightHandItem.Length > 0)
-                    {
-                        ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
-                        ExternalDataImportManager.ImportItemDataHandler(RightHandItem, ref richTabItems, false);
-                        itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                        string RightHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                        pageContext.ExternallyReadEntityData = JObject.Parse(RightHandData);
-                    }
-                    break;
-                case "Legs":
-                    if (LegsItem != null && LegsItem.Length > 0)
-                    {
-                        ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
-                        ExternalDataImportManager.ImportItemDataHandler(LegsItem, ref richTabItems, false);
-                        itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                        string LegsData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                        pageContext.ExternallyReadEntityData = JObject.Parse(LegsData);
-                    }
-                    break;
-                case "Feet":
-                    if (FeetItem != null && FeetItem.Length > 0)
-                    {
-                        ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
-                        ExternalDataImportManager.ImportItemDataHandler(FeetItem, ref richTabItems, false);
-                        itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                        string FeetData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                        pageContext.ExternallyReadEntityData = JObject.Parse(FeetData);
-                    }
-                    break;
-            }
-            #endregion
+            itemContext.IsCloseable = false;
 
             #region 设置已生成的数据
             string Result = "";
             if (item.ShowDialog().Value)
             {
+                ItemPageDataContext pageContext = (itemContext.ItemPageList[0].Content as ItemPages).DataContext as ItemPageDataContext;
+                itemContext.home = Window.GetWindow(element);
+
+                #region 如果已有数据，则导入
+                //switch (iconTextButtons.Uid)
+                //{
+                //    case "Head":
+                //        if (HeadItem != null && HeadItem.Length > 0)
+                //        {
+                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ExternalDataImportManager.ImportItemDataHandler(HeadItem, ref richTabItems, false);
+                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
+                //            string HeadData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
+                //            pageContext.ExternallyReadEntityData = JObject.Parse(HeadData);
+                //        }
+                //        break;
+                //    case "Body":
+                //        if (BodyItem != null && BodyItem.Length > 0)
+                //        {
+                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ExternalDataImportManager.ImportItemDataHandler(BodyItem, ref richTabItems, false);
+                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
+                //            string BodyData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
+                //            pageContext.ExternallyReadEntityData = JObject.Parse(BodyData);
+                //        }
+                //        break;
+                //    case "LeftHand":
+                //        if (LeftHandItem != null && LeftHandItem.Length > 0)
+                //        {
+                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ExternalDataImportManager.ImportItemDataHandler(LeftHandItem, ref richTabItems, false);
+                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
+                //            string LeftHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
+                //            pageContext.ExternallyReadEntityData = JObject.Parse(LeftHandData);
+                //        }
+                //        break;
+                //    case "RightHand":
+                //        if (RightHandItem != null && RightHandItem.Length > 0)
+                //        {
+                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ExternalDataImportManager.ImportItemDataHandler(RightHandItem, ref richTabItems, false);
+                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
+                //            string RightHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
+                //            pageContext.ExternallyReadEntityData = JObject.Parse(RightHandData);
+                //        }
+                //        break;
+                //    case "Legs":
+                //        if (LegsItem != null && LegsItem.Length > 0)
+                //        {
+                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ExternalDataImportManager.ImportItemDataHandler(LegsItem, ref richTabItems, false);
+                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
+                //            string LegsData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
+                //            pageContext.ExternallyReadEntityData = JObject.Parse(LegsData);
+                //        }
+                //        break;
+                //    case "Feet":
+                //        if (FeetItem != null && FeetItem.Length > 0)
+                //        {
+                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ExternalDataImportManager.ImportItemDataHandler(FeetItem, ref richTabItems, false);
+                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
+                //            string FeetData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
+                //            pageContext.ExternallyReadEntityData = JObject.Parse(FeetData);
+                //        }
+                //        break;
+                //}
+                #endregion
+
                 Result = pageContext.Result;
+                string nbt = ExternalDataImportManager.GetItemDataHandler(Result, false);
+                if (nbt.Length == 0) return;
+                JObject data = JObject.Parse(nbt);
+                string itemID = data.SelectToken("id").ToString().Replace("minecraft:","");
+                string filePath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID + ".png";
                 switch (iconTextButtons.Uid)
                 {
                     case "Head":
+                        if (File.Exists(filePath))
+                            HeadItemImage = new BitmapImage(new Uri(filePath,UriKind.Absolute));
                         HeadItem = Result;
                         break;
                     case "Body":
+                        if (File.Exists(filePath))
+                            ChestItemImage = new BitmapImage(new Uri(filePath, UriKind.Absolute));
                         BodyItem = Result;
                         break;
                     case "LeftHand":
+                        if (File.Exists(filePath))
+                            LeftHandItemImage = new BitmapImage(new Uri(filePath, UriKind.Absolute));
                         LeftHandItem = Result;
                         break;
                     case "RightHand":
+                        if (File.Exists(filePath))
+                            RightHandItemImage = new BitmapImage(new Uri(filePath, UriKind.Absolute));
                         RightHandItem = Result;
                         break;
                     case "Legs":
+                        if (File.Exists(filePath))
+                            LegItemImage = new BitmapImage(new Uri(filePath, UriKind.Absolute));
                         LegsItem = Result;
                         break;
                     case "Feet":
+                        if (File.Exists(filePath))
+                            FeetItemImage = new BitmapImage(new Uri(filePath, UriKind.Absolute));
                         FeetItem = Result;
                         break;
                 }
             }
             #endregion
-
-            #region 为装备按钮设置ToolTip
-            string nbt = ExternalDataImportManager.GetItemDataHandler(Result, false);
-            if (nbt.Length == 0) return;
-            JObject data = JObject.Parse(nbt);
-            string itemID = data.SelectToken("id").ToString();
-            JToken itemName = data.SelectToken("tag.display.Name");
-            JToken itemNameValue = itemName != null ? JObject.Parse(itemName.ToString()).SelectToken("text") : null;
-            List<Run> runs = [];
-
-            #region 处理描述
-            if (data.SelectToken("tag.display.Lore") is JArray itemLoreArray)
-            {
-                foreach (JToken itemLoreValue in itemLoreArray)
-                {
-                    JArray LoreArray = JArray.Parse(itemLoreValue.ToString());
-                    Run itemLore = new(string.Join("",LoreArray))
-                    {
-                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#5454FC")),
-                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent")),
-                        FontWeight = FontWeights.Bold
-                    };
-                    runs.Add(itemLore);
-                }
-            }
-            #endregion
-
-            #region 处理剩余数据
-
-            #endregion
-
-            string uri;
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.Replace("minecraft:", "") + ".png"))
-                uri = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.Replace("minecraft:", "") + ".png";
-            else
-                uri = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.Replace("minecraft:", "") + "_spawn_egg.png";
-
-            if (iconTextButtons.ToolTip == null)
-            {
-                RichToolTip richToolTip = new()
-                {
-                    Style = Application.Current.Resources["DisplayDataStyle"] as Style,
-                    ContentIcon = new BitmapImage(new Uri(uri, UriKind.Absolute)),
-                    DisplayID = itemID,
-                    CustomName = itemNameValue != null ? itemNameValue.ToString() : "",
-                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#424242")),
-                    Foreground = new SolidColorBrush(Colors.White),
-                    Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint
-                };
-                richToolTip.ApplyTemplate();
-                RichTextBox richTextBox = richToolTip.Template.FindName("Box", richToolTip) as RichTextBox;
-                Paragraph paragraph = richTextBox.Document.Blocks.First() as Paragraph;
-                paragraph.Inlines.AddRange(runs);
-                iconTextButtons.ToolTip = richToolTip;
-            }
-            else
-            {
-                RichToolTip richToolTip = iconTextButtons.ToolTip as RichToolTip;
-                RichTextBox richTextBox = richToolTip.Template.FindName("Box", richToolTip) as RichTextBox;
-                Paragraph paragraph = richTextBox.Document.Blocks.First() as Paragraph;
-                paragraph.Inlines.Clear();
-                paragraph.Inlines.AddRange(runs);
-                richToolTip.ContentIcon = new BitmapImage(new Uri(uri, UriKind.Absolute));
-                richToolTip.DisplayID = itemID;
-                richToolTip.CustomName = itemNameValue != null ? itemNameValue.ToString() : "";
-            }
-            #endregion
         }
 
+        [RelayCommand]
         /// <summary>
         /// 反选所有bool类NBT
         /// </summary>
-        public void ReverseAllNBTCommand(object sender, RoutedEventArgs e)
+        public void ReverseAllNBT()
         {
             foreach (TextCheckBoxs item in NBTList.Children)
             {
@@ -1459,42 +1406,52 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 全选所有bool类NBT
         /// </summary>
         /// <param name="obj"></param>
-        public void SelectAllNBTCommand(object sender, RoutedEventArgs e)
+        public void SelectAllNBT(FrameworkElement frameworkElement)
         {
-            bool currentValue = (sender as TextCheckBoxs).IsChecked.Value;
+            bool currentValue = (frameworkElement as TextCheckBoxs).IsChecked.Value;
             foreach (TextCheckBoxs item in NBTList.Children)
             {
                 item.IsChecked = currentValue;
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 生成as
         /// </summary>
-        private void run_command()
+        private async Task Run()
         {
             string result;
+            CustomName = "";
+            await stylizedTextBox.Upgrade(CurrentMinVersion);
+            await tagRichTextBox.GetResult();
+            string CustomNameValue = await stylizedTextBox.Result();
+            if (CustomNameValue.Trim().Length > 0)
+                CustomName = "CustomName:" + (CurrentMinVersion >= 113 ? "'[" : @"\\\\\\\""") + CustomNameValue.TrimEnd(',') + (CurrentMinVersion >= 113 ? "]'" : @"\\\\\\\""") + ",";
 
             #region 拼接指令数据
 
             #region HaveAnimation
-
             #endregion
 
-            #region result
-            result = CustomName + BoolNBTs + Equipments + DisabledValue + CustomNameVisibleString + Tag + PoseString;
-            result = result.TrimEnd(',');
-            result = "/summon armor_stand ~ ~ ~" + (result != "" ? " {" + result +"}":"");
+            #region Result
+            string nbt = CustomName + BoolNBTs + Equipments + DisabledValue + CustomNameVisibleString + Tags + PoseString;
+            nbt = nbt.TrimEnd(',');
+            if (CurrentMinVersion >= 113)
+                result = "summon armor_stand ~ ~ ~" + (nbt != "" ? " {" + nbt + "}" : "");
+            else
+                result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右键戳我\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""summon armor_stand ~ ~ ~ {" + nbt + @"}\\\""}\""}}""}}";
             #endregion
 
             #endregion
 
             #region 生成结果
-            if(ShowGeneratorResult)
+            if (ShowGeneratorResult)
             {
                 GenerateResultDisplayer.Displayer displayer = GenerateResultDisplayer.Displayer.GetContentDisplayer();
                 displayer.GeneratorResult(result, "盔甲架", icon_path);
@@ -1503,15 +1460,16 @@ namespace cbhk.Generators.ArmorStandGenerator
             else
             {
                 Clipboard.SetText(result);
-                Message.PushMessage("盔甲架生成成功！数据已进入剪切板",MessageBoxImage.Information);
+                Message.PushMessage("盔甲架生成成功！数据已进入剪切板", MessageBoxImage.Information);
             }
             #endregion
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回主页
         /// </summary>
-        private void return_command(Window win)
+        private void Return(Window win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -1520,10 +1478,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             win.Close();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 重置所有动作
         /// </summary>
-        private void reset_all_pose_command()
+        private void ResetAllPose()
         {
             if(CanResetAllPose)
             {
@@ -1532,10 +1491,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 重置头部动作
         /// </summary>
-        private void reset_head_pose_command()
+        private void ResetHeadPose()
         {
             if(CanResetHeadPose)
             {
@@ -1544,10 +1504,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 重置身体动作
         /// </summary>
-        private void reset_body_pose_command()
+        private void ResetBodyPose()
         {
             if(CanResetBodyPose)
             {
@@ -1556,10 +1517,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 重置左臂动作
         /// </summary>
-        private void reset_larm_pose_command()
+        private void ResetLeftArmPose()
         {
             if(CanResetLArmPose)
             {
@@ -1568,10 +1530,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 重置右臂动作
         /// </summary>
-        private void reset_rarm_pose_command()
+        private void ResetRightArmPose()
         {
             if(CanResetRArmPose)
             {
@@ -1580,10 +1543,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 重置左腿动作
         /// </summary>
-        private void reset_lleg_pose_command()
+        private void ResetLeftLegPose()
         {
             if(CanResetLLegPose)
             {
@@ -1592,10 +1556,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 重置右腿动作
         /// </summary>
-        private void reset_rleg_pose_command()
+        private void ResetRightLegPose()
         {
             if(CanResetRLegPose)
             {
@@ -1604,10 +1569,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 头部三轴合一
         /// </summary>
-        private void head_three_axis_command(Button btn)
+        private void HeadThreeAxis(Button btn)
         {
             UsingThreeAxis = !UsingThreeAxis;
             btn.Cursor = UsingThreeAxis ? Cursors.None : Cursors.Arrow;
@@ -1640,10 +1606,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 身体三轴合一
         /// </summary>
-        private void body_three_axis_command(Button btn)
+        private void BodyThreeAxis(Button btn)
         {
             UsingThreeAxis = !UsingThreeAxis;
             btn.Cursor = UsingThreeAxis ? Cursors.None : Cursors.Arrow;
@@ -1676,10 +1643,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 左臂三轴合一
         /// </summary>
-        private void larm_three_axis_command(Button btn)
+        private void LeftArmThreeAxis(Button btn)
         {
             UsingThreeAxis = !UsingThreeAxis;
             btn.Cursor = UsingThreeAxis ? Cursors.None : Cursors.Arrow;
@@ -1712,10 +1680,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 右臂三轴合一
         /// </summary>
-        private void rarm_three_axis_command(Button btn)
+        private void RightArmThreeAxis(Button btn)
         {
             UsingThreeAxis = !UsingThreeAxis;
             btn.Cursor = UsingThreeAxis ? Cursors.None : Cursors.Arrow;
@@ -1748,10 +1717,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 左腿三轴合一
         /// </summary>
-        private void lleg_three_axis_command(Button btn)
+        private void LeftLegThreeAxis(Button btn)
         {
             UsingThreeAxis = !UsingThreeAxis;
             btn.Cursor = UsingThreeAxis ? Cursors.None : Cursors.Arrow;
@@ -1785,10 +1755,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 右腿三轴合一
         /// </summary>
-        private void rleg_three_axis_command(Button btn)
+        private void RightLegThreeAxis(Button btn)
         {
             UsingThreeAxis = !UsingThreeAxis;
             btn.Cursor = UsingThreeAxis ? Cursors.None : Cursors.Arrow;
@@ -1822,6 +1793,56 @@ namespace cbhk.Generators.ArmorStandGenerator
             }
         }
 
+        /// <summary>
+        /// 载入基础NBT列表
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void NBTCheckboxListLoaded(object sender, RoutedEventArgs e)
+        {
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\data\\base_nbt.ini"))
+                as_nbts = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\data\\base_nbt.ini", Encoding.UTF8).ToList();
+            NBTList = sender as StackPanel;
+
+            if (as_nbts.Count > 0)
+            {
+                foreach (string item in as_nbts)
+                {
+                    TextCheckBoxs textCheckBox = new()
+                    {
+                        Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                        Margin = new Thickness(0, 0, 0, 10),
+                        HeaderText = item,
+                        HeaderHeight = 20,
+                        FontSize = 15,
+                        HeaderWidth = 20,
+                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Style = (NBTList.Children[0] as TextCheckBoxs).Style
+                    };
+                    NBTList.Children.Add(textCheckBox);
+                    textCheckBox.Checked += NBTChecked;
+                    textCheckBox.Unchecked += NBTUnchecked;
+                    switch (item)
+                    {
+                        case "ShowArms":
+                            {
+                                textCheckBox.Checked += ShowArmsInModel;
+                                textCheckBox.Unchecked += HideArmsInModel;
+                                break;
+                            }
+                        case "NoBasePlate":
+                            {
+                                textCheckBox.Checked += NoBasePlateInModel;
+                                textCheckBox.Unchecked += HaveBasePlateInModel;
+                                break;
+                            }
+                    }
+                }
+                NBTList.Children.RemoveAt(0);
+            }
+        }
+
         /// <summary>   
         /// 设置鼠标的坐标   
         /// </summary>   
@@ -1829,7 +1850,6 @@ namespace cbhk.Generators.ArmorStandGenerator
         /// <param name="y">纵坐标</param>   
         [DllImport("User32")]
         public extern static void SetCursorPos(int x, int y);
-
 
         public void ThreeAxisMouseMove(object sender, MouseEventArgs e)
         {
@@ -1897,55 +1917,6 @@ namespace cbhk.Generators.ArmorStandGenerator
         }
 
         /// <summary>
-        /// 载入基础NBT列表
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void NBTCheckboxListLoaded(object sender, RoutedEventArgs e)
-        {
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\data\\base_nbt.ini"))
-                as_nbts = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ArmorStand\\data\\base_nbt.ini", Encoding.UTF8).ToList();
-            NBTList = sender as StackPanel;
-
-            if (as_nbts.Count > 0)
-            {
-                foreach (string item in as_nbts)
-                {
-                    TextCheckBoxs textCheckBox = new()
-                    {
-                        Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-                        Margin = new Thickness(0,0,0,10),
-                        HeaderText = item,
-                        HeaderHeight = 15,
-                        HeaderWidth = 15,
-                        HorizontalAlignment = HorizontalAlignment.Left,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        Style = (NBTList.Children[0] as TextCheckBoxs).Style
-                    };
-                    NBTList.Children.Add(textCheckBox);
-                    textCheckBox.Checked += NBTChecked;
-                    textCheckBox.Unchecked += NBTUnchecked;
-                    switch (item)
-                    {
-                        case "ShowArms":
-                            {
-                                textCheckBox.Checked += ShowArmsInModel;
-                                textCheckBox.Unchecked += HideArmsInModel;
-                                break;
-                            }
-                        case "NoBasePlate":
-                            {
-                                textCheckBox.Checked += NoBasePlateInModel;
-                                textCheckBox.Unchecked += HaveBasePlateInModel;
-                                break;
-                            }
-                    }
-                }
-                NBTList.Children.RemoveAt(0);
-            }
-        }
-
-        /// <summary>
         /// 隐藏盔甲架手臂
         /// </summary>
         /// <param name="sender"></param>
@@ -2003,19 +1974,6 @@ namespace cbhk.Generators.ArmorStandGenerator
         {
             TextCheckBoxs current = sender as TextCheckBoxs;
             BoolTypeNBT.Add(current.HeaderText);
-        }
-
-        /// <summary>
-        /// 载入动画时间轴
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void TimeLineBoxLoaded(object sender, RoutedEventArgs e)
-        {
-            Viewbox viewbox = sender as Viewbox;
-            tl.Setup(0, 50, 10, 150);
-            viewbox.Child = tl;
-            tl.AddElement(5);
         }
 
         #region 处理3D模型
@@ -2236,6 +2194,11 @@ namespace cbhk.Generators.ArmorStandGenerator
             else if (e.Delta < 0)
                 Move(-2);
         }
+        #endregion
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// 移动摄像机与模型之间的相对距离

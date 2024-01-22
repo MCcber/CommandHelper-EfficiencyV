@@ -59,7 +59,8 @@
             Background="#FFE5B663"
             BorderThickness="0"
             FreshVisibility="Collapsed"
-            ModifyVisibility="Collapsed"
+            ModifyName=""
+            ModifyVisibility="Hidden"
             Style="{DynamicResource AccordionStyle}"
             TitleForeground="Black">
             <Grid Background="#2F2F2F">

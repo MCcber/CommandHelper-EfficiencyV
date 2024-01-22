@@ -25,7 +25,9 @@ namespace cbhk.Generators.SignGenerator.Components
     public class SignPageDataContext : ObservableObject
     {
         #region 字段
-        public ObservableCollection<string> SignTypeSource { get; set; } = new();
+        public ObservableCollection<string> SignTypeSource { get; set; } = [];
+
+        public string Result { get; set; } = "";
 
         #region 告示牌类型
         private string selectedSignType = "";
@@ -67,15 +69,15 @@ namespace cbhk.Generators.SignGenerator.Components
         /// <summary>
         /// 版本数据源
         /// </summary>
-        public ObservableCollection<string> VersionSource { get; set; } = new() { "1.13-","1.14~1.16","1.17~1.19.3", "1.19.4","1.20+" };
+        public ObservableCollection<string> VersionSource { get; set; } = ["1.13-","1.14~1.16","1.17~1.19.3", "1.19.4","1.20+"];
 
         /// <summary>
         /// 不同版本拥有的类型映射图
         /// </summary>
-        private Dictionary<string, List<string>> TypeVersionMap = new();
+        private Dictionary<string, List<string>> TypeVersionMap = [];
 
         #region 告示牌类型数据源
-        public ObservableCollection<string> typeSource = new();
+        public ObservableCollection<string> typeSource = [];
         public ObservableCollection<string> TypeSource
         {
             get => typeSource;
@@ -86,7 +88,7 @@ namespace cbhk.Generators.SignGenerator.Components
         /// <summary>
         /// 正反面文档
         /// </summary>
-        public ObservableCollection<EnabledFlowDocument> SignDocuments { get; set; } = new() { new EnabledFlowDocument(),new EnabledFlowDocument() };
+        public ObservableCollection<EnabledFlowDocument> SignDocuments { get; set; } = [new EnabledFlowDocument(),new EnabledFlowDocument()];
 
         /// <summary>
         /// 告示牌编辑器
@@ -305,7 +307,7 @@ namespace cbhk.Generators.SignGenerator.Components
                     string id = item["id"].ToString();
                     string version = item["version"].ToString();
                     if (!TypeVersionMap.TryGetValue(version, out List<string> value))
-                        TypeVersionMap.Add(version, new List<string> { id });
+                        TypeVersionMap.Add(version, [id]);
                     else
                         value.Add(id);
                     typeSource.Add(id);
@@ -314,49 +316,6 @@ namespace cbhk.Generators.SignGenerator.Components
                 foreach (var item in typeSource)
                     TypeSource.Add(item);
             });
-            #endregion
-        }
-
-        /// <summary>
-        /// 为混淆文字效果提供分割首尾文本块的功能
-        /// </summary>
-        private void obfuscateSpiltRichRunHelper(RichRun StartRichRun, RichRun EndRichRun, RichParagraph startRichParagraph, RichParagraph endRichParagraph)
-        {
-            #region 切割选区起始处到起始文本块之间的内容和选区末尾处到末尾文本块之间的内容
-            if (!Equals(StartRichRun, EndRichRun))
-            {
-                if (!StartRichRun.ObfuscateTimer.Enabled)
-                {
-                    RichRun PreviousRichRun = new();
-                    TextRange StartPartRange = new(StartRichRun.ContentStart, SignTextEditor.Selection.Start);
-                    PreviousRichRun.Text = StartPartRange.Text;
-                    startRichParagraph.Inlines.InsertBefore(StartRichRun, PreviousRichRun);
-                    StartRichRun.Text = StartRichRun.Text[StartPartRange.Text.Length..];
-                }
-                if (!EndRichRun.ObfuscateTimer.Enabled)
-                {
-                    RichRun NextRichRun = new();
-                    TextRange EndPartRange = new(EndRichRun.ContentEnd, SignTextEditor.Selection.End);
-                    NextRichRun.Text = EndPartRange.Text;
-                    endRichParagraph.Inlines.InsertAfter(EndRichRun, NextRichRun);
-                    EndRichRun.Text = EndRichRun.Text[..^EndPartRange.Text.Length];
-                }
-            }
-            else
-            {
-                if (!StartRichRun.ObfuscateTimer.Enabled)
-                {
-                    RichRun PreviousRichRun = new();
-                    RichRun NextRichRun = new();
-                    TextRange StartPartRange = new(StartRichRun.ContentStart, SignTextEditor.Selection.Start);
-                    TextRange EndPartRange = new(EndRichRun.ContentEnd, SignTextEditor.Selection.End);
-                    PreviousRichRun.Text = StartPartRange.Text;
-                    NextRichRun.Text = EndPartRange.Text;
-                    startRichParagraph.Inlines.InsertBefore(StartRichRun, PreviousRichRun);
-                    endRichParagraph.Inlines.InsertAfter(EndRichRun, NextRichRun);
-                    StartRichRun.Text = SignTextEditor.Selection.Text;
-                }
-            }
             #endregion
         }
 
@@ -393,10 +352,11 @@ namespace cbhk.Generators.SignGenerator.Components
                 int strikethrough_index = current_decorations.IndexOf(TextDecorations.Strikethrough.First());
                 if (!current_decorations.Contains(TextDecorations.Baseline.First()))
                 {
-                    TextDecorationCollection textDecorations = new TextDecorationCollection();
-                    if (strikethrough_index != -1)
-                        textDecorations.Add(TextDecorations.Strikethrough);
-                    textDecorations.Add(TextDecorations.Baseline);
+                    TextDecorationCollection textDecorations =
+                    [
+                        ..(strikethrough_index != -1 ? TextDecorations.Strikethrough : []),
+                        TextDecorations.Baseline[0]
+                    ];
                     textRange.ApplyPropertyValue(TextBlock.TextDecorationsProperty, textDecorations);
                 }
                 else
@@ -422,10 +382,7 @@ namespace cbhk.Generators.SignGenerator.Components
                 int underline_index = current_decorations.IndexOf(TextDecorations.Baseline.First());
                 if (!current_decorations.Contains(TextDecorations.Strikethrough.First()))
                 {
-                    TextDecorationCollection textDecorations = new TextDecorationCollection();
-                    if (underline_index != -1)
-                        textDecorations.Add(TextDecorations.Baseline);
-                    textDecorations.Add(TextDecorations.Strikethrough);
+                    TextDecorationCollection textDecorations = [.. underline_index != -1 ? TextDecorations.Baseline : [], TextDecorations.Strikethrough[0]];
                     textRange.ApplyPropertyValue(TextBlock.TextDecorationsProperty, textDecorations);
                 }
                 else
@@ -458,21 +415,21 @@ namespace cbhk.Generators.SignGenerator.Components
                 if (Equals(StartRichRun, EndRichRun))
                 {
                     //关闭混淆
-                    if (StartRichRun.ObfuscateTimer.Enabled)
+                    if (StartRichRun.ObfuscateTimer.IsEnabled)
                     {
                         StartRichRun.IsObfuscated = false;
-                        StartRichRun.ObfuscateTimer.Enabled = false;
+                        StartRichRun.ObfuscateTimer.IsEnabled = false;
                         StartRichRun.Text = StartRichRun.UID;
                         StartRichRun.FontFamily = new FontFamily(commonFontFamily);
                     }
                     else//开启混淆
                     {
-                        obfuscateSpiltRichRunHelper(StartRichRun, StartRichRun, startRichParagraph, startRichParagraph);
+                        ObfuscateRunHelper.Run(ref SignTextEditor);
                         StartRichRun.UID = StartRichRun.Text;
                         FontFamily fontFamily = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\"), "./#"+ obfuscatedFontFamily);
                         StartRichRun.FontFamily = fontFamily;
                         StartRichRun.IsObfuscated = true;
-                        StartRichRun.ObfuscateTimer.Enabled = true;
+                        StartRichRun.ObfuscateTimer.IsEnabled = true;
                     }
                 }
                 else
@@ -485,7 +442,7 @@ namespace cbhk.Generators.SignGenerator.Components
                     List<RichRun> IsNotEnableRichRuns = [];
                     CurrentRichRuns.All(item =>
                     {
-                        if (!item.ObfuscateTimer.Enabled)
+                        if (!item.ObfuscateTimer.IsEnabled)
                         {
                             IsNotEnableRichRuns.Add(item);
                             IsNotEnableCount++;
@@ -495,14 +452,14 @@ namespace cbhk.Generators.SignGenerator.Components
                     //大于0则把未开启混淆的文本块开启混淆
                     if (IsNotEnableCount > 0)
                     {
-                        obfuscateSpiltRichRunHelper(StartRichRun, EndRichRun, startRichParagraph, startRichParagraph);
+                        ObfuscateRunHelper.Run(ref SignTextEditor);
                         IsNotEnableRichRuns.All(item =>
                         {
                             item.UID = item.Text;
                             FontFamily fontFamily = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\"), "./#"+ obfuscatedFontFamily);
                             item.FontFamily = fontFamily;
                             item.IsObfuscated = true;
-                            item.ObfuscateTimer.Enabled = true;
+                            item.ObfuscateTimer.IsEnabled = true;
                             return true;
                         });
                     }
@@ -511,7 +468,7 @@ namespace cbhk.Generators.SignGenerator.Components
                         foreach (RichRun item in CurrentRichRuns)
                         {
                             item.IsObfuscated = false;
-                            item.ObfuscateTimer.Enabled = false;
+                            item.ObfuscateTimer.IsEnabled = false;
                             item.Text = item.UID;
                             item.FontFamily = new FontFamily(commonFontFamily);
                         }
@@ -533,11 +490,11 @@ namespace cbhk.Generators.SignGenerator.Components
                 int EndRichRunIndex = endRichRuns.IndexOf(EndRichRun);
                 int StartUnableCount = 0;
                 int EndUnableCount = 0;
-                List<RichRun> UnableRichRuns = new List<RichRun> { };
+                List<RichRun> UnableRichRuns = [];
                 //记录未开启混淆的文本块数量
                 for (int i = StartRichRunIndex; i < CurrentRichRuns.Count; i++)
                 {
-                    if (!CurrentRichRuns[i].ObfuscateTimer.Enabled)
+                    if (!CurrentRichRuns[i].ObfuscateTimer.IsEnabled)
                     {
                         UnableRichRuns.Add(CurrentRichRuns[i]);
                         StartUnableCount++;
@@ -545,7 +502,7 @@ namespace cbhk.Generators.SignGenerator.Components
                 }
                 for (int i = 0; i <= EndRichRunIndex; i++)
                 {
-                    if (!endRichRuns[i].ObfuscateTimer.Enabled)
+                    if (!endRichRuns[i].ObfuscateTimer.IsEnabled)
                     {
                         UnableRichRuns.Add(endRichRuns[i]);
                         EndUnableCount++;
@@ -557,21 +514,21 @@ namespace cbhk.Generators.SignGenerator.Components
                     foreach (var item in CurrentRichRuns)
                     {
                         item.IsObfuscated = false;
-                        item.ObfuscateTimer.Enabled = false;
+                        item.ObfuscateTimer.IsEnabled = false;
                         item.UID = item.Text;
                         item.FontFamily = new FontFamily(commonFontFamily);
                     }
                 }
                 else//否则把未开启混淆的文本块开启混淆
                 {
-                    obfuscateSpiltRichRunHelper(StartRichRun, EndRichRun, startRichParagraph, endRichParagraph);
+                    ObfuscateRunHelper.Run(ref SignTextEditor);
                     foreach (var item in UnableRichRuns)
                     {
                         item.UID = item.Text;
                         FontFamily fontFamily = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\"), "./#"+ obfuscatedFontFamily);
                         item.FontFamily = fontFamily;
                         item.IsObfuscated = true;
-                        item.ObfuscateTimer.Enabled = true;
+                        item.ObfuscateTimer.IsEnabled = true;
                     }
                 }
             }
@@ -630,7 +587,7 @@ namespace cbhk.Generators.SignGenerator.Components
                     item.TextDecorations = [];
                     item.Foreground = new SolidColorBrush(Color.FromRgb(0, 0, 0));
                     item.IsObfuscated = false;
-                    item.ObfuscateTimer.Enabled = false;
+                    item.ObfuscateTimer.IsEnabled = false;
                     if (item.UID.Trim() != "")
                         item.Text = item.UID;
                 }
@@ -845,7 +802,7 @@ namespace cbhk.Generators.SignGenerator.Components
         /// <summary>
         /// 生成告示牌
         /// </summary>
-        private void RunCommand()
+        public void RunCommand()
         {
             StringBuilder frontResult = new();
             StringBuilder backResult = new();
@@ -900,8 +857,6 @@ namespace cbhk.Generators.SignGenerator.Components
                 backResult.Clear();
             #endregion
 
-            string result = "";
-
             if (CanGlowing && IsFrontGlowing && IsOrBigger1_20)
                 frontResult.Append("has_glowing_text:1b,");
             else
@@ -928,7 +883,7 @@ namespace cbhk.Generators.SignGenerator.Components
                 backResult.Append(']');
             }
             if (CanWaxed && IsWaxed)
-                result += "is_waxed:1b,";
+                Result += "is_waxed:1b,";
 
             string signId = CanHanging && IsHanging ?SelectedSignType+"_hanging_sign": SelectedSignType + "_sign";
 
@@ -937,33 +892,33 @@ namespace cbhk.Generators.SignGenerator.Components
             if (backResult.ToString().EndsWith(','))
                 backResult = backResult.Remove(backResult.Length - 1, 1);
             if (IsOrBigger1_20)
-                result = result + "front_text:{" + frontResult.ToString() + "},back_text:{" + backResult.ToString() + "}";
+                Result = Result + "front_text:{" + frontResult.ToString() + "},back_text:{" + backResult.ToString() + "}";
             else
-                result = frontResult.ToString();
+                Result = frontResult.ToString();
 
             if(Give)
             {
                 if (SelectedVersion != "1.13-")
-                    result = "/give @p " + signId + "{BlockEntityTag:{" + result + "}}";
+                    Result = "/give @p " + signId + "{BlockEntityTag:{" + Result + "}}";
                 else
-                    result = "/give @p standing_sign 1 0" + "{BlockEntityTag:{" + result + "}}";
+                    Result = "/give @p standing_sign 1 0" + "{BlockEntityTag:{" + Result + "}}";
             }
             else
             {
                 if (SelectedVersion != "1.13-")
-                    result = "/setblock ~ ~1 ~ " + signId + "{" + result + "}";
+                    Result = "/setblock ~ ~1 ~ " + signId + "{" + Result + "}";
                 else
-                    result = "/setblock ~ ~1 ~ standing_sign {" + result + "}";
+                    Result = "/setblock ~ ~1 ~ standing_sign {" + Result + "}";
             }
             if(ShowResult)
             {
                 Displayer displayer = Displayer.GetContentDisplayer();
-                displayer.GeneratorResult(result,"告示牌", AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Sign\\images\\icon.png");
+                displayer.GeneratorResult(Result,"告示牌", AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Sign\\images\\icon.png");
                 displayer.Show();
             }
             else
             {
-                Clipboard.SetText(result);
+                Clipboard.SetText(Result);
                 Message.PushMessage("生成成功！告示牌已进入剪切板",MessageBoxImage.Information);
             }
         }
@@ -994,14 +949,14 @@ namespace cbhk.Generators.SignGenerator.Components
             if (TypeVersionMap.Count == 0)
                 return;
             TypeSource.Clear();
-            List<string> result = [];
+            List<string> Result = [];
             string currentVersion = version.Replace("+", "").Replace("-", "").Replace(".","");
             foreach (KeyValuePair<string, List<string>> item in TypeVersionMap)
             {
                 string itemCopy = item.Key.Replace("+", "").Replace("-", "").Replace(".", "");
                 if (itemCopy == "all" || itemCopy.Contains(currentVersion) || (!itemCopy.Contains('~') && !currentVersion.Contains('~') && (int.Parse(itemCopy) <= int.Parse(currentVersion))))
                     for (int i = 0; i < item.Value.Count; i++)
-                        result.Add(item.Value[i]);
+                        Result.Add(item.Value[i]);
                 else
                 {
                     if (itemCopy.Contains('~'))
@@ -1010,11 +965,11 @@ namespace cbhk.Generators.SignGenerator.Components
                         currentVersion = currentVersion.Split('~')[1];
                     if (int.Parse(itemCopy) <= int.Parse(currentVersion) || VersionSource[^1].Contains(version))
                         for (int i = 0; i < item.Value.Count; i++)
-                            result.Add(item.Value[i]);
+                            Result.Add(item.Value[i]);
                 }
             }
-            result.Sort();
-            foreach (var item in result)
+            Result.Sort();
+            foreach (var item in Result)
                 TypeSource.Add(item);
             SelectedSignType = TypeSource[0];
         }
@@ -1062,7 +1017,7 @@ namespace cbhk.Generators.SignGenerator.Components
                         richRun.Text = richRun.UID = StartText;
                         RichRun SpiltRichRun = new RichRun();
                         SpiltRichRun.UID = SpiltRichRun.Text = EndText;
-                        SpiltRichRun.ObfuscateTimer.Enabled = richRun.ObfuscateTimer.Enabled;
+                        SpiltRichRun.ObfuscateTimer.IsEnabled = richRun.ObfuscateTimer.IsEnabled;
                         SignTextEditor.CaretPosition.Paragraph.Inlines.InsertAfter(richRun, SpiltRichRun);
                         List<RichRun> CurrentRuns = SignTextEditor.CaretPosition.Paragraph.Inlines.ToList().ConvertAll(item => item as RichRun);
                         int CurrentIndex = CurrentRuns.IndexOf(richRun);

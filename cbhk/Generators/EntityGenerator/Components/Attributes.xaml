@@ -69,7 +69,7 @@
             Margin="10,2,10,0"
             Background="#FFE5B663"
             FreshForeground="Black"
-            FreshName="清空"
+            FreshName="清除"
             Loaded="Modifiers_Loaded"
             ModifyForeground="Black"
             ModifyName="添加"

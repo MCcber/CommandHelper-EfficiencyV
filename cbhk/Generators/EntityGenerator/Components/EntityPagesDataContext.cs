@@ -1,5 +1,6 @@
 ﻿using cbhk.ControlsDataContexts;
 using cbhk.CustomControls;
+using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.GenerateResultDisplayer;
@@ -13,6 +14,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -257,14 +259,13 @@ namespace cbhk.Generators.EntityGenerator.Components
             {
                 SetProperty(ref selectedEntityId, value);
                 //更新特指和共通标签、额外字段
-                if (SpecialViewer != null && !Loading)
-                    Task.Run(async() =>
+                Task.Run(async () =>
+                {
+                    await currentEntityPage.Dispatcher.InvokeAsync(async () =>
                     {
-                        await currentEntityPage.Dispatcher.InvokeAsync(async () =>
-                        {
-                            await UpdateUILayOut();
-                        });
+                        await UpdateUILayOut();
                     });
+                });
             }
         }
         public string SelectedEntityIdString
@@ -282,7 +283,18 @@ namespace cbhk.Generators.EntityGenerator.Components
         public string SelectedVersion
         {
             get => selectedVersion;
-            set => SetProperty(ref selectedVersion, value);
+            set
+            {
+                SetProperty(ref selectedVersion, value);
+                CurrentMinVersion = int.Parse(selectedVersion.Replace(".", "").Replace("+", "").Split('-')[0]);
+            }
+        }
+
+        private int currentMinVersion = 1202;
+        public int CurrentMinVersion
+        {
+            get => currentMinVersion;
+            set => currentMinVersion = int.Parse(SelectedVersion.Replace(".", "").Replace("+", "").Split('-')[0]);
         }
         #endregion
 
@@ -293,12 +305,9 @@ namespace cbhk.Generators.EntityGenerator.Components
         ImageBrush buttonNormalBrush;
         ImageBrush buttonPressedBrush;
         string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Entity\\data\\";
-        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Entity\\data\\SpecialTags.json";
         #endregion
 
         #region 字段与引用
-        //正在载入
-        bool Loading = true;
         //当前实体页引用
         EntityPages currentEntityPage = null;
         //无特指NBT时提示
@@ -308,20 +317,50 @@ namespace cbhk.Generators.EntityGenerator.Components
             AlignmentY = AlignmentY.Center,
             Stretch = Stretch.None
         };
-        //属性数据
-        public ObservableCollection<NBTDataStructure> AttributeResult { get; set; } = new();
-        //存储当前实体的乘客
-        public ObservableCollection<NBTDataStructure> PassengerResult { get; set; } = new();
+
+        /// <summary>
+        /// 缓存面板
+        /// </summary>
+        private Grid CacheGrid = null;
+
+        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Entity\\data\\SpecialTags.json";
+
         //实体数据源
-        public ObservableCollection<IconComboBoxItem> EntityIds { get; set; } = new();
-        //版本
-        public ObservableCollection<string> VersionSource { get; set; } = new() { "1.12-", "1.13+" };
+        private ObservableCollection<IconComboBoxItem> entityIds = [];
+        public ObservableCollection<IconComboBoxItem> EntityIds
+        {
+            get => entityIds;
+            set => SetProperty(ref entityIds, value);
+        }
+
+        //属性数据
+        public ObservableCollection<NBTDataStructure> AttributeResult { get; set; } = [];
+        //存储当前实体的乘客
+        public ObservableCollection<NBTDataStructure> PassengerResult { get; set; } = [];
+
+        #region 版本数据源
+        private ObservableCollection<string> versionSource = [];
+        public ObservableCollection<string> VersionSource
+        {
+            get => versionSource;
+            set => SetProperty(ref versionSource, value);
+        }
+        #endregion
+
+        /// <summary>
+        /// 需要适应版本变化的特指数据所属控件的事件
+        /// </summary>
+        public Dictionary<FrameworkElement, Action<FrameworkElement, RoutedEventArgs>> VersionNBTList = [];
+        /// <summary>
+        /// 版本控件
+        /// </summary>
+        public List<IVersionUpgrader> VersionComponents { get; set; } = [];
         //特指结果集合
-        public Dictionary<string,ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = new();
+        public Dictionary<string,ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
         //实体、活体、生物结果集合
-        public ObservableCollection<NBTDataStructure> CommonResult { get; set; } = new();
+        public ObservableCollection<NBTDataStructure> CommonResult { get; set; } = [];
         //在生成时标记当前实体拥有哪些共通标签
-        private List<string> CurrentCommonTags = new();
+        private List<string> CurrentCommonTags = [];
         //白色画刷
         SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         //黑色画刷
@@ -349,11 +388,11 @@ namespace cbhk.Generators.EntityGenerator.Components
         [GeneratedRegex("[a-zA-Z_]+")]
         private partial Regex GetEntityID();
         //特殊实体的共通标签链表
-        List<string> specialEntityCommonTagList = new();
+        List<string> specialEntityCommonTagList = [];
         //特殊实体特指标签字典,用于动态切换内容
-        Dictionary<string,Grid> specialDataDictionary = new();
+        Dictionary<string,Grid> specialDataDictionary = [];
         //特殊标签面板
-        ScrollViewer SpecialViewer = null;
+        ScrollViewer? SpecialViewer = null;
         DataTable EntityIdTable = null;
         DataTable BlockTable = null;
         //存储最终的结果
@@ -406,44 +445,31 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void EntityPageLoaded(object sender,RoutedEventArgs e)
+        public void EntityPages_Loaded(object sender,RoutedEventArgs e)
         {
-            if (currentEntityPage != null) return;
             currentEntityPage = sender as EntityPages;
-            Window window = Window.GetWindow(currentEntityPage);
-            EntityDataContext context = window.DataContext as EntityDataContext;
-            string SpecialData = File.ReadAllText(SpecialNBTStructureFilePath);
-            JArray specialArray = JArray.Parse(SpecialData);
-            string entityImageFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            EntityIdTable = context.EntityIdTable;
-            await Task.Run(async () =>
+            EntityDataContext entityDataContext = (Window.GetWindow(currentEntityPage) as Entity).DataContext as EntityDataContext;
+            EntityIds = entityDataContext.EntityIds;
+            VersionSource = entityDataContext.VersionSource;
+        }
+
+        /// <summary>
+        /// 版本更新事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            CancellationTokenSource cancellationTokenSource = new();
+            CancellationToken cancellationToken = new();
+            await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
             {
-                object obj = new();
-                BindingOperations.EnableCollectionSynchronization(EntityIds, obj);
-                await currentEntityPage.Dispatcher.InvokeAsync(() =>
-                {
-                    for (int i = 0; i < specialArray.Count; i++)
-                    {
-                        IconComboBoxItem item = new();
-                        string entityID = specialArray[i]["type"].ToString();
-                        bool haveEntity = EntityIdTable.Select("id='" + entityID + "'").Length != 0;
-                        if (haveEntity)
-                        {
-                            #region 设置实体图标、名称和ID
-                            string iconPath = File.Exists(entityImageFolderPath + entityID + "_spawn_egg.png") ? entityImageFolderPath + entityID + "_spawn_egg.png" : entityImageFolderPath + entityID + ".png";
-                            if (File.Exists(iconPath))
-                                item.ComboBoxItemIcon = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
-                            item.ComboBoxItemText = EntityIdTable.Select("id='" + entityID + "'").First()["name"].ToString();
-                            item.ComboBoxItemId = entityID;
-                            #endregion
-                            EntityIds.Add(item);
-                        }
-                    }
-                    if(!SpecialTagsResult.ContainsKey(EntityIds[0].ComboBoxItemId))
-                    SpecialTagsResult.Add(EntityIds[0].ComboBoxItemId, new ObservableCollection<NBTDataStructure>());
-                    Loading = false;
-                    SelectedEntityId = EntityIds[0];
-                });
+                await VersionComponents[i].Upgrade(CurrentMinVersion);
+            });
+            await Parallel.ForEachAsync(VersionNBTList, async (item, cancellationToken) =>
+            {
+                await Task.Delay(0, cancellationToken);
+                item.Value.Invoke(item.Key, null);
             });
         }
 
@@ -615,7 +641,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             string PassengersData = PassengerResult.Count > 0 ? "Passengers:[" + string.Join(",", PassengerResult.Select(item => item.Result)).Trim(',') + "]" : "";
             PassengersData = PassengersData == "Passengers:[]" ? "" : PassengersData;
 
-            Result = (SpecialTagsResult.ContainsKey(SelectedEntityIdString) && SpecialTagsResult[SelectedEntityIdString].Count > 0? string.Join(",", SpecialTagsResult[SelectedEntityIdString].Select(item =>
+            Result = (SpecialTagsResult.TryGetValue(SelectedEntityIdString, out ObservableCollection<NBTDataStructure> value) && value.Count > 0? string.Join(",", value.Select(item =>
             {
                 if (item != null && item.Result.Length > 0)
                     return item.Result;
@@ -683,7 +709,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// <returns></returns>
         private List<FrameworkElement> ComponentsGenerator(ComponentData Request)
         {
-            List<FrameworkElement> result = new();
+            List<FrameworkElement> result = [];
             TextBlock displayText = new()
             {
                 Uid = Request.nbtType,
@@ -991,23 +1017,22 @@ namespace cbhk.Generators.EntityGenerator.Components
                                                             JToken amountObj = item.SelectToken("Amount");
                                                             JToken nameObj = item.SelectToken("Name");
                                                             JToken operationObj = item.SelectToken("Operation");
-                                                            JArray uuidArray = item.SelectToken("UUID") as JArray;
                                                             if (amountObj != null)
                                                                 attributes.AttributeModifiersSource[^1].Amount.Value = double.Parse(amountObj.ToString());
                                                             if (nameObj != null)
                                                                 attributes.AttributeModifiersSource[^1].ModifierName.Text = nameObj.ToString();
                                                             if (operationObj != null)
                                                                 attributes.AttributeModifiersSource[^1].Operation.SelectedIndex = int.Parse(operationObj.ToString());
-                                                            if (uuidArray != null)
+                                                            if (item.SelectToken("UUID") is JArray uuidArray)
                                                             {
                                                                 int uid0 = int.Parse(uuidArray[0].ToString());
                                                                 int uid1 = int.Parse(uuidArray[1].ToString());
                                                                 int uid2 = int.Parse(uuidArray[2].ToString());
                                                                 int uid3 = int.Parse(uuidArray[3].ToString());
-                                                                attributes.AttributeModifiersSource[^1].UUID.number0.Value = uid0;
-                                                                attributes.AttributeModifiersSource[^1].UUID.number1.Value = uid1;
-                                                                attributes.AttributeModifiersSource[^1].UUID.number2.Value = uid2;
-                                                                attributes.AttributeModifiersSource[^1].UUID.number3.Value = uid3;
+                                                                //attributes.AttributeModifiersSource[^1].UUID.number0.Value = uid0;
+                                                                //attributes.AttributeModifiersSource[^1].UUID.number1.Value = uid1;
+                                                                //attributes.AttributeModifiersSource[^1].UUID.number2.Value = uid2;
+                                                                //attributes.AttributeModifiersSource[^1].UUID.number3.Value = uid3;
                                                             }
                                                         }
                                                     }
@@ -1102,7 +1127,8 @@ namespace cbhk.Generators.EntityGenerator.Components
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
-                                            ModifyVisibility = Visibility.Collapsed,
+                                            ModifyName = "",
+                                            ModifyVisibility = Visibility.Hidden,
                                             FreshVisibility = Visibility.Collapsed,
                                             Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
                                         };
@@ -1156,7 +1182,8 @@ namespace cbhk.Generators.EntityGenerator.Components
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
-                                            ModifyVisibility = Visibility.Collapsed,
+                                            ModifyName = "",
+                                            ModifyVisibility = Visibility.Hidden,
                                             FreshVisibility = Visibility.Collapsed,
                                             Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
                                         };
@@ -1210,7 +1237,8 @@ namespace cbhk.Generators.EntityGenerator.Components
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
-                                            ModifyVisibility = Visibility.Collapsed,
+                                            ModifyName = "",
+                                            ModifyVisibility = Visibility.Hidden,
                                             FreshVisibility = Visibility.Collapsed,
                                             Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
                                         };
@@ -1262,7 +1290,8 @@ namespace cbhk.Generators.EntityGenerator.Components
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
-                                            ModifyVisibility = Visibility.Collapsed,
+                                            ModifyName = "",
+                                            ModifyVisibility = Visibility.Hidden,
                                             FreshVisibility = Visibility.Collapsed,
                                             Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
                                         };
@@ -1326,6 +1355,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                                                 key = "";
                                             JArray suspectArray = ExternallyReadEntityData.SelectToken(key+"anger.suspects") as JArray;
                                             Accordion accordion = suspectsEntities.FindChild<Accordion>();
+                                            
                                             StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
                                             for (int i = 0; i < suspectArray.Count; i++)
                                             {
@@ -1374,16 +1404,10 @@ namespace cbhk.Generators.EntityGenerator.Components
                                             #region 游戏事件
                                             JToken gameEvent = ExternallyReadEntityData.SelectToken(key+"listener.event.game_event");
                                             JToken distance = ExternallyReadEntityData.SelectToken(key + "listener.event.distance");
-                                            JArray event_pos = ExternallyReadEntityData.SelectToken(key + "listener.event.pos") as JArray;
-                                            JArray event_source = ExternallyReadEntityData.SelectToken(key + "listener.event.source") as JArray;
-                                            JArray projectile_owner = ExternallyReadEntityData.SelectToken(key + "listener.event.projectile_owner") as JArray;
                                             #endregion
                                             #region 候选的游戏事件
                                             JToken gameEventC = ExternallyReadEntityData.SelectToken(key + "listener.selector.event.game_event");
                                             JToken distanceC = ExternallyReadEntityData.SelectToken(key + "listener.selector.event.distance");
-                                            JArray event_posC = ExternallyReadEntityData.SelectToken(key + "listener.selector.event.pos") as JArray;
-                                            JArray event_sourceC = ExternallyReadEntityData.SelectToken(key + "listener.selector.event.source") as JArray;
-                                            JArray projectile_ownerC = ExternallyReadEntityData.SelectToken(key + "listener.selector.event.projectile_owner") as JArray;
                                             JToken event_delayC = ExternallyReadEntityData.SelectToken(key + "listener.event_delay");
                                             JToken selector_tick = ExternallyReadEntityData.SelectToken(key + "listener.selector.tick");
                                             #endregion
@@ -1395,7 +1419,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                                                 vibrationMonitors.game_event.Text = gameEvent.ToString();
                                             if (distance != null)
                                                 vibrationMonitors.distance.Value = float.Parse(distance.ToString());
-                                            if (event_pos != null)
+                                            if (ExternallyReadEntityData.SelectToken(key + "listener.event.pos") is JArray event_pos)
                                             {
                                                 vibrationMonitors.VibrationSourcePos.EnableButton.IsChecked = true;
                                                 vibrationMonitors.VibrationSourcePos.IsUUID = false;
@@ -1403,7 +1427,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                                                 vibrationMonitors.VibrationSourcePos.number1.Value = double.Parse(event_pos[1].ToString());
                                                 vibrationMonitors.VibrationSourcePos.number2.Value = double.Parse(event_pos[2].ToString());
                                             }
-                                            if(event_source != null)
+                                            if(ExternallyReadEntityData.SelectToken(key + "listener.event.source") is JArray event_source)
                                             {
                                                 vibrationMonitors.TargetUUID.EnableButton.IsChecked = true;
                                                 vibrationMonitors.TargetUUID.number0.Value = int.Parse(event_source[0].ToString());
@@ -1411,7 +1435,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                                                 vibrationMonitors.TargetUUID.number2.Value = int.Parse(event_source[2].ToString());
                                                 vibrationMonitors.TargetUUID.number3.Value = int.Parse(event_source[3].ToString());
                                             }
-                                            if(projectile_owner != null)
+                                            if(ExternallyReadEntityData.SelectToken(key + "listener.event.projectile_owner") is JArray projectile_owner)
                                             {
                                                 vibrationMonitors.ProjectileUUID.EnableButton.IsChecked = true;
                                                 vibrationMonitors.ProjectileUUID.number0.Value = int.Parse(projectile_owner[0].ToString());
@@ -1430,7 +1454,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                                                 vibrationMonitors.game_eventC.Text = gameEventC.ToString();
                                             if (distanceC != null)
                                                 vibrationMonitors.distanceC.Value = float.Parse(distanceC.ToString());
-                                            if(event_posC != null)
+                                            if(ExternallyReadEntityData.SelectToken(key + "listener.selector.event.pos") is JArray event_posC)
                                             {
                                                 vibrationMonitors.VibrationSourcePosC.EnableButton.IsChecked = true;
                                                 vibrationMonitors.VibrationSourcePosC.IsUUID = false;
@@ -1438,7 +1462,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                                                 vibrationMonitors.VibrationSourcePosC.number1.Value = double.Parse(event_posC[1].ToString());
                                                 vibrationMonitors.VibrationSourcePosC.number2.Value = double.Parse(event_posC[2].ToString());
                                             }
-                                            if(event_sourceC != null)
+                                            if(ExternallyReadEntityData.SelectToken(key + "listener.selector.event.source") is JArray event_sourceC)
                                             {
                                                 vibrationMonitors.TargetUUIDC.EnableButton.IsChecked = true;
                                                 vibrationMonitors.TargetUUIDC.number0.Value = int.Parse(event_sourceC[0].ToString());
@@ -1446,7 +1470,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                                                 vibrationMonitors.TargetUUIDC.number2.Value = int.Parse(event_sourceC[2].ToString());
                                                 vibrationMonitors.TargetUUIDC.number3.Value = int.Parse(event_sourceC[3].ToString());
                                             }
-                                            if(projectile_ownerC != null)
+                                            if(ExternallyReadEntityData.SelectToken(key + "listener.selector.event.projectile_owner") is JArray projectile_ownerC)
                                             {
                                                 vibrationMonitors.ProjectileUUIDC.EnableButton.IsChecked = true;
                                                 vibrationMonitors.ProjectileUUIDC.number0.Value = int.Parse(projectile_ownerC[0].ToString());
@@ -1461,10 +1485,9 @@ namespace cbhk.Generators.EntityGenerator.Components
                                                     vibrationMonitors.VibrationMonitorTypeBox.SelectedIndex = 0;
                                                 else
                                                     vibrationMonitors.VibrationMonitorTypeBox.SelectedIndex = 1;
-                                                JArray listenerSourcePos = ExternallyReadEntityData.SelectToken(key + "listener.source.pos") as JArray;
                                                 JToken listenerSourceSourceEntity = ExternallyReadEntityData.SelectToken(key + "listener.source.source_entity");
                                                 JToken yOffset = ExternallyReadEntityData.SelectToken(key + "listener.source.y_offset");
-                                                if (listenerSourcePos != null)
+                                                if (ExternallyReadEntityData.SelectToken(key + "listener.source.pos") is JArray listenerSourcePos)
                                                 {
                                                     vibrationMonitors.BlockGroup.Visibility = Visibility.Visible;
                                                     vibrationMonitors.EntityGroup0.Visibility = vibrationMonitors.EntityGroup1.Visibility = Visibility.Collapsed;
@@ -1593,7 +1616,8 @@ namespace cbhk.Generators.EntityGenerator.Components
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(10, 2, 10, 0),
                                             TitleForeground = blackBrush,
-                                            ModifyVisibility = Visibility.Collapsed,
+                                            ModifyName = "",
+                                            ModifyVisibility = Visibility.Hidden,
                                             FreshVisibility = Visibility.Collapsed,
                                             ModifyForeground = blackBrush,
                                             FreshForeground = blackBrush,
@@ -1620,12 +1644,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                                             {
                                                 JArray uuidArray = JArray.Parse(uuid.ToString());
                                                 leashData.TiedByEntity.IsChecked = true;
-                                                leashData.tractor.EnableButton.IsChecked = true;
                                                 leashData.BeingLed_Click(leashData.TiedByEntity,null);
-                                                leashData.tractor.number0.Value = int.Parse(uuidArray[0].ToString());
-                                                leashData.tractor.number1.Value = int.Parse(uuidArray[1].ToString());
-                                                leashData.tractor.number2.Value = int.Parse(uuidArray[2].ToString());
-                                                leashData.tractor.number3.Value = int.Parse(uuidArray[3].ToString());
                                             }
                                             else
                                             if (x != null && y != null && z != null)
@@ -2092,6 +2111,11 @@ namespace cbhk.Generators.EntityGenerator.Components
         public void AccordionVisibilitylLoaded(object sender, RoutedEventArgs e)
         {
             Accordion accordion = sender as Accordion;
+            if(accordion.ModifyVisibility == Visibility.Collapsed)
+            {
+                accordion.ModifyVisibility = Visibility.Hidden;
+                accordion.ModifyName = "";
+            }
             Binding visibilityBinder = new()
             {
                 Path = new PropertyPath(accordion.Uid + "Visibility"),
@@ -2111,6 +2135,8 @@ namespace cbhk.Generators.EntityGenerator.Components
             foreach (TabItem item in tabControl.Items)
                 item.DataContext = this;
             SpecialViewer = (tabControl.Items[0] as TabItem).Content as ScrollViewer;
+            //if(SpecialViewer.Content is Grid grid && grid.Children.Count == 0)
+            //SpecialViewer.Content = CacheGrid;
         }
 
         /// <summary>
@@ -2120,8 +2146,10 @@ namespace cbhk.Generators.EntityGenerator.Components
         {
             string data = File.ReadAllText(SpecialNBTStructureFilePath);
             JArray array = JArray.Parse(data);
+            //更新标签页显示文本
             if (currentEntityPage.Parent is TabItem currentTab)
                 currentTab.Header = SelectedEntityId.ComboBoxItemId + ":" + SelectedEntityId.ComboBoxItemText;
+
             #region 搜索当前实体ID对应的JSON对象
             List<JToken> targetList = array.Where(item =>
             {
@@ -2140,13 +2168,13 @@ namespace cbhk.Generators.EntityGenerator.Components
                 //计算本次与上次共通标签的差集,关闭指定菜单，而不是全部关闭再依次判断打开
                 List<string> closedCommonTagList = specialEntityCommonTagList.Except(commonTagList).ToList();
                 #region 处理特指NBT
-                if (!specialDataDictionary.ContainsKey(SelectedEntityIdString))
+                if (!specialDataDictionary.TryGetValue(SelectedEntityIdString, out Grid value))
                 {
                     JArray children = JArray.Parse(targetObj["children"].ToString());
-                    List<FrameworkElement> components = new();
-                    Grid newGrid = new();
-                    newGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
-                    newGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+                    List<FrameworkElement> components = [];
+                    CacheGrid = new();
+                    CacheGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
+                    CacheGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
                     #region 更新控件集合
                     foreach (JObject nbtStructure in children.Cast<JObject>())
@@ -2162,43 +2190,44 @@ namespace cbhk.Generators.EntityGenerator.Components
                     {
                         for (int j = 0; j < components.Count; j++)
                         {
-                            if (LeftIndex || newGrid.RowDefinitions.Count == 0)
-                                newGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
-                            newGrid.Children.Add(components[j]);
+                            if (LeftIndex || CacheGrid.RowDefinitions.Count == 0)
+                                CacheGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
+                            CacheGrid.Children.Add(components[j]);
                             if (components[j] is Accordion || components[j] is TextCheckBoxs || components[j] is SuspectsEntities || components[j] is VibrationMonitors)
                             {
-                                Grid.SetRow(components[j], newGrid.RowDefinitions.Count - 1);
+                                Grid.SetRow(components[j], CacheGrid.RowDefinitions.Count - 1);
                                 Grid.SetColumn(components[j], 0);
                                 Grid.SetColumnSpan(components[j], 2);
                                 LeftIndex = true;
                             }
                             else
                             {
-                                Grid.SetRow(components[j], newGrid.RowDefinitions.Count - 1);
+                                Grid.SetRow(components[j], CacheGrid.RowDefinitions.Count - 1);
                                 Grid.SetColumn(components[j], LeftIndex ? 0 : 1);
                                 LeftIndex = !LeftIndex;
                             }
                         }
-                        if (!specialDataDictionary.ContainsKey(SelectedEntityIdString))
-                            specialDataDictionary.Add(SelectedEntityIdString, newGrid);
-                        SpecialViewer.Content = newGrid;
-                        if (newGrid.Children.Count == 0)
-                            newGrid.Background = emptyDataTip;
+                        specialDataDictionary.TryAdd(SelectedEntityIdString, CacheGrid);
+                        if (SpecialViewer is not null)
+                            SpecialViewer.Content = CacheGrid;
+                        if (CacheGrid.Children.Count == 0)
+                            CacheGrid.Background = emptyDataTip;
                     });
                     #endregion
                 }
                 else
                 {
-                    Grid cacheGrid = specialDataDictionary[SelectedEntityIdString];
-                    if (cacheGrid.Children.Count == 0)
-                        cacheGrid.Background = emptyDataTip;
-                    SpecialViewer.Content = cacheGrid;
+                    Grid newGrid = value;
+                    if (newGrid.Children.Count == 0)
+                        newGrid.Background = emptyDataTip;
+                    if (SpecialViewer is not null)
+                        SpecialViewer.Content = newGrid;
                 }
                 #endregion
                 #region 处理额外字段与共通标签的显示隐藏
                 Type currentClassType = GetType();
                 #region 需要隐藏的共通标签
-                TabControl tabControl = (SpecialViewer.Parent as TextTabItems).Parent as TabControl;
+                TabControl tabControl = (SpecialViewer?.Parent as TextTabItems).Parent as TabControl;
                 foreach (var item in closedCommonTagList)
                 {
                     PropertyInfo visibilityPropertyInfo = currentClassType.GetProperty(item + "Visibility");
@@ -2253,10 +2282,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void TagsTab_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            await GeneratorSpecifyTags(sender as TabControl);
-        }
+        public async void TagsTab_SelectionChanged(object sender, SelectionChangedEventArgs e) => await GeneratorSpecifyTags(sender as TabControl);
 
         private async Task GeneratorSpecifyTags(TabControl tabControl)
         {
@@ -2271,7 +2297,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             //分辨当前是实体、生物还是活体,都不是则为其它共通标签
             bool IsSubContainer = tabControl.SelectedIndex > 5;
             //检查实体、活体、生物三大共通标签是否都被添加
-            List<string> AddedCommonTags = new();
+            List<string> AddedCommonTags = [];
             for (int i = 0; i < subGrid.Children.Count; i++)
             {
                 FrameworkElement frameworkElement = subGrid.Children[i] as FrameworkElement;
@@ -2298,7 +2324,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             List<string> commonTagList = commonTags.ToList().ConvertAll(item => item.ToString());
 
             #region 处理共通标签
-            List<FrameworkElement> components = new();
+            List<FrameworkElement> components = [];
             var sortOrder = new List<string> { "EntityCommonTags", "LivingBodyCommonTags", "MobCommonTags" };
             foreach (string commonString in commonTagList)
             {
@@ -2367,13 +2393,12 @@ namespace cbhk.Generators.EntityGenerator.Components
             //分辨当前是实体、生物还是活体,都不是则为其它共通标签
             IsSubContainer = parentAccordion != null;
             //检查实体、活体、生物三大共通标签是否都被添加
-            List<string> AddedCommonTags = new();
+            List<string> AddedCommonTags = [];
             for (int i = 0; i < subGrid.Children.Count; i++)
             {
                 FrameworkElement frameworkElement = subGrid.Children[i] as FrameworkElement;
-                NBTDataStructure dataStructure = frameworkElement.Tag as NBTDataStructure;
-                if(dataStructure != null && !AddedCommonTags.Contains(dataStructure.NBTGroup))
-                AddedCommonTags.Add(dataStructure.NBTGroup);
+                if (frameworkElement.Tag is NBTDataStructure dataStructure && !AddedCommonTags.Contains(dataStructure.NBTGroup))
+                    AddedCommonTags.Add(dataStructure.NBTGroup);
             }
             if ((parentAccordion == null && AddedCommonTags.Count >= 3) || (parentAccordion != null && AddedCommonTags.Count > 0)) return;
 
@@ -2395,7 +2420,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             List<string> commonTagList = commonTags.ToList().ConvertAll(item => item.ToString());
 
             #region 处理共通标签
-            List<FrameworkElement> components = new();
+            List<FrameworkElement> components = [];
             var sortOrder = new List<string> { "EntityCommonTags", "LivingBodyCommonTags", "MobCommonTags" };
             foreach (string commonString in commonTagList)
             {

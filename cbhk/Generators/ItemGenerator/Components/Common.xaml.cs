@@ -1,9 +1,13 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
+using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
-using System.Windows.Controls;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 
 namespace cbhk.Generators.ItemGenerator.Components
 {
@@ -13,7 +17,9 @@ namespace cbhk.Generators.ItemGenerator.Components
     public partial class Common : UserControl
     {
         public DataTable HideInfomationTable = null;
-        public ObservableCollection<string> HideFlagsSource { get; set; } = new();
+        public ObservableCollection<string> HideFlagsSource { get; set; } = [];
+        ItemPageDataContext itemPageDataContext = null;
+        private int CurrentMinVersion = 1202;
         #region 保存物品信息隐藏选项
         private string ItemHideFlags
         {
@@ -28,12 +34,28 @@ namespace cbhk.Generators.ItemGenerator.Components
         }
         #endregion
         #region 保存名称与描述
+        string itemName = "";
+        string itemLore = "";
         private string ItemDisplay
         {
             get
             {
-                string DisplayNameString = ItemName.Text.Trim() != "" ? "Name:'{\"text\":\"" + ItemName.Text + "\"}'," : "";
-                string ItemLoreString = ItemLore.Text.Trim() != "" ? "Lore:[\"[\\\"" + ItemLore.Text + "\\\"]\"]" : "";
+                string DisplayNameString = ""; 
+                string ItemLoreString = "";
+                if(itemName.Trim() != "")
+                {
+                    if (CurrentMinVersion >= 113)
+                        DisplayNameString = @"Name:'[" + itemName + "]',";
+                    else
+                        DisplayNameString = @"Name:""" + itemName.Replace(@"""", @"\\\""") + @""",";
+                }
+                if (itemLore.Trim() != "")
+                {
+                    if (CurrentMinVersion >= 113)
+                        ItemLoreString = @"Lore:[""['" + itemLore + @"']""]";
+                    else
+                        ItemLoreString = @"Lore:[""" + itemLore.Replace(@"""", @"\\\""") + @"""]";
+                }
                 string result = DisplayNameString != "" || ItemLoreString != "" ? "display:{" + (DisplayNameString + ItemLoreString).TrimEnd(',') + "}," : "";
                 return result;
             }
@@ -63,16 +85,22 @@ namespace cbhk.Generators.ItemGenerator.Components
             get => RepairCost.Value > 0 ? "RepairCost:" + RepairCost.Value + "," : "";
         }
         #endregion
-        #region 合并结果
-        public string Result
-        {
-            get => ItemDisplay + ItemHideFlags + UnbreakableString + CustomCreativeLockResult + CustomModelDataResult + RepairCostResult;
-        }
-        #endregion
 
         public Common()
         {
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// 常用控件载入
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Common_Loaded(object sender,RoutedEventArgs e)
+        {
+            itemPageDataContext = (sender as Common).FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            itemPageDataContext.VersionComponents.Add(ItemName);
+            itemPageDataContext.VersionComponents.Add(ItemLore);
         }
 
         /// <summary>
@@ -101,13 +129,13 @@ namespace cbhk.Generators.ItemGenerator.Components
             }
             if (name != null)
             {
-                ItemName.Text = JObject.Parse(name.ToString())["text"].ToString();
+                ((ItemName.richTextBox.Document.Blocks.FirstBlock as Paragraph).Inlines.FirstInline as RichRun).Text = JObject.Parse(name.ToString())["text"].ToString();
                 ExternData.Remove("tag.display.Name");
             }
             if (lore != null)
             {
                 JArray loreArray = JArray.Parse(lore.ToString());
-                ItemLore.Text = string.Join("",loreArray).Replace("\"", "").Trim('[').Trim(']');
+                ((ItemLore.richTextBox.Document.Blocks.FirstBlock as Paragraph).Inlines.FirstInline as RichRun).Text = string.Join("",loreArray).Replace("\"", "").Trim('[').Trim(']');
                 ExternData.Remove("tag.display.Lore");
             }
             if (HideFlags != null)
@@ -127,6 +155,18 @@ namespace cbhk.Generators.ItemGenerator.Components
                 RepairCost.Value = int.Parse(RepairCostObj.ToString());
                 ExternData.Remove("tag.RepairCost");
             }
+        }
+
+        public async Task<string> GetResult()
+        {
+            if (itemPageDataContext is not null)
+                CurrentMinVersion = itemPageDataContext.CurrentMinVersion;
+            await CustomTag.GetResult();
+            string tag = CustomTag.Result;
+            itemName = await ItemName.Result();
+            itemLore = await ItemLore.Result();
+            string result = tag + ItemDisplay + ItemHideFlags + UnbreakableString + CustomCreativeLockResult + CustomModelDataResult + RepairCostResult;
+            return result;
         }
     }
 }

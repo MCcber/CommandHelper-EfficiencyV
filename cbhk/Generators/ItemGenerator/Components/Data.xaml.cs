@@ -1,8 +1,12 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using cbhk.CustomControls.Interfaces;
+using cbhk.GeneralTools;
+using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -14,21 +18,26 @@ namespace cbhk.Generators.ItemGenerator.Components
     public partial class Data : UserControl
     {
         //属性数据源
-        public ObservableCollection<AttributeItems> AttributeSource = new();
+        public ObservableCollection<AttributeItems> AttributeSource = [];
         public DataTable AttributeTable = null;
         public DataTable AttributeSlotTable = null;
 
         #region 合并结果
-        public string Result
+        public async Task<string> Result()
         {
-            get
+            string result = "";
+            if(AttributeSource.Count > 0)
             {
-                string result = AttributeSource.Count > 0 ? "AttributeModifiers:[" + string.Join(',', AttributeSource.Select(item =>
+                StringBuilder modifierString = new();
+                string modifierElement;
+                for (int i = 0; i < AttributeSource.Count; i++)
                 {
-                    return item.Result;
-                })) + "]" : "";
-                return result;
+                    modifierElement = await (AttributeSource[i] as IVersionUpgrader).Result();
+                    modifierString.Append(modifierElement + ",");
+                }
+                result = "AttributeModifiers:[" + modifierString.ToString().TrimEnd(',') + "]";
             }
+            return result;
         }
         #endregion
 
@@ -44,13 +53,31 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// 添加属性
         /// </summary>
         /// <param name="obj"></param>
-        private void AddAttributeCommand(FrameworkElement obj) => AttributeSource.Add(new AttributeItems() { Margin = new(0, 2, 0, 0) });
+        private async void AddAttributeCommand(FrameworkElement obj)
+        {
+            AttributeItems attributeItems = new()
+            {
+                Margin = new(0, 2, 0, 0)
+            };
+            AttributeSource.Add(attributeItems);
+            ItemPageDataContext itemPageDataContext = attributeItems.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            itemPageDataContext.VersionComponents.Add(attributeItems);
+            await attributeItems.Upgrade(itemPageDataContext.CurrentMinVersion);
+        }
 
         /// <summary>
         /// 清空属性
         /// </summary>
         /// <param name="obj"></param>
-        private void ClearAttributesComand(FrameworkElement obj) => AttributeSource.Clear();
+        private void ClearAttributesComand(FrameworkElement obj)
+        {
+            ItemPageDataContext itemPageDataContext = obj.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            for (int i = 0; i < AttributeSource.Count; i++)
+            {
+                itemPageDataContext.VersionComponents.Remove(AttributeSource[i]);
+                AttributeSource.RemoveAt(i);
+            }
+        }
 
         /// <summary>
         /// 获取外来数据

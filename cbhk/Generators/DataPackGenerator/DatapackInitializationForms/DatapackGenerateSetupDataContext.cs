@@ -3,6 +3,7 @@ using cbhk.Generators.DataPackGenerator.Components;
 using cbhk.Generators.DataPackGenerator.Components.EditPage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -91,20 +92,18 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         /// </summary>
         private void SetSolutionPathCommand()
         {
-            System.Windows.Forms.FolderBrowserDialog folderBrowser = new()
+            OpenFolderDialog openFolderDialog = new()
             {
-                Description = "请选择当前解决方案生成路径",
-                UseDescriptionForTitle = true,
+                Title = "请选择当前解决方案生成路径",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                ShowHiddenFiles = true,
-                ShowNewFolderButton = true
+                ShowHiddenItems = true
             };
 
-            if (folderBrowser.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (openFolderDialog.ShowDialog().Value)
             {
-                if (Directory.Exists(folderBrowser.SelectedPath))
+                if (Directory.Exists(openFolderDialog.FolderName))
                 {
-                    string selectedPath = folderBrowser.SelectedPath;
+                    string selectedPath = openFolderDialog.FolderName;
                     SelectedSolutionPath = selectedPath;
                     if (GeneratorPathList.Count > 0)
                     {
@@ -170,7 +169,7 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
                     }
                     else
                     {
-                        foreach (var item in Datapacks.Cast<JValue>())
+                        foreach (JValue item in Datapacks.Cast<JValue>())
                         {
                             string solutionPath = item.ToString();
                             string DatapackName = solutionPath[(solutionPath.LastIndexOf('\\') + 1)..];

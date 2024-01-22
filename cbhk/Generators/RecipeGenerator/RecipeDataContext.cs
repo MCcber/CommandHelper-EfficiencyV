@@ -61,6 +61,7 @@ namespace cbhk.Generators.RecipeGenerator
         }
         #endregion
 
+        #region 字段
         /// <summary>
         /// 主页引用
         /// </summary>
@@ -84,8 +85,20 @@ namespace cbhk.Generators.RecipeGenerator
         /// <summary>
         /// 原版物品库
         /// </summary>
-        public ObservableCollection<ItemStructure> originalItemsSource { get; set; } = new();
-        public ObservableCollection<ItemStructure> customItemSource { get; set; } = new();
+        public ObservableCollection<ItemStructure> OriginalItemSource { get; set; } = [];
+        /// <summary>
+        /// 自定义物品库
+        /// </summary>
+        public ObservableCollection<ItemStructure> CustomItemSource { get; set; } = [];
+        /// <summary>
+        /// 原版物品库数据源
+        /// </summary>
+        public CollectionViewSource OriginalItemViewSource = new();
+        /// <summary>
+        /// 自定义物品库数据源
+        /// </summary>
+        public CollectionViewSource CustomItemViewSource = new();
+        #endregion
 
         #region 已选中的成员
         private ItemStructure selectedItem = null;
@@ -96,6 +109,17 @@ namespace cbhk.Generators.RecipeGenerator
         }
         #endregion
 
+        #region 已选中的物品库索引
+        private int selectedItemListIndex;
+
+        public int SelectedItemListIndex
+        {
+            get => selectedItemListIndex;
+            set => SetProperty(ref selectedItemListIndex,value);
+        }
+
+        #endregion
+
         #region 搜索值
         private string searchText = "";
         public string SearchText
@@ -104,20 +128,16 @@ namespace cbhk.Generators.RecipeGenerator
             set
             {
                 searchText = value;
-                if(originalItemViewer != null)
-                {
-                    OriginalItemSource.View.Refresh();
-                }
+                if (SelectedItemListIndex == 0)
+                    OriginalItemViewSource.View?.Refresh();
+                else
+                    CustomItemViewSource.View?.Refresh();
             }
         }
         #endregion
 
-        //原版物品库数据源
-        private CollectionViewSource OriginalItemSource = new();
-        //自定义物品库数据源
-        private CollectionViewSource CustomItemSource = new();
         //配方标签页数据源
-        public ObservableCollection<RichTabItems> RecipeList { get; set; } = new() { new RichTabItems() {Header = "工作台",               
+        public ObservableCollection<RichTabItems> RecipeList { get; set; } = [ new RichTabItems() {Header = "工作台",               
                 IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
@@ -129,14 +149,9 @@ namespace cbhk.Generators.RecipeGenerator
                 TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
                 SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush, } };
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush, } ];
 
-        /// <summary>
-        /// 表示是否已订阅搜索事件
-        /// </summary>
-        bool GotFocused = false;
-
-        public DataTable ItemTable = null;
+        public DataTable ItemTable = new();
 
         public RecipeDataContext()
         {
@@ -149,69 +164,75 @@ namespace cbhk.Generators.RecipeGenerator
             ClearRecipes = new RelayCommand<MenuItem>(ClearRecipesCommand);
             #endregion
 
-            #region 初始化数据表
             Task.Run(async () =>{
+                #region 初始化数据表
                 DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
                 ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
-            }).ContinueWith(ItemsLoaded);
-            #endregion
-
-            #region 初始化数据
-            RecipeList[0].Content = new CraftingTable() { FontWeight = FontWeights.Normal };
-            #endregion
-        }
-
-        private async void ItemsLoaded(Task task)
-        {
-            #region 异步载入原版物品序列
-            //异步锁
-            object itemLoadLock = new();
-            BindingOperations.EnableCollectionSynchronization(originalItemsSource, itemLoadLock);
-            //加载物品集合
-            await Task.Run(() =>
-            {
-                lock (itemLoadLock)
+                #endregion
+                #region 初始化数据
+                await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    string uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                    string urlPath = "";
-                    foreach (DataRow row in ItemTable.Rows)
-                    {
-                        urlPath = uriDirectoryPath + row["id"].ToString() + ".png";
-                        if (File.Exists(urlPath))
-                            originalItemsSource.Add(new ItemStructure(new Uri(urlPath, UriKind.Absolute), row["id"].ToString() + ":" + row["name"].ToString(), "{id:\"minecraft:" + row["id"].ToString() + "\",Count:1b}"));
-                    }
+                    RecipeList[0].Content = new CraftingTable() { FontWeight = FontWeights.Normal };
+                });
+                #endregion
+                #region 异步载入原版物品序列
+                //加载物品集合
+                string uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
+                string urlPath = "";
+                foreach (DataRow row in ItemTable.Rows)
+                {
+                    urlPath = uriDirectoryPath + row["id"].ToString() + ".png";
+                    if (File.Exists(urlPath))
+                        OriginalItemSource.Add(new ItemStructure(new Uri(urlPath, UriKind.Absolute), row["id"].ToString() + ":" + row["name"].ToString(), "{id:\"minecraft:" + row["id"].ToString() + "\",Count:1b}"));
                 }
-            });
-            #endregion
-            #region 异步载入自定义物品序列
-            BindingOperations.EnableCollectionSynchronization(customItemSource, itemLoadLock);
-            //加载物品集合
-            await Task.Run(() =>
-            {
-                lock (itemLoadLock)
+                #endregion
+                #region 异步载入自定义物品序列
+                //加载物品集合
+                uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\Item\\";
+                string[] itemFileList = Directory.GetFiles(uriDirectoryPath);
+                foreach (string item in itemFileList)
                 {
-                    string uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\Item\\";
-                    string[] itemFileList = Directory.GetFiles(uriDirectoryPath);
-                    foreach (string item in itemFileList)
+                    if (File.Exists(item))
                     {
-                        if (File.Exists(item))
+                        string nbt = ExternalDataImportManager.GetItemDataHandler(item);
+                        if (nbt.Length > 0)
                         {
-                            string nbt = ExternalDataImportManager.GetItemDataHandler(item);
-                            if (nbt.Length > 0)
-                            {
-                                JObject data = JObject.Parse(nbt);
-                                JToken id = data.SelectToken("id");
-                                if (id == null) continue;
-                                string itemID = id.ToString().Replace("\"", "").Replace("minecraft:", "");
-                                string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
-                                string itemName = ItemTable.Select("id='"+ itemID + "'").First()["name"].ToString();
-                                customItemSource.Add(new ItemStructure(new Uri(iconPath, UriKind.Absolute), itemID + ":" + itemName, nbt));
-                            }
+                            JObject data = JObject.Parse(nbt);
+                            JToken id = data.SelectToken("id");
+                            if (id == null) continue;
+                            string itemID = id.ToString().Replace("\"", "").Replace("minecraft:", "");
+                            string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
+                            string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                            CustomItemSource.Add(new ItemStructure(new Uri(iconPath, UriKind.Absolute), itemID + ":" + itemName, nbt));
                         }
                     }
                 }
+                #endregion
             });
-            #endregion
+        }
+
+        /// <summary>
+        /// 订阅原版物品库过滤事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void OriginalListView_Loaded(object sender,RoutedEventArgs e)
+        {
+            Window window = Window.GetWindow(sender as ListView);
+            OriginalItemViewSource = window.FindResource("OriginalItemView") as CollectionViewSource;
+            OriginalItemViewSource.Filter += CollectionViewSource_Filter;
+        }
+
+        /// <summary>
+        /// 订阅自定义物品库过滤事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void CustomListView_Loaded(object sender, RoutedEventArgs e)
+        {
+            Window window = Window.GetWindow(sender as ListView);
+            CustomItemViewSource = window.FindResource("CustomItemView") as CollectionViewSource;
+            CustomItemViewSource.Filter += CollectionViewSource_Filter;
         }
 
         /// <summary>
@@ -468,19 +489,15 @@ namespace cbhk.Generators.RecipeGenerator
         /// </summary>
         private void run_command()
         {
-            System.Windows.Forms.FolderBrowserDialog folderBrowser = new()
+            OpenFolderDialog openFolderDialog = new()
             {
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                Description = "请选择配方文件生成路径",
-                UseDescriptionForTitle = true,
-                RootFolder = Environment.SpecialFolder.MyComputer,
-                ShowHiddenFiles = true,
-                ShowNewFolderButton = true,
-                ShowPinnedPlaces = true
+                Title = "请选择配方文件生成路径",
+                ShowHiddenItems = true,
             };
-            if (folderBrowser.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (openFolderDialog.ShowDialog().Value)
             {
-                string selectedPath = folderBrowser.SelectedPath;
+                string selectedPath = openFolderDialog.FolderName;
                 if (!selectedPath.EndsWith("\\"))
                     selectedPath += "\\";
                 foreach (var item in RecipeList)
@@ -540,27 +557,6 @@ namespace cbhk.Generators.RecipeGenerator
         }
 
         /// <summary>
-        /// 搜索框获取焦点后执行过滤事件绑定
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SearchBox_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if(!GotFocused)
-            {
-                TextBox textBox = sender as TextBox;
-                Window window = Window.GetWindow(textBox);
-                OriginalItemSource = window.FindResource("OriginalItemSource") as CollectionViewSource;
-                OriginalItemSource.Filter += CollectionViewSource_Filter;
-
-                CustomItemSource = window.FindResource("CustomItemSource") as CollectionViewSource;
-                CustomItemSource.Filter += CollectionViewSource_Filter;
-
-                GotFocused = true;
-            }
-        }
-
-        /// <summary>
         /// 物品过滤事件
         /// </summary>
         /// <param name="sender"></param>
@@ -586,7 +582,7 @@ namespace cbhk.Generators.RecipeGenerator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ItemsLoaded(object sender, RoutedEventArgs e)
+        public void Items_Loaded(object sender, RoutedEventArgs e)
         {
             TabControl tabControl = sender as TabControl;
 

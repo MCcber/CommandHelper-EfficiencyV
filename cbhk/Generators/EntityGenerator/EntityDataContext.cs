@@ -1,22 +1,27 @@
-﻿using cbhk.CustomControls;
+﻿using cbhk.ControlsDataContexts;
+using cbhk.CustomControls;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.EntityGenerator.Components;
+using cbhk.Generators.ItemGenerator.Components;
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.EntityGenerator
 {
@@ -51,15 +56,18 @@ namespace cbhk.Generators.EntityGenerator
         public MainWindow home = null;
         //本生成器的图标路径
         string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconEntities.png";
+        private string ModifierOperationTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Entity\\data\\AttributeModifierOperationType.ini";
+        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Entity\\data\\SpecialTags.json";
+        public ObservableCollection<string> ModifierOperationTypeSource = [];
         //实体标签页的数据源
-        public ObservableCollection<RichTabItems> EntityPageList { get; set; } = new() {
+        public ObservableCollection<RichTabItems> EntityPageList { get; set; } = [
             new RichTabItems()
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 Header = "实体",
                 FontWeight = FontWeights.Normal,
                 IsContentSaved = true,
-                BorderThickness = new(4, 3, 4, 0),
+                BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
                 SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
                 LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
@@ -68,7 +76,24 @@ namespace cbhk.Generators.EntityGenerator
                 SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
-            } };
+            } ];
+
+        //版本数据源
+        public ObservableCollection<string> VersionSource { get; set; } = ["1.20.2+", "1.16-1.20.1", "1.13-1.15", "1.12-"];
+
+        //实体数据源
+        public ObservableCollection<IconComboBoxItem> EntityIds { get; set; } = [];
+
+        #region 能否关闭标签页
+        private bool isCloseable = true;
+
+        public bool IsCloseable
+        {
+            get => isCloseable;
+            set => SetProperty(ref isCloseable, value);
+        }
+        #endregion
+
         //实体标签页数量,用于为共通标签提供数据
         private int passengerMaxIndex = 0;
         public int PassengerMaxIndex
@@ -99,9 +124,18 @@ namespace cbhk.Generators.EntityGenerator
             ImportEntityFromClipboard = new RelayCommand(ImportEntityFromClipboardCommand);
             ImportEntityFromFile = new RelayCommand(ImportEntityFromFileCommand);
             #endregion
+        }
+
+        /// <summary>
+        /// 实体载入
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void Entity_Loaded(object sender,RoutedEventArgs e)
+        {
             #region 初始化数据表
             DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-            Task.Run(async () =>
+            await Task.Run(async () =>
             {
                 BlockTable = await dataCommunicator.GetData("SELECT * FROM Blocks");
                 BlockStateTable = await dataCommunicator.GetData("SELECT * FROM BlockStates");
@@ -111,11 +145,45 @@ namespace cbhk.Generators.EntityGenerator
             });
             #endregion
             #region 载入实体预设数据
-            Task.Run(async () =>
+            await Task.Run(async () =>
             {
+                if (File.Exists(ModifierOperationTypeFilePath))
+                {
+                    List<string> data = File.ReadLines(ModifierOperationTypeFilePath).ToList();
+                    for (int i = 0; i < data.Count; i++)
+                    {
+                        ModifierOperationTypeSource.Add(data[i]);
+                    }
+                }
+                string SpecialData = File.ReadAllText(SpecialNBTStructureFilePath);
+                JArray specialArray = JArray.Parse(SpecialData);
+                string entityImageFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    EntityPageList[0].Content = new EntityPages();
+                    for (int i = 0; i < specialArray.Count; i++)
+                    {
+                        IconComboBoxItem item = new();
+                        string entityID = specialArray[i]["type"].ToString();
+                        DataRow entityRow = EntityIdTable.Select("id='minecraft:" + entityID + "'").First();
+                        #region 设置实体图标、名称和ID
+                        if (entityRow is not null)
+                        {
+                            string iconPath = File.Exists(entityImageFolderPath + entityID + "_spawn_egg.png") ? entityImageFolderPath + entityID + "_spawn_egg.png" : entityImageFolderPath + entityID + ".png";
+                            if (File.Exists(iconPath))
+                                item.ComboBoxItemIcon = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                            item.ComboBoxItemText = entityRow["name"].ToString();
+                            item.ComboBoxItemId = entityID;
+                            EntityIds.Add(item);
+                        }
+                        #endregion
+                    }
+                });
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    EntityPages entityPages = new();
+                    EntityPagesDataContext entityPagesDataContext = entityPages.DataContext as EntityPagesDataContext;
+                    entityPagesDataContext.UseForTool = !IsCloseable;
+                    EntityPageList[0].Content = entityPages;
                 });
             });
             #endregion
@@ -156,7 +224,8 @@ namespace cbhk.Generators.EntityGenerator
         /// </summary>
         private void ClearEntityCommand()
         {
-            EntityPageList.Clear();
+            if (IsCloseable)
+                EntityPageList.Clear();
         }
 
         /// <summary>
@@ -164,12 +233,20 @@ namespace cbhk.Generators.EntityGenerator
         /// </summary>
         public void AddEntityCommand()
         {
+            if(EntityPageList.Count > 0)
+            {
+                EntityPagesDataContext entityPagesDataContext = (EntityPageList[0].Content as EntityPages).DataContext as EntityPagesDataContext;
+                if (entityPagesDataContext.UseForTool)
+                {
+                    return;
+                }
+            }
             RichTabItems richTabItems = new()
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 Header = "实体",
                 IsContentSaved = true,
-                BorderThickness = new(4, 3, 4, 0),
+                BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
                 SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
                 LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
@@ -180,6 +257,8 @@ namespace cbhk.Generators.EntityGenerator
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
             };
             EntityPages entityPages = new() { FontWeight = FontWeights.Normal };
+            EntityPagesDataContext pageContext = entityPages.DataContext as EntityPagesDataContext;
+            pageContext.UseForTool = !IsCloseable;
             richTabItems.Content = entityPages;
             EntityPageList.Add(richTabItems);
             if (EntityPageList.Count == 1)
@@ -246,8 +325,8 @@ namespace cbhk.Generators.EntityGenerator
         /// <returns></returns>
         private async Task GeneratorAndSaveAllEntites()
         {
-            List<string> Result = new();
-            List<string> FileNameList = new();
+            List<string> Result = [];
+            List<string> FileNameList = [];
 
             foreach (var entityPage in EntityPageList)
             {
@@ -278,21 +357,19 @@ namespace cbhk.Generators.EntityGenerator
                     Result.Add(result);
                 });
             }
-            System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new()
+            OpenFolderDialog openFolderDialog = new()
             {
-                Description = "请选择要保存的目录",
+                Title = "请选择要保存的目录",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                ShowHiddenFiles = true,
-                ShowNewFolderButton = true,
-                UseDescriptionForTitle = true
+                ShowHiddenItems = true
             };
-            if(folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if(openFolderDialog.ShowDialog().Value)
             {
                 for (int i = 0; i < Result.Count; i++)
                 {
-                    if (Directory.Exists(folderBrowserDialog.SelectedPath))
-                        _ = File.WriteAllTextAsync(folderBrowserDialog.SelectedPath + FileNameList[i] + ".command", Result[i]);
-                    _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\Entity\\" + folderBrowserDialog.SelectedPath + FileNameList[i] + ".command", Result[i]);
+                    if (Directory.Exists(openFolderDialog.FolderName))
+                        _ = File.WriteAllTextAsync(openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
+                    _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\Entity\\" + openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
                 }
             }
         }

@@ -62,7 +62,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             if (json.SelectToken("id") is not JObject itemID)
                 itemID = json.SelectToken("Item.id") as JObject;
             currentImage.Tag = data;
-            currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\"+itemID.ToString() + ".png", UriKind.Absolute));
+            currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\"+itemID.ToString() + ".png", UriKind.Absolute));
         }
 
         /// <summary>
@@ -72,9 +72,9 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// <param name="e"></param>
         private void referenceFromFile_Click(object sender, RoutedEventArgs e)
         {
-            Slider slider = sender as Slider;
-            int currentRow = Grid.GetRow(slider);
-            Grid grid = slider.Parent as Grid;
+            Button button = sender as Button;
+            int currentRow = Grid.GetRow(button);
+            Grid grid = button.Parent as Grid;
             Image currentImage = null;
             foreach (FrameworkElement item in grid.Children)
             {
@@ -101,7 +101,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                 if (json.SelectToken("id") is not JObject itemID)
                     itemID = json.SelectToken("Item.id") as JObject;
                 currentImage.Tag = data;
-                currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.ToString() + ".png", UriKind.Absolute));
+                currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png", UriKind.Absolute));
             }
         }
 
@@ -112,17 +112,19 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// <param name="e"></param>
         private void generator_Click(object sender, RoutedEventArgs e)
         {
-            IconTextButtons iconTextButtons = sender as IconTextButtons;
-            Entity entity = Window.GetWindow(iconTextButtons) as Entity;
+            Button button = sender as Button;
+            Entity entity = Window.GetWindow(button) as Entity;
             EntityDataContext entityContext = entity.DataContext as EntityDataContext;
-            int currentRow = Grid.GetRow(iconTextButtons);
+            int currentRow = Grid.GetRow(button);
             Item item = new();
             ItemDataContext context = item.DataContext as ItemDataContext;
-            context.home = entityContext.home;
-            if(item.ShowDialog().Value)
+            context.IsCloseable = false;
+            context.home = entity;
+            if(item.ShowDialog().Value && context.ItemPageList.Count > 0)
             {
+                ItemPageDataContext itemPageDataContext = (context.ItemPageList[0].Content as ItemPages).DataContext as ItemPageDataContext;
                 Image currentImage = null;
-                Grid grid = iconTextButtons.Parent as Grid;
+                Grid grid = button.Parent as Grid;
                 foreach (FrameworkElement ele in grid.Children)
                 {
                     if (currentRow == Grid.GetRow(ele) && Grid.GetColumn(ele) == 1)
@@ -131,14 +133,12 @@ namespace cbhk.Generators.EntityGenerator.Components
                         break;
                     }
                 }
-                ItemPages itemPages = context.ItemPageList.First().Content as ItemPages;
-                ItemPageDataContext itemPageContext = itemPages.DataContext as ItemPageDataContext;
                 string data = ExternalDataImportManager.GetItemDataHandler(Clipboard.GetText(), false);
                 JObject json = JObject.Parse(data);
                 if (json.SelectToken("id") is not JObject itemID)
                     itemID = json.SelectToken("Item.id") as JObject;
-                currentImage.Tag = itemPageContext.Result;
-                currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.ToString() + ".png", UriKind.Absolute));
+                currentImage.Tag = itemPageDataContext.Result;
+                currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png", UriKind.Absolute));
             }
         }
 

@@ -1,14 +1,9 @@
 ﻿using cbhk.ControlsDataContexts;
 using cbhk.CustomControls;
 using cbhk.GeneralTools;
-using System;
 using System.Collections.ObjectModel;
-using System.Data;
-using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.ItemGenerator.Components
 {
@@ -17,7 +12,6 @@ namespace cbhk.Generators.ItemGenerator.Components
     /// </summary>
     public partial class CanDestroyItems : UserControl
     {
-        DataTable BlockTable = null;
         private IconComboBoxItem block;
         public IconComboBoxItem Block
         {
@@ -57,25 +51,8 @@ namespace cbhk.Generators.ItemGenerator.Components
         private void CanDestroyItemLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox comboBoxs = sender as ComboBox;
-            if (comboBoxs.ItemsSource != null) return;
-            ItemDataContext context = Window.GetWindow(this).DataContext as ItemDataContext;
-            BlockTable = context.BlockTable;
-            ObservableCollection<IconComboBoxItem> source = new();
-            string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            foreach (DataRow row in BlockTable.Rows)
-            {
-                string id = row["id"].ToString();
-                string name = row["name"].ToString();
-                string imagePath = id + ".png";
-                if(File.Exists(currentPath + imagePath))
-                source.Add(new IconComboBoxItem()
-                {
-                    ComboBoxItemId = id,
-                    ComboBoxItemText = name,
-                    ComboBoxItemIcon = new BitmapImage(new Uri(currentPath + imagePath, UriKind.Absolute))
-                });
-            }
-            comboBoxs.ItemsSource = source;
+            ItemPageDataContext itemPageDataContext = this.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            comboBoxs.ItemsSource = itemPageDataContext.BlockList;
         }
     }
 }

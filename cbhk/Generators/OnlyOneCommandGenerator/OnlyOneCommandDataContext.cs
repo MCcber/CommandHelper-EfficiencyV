@@ -2,7 +2,6 @@
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Syncfusion.Windows.Edit;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -17,6 +16,7 @@ using Microsoft.Win32;
 using System.Linq;
 using System.Collections.Generic;
 using System;
+using ICSharpCode.AvalonEdit;
 
 namespace cbhk.Generators.OnlyOneCommandGenerator
 {
@@ -73,7 +73,7 @@ namespace cbhk.Generators.OnlyOneCommandGenerator
         /// <summary>
         /// OOC标签页数据源
         /// </summary>
-        public ObservableCollection<RichTabItems> OocTabSource { get; set; } = new();
+        public ObservableCollection<RichTabItems> OocTabSource { get; set; } = [];
 
         /// <summary>
         /// 主页引用
@@ -144,7 +144,7 @@ namespace cbhk.Generators.OnlyOneCommandGenerator
                     await Task.Run(async () =>
                     {
                         StringBuilder result = new();
-                        List<string> targetBlockId = new() { "minecraft:command_block", "minecraft:repeating_command_block", "minecraft:chain_command_block" };
+                        List<string> targetBlockId = ["minecraft:command_block", "minecraft:repeating_command_block", "minecraft:chain_command_block"];
                         foreach (TagCompound block in blockCollection.Cast<TagCompound>())
                         {
                             string test = block.Type.ToString();
@@ -162,7 +162,7 @@ namespace cbhk.Generators.OnlyOneCommandGenerator
                         await onlyOneCommand.Dispatcher.InvokeAsync(() =>
                         {
                             AddOneCommandPageCommand();
-                            (SelectedItem.Content as EditControl).Text = result.ToString();
+                            (SelectedItem.Content as TextEditor).Text = result.ToString();
                         });
                     });
                 }
@@ -172,31 +172,6 @@ namespace cbhk.Generators.OnlyOneCommandGenerator
                 }
             }
         }
-
-        /// <summary>
-        /// 从剪切板导入
-        /// </summary>
-        //private async void ImportFormClipBoardCommand()
-        //{
-            //string nbt = Clipboard.GetText();
-            //await Task.Run(async () =>
-            //{
-            //    nbt = nbt[nbt.IndexOf("{")..(nbt.LastIndexOf("}") + 1)];
-            //    List<Match> result = GetCommand().Matches(nbt).Where(item=>!string.IsNullOrEmpty(item.Value)).ToList();
-            //    if(result.Count > 1)
-            //    result.RemoveAt(result.Count - 1);
-            //    await onlyOneCommand.Dispatcher.InvokeAsync(() =>
-            //    {
-            //        AddOneCommandPageCommand();
-            //        StringBuilder commandContent = new();
-            //        for (int i = 0; i < result.Count; i++)
-            //        {
-            //            commandContent.Append(result[i].Value + "\r\n");
-            //        }
-            //            (SelectedItem.Content as EditControl).Text = commandContent.ToString();
-            //    });
-            //});
-        //}
 
         /// <summary>
         /// 初始化标签页
@@ -223,20 +198,14 @@ namespace cbhk.Generators.OnlyOneCommandGenerator
         /// </summary>
         private void AddOneCommandPageCommand()
         {
-            EditControl editControl = new()
+            TextEditor editControl = new()
             {
-                EnableIntellisense = true,
-                EnableOutlining = true,
-                IntellisenseMode = IntellisenseMode.Auto,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 FontSize = 15,
-                CaretBrush = caretBrush,
-                DocumentLanguage = Languages.Custom,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                ShowLineNumber = true,
-                LineNumberAreaBackground = tranparentBrush,
-                LineNumberTextForeground = textBrush,
+                ShowLineNumbers = true,
+                LineNumbersForeground = textBrush,
                 Foreground = textBrush,
                 Background = tranparentBrush
             };
@@ -291,11 +260,11 @@ namespace cbhk.Generators.OnlyOneCommandGenerator
 
             foreach (RichTabItems tab in OocTabSource)
             {
-                if(tab.Content is EditControl editControl && tab.Uid == "")
+                if(tab.Content is TextEditor editControl && tab.Uid == "")
                 {
-                    for (int i = 0; i < editControl.Lines.Count; i++)
+                    for (int i = 0; i < editControl.Document.LineCount; i++)
                     {
-                        string lineContent = editControl.Lines[i].Text;
+                        string lineContent = editControl.Document.GetText(editControl.Document.Lines[i]);
                         resultContent.Append("{id:commandblock_minecart,Command:\"setblock ~" + Offset + " ~-2 ~ chain_command_block 5 replace {Command:\\\"" + lineContent + "\\\",auto:1b}\"},");
                         Offset++;
                     }

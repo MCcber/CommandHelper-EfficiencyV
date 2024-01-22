@@ -105,10 +105,10 @@
                     ToolTipService.BetweenShowDelay="0"
                     ToolTipService.InitialShowDelay="0" />
                 <ComboBox
+                    x:Name="ID"
                     Uid="Id"
                     Height="25"
                     Loaded="EffectID_Loaded"
-                    SelectedIndex="0"
                     Style="{DynamicResource IconComboBoxStyle}" />
             </DockPanel>
             <CustomControls:Accordion
@@ -120,7 +120,8 @@
                 Margin="10,2,10,0"
                 Background="#FFE5B663"
                 FreshVisibility="Collapsed"
-                ModifyVisibility="Collapsed"
+                ModifyName=""
+                ModifyVisibility="Hidden"
                 Style="{DynamicResource AccordionStyle}"
                 TitleForeground="Black">
                 <ScrollViewer

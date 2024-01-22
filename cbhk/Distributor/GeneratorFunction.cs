@@ -192,6 +192,8 @@ namespace cbhk.Distributor
         private void StartDatapacksGeneratorCommand()
         {
             Generators.DataPackGenerator.Datapack dataPack = new();
+            Generators.DataPackGenerator.DatapackDataContext context = dataPack.DataContext as Generators.DataPackGenerator.DatapackDataContext;
+            context.home = cbhk;
             SetCBHKState();
             dataPack.Show();
             dataPack.Focus();
@@ -220,18 +222,18 @@ namespace cbhk.Distributor
         {
             RelayCommand result = id switch
             {
-                "ooc" => function.StartOoc,
-                "datapack" => function.StartDatapack,
-                "armorstand" => function.StartArmorStand,
-                "writtenbook" => function.StartWrittenBook,
-                "spawners" => function.StartSpawner,
-                "recipes" => function.StartRecipes,
-                "villagers" => function.StartVillagers,
-                "tags" => function.StartTags,
-                "items" => function.StartItems,
-                "fireworks" => function.StartFireworks,
-                "entities" => function.StartEntities,
-                "signs" => function.StartSign,
+                "Ooc" => function.StartOoc,
+                "Datapack" => function.StartDatapack,
+                "Armorstand" => function.StartArmorStand,
+                "Writtenbook" => function.StartWrittenBook,
+                "Spawners" => function.StartSpawner,
+                "Recipes" => function.StartRecipes,
+                "Villagers" => function.StartVillagers,
+                "Tags" => function.StartTags,
+                "Items" => function.StartItems,
+                "Fireworks" => function.StartFireworks,
+                "Entities" => function.StartEntities,
+                "Signs" => function.StartSign,
                 _ => null
             };
             return result;

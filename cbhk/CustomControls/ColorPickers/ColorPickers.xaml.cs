@@ -1,5 +1,6 @@
 ﻿using cbhk.CustomControls.ColorPickers.Media;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,9 +14,79 @@ namespace cbhk.CustomControls.ColorPickers
     /// </summary>
     public partial class ColorPickers : UserControl
     {
+        private bool isPresetColorMode = false;
+
+        public bool IsPresetColorMode
+        {
+            get => isPresetColorMode;
+            set
+            {
+                isPresetColorMode = value;
+                if(IsPresetColorMode)
+                {
+                    SelectPoint.Visibility = CustomColorGrid.Visibility = Visibility.Collapsed;
+                    PresetColorGrid.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    SelectPoint.Visibility = CustomColorGrid.Visibility = Visibility.Visible;
+                    PresetColorGrid.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        public static Dictionary<Color, string> PresetColorList = new() { { Colors.Black, @"\\u00a70" }, { Colors.DarkBlue, @"\\u00a71" }, { Colors.DarkGreen, @"\\u00a72" },{ Colors.Cyan,@"\\u00a73" }, { Colors.DarkRed, @"\\u00a74" }, { Colors.Purple, @"\\u00a75" }, { Colors.Gold, @"\\u00a76" }, { Colors.LightGray, @"\\u00a77" }, { Colors.DarkGray, @"\\u00a78" }, { Colors.Blue, @"\\u00a79" }, { Colors.Green, @"\\u00a7a" }, { Colors.LightBlue, @"\\u00a7b" }, { Colors.Red, @"\\u00a7c" }, { Colors.Pink, @"\\u00a7d" }, { Colors.Yellow, @"\\u00a7e" }, { Colors.White, @"\\u00a7f" } };
+
         public ColorPickers()
         {
             InitializeComponent();
+
+            Loaded += ColorPickers_Loaded;
+        }
+
+        private void ColorPickers_Loaded(object sender, RoutedEventArgs e)
+        {
+            int rowIndex = 0;
+            int columnIndex = -1;
+            foreach (var item in PresetColorList)
+            {
+                Border border = new()
+                {
+                    Background = new SolidColorBrush(item.Key),
+                    CornerRadius = new(4),
+                    Width = 20,
+                    Height = 20,
+                    Cursor = System.Windows.Input.Cursors.Hand
+                };
+                border.MouseLeftButtonUp += Border_MouseLeftButtonUp;
+                PresetColorGrid.Children.Add(border);
+                columnIndex++;
+                if (columnIndex > 4)
+                {
+                    columnIndex = 0;
+                    rowIndex++;
+                }
+                Grid.SetColumn(border, columnIndex);
+                Grid.SetRow(border, rowIndex);
+            }
+        }
+
+        public string ColorKey
+        {
+            get { return (string)GetValue(ColorKeyProperty); }
+            set { SetValue(ColorKeyProperty, value); }
+        }
+
+        public static readonly DependencyProperty ColorKeyProperty =
+            DependencyProperty.Register("ColorKey", typeof(string), typeof(ColorPickers), new PropertyMetadata(default(string)));
+
+        private void Border_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            Border border = sender as Border;
+            Color color = (border.Background as SolidColorBrush).Color;
+            ColorKey = PresetColorList[color];
+            SelectColor = border.Background as SolidColorBrush;
+            pop.IsOpen = false;
         }
 
         double H = 0;
@@ -46,8 +117,6 @@ namespace cbhk.CustomControls.ColorPickers
         }
 
         SolidColorBrush _SelectColor = Brushes.Transparent;
-
-
 
         //public SolidColorBrush SelectColor
         //{
@@ -81,9 +150,9 @@ namespace cbhk.CustomControls.ColorPickers
             set
             {
                 _SelectColor = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("SelectColor"));
                 SetValue(SelectColorProperty, value);
                 Background = SelectColor;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectColor)));
             }
         }
 

@@ -180,7 +180,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <CustomControls:StereoTextButton
                 Grid.Column="0"
@@ -340,30 +340,20 @@
                         Foreground="White" />
                 </CustomControls:StereoTextButton.ToolTip>
             </CustomControls:StereoTextButton>
-            <Grid Grid.Column="6">
-                <TextBlock
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    Panel.ZIndex="1"
-                    Foreground="White"
-                    IsHitTestVisible="False"
-                    Text="Color"
-                    TextAlignment="Center" />
-                <ColorPicker:ColorPickers
-                    Grid.Column="1"
-                    Panel.ZIndex="0"
-                    Background="Black"
-                    SelectColor="{Binding SelectionColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    ToolTipService.BetweenShowDelay="0"
-                    ToolTipService.InitialShowDelay="0">
-                    <ColorPicker:ColorPickers.ToolTip>
-                        <ToolTip
-                            Background="#424242"
-                            Content="颜色"
-                            Foreground="White" />
-                    </ColorPicker:ColorPickers.ToolTip>
-                </ColorPicker:ColorPickers>
-            </Grid>
+            <ColorPicker:ColorPickers
+                Grid.Column="6"
+                Width="30"
+                Background="Black"
+                SelectColor="{Binding SelectionColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <ColorPicker:ColorPickers.ToolTip>
+                    <ToolTip
+                        Background="#424242"
+                        Content="颜色"
+                        Foreground="White" />
+                </ColorPicker:ColorPickers.ToolTip>
+            </ColorPicker:ColorPickers>
         </Grid>
         <Image
             Grid.Row="2"

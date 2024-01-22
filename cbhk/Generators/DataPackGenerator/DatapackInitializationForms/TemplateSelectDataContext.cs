@@ -93,7 +93,12 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
                 SolutionTemplateSource.View?.Refresh();
             }
         }
-        public int SelectedVersionIndex { get; set; } = 0;
+        private int selectedVersionIndex = 0;
+        public int SelectedVersionIndex
+        {
+            get => selectedVersionIndex;
+            set => SetProperty(ref selectedVersionIndex, value);
+        }
         private int RealSelectedVersion
         {
             get => VersionList.Count - 1 - VersionList.IndexOf(SelectedVersion) + 3;
@@ -113,11 +118,16 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
                     SolutionTemplateSource.View?.Refresh();
             }
         }
-        public int SelectedDeveloperNameIndex { get; set; } = 0;
+        private int selectedDeveloperNameIndex = 0;
+        public int SelectedDeveloperNameIndex
+        {
+            get => selectedDeveloperNameIndex;
+            set => SetProperty(ref selectedDeveloperNameIndex, value);
+        }
         #endregion
 
         #region 存储已选择的功能类型
-        private string selectedFunctionType = "";
+        private string selectedFunctionType = "全部";
         public string SelectedFunctionType
         {
             get => selectedFunctionType;
@@ -129,7 +139,12 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
                     SolutionTemplateSource.View?.Refresh();
             }
         }
-        public int SelectedFunctionTypeIndex { get; set; } = 0;
+        private int selectedFunctionTypeIndex = 0;
+        public int SelectedFunctionTypeIndex
+        {
+            get => selectedFunctionTypeIndex;
+            set => SetProperty(ref selectedFunctionTypeIndex, value);
+        }
         #endregion
 
         #region 存储已选择的解决方案
@@ -180,7 +195,6 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         Datapack dataPack = null;
         #endregion
 
-
         public TemplateSelectDataContext()
         {
             #region 链接命令
@@ -192,7 +206,7 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         /// <summary>
         /// 异步加载数据
         /// </summary>
-        private async void InitData()
+        private async Task InitData()
         {
             await Task.Run(() =>
             {
@@ -309,10 +323,10 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void TemplateWindowLoaded(object sender,RoutedEventArgs e)
+        public async void TemplateWindowLoaded(object sender,RoutedEventArgs e)
         {
             dataPack = Window.GetWindow(sender as Page) as Datapack;
-            InitData();
+            await InitData();
         }
 
         /// <summary>
@@ -325,6 +339,7 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
             {
                 context.datapackGenerateSetupPage ??= new();
                 DatapackGenerateSetupDataContext setUpContext = context.datapackGenerateSetupPage.DataContext as DatapackGenerateSetupDataContext;
+                if(LastSelectedSolution is not null)
                 setUpContext.SolutionTemplatePath = LastSelectedSolution.Uid;
                 NavigationService.GetNavigationService(context.frame).Navigate(context.datapackGenerateSetupPage);
             });

@@ -2,13 +2,11 @@
 using cbhk.GeneralTools;
 using cbhk.Generators.DataPackGenerator.Components.EditPage;
 using Newtonsoft.Json.Linq;
-using Syncfusion.Windows.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -66,11 +64,11 @@ namespace cbhk.Generators.DataPackGenerator.Components
         //原版命名空间配置文件路径
         static string OriginalTargetFolderNameListFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Datapack\\data\\minecraftNameSpaceList.ini";
         //存储目标目录类型列表
-        public static List<string> TargetFolderNameList = new(){ };
+        public static List<string> TargetFolderNameList = [];
         //存储能够读取的文件类型列表
-        public static List<string> ReadableFileExtensionList = new(){ };
+        public static List<string> ReadableFileExtensionList = [];
         //存储原版命名空间类型列表
-        public static List<string> OriginalTargetFolderNameList = new(){ };
+        public static List<string> OriginalTargetFolderNameList = [];
         /// <summary>
         /// 编辑页数据上下文
         /// </summary>

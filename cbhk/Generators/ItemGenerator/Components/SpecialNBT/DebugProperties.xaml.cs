@@ -5,9 +5,11 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
@@ -18,7 +20,7 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
     public partial class DebugProperties : UserControl
     {
         #region 方块ID集合与方块键集合
-        private ObservableCollection<string> PropertyList = new();
+        private ObservableCollection<string> PropertyList = [];
         #endregion
 
         #region 字段
@@ -53,26 +55,37 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         public DebugProperties()
         {
             InitializeComponent();
+        }
 
-            #region 初始化数据
+        /// <summary>
+        /// 初始化数据
+        /// </summary>
+        private async void DebugProperty_Loaded(object sender,RoutedEventArgs e)
+        {
             ItemDataContext context = Window.GetWindow(this).DataContext as ItemDataContext;
             BlockTable = context.BlockTable;
             BlockStateTable = context.BlockStateTable;
 
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            ObservableCollection<IconComboBoxItem> Blocksource = new();
-            foreach (DataRow row in BlockTable.Rows)
+            ObservableCollection<IconComboBoxItem> Blocksource = [];
+            await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                string id = row["id"].ToString();
-                string name = row["name"].ToString();
-                string imagePath = currentPath + id + ".png";
-                Blocksource.Add(new IconComboBoxItem()
+                foreach (DataRow row in BlockTable.Rows)
                 {
-                    ComboBoxItemIcon = new BitmapImage(new Uri(imagePath,UriKind.Absolute)),
-                    ComboBoxItemId = id,
-                    ComboBoxItemText = name
-                });
-            }
+                    string id = row["id"].ToString();
+                    string name = row["name"].ToString();
+                    string imagePath = currentPath + id + ".png";
+                    ImageSource imageSource = new BitmapImage();
+                    if (File.Exists(imagePath))
+                        imageSource = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
+                    Blocksource.Add(new IconComboBoxItem()
+                    {
+                        ComboBoxItemIcon = imageSource,
+                        ComboBoxItemId = id,
+                        ComboBoxItemText = name
+                    });
+                }
+            });
             BlockId.ItemsSource = Blocksource;
 
             BlockProperty.ItemsSource = PropertyList;
@@ -80,7 +93,6 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
             BlocksPropertyObject = JObject.Parse(propertiesContent);
             BlockId.SelectedIndex = 0;
             BlockProperty.SelectedIndex = 0;
-            #endregion
         }
 
         /// <summary>
@@ -93,13 +105,15 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
             if(BlockId.SelectedValue is IconComboBoxItem iconComboBoxItem)
             {
                 string selectedBlock = iconComboBoxItem.ComboBoxItemId.Replace("minecraft:", "");
-                //string targetObj = BlockTable.Select("name='" + selectedBlock + "'").First()["id"].ToString().Replace("minecraft:","");
-                //targetObj = targetObj[..targetObj.IndexOf(':')];
                 PropertyList.Clear();
-                BlocksPropertyObject = JObject.Parse(BlockStateTable.Select("id='" + selectedBlock + "'").First()["properties"].ToString());
-                foreach (JProperty item in BlocksPropertyObject.Properties())
-                    PropertyList.Add(item.Name);
-                BlockProperty.SelectedIndex = 0;
+                DataRow[] dataRows = BlockStateTable.Select("id='minecraft:" + selectedBlock + "'");
+                if (dataRows.Length > 0 && dataRows.First()["properties"] is string properties && properties.Trim().Length > 0)
+                {
+                    BlocksPropertyObject = JObject.Parse(properties);
+                    foreach (JProperty item in BlocksPropertyObject.Properties())
+                        PropertyList.Add(item.Name);
+                    BlockProperty.SelectedIndex = 0;
+                }
             }
         }
 

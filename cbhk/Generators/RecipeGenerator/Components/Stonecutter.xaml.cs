@@ -61,8 +61,8 @@ namespace cbhk.Generators.RecipeGenerator.Components
         /// <summary>
         /// 材料列表
         /// </summary>
-        public ObservableCollection<ItemStructure> MaterialList { get; set; } = new();
-        public ObservableCollection<string> MaterialTag { get; set; } = new();
+        public ObservableCollection<ItemStructure> MaterialList { get; set; } = [];
+        public ObservableCollection<string> MaterialTag { get; set; } = [];
         BitmapImage emptyImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Recipe\\images\\Empty.png"));
         SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#484848"));

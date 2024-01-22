@@ -1,22 +1,50 @@
-﻿using cbhk.Generators.WrittenBookGenerator;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace cbhk.CustomControls
 {
-    public class RichRun:Run
+    public class RichRun : Run
     {
+        #region 字段
+        public int CurrentVersion = 1202;
         /// <summary>
         /// 迭代内容序列
         /// </summary>
-        public List<char> Obfuscates;
-        //开启混淆
-        public bool IsObfuscated = false;
+        private static List<char> Obfuscates = [];
+        private static FontFamily commonFontFamily = new("Bitstream Vera Sans Mono");
+        private FontFamily OriginFontFamily = new("Microsoft YaHei UI");
+
+        #region 控制混淆
+        private bool isObfuscated = false;
+        public bool IsObfuscated
+        {
+            get => isObfuscated;
+            set
+            {
+                isObfuscated = value;
+                ObfuscateTimer.IsEnabled = isObfuscated;
+                if (ObfuscateTimer.IsEnabled)
+                {
+                    ObfuscateTimer.Start();
+                    FontFamily = commonFontFamily;
+                }
+                else
+                {
+                    ObfuscateTimer.Stop();
+                    FontFamily = OriginFontFamily;
+                }
+            }
+        }
+        #endregion
 
         /// <summary>
         /// 迭代结果
@@ -33,10 +61,7 @@ namespace cbhk.CustomControls
         public string UID
         {
             get => uid;
-            set
-            {
-                uid = value;
-            }
+            set => uid = value;
         }
         #endregion
 
@@ -46,16 +71,12 @@ namespace cbhk.CustomControls
         //用于判断的删除线
         readonly TextDecoration strikethrough_style = System.Windows.TextDecorations.Strikethrough.First();
 
-        /// <summary>
-        /// 当前混淆最长长度
-        /// </summary>
-        double MaxContentLength;
-
-        public System.Windows.Forms.Timer ObfuscateTimer = new()
+        public DispatcherTimer ObfuscateTimer = new()
         {
-            Interval = 10,
-            Enabled = false
+            Interval = TimeSpan.FromMilliseconds(10),
+            IsEnabled = false
         };
+        #endregion
 
         #region 保存事件数据
         private bool hasClickEvent = false;
@@ -63,80 +84,57 @@ namespace cbhk.CustomControls
         public bool HasClickEvent
         {
             get => hasClickEvent;
-            set
-            {
-                hasClickEvent = value;
-            }
+            set => hasClickEvent = value;
         }
 
         private bool hasHoverEvent = false;
 
         public bool HasHoverEvent
         {
-            get { return hasHoverEvent; }
-            set
-            {
-                hasHoverEvent = value;
-            }
+            get => hasHoverEvent;
+            set => hasHoverEvent = value;
         }
 
         private bool hasInsertion = false;
 
         public bool HasInsertion
         {
-            get { return hasInsertion; }
-            set
-            {
-                hasInsertion = value;
-            }
+            get => hasInsertion;
+            set => hasInsertion = value;
         }
 
         private string clickEventActionItem = "运行命令";
         public string ClickEventActionItem
         {
-            get { return clickEventActionItem; }
-            set
-            {
-                clickEventActionItem = value;
-            }
+            get => clickEventActionItem;
+            set => clickEventActionItem = value;
         }
         private string clickEventValue = "";
         public string ClickEventValue
         {
-            get { return clickEventValue; }
-            set
-            {
-                clickEventValue = value;
-            }
+            get => clickEventValue;
+            set => clickEventValue = value;
         }
         private string hoverEventActionItem = "显示文本";
         public string HoverEventActionItem
         {
-            get { return hoverEventActionItem; }
-            set
-            {
-                hoverEventActionItem = value;
-            }
+            get => hoverEventActionItem;
+            set => hoverEventActionItem = value;
         }
         private string hoverEventValue = "";
         public string HoverEventValue
         {
-            get { return hoverEventValue; }
-            set
-            {
-                hoverEventValue = value;
-            }
+            get => hoverEventValue;
+            set => hoverEventValue = value;
         }
 
         private string insertionValue = "";
         public string InsertionValue
         {
-            get { return insertionValue; }
-            set
-            {
-                insertionValue = value;
-            }
+            get => insertionValue;
+            set => insertionValue = value;
         }
+        #endregion
 
         #region 最终事件数据
         public string EventData
@@ -144,11 +142,11 @@ namespace cbhk.CustomControls
             get
             {
                 string result = "";
-                string clickEventAction = WrittenBookDataContext.EventDataBase.Where(item => item.Value == ClickEventActionItem.Trim()).First().Key;
-                string ClickEventString = HasClickEvent ? ",\"clickEvent\":{\"action\":\"" + clickEventAction + "\",\"value\":\"" + (clickEventAction.Trim() == "open_url"? "http://" : "") + ClickEventValue + "\"}" : "";
+                string clickEventAction = EventDataBase.Where(item => item.Value == ClickEventActionItem.Trim()).First().Key;
+                string ClickEventString = HasClickEvent ? ",\"clickEvent\":{\"action\":\"" + clickEventAction + "\",\"value\":\"" + (clickEventAction.Trim() == "open_url" ? "http://" : "") + ClickEventValue + "\"}" : "";
 
-                string HoverEventString = HasHoverEvent ? ",\"hoverEvent\":{\"action\":\"" + (WrittenBookDataContext.EventDataBase.Where(item => item.Value == HoverEventActionItem.Trim()).First().Key) + "\",\"value\":\"" + HoverEventValue + "\"}" : "";
-                string InsertionString = HasInsertion ? ",\"insertion\":{\"action\":\"" + (WrittenBookDataContext.EventDataBase.Where(item => item.Value == HoverEventActionItem.Trim()).First().Key) + "\",\"value\":\"" + HoverEventValue + "\"}" : "";
+                string HoverEventString = HasHoverEvent ? ",\"hoverEvent\":{\"action\":\"" + (EventDataBase.Where(item => item.Value == HoverEventActionItem.Trim()).First().Key) + "\",\"value\":\"" + HoverEventValue + "\"}" : "";
+                string InsertionString = HasInsertion ? ",\"insertion\":{\"action\":\"" + (EventDataBase.Where(item => item.Value == HoverEventActionItem.Trim()).First().Key) + "\",\"value\":\"" + HoverEventValue + "\"}" : "";
                 result = ClickEventString + HoverEventString + InsertionString;
                 return result;
             }
@@ -165,13 +163,27 @@ namespace cbhk.CustomControls
                 {
                     string result = "";
                     bool IsLastRun = Equals(CurrentParagraph.Inlines.LastInline, this);
-                    string textString = ObfuscateTimer.Enabled ? UID : Text;
-                    textString = textString.Replace("\\", "\\\\\\\\").Replace("\"", "\\\\\"");
-                    if (textString.Length > 0)
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
-                        string colorString = Foreground.ToString().Remove(1, 2);
-                        result = "{\"text\":\"" + textString + (IsLastRun ? "\\\\n" : "") + "\"" + (colorString != "#000000" ? ",\"color\":\"" + colorString + "\"" : "") + (FontStyle == FontStyles.Italic ? ",\"italic\":true" : "") + (FontWeight == FontWeights.Bold ? ",\"bold\":true" : "") + (TextDecorations.Contains(underlined_style) ? ",\"underlined\":true" : "") + (TextDecorations.Contains(strikethrough_style) ? ",\"strikethrough\":true" : "") + (IsObfuscated && ObfuscateTimer.Enabled ? ",\"obfuscated\":true" : "") + EventData + "},";
-                    }
+                        string textString = ObfuscateTimer.IsEnabled ? UID : Text;
+                        textString = textString.Replace("\\", "\\\\\\\\").Replace("\"", "\\\\\"");
+                        if (textString.Length > 0)
+                        {
+                            string colorString = Foreground.ToString().Remove(1, 2);
+                            string colorKey = ColorPickers.ColorPickers.PresetColorList[(Foreground as SolidColorBrush).Color];
+                            if (CurrentVersion >= 113)
+                                result = "{\"text\":\"" + textString + (IsLastRun ? "\\\\n" : "") + "\"" + (colorString != "#000000" ? ",\"color\":\"" + colorString + "\"" : "") + (FontStyle == FontStyles.Italic ? ",\"italic\":true" : "") + (FontWeight == FontWeights.Bold ? ",\"bold\":true" : "") + (TextDecorations.Contains(underlined_style) ? ",\"underlined\":true" : "") + (TextDecorations.Contains(strikethrough_style) ? ",\"strikethrough\":true" : "") + (IsObfuscated && ObfuscateTimer.IsEnabled ? ",\"obfuscated\":true" : "") + EventData + "},";
+                            else
+                                result = (colorKey.Length > 0 && colorKey != @"\\u00a7f" ? colorKey:"") +
+                                    (FontStyle == FontStyles.Italic ? @"\\u00a7o" : "") +
+                                    (FontWeight == FontWeights.Bold ? @"\\u00a7l" : "") +
+                                    (TextDecorations.Contains(underlined_style) ? @"\\u00a7n" : "") +
+                                    (TextDecorations.Contains(strikethrough_style) ? @"\\u00a7m" : "") +
+                                    (IsObfuscated ? @"\\u00a7k" : "") + textString;
+                            if (result.Length > textString.Length && CurrentVersion < 113)
+                                result += @"\\u00a7r";
+                        }
+                    });
                     return result;
                 }
                 else
@@ -180,6 +192,17 @@ namespace cbhk.CustomControls
         }
         #endregion
 
+        #region 事件数据
+        //点击事件数据源
+        public static ObservableCollection<string> clickEventSource { get; set; } = [];
+        //悬浮事件数据源
+        public static ObservableCollection<string> hoverEventSource { get; set; } = [];
+        //点击事件数据源文件路径
+        string clickEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\data\\clickEventActions.ini";
+        //悬浮事件数据源文件路径
+        string hoverEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\data\\hoverEventActions.ini";
+        //事件数据库
+        private static Dictionary<string, string> EventDataBase = [];
         #endregion
 
         /// <summary>
@@ -187,12 +210,51 @@ namespace cbhk.CustomControls
         /// </summary>
         public RichRun()
         {
-            Obfuscates = WrittenBookDataContext.obfuscates;
+            Foreground = new SolidColorBrush(Colors.White);
+            FontFamily = OriginFontFamily;
             ObfuscateTimer.Tick += ObfuscateTick;
             MouseEnter += ObfuscateTextMouseEnter;
             MouseLeave += ObfuscateTextMouseLeave;
             MouseLeftButtonDown += ObfuscateTextMouseLeftButtonDown;
             MouseLeftButtonUp += ObfuscateTextMouseLeftButtonUp;
+
+            #region 读取混淆文本配置
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\WrittenBook\data\obfuscateChars.ini"))
+            {
+                Obfuscates =
+                [
+                    .. File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\WrittenBook\data\obfuscateChars.ini").ToCharArray(),
+                ];
+            }
+            #endregion
+
+            #region 读取点击事件
+            if (File.Exists(clickEventSourceFilePath) && clickEventSource.Count == 0)
+            {
+                string[] source = File.ReadAllLines(clickEventSourceFilePath);
+                for (int i = 0; i < source.Length; i++)
+                {
+                    string[] data = source[i].Split('.');
+                    clickEventSource.Add(data[1]);
+                    if (!EventDataBase.ContainsKey(data[0]))
+                        EventDataBase.Add(data[0], data[1]);
+                }
+            }
+            #endregion
+
+            #region 读取悬浮事件
+            if (File.Exists(hoverEventSourceFilePath) && hoverEventSource.Count == 0)
+            {
+                string[] source = File.ReadAllLines(hoverEventSourceFilePath);
+                for (int i = 0; i < source.Length; i++)
+                {
+                    string[] data = source[i].Split('.');
+                    hoverEventSource.Add(data[1]);
+                    if (!EventDataBase.ContainsKey(data[0]))
+                        EventDataBase.Add(data[0], data[1]);
+                }
+            }
+            #endregion
         }
 
         /// <summary>
@@ -203,7 +265,7 @@ namespace cbhk.CustomControls
         private void ObfuscateTextMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if(IsObfuscated)
-            ObfuscateTimer.Enabled = true;
+            ObfuscateTimer.IsEnabled = true;
         }
 
         /// <summary>
@@ -215,7 +277,7 @@ namespace cbhk.CustomControls
         {
             if (IsObfuscated)
             {
-                ObfuscateTimer.Enabled = false;
+                ObfuscateTimer.IsEnabled = false;
                 Text = UID;
             }
         }
@@ -228,7 +290,7 @@ namespace cbhk.CustomControls
         private void ObfuscateTextMouseLeave(object sender, MouseEventArgs e)
         {
             if (IsObfuscated)
-                ObfuscateTimer.Enabled = true;
+                ObfuscateTimer.IsEnabled = true;
         }
 
         /// <summary>
@@ -240,7 +302,7 @@ namespace cbhk.CustomControls
         {
             if (IsObfuscated)
             {
-                ObfuscateTimer.Enabled = false;
+                ObfuscateTimer.IsEnabled = false;
                 Text = UID;
             }
         }
@@ -252,7 +314,6 @@ namespace cbhk.CustomControls
         /// <param name="e"></param>
         public void ObfuscateTick(object sender, EventArgs e)
         {
-            MaxContentLength = GeneralTools.GetTextWidth.Get(new Run(UID));
             ObfuscatesResult.Clear();
             for (int i = 0; i < UID.Length; i++)
                 ObfuscatesResult.Append(Obfuscates[random.Next(0, Obfuscates.Count - 1)]);

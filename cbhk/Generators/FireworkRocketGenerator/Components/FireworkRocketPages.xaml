@@ -355,6 +355,8 @@
                     <ColorPicker:ColorPickers
                         Grid.Row="0"
                         Grid.Column="1"
+                        Width="200"
+                        Height="30"
                         Margin="1,0,0,2"
                         HorizontalAlignment="Stretch"
                         Background="{Binding RelativeSource={RelativeSource Mode=Self}, Path=SelectColor, Mode=OneWay}"

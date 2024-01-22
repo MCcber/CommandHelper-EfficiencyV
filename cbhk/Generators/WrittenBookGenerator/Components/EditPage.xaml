@@ -13,10 +13,6 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
 
-    <Page.DataContext>
-        <local_datacontext:WrittenBookDataContext />
-    </Page.DataContext>
-
     <Grid>
         <DockPanel
             Grid.Row="0"
@@ -93,10 +89,7 @@
                         <behaviors:CallMethodAction MethodName="RichTextBox_PreviewMouseLeftButtonUp" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
-                <CustomControls:EnabledFlowDocument
-                    FontFamily="Minecraft AE Pixel"
-                    FontSize="20"
-                    LineHeight="10">
+                <CustomControls:EnabledFlowDocument LineHeight="10">
                     <CustomControls:RichParagraph>
                         <CustomControls:RichRun />
                     </CustomControls:RichParagraph>

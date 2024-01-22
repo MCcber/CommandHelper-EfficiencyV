@@ -16,7 +16,7 @@ namespace cbhk.GeneralTools
         /// <returns></returns>
         public static List<BitmapImage> DeCompressionImageSet(string sourcePath)
         {
-            List<BitmapImage> result = new();
+            List<BitmapImage> result = [];
             using FileStream zipToOpen = new(sourcePath, FileMode.Open);
             using ZipArchive archive = new(zipToOpen, ZipArchiveMode.Read);
             foreach (ZipArchiveEntry entry in archive.Entries)

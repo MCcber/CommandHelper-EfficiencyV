@@ -12,11 +12,11 @@ namespace cbhk.Generators.EntityGenerator.Components
     public partial class VibrationMonitors : UserControl
     {
         #region 振动监听器类型数据源
-        public ObservableCollection<string> VibrationMonitorType { get; set; } = new() { "block","entity" };
+        public ObservableCollection<string> VibrationMonitorType { get; set; } = ["block","entity"];
         #endregion
 
         #region 目标实体类型切换数据源
-        public ObservableCollection<string> TargetEntitySwitcher { get; set; } = new() { "ID", "UUID", "Data" };
+        public ObservableCollection<string> TargetEntitySwitcher { get; set; } = ["ID", "UUID", "Data"];
         #endregion
 
         public VibrationMonitors()
@@ -118,7 +118,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         private void event_LostFocus(object sender, RoutedEventArgs e)
         {
             TextTabItems textTabItems = sender as TextTabItems;
-            List<string> results = new() { "", "", "", "", "" };
+            List<string> results = ["", "", "", "", ""];
             if (game_event.Text.Length > 0)
                 results[0] = "game_event:\"" + game_event.Text + "\"";
             else
@@ -151,7 +151,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         private void selector_LostFocus(object sender, RoutedEventArgs e)
         {
             TextTabItems textTabItems = sender as TextTabItems;
-            List<string> results = new() { "", "", "", "", "" };
+            List<string> results = ["", "", "", "", ""];
             if (game_eventC.Text.Length > 0)
                 results[0] = "game_event:\"" + game_eventC.Text + "\"";
             else
@@ -184,7 +184,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         private void source_LostFocus(object sender, RoutedEventArgs e)
         {
             TextTabItems textTabItems = sender as TextTabItems;
-            List<string> results = new() { "", "" };
+            List<string> results = ["", ""];
 
             #region 振动监听器类型
             if (VibrationMonitorTypeBox.SelectedItem.ToString().Length > 0)

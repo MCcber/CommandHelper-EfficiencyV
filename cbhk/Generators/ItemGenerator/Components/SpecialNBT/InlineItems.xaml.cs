@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -47,7 +48,7 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                     JToken itemID = itemTag["id"];
                     DisplayItem.Tag = itemData;
                     if (itemID != null)
-                        (DisplayItem.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID + ".png", UriKind.RelativeOrAbsolute));
+                        (DisplayItem.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID + ".png", UriKind.RelativeOrAbsolute));
                 }
             }
         }
@@ -74,7 +75,7 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
             JToken itemID = itemTag["id"];
             DisplayItem.Tag = itemData;
             if (itemID != null)
-                (DisplayItem.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID + ".png", UriKind.RelativeOrAbsolute));
+                (DisplayItem.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID + ".png", UriKind.RelativeOrAbsolute));
         }
 
         /// <summary>
@@ -82,7 +83,7 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ReferenceIndex_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private async void ReferenceIndex_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             Slider slider = sender as Slider;
             ItemDataContext itemContext = (Window.GetWindow(slider) as Item).DataContext as ItemDataContext;
@@ -95,8 +96,8 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 pageContext.UseForReference = true;
                 if (slider.Value < itemContext.ItemPageList.Count && currentIndex != index)
                 {
-                    DisplayItem.Tag = pageContext.run_command(false);
-                    (DisplayItem.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + pageContext.SelectedItemId.ComboBoxItemId + "_spawn_egg.png", UriKind.RelativeOrAbsolute));
+                    DisplayItem.Tag = await pageContext.run_command(false);
+                    (DisplayItem.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItemId.ComboBoxItemId + "_spawn_egg.png", UriKind.RelativeOrAbsolute));
                 }
                 else
                 {

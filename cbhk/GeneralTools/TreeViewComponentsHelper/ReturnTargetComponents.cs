@@ -448,7 +448,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             MatchCollection case1 = Regex.Matches(description, @"(?<=可以是)[a-zA-Z_]+(?=。)");
             MatchCollection case2 = Regex.Matches(description, @"(?<=如果是)[a-zA-Z_]+(?=。)");
             JArray children = JArray.Parse(subObj["children"].ToString());
-            ObservableCollection<RichTreeViewItems> subStructureCollection = new();
+            ObservableCollection<RichTreeViewItems> subStructureCollection = [];
             string selectedItem = currentBox.SelectedItem.ToString();
 
             //表示需要子结构
@@ -515,7 +515,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 }
 
                 #region 更新子结构数据
-                currentItem.SubStructure ??= new Dictionary<string, ObservableCollection<RichTreeViewItems>>();
+                currentItem.SubStructure ??= [];
                 if (!currentItem.SubStructure.ContainsKey(selectedItem))
                     currentItem.SubStructure.Add(selectedItem, subStructureCollection);
                 else

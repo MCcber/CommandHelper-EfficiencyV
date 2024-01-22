@@ -223,7 +223,7 @@ namespace cbhk.Generators.RecipeGenerator.Components
                     if (itemIDObj != null)
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
-                        Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.ToString() + ".png");
+                        Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png");
                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                         TemplateItem.Source = new BitmapImage(iconUri);
                         TemplateItem.Tag = new ItemStructure(iconUri, itemID + ":" + itemName);

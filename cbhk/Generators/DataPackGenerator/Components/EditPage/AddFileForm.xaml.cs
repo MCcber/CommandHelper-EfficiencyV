@@ -54,10 +54,10 @@ namespace cbhk.Generators.DataPackGenerator.Components.EditPage
     {
         private string FileTemplatesFolder = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Datapack\\data\\FileTemplates";
         private object tagItemsLock = new();
-        public ObservableCollection<NewItemStyle> NewItemStyles { get; set; } = new();
+        public ObservableCollection<NewItemStyle> NewItemStyles { get; set; } = [];
 
         private CollectionViewSource NewItemStyleSource = null;
-        public ObservableCollection<string> SortBySource { get; set; } = new();
+        public ObservableCollection<string> SortBySource { get; set; } = [];
         public RelayCommand<Window> ClickTrue { get; set; }
         public RelayCommand<Window> ClickFalse { get; set; }
 
@@ -125,49 +125,52 @@ namespace cbhk.Generators.DataPackGenerator.Components.EditPage
             #endregion
 
             #region 异步载入标签成员
-            BindingOperations.EnableCollectionSynchronization(NewItemStyles, tagItemsLock);
-            Task.Run(() =>
+            if(NewItemStyles.Count == 0)
             {
-                lock (tagItemsLock)
+                BindingOperations.EnableCollectionSynchronization(NewItemStyles, tagItemsLock);
+                Task.Run(() =>
                 {
-                    string mcfunctionIconPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\command_block.png";
-                    if (Directory.Exists(FileTemplatesFolder))
+                    lock (tagItemsLock)
                     {
-                        string[] fileTemplates = Directory.GetFiles(FileTemplatesFolder, "*.json");
-                        string type = "";
-                        string description = "";
-                        string path = "";
-                        string nameSpace = "";
-                        DrawingImage icon = new();
-                        for (int i = 0; i < fileTemplates.Length; i++)
+                        string mcfunctionIconPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\command_block.png";
+                        if (Directory.Exists(FileTemplatesFolder))
                         {
-                            type = "";
-                            description = "";
-                            path = "";
-                            nameSpace = "";
-                            JObject fileData = JObject.Parse(File.ReadAllText(fileTemplates[i]));
-                            if (fileData["type"] is JToken fileType)
-                                type = fileType.ToString();
-                            if (fileData["description"] is JToken fileDescription)
-                                description = fileDescription.ToString();
-                            if (fileData["path"] is JToken filePath)
+                            string[] fileTemplates = Directory.GetFiles(FileTemplatesFolder, "*.json");
+                            string type = "";
+                            string description = "";
+                            string path = "";
+                            string nameSpace = "";
+                            DrawingImage icon = new();
+                            for (int i = 0; i < fileTemplates.Length; i++)
                             {
-                                if (filePath.ToString().StartsWith("template:"))
-                                    path = AppDomain.CurrentDomain.BaseDirectory + filePath.ToString()[(filePath.ToString().IndexOf(':') + 1)..];
-                                else
-                                    if(File.Exists(filePath.ToString()))
-                                    path = filePath.ToString();
+                                type = "";
+                                description = "";
+                                path = "";
+                                nameSpace = "";
+                                JObject fileData = JObject.Parse(File.ReadAllText(fileTemplates[i]));
+                                if (fileData["type"] is JToken fileType)
+                                    type = fileType.ToString();
+                                if (fileData["description"] is JToken fileDescription)
+                                    description = fileDescription.ToString();
+                                if (fileData["path"] is JToken filePath)
+                                {
+                                    if (filePath.ToString().StartsWith("template:"))
+                                        path = AppDomain.CurrentDomain.BaseDirectory + filePath.ToString()[(filePath.ToString().IndexOf(':') + 1)..];
+                                    else
+                                        if (File.Exists(filePath.ToString()))
+                                        path = filePath.ToString();
+                                }
+                                if (fileData["nameSpace"] is JToken nameSpaceObj)
+                                    nameSpace = nameSpaceObj.ToString();
+                                if (Application.Current.Resources[Path.GetExtension(path)] is DrawingImage drawingImage)
+                                    icon = drawingImage;
+                                if (path.Length > 0)
+                                    NewItemStyles.Add(new NewItemStyle() { Icon = icon, Path = path, Description = description, FunctionName = Path.GetFileNameWithoutExtension(fileTemplates[i]), TypeName = Path.GetExtension(path), NameSpace = nameSpace });
                             }
-                            if (fileData["nameSpace"] is JToken nameSpaceObj)
-                                nameSpace = nameSpaceObj.ToString();
-                            if (Application.Current.Resources[Path.GetExtension(path)] is DrawingImage drawingImage)
-                                icon = drawingImage;
-                            if(path.Length > 0)
-                            NewItemStyles.Add(new NewItemStyle() { Icon = icon, Path = path, Description = description, FunctionName = Path.GetFileNameWithoutExtension(fileTemplates[i]), TypeName = Path.GetExtension(path),NameSpace = nameSpace });
                         }
                     }
-                }
-            });
+                });
+            }
             #endregion
 
             #region 排序依据类型

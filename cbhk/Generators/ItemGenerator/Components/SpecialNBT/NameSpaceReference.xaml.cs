@@ -1,5 +1,6 @@
 ﻿using cbhk.CustomControls;
 using cbhk.GeneralTools;
+using Microsoft.Win32;
 using System;
 using System.IO;
 using System.Windows;
@@ -24,15 +25,15 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         /// <param name="e"></param>
         private void Reference_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new()
+            OpenFolderDialog openFolderDialog = new()
             {
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                Description = "请选择一个配方的命名空间"
+                Title = "请选择一个配方的命名空间"
             };
-            if(folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if(openFolderDialog.ShowDialog().Value)
             {
-                if(Directory.Exists(folderBrowserDialog.SelectedPath))
-                    ReferenceBox.Text = Path.GetDirectoryName(folderBrowserDialog.SelectedPath);
+                if(Directory.Exists(openFolderDialog.FolderName))
+                    ReferenceBox.Text = Path.GetDirectoryName(openFolderDialog.FolderName);
             }
         }
 

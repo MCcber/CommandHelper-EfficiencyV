@@ -1,12 +1,15 @@
 ﻿using cbhk.CustomControls;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
+using cbhk.Generators.ItemGenerator.Components;
+using cbhk.Generators.ItemGenerator;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 namespace cbhk.Generators.EntityGenerator.Components
 {
@@ -34,7 +37,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                 JToken itemID = nbtData.SelectToken("Item.id");
                 itemID ??= nbtData.SelectToken("id");
                 ItemIcon.Tag = nbtData;
-                string uri = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.ToString() + ".png";
+                string uri = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png";
                 if (File.Exists(uri))
                     (ItemIcon.Child as Image).Source = new BitmapImage(new Uri(uri, UriKind.Absolute));
             }
@@ -68,9 +71,47 @@ namespace cbhk.Generators.EntityGenerator.Components
                 JToken itemID = nbtData.SelectToken("Item.id");
                 itemID ??= nbtData.SelectToken("id");
                 ItemIcon.Tag = nbtData;
-                string uri = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.ToString() + ".png";
+                string uri = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png";
                 if(File.Exists(uri))
                 (ItemIcon.Child as Image).Source = new BitmapImage(new Uri(uri, UriKind.Absolute));
+            }
+        }
+
+        /// <summary>
+        /// 生成部位的穿戴物
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void generator_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            Entity entity = Window.GetWindow(button) as Entity;
+            EntityDataContext entityContext = entity.DataContext as EntityDataContext;
+            int currentRow = Grid.GetRow(button);
+            Item item = new();
+            ItemDataContext context = item.DataContext as ItemDataContext;
+            context.IsCloseable = false;
+            context.home = entity;
+            if (item.ShowDialog().Value && context.ItemPageList.Count > 0)
+            {
+                ItemPageDataContext itemPageDataContext = (context.ItemPageList[0].Content as ItemPages).DataContext as ItemPageDataContext;
+                Border currentImage = null;
+                DockPanel dockPanel = button.Parent as DockPanel;
+                currentImage = dockPanel.Children[0] as Border;
+                string data = ExternalDataImportManager.GetItemDataHandler(itemPageDataContext.Result, false);
+                JObject json = JObject.Parse(data);
+                string itemID = "";
+                if (json.SelectToken("id") is JToken itemIDToken)
+                    itemID = json.SelectToken("id")?.ToString();
+                if (itemID.Length == 0)
+                    itemID = json.SelectToken("Item.id")?.ToString();
+                currentImage.Tag = itemPageDataContext.Result;
+                if (itemID.Length > 0)
+                {
+                    itemID = itemID.Replace("minecraft:", "");
+                    ImageBrush imageBrush = new(new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID + ".png", UriKind.Absolute)));
+                    currentImage.Background = imageBrush;
+                }
             }
         }
 

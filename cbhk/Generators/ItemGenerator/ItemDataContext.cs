@@ -1,10 +1,12 @@
-﻿using cbhk.CustomControls;
+﻿using cbhk.ControlsDataContexts;
+using cbhk.CustomControls;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.ItemGenerator.Components;
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -16,8 +18,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.ItemGenerator
 {
@@ -31,6 +33,8 @@ namespace cbhk.Generators.ItemGenerator
         public RelayCommand ClearItem { get; set; }
         public RelayCommand ImportItemFromClipboard { get; set; }
         public RelayCommand ImportItemFromFile { get; set; }
+
+        public RelayCommand ClearUnnecessaryData { get; set; }
         #endregion
 
         #region 显示结果
@@ -48,15 +52,15 @@ namespace cbhk.Generators.ItemGenerator
         /// </summary>
         public Window home = null;
         //物品页数据源
-        public ObservableCollection<RichTabItems> ItemPageList { get; set; } = new()
-        {
+        public ObservableCollection<RichTabItems> ItemPageList { get; set; } =
+        [
             new RichTabItems()
                     {
                         Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                         Header = "物品",
                         FontWeight = FontWeights.Normal,
                         IsContentSaved = true,
-                        BorderThickness = new(4, 3, 4, 0),
+                        BorderThickness = new(4, 4, 4, 0),
                         Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
                         SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
                         LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
@@ -66,7 +70,22 @@ namespace cbhk.Generators.ItemGenerator
                         SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
                         SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
                     }
-        };
+        ];
+
+        #region 能否关闭标签页
+        private bool isCloseable = true;
+
+        public bool IsCloseable
+        {
+            get => isCloseable;
+            set => SetProperty(ref isCloseable, value);
+        }
+        #endregion
+
+        //版本列表
+        public ObservableCollection<string> VersionList = ["1.12-","1.13+"];
+        //物品ID列表
+        public ObservableCollection<IconComboBoxItem> ItemIDs { get; set; } = [];
 
         #region 当前选中的物品页
         private TabItem selectedItemPage = null;
@@ -103,35 +122,74 @@ namespace cbhk.Generators.ItemGenerator
             SaveAll = new RelayCommand(SaveAllCommand);
             AddItem = new RelayCommand(AddItemCommand);
             ClearItem = new RelayCommand(ClearItemCommand);
+            ClearUnnecessaryData = new RelayCommand(ClearUnnecessaryDataCommand);
             ImportItemFromClipboard = new RelayCommand(ImportItemFromClipboardCommand);
             ImportItemFromFile = new RelayCommand(ImportItemFromFileCommand);
             #endregion
-            #region 初始化数据表
+        }
+
+        public async void Item_Loaded(object sender,RoutedEventArgs e)
+        {
+            #region 初始化数据表与物品页
             DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-            Task.Run(async () =>
+            await Task.Run(async () =>
             {
                 EnchantmentTable = await dataCommunicator.GetData("SELECT * FROM Enchantments");
                 BlockTable = await dataCommunicator.GetData("SELECT * FROM Blocks");
                 BlockStateTable = await dataCommunicator.GetData("SELECT * FROM BlockStates");
                 ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
-                AttributeTable = await dataCommunicator.GetData("SELECT * FROM Attributes");
+                AttributeTable = await dataCommunicator.GetData("SELECT * FROM MobAttributes");
                 AttributeSlotTable = await dataCommunicator.GetData("SELECT * FROM AttributeSlots");
                 AttributeValueTypeTable = await dataCommunicator.GetData("SELECT * FROM AttributeValueTypes");
                 EffectTable = await dataCommunicator.GetData("SELECT * FROM MobEffects");
                 HideInfomationTable = await dataCommunicator.GetData("SELECT * FROM HideInfomation");
+
+                #region 初始化物品ID列表
+                string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
+                foreach (DataRow row in ItemTable.Rows)
+                {
+                    string id = row["id"].ToString();
+                    string imagePath = "";
+                    if (File.Exists(currentPath + id + ".png"))
+                        imagePath = currentPath + id + ".png";
+                    else
+                        if (File.Exists(currentPath + id + "_spawn_egg.png"))
+                        imagePath = currentPath + id + "_spawn_egg.png";
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        ItemIDs.Add(new IconComboBoxItem()
+                        {
+                            ComboBoxItemId = id,
+                            ComboBoxItemText = row["name"].ToString(),
+                            ComboBoxItemIcon = File.Exists(imagePath) ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : null
+                        });
+                    });
+                }
+                #endregion
             });
             #endregion
             #region 初始化物品页
-            object obj = new();
-            BindingOperations.EnableCollectionSynchronization(ItemPageList, obj);
-            Task.Run(async () =>
+            await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    ItemPageList[0].Content = new ItemPages();
-                });
+                ItemPages itemPages = new();
+                ItemPageDataContext itemPageDataContext = itemPages.DataContext as ItemPageDataContext;
+                itemPageDataContext.UseForTool = !IsCloseable;
+                ItemPageList[0].Content = itemPages;
             });
             #endregion
+        }
+
+        /// <summary>
+        /// 清除不需要的特指数据
+        /// </summary>
+        private void ClearUnnecessaryDataCommand()
+        {
+            ItemPageDataContext itemPageDataContext = (SelectedItemPage.Content as ItemPages).DataContext as ItemPageDataContext;
+            if (itemPageDataContext.specialDataDictionary.TryGetValue(itemPageDataContext.SelectedItemId.ComboBoxItemId, out Grid grid))
+                grid = itemPageDataContext.specialDataDictionary[itemPageDataContext.SelectedItemId.ComboBoxItemId];
+            itemPageDataContext.specialDataDictionary.Clear();
+            grid ??= new();
+            itemPageDataContext.specialDataDictionary.Add(itemPageDataContext.SelectedItemId.ComboBoxItemId, grid);
         }
 
         /// <summary>
@@ -139,6 +197,14 @@ namespace cbhk.Generators.ItemGenerator
         /// </summary>
         private void AddItemCommand()
         {
+            if(ItemPageList.Count > 0)
+            {
+                ItemPageDataContext itemPageDataContext = (ItemPageList[0].Content as ItemPages).DataContext as ItemPageDataContext;
+                if (itemPageDataContext.UseForTool)
+                {
+                    return;
+                }
+            }
             RichTabItems richTabItems = new()
             {
                 Header = "物品",
@@ -157,6 +223,8 @@ namespace cbhk.Generators.ItemGenerator
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
             };
             ItemPages itemPage = new() { FontWeight = FontWeights.Normal };
+            ItemPageDataContext pageContext = itemPage.DataContext as ItemPageDataContext;
+            pageContext.UseForTool = !IsCloseable;
             richTabItems.Content = itemPage;
             ItemPageList.Add(richTabItems);
             if (ItemPageList.Count == 1)
@@ -171,7 +239,8 @@ namespace cbhk.Generators.ItemGenerator
         /// </summary>
         private void ClearItemCommand()
         {
-            ItemPageList.Clear();
+            if (IsCloseable)
+                ItemPageList.Clear();
         }
 
         /// <summary>
@@ -209,16 +278,16 @@ namespace cbhk.Generators.ItemGenerator
         /// </summary>
         private async void SaveAllCommand()
         {
-            List<string> Result = new();
-            List<string> FileNameList = new();
+            List<string> Result = [];
+            List<string> FileNameList = [];
 
             foreach (var itemPage in ItemPageList)
             {
-                await itemPage.Dispatcher.InvokeAsync(() =>
+                await itemPage.Dispatcher.InvokeAsync(async () =>
                 {
                     ItemPages itemPages = itemPage.Content as ItemPages;
                     ItemPageDataContext context = itemPages.DataContext as ItemPageDataContext;
-                    string result = context.run_command(false);
+                    string result = await context.run_command(false);
                     string nbt = "";
                     if (result.Contains('{'))
                     {
@@ -240,19 +309,19 @@ namespace cbhk.Generators.ItemGenerator
                     Result.Add(result);
                 });
             }
-            System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new()
+            OpenFolderDialog openFolderDialog = new()
             {
-                Description = "请选择要保存的目录",
+                Title = "请选择要保存的目录",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
             };
-            if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (openFolderDialog.ShowDialog().Value)
             {
-                if (Directory.Exists(folderBrowserDialog.SelectedPath))
+                if (Directory.Exists(openFolderDialog.FolderName))
                 {
                     Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\Item\\");
                     for (int i = 0; i < Result.Count; i++)
                     {
-                        _ = File.WriteAllTextAsync(folderBrowserDialog.SelectedPath + FileNameList[i] + ".command", Result[i]);
+                        _ = File.WriteAllTextAsync(openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
                         _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\Item\\" + FileNameList[i] + ".command", Result[i]);
                     }
                 }

@@ -37,75 +37,75 @@
         </Style>
         <ImageBrush
             x:Key="1.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/1.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/1.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="1Hover.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/1Hover.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/1Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="2.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/2.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/2.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="2Hover.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/2Hover.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/2Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="3.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/3.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/3.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="3Hover.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/3Hover.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/3Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="4.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/4.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/4.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="4Hover.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/4Hover.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/4Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="5.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/5.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/5.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="5Hover.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/5Hover.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/5Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="6.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/6.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/6.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="6Hover.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/6Hover.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/6Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="7.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/7.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/7.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="7Hover.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/7Hover.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/7Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="8.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/8.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/8.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="8Hover.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/8Hover.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/8Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="9.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/9.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/9.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="9Hover.png"
-            ImageSource="/cbhk;component/resources/cbhk_form/images/more/thanks/9Hover.png"
+            ImageSource="/cbhk;component/resources/cbhk/images/more/thanks/9Hover.png"
             Stretch="Uniform" />
     </UserControl.Resources>
 
@@ -139,7 +139,7 @@
                             <Image
                                 Width="300"
                                 VerticalAlignment="Top"
-                                Source="/cbhk;component/resources/cbhk_form/images/more/thanks/Title.png" />
+                                Source="/cbhk;component/resources/cbhk/images/more/thanks/Title.png" />
                             <DockPanel
                                 Margin="0,10,0,0"
                                 HorizontalAlignment="Center"
@@ -276,10 +276,10 @@
             <Image
                 MouseLeftButtonUp="ClickToJoinGroup"
                 RenderOptions.BitmapScalingMode="HighQuality"
-                Source="/cbhk;component/resources/cbhk_form/images/more/conversation_group.png"
+                Source="/cbhk;component/resources/cbhk/images/more/conversation_group.png"
                 Stretch="Uniform" />
         </CustomControls:TextTabItems>
-        <CustomControls:TextTabItems
+        <!--<CustomControls:TextTabItems
             Background="#48382C"
             BorderThickness="4,4,4,0"
             Foreground="White"
@@ -329,7 +329,7 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-        </CustomControls:TextTabItems>
+        </CustomControls:TextTabItems>-->
         <CustomControls:TextTabItems
             Background="#48382C"
             BorderThickness="4,4,4,0"
@@ -348,7 +348,7 @@
                     Width="100"
                     Height="100"
                     Margin="0,10,0,0"
-                    Source="/cbhk;component/resources/cbhk_form/images/more/github.png"
+                    Source="/cbhk;component/resources/cbhk/images/more/github.png"
                     Stretch="Uniform" />
                 <TextBlock
                     Margin="0,10,0,0"

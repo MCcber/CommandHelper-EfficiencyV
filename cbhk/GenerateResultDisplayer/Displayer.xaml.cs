@@ -103,6 +103,9 @@ namespace cbhk.GenerateResultDisplayer
                 firstParagraph.Inlines.Add(new Run(" ------------"));
                 #endregion
                 Paragraph paragraph = new() { TextAlignment = TextAlignment.Left };
+                Paragraph splitParagraph = new() { TextAlignment = TextAlignment.Center };
+                Run splitRun = new("---------- " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ----------");
+                splitParagraph.Inlines.Add(splitRun);
                 Run newResult = new() { ToolTip = toolTip, Text = spawnResult, FontFamily = fontFamily,Cursor = Cursors.Hand };
                 ToolTipService.SetBetweenShowDelay(newResult, 0);
                 ToolTipService.SetInitialShowDelay(newResult, 0);
@@ -120,6 +123,7 @@ namespace cbhk.GenerateResultDisplayer
                 paragraph.Inlines.Add(newResult);
                 flowDocument.Blocks.Add(firstParagraph);
                 flowDocument.Blocks.Add(paragraph);
+                flowDocument.Blocks.Add(splitParagraph);
                 RichTextBox result_box = new()
                 {
                     IsReadOnly = true,
@@ -160,10 +164,10 @@ namespace cbhk.GenerateResultDisplayer
             else//如果存在相同标签页
             {
                 RichTextBox richTextBox = currentTabItem.Content as RichTextBox;
-                Paragraph firstParagraph = richTextBox.Document.Blocks.ElementAt(1) as Paragraph;
+                Paragraph firstParagraph = richTextBox.Document.Blocks.ElementAt(0) as Paragraph;
                 #region 用于分割的段落
                 Paragraph splitParagraph = new() { FontSize = 15, TextAlignment = TextAlignment.Center };
-                Run splitRun = new("--------------------");
+                Run splitRun = new("---------- "+DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")+" ----------");
                 splitParagraph.Inlines.Add(splitRun);
                 #endregion
                 Paragraph newParagraph = new() { TextAlignment = TextAlignment.Left };
@@ -182,8 +186,8 @@ namespace cbhk.GenerateResultDisplayer
                 ToolTipService.SetBetweenShowDelay(newResult, 0);
                 ToolTipService.SetInitialShowDelay(newResult, 0);
                 newParagraph.Inlines.Add(newResult);
-                richTextBox.Document.Blocks.InsertBefore(firstParagraph,splitParagraph);
-                richTextBox.Document.Blocks.InsertBefore(splitParagraph, newParagraph);
+                richTextBox.Document.Blocks.InsertAfter(firstParagraph,newParagraph);
+                richTextBox.Document.Blocks.InsertAfter(newParagraph,splitParagraph);
             }
             #endregion
         }

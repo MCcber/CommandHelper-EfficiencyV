@@ -61,28 +61,10 @@ namespace cbhk.Generators.WrittenBookGenerator
         Button sureToSignatureButton = null;
         //取消署名背景文件路径
         string signatureCancelFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\images\\cancel_signature.png";
-        //点击事件数据源
-        public static ObservableCollection<string> clickEventSource { get; set; } = new();
-        //悬浮事件数据源
-        public static ObservableCollection<string> hoverEventSource { get; set; } = new();
-        //点击事件数据源文件路径
-        string clickEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\data\\clickEventActions.ini";
-        //悬浮事件数据源文件路径
-        string hoverEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\data\\hoverEventActions.ini";
-        //事件数据库
-        public static Dictionary<string, string> EventDataBase = new() { };
         //混淆文本配置文件路径
         string obfuscateFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\data\\obfuscateChars.ini";
-        //混淆字体类型
-        string obfuscatedFontFamily = "Bitstream Vera Sans Mono";
-        //普通字体类型
-        string commonFontFamily = "Microsoft YaHei UI";
-        //混淆文本迭代链表
-        public static List<char> obfuscates = new();
-        #endregion
-
         //流文档链表,每个成员代表成书中的一页
-        public List<EnabledFlowDocument> WrittenBookPages = new();
+        public List<EnabledFlowDocument> WrittenBookPages = [];
 
         /// <summary>
         /// 一页总字符数
@@ -91,6 +73,42 @@ namespace cbhk.Generators.WrittenBookGenerator
 
         //字符数量超出提示
         TextBlock ExceedsBlock = null;
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public Window home = null;
+
+        /// <summary>
+        /// 事件设置控件
+        /// </summary>
+        TextEvent EventComponent = new();
+        //本生成器的图标路径
+        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconWrittenBook.png";
+
+        //当前光标选中的文本对象链表
+        List<RichRun> CurrentSelectedRichRunList = [];
+
+        //作为内部工具被调用
+        public bool AsInternalTool = false;
+
+        /// <summary>
+        /// 保存最终结果
+        /// </summary>
+        public string result = "";
+
+        /// <summary>
+        /// 保存最终结果的首个json对象
+        /// </summary>
+        public string object_result = "";
+
+        //取消署名按钮引用
+        Button signatureCancelButton = null;
+        //署名按钮
+        Button SignatureButton = null;
+
+        //保存成书的文档链表，用于显示和编辑
+        public List<EnabledFlowDocument> HistroyFlowDocumentList = [];
+        #endregion
 
         #region 字符超出数量
         string exceedsCount = "0";
@@ -149,16 +167,6 @@ namespace cbhk.Generators.WrittenBookGenerator
             set => SetProperty(ref currentRichRun,value);
         }
         #endregion
-
-        /// <summary>
-        /// 主页引用
-        /// </summary>
-        public Window home = null;
-
-        /// <summary>
-        /// 事件设置控件
-        /// </summary>
-        TextEvent EventComponent = new();
 
         #region 设置选定文本样式指令
         /// <summary>
@@ -223,8 +231,7 @@ namespace cbhk.Generators.WrittenBookGenerator
         #endregion
 
         #region 拾色器
-        ColorPickers LeftColorPicker = null;
-        ColorPickers RightColorPicker = null;
+        ColorPickers colorPicker = null;
         #endregion
 
         #region 被选择文本的字体颜色
@@ -344,32 +351,17 @@ namespace cbhk.Generators.WrittenBookGenerator
         }
         #endregion
 
-        //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconWrittenBook.png";
+        #region 跳转页面数字
+        private int jumpSpecificPageNumber;
 
-        //当前光标选中的文本对象链表
-        List<RichRun> CurrentSelectedRichRunList = [];
+        public int JumpSpecificPageNumber
+        {
+            get => jumpSpecificPageNumber;
+            set => SetProperty(ref jumpSpecificPageNumber, value);
 
-        //作为内部工具被调用
-        public static bool AsInternalTool = false;
+        }
 
-        /// <summary>
-        /// 保存最终结果
-        /// </summary>
-        public string result = "";
-
-        /// <summary>
-        /// 保存最终结果的首个json对象
-        /// </summary>
-        public string object_result = "";
-
-        //取消署名按钮引用
-        Button signatureCancelButton = null;
-        //署名按钮
-        Button SignatureButton = null;
-
-        //保存成书的文档链表，用于显示和编辑
-        public List<EnabledFlowDocument> HistroyFlowDocumentList = null;
+        #endregion
 
         #region 悬浮菜单
         Popup popup = new()
@@ -382,8 +374,9 @@ namespace cbhk.Generators.WrittenBookGenerator
 
         #region 初始化两个页面
         Frame PageFrame = new() { NavigationUIVisibility = NavigationUIVisibility.Hidden };
-        public static EditPage editPage = new();
-        public static SignaturePage signaturePage = new();
+        EditPage editPage = new();
+        SignaturePage signaturePage = new();
+        bool WindowLoaded = false;
         #endregion
 
         /// <summary>
@@ -392,10 +385,6 @@ namespace cbhk.Generators.WrittenBookGenerator
         /// <param name="AsAnInternalTool"></param>
         public WrittenBookDataContext()
         {
-            #region 初始化字体
-            commonFontFamily = "Microsoft YaHei UI";
-            #endregion
-
             #region 链接指令
             RunCommand = new RelayCommand(run_command);
             ReturnCommand = new RelayCommand<CommonWindow>(return_command);
@@ -407,39 +396,9 @@ namespace cbhk.Generators.WrittenBookGenerator
             ResetTextCommand = new RelayCommand(resetTextCommand);
             #endregion
 
-            #region 读取点击事件
-            if (File.Exists(clickEventSourceFilePath) && clickEventSource.Count == 0)
-            {
-                string[] source = File.ReadAllLines(clickEventSourceFilePath);
-                for (int i = 0; i < source.Length; i++)
-                {
-                    string[] data = source[i].Split('.');
-                    clickEventSource.Add(data[1]);
-                    if (!EventDataBase.ContainsKey(data[0]))
-                        EventDataBase.Add(data[0], data[1]);
-                }
-            }
-            #endregion
-
-            #region 读取悬浮事件
-            if (File.Exists(hoverEventSourceFilePath) && hoverEventSource.Count == 0)
-            {
-                string[] source = File.ReadAllLines(hoverEventSourceFilePath);
-                for (int i = 0; i < source.Length; i++)
-                {
-                    string[] data = source[i].Split('.');
-                    hoverEventSource.Add(data[1]);
-                    if (!EventDataBase.ContainsKey(data[0]))
-                        EventDataBase.Add(data[0], data[1]);
-                }
-            }
-            #endregion
-
-            #region 读取混淆文本配置
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\data\\obfuscateChars.ini"))
-            {
-                obfuscates = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\data\\obfuscateChars.ini").ToCharArray().ToList();
-            }
+            #region 初始化编辑和署名页
+            editPage.DataContext = this;
+            signaturePage.DataContext = this;
             #endregion
         }
 
@@ -448,7 +407,7 @@ namespace cbhk.Generators.WrittenBookGenerator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void LoadedEditPage(object sender, RoutedEventArgs e)
+        public void EditPage_Loaded(object sender, RoutedEventArgs e)
         {
             ContentControl contentControl = sender as ContentControl;
             editPage.DataContext = this;
@@ -457,20 +416,34 @@ namespace cbhk.Generators.WrittenBookGenerator
         }
 
         /// <summary>
+        /// 按下回车后定位到指定页面
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void JumpToSpecificPage_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Enter)
+            {
+                if(JumpSpecificPageNumber > 0 && JumpSpecificPageNumber <= WrittenBookPages.Count)
+                {
+                    WrittenBookEditor.Document = WrittenBookPages[JumpSpecificPageNumber - 1];
+                    CurrentPageIndex = JumpSpecificPageNumber - 1;
+                }
+            }
+        }
+
+        /// <summary>
         /// 重置选中文本的所有属性
         /// </summary>
         private void resetTextCommand()
         {
-            RichRun start_run = WrittenBookEditor.Selection.Start.Parent as RichRun;
-            RichRun end_run = WrittenBookEditor.Selection.End.Parent as RichRun;
-
-            if (end_run != null && start_run != null)
+            if (WrittenBookEditor.Selection.End.Parent is RichRun endRun && WrittenBookEditor.Selection.Start.Parent is RichRun startRun)
             {
-                RichParagraph StartParagraph = start_run.Parent as RichParagraph;
-                RichParagraph EndParagraph = end_run.Parent as RichParagraph;
-                List<RichRun> StartRuns = new List<RichRun> { };
+                RichParagraph StartParagraph = startRun.Parent as RichParagraph;
+                RichParagraph EndParagraph = endRun.Parent as RichParagraph;
+                List<RichRun> StartRuns = [];
                 StartRuns = StartParagraph.Inlines.ToList().ConvertAll(item => item as RichRun);
-                int StartRunIndex = StartRuns.IndexOf(start_run);
+                int StartRunIndex = StartRuns.IndexOf(startRun);
                 //移除不包括在内的对象
                 if (StartRunIndex > 0)
                     StartRuns.RemoveRange(0, StartRunIndex);
@@ -488,14 +461,14 @@ namespace cbhk.Generators.WrittenBookGenerator
                     }//表示选中了不止两行
                     else
                     {
-                        List<RichRun> EndRuns = new List<RichRun> { };
+                        List<RichRun> EndRuns = [];
                         for (int i = StartParagraphIndex + 1; i <= EndParagrapghIndex; i++)
                         {
                             EndRuns = paragraphs[i].Inlines.ToList().ConvertAll(item => item as RichRun);
                             //最后一个段落只加行首到选区末尾处
                             if (i == EndParagrapghIndex)
                             {
-                                int EndRunIndex = EndRuns.IndexOf(end_run);
+                                int EndRunIndex = EndRuns.IndexOf(endRun);
                                 EndRuns.RemoveRange(EndRunIndex + 1, EndRuns.Count - (EndRunIndex + 1));
                             }
                             StartRuns.AddRange(EndRuns);
@@ -504,7 +477,7 @@ namespace cbhk.Generators.WrittenBookGenerator
                 }
                 else
                 {
-                    int EndRunIndex = StartRuns.IndexOf(end_run);
+                    int EndRunIndex = StartRuns.IndexOf(endRun);
                     StartRuns.RemoveRange(EndRunIndex + 1, StartRuns.Count - (EndRunIndex + 1));
                 }
 
@@ -512,57 +485,14 @@ namespace cbhk.Generators.WrittenBookGenerator
                 {
                     item.FontWeight = FontWeights.Normal;
                     item.FontStyle = FontStyles.Normal;
-                    item.TextDecorations = new TextDecorationCollection();
+                    item.TextDecorations = [];
                     item.Foreground = new SolidColorBrush(Color.FromRgb(0, 0, 0));
                     item.IsObfuscated = false;
-                    item.ObfuscateTimer.Enabled = false;
+                    item.ObfuscateTimer.IsEnabled = false;
                     if (item.UID.Trim() != "")
                         item.Text = item.UID;
                 }
             }
-        }
-
-        /// <summary>
-        /// 为混淆文字效果提供分割首尾文本块的功能
-        /// </summary>
-        private void obfuscateSpiltRichRunHelper(RichRun StartRichRun,RichRun EndRichRun,RichParagraph startRichParagraph,RichParagraph endRichParagraph)
-        {
-            #region 切割选区起始处到起始文本块之间的内容和选区末尾处到末尾文本块之间的内容
-            if(!Equals(StartRichRun, EndRichRun))
-            {
-                if (!StartRichRun.ObfuscateTimer.Enabled)
-                {
-                    RichRun PreviousRichRun = new RichRun();
-                    TextRange StartPartRange = new TextRange(StartRichRun.ContentStart, WrittenBookEditor.Selection.Start);
-                    PreviousRichRun.Text = StartPartRange.Text;
-                    startRichParagraph.Inlines.InsertBefore(StartRichRun, PreviousRichRun);
-                    StartRichRun.Text = StartRichRun.Text.Substring(StartPartRange.Text.Length);
-                }
-                if (!EndRichRun.ObfuscateTimer.Enabled)
-                {
-                    RichRun NextRichRun = new RichRun();
-                    TextRange EndPartRange = new TextRange(EndRichRun.ContentEnd, WrittenBookEditor.Selection.End);
-                    NextRichRun.Text = EndPartRange.Text;
-                    endRichParagraph.Inlines.InsertAfter(EndRichRun, NextRichRun);
-                    EndRichRun.Text = EndRichRun.Text.Substring(0, EndRichRun.Text.Length - EndPartRange.Text.Length);
-                }
-            }
-            else
-            {
-                if (!StartRichRun.ObfuscateTimer.Enabled)
-                {
-                    RichRun PreviousRichRun = new RichRun();
-                    RichRun NextRichRun = new RichRun();
-                    TextRange StartPartRange = new TextRange(StartRichRun.ContentStart, WrittenBookEditor.Selection.Start);
-                    TextRange EndPartRange = new TextRange(EndRichRun.ContentEnd, WrittenBookEditor.Selection.End);
-                    PreviousRichRun.Text = StartPartRange.Text;
-                    NextRichRun.Text = EndPartRange.Text;
-                    startRichParagraph.Inlines.InsertBefore(StartRichRun, PreviousRichRun);
-                    endRichParagraph.Inlines.InsertAfter(EndRichRun, NextRichRun);
-                    StartRichRun.Text = WrittenBookEditor.Selection.Text;
-                }
-            }
-            #endregion
         }
 
         /// <summary>
@@ -573,137 +503,13 @@ namespace cbhk.Generators.WrittenBookGenerator
             if (WrittenBookEditor.Selection == null) return;
             if (WrittenBookEditor.Selection.Text.Length == 0) return;
 
-            RichParagraph startRichParagraph = WrittenBookEditor.Selection.Start.Paragraph as RichParagraph;
-            RichParagraph endRichParagraph = WrittenBookEditor.Selection.End.Paragraph as RichParagraph;
-            if (startRichParagraph == null || endRichParagraph == null) return;
             //获取选区头部所在的文本块以及它所在段落中的索引
-            RichRun StartRichRun = WrittenBookEditor.Selection.Start.Parent as RichRun;
-            RichRun EndRichRun = WrittenBookEditor.Selection.End.Parent as RichRun;
-            List<RichRun> CurrentRichRuns = WrittenBookEditor.Selection.Start.Paragraph.Inlines.ToList().ConvertAll(item => item as RichRun);
-
-            //判断选区首尾是否在同一个段落中
-            if (Equals(startRichParagraph,endRichParagraph))
+            if (WrittenBookEditor.Selection.Start.Paragraph is not RichParagraph || WrittenBookEditor.Selection.End.Paragraph is not RichParagraph)
             {
-                if (Equals(StartRichRun,EndRichRun))
-                {
-                    //关闭混淆
-                    if(StartRichRun.ObfuscateTimer.Enabled)
-                    {
-                        StartRichRun.IsObfuscated = false;
-                        StartRichRun.ObfuscateTimer.Enabled = false;
-                        StartRichRun.Text = StartRichRun.UID;
-                        StartRichRun.FontFamily = new FontFamily(commonFontFamily);
-                    }
-                    else//开启混淆
-                    {
-                        obfuscateSpiltRichRunHelper(StartRichRun,StartRichRun,startRichParagraph,startRichParagraph);
-                        StartRichRun.UID = StartRichRun.Text;
-                        FontFamily fontFamily = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\"), "./#Bitstream Vera Sans Mono");
-                        StartRichRun.FontFamily = fontFamily;
-                        StartRichRun.IsObfuscated = true;
-                        StartRichRun.ObfuscateTimer.Enabled = true;
-                    }
-                }
-                else
-                {
-                    int StartRichRunIndex = CurrentRichRuns.IndexOf(StartRichRun);
-                    int EndRichRunIndex = CurrentRichRuns.IndexOf(EndRichRun);
-                    //检查未开启混淆的文本块数量
-                    int IsNotEnableCount = 0;
-                    //未混淆文本块链表
-                    List<RichRun> IsNotEnableRichRuns = [];
-                    CurrentRichRuns.All(item =>
-                    {
-                        if(!item.ObfuscateTimer.Enabled)
-                        {
-                            IsNotEnableRichRuns.Add(item);
-                            IsNotEnableCount++;
-                        }
-                        return true;
-                    });
-                    //大于0则把未开启混淆的文本块开启混淆
-                    if(IsNotEnableCount > 0)
-                    {
-                        obfuscateSpiltRichRunHelper(StartRichRun, EndRichRun, startRichParagraph, startRichParagraph);
-                        IsNotEnableRichRuns.All(item =>
-                        {
-                            item.UID = item.Text;
-                            FontFamily fontFamily = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\"), "./#Bitstream Vera Sans Mono");
-                            item.FontFamily = fontFamily;
-                            item.IsObfuscated = true;
-                            item.ObfuscateTimer.Enabled = true;
-                            return true;
-                        });
-                    }
-                    else//否则把所有选中的文本块去掉混淆
-                    {
-                        foreach (RichRun item in CurrentRichRuns)
-                        {
-                            item.IsObfuscated = false;
-                            item.ObfuscateTimer.Enabled = false;
-                            item.Text = item.UID;
-                            item.FontFamily = new FontFamily(commonFontFamily);
-                        }
-                    }
-                }
+                return;
             }
-            else//不在同一个段落中则把在选区中的两个段落之间的所有文本块合并处理
-            {
-                #region 获取起始与末尾两个段落之间所有段落的文本块
-                List<RichParagraph> richParagraphs = WrittenBookEditor.Document.Blocks.ToList().ConvertAll(item=>item as RichParagraph);
-                int StartRichParaIndex = richParagraphs.IndexOf(startRichParagraph);
-                int EndRichParaIndex = richParagraphs.IndexOf(endRichParagraph);
-                for (int i = StartRichParaIndex + 1; i <= (EndRichParaIndex - 1); i++)
-                    CurrentRichRuns.AddRange(richParagraphs[i].Inlines.ToList().ConvertAll(item => item as RichRun));
-                #endregion
 
-                List<RichRun> endRichRuns = endRichParagraph.Inlines.ToList().ConvertAll(item => item as RichRun);
-                int StartRichRunIndex = CurrentRichRuns.IndexOf(StartRichRun);
-                int EndRichRunIndex = endRichRuns.IndexOf(EndRichRun);
-                int StartUnableCount = 0;
-                int EndUnableCount = 0;
-                List<RichRun> UnableRichRuns = new List<RichRun> { };
-                //记录未开启混淆的文本块数量
-                for (int i = StartRichRunIndex; i < CurrentRichRuns.Count; i++)
-                {
-                    if (!CurrentRichRuns[i].ObfuscateTimer.Enabled)
-                    {
-                        UnableRichRuns.Add(CurrentRichRuns[i]);
-                        StartUnableCount++;
-                    }
-                }
-                for (int i = 0; i <= EndRichRunIndex; i++)
-                {
-                    if (!endRichRuns[i].ObfuscateTimer.Enabled)
-                    {
-                        UnableRichRuns.Add(endRichRuns[i]);
-                        EndUnableCount++;
-                    }
-                }
-                //总数量为0则说明选区内文本块已全部开启混淆,则需要把所有文本块关闭混淆
-                if(StartUnableCount + EndUnableCount == 0)
-                {
-                    foreach (var item in CurrentRichRuns)
-                    {
-                        item.IsObfuscated = false;
-                        item.ObfuscateTimer.Enabled = false;
-                        item.UID = item.Text;
-                        item.FontFamily = new FontFamily(commonFontFamily);
-                    }
-                }
-                else//否则把未开启混淆的文本块开启混淆
-                {
-                    obfuscateSpiltRichRunHelper(StartRichRun, EndRichRun, startRichParagraph, endRichParagraph);
-                    foreach (var item in UnableRichRuns)
-                    {
-                        item.UID = item.Text;
-                        FontFamily fontFamily = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\"), "./#Bitstream Vera Sans Mono");
-                        item.FontFamily = fontFamily;
-                        item.IsObfuscated = true;
-                        item.ObfuscateTimer.Enabled = true;
-                    }
-                }
-            }
+            ObfuscateRunHelper.Run(ref WrittenBookEditor);
         }
 
         /// <summary>
@@ -723,10 +529,7 @@ namespace cbhk.Generators.WrittenBookGenerator
                 int underline_index = current_decorations.IndexOf(TextDecorations.Baseline.First());
                 if (!current_decorations.Contains(TextDecorations.Strikethrough.First()))
                 {
-                    TextDecorationCollection textDecorations = new TextDecorationCollection();
-                    if (underline_index != -1)
-                        textDecorations.Add(TextDecorations.Baseline);
-                    textDecorations.Add(TextDecorations.Strikethrough);
+                    TextDecorationCollection textDecorations = [..underline_index != -1 ? TextDecorations.Baseline : [], TextDecorations.Strikethrough[0]];
                     textRange.ApplyPropertyValue(TextBlock.TextDecorationsProperty, textDecorations);
                 }
                 else
@@ -757,10 +560,11 @@ namespace cbhk.Generators.WrittenBookGenerator
                 int strikethrough_index = current_decorations.IndexOf(TextDecorations.Strikethrough.First());
                 if (!current_decorations.Contains(TextDecorations.Baseline.First()))
                 {
-                    TextDecorationCollection textDecorations = new();
-                    if (strikethrough_index != -1)
-                        textDecorations.Add(TextDecorations.Strikethrough);
-                    textDecorations.Add(TextDecorations.Baseline);
+                    TextDecorationCollection textDecorations =
+                    [
+                        .. strikethrough_index != -1 ? TextDecorations.Strikethrough : [],
+                        TextDecorations.Baseline[0],
+                    ];
                     textRange.ApplyPropertyValue(TextBlock.TextDecorationsProperty, textDecorations);
                 }
                 else
@@ -932,15 +736,22 @@ namespace cbhk.Generators.WrittenBookGenerator
                 }
 
                 #region 设置数据
-                RichRun start_run = WrittenBookEditor.Selection.Start.Parent as RichRun;
-                RichRun end_run = WrittenBookEditor.Selection.End.Parent as RichRun;
-                //Paragraph start_paragraph = start_run.Parent as Paragraph;
-                //Paragraph end_paragraph = end_run.Parent as Paragraph;
-                SameRun = Equals(start_run, end_run);
+                RichRun startRun = WrittenBookEditor.Selection.Start.Parent as RichRun;
+                RichRun endRun = WrittenBookEditor.Selection.End.Parent as RichRun;
+                startRun ??= new RichRun() { Text = startRun.Text };
+                endRun ??= new RichRun() { Text = endRun.Text };
+                if (endRun is null)
+                {
+                    Paragraph paragraph = WrittenBookEditor.Selection.Start.Paragraph;
+                    List<Run> runs = paragraph.Inlines.Cast<Run>().ToList();
+                    int startIndex = runs.IndexOf(startRun);
+                    runs[startIndex] = new RichRun() { Text = startRun.Text };
+                }
+                SameRun = Equals(startRun, endRun);
                 if (SameRun)
                 {
                     #region 同步数据
-                    CurrentRichRun = start_run;
+                    CurrentRichRun = startRun;
 
                     #region 事件的开关
                     Binding HaveClickEventBinder = new()
@@ -1030,7 +841,7 @@ namespace cbhk.Generators.WrittenBookGenerator
         /// <param name="e"></param>
         public void WrittenBoxPreviewKeyDown(object sender, KeyEventArgs e)
         {
-            //处理粘贴的数据,合并为RichRun以适配混淆效果
+            #region 处理粘贴的数据,合并为RichRun以适配混淆效果
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.V)
             {
                 RichRun richRun = WrittenBookEditor.CaretPosition.Parent as RichRun;
@@ -1038,8 +849,11 @@ namespace cbhk.Generators.WrittenBookGenerator
                 {
                     Text = Clipboard.GetText()
                 };
+                e.Handled = true;
             }
+            #endregion
 
+            #region 处理换行
             if (e.Key == Key.Enter)
             {
                 RichParagraph richParagraph = new();
@@ -1064,9 +878,9 @@ namespace cbhk.Generators.WrittenBookGenerator
                         string StartText = CutDownStartRange.Text;
                         string EndText = CutDownEndRange.Text;
                         richRun.Text = richRun.UID = StartText;
-                        RichRun SpiltRichRun = new RichRun();
+                        RichRun SpiltRichRun = new();
                         SpiltRichRun.UID = SpiltRichRun.Text = EndText;
-                        SpiltRichRun.ObfuscateTimer.Enabled = richRun.ObfuscateTimer.Enabled;
+                        SpiltRichRun.ObfuscateTimer.IsEnabled = richRun.ObfuscateTimer.IsEnabled;
                         WrittenBookEditor.CaretPosition.Paragraph.Inlines.InsertAfter(richRun,SpiltRichRun);
                         List<RichRun> CurrentRuns = WrittenBookEditor.CaretPosition.Paragraph.Inlines.ToList().ConvertAll(item=>item as RichRun);
                         int CurrentIndex = CurrentRuns.IndexOf(richRun);
@@ -1082,6 +896,7 @@ namespace cbhk.Generators.WrittenBookGenerator
                 WrittenBookEditor.Focus();
                 e.Handled = true;
             }
+            #endregion
         }
 
         /// <summary>
@@ -1139,16 +954,20 @@ namespace cbhk.Generators.WrittenBookGenerator
         public void WrittenBookTextBox_KeyUp(object sender, KeyEventArgs e)
         {
             #region 如果内容被全部删除,则更新空白文档的排版
-            if ((Keyboard.IsKeyUp(Key.Back) || Keyboard.IsKeyUp(Key.Delete)) && WrittenBookEditor.Document.Blocks.Count <= 1)
+            if ((e.Key == Key.Back || e.Key == Key.Delete) && WrittenBookEditor.Document.Blocks.Count <= 1)
             {
-                WrittenBookEditor.CaretBrush = Brushes.Transparent;
-                for (int i = 0; i < 4; i++)
+                if(WrittenBookEditor.Document.Blocks.Count == 1 && WrittenBookEditor.Document.Blocks.First() is not RichParagraph)
                 {
-                    RichParagraph richParagraph = new() { FontFamily = new FontFamily(commonFontFamily), FontSize = 40, TextAlignment = TextAlignment.Center, Margin = new(0, 2.5, 0, 2.5) };
-                    richParagraph.Inlines.Add(new RichRun());
+                    Paragraph paragraph = WrittenBookEditor.Document.Blocks.First() as Paragraph;
+                    List<RichRun> richRuns = paragraph.Inlines.Cast<RichRun>().ToList();
+                    RichParagraph richParagraph = new() { FontFamily = new FontFamily("Microsoft YaHei UI"), FontSize = 12 };
+                    richParagraph.Inlines.Clear();
+                    foreach (var item in richRuns)
+                    {
+                        richParagraph.Inlines.Add(item);
+                    }
                     WrittenBookEditor.Document.Blocks.Add(richParagraph);
                 }
-                WrittenBookEditor.CaretBrush = Brushes.Black;
             }
             #endregion
             ShowHoverMenu();
@@ -1185,15 +1004,16 @@ namespace cbhk.Generators.WrittenBookGenerator
         public void WrittenBoxLoaded(object sender, RoutedEventArgs e)
         {
             //初始化
-            if(WrittenBookEditor == null)
+            if(!WindowLoaded)
             {
+                WindowLoaded = true;
                 WrittenBookEditor = sender as RichTextBox;
                 //初始化文档链表
-                if (HistroyFlowDocumentList == null)
+                if (HistroyFlowDocumentList.Count == 0)
                     WrittenBookPages.Add(WrittenBookEditor.Document as EnabledFlowDocument);
                 else
                 {
-                    HistroyFlowDocumentList.All(item => { item.FontFamily = new FontFamily(commonFontFamily); return true; });
+                    HistroyFlowDocumentList.All(item => { item.FontFamily = new FontFamily("Bitstream Vera Sans Mono"); return true; });
                     WrittenBookPages = HistroyFlowDocumentList;
                     WrittenBookEditor.Document = WrittenBookPages[0];
                 }
@@ -1224,11 +1044,7 @@ namespace cbhk.Generators.WrittenBookGenerator
         /// <param name="e"></param>
         public void ColorPickerLoaded(object sender, RoutedEventArgs e)
         {
-            ColorPickers colorPickers = sender as ColorPickers;
-            if (LeftColorPicker == null && colorPickers.Uid == "Left")
-                LeftColorPicker = colorPickers;
-            if (RightColorPicker == null && colorPickers.Uid == "Right")
-                RightColorPicker = colorPickers;
+            colorPicker = sender as ColorPickers;
         }
 
         /// <summary>
@@ -1425,7 +1241,7 @@ namespace cbhk.Generators.WrittenBookGenerator
             MaxPage = WrittenBookPages.Count;
             if (MaxPage <= (CurrentPageIndex + 1))
             {
-                WrittenBookPages.Add(new EnabledFlowDocument() { FontFamily = new FontFamily(commonFontFamily), FontSize = 25, LineHeight = 10 });
+                WrittenBookPages.Add(new EnabledFlowDocument() { FontFamily = new FontFamily("Bitstream Vera Sans Mono"), FontSize = 12, LineHeight = 10 });
             }
             CurrentPageIndex++;
             WrittenBookEditor.Document = WrittenBookPages[CurrentPageIndex];

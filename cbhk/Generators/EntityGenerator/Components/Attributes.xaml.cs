@@ -1,4 +1,5 @@
 ﻿using cbhk.CustomControls;
+using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -16,8 +17,8 @@ namespace cbhk.Generators.EntityGenerator.Components
     {
         #region 字段
         DataTable MobAttributeTable = null;
-        ObservableCollection<string> AttributeNames { get; set; } = new();
-        public ObservableCollection<AttributeModifiers> AttributeModifiersSource { get; set; } = new();
+        ObservableCollection<string> AttributeNames { get; set; } = [];
+        public ObservableCollection<AttributeModifiers> AttributeModifiersSource { get; set; } = [];
         #endregion
 
         #region 合并数据
@@ -28,7 +29,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                 string result = "";
                 string SelectedName = AttributeName.SelectedValue.ToString();
                 if(SelectedName.Length > 0)
-                result = "{Base: " + Base.Value + "d" + (AttributeModifiersSource.Count > 0 ? ",Modifiers:[" + string.Join(',', AttributeModifiersSource.Select(item => item.Result)) + "]" : "") + ",Name:\"" + SelectedName[(SelectedName.IndexOf(':') + 1)..SelectedName.LastIndexOf(':')] + "\"}";
+                result = "{Base: " + Base.Value + "d" + (AttributeModifiersSource.Count > 0 ? ",Modifiers:[" + string.Join(',', AttributeModifiersSource.Select(item => (item as IVersionUpgrader).Result())) + "]" : "") + ",Name:\"" + SelectedName[(SelectedName.IndexOf(':') + 1)..SelectedName.LastIndexOf(':')] + "\"}";
                 return result;
             }
         }
@@ -37,8 +38,6 @@ namespace cbhk.Generators.EntityGenerator.Components
         public Attributes()
         {
             InitializeComponent();
-            EntityDataContext context = Window.GetWindow(this).DataContext as EntityDataContext;
-            MobAttributeTable = context.MobAttributeTable;
         }
 
         /// <summary>
@@ -48,6 +47,8 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// <param name="e"></param>
         private void AttributeName_Loaded(object sender, RoutedEventArgs e)
         {
+            EntityDataContext context = Window.GetWindow(this).DataContext as EntityDataContext;
+            MobAttributeTable = context.MobAttributeTable;
             ComboBox comboBox = sender as ComboBox;
             foreach (DataRow row in MobAttributeTable.Rows)
             {
@@ -87,13 +88,27 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// 添加修饰成员
         /// </summary>
         /// <param name="obj"></param>
-        public void AddModifierCommand(FrameworkElement obj) => AttributeModifiersSource.Add(new AttributeModifiers());
+        public void AddModifierCommand(FrameworkElement obj)
+        {
+            AttributeModifiers attributeModifiers = new();
+            AttributeModifiersSource.Add(attributeModifiers);
+            EntityPagesDataContext entityPagesDataContext = obj.FindParent<EntityPages>().DataContext as EntityPagesDataContext;
+            entityPagesDataContext.VersionComponents.Add(attributeModifiers);
+        }
 
         /// <summary>
         /// 清空修饰成员
         /// </summary>
         /// <param name="obj"></param>
-        private void ClearModifierCommand(FrameworkElement obj) => AttributeModifiersSource.Clear();
+        private void ClearModifierCommand(FrameworkElement obj)
+        {
+            EntityPagesDataContext entityPagesDataContext = obj.FindParent<EntityPages>().DataContext as EntityPagesDataContext;
+            for (int i = 0; i < AttributeModifiersSource.Count; i++)
+            {
+                entityPagesDataContext.VersionComponents.Remove(AttributeModifiersSource[i]);
+                AttributeModifiersSource.RemoveAt(i);
+            }
+        }
 
         /// <summary>
         /// 删除该控件

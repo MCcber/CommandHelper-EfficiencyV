@@ -130,7 +130,7 @@
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 RenderOptions.ClearTypeHint="Enabled"
                 SnapsToDevicePixels="True"
-                Source="/cbhk;component/resources/cbhk_form/images/empty.png"
+                Source="/cbhk;component/resources/cbhk/images/empty.png"
                 UseLayoutRounding="True" />
             <Image
                 Grid.Row="0"
@@ -162,7 +162,7 @@
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 RenderOptions.ClearTypeHint="Enabled"
                 SnapsToDevicePixels="True"
-                Source="/cbhk;component/resources/cbhk_form/images/empty.png"
+                Source="/cbhk;component/resources/cbhk/images/empty.png"
                 UseLayoutRounding="True" />
             <Image
                 Grid.Row="0"
@@ -206,7 +206,7 @@
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 RenderOptions.ClearTypeHint="Enabled"
                 SnapsToDevicePixels="True"
-                Source="/cbhk;component/resources/cbhk_form/images/empty.png"
+                Source="/cbhk;component/resources/cbhk/images/empty.png"
                 UseLayoutRounding="True" />
             <Image
                 Grid.Row="0"

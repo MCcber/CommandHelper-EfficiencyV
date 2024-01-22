@@ -34,9 +34,9 @@
             Grid.Column="1"
             Height="25"
             VerticalContentAlignment="Center"
-            IsEditable="True"
             Loaded="EnchantmentIdLoaded"
             SelectedIndex="0"
+            SelectionChanged="EnchantmentID_SelectionChanged"
             Style="{DynamicResource TextComboBoxStyle}" />
         <TextBlock
             Grid.Column="2"

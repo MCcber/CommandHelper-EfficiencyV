@@ -88,8 +88,8 @@
                 </CustomControls:IconTextButtons.ToolTip>
             </CustomControls:IconTextButtons>
             <CustomControls:IconTextButtons
-                Width="40"
-                Height="40"
+                Width="25"
+                Height="25"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Background="{StaticResource ButtonNormal}"
@@ -110,8 +110,8 @@
                 <TextBlock FontWeight="Bold" Text="B" />
             </CustomControls:IconTextButtons>
             <CustomControls:IconTextButtons
-                Width="40"
-                Height="40"
+                Width="25"
+                Height="25"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Background="{StaticResource ButtonNormal}"
@@ -132,8 +132,8 @@
                 <TextBlock FontStyle="Italic" Text="i" />
             </CustomControls:IconTextButtons>
             <CustomControls:IconTextButtons
-                Width="40"
-                Height="40"
+                Width="25"
+                Height="25"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Background="{StaticResource ButtonNormal}"
@@ -157,8 +157,8 @@
                 </TextBlock>
             </CustomControls:IconTextButtons>
             <CustomControls:IconTextButtons
-                Width="40"
-                Height="40"
+                Width="25"
+                Height="25"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Background="{StaticResource ButtonNormal}"
@@ -182,8 +182,8 @@
                 </TextBlock>
             </CustomControls:IconTextButtons>
             <CustomControls:IconTextButtons
-                Width="40"
-                Height="40"
+                Width="25"
+                Height="25"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Background="{StaticResource ButtonNormal}"
@@ -209,8 +209,8 @@
                 </Grid.ColumnDefinitions>
                 <CustomControls:IconTextButtons
                     Grid.Column="0"
-                    Width="40"
-                    Height="40"
+                    Width="25"
+                    Height="25"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Panel.ZIndex="0"
@@ -221,8 +221,8 @@
                     Foreground="Black"
                     PressedBackground="{StaticResource ButtonPressed}"
                     Style="{DynamicResource IconTextButton}"
-                    ToolTipService.InitialShowDelay="0"
-                    ToolTipService.ShowDuration="0">
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
                     <CustomControls:IconTextButtons.ToolTip>
                         <ToolTip
                             Background="#424242"
@@ -230,19 +230,10 @@
                             Foreground="White" />
                     </CustomControls:IconTextButtons.ToolTip>
                 </CustomControls:IconTextButtons>
-                <TextBlock
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    Panel.ZIndex="1"
-                    Foreground="White"
-                    IsHitTestVisible="False"
-                    Text="Color"
-                    TextAlignment="Center" />
                 <ColorPicker:ColorPickers
                     Grid.Column="1"
-                    Width="40"
-                    Height="40"
-                    Panel.ZIndex="0"
+                    Width="25"
+                    Height="25"
                     Background="Black"
                     SelectColor="{Binding SelectionColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     ToolTipService.BetweenShowDelay="0"
@@ -263,6 +254,26 @@
                     </behavior:Interaction.Triggers>
                 </ColorPicker:ColorPickers>
             </Grid>
+            <DockPanel>
+                <TextBlock
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="跳转到" />
+                <Slider
+                    Width="50"
+                    Height="25"
+                    Maximum="2147483647"
+                    Minimum="1"
+                    Style="{DynamicResource NumberBoxStyle}"
+                    Value="{Binding JumpSpecificPageNumber, Mode=OneWayToSource}">
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="KeyDown">
+                            <behavior:CallMethodAction MethodName="JumpToSpecificPage_KeyDown" TargetObject="{Binding}" />
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
+                </Slider>
+            </DockPanel>
             <CustomControls:RadiusToggleButtons
                 Margin="5,0,0,0"
                 Foreground="White"
@@ -281,7 +292,7 @@
             VerticalAlignment="Top">
             <behavior:Interaction.Triggers>
                 <behavior:EventTrigger EventName="Loaded">
-                    <behavior:CallMethodAction MethodName="LoadedEditPage" TargetObject="{Binding}" />
+                    <behavior:CallMethodAction MethodName="EditPage_Loaded" TargetObject="{Binding}" />
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
         </ContentControl>

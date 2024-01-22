@@ -1,5 +1,6 @@
 ﻿using cbhk.ControlsDataContexts;
 using cbhk.CustomControls;
+using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -16,7 +18,7 @@ namespace cbhk.Generators.EntityGenerator.Components
     /// <summary>
     /// AreaEffectCloudEffects.xaml 的交互逻辑
     /// </summary>
-    public partial class AreaEffectCloudEffects : UserControl
+    public partial class AreaEffectCloudEffects : UserControl,IVersionUpgrader
     {
         #region 浮点数取值范围
         public float FloatMinValue
@@ -32,80 +34,73 @@ namespace cbhk.Generators.EntityGenerator.Components
         DataTable MobEffectTable = new();
 
         #region 合并数据
-        private bool HaveResult = true;
-        public string Result
+        int currentVersion = 0;
+        string id = "";
+        async Task<string> IVersionUpgrader.Result()
         {
-            get
+            await Upgrade(currentVersion);
+            string result = "";
+            List<string> Data = [];
+            List<string> FactorCalculationList = [];
+            foreach (FrameworkElement component in EffectListPanel.Children)
             {
-                if(HaveResult)
+                if (component is DockPanel)
                 {
-                    string result = "";
-                    List<string> Data = new();
-                    List<string> FactorCalculationList = new();
-                    foreach (FrameworkElement component in EffectListPanel.Children)
+                    DockPanel dockPanel = component as DockPanel;
+                    foreach (FrameworkElement subChild in dockPanel.Children)
                     {
-                        if(component is DockPanel)
+                        if (subChild is Slider)
                         {
-                            DockPanel dockPanel = component as DockPanel;
-                            foreach (FrameworkElement subChild in dockPanel.Children)
-                            {
-                                if(subChild is Slider)
-                                {
-                                    Slider slider = subChild as Slider;
-                                    Data.Add(slider.Uid + ":" + slider.Value);
-                                }
-                                if(subChild is TextCheckBoxs)
-                                {
-                                    TextCheckBoxs textCheckBoxs = subChild as TextCheckBoxs;
-                                    if (textCheckBoxs.IsChecked.Value)
-                                        Data.Add(textCheckBoxs.Uid + ":1b");
-                                }
-                                if(subChild is ComboBox)
-                                {
-                                    ComboBox comboBox = subChild as ComboBox;
-                                    string currentID = MobEffectTable.Select("name='" + comboBox.SelectedItem.ToString() + "'")?.First()["id"].ToString();
-                                    Data.Add(comboBox.Uid + ":\"minecraft:" +currentID + "\"");
-                                }
-                            }
+                            Slider slider = subChild as Slider;
+                            Data.Add(slider.Uid + ":" + slider.Value);
                         }
-                        else
-                        if (component is TextCheckBoxs)
+                        if (subChild is TextCheckBoxs)
                         {
-                            TextCheckBoxs textCheckBoxs = component as TextCheckBoxs;
+                            TextCheckBoxs textCheckBoxs = subChild as TextCheckBoxs;
                             if (textCheckBoxs.IsChecked.Value)
                                 Data.Add(textCheckBoxs.Uid + ":1b");
                         }
-                        else
-                        if (component is Slider)
+                        if (subChild is ComboBox comboBox)
                         {
-                            Slider slider = component as Slider;
-                            if (slider.Value > 0)
-                                Data.Add(slider.Uid + ":" + slider.Value + (Equals(slider.Maximum, float.MaxValue) ? "f" : ""));
+                            Data.Add(comboBox.Uid + ":" + id);
                         }
                     }
-                    foreach (FrameworkElement component in FactorCalculationDataGrid.Children)
-                    {
-                        if (component is TextCheckBoxs)
-                        {
-                            TextCheckBoxs textCheckBoxs = component as TextCheckBoxs;
-                            if (textCheckBoxs.IsChecked.Value)
-                                FactorCalculationList.Add(textCheckBoxs.Uid + ":1b");
-                        }
-                        else
-                        if (component is Slider)
-                        {
-                            Slider slider = component as Slider;
-                            if (slider.Value > 0)
-                                FactorCalculationList.Add(slider.Uid + ":" + slider.Value + (Equals(slider.Maximum, float.MaxValue) ? "f" : ""));
-                        }
-                    }
-                    result = "{" + string.Join(",", Data) + (FactorCalculationList.Count > 0 ? ",FactorCalculationData:{" + string.Join(",", FactorCalculationList) + "}" : "") + "}";
-                    if (result == "{}")
-                        result = "";
-                    return result;
                 }
-                return "";
+                else
+                if (component is TextCheckBoxs)
+                {
+                    TextCheckBoxs textCheckBoxs = component as TextCheckBoxs;
+                    if (textCheckBoxs.IsChecked.Value)
+                        Data.Add(textCheckBoxs.Uid + ":1b");
+                }
+                else
+                if (component is Slider)
+                {
+                    Slider slider = component as Slider;
+                    if (slider.Value > 0)
+                        Data.Add(slider.Uid + ":" + slider.Value + (Equals(slider.Maximum, float.MaxValue) ? "f" : ""));
+                }
             }
+            foreach (FrameworkElement component in FactorCalculationDataGrid.Children)
+            {
+                if (component is TextCheckBoxs)
+                {
+                    TextCheckBoxs textCheckBoxs = component as TextCheckBoxs;
+                    if (textCheckBoxs.IsChecked.Value)
+                        FactorCalculationList.Add(textCheckBoxs.Uid + ":1b");
+                }
+                else
+                if (component is Slider)
+                {
+                    Slider slider = component as Slider;
+                    if (slider.Value > 0)
+                        FactorCalculationList.Add(slider.Uid + ":" + slider.Value + (Equals(slider.Maximum, float.MaxValue) ? "f" : ""));
+                }
+            }
+            result = "{" + string.Join(",", Data) + (FactorCalculationList.Count > 0 ? ",FactorCalculationData:{" + string.Join(",", FactorCalculationList) + "}" : "") + "}";
+            if (result == "{}")
+                result = "";
+            return result;
         }
         #endregion
 
@@ -121,9 +116,8 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// <param name="obj"></param>
         private void CloseEffectCommand(FrameworkElement obj)
         {
-            (Parent as StackPanel).Children.Remove(this);
-            HaveResult = false;
             this.FindParent<Accordion>().FindChild<IconButtons>().Focus();
+            (Parent as StackPanel).Children.Remove(this);
         }
 
         /// <summary>
@@ -131,9 +125,10 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void EffectID_Loaded(object sender, RoutedEventArgs e)
+        private async void EffectID_Loaded(object sender, RoutedEventArgs e)
         {
-            ObservableCollection<IconComboBoxItem> source = new();
+            ComboBox comboBox = sender as ComboBox;
+            ObservableCollection<IconComboBoxItem> source = [];
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
             foreach (DataRow item in MobEffectTable.Rows)
             {
@@ -149,15 +144,40 @@ namespace cbhk.Generators.EntityGenerator.Components
                     ComboBoxItemText = name
                 });
             }
-            (sender as ComboBox).ItemsSource = source;
+            comboBox.ItemsSource = source;
+            comboBox.SelectedIndex = 0;
+
+            await Upgrade(1202);
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
             EffectAccordion.Fresh = new CommunityToolkit.Mvvm.Input.RelayCommand<FrameworkElement>(CloseEffectCommand);
-            ObservableCollection<IconComboBoxItem> source = new();
+            ObservableCollection<IconComboBoxItem> source = [];
             EntityDataContext context = Window.GetWindow(this).DataContext as EntityDataContext;
             MobEffectTable = context.MobEffectTable;
+        }
+
+        public async Task Upgrade(int version)
+        {
+            currentVersion = version;
+            await Task.Delay(0);
+            if(version < 116)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    string number = MobEffectTable.Select("id='" + (ID.SelectedItem as IconComboBoxItem).ComboBoxItemId + "'")?.First()["number"].ToString();
+                    if (number is not null)
+                        id = number;
+                });
+            }
+            else
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    id = "\"minecraft:" + (ID.SelectedItem as IconComboBoxItem).ComboBoxItemId + "\"";
+                });
+            }
         }
     }
 }

@@ -9,9 +9,9 @@
     xmlns:local_window="clr-namespace:cbhk.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="物品生成器"
-    Width="755"
+    Width="785"
     Height="500"
-    MinWidth="755"
+    MinWidth="785"
     MinHeight="500"
     Background="#2F2F2F"
     Icon="/cbhk;component/resources/common/images/spawnerIcons/IconItems.png"
@@ -48,6 +48,12 @@
             Command="{Binding ReturnCommand}"
             CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local_window:CommonWindow}}" />
     </Window.InputBindings>
+
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="Loaded">
+            <behaviors:CallMethodAction MethodName="Item_Loaded" TargetObject="{Binding}" />
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -105,42 +111,91 @@
                 Background="{StaticResource Save}"
                 Command="{Binding SaveAll}"
                 Style="{DynamicResource IconTextButton}" />
-            <CustomControls:IconTextButtons
-                Padding="5"
+            <CustomControls:StereoTextButton
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Background="{DynamicResource ButtonNormal}"
+                Background="#EFF2F1"
+                BorderThickness="4,4,4,7"
+                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
                 Command="{Binding AddItem}"
                 Content="添加"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControls:IconTextButtons
-                Padding="5"
+                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+                PressedBorderThickness="4 4 4 4"
+                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+                RightBorderTexture="{StaticResource ButtonNormalRight}"
+                Style="{DynamicResource StereoTextButton}"
+                TopBorderTexture="{StaticResource ButtonNormalTop}" />
+            <CustomControls:StereoTextButton
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Background="{DynamicResource ButtonNormal}"
+                Background="#EFF2F1"
+                BorderThickness="4,4,4,7"
+                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
                 Command="{Binding ClearItem}"
                 Content="清空"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControls:IconTextButtons
-                Padding="5"
+                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+                PressedBorderThickness="4 4 4 4"
+                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+                RightBorderTexture="{StaticResource ButtonNormalRight}"
+                Style="{DynamicResource StereoTextButton}"
+                TopBorderTexture="{StaticResource ButtonNormalTop}" />
+            <CustomControls:StereoTextButton
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Background="{DynamicResource ButtonNormal}"
+                Background="#EFF2F1"
+                BorderThickness="4,4,4,7"
+                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
                 Command="{Binding ImportItemFromClipboard}"
                 Content="从剪切板导入"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControls:IconTextButtons
-                Padding="5"
+                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+                PressedBorderThickness="4 4 4 4"
+                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+                RightBorderTexture="{StaticResource ButtonNormalRight}"
+                Style="{DynamicResource StereoTextButton}"
+                TopBorderTexture="{StaticResource ButtonNormalTop}" />
+            <CustomControls:StereoTextButton
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Background="{DynamicResource ButtonNormal}"
+                Background="#EFF2F1"
+                BorderThickness="4,4,4,7"
+                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
                 Command="{Binding ImportItemFromFile}"
                 Content="从文件导入"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
+                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+                PressedBorderThickness="4 4 4 4"
+                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+                RightBorderTexture="{StaticResource ButtonNormalRight}"
+                Style="{DynamicResource StereoTextButton}"
+                TopBorderTexture="{StaticResource ButtonNormalTop}" />
+            <CustomControls:StereoTextButton
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="#EFF2F1"
+                BorderThickness="4,4,4,7"
+                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+                Command="{Binding ClearUnnecessaryData}"
+                Content="冻结数据"
+                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+                PressedBorderThickness="4 4 4 4"
+                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+                RightBorderTexture="{StaticResource ButtonNormalRight}"
+                Style="{DynamicResource StereoTextButton}"
+                TopBorderTexture="{StaticResource ButtonNormalTop}" />
             <CustomControls:RadiusToggleButtons
                 VerticalContentAlignment="Center"
                 Foreground="White"
@@ -148,7 +203,7 @@
                 SelectedToggleText="显示结果"
                 Style="{DynamicResource RadiusToggleButton}"
                 ToggleHeight="26"
-                ToggleWidth="45"
+                ToggleWidth="46"
                 UnSelectedToggleText="隐藏结果" />
         </DockPanel>
         <TabControl

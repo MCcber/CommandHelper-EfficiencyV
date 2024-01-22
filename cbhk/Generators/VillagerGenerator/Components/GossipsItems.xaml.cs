@@ -20,7 +20,8 @@ namespace cbhk.Generators.VillagerGenerator.Components
                 string result;
                 string item_data = Type.SelectedItem.ToString();
                 string TypeData = item_data.Trim() != ""?"Type:"+ item_data+",":"";
-                string ValueData = Value.ToString().Trim() != "" ? "Value:" + (Value.ToString().Contains(".") ? Value.ToString().Split('.')[0] :Value.ToString()) +",":"";
+                string gossipValueString = Value.Value.ToString().Trim();
+                string ValueData = gossipValueString != "" ? "Value:" + (gossipValueString.Contains('.') ? gossipValueString.Split('.')[0] : gossipValueString) +",":"";
                 string TargetData = Target.Text.Trim() != "" ?"Target:\""+Target.Text+"\",":"";
                 result = TypeData != "" || ValueData != "" || TargetData != "" ?TypeData + ValueData + TargetData:"";
                 result = "{" + result.TrimEnd(',') + "},";
@@ -63,9 +64,9 @@ namespace cbhk.Generators.VillagerGenerator.Components
             Button currentButton = sender as Button;
             VillagerDataContext context = Window.GetWindow(currentButton).DataContext as VillagerDataContext;
             //创建字典，让字典的键来自动匹配对应的值，自动执行搜索和带入公式两个行为
-            Dictionary<string, int> currentGossipTypes = new();
+            Dictionary<string, int> currentGossipTypes = [];
             //已处理的标记
-            Dictionary<string, bool> handedMarkers = new();
+            Dictionary<string, bool> handedMarkers = [];
             foreach (var item in context.GossipTypes)
             {
                 currentGossipTypes.Add(item, 0);

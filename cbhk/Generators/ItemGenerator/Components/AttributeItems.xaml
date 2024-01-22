@@ -27,7 +27,7 @@
                 Text="属性名" />
             <ComboBox
                 x:Name="AttributeNameBox"
-                Width="100"
+                Width="300"
                 HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
                 Loaded="AttributeIdsLoaded"
@@ -57,7 +57,7 @@
                 Text="值类型" />
             <ComboBox
                 x:Name="Operations"
-                Width="100"
+                Width="170"
                 Height="30"
                 HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
@@ -86,7 +86,7 @@
             <Slider
                 x:Name="Amount"
                 Height="25"
-                Margin="30,0,0,0"
+                Margin="24,0,0,0"
                 HorizontalAlignment="Stretch"
                 Background="Transparent"
                 BorderThickness="0"
@@ -106,7 +106,7 @@
             <TextBox
                 x:Name="NameBox"
                 Height="25"
-                Margin="15,0,0,0"
+                Margin="12,0,0,0"
                 Padding="0,2,0,0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Center"

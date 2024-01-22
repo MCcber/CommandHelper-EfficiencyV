@@ -59,7 +59,7 @@ namespace cbhk.Generators.VillagerGenerator
             }
         }
 
-        public ObservableCollection<string> VersionSource { get; set; } = new() { "1.13-","1.14+" };
+        public ObservableCollection<string> VersionSource { get; set; } = ["1.13-","1.14+"];
         #endregion
 
         #region 是否显示结果
@@ -77,7 +77,7 @@ namespace cbhk.Generators.VillagerGenerator
         public Window home = null;
         //本生成器的图标路径
         string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconVillagers.png";
-        string emptyIcon = "pack://application:,,,/cbhk;component/resources/cbhk_form/images/empty.png";
+        string emptyIcon = "pack://application:,,,/cbhk;component/resources/cbhk/images/empty.png";
         string GossipTypesFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Villager\\data\\GossipTypes.ini";
         SolidColorBrush orangeBrush = new((Color)ColorConverter.ConvertFromString("#D77933"));
         SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
@@ -85,11 +85,11 @@ namespace cbhk.Generators.VillagerGenerator
         /// 排版索引
         /// </summary>
         public int compositionIndex = 1;
-        public ObservableCollection<string> GossipTypes { get; set; } = new();
+        public ObservableCollection<string> GossipTypes { get; set; } = [];
         //左侧交易项数据源
-        public ObservableCollection<TransactionItems> transactionItems { get; set; } = new(){ };
+        public ObservableCollection<TransactionItems> transactionItems { get; set; } = [];
         //言论数据源
-        public ObservableCollection<GossipsItems> gossipItems { get; set; } = new() { };
+        public ObservableCollection<GossipsItems> gossipItems { get; set; } = [];
 
         #region 当前选中的物品
         private TransactionItems currentItem = null;
@@ -106,33 +106,35 @@ namespace cbhk.Generators.VillagerGenerator
         ComboBox GossipSearchType = null;
         //言论数据源所在视图引用
         ScrollViewer GossipViewer = null;
-        //原版物品库
-        public ObservableCollection<ItemStructure> BagItems { get; set; } = new ();
-        public ObservableCollection<ItemStructure> CustomItems { get; set; } = new();
+        /// <summary>
+        /// 原版物品库
+        /// </summary>
+        public ObservableCollection<ItemStructure> OriginalItemList { get; set; } = [];
+        /// <summary>
+        /// 自定义物品库
+        /// </summary>
+        public ObservableCollection<ItemStructure> CustomItemList { get; set; } = [];
         //物品描述引用
-        public ObservableCollection<string> BagItemToolTips { get; set; } = new () { };
+        public ObservableCollection<string> BagItemToolTips { get; set; } = [];
         //言论搜索类型数据源
-        ObservableCollection<string> gossipSearchType = new(){ };
+        ObservableCollection<string> gossipSearchType = [];
         //言论搜索类型配置文件路径
         string gossipSearchTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Villager\\data\\GossipSearchTypes.ini";
         //维度数据源
-        ObservableCollection<string> DimensionTypeSource = new() { };
+        ObservableCollection<string> DimensionTypeSource = [];
         //维度数据源配置文件路径
         string dimensionTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Villager\\data\\DimensionTypes.ini";
         //维度类型数据库
-        Dictionary<string, string> DimensionDataBase = new() { };
-        //物品加载进程锁
-        object itemLoadLock = new();
+        Dictionary<string, string> DimensionDataBase = [];
 
         /// <summary>
-        /// 对象数据源
+        /// 原版物品库数据视图
         /// </summary>
-        private CollectionViewSource BagViewSource = null;
-
+        private CollectionViewSource OriginalViewSource = new ();
         /// <summary>
-        /// 表示是否已订阅搜索事件
+        /// 自定义物品库数据视图
         /// </summary>
-        bool GotFocused = false;
+        private CollectionViewSource CustomViewSource = new();
 
         //背包引用
         ListView Bag = null;
@@ -372,18 +374,29 @@ namespace cbhk.Generators.VillagerGenerator
         }
         #endregion
 
+        #region 已选中的物品库索引
+        private int selectedItemListIndex;
+
+        public int SelectedItemListIndex
+        {
+            get => selectedItemListIndex;
+            set => SetProperty(ref selectedItemListIndex, value);
+        }
+
+        #endregion
+
         #region 搜索内容
         private string searchText = "";
         public string SearchText
         {
-            get
-            {
-                return searchText;
-            }
+            get => searchText;
             set
             {
-                searchText = value;
-                BagViewSource?.View.Refresh();
+                SetProperty(ref searchText, value);
+                if (SelectedItemListIndex == 0)
+                    OriginalViewSource.View?.Refresh();
+                else
+                    CustomViewSource.View?.Refresh();
             }
         }
         #endregion
@@ -620,12 +633,12 @@ namespace cbhk.Generators.VillagerGenerator
         string VillagerProfessionsSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Villager\\data\\VillagerProfessionTypes.ini";
         string VillagerLevelSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Villager\\data\\VillagerLevels.ini";
 
-        public Dictionary<string, string> VillagerTypeDataBase = new Dictionary<string, string> { };
-        public Dictionary<string, string> VillagerProfessionTypeDataBase = new Dictionary<string, string> { };
+        public Dictionary<string, string> VillagerTypeDataBase = [];
+        public Dictionary<string, string> VillagerProfessionTypeDataBase = [];
 
-        public ObservableCollection<string> VillagerTypeSource { get; set; } = new() { };
-        public ObservableCollection<string> VillagerProfessionTypeSource { get; set; } = new() { };
-        public ObservableCollection<string> VillagerLevelSource { get; set; } = new() { };
+        public ObservableCollection<string> VillagerTypeSource { get; set; } = [];
+        public ObservableCollection<string> VillagerProfessionTypeSource { get; set; } = [];
+        public ObservableCollection<string> VillagerLevelSource { get; set; } = [];
         #endregion
 
         #region 村民种类
@@ -847,64 +860,67 @@ namespace cbhk.Generators.VillagerGenerator
             {
                 DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
                 ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
-            }).ContinueWith(ItemsLoaded);
+
+                #region 异步载入原版物品序列
+                //加载物品集合
+                string uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
+                string urlPath = "";
+                foreach (DataRow row in ItemTable.Rows)
+                {
+                    urlPath = uriDirectoryPath + row["id"].ToString() + ".png";
+                    if (File.Exists(urlPath))
+                        OriginalItemList.Add(new ItemStructure(new Uri(urlPath, UriKind.Absolute), row["id"].ToString() + ":" + row["name"].ToString(), "{id:\"minecraft:" + row["id"].ToString() + "\",Count:1b}"));
+                }
+                #endregion
+                #region 异步载入自定义物品序列
+                //加载物品集合
+                uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\Item\\";
+                string[] itemFileList = Directory.GetFiles(uriDirectoryPath);
+                foreach (var item in itemFileList)
+                {
+                    if (File.Exists(item))
+                    {
+                        string nbt = ExternalDataImportManager.GetItemDataHandler(item);
+                        if (nbt.Length > 0)
+                        {
+                            JObject data = JObject.Parse(nbt);
+                            JToken id = data.SelectToken("id");
+                            if (id == null) continue;
+                            string itemID = id.ToString().Replace("\"", "").Replace("minecraft:", "");
+                            string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
+                            string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                            if (File.Exists(iconPath))
+                                CustomItemList.Add(new ItemStructure(new Uri(iconPath, UriKind.Absolute), itemID + ":" + itemName, nbt));
+                        }
+                    }
+                }
+                #endregion
+            });
             #endregion
         }
 
         /// <summary>
-        /// 载入原版与自定义物品库
+        /// 原版物品库视图载入
         /// </summary>
-        /// <returns></returns>
-        private void ItemsLoaded(Task task)
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void OriginalItemListView_Loaded(object sender,RoutedEventArgs e)
         {
-            #region 异步载入原版物品序列
-            BindingOperations.EnableCollectionSynchronization(BagItems, itemLoadLock);
-            //加载物品集合
-            Task.Run(() =>
-            {
-                lock (itemLoadLock)
-                {
-                    string uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                    string urlPath = "";
-                    foreach (DataRow row in ItemTable.Rows)
-                    {
-                        urlPath = uriDirectoryPath + row["id"].ToString() + ".png";
-                        if (File.Exists(urlPath))
-                            BagItems.Add(new ItemStructure(new Uri(urlPath, UriKind.Absolute), row["id"].ToString() + ":" + row["name"].ToString(), "{id:\"minecraft:" + row["id"].ToString() + "\",Count:1b}"));
-                    }
-                }
-            });
-            #endregion
-            #region 异步载入自定义物品序列
-            BindingOperations.EnableCollectionSynchronization(CustomItems, itemLoadLock);
-            //加载物品集合
-            Task.Run(() =>
-            {
-                lock (itemLoadLock)
-                {
-                    string uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\Item\\";
-                    string[] itemFileList = Directory.GetFiles(uriDirectoryPath);
-                    foreach (var item in itemFileList)
-                    {
-                        if (File.Exists(item))
-                        {
-                            string nbt = ExternalDataImportManager.GetItemDataHandler(item);
-                            if (nbt.Length > 0)
-                            {
-                                JObject data = JObject.Parse(nbt);
-                                JToken id = data.SelectToken("id");
-                                if (id == null) continue;
-                                string itemID = id.ToString().Replace("\"", "").Replace("minecraft:", "");
-                                string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
-                                string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                                if(File.Exists(iconPath))
-                                CustomItems.Add(new ItemStructure(new Uri(iconPath, UriKind.Absolute), itemID + ":" + itemName, nbt));
-                            }
-                        }
-                    }
-                }
-            });
-            #endregion
+            Window parent = Window.GetWindow(sender as ListView);
+            OriginalViewSource = parent.FindResource("OriginalItemView") as CollectionViewSource;
+            OriginalViewSource.Filter += CollectionViewSource_Filter;
+        }
+
+        /// <summary>
+        /// 自定义物品库视图载入
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void CustomItemListView_Loaded(object sender, RoutedEventArgs e)
+        {
+            Window parent = Window.GetWindow(sender as ListView);
+            CustomViewSource = parent.FindResource("CustomItemView") as CollectionViewSource;
+            CustomViewSource.Filter += CollectionViewSource_Filter;
         }
 
         /// <summary>
@@ -964,23 +980,6 @@ namespace cbhk.Generators.VillagerGenerator
             {
                 _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
                 _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\Villager\\" + Path.GetFileName(saveFileDialog.FileName), Result);
-            }
-        }
-
-        /// <summary>
-        /// 获取数据源引用，订阅过滤事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void TextBox_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if(!GotFocused)
-            {
-                TextBox textBox = sender as TextBox;
-                Window parent = Window.GetWindow(textBox);
-                BagViewSource = parent.FindResource("BagItemSource") as CollectionViewSource;
-                BagViewSource.Filter += CollectionViewSource_Filter;
-                GotFocused = true;
             }
         }
 
@@ -1151,7 +1150,7 @@ namespace cbhk.Generators.VillagerGenerator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ItemsLoaded(object sender, RoutedEventArgs e)
+        public void Items_Loaded(object sender, RoutedEventArgs e)
         {
             Bag = ((sender as TabControl).Items[0] as TextTabItems).Content as ListView;
             CustomBag = ((sender as TabControl).Items[1] as TextTabItems).Content as ListView;

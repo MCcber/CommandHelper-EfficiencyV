@@ -31,7 +31,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             //所附着的节点
             RichTreeViewItems parentItem = parameter as RichTreeViewItems;
             //ComponentsRequests
-            List<string> requests = new();
+            List<string> requests = [];
 
             #region 实例化节点容器
             DockPanel dockPanel = new()
@@ -88,7 +88,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
 
             if (tagList.Count > 1)
             {
-                enumList = new();
+                enumList = [];
                 foreach (var item in tagList)
                 {
                     //构造枚举内容

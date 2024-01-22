@@ -68,7 +68,7 @@ namespace cbhk.GeneralTools
                 string[] runsName = runs.GetValueNames();
                 foreach (string strName in runsName)
                 {
-                    if (strName.ToUpper() == keyName.ToUpper())
+                    if (strName.Equals(keyName, StringComparison.CurrentCultureIgnoreCase))
                     {
                         _exist = true;
                         return _exist;
@@ -111,7 +111,7 @@ namespace cbhk.GeneralTools
                     string[] keyNames = key.GetValueNames();
                     foreach (string keyName in keyNames)
                     {
-                        if (keyName.ToUpper() == exeName.ToUpper())
+                        if (keyName.Equals(exeName, StringComparison.CurrentCultureIgnoreCase))
                         {
                             key.DeleteValue(exeName);
                             key.Close();
@@ -119,7 +119,7 @@ namespace cbhk.GeneralTools
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 //string ss = ex.Message;
                 return false;

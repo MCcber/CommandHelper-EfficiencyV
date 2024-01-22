@@ -10,16 +10,16 @@
     mc:Ignorable="d">
     <DockPanel>
         <Border
+            x:Name="EntityIcon"
             Width="30"
             Height="30"
             BorderBrush="Orange"
-            BorderThickness="1">
-            <Image x:Name="EntityIcon" HorizontalAlignment="Left" />
-        </Border>
+            BorderThickness="1" />
         <CustomControls:StereoTextButton
             HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
             Background="#EFF2F1"
-            BorderThickness="4,3,4,8"
+            BorderThickness="4,3,4,7"
             BottomBorderTexture="{StaticResource ButtonNormalBottom}"
             Click="SetEmpty_Click"
             Content="设置为空"
@@ -33,10 +33,10 @@
             Style="{DynamicResource StereoTextButton}"
             TopBorderTexture="{StaticResource ButtonNormalTop}" />
         <CustomControls:StereoTextButton
-            Padding="5"
             HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
             Background="#EFF2F1"
-            BorderThickness="4,3,4,8"
+            BorderThickness="4,3,4,7"
             BottomBorderTexture="{StaticResource ButtonNormalBottom}"
             Click="ImportFromClipboard_Click"
             Content="从剪切板读取"
@@ -50,10 +50,10 @@
             Style="{DynamicResource StereoTextButton}"
             TopBorderTexture="{StaticResource ButtonNormalTop}" />
         <CustomControls:StereoTextButton
-            Padding="5"
             HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
             Background="#EFF2F1"
-            BorderThickness="4,3,4,8"
+            BorderThickness="4,3,4,7"
             BottomBorderTexture="{StaticResource ButtonNormalBottom}"
             Click="ImportFromFile_Click"
             Content="从文件读取"
@@ -67,10 +67,10 @@
             Style="{DynamicResource StereoTextButton}"
             TopBorderTexture="{StaticResource ButtonNormalTop}" />
         <CustomControls:StereoTextButton
-            Padding="5"
             HorizontalAlignment="Stretch"
+            VerticalAlignment="Bottom"
             Background="#EFF2F1"
-            BorderThickness="4,3,4,8"
+            BorderThickness="4,3,4,7"
             BottomBorderTexture="{StaticResource ButtonNormalBottom}"
             Click="Spawn_Click"
             Content="生成"

@@ -1,8 +1,13 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using cbhk.CustomControls.Interfaces;
+using cbhk.GeneralTools;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -11,12 +16,12 @@ namespace cbhk.Generators.ItemGenerator.Components
     /// <summary>
     /// Function.xaml 的交互逻辑
     /// </summary>
-    public partial class Function : UserControl
+    public partial class Function : UserControl,IVersionUpgrader
     {
         #region 可破坏可放置方块等数据源
-        public ObservableCollection<CanDestroyItems> CanDestroyItemsSource { get; set; } = new();
-        public ObservableCollection<CanPlaceOnItems> CanPlaceOnItemsSource { get; set; } = new();
-        public ObservableCollection<EnchantmentItems> EnchantmentItemsSource { get; set; } = new();
+        public ObservableCollection<CanDestroyItems> CanDestroyItemsSource { get; set; } = [];
+        public ObservableCollection<CanPlaceOnItems> CanPlaceOnItemsSource { get; set; } = [];
+        public ObservableCollection<EnchantmentItems> EnchantmentItemsSource { get; set; } = [];
         #endregion
 
         #region 可破坏方块列表
@@ -42,13 +47,23 @@ namespace cbhk.Generators.ItemGenerator.Components
         #endregion
 
         #region 附魔列表
-        private string EnchantmentResult
+        string enchantmentKey = "Enchantments";
+        private async Task<string> GetEnchantmentResult()
         {
-            get
+            string result = "";
+            if (EnchantmentItemsSource.Count > 0)
             {
-                string result = EnchantmentItemsSource.Count > 0 ? "Enchantments:[" + string.Join(",", EnchantmentItemsSource.Select(item => item.Result)) + "]," : "";
-                return result;
+                StringBuilder enchantString = new();
+                string enchantmentElement;
+                for (int i = 0; i < EnchantmentItemsSource.Count; i++)
+                {
+                    enchantmentElement = await (EnchantmentItemsSource[i] as IVersionUpgrader).Result();
+                    if (enchantmentElement is not null)
+                        enchantString.Append(enchantmentElement + ",");
+                }
+                result = enchantmentKey + ":[" + enchantString.ToString().TrimEnd(',') + "]";
             }
+            return result;
         }
         #endregion
 
@@ -87,13 +102,13 @@ namespace cbhk.Generators.ItemGenerator.Components
         #endregion
 
         #region 合并结果
-        public string Result
+        int currentVersion = 1202;
+        async Task<string> IVersionUpgrader.Result()
         {
-            get
-            {
-                string result = CanDestroyBlockResult + CanPlaceOnBlockResult + EnchantmentResult + TrimResult;
-                return result;
-            }
+            await Upgrade(currentVersion);
+            string EnchantmentResult = await GetEnchantmentResult();
+            string result = CanDestroyBlockResult + CanPlaceOnBlockResult + EnchantmentResult + TrimResult;
+            return result;
         }
         #endregion
 
@@ -118,33 +133,31 @@ namespace cbhk.Generators.ItemGenerator.Components
         }
 
         #region 附魔、可破坏可放置、属性等数据的编辑和清空
-
         /// <summary>
         /// 清空附魔数据
         /// </summary>
         /// <param name="obj"></param>
         private void ClearEnchantmentClick(FrameworkElement obj)
         {
-            EnchantmentItemsSource.Clear();
+            ItemPageDataContext itemPageDataContext = obj.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            for (int i = 0; i < EnchantmentItemsSource.Count; i++)
+            {
+                itemPageDataContext.VersionComponents.Remove(EnchantmentItemsSource[i]);
+                EnchantmentItemsSource.RemoveAt(i);
+            }
         }
 
         /// <summary>
         /// 清空可放置方块数据
         /// </summary>
         /// <param name="obj"></param>
-        private void ClearCanPlaceOnBlockClick(FrameworkElement obj)
-        {
-            CanPlaceOnItemsSource.Clear();
-        }
+        private void ClearCanPlaceOnBlockClick(FrameworkElement obj) => CanPlaceOnItemsSource.Clear();
 
         /// <summary>
         /// 清空可破坏方块数据
         /// </summary>
         /// <param name="obj"></param>
-        private void ClearCanDestroyBlockClick(FrameworkElement obj)
-        {
-            CanDestroyItemsSource.Clear();
-        }
+        private void ClearCanDestroyBlockClick(FrameworkElement obj) => CanDestroyItemsSource.Clear();
 
         /// <summary>
         /// 增加附魔列表成员
@@ -153,7 +166,10 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// <param name="e"></param>
         private void AddEnchantmentClick(FrameworkElement obj)
         {
-            EnchantmentItemsSource.Add(new EnchantmentItems());
+            EnchantmentItems enchantmentItems = new();
+            EnchantmentItemsSource.Add(enchantmentItems);
+            ItemPageDataContext itemPageDataContext = obj.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            itemPageDataContext.VersionComponents.Add(enchantmentItems);
         }
 
         /// <summary>
@@ -161,20 +177,14 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void AddCanPlaceOnBlockClick(FrameworkElement obj)
-        {
-            CanPlaceOnItemsSource.Add(new CanPlaceOnItems());
-        }
+        private void AddCanPlaceOnBlockClick(FrameworkElement obj) => CanPlaceOnItemsSource.Add(new CanPlaceOnItems());
 
         /// <summary>
         /// 增加可破坏方块列表成员
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void AddCanDestroyBlockClick(FrameworkElement obj)
-        {
-            CanDestroyItemsSource.Add(new CanDestroyItems());
-        }
+        private void AddCanDestroyBlockClick(FrameworkElement obj) => CanDestroyItemsSource.Add(new CanDestroyItems());
         #endregion
 
         /// <summary>
@@ -184,15 +194,14 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// <param name="e"></param>
         private void TrimData_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new()
+            OpenFolderDialog openFolderDialog = new()
             {
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                ShowHiddenFiles = true,
-                ShowNewFolderButton = true,
-                Description = "为盔甲纹饰引用一个命名空间",
-                UseDescriptionForTitle = true
+                ShowHiddenItems = true,
+                Title = "为盔甲纹饰引用一个命名空间",
+                Multiselect = false,
             };
-            if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (openFolderDialog.ShowDialog().Value)
             {
                 Button button = sender as Button;
                 int currentRowIndex = Grid.GetRow(button);
@@ -204,7 +213,7 @@ namespace cbhk.Generators.ItemGenerator.Components
                     if (row == currentRowIndex && column == 1)
                     {
                         TextBox textBox = item as TextBox;
-                        textBox.Text = folderBrowserDialog.SelectedPath;
+                        textBox.Text = openFolderDialog.FolderName;
                     }
                 }
             }
@@ -260,6 +269,16 @@ namespace cbhk.Generators.ItemGenerator.Components
                 }
                 ExternData.Remove("tag.Enchantments");
             }
+        }
+
+        public async Task Upgrade(int version)
+        {
+            currentVersion = version;
+            await Task.Delay(0);
+            if (version < 113)
+                enchantmentKey = "ench";
+            else
+                enchantmentKey = "Enchantments";
         }
     }
 }

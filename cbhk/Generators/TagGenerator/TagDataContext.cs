@@ -59,7 +59,7 @@ namespace cbhk.Generators.TagGenerator
         #endregion
 
         #region 所有标签成员
-        private ObservableCollection<TagItemTemplate> tagItems = new();
+        private ObservableCollection<TagItemTemplate> tagItems = [];
         public ObservableCollection<TagItemTemplate> TagItems
         {
             get => tagItems;
@@ -221,7 +221,9 @@ namespace cbhk.Generators.TagGenerator
         /// </summary>
         public Window home = null;
 
-        //对象数据源
+        /// <summary>
+        /// 对象数据源
+        /// </summary>
         CollectionViewSource TagViewSource = null;
         //标签生成器的过滤类型数据源
         public ObservableCollection<string> TypeItemSource = [];
@@ -236,9 +238,6 @@ namespace cbhk.Generators.TagGenerator
             #endregion
 
             #region 异步载入标签成员
-            //载入进程锁
-            object tagItemsLock = new();
-            BindingOperations.EnableCollectionSynchronization(TagItems, tagItemsLock);
             Task.Run(async () =>
             {
                 DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
@@ -499,8 +498,8 @@ namespace cbhk.Generators.TagGenerator
         /// <param name="e"></param>
         public void ListViewLoaded(object sender, RoutedEventArgs e)
         {
-            TagZone = sender as ListView;
             #region 获取数据源引用，订阅过滤事件
+            TagZone = sender as ListView;
             Window parent = Window.GetWindow(TagZone);
             TagViewSource = parent.FindResource("TagItemSource") as CollectionViewSource;
             TagViewSource.Filter += CollectionViewSource_Filter;

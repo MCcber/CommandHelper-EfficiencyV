@@ -27,6 +27,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
     <PackageIcon></PackageIcon>
+    <ApplicationIcon>cb.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <OutputPath>bin\x86\Debug\</OutputPath>
@@ -49,7 +50,31 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="纹理\**" />
+    <EmbeddedResource Remove="纹理\**" />
+    <None Remove="纹理\**" />
+    <Page Remove="纹理\**" />
+  </ItemGroup>
+  <ItemGroup>
     <Resource Include="cb.ico" />
+    <Resource Include="FilePathComparator.cs" />
+    <Resource Include="Generators\DataPackGenerator\Images\Command1.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\Command2.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\Command3.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconArrowLeft.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconArrowRight.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconDataPack.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconFolder.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconLink.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconNew.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconProject.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconSmall1.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconSmall2.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconSmall3.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconSmallLocked.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconSmallPlus.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconSmallYes.png" />
+    <Resource Include="Generators\DataPackGenerator\Images\IconTemplate.png" />
     <Resource Include="Generators\RecipeGenerator\Images\Cell.png" />
     <Resource Include="Generators\RecipeGenerator\Images\CraftingTable.png" />
     <Resource Include="Generators\RecipeGenerator\Images\Arrow.png" />
@@ -57,26 +82,31 @@
     <Resource Include="Generators\RecipeGenerator\Images\Furnace.png" />
     <Resource Include="Generators\RecipeGenerator\Images\SmithingTable.png" />
     <Resource Include="Generators\RecipeGenerator\Images\Smoker.png" />
-    <Resource Include="resources\cbhk_form\images\Error.png">
+    <Resource Include="resources\cbhk\images\Error.png">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\cbhk_form\images\eyeHide.png" />
-    <Resource Include="resources\cbhk_form\images\eyeShow.png" />
-    <Resource Include="resources\cbhk_form\images\Info.png">
+    <Resource Include="resources\cbhk\images\eyeHide.png" />
+    <Resource Include="resources\cbhk\images\eyeShow.png" />
+    <Resource Include="resources\cbhk\images\GeneratorButtonBackground.png" />
+    <Resource Include="resources\cbhk\images\IconMore.png" />
+    <Resource Include="resources\cbhk\images\IconSetting.png" />
+    <Resource Include="resources\cbhk\images\IconTeach.png" />
+    <Resource Include="resources\cbhk\images\IconUser.png" />
+    <Resource Include="resources\cbhk\images\Info.png">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\cbhk_form\images\login.jpg" />
-    <Resource Include="resources\cbhk_form\images\LoginMinimize.png" />
-    <Resource Include="resources\cbhk_form\images\LoginText.png" />
-    <Resource Include="resources\cbhk_form\images\LoginX.png" />
-    <Resource Include="resources\cbhk_form\images\more\github.png" />
-    <Resource Include="resources\cbhk_form\images\SignInBackground.png" />
+    <Resource Include="resources\cbhk\images\login.jpg" />
+    <Resource Include="resources\cbhk\images\LoginMinimize.png" />
+    <Resource Include="resources\cbhk\images\LoginText.png" />
+    <Resource Include="resources\cbhk\images\LoginX.png" />
+    <Resource Include="resources\cbhk\images\more\github.png" />
+    <Resource Include="resources\cbhk\images\SignInBackground.png" />
     <Resource Include="resources\common\fonts\MinecraftAE.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk_form\images\cbhk_group.jpg" />
-    <Resource Include="resources\cbhk_form\images\my_qq.png" />
-    <Resource Include="resources\cbhk_form\images\special_thanks.jpg" />
+    <Resource Include="resources\cbhk\images\cbhk_group.jpg" />
+    <Resource Include="resources\cbhk\images\my_qq.png" />
+    <Resource Include="resources\cbhk\images\special_thanks.jpg" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">
@@ -90,12 +120,12 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk_form\images\command_classes\advance.png" />
-    <Resource Include="resources\cbhk_form\images\command_classes\basic.png" />
-    <Resource Include="resources\cbhk_form\images\command_classes\original_edition_mod.png" />
+    <Resource Include="resources\cbhk\images\command_classes\advance.png" />
+    <Resource Include="resources\cbhk\images\command_classes\basic.png" />
+    <Resource Include="resources\cbhk\images\command_classes\original_edition_mod.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk_form\images\more\conversation_group.png">
+    <Resource Include="resources\cbhk\images\more\conversation_group.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
@@ -112,11 +142,11 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
     <PackageReference Include="CommunityToolkit.Mvvm">
-      <Version>8.2.1</Version>
+      <Version>8.2.2</Version>
     </PackageReference>
     <PackageReference Include="Cyotek.Data.Nbt" Version="3.1.1" />
-    <PackageReference Include="GeneralUpdate.Core" Version="4.14.21" />
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf">
       <Version>1.1.0</Version>
     </PackageReference>
@@ -131,32 +161,27 @@
       <Version>7.1.3</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.39</Version>
+      <Version>1.1.77</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="SharpCompress" Version="0.34.1" />
     <PackageReference Include="SingleInstanceCore" Version="2.2.2" />
-    <PackageReference Include="Syncfusion.Edit.WPF" Version="23.1.41" />
-    <PackageReference Include="Syncfusion.Licensing" Version="23.1.41" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="System.Runtime.WindowsRuntime.UI.Xaml">
       <Version>4.7.0</Version>
     </PackageReference>
-    <PackageReference Include="System.Text.Json">
-      <Version>7.0.3</Version>
-    </PackageReference>
     <PackageReference Include="VirtualizingWrapPanel">
-      <Version>1.5.7</Version>
+      <Version>2.0.2</Version>
     </PackageReference>
-    <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.5" />
     <PackageReference Include="WriteableBitmapEx" Version="1.6.8" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk_form\images\empty.png" />
+    <Resource Include="resources\cbhk\images\empty.png" />
+    <Resource Include="resources\common\images\backToHomePage.png" />
     <Resource Include="resources\common\images\BlackEdit.png" />
     <Resource Include="resources\common\images\ButtonFrame.png" />
   </ItemGroup>
@@ -190,6 +215,7 @@
     </Resource>
     <Resource Include="resources\common\images\CheckboxChecked.png" />
     <Resource Include="resources\common\images\CheckboxEmpty.png" />
+    <Resource Include="resources\common\images\ColorPicker.png" />
     <Resource Include="resources\common\images\ContentBox.png" />
     <Resource Include="resources\common\images\eyeHide.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -198,6 +224,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="resources\common\images\Frame.png" />
+    <Resource Include="resources\common\images\IconFree.png" />
+    <Resource Include="resources\common\images\IconFresh.png" />
+    <Resource Include="resources\common\images\IconGaze.png" />
+    <Resource Include="resources\common\images\IconInvisible.png" />
+    <Resource Include="resources\common\images\IconPlay.png" />
+    <Resource Include="resources\common\images\IconReset.png" />
+    <Resource Include="resources\common\images\IconShouder.png" />
+    <Resource Include="resources\common\images\IconThirdPerson.png" />
+    <Resource Include="resources\common\images\IconVisible.png" />
     <Resource Include="resources\common\images\itemFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -206,6 +241,7 @@
     <Resource Include="resources\common\images\RadiusToggleButtonOn.png" />
     <Resource Include="resources\common\images\RadiusToggleButtonOnLocked.png" />
     <Resource Include="resources\common\images\Save.png" />
+    <Resource Include="resources\common\images\SaveAs.png" />
     <Resource Include="resources\common\images\SelectedTabItemLeft.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -318,14 +354,14 @@
     <Resource Include="resources\common\images\Issue.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk_form\images\Bottom.png" />
-    <Resource Include="resources\cbhk_form\images\BottomLeft.png" />
-    <Resource Include="resources\cbhk_form\images\BottomRight.png" />
-    <Resource Include="resources\cbhk_form\images\Left.png" />
-    <Resource Include="resources\cbhk_form\images\Right.png" />
-    <Resource Include="resources\cbhk_form\images\Top.png" />
-    <Resource Include="resources\cbhk_form\images\TopLeft.png" />
-    <Resource Include="resources\cbhk_form\images\TopRight.png" />
+    <Resource Include="resources\cbhk\images\Bottom.png" />
+    <Resource Include="resources\cbhk\images\BottomLeft.png" />
+    <Resource Include="resources\cbhk\images\BottomRight.png" />
+    <Resource Include="resources\cbhk\images\Left.png" />
+    <Resource Include="resources\cbhk\images\Right.png" />
+    <Resource Include="resources\cbhk\images\Top.png" />
+    <Resource Include="resources\cbhk\images\TopLeft.png" />
+    <Resource Include="resources\cbhk\images\TopRight.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="resources\common\images\spawnerIcons\IconDataPack.png" />
@@ -335,29 +371,29 @@
     <Resource Include="resources\common\images\IconArrowRight.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk_form\images\IconHome.png" />
-    <Resource Include="resources\cbhk_form\images\IconLink.png" />
+    <Resource Include="resources\cbhk\images\IconHome.png" />
+    <Resource Include="resources\cbhk\images\IconLink.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk_form\images\more\thanks\1.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\1Hover.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\2.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\2Hover.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\3.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\3Hover.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\4.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\4Hover.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\5.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\5Hover.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\6.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\6Hover.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\7.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\7Hover.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\8.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\8Hover.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\9.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\9Hover.png" />
-    <Resource Include="resources\cbhk_form\images\more\thanks\Title.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\1.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\1Hover.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\2.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\2Hover.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\3.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\3Hover.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\4.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\4Hover.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\5.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\5Hover.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\6.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\6Hover.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\7.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\7Hover.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\8.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\8Hover.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\9.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\9Hover.png" />
+    <Resource Include="resources\cbhk\images\more\thanks\Title.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Generators\DataPackGenerator\Images\dataPackIcon.png" />
@@ -369,6 +405,7 @@
     <Resource Include="Generators\DataPackGenerator\Images\editedIcon.png" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="FilePathComparator.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell2.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell3.cs" />
@@ -380,6 +417,23 @@
   <ItemGroup>
     <None Remove="cb.ico" />
     <None Remove="GeneralTools\jsonReader - v1.3.js" />
+    <None Remove="Generators\DataPackGenerator\Images\Command1.png" />
+    <None Remove="Generators\DataPackGenerator\Images\Command2.png" />
+    <None Remove="Generators\DataPackGenerator\Images\Command3.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconArrowLeft.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconArrowRight.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconDataPack.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconFolder.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconLink.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconNew.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconProject.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconSmall1.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconSmall2.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconSmall3.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconSmallLocked.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconSmallPlus.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconSmallYes.png" />
+    <None Remove="Generators\DataPackGenerator\Images\IconTemplate.png" />
     <None Remove="Generators\RecipeGenerator\cell.png" />
     <None Remove="Generators\RecipeGenerator\Components\Empty.png" />
     <None Remove="Generators\RecipeGenerator\crafting_table.png" />
@@ -390,16 +444,22 @@
     <None Remove="Generators\RecipeGenerator\Images\furnace.png" />
     <None Remove="Generators\RecipeGenerator\Images\SmithingTable.png" />
     <None Remove="Generators\RecipeGenerator\Images\smoker.png" />
-    <None Remove="resources\cbhk_form\images\Error.png" />
-    <None Remove="resources\cbhk_form\images\eyeHide.png" />
-    <None Remove="resources\cbhk_form\images\eyeShow.png" />
-    <None Remove="resources\cbhk_form\images\Info.png" />
-    <None Remove="resources\cbhk_form\images\login.jpg" />
-    <None Remove="resources\cbhk_form\images\LoginMinimize.png" />
-    <None Remove="resources\cbhk_form\images\LoginText.png" />
-    <None Remove="resources\cbhk_form\images\LoginX.png" />
-    <None Remove="resources\cbhk_form\images\more\github.png" />
-    <None Remove="resources\cbhk_form\images\SigninBackground.png" />
+    <None Remove="resources\cbhk\images\Error.png" />
+    <None Remove="resources\cbhk\images\eyeHide.png" />
+    <None Remove="resources\cbhk\images\eyeShow.png" />
+    <None Remove="resources\cbhk\images\GeneratorButtonBackground.png" />
+    <None Remove="resources\cbhk\images\IconMore.png" />
+    <None Remove="resources\cbhk\images\IconSetting.png" />
+    <None Remove="resources\cbhk\images\IconTeach.png" />
+    <None Remove="resources\cbhk\images\IconUser.png" />
+    <None Remove="resources\cbhk\images\Info.png" />
+    <None Remove="resources\cbhk\images\login.jpg" />
+    <None Remove="resources\cbhk\images\LoginMinimize.png" />
+    <None Remove="resources\cbhk\images\LoginText.png" />
+    <None Remove="resources\cbhk\images\LoginX.png" />
+    <None Remove="resources\cbhk\images\more\github.png" />
+    <None Remove="resources\cbhk\images\SigninBackground.png" />
+    <None Remove="resources\common\images\backToHomePage.png" />
     <None Remove="resources\common\images\BlackEdit.png" />
     <None Remove="resources\common\images\ButtonFrame.png" />
     <None Remove="resources\common\images\ButtonNormalBottom.png" />
@@ -410,10 +470,21 @@
     <None Remove="resources\common\images\ButtonPressedLeft.png" />
     <None Remove="resources\common\images\ButtonPressedRight.png" />
     <None Remove="resources\common\images\ButtonPressedTop.png" />
+    <None Remove="resources\common\images\ColorPicker.png" />
     <None Remove="resources\common\images\eyeHide.png" />
     <None Remove="resources\common\images\eyeShow.png" />
+    <None Remove="resources\common\images\IconFree.png" />
+    <None Remove="resources\common\images\IconFresh.png" />
+    <None Remove="resources\common\images\IconGaze.png" />
+    <None Remove="resources\common\images\IconInvisible.png" />
+    <None Remove="resources\common\images\IconPlay.png" />
+    <None Remove="resources\common\images\IconReset.png" />
+    <None Remove="resources\common\images\IconShouder.png" />
+    <None Remove="resources\common\images\IconThirdPerson.png" />
+    <None Remove="resources\common\images\IconVisible.png" />
     <None Remove="resources\common\images\itemFrame.png" />
     <None Remove="resources\common\images\Save.png" />
+    <None Remove="resources\common\images\SaveAs.png" />
     <None Remove="resources\common\images\SelectedTabItemLeft.png" />
     <None Remove="resources\common\images\SelectedTabItemRight.png" />
     <None Remove="resources\common\images\SelectedTabItemTop.png" />

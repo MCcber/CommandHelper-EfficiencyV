@@ -62,7 +62,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             if (json.SelectToken("id") is not JObject itemID)
                 itemID = json.SelectToken("Item.id") as JObject;
             currentImage.Tag = data;
-            currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.ToString() + ".png", UriKind.Absolute));
+            currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png", UriKind.Absolute));
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                 if (json.SelectToken("id") is not JObject itemID)
                     itemID = json.SelectToken("Item.id") as JObject;
                 currentImage.Tag = data;
-                currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.ToString() + ".png", UriKind.Absolute));
+                currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png", UriKind.Absolute));
             }
         }
 
@@ -138,7 +138,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                 if (json.SelectToken("id") is not JObject itemID)
                     itemID = json.SelectToken("Item.id") as JObject;
                 currentImage.Tag = pageContext.Result;
-                currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\" + itemID.ToString() + ".png", UriKind.Absolute));
+                currentImage.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png", UriKind.Absolute));
             }
         }
 

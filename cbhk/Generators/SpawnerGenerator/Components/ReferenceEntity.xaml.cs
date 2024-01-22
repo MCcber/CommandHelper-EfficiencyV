@@ -2,11 +2,14 @@
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.EntityGenerator;
 using cbhk.Generators.EntityGenerator.Components;
+using HelixToolkit.Wpf;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.SpawnerGenerator.Components
@@ -21,7 +24,10 @@ namespace cbhk.Generators.SpawnerGenerator.Components
             InitializeComponent();
             Tag = "{id:\"minecraft:pig\"}";
             if(File.Exists(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\pig_spawn_egg.png"))
-            EntityIcon.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\pig_spawn_egg.png"));
+            {
+                ImageBrush imageBrush = new(new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\pig_spawn_egg.png")));
+                EntityIcon.Background = imageBrush;
+            }
         }
 
         /// <summary>
@@ -32,7 +38,7 @@ namespace cbhk.Generators.SpawnerGenerator.Components
         private void SetEmpty_Click(object sender, RoutedEventArgs e)
         {
             Tag = "";
-            EntityIcon.Source = null;
+            EntityIcon.Background = null;
         }
 
         /// <summary>
@@ -51,12 +57,12 @@ namespace cbhk.Generators.SpawnerGenerator.Components
             {
                 string id = JObject.Parse(data)["id"].ToString().Replace("minecraft:", "");
                 string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + id + ".png";
+                ImageBrush imageBrush = null;
                 if (!File.Exists(iconPath))
                     iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + id + "_spawn_egg.png";
                 if (File.Exists(iconPath))
-                    EntityIcon.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
-                else
-                    EntityIcon.Source = null;
+                    imageBrush = new(new BitmapImage(new Uri(iconPath, UriKind.Absolute)));
+                EntityIcon.Background = imageBrush;
             }
             catch
             {
@@ -88,12 +94,13 @@ namespace cbhk.Generators.SpawnerGenerator.Components
                     {
                         string id = JObject.Parse(data)["id"].ToString().Replace("minecraft:", "");
                         string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + id + ".png";
+                        ImageBrush imageBrush = null;
                         if (!File.Exists(iconPath))
                             iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + id + "_spawn_egg.png";
                         if (File.Exists(iconPath))
-                            EntityIcon.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
-                        else
-                            EntityIcon.Source = null;
+                            imageBrush = new(new BitmapImage(new Uri(iconPath, UriKind.Absolute)));
+                            EntityIcon.Background = imageBrush;
+                        EntityIcon.Background = imageBrush;
                     }
                     catch
                     {
@@ -114,20 +121,32 @@ namespace cbhk.Generators.SpawnerGenerator.Components
         {
             Entity entity = new();
             EntityDataContext context = entity.DataContext as EntityDataContext;
-            EntityPagesDataContext pageContext = (context.EntityPageList[0].Content as EntityPages).DataContext as EntityPagesDataContext;
-            pageContext.UseForTool = true;
+            context.IsCloseable = false;
             if (entity.ShowDialog().Value)
             {
-                string data = ExternalDataImportManager.GetEntityDataHandler(pageContext.Result, false);
-                Tag = pageContext.Result;
-                string id = JObject.Parse(data)["id"].ToString().Replace("minecraft:", "");
-                string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + id + ".png";
-                if (!File.Exists(iconPath))
-                    iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + id + "_spawn_egg.png";
-                if (File.Exists(iconPath))
-                    EntityIcon.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
-                else
-                    EntityIcon.Source = null;
+                EntityPagesDataContext entityPagesDataContext = (context.EntityPageList[0].Content as EntityPages).DataContext as EntityPagesDataContext;
+                string data = ExternalDataImportManager.GetEntityDataHandler(entityPagesDataContext.Result, false);
+                Tag = entityPagesDataContext.Result;
+                string entityID = "";
+                JObject json = JObject.Parse(data);
+                if (json.SelectToken("id") is JToken entityIDToken)
+                    entityID = entityIDToken.ToString().Replace("minecraft:", "").Replace("_spawn_egg:", "");
+                if (entityID.Length == 0)
+                {
+                    entityIDToken = json.SelectToken("Item.id");
+                    if (entityIDToken is not null)
+                        entityID = entityIDToken.ToString().Replace("minecraft:", "").Replace("_spawn_egg:", "");
+                }
+                if (entityID.Length > 0)
+                {
+                    string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + entityID + ".png";
+                    ImageBrush imageBrush = null;
+                    if (!File.Exists(iconPath))
+                        iconPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + entityID + "_spawn_egg.png";
+                    if (File.Exists(iconPath))
+                        imageBrush = new(new BitmapImage(new Uri(iconPath, UriKind.Absolute)));
+                    EntityIcon.Background = imageBrush;
+                }
             }
         }
     }

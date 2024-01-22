@@ -35,7 +35,7 @@
             TopBorderTexture="{StaticResource TabItemTop}">
             <Image
                 MouseLeftButtonUp="OpenBasicClasses"
-                Source="pack://application:,,,/cbhk;component/resources/cbhk_form/images/command_classes/basic.png"
+                Source="pack://application:,,,/cbhk;component/resources/cbhk/images/command_classes/basic.png"
                 Stretch="Uniform" />
         </CustomControls:TextTabItems>
         <CustomControls:TextTabItems
@@ -54,7 +54,7 @@
             TopBorderTexture="{StaticResource TabItemTop}">
             <Image
                 MouseLeftButtonUp="OpenAdvanceClasses"
-                Source="pack://application:,,,/cbhk;component/resources/cbhk_form/images/command_classes/advance.png"
+                Source="pack://application:,,,/cbhk;component/resources/cbhk/images/command_classes/advance.png"
                 Stretch="Uniform" />
         </CustomControls:TextTabItems>
         <CustomControls:TextTabItems
@@ -73,7 +73,7 @@
             TopBorderTexture="{StaticResource TabItemTop}">
             <Image
                 MouseLeftButtonUp="OpenOriginalEditionModClasses"
-                Source="pack://application:,,,/cbhk;component/resources/cbhk_form/images/command_classes/original_edition_mod.png"
+                Source="pack://application:,,,/cbhk;component/resources/cbhk/images/command_classes/original_edition_mod.png"
                 Stretch="Uniform" />
         </CustomControls:TextTabItems>
     </TabControl>

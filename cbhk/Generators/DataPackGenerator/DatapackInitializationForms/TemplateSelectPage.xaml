@@ -109,7 +109,7 @@
                                     Height="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualHeight}"
                                     Background="#383838">
                                     <TextBlock
-                                        Margin="15,0,0,0"
+                                        Margin="8,0,0,0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
                                         Background="Transparent"
@@ -263,13 +263,15 @@
                 </ListView>
             </ScrollViewer>
             <DockPanel
-                Margin="0,15,20,0"
+                Margin="0,20,20,0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 LastChildFill="False">
                 <CustomControls:StereoTextButton
                     Width="92"
                     Height="32"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
                     Background="#EFF2F1"
                     BorderThickness="4,3.6,4,7.65"
                     BottomBorderTexture="{StaticResource ButtonNormalBottom}"
@@ -290,6 +292,8 @@
                     Width="92"
                     Height="32"
                     Margin="6,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
                     Background="#EFF2F1"
                     BorderThickness="4,3.6,4,7.65"
                     BottomBorderTexture="{StaticResource ButtonNormalBottom}"

@@ -20,6 +20,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace cbhk.GeneralTools
@@ -309,14 +310,18 @@ namespace cbhk.GeneralTools
                     #region 实体数据
                     if (spawnPotential.SelectToken("data.entity") is JObject entity)
                     {
+                        ImageBrush imageBrush = null;
                         string data = entity.ToString();
                         spawnPotentialInstance.entity.Tag = data;
                         string entityID = JObject.Parse(data)["id"].ToString().Replace("minecraft:","");
                         string rootPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\entityImages\\";
                         string iconPath = rootPath + entityID + ".png";
                         if (!File.Exists(iconPath))
+                        {
                             iconPath = rootPath + entityID + "_spawn_egg.png";
-                        spawnPotentialInstance.entity.EntityIcon.Source = new BitmapImage(new Uri(iconPath));
+                            imageBrush = new(new BitmapImage(new Uri(iconPath)));
+                        }
+                        spawnPotentialInstance.entity.EntityIcon.Background = imageBrush;
                     }
                     #endregion
                 }
@@ -346,7 +351,6 @@ namespace cbhk.GeneralTools
             #region 提取可用NBT数据和实体ID
             if (data.Contains('{') && data.Contains('}'))
                 result = data[data.IndexOf('{')..(data.LastIndexOf('}') + 1)];
-
             if(result.Length > 0)
             {
                 //补齐缺失双引号对的key
@@ -370,7 +374,6 @@ namespace cbhk.GeneralTools
                 }
                 #endregion
             }
-
             return result;
             #endregion
         }
@@ -417,7 +420,7 @@ namespace cbhk.GeneralTools
             #region 处理交易数据
             if(nbtObj.SelectToken("Offers.Recipes") is JArray Recipes)
             {
-                string rootPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\item_and_block_images\\";
+                string rootPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\";
                 foreach (JObject recipe in Recipes.Cast<JObject>())
                 {
                     #region 读取数据
@@ -826,7 +829,7 @@ namespace cbhk.GeneralTools
             };
             ItemPages itemPages = new() { FontWeight = FontWeights.Normal };
             ItemPageDataContext context = itemPages.DataContext as ItemPageDataContext;
-            context.Give = mode != "Summon";
+            context.Summon = mode == "Summon";
             if (filePath.Length > 0 && File.Exists(filePath))
                 context.ExternFilePath = filePath;
             if (externData != null)

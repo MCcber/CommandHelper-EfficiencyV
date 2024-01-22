@@ -1,5 +1,6 @@
 ﻿using cbhk.ControlsDataContexts;
 using cbhk.CustomControls;
+using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -26,35 +27,38 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         public void ValueChangedHandler(object sender, RoutedEventArgs e)
         {
             #region 共通变量
-            Grid parentGrid = (sender as FrameworkElement).Parent as Grid;
-            if (parentGrid == null) return;
+            if ((sender as FrameworkElement).Parent is not Grid parentGrid) return;
             ScrollViewer scrollViewer = parentGrid.Parent as ScrollViewer;
             TextTabItems parent = scrollViewer.Parent as TextTabItems;
             int currentIndex = 0;
-            ItemPageDataContext itemPages = parent.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            ItemPageDataContext context = parent.FindParent<ItemPages>().DataContext as ItemPageDataContext;
             PropertyPath propertyPath = null;
             Binding valueBinder = new()
             {
                 Mode = BindingMode.OneWayToSource,
                 Converter = new TagToString()
             };
-            if (!itemPages.SpecialTagsResult.ContainsKey(itemPages.SelectedItemId.ComboBoxItemId))
-                itemPages.SpecialTagsResult.Add(itemPages.SelectedItemId.ComboBoxItemId, new System.Collections.ObjectModel.ObservableCollection<NBTDataStructure>());
+            if (!context.SpecialTagsResult.ContainsKey(context.SelectedItemId.ComboBoxItemId))
+                context.SpecialTagsResult.Add(context.SelectedItemId.ComboBoxItemId, []);
             #endregion
 
             #region 是否为谜之炖菜状态效果
             if(sender is Accordion && (sender as FrameworkElement).Uid == "StewEffectList")
             {
                 Accordion accordion = sender as Accordion;
+
+                //加入版本更新队列
+                if (!context.VersionNBTList.ContainsKey(accordion))
+                    context.VersionNBTList.Add(accordion, StewEffectList_LostFocus);
                 accordion.Modify = new RelayCommand<FrameworkElement>(AddStewEffectCommand);
                 accordion.Fresh = new RelayCommand<FrameworkElement>(ClearStewEffectCommand);
                 accordion.GotFocus -= ValueChangedHandler;
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += StewEffectList_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -73,9 +77,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += MapDecorations_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -92,9 +96,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += MapDisplay_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -111,9 +115,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += ShieldBlockEntityTag_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -126,15 +130,19 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
             if (sender is Accordion && (sender as FrameworkElement).Uid == "CustomPotionEffectList")
             {
                 Accordion accordion = sender as Accordion;
+                //加入版本更新队列
+                if (!context.VersionNBTList.ContainsKey(accordion))
+                    context.VersionNBTList.Add(accordion, CustomPotionEffects_LostFocus);
                 accordion.GotFocus -= ValueChangedHandler;
                 accordion.Modify = new RelayCommand<FrameworkElement>(AddCustomPotionEffectCommand);
                 accordion.Fresh = new RelayCommand<FrameworkElement>(ClearCustomPotionEffectsCommand);
+
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += CustomPotionEffects_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -153,9 +161,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += NameSpaceReference_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -168,15 +176,18 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
             if (sender is Accordion && (sender as FrameworkElement).Uid == "StoredEnchantments")
             {
                 Accordion accordion = sender as Accordion;
+                //加入版本更新队列
+                if (!context.VersionNBTList.ContainsKey(accordion))
+                    context.VersionNBTList.Add(accordion, StoredEnchantments_LostFocus);
                 accordion.GotFocus -= ValueChangedHandler;
                 accordion.Modify = new RelayCommand<FrameworkElement>(AddEnchantment);
                 accordion.Fresh = new RelayCommand<FrameworkElement>(ClearEnchantments);
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += StoredEnchantments_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -195,9 +206,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += DebugProperties_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -216,9 +227,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += Item_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -237,9 +248,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += LodestonePos_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -256,9 +267,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 NBTDataStructure dataStructure = slider.Tag as NBTDataStructure;
                 slider.ValueChanged += NumberBoxValueChanged;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = slider.Tag;
@@ -281,9 +292,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 else
                     textBox.LostFocus += StringBox_LostFocus;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(textBox.Tag as NBTDataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(textBox.Tag as NBTDataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currengTag = dataStructure;
@@ -301,9 +312,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 textCheckBoxs.Checked += CheckBox_Checked;
                 textCheckBoxs.Unchecked += CheckBox_Unchecked;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = textCheckBoxs.Tag;
@@ -320,9 +331,9 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 NBTDataStructure dataStructure = comboBox.Tag as NBTDataStructure;
                 comboBox.SelectionChanged += EnumBox_SelectionChanged;
 
-                itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = itemPages.SpecialTagsResult[itemPages.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + itemPages.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = comboBox.Tag;
@@ -342,7 +353,10 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
             Accordion accordion = obj as Accordion;
             ScrollViewer scrollViewer = accordion.Content as ScrollViewer;
             StackPanel stackPanel = scrollViewer.Content as StackPanel;
-            stackPanel.Children.Add(new SuspiciousStewEffects());
+            SuspiciousStewEffects suspiciousStewEffects = new();
+            stackPanel.Children.Add(suspiciousStewEffects);
+            ItemPageDataContext itemPageDataContext = suspiciousStewEffects.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            itemPageDataContext.VersionComponents.Add(suspiciousStewEffects);
         }
 
         /// <summary>
@@ -351,9 +365,15 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         /// <param name="obj"></param>
         private void ClearStewEffectCommand(FrameworkElement obj)
         {
+            ItemPageDataContext itemPageDataContext = obj.FindParent<ItemPages>().DataContext as ItemPageDataContext;
             Accordion accordion = obj as Accordion;
             ScrollViewer scrollViewer = accordion.Content as ScrollViewer;
             StackPanel stackPanel = scrollViewer.Content as StackPanel;
+            for (int i = 0; i < stackPanel.Children.Count; i++)
+            {
+                itemPageDataContext.VersionComponents.Remove(stackPanel.Children[i] as SuspiciousStewEffects);
+                stackPanel.Children.RemoveAt(i);
+            }
             stackPanel.Children.Clear();
         }
 
@@ -363,20 +383,27 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <exception cref="NotImplementedException"></exception>
-        public void StewEffectList_LostFocus(object sender, RoutedEventArgs e)
+        public async void StewEffectList_LostFocus(object sender, RoutedEventArgs e)
         {
             Accordion accordion = sender as Accordion;
-            NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
-            StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
-            if (stackPanel.Children.Count > 0)
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
             {
-                StringBuilder result = new();
-                foreach (SuspiciousStewEffects suspiciousStewEffects in stackPanel.Children)
-                    result.Append(suspiciousStewEffects.Result + ",");
-                dataStructure.Result = accordion.Name + ":[" + result.ToString().Trim(',') + "]";
-            }
-            else
-                dataStructure.Result = "";
+                NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
+                StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
+                if (stackPanel.Children.Count > 0)
+                {
+                    StringBuilder result = new();
+                    string effectString = "";
+                    foreach (IVersionUpgrader suspiciousStewEffects in stackPanel.Children.Cast<IVersionUpgrader>())
+                    {
+                        effectString = await suspiciousStewEffects.Result();
+                        result.Append(effectString + ",");
+                    }
+                    dataStructure.Result = accordion.Name + ":[" + result.ToString().Trim(',') + "]";
+                }
+                else
+                    dataStructure.Result = "";
+            });
         }
 
         /// <summary>
@@ -462,22 +489,28 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void CustomPotionEffects_LostFocus(object sender, RoutedEventArgs e)
+        public async void CustomPotionEffects_LostFocus(object sender, RoutedEventArgs e)
         {
             Accordion accordion = sender as Accordion;
-            NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
-            StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
-            string result = "";
-            if (stackPanel.Children.Count > 0)
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
             {
-                foreach (CustomPotionEffects potion in stackPanel.Children)
+                NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
+                StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
+                string result = "";
+                if (stackPanel.Children.Count > 0)
                 {
-                    result += potion.Result + ",";
+                    int currentVersion = (accordion.FindParent<ItemPages>().DataContext as ItemPageDataContext).CurrentMinVersion;
+                    string effectString = "";
+                    foreach (IVersionUpgrader potion in stackPanel.Children.Cast<IVersionUpgrader>())
+                    {
+                        effectString = await potion.Result();
+                        result += effectString + ",";
+                    }
+                    dataStructure.Result = (currentVersion < 1202 ? "CustomPotionEffects" : "custom_potion_effects") + ":[" + result.Trim(',') + "]";
                 }
-                dataStructure.Result = accordion.Name + ":[" + result.Trim(',') + "]";
-            }
-            else
-                dataStructure.Result = "";
+                else
+                    dataStructure.Result = "";
+            });
         }
 
         /// <summary>
@@ -501,7 +534,10 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
             Accordion accordion = obj as Accordion;
             ScrollViewer scrollViewer = accordion.Content as ScrollViewer;
             StackPanel stackPanel = scrollViewer.Content as StackPanel;
-            stackPanel.Children.Add(new CustomPotionEffects());
+            CustomPotionEffects customPotionEffects = new();
+            stackPanel.Children.Add(customPotionEffects);
+            ItemPageDataContext itemPageDataContext = customPotionEffects.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            itemPageDataContext.VersionComponents.Add(customPotionEffects);
         }
 
         /// <summary>
@@ -557,7 +593,10 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         {
             Accordion accordion = obj as Accordion;
             StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
-            stackPanel.Children.Add(new EnchantmentItems());
+            EnchantmentItems enchantmentItems = new();
+            stackPanel.Children.Add(enchantmentItems);
+            ItemPageDataContext itemPageDataContext = obj.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            itemPageDataContext.VersionComponents.Add(enchantmentItems);
         }
 
         /// <summary>
@@ -576,20 +615,27 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void StoredEnchantments_LostFocus(object sender, RoutedEventArgs e)
+        public async void StoredEnchantments_LostFocus(object sender, RoutedEventArgs e)
         {
             Accordion accordion = sender as Accordion;
-            NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
-            StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
-            string result = "";
-            if (stackPanel.Children.Count > 0)
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
             {
-                foreach (EnchantmentItems enchantmentItems in stackPanel.Children)
-                    result += enchantmentItems.Result + ",";
-                dataStructure.Result = "StoredEnchantments:[" + result.Trim(',') + "]";
-            }
-            else
-                dataStructure.Result = "";
+                NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
+                StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
+                string result = "";
+                if (stackPanel.Children.Count > 0)
+                {
+                    string enchantString = "";
+                    foreach (IVersionUpgrader enchantmentItems in stackPanel.Children.Cast<IVersionUpgrader>())
+                    {
+                        enchantString = await enchantmentItems.Result();
+                        result += enchantString + ",";
+                    }
+                    dataStructure.Result = "StoredEnchantments:[" + result.Trim(',') + "]";
+                }
+                else
+                    dataStructure.Result = "";
+            });
         }
 
         /// <summary>
@@ -615,7 +661,8 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 {
                     IconComboBoxItem selectedItem = debugProperties.BlockId.SelectedItem as IconComboBoxItem;
                     currentID = BlockTable.Select("name='" + selectedItem.ComboBoxItemText + "'").First()["id"].ToString();
-                    result += "\"" + currentID + "\":\"" + debugProperties.BlockProperty.SelectedItem.ToString() + "\",";
+                    if (debugProperties.BlockProperty.Items.Count > 0)
+                        result += "\"" + currentID + "\":\"" + debugProperties.BlockProperty.SelectedItem.ToString() + "\",";
                 }
                 dataStructure.Result = "DebugProperty:{" + result.Trim(',') + "}";
             }
@@ -694,7 +741,7 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
         {
             Accordion accordion = sender as Accordion;
             StackPanel itemPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
-            List<string> itemList = new();
+            List<string> itemList = [];
             NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
             if (itemPanel.Children.Count > 0)
             {
@@ -765,7 +812,7 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                 dataStructure.Result = "";
             else
             {
-                List<string> valueList = textBox.Text.Split(',').ToList();
+                List<string> valueList = [.. textBox.Text.Split(',')];
                 StringBuilder result = new();
                 _ = valueList.All(item =>
                 {

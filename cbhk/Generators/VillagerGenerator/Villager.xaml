@@ -28,8 +28,8 @@
 
     <Window.Resources>
         <GeneralTools:UriToBitmapImage x:Key="UriToBitmapImage" />
-        <CollectionViewSource x:Key="BagItemSource" Source="{Binding BagItems, IsAsync=True}" />
-        <CollectionViewSource x:Key="CustomItemSource" Source="{Binding CustomItems, IsAsync=True}" />
+        <CollectionViewSource x:Key="OriginalItemView" Source="{Binding OriginalItemList, IsAsync=True}" />
+        <CollectionViewSource x:Key="CustomItemView" Source="{Binding CustomItemList, IsAsync=True}" />
         <ImageBrush x:Key="EditBox" ImageSource="/cbhk;component/resources/common/images/TextEditBox.png" />
         <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk;component/resources/common/images/ButtonNormal.png" />
         <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk;component/resources/common/images/ButtonPressed.png" />
@@ -585,6 +585,7 @@
                         VerticalContentAlignment="Center"
                         AllowDrop="False"
                         FontSize="18"
+                        IsReadOnly="True"
                         ItemsSource="{Binding VillagerTypeSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerType, Mode=TwoWay}"
@@ -602,6 +603,7 @@
                         VerticalContentAlignment="Center"
                         AllowDrop="False"
                         FontSize="18"
+                        IsReadOnly="True"
                         ItemsSource="{Binding VillagerProfessionTypeSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerProfessionType, Mode=TwoWay}"
@@ -619,6 +621,7 @@
                         VerticalContentAlignment="Center"
                         AllowDrop="False"
                         FontSize="18"
+                        IsReadOnly="True"
                         ItemsSource="{Binding VillagerLevelSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerLevel, Mode=TwoWay}"
@@ -1057,20 +1060,15 @@
                         </Grid>
                     </StackPanel>
                 </Grid>
-                <!--  原版背包  -->
                 <TabControl
                     Grid.Row="2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Top"
                     Background="Transparent"
                     BorderThickness="0"
-                    SelectedIndex="0"
+                    SelectedIndex="{Binding SelectedItemListIndex, Mode=OneWayToSource}"
                     Style="{DynamicResource TabControlWithScrollBar}">
-                    <behavior:Interaction.Triggers>
-                        <behavior:EventTrigger EventName="Loaded">
-                            <behavior:CallMethodAction MethodName="ItemsLoaded" TargetObject="{Binding}" />
-                        </behavior:EventTrigger>
-                    </behavior:Interaction.Triggers>
+                    <!--  原版背包  -->
                     <CustomControls:TextTabItems
                         Background="#48382C"
                         BorderThickness="5,5,5,0"
@@ -1088,7 +1086,7 @@
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Top"
                             BorderThickness="0"
-                            ItemsSource="{Binding Source={StaticResource BagItemSource}, IsAsync=True}"
+                            ItemsSource="{Binding Source={StaticResource OriginalItemView}, IsAsync=True}"
                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                             SelectedItem="{Binding SelectedItem, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
@@ -1128,6 +1126,11 @@
                                         VirtualizingPanel.IsVirtualizing="True" />
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
+                            <behavior:Interaction.Triggers>
+                                <behavior:EventTrigger EventName="Loaded">
+                                    <behavior:CallMethodAction MethodName="OriginalItemListView_Loaded" TargetObject="{Binding}" />
+                                </behavior:EventTrigger>
+                            </behavior:Interaction.Triggers>
                         </ListView>
                     </CustomControls:TextTabItems>
                     <CustomControls:TextTabItems
@@ -1148,7 +1151,7 @@
                             VerticalAlignment="Top"
                             BorderThickness="0"
                             IsSynchronizedWithCurrentItem="True"
-                            ItemsSource="{Binding Source={StaticResource CustomItemSource}}"
+                            ItemsSource="{Binding Source={StaticResource CustomItemView}}"
                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                             SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
@@ -1189,8 +1192,18 @@
                                         VirtualizingPanel.IsVirtualizing="True" />
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
+                            <behavior:Interaction.Triggers>
+                                <behavior:EventTrigger EventName="Loaded">
+                                    <behavior:CallMethodAction MethodName="CustomItemListView_Loaded" TargetObject="{Binding}" />
+                                </behavior:EventTrigger>
+                            </behavior:Interaction.Triggers>
                         </ListView>
                     </CustomControls:TextTabItems>
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="Loaded">
+                            <behavior:CallMethodAction MethodName="Items_Loaded" TargetObject="{Binding}" />
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
                 </TabControl>
                 <Grid
                     Grid.Row="3"
@@ -1318,11 +1331,6 @@
                         FontSize="15"
                         Foreground="White"
                         Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
-                        <behavior:Interaction.Triggers>
-                            <behavior:EventTrigger EventName="GotFocus">
-                                <behavior:CallMethodAction MethodName="TextBox_GotFocus" TargetObject="{Binding}" />
-                            </behavior:EventTrigger>
-                        </behavior:Interaction.Triggers>
                         <TextBox.Resources>
                             <VisualBrush
                                 x:Key="BackgroundBrush"

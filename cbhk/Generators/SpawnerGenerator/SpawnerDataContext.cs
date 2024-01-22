@@ -6,6 +6,7 @@ using cbhk.Generators.SpawnerGenerator.Components;
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -50,7 +51,7 @@ namespace cbhk.Generators.SpawnerGenerator
             get => selectedVersion;
             set => SetProperty(ref selectedVersion, value);
         }
-        public ObservableCollection<string> VersionSource { get; set; } = new() { "1.13+","1.12-" };
+        public ObservableCollection<string> VersionSource { get; set; } = ["1.13+","1.12-"];
         #endregion
 
         #region 字段与引用
@@ -59,7 +60,7 @@ namespace cbhk.Generators.SpawnerGenerator
         /// </summary>
         public Window home = null;
         //刷怪笼标签页集合
-        public ObservableCollection<RichTabItems> SpawnerPages { get; set; } = new() { new RichTabItems() { Header = "刷怪笼",
+        public ObservableCollection<RichTabItems> SpawnerPages { get; set; } = [ new RichTabItems() { Header = "刷怪笼",
                 IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
@@ -71,7 +72,7 @@ namespace cbhk.Generators.SpawnerGenerator
                 TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
                 SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,} };
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,} ];
 
         //本生成器的图标路径
         string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconSpawner.png";
@@ -236,16 +237,14 @@ namespace cbhk.Generators.SpawnerGenerator
                         Results.Add(context.Result);
                     });
                 }
-
-                System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new()
+                
+                OpenFolderDialog openFolderDialog = new()
                 {
-                    Description = "请选择要保存的目录",
+                    Title = "请选择要保存的目录",
                     InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                    ShowHiddenFiles = true,
-                    ShowNewFolderButton = true,
-                    UseDescriptionForTitle = true
+                    ShowHiddenItems = true,
                 };
-                if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                if (openFolderDialog.ShowDialog().Value)
                 {
                     int index = 0;
                     foreach (string item in Results)
@@ -256,7 +255,7 @@ namespace cbhk.Generators.SpawnerGenerator
                             if (JObject.Parse(item).SelectToken("SpawnData.entity.id") is JToken id)
                                 entityID = id.ToString().Replace("minecraft:", "");
                         }
-                        File.WriteAllTextAsync(folderBrowserDialog.SelectedPath + "spawner" + entityID + index + ".command", item);
+                        File.WriteAllTextAsync(openFolderDialog.FolderName + "spawner" + entityID + index + ".command", item);
                         index++;
                     }
                 }
