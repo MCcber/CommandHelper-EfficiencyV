@@ -23,6 +23,12 @@
         <localContext:SignPageDataContext />
     </UserControl.DataContext>
 
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="Loaded">
+            <behaviors:CallMethodAction MethodName="SignPage_Loaded" TargetObject="{Binding}" />
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
@@ -37,7 +43,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource RightArrow}"
                 BorderThickness="0"
-                Command="{Binding Run}"
+                Command="{Binding RunCommand}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
@@ -46,6 +52,25 @@
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
+                        Foreground="White" />
+                </CustomControls:IconTextButtons.ToolTip>
+            </CustomControls:IconTextButtons>
+            <CustomControls:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource Save}"
+                BorderThickness="0"
+                Command="{Binding SaveCommand}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControls:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="保存"
                         Foreground="White" />
                 </CustomControls:IconTextButtons.ToolTip>
             </CustomControls:IconTextButtons>
@@ -59,8 +84,15 @@
                 Width="100"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
+                SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}" />
+                Style="{DynamicResource TextComboBoxStyle}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="SelectionChanged">
+                        <behaviors:CallMethodAction MethodName="Version_SelectionChanged" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </ComboBox>
             <TextBlock
                 Margin="5,0"
                 HorizontalAlignment="Center"
@@ -72,26 +104,13 @@
                 ItemsSource="{Binding TypeSource, IsAsync=True}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedSignType, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}" />
-            <CustomControls:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource Save}"
-                BorderThickness="0"
-                Command="{Binding Save}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
-                ToolTipService.BetweenShowDelay="0"
-                ToolTipService.InitialShowDelay="0">
-                <CustomControls:IconTextButtons.ToolTip>
-                    <ToolTip
-                        Background="#484848"
-                        Content="保存"
-                        Foreground="White" />
-                </CustomControls:IconTextButtons.ToolTip>
-            </CustomControls:IconTextButtons>
+                Style="{DynamicResource TextComboBoxStyle}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="SelectionChanged">
+                        <behaviors:CallMethodAction MethodName="SignID_SelectionChanged" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </ComboBox>
             <CustomControls:TextToggleButtons
                 Padding="5"
                 HorizontalAlignment="Left"
@@ -108,8 +127,8 @@
                 IsChecked="{Binding Give, Mode=OneWayToSource}"
                 SelectedToggleText="给予"
                 Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
+                ToggleHeight="26"
+                ToggleWidth="46"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0"
                 UnSelectedToggleText="设置" />
@@ -120,8 +139,8 @@
                 IsEnabled="{Binding CanWaxed, Mode=OneWay}"
                 SelectedToggleText="已裱"
                 Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
+                ToggleHeight="26"
+                ToggleWidth="46"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0"
                 UnSelectedToggleText="未裱">
@@ -139,8 +158,8 @@
                 IsEnabled="{Binding HaveBackFace, Mode=OneWay}"
                 SelectedToggleText="反面"
                 Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
+                ToggleHeight="26"
+                ToggleWidth="46"
                 UnSelectedToggleText="正面" />
             <CustomControls:RadiusToggleButtons
                 Margin="5,0"
@@ -149,8 +168,8 @@
                 IsEnabled="{Binding CanGlowing, Mode=OneWay}"
                 SelectedToggleText="正面发光"
                 Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
+                ToggleHeight="26"
+                ToggleWidth="46"
                 UnSelectedToggleText="正面发光" />
             <CustomControls:RadiusToggleButtons
                 Margin="5,0"
@@ -159,8 +178,8 @@
                 IsEnabled="{Binding CanGlowing, Mode=OneWay}"
                 SelectedToggleText="反面发光"
                 Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
+                ToggleHeight="26"
+                ToggleWidth="46"
                 UnSelectedToggleText="反面发光" />
             <CustomControls:RadiusToggleButtons
                 Margin="5,0"
@@ -168,8 +187,8 @@
                 IsChecked="{Binding ShowResult, Mode=OneWayToSource}"
                 SelectedToggleText="显示结果"
                 Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
+                ToggleHeight="26"
+                ToggleWidth="46"
                 UnSelectedToggleText="隐藏结果" />
         </DockPanel>
         <Grid Grid.Row="1">
@@ -187,7 +206,7 @@
                 Background="#EFF2F1"
                 BorderThickness="4,4,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding SetBold}"
+                Command="{Binding SetBoldCommand}"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
@@ -212,7 +231,7 @@
                 Background="#EFF2F1"
                 BorderThickness="4,4,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding SetItalic}"
+                Command="{Binding SetItalicCommand}"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
@@ -237,7 +256,7 @@
                 Background="#EFF2F1"
                 BorderThickness="4,4,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding SetUnderlined}"
+                Command="{Binding SetUnderlinedCommand}"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
@@ -266,7 +285,7 @@
                 Background="#EFF2F1"
                 BorderThickness="4,4,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding SetStrikethrough}"
+                Command="{Binding SetStrikethoughCommand}"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
@@ -295,7 +314,7 @@
                 Background="#EFF2F1"
                 BorderThickness="4,4,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding SetObfuscated}"
+                Command="{Binding SetObfuscatedCommand}"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
@@ -320,7 +339,7 @@
                 Background="#EFF2F1"
                 BorderThickness="4,4,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding Reset}"
+                Command="{Binding ResetCommand}"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"

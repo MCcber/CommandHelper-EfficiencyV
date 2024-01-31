@@ -24,17 +24,8 @@ using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.RecipeGenerator
 {
-    public class RecipeDataContext : ObservableObject
+    public partial class RecipeDataContext : ObservableObject
     {
-        #region 返回、运行与导入等指令
-        public RelayCommand<CommonWindow> Return { get; set; }
-        public RelayCommand Run { get; set; }
-        public RelayCommand ImportFromClipboard { get; set; }
-        public RelayCommand ImportFromFile { get; set; }
-        public RelayCommand<MenuItem> AddRecipe { get; set; }
-        public RelayCommand<MenuItem> ClearRecipes { get; set; }
-        #endregion
-
         #region 保存物品ID
         private IconComboBoxItem select_item_id_source;
         public IconComboBoxItem SelectItemIdSource
@@ -155,15 +146,6 @@ namespace cbhk.Generators.RecipeGenerator
 
         public RecipeDataContext()
         {
-            #region 链接命令
-            Return = new RelayCommand<CommonWindow>(return_command);
-            Run = new RelayCommand(run_command);
-            ImportFromClipboard = new RelayCommand(ImportFromClipboardCommand);
-            ImportFromFile = new RelayCommand(ImportFromFileCommand);
-            AddRecipe = new RelayCommand<MenuItem>(AddRecipeCommand);
-            ClearRecipes = new RelayCommand<MenuItem>(ClearRecipesCommand);
-            #endregion
-
             Task.Run(async () =>{
                 #region 初始化数据表
                 DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
@@ -235,11 +217,12 @@ namespace cbhk.Generators.RecipeGenerator
             CustomItemViewSource.Filter += CollectionViewSource_Filter;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 添加配方
         /// </summary>
         /// <param name="obj"></param>
-        private void AddRecipeCommand(MenuItem obj)
+        private void AddRecipe(MenuItem obj)
         {
             MenuItem menu = obj.Parent as MenuItem;
             int index = menu.Items.IndexOf(obj);
@@ -291,7 +274,7 @@ namespace cbhk.Generators.RecipeGenerator
         /// <summary>
         /// 外部添加配方
         /// </summary>
-        public object AddRecipeCommand(RecipeType recipeType)
+        public object AddExternRecipe(RecipeType recipeType)
         {
             object result = "";
             RichTabItems richTabItems = new()
@@ -359,11 +342,12 @@ namespace cbhk.Generators.RecipeGenerator
             return result;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 清空配方
         /// </summary>
         /// <param name="obj"></param>
-        private void ClearRecipesCommand(MenuItem obj)
+        private void ClearRecipes(MenuItem obj)
         {
             MenuItem menu = obj.Parent as MenuItem;
             int index = menu.Items.IndexOf(obj);
@@ -427,19 +411,21 @@ namespace cbhk.Generators.RecipeGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从剪切板导入配方
         /// </summary>
-        private void ImportFromClipboardCommand()
+        private void ImportFromClipboard()
         {
             RecipeDataContext context = this;
             ExternalDataImportManager.ImportRecipeDataHandler(Clipboard.GetText(), ref context,false);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从文件导入配方
         /// </summary>
-        private void ImportFromFileCommand()
+        private void ImportFromFile()
         {
             OpenFileDialog openFileDialog = new()
             {
@@ -475,7 +461,8 @@ namespace cbhk.Generators.RecipeGenerator
             menuItem.Icon = image;
         }
 
-        private void return_command(CommonWindow win)
+        [RelayCommand]
+        private void Return(CommonWindow win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -484,10 +471,11 @@ namespace cbhk.Generators.RecipeGenerator
             win.Close();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 执行生成
         /// </summary>
-        private void run_command()
+        private void Run()
         {
             OpenFolderDialog openFolderDialog = new()
             {
@@ -506,7 +494,7 @@ namespace cbhk.Generators.RecipeGenerator
                     {
                         craftingTableDataContext context = craftingTable.DataContext as craftingTableDataContext;
                         context.NeedSave = false;
-                        context.RunCommand();
+                        context.Run();
                         context.NeedSave = false;
                         _ = File.WriteAllTextAsync(selectedPath + context.FileName + ".json", context.Result);
                     }
@@ -514,7 +502,7 @@ namespace cbhk.Generators.RecipeGenerator
                     {
                         furnaceDataContext context = furnace.DataContext as furnaceDataContext;
                         context.NeedSave = false;
-                        context.RunCommand();
+                        context.Run();
                         context.NeedSave = false;
                         _ = File.WriteAllTextAsync(selectedPath + context.FileName + ".json", context.Result);
                     }
@@ -522,7 +510,7 @@ namespace cbhk.Generators.RecipeGenerator
                     {
                         blastFurnaceDataContext context = blastFurnace.DataContext as blastFurnaceDataContext;
                         context.NeedSave = false;
-                        context.RunCommand();
+                        context.Run();
                         context.NeedSave = false;
                         _ = File.WriteAllTextAsync(selectedPath + context.FileName + ".json", context.Result);
                     }
@@ -530,7 +518,7 @@ namespace cbhk.Generators.RecipeGenerator
                     {
                         campfireDataContext context = campfire.DataContext as campfireDataContext;
                         context.NeedSave = false;
-                        context.RunCommand();
+                        context.Run();
                         context.NeedSave = false;
                         _ = File.WriteAllTextAsync(selectedPath + context.FileName + ".json", context.Result);
                     }
@@ -538,7 +526,7 @@ namespace cbhk.Generators.RecipeGenerator
                     {
                         smithingTableDataContext context = smithingTable.DataContext as smithingTableDataContext;
                         context.NeedSave = false;
-                        context.RunCommand();
+                        context.Run();
                         context.NeedSave = false;
                         _ = File.WriteAllTextAsync(selectedPath + context.FileName + ".json", context.Result);
                     }
@@ -546,7 +534,7 @@ namespace cbhk.Generators.RecipeGenerator
                     {
                         stonecutterDataContext context = stonecutter.DataContext as stonecutterDataContext;
                         context.NeedSave = false;
-                        context.RunCommand();
+                        context.Run();
                         context.NeedSave = false;
                         _ = File.WriteAllTextAsync(selectedPath + context.FileName + ".json", context.Result);
                     }

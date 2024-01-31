@@ -16,7 +16,7 @@ using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.SignGenerator
 {
-    public class SignDataContext:ObservableObject
+    public partial class SignDataContext : ObservableObject
     {
         #region 字段
         /// <summary>
@@ -63,21 +63,17 @@ namespace cbhk.Generators.SignGenerator
             set => SetProperty(ref showResult, value);
         }
 
-        #endregion
+        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+            new TextComboBoxItem() { Text = "1.20.0" },
+            new TextComboBoxItem() { Text = "1.19.4" },
+            new TextComboBoxItem() { Text = "1.19.3" },
+            new TextComboBoxItem() { Text = "1.17.0" },
+            new TextComboBoxItem() { Text = "1.16.0" },
+            new TextComboBoxItem() { Text = "1.14.0" },
+            new TextComboBoxItem() { Text = "1.13.0" }
+        ];
 
-        #region 运行、返回等命令
-        public RelayCommand Run { get; set; }
-        public RelayCommand<CommonWindow> Return { get; set; }
 
-        /// <summary>
-        /// 添加告示牌
-        /// </summary>
-        public RelayCommand AddSign { get; set; }
-
-        /// <summary>
-        /// 清空告示牌
-        /// </summary>
-        public RelayCommand ClearSigns { get; set; }
         #endregion
 
         public SignDataContext()
@@ -91,17 +87,14 @@ namespace cbhk.Generators.SignGenerator
             });
             if (File.Exists(iconPath))
                 icon = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
-            AddSign = new RelayCommand(AddSignCommand);
-            ClearSigns = new(ClearSignsCommand);
-            Run = new(runCommand);
-            Return = new RelayCommand<CommonWindow>(ReturnCommand);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void ReturnCommand(CommonWindow win)
+        private void Return(CommonWindow win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -110,10 +103,11 @@ namespace cbhk.Generators.SignGenerator
             win.Close();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 生成所有告示牌
         /// </summary>
-        private async void runCommand()
+        private async Task Run()
         {
             Displayer displayer = Displayer.GetContentDisplayer();
             StringBuilder result = new();
@@ -125,7 +119,7 @@ namespace cbhk.Generators.SignGenerator
                     {
                         SignPage signPage = item.Content as SignPage;
                         SignPageDataContext signPageDataContext = signPage.DataContext as SignPageDataContext;
-                        signPageDataContext.RunCommand();
+                        signPageDataContext.Run();
                         if (!ShowResult)
                             result.Append(signPageDataContext.Result + "\r\n");
                         displayer.GeneratorResult(signPageDataContext.Result, "告示牌", iconPath);
@@ -138,11 +132,12 @@ namespace cbhk.Generators.SignGenerator
                 Clipboard.SetText(result.ToString());
         }
 
+        [RelayCommand]
         /// <summary>
         /// 添加告示牌
         /// </summary>
         /// <param name="element"></param>
-        private void AddSignCommand()
+        private void AddSign()
         {
             string signPanelPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\acaciaSignPanel.png";
             SignPage signPage = new() { FontWeight = FontWeights.Normal };
@@ -167,11 +162,38 @@ namespace cbhk.Generators.SignGenerator
             Signs.Add(richTabItems);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 清空告示牌
         /// </summary>
-        private void ClearSignsCommand() => Signs.Clear();
+        private void ClearSigns() => Signs.Clear();
 
+        [RelayCommand]
+        /// <summary>
+        /// 保存所有告示牌
+        /// </summary>
+        private void SaveAll()
+        {
+
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 从剪切板导入数据
+        /// </summary>
+        private void ImportFromClipboard()
+        {
+
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 从文件导入数据
+        /// </summary>
+        private void ImportFromFile()
+        {
+
+        }
 
         /// <summary>
         /// 添加告示牌操作图标

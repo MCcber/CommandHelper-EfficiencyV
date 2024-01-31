@@ -1,4 +1,5 @@
-﻿using cbhk.GeneralTools;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -21,13 +22,6 @@ namespace cbhk.Generators.TagGenerator
 {
     public partial class TagDataContext: ObservableObject
     {
-        #region 生成、返回等指令
-        public RelayCommand RunCommand { get; set; }
-        public RelayCommand<CommonWindow> ReturnCommand { get; set; }
-        public RelayCommand ImportFromClipboard { get; set; }
-        public RelayCommand ImportFromFile { get; set; }
-        #endregion
-
         #region 替换
         private bool replace;
         public bool Replace
@@ -79,12 +73,13 @@ namespace cbhk.Generators.TagGenerator
             get => selectedItem;
             set => SetProperty(ref selectedItem,value);
         }
+
         private int LastSelectedIndex = 0;
         #endregion
 
         #region 当前选中的类型成员
-        private string selectedTypeItem = null;
-        public string SelectedTypeItem
+        private TextComboBoxItem selectedTypeItem = null;
+        public TextComboBoxItem SelectedTypeItem
         {
             get => selectedTypeItem;
             set
@@ -226,17 +221,10 @@ namespace cbhk.Generators.TagGenerator
         /// </summary>
         CollectionViewSource TagViewSource = null;
         //标签生成器的过滤类型数据源
-        public ObservableCollection<string> TypeItemSource = [];
+        public ObservableCollection<TextComboBoxItem> TypeItemSource = [];
 
         public TagDataContext()
         {
-            #region 链接指令
-            RunCommand = new RelayCommand(run_command);
-            ReturnCommand = new RelayCommand<CommonWindow>(return_command);
-            ImportFromClipboard = new(ImportFromClipboardCommand);
-            ImportFromFile = new(ImportFromFileCommand);
-            #endregion
-
             #region 异步载入标签成员
             Task.Run(async () =>
             {
@@ -346,20 +334,22 @@ namespace cbhk.Generators.TagGenerator
             #endregion
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从剪切板导入标签数据
         /// </summary>
-        private void ImportFromClipboardCommand()
+        private void ImportFromClipboard()
         {
             ObservableCollection<TagItemTemplate> items = TagItems;
             TagDataContext context = this;
             ExternalDataImportManager.ImportTagDataHandler(Clipboard.GetText(),ref items,ref context,false);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从文件导入标签数据
         /// </summary>
-        private void ImportFromFileCommand()
+        private void ImportFromFile()
         {
             ObservableCollection<TagItemTemplate> items = TagItems;
             TagDataContext context = this;
@@ -386,7 +376,7 @@ namespace cbhk.Generators.TagGenerator
         {
             #region 执行过滤
             TagItemTemplate currentItem = e.Item as TagItemTemplate;
-            bool needDisplay = e.Accepted = currentItem.DataType.Contains(SelectedTypeItem) || SelectedTypeItem == "All";
+            bool needDisplay = e.Accepted = currentItem.DataType.Contains(SelectedTypeItem.Text) || SelectedTypeItem.Text == "All";
             #endregion
             #region 执行搜索
             if (needDisplay)
@@ -416,7 +406,7 @@ namespace cbhk.Generators.TagGenerator
                 string[] Types = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Tag\\data\\TypeFilter.ini");
                 for (int i = 0; i < Types.Length; i++)
                 {
-                    TypeItemSource.Add(Types[i]);
+                    TypeItemSource.Add(new TextComboBoxItem() { Text = Types[i] });
                 }
             }
             comboBoxs.ItemsSource = TypeItemSource;
@@ -434,11 +424,12 @@ namespace cbhk.Generators.TagGenerator
             TagViewSource?.View.Refresh();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void return_command(CommonWindow win)
+        private void Return(CommonWindow win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -447,10 +438,11 @@ namespace cbhk.Generators.TagGenerator
             win.Close();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 执行生成
         /// </summary>
-        private void run_command()
+        private void Run()
         {
             string result = (string.Join("\r\n",Items) + "\r\n" + string.Join("\r\n",Blocks) + "\r\n" + string.Join("\r\n",Entities) + "\r\n" + string.Join("\r\n",Biomes) + "\r\n" + string.Join("\r\n",GameEvent)).TrimEnd().TrimEnd(',');
             result = "{\r\n  \"replace\": " + Replace.ToString().ToLower() + ",\r\n\"values\": [\r\n" + result.Trim('\n').Trim('\r') + "\r\n]\r\n}";

@@ -399,7 +399,7 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
                         effectString = await suspiciousStewEffects.Result();
                         result.Append(effectString + ",");
                     }
-                    dataStructure.Result = accordion.Name + ":[" + result.ToString().Trim(',') + "]";
+                    dataStructure.Result = "Effects:[" + result.ToString().Trim(',') + "]";
                 }
                 else
                     dataStructure.Result = "";

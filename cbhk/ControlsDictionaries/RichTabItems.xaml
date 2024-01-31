@@ -73,15 +73,6 @@
                                     Visibility="{TemplateBinding IsContentSaved,
                                     Converter={StaticResource SaveMarkController}}"
                                 -->
-                                <Ellipse
-                                    x:Name="saveMarker"
-                                    Grid.Column="1"
-                                    Width="5"
-                                    Height="5"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Fill="White"
-                                    Visibility="Hidden" />
                                 <CustomControls:IconTextButtons
                                     x:Name="closeButton"
                                     Grid.Column="1"
@@ -93,7 +84,7 @@
                                     BorderThickness="0"
                                     FontWeight="Normal"
                                     Foreground="Transparent"
-                                    PressedBackground="{StaticResource CloseButtonHightLight}"
+                                    PressedBackground="{StaticResource CloseButtonNormal}"
                                     Style="{DynamicResource IconTextButton}"
                                     Visibility="Hidden">
                                     <behavior:Interaction.Triggers>
@@ -201,9 +192,6 @@
                             <Setter TargetName="innerBorder" Property="BorderThickness" Value="1,1,1,0" />
                             <Setter TargetName="mainBorder" Property="BorderThickness" Value="1,1,1,0" />
                         </MultiDataTrigger>-->
-                        <Trigger SourceName="closeButton" Property="IsMouseOver" Value="True">
-                            <Setter TargetName="closeButton" Property="Background" Value="{StaticResource CloseButtonHightLight}" />
-                        </Trigger>
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
                                 <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="false" />
@@ -271,34 +259,47 @@
                             <Setter TargetName="innerBorder" Property="BorderThickness" Value="1,1,1,0" />
                             <Setter TargetName="mainBorder" Property="BorderThickness" Value="4,4,4,0" />
                         </MultiDataTrigger>
+
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
                                 <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
-                                <Condition Binding="{Binding IsContentSaved, RelativeSource={RelativeSource Mode=Self}}" Value="True" />
                             </MultiDataTrigger.Conditions>
+                            <Setter TargetName="closeButton" Property="Width" Value="14" />
+                            <Setter TargetName="closeButton" Property="Height" Value="14" />
                             <Setter TargetName="closeButton" Property="Visibility" Value="Visible" />
                         </MultiDataTrigger>
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
-                                <Condition Binding="{Binding IsContentSaved, RelativeSource={RelativeSource Mode=Self}}" Value="False" />
+                                <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
                             </MultiDataTrigger.Conditions>
-                            <Setter TargetName="saveMarker" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="closeButton" Property="Width" Value="14" />
+                            <Setter TargetName="closeButton" Property="Height" Value="14" />
+                            <Setter TargetName="closeButton" Property="Visibility" Value="Visible" />
                         </MultiDataTrigger>
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
                                 <Condition Binding="{Binding IsContentSaved, RelativeSource={RelativeSource Mode=Self}}" Value="False" />
                             </MultiDataTrigger.Conditions>
-                            <Setter TargetName="saveMarker" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="closeButton" Property="Background">
+                                <Setter.Value>
+                                    <VisualBrush Stretch="Uniform">
+                                        <VisualBrush.Visual>
+                                            <Ellipse
+                                                Width="10"
+                                                Height="10"
+                                                Margin="5"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Fill="White" />
+                                        </VisualBrush.Visual>
+                                    </VisualBrush>
+                                </Setter.Value>
+                            </Setter>
                         </MultiDataTrigger>
-                        <MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
-                                <Condition Binding="{Binding IsContentSaved, RelativeSource={RelativeSource Mode=Self}}" Value="True" />
-                            </MultiDataTrigger.Conditions>
-                            <Setter TargetName="closeButton" Property="Visibility" Value="Hidden" />
-                        </MultiDataTrigger>
+                        <Trigger SourceName="closeButton" Property="IsMouseOver" Value="True">
+                            <Setter TargetName="closeButton" Property="Background" Value="{DynamicResource CloseButtonHightLight}" />
+                        </Trigger>
+
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
                                 <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="true" />
@@ -317,10 +318,6 @@
                             <Setter TargetName="mainBorder" Property="Background" Value="{Binding SelectedBackground, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
                             <Setter Property="FontWeight" Value="Bold" />
                         </MultiDataTrigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="closeButton" Property="Visibility" Value="Visible" />
-                            <Setter TargetName="saveMarker" Property="Visibility" Value="Hidden" />
-                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

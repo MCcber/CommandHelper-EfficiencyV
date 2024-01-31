@@ -158,14 +158,14 @@
             <CustomControls:IconTextButtons
                 Padding="5"
                 Background="{StaticResource ButtonNormal}"
-                Command="{Binding ImportFromClipboard}"
+                Command="{Binding ImportFromClipboardCommand}"
                 Content="从剪切板导入"
                 PressedBackground="{StaticResource ButtonPressed}"
                 Style="{DynamicResource IconTextButton}" />
             <CustomControls:IconTextButtons
                 Padding="5"
                 Background="{StaticResource ButtonNormal}"
-                Command="{Binding ImportFromFile}"
+                Command="{Binding ImportFromFileCommand}"
                 Content="从文件导入"
                 PressedBackground="{StaticResource ButtonPressed}"
                 Style="{DynamicResource IconTextButton}" />

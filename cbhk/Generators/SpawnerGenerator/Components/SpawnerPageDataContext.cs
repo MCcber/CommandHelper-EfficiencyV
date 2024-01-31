@@ -15,15 +15,8 @@ using System.Windows.Controls;
 
 namespace cbhk.Generators.SpawnerGenerator.Components
 {
-    public class SpawnerPageDataContext:ObservableObject
+    public partial class SpawnerPageDataContext:ObservableObject
     {
-        #region 保存与运行等指令
-        public RelayCommand Run { get; set; }
-        public RelayCommand Save { get; set; }
-        public RelayCommand<FrameworkElement> AddSpawnPotential { get; set; }
-        public RelayCommand<FrameworkElement> ClearSpawnPotential { get; set; }
-        #endregion
-
         #region 存储结果
         public string Result { get; set; }
         #endregion
@@ -38,13 +31,25 @@ namespace cbhk.Generators.SpawnerGenerator.Components
         #endregion
 
         #region 选中版本以及版本数据源
-        private string selectedVersion = "1.13+";
-        public string SelectedVersion
+        private TextComboBoxItem selectedVersion;
+        public TextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
-            set => SetProperty(ref selectedVersion, value);
+            set
+            {
+                SetProperty(ref selectedVersion, value);
+                CurrentMinVersion = int.Parse(selectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
+            }
         }
-        public ObservableCollection<string> VersionSource { get; set; } = ["1.13+", "1.12-"];
+
+        private ObservableCollection<TextComboBoxItem> versionSource = [];
+        public ObservableCollection<TextComboBoxItem> VersionSource
+        {
+            get => versionSource;
+            set => SetProperty(ref versionSource, value);
+        }
+
+        private int CurrentMinVersion = 1130;
         #endregion
 
         #region 字段与引用
@@ -69,36 +74,68 @@ namespace cbhk.Generators.SpawnerGenerator.Components
         string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconSpawner.png";
         #endregion
 
-        public SpawnerPageDataContext()
+        /// <summary>
+        /// 载入刷怪笼页面
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SpawnerPage_Loaded(object sender,RoutedEventArgs e)
         {
-            #region 绑定指令
-            Run = new RelayCommand(run_command);
-            Save = new RelayCommand(SaveCommand);
-            AddSpawnPotential = new RelayCommand<FrameworkElement>(AddSpawnPotentialCommand);
-            ClearSpawnPotential = new RelayCommand<FrameworkElement>(ClearSpawnPotentialCommand);
-            #endregion
+            SpawnerDataContext spawnerDataContext = Window.GetWindow(sender as SpawnerPage).DataContext as SpawnerDataContext;
+            VersionSource = spawnerDataContext.VersionSource;
         }
 
         /// <summary>
+        /// 载入控件面板
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ComponentsGrid_Loaded(object sender, RoutedEventArgs e)
+        {
+            componentsGrid = sender as Grid;
+
+            if (ImportMode)
+            {
+                foreach (FrameworkElement item in componentsGrid.Children)
+                {
+                    if (item is Slider slider)
+                    {
+                        JToken currentObj = ExternalSpawnerData.SelectToken(slider.Uid);
+                        if (currentObj != null && currentObj.ToString() != "0")
+                            slider.Value = short.Parse(currentObj.ToString());
+                    }
+                    if (item is RadiusToggleButtons radiusToggleButtons)
+                    {
+                        JToken currentObj = ExternalSpawnerData.SelectToken(radiusToggleButtons.Uid);
+                        radiusToggleButtons.IsChecked = currentObj == null;
+                    }
+                }
+            }
+        }
+
+        [RelayCommand]
+        /// <summary>
         /// 添加潜在实体
         /// </summary>
-        public void AddSpawnPotentialCommand(FrameworkElement ele)
+        public void AddSpawnPotential(FrameworkElement ele)
         {
             SpawnPotentials.Add(new SpawnPotential());
         }
 
+        [RelayCommand]
         /// <summary>
         /// 清空潜在实体
         /// </summary>
-        private void ClearSpawnPotentialCommand(FrameworkElement ele)
+        private void ClearSpawnPotential(FrameworkElement ele)
         {
             SpawnPotentials.Clear();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 执行生成
         /// </summary>
-        public void run_command()
+        public void Run()
         {
             Result = "";
             foreach (FrameworkElement item in componentsGrid.Children)
@@ -125,7 +162,7 @@ namespace cbhk.Generators.SpawnerGenerator.Components
                 SpawnPotentialsData = "SpawnPotentials:[" + string.Join(",", SpawnPotentials.Select(item => item.Result)) + "],";
             Result += SpawnPotentialsData;
 
-            if (SelectedVersion == "1.13+")
+            if (CurrentMinVersion >= 1130)
                 Result = "/setblock ~ ~ ~ minecraft:spawner{" + Result.Trim(',') + "}";
             else
                 Result = "/setblock ~ ~ ~ minecraft:mob_spawner 0 replace {" + Result.Trim(',') + "}";
@@ -146,13 +183,14 @@ namespace cbhk.Generators.SpawnerGenerator.Components
             #endregion
         }
 
+        [RelayCommand]
         /// <summary>
         /// 执行保存
         /// </summary>
-        private void SaveCommand()
+        private void Save()
         {
             ShowResult = false;
-            run_command();
+            Run();
             OpenFolderDialog openFolderDialog = new()
             {
                 Title = "请选择要保存的目录",
@@ -166,34 +204,6 @@ namespace cbhk.Generators.SpawnerGenerator.Components
                 if (JObject.Parse(data).SelectToken("SpawnData.entity.id") is JToken id)
                     entityID = id.ToString().Replace("minecraft:", "");
                 File.WriteAllTextAsync(openFolderDialog.FolderName + entityID + "Spawner" + ".command", Result);
-            }
-        }
-
-        /// <summary>
-        /// 载入控件面板
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ComponentsGridLoaded(object sender, RoutedEventArgs e)
-        {
-            componentsGrid = sender as Grid;
-            
-            if(ImportMode)
-            {
-                foreach (FrameworkElement item in componentsGrid.Children)
-                {
-                    if (item is Slider slider)
-                    {
-                        JToken currentObj = ExternalSpawnerData.SelectToken(slider.Uid);
-                        if (currentObj != null && currentObj.ToString() != "0")
-                            slider.Value = short.Parse(currentObj.ToString());
-                    }
-                    if (item is RadiusToggleButtons radiusToggleButtons)
-                    {
-                        JToken currentObj = ExternalSpawnerData.SelectToken(radiusToggleButtons.Uid);
-                        radiusToggleButtons.IsChecked = currentObj == null;
-                    }
-                }
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using Serilog;
@@ -12,13 +13,22 @@ namespace cbhk
     /// </summary>
     public partial class App : Application,ISingleInstance
     {
+        private static string StartUpTimeString = "";
         public void OnInstanceInvoked(string[] args)
         {
-            Exit += App_Exit;   
+            
         }
 
         private void App_Exit(object sender, ExitEventArgs e)
         {
+
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            base.OnExit(e);
+            Log.CloseAndFlush();
+            File.Delete(AppDomain.CurrentDomain.BaseDirectory + @"Logs\" + StartUpTimeString + ".txt");
             SingleInstance.Cleanup();
         }
 
@@ -47,7 +57,7 @@ namespace cbhk
 
             SetupExceptionHandling();
             base.OnStartup(e);
-            new MainWindow([]).Show();
+            new SignIn().Show();
         }
 
         /// <summary>
@@ -55,10 +65,12 @@ namespace cbhk
         /// </summary>
         private void SetupExceptionHandling()
         {
+            StartUpTimeString = DateTime.Now.ToString("yyyy.MM.dd") + "\\" + DateTime.Now.ToString("HH.mm.ss");
             // 设置日志输出到文件
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.File(AppDomain.CurrentDomain.BaseDirectory + "Logs\\"+DateTime.Now.ToString("yyyy.MM.dd")+"\\"+DateTime.Now.ToString("HH-mm-ss") +".txt")
-                .CreateLogger();
+                        .MinimumLevel.Fatal () // 设置最小日志记录级别为Error
+                        .WriteTo.File(AppDomain.CurrentDomain.BaseDirectory + @"Logs\" + StartUpTimeString + ".txt") // 设置日志输出文件路径
+                        .CreateLogger();
 
             // 全局异常监控
             AppDomain.CurrentDomain.UnhandledException += (s, ev) =>

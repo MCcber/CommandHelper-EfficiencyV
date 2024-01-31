@@ -112,7 +112,7 @@
                 FontSize="20"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
-                SelectedIndex="1"
+                SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=OneWay}"
                 Style="{DynamicResource TextComboBoxStyle}" />
             <CustomControls:IconTextButtons
@@ -127,7 +127,7 @@
                 Margin="5,0,0,0"
                 Padding="5"
                 Background="{StaticResource ButtonNormal}"
-                Command="{Binding ImportFromClipboard}"
+                Command="{Binding ImportFromClipboardCommand}"
                 Content="从剪切板导入"
                 PressedBackground="{StaticResource ButtonPressed}"
                 Style="{DynamicResource IconTextButton}" />
@@ -135,7 +135,7 @@
                 Margin="5,0,0,0"
                 Padding="5"
                 Background="{StaticResource ButtonNormal}"
-                Command="{Binding ImportFromFile}"
+                Command="{Binding ImportFromFileCommand}"
                 Content="从文件导入"
                 PressedBackground="{StaticResource ButtonPressed}"
                 Style="{DynamicResource IconTextButton}" />
@@ -183,7 +183,7 @@
                         Padding="0,-5,0,0"
                         HorizontalAlignment="Right"
                         Background="{StaticResource CloseWhite}"
-                        Command="{Binding ClearTransactionItem}"
+                        Command="{Binding ClearTransactionItemCommand}"
                         DockPanel.Dock="Right"
                         FontSize="25"
                         IconColor="Black"
@@ -196,7 +196,7 @@
                         Padding="0,-5,0,0"
                         HorizontalAlignment="Right"
                         Background="{StaticResource WhiteEdit}"
-                        Command="{Binding AddTransactionItem}"
+                        Command="{Binding AddTransactionItemCommand}"
                         DockPanel.Dock="Right"
                         IconColor="Black"
                         RenderOptions.BitmapScalingMode="NearestNeighbor"
@@ -584,7 +584,6 @@
                         HorizontalAlignment="Left"
                         VerticalContentAlignment="Center"
                         AllowDrop="False"
-                        FontSize="18"
                         IsReadOnly="True"
                         ItemsSource="{Binding VillagerTypeSource}"
                         SelectedIndex="0"
@@ -602,7 +601,6 @@
                         HorizontalAlignment="Left"
                         VerticalContentAlignment="Center"
                         AllowDrop="False"
-                        FontSize="18"
                         IsReadOnly="True"
                         ItemsSource="{Binding VillagerProfessionTypeSource}"
                         SelectedIndex="0"
@@ -620,7 +618,6 @@
                         HorizontalAlignment="Left"
                         VerticalContentAlignment="Center"
                         AllowDrop="False"
-                        FontSize="18"
                         IsReadOnly="True"
                         ItemsSource="{Binding VillagerLevelSource}"
                         SelectedIndex="0"
@@ -695,7 +692,7 @@
                                 Width="30"
                                 Height="30"
                                 Background="{StaticResource CloseWhite}"
-                                Command="{Binding ClearGossipItem}"
+                                Command="{Binding ClearGossipItemCommand}"
                                 DockPanel.Dock="Right"
                                 PressedBackground="{StaticResource CloseWhiteHover}"
                                 Style="{DynamicResource IconTextButton}" />
@@ -706,7 +703,7 @@
                                 Height="28"
                                 Margin="90,0,0,0"
                                 Background="{StaticResource WhiteEdit}"
-                                Command="{Binding AddGossipItem}"
+                                Command="{Binding AddGossipItemCommand}"
                                 DockPanel.Dock="Right"
                                 Style="{DynamicResource IconTextButton}" />
                         </DockPanel>
@@ -1120,10 +1117,10 @@
                                 <ItemsPanelTemplate>
                                     <VirtualizingWrapPanel:VirtualizingWrapPanel
                                         Background="#555956"
-                                        ScrollViewer.CanContentScroll="True"
-                                        VirtualizingPanel.CacheLength="250 250"
+                                        VirtualizingPanel.CacheLength="200 200"
                                         VirtualizingPanel.CacheLengthUnit="Pixel"
-                                        VirtualizingPanel.IsVirtualizing="True" />
+                                        VirtualizingPanel.IsVirtualizing="True"
+                                        VirtualizingPanel.ScrollUnit="Pixel" />
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
                             <behavior:Interaction.Triggers>
@@ -1186,10 +1183,10 @@
                                 <ItemsPanelTemplate>
                                     <VirtualizingWrapPanel:VirtualizingWrapPanel
                                         Background="#555956"
-                                        ScrollViewer.CanContentScroll="True"
                                         VirtualizingPanel.CacheLength="200 200"
                                         VirtualizingPanel.CacheLengthUnit="Pixel"
-                                        VirtualizingPanel.IsVirtualizing="True" />
+                                        VirtualizingPanel.IsVirtualizing="True"
+                                        VirtualizingPanel.ScrollUnit="Pixel" />
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
                             <behavior:Interaction.Triggers>
@@ -1235,6 +1232,7 @@
                         FontSize="15"
                         Foreground="White"
                         SelectedIndex="0"
+                        SelectedItem="{Binding SelectedSearchGossipItem}"
                         Style="{DynamicResource TextComboBoxStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">

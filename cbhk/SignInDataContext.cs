@@ -152,9 +152,9 @@ namespace cbhk
                 DataTable dataTable = await dataCommunicator.GetData("SELECT * FROM UserData");
                 if (dataTable != null && dataTable.Rows.Count > 0)
                 {
-                    if (dataTable.Rows[0]["account"] is string account)
+                    if (dataTable.Rows[0]["Account"] is string account)
                         UserAccount = account;
-                    if (dataTable.Rows[0]["password"] is string password)
+                    if (dataTable.Rows[0]["Password"] is string password)
                         UserPassword = password;
                     SaveUserAccount = UserAccount.Trim() != "";
                     SaveUserPassword = UserPassword.Trim() != "";
@@ -170,7 +170,6 @@ namespace cbhk
         public void SignInWindowLoaded(object sender, RoutedEventArgs e)
         {
             FrontWindow = sender as Window;
-
             #region 自动登录
             SignInTimer.Tick += ThreadTimerCallback;
             SignInTimer.IsEnabled = SaveUserPassword;
@@ -185,7 +184,6 @@ namespace cbhk
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        [Obsolete]
         private void ThreadTimerCallback(object sender, EventArgs e)
         {
             SignInCommand();
@@ -233,7 +231,6 @@ namespace cbhk
         /// <summary>
         /// 登录
         /// </summary>
-        [Obsolete]
         private async void SignInCommand()
         {
             IsOpenSignIn = false;
@@ -255,42 +252,6 @@ namespace cbhk
             //立刻处理Window消息
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new ThreadStart(delegate { }));
 
-            #region 保存账号和密码
-            if (SaveUserAccount || SaveUserPassword)
-            {
-                SQLiteConnection connection = new("Data Source=" + AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db");
-                await connection.OpenAsync();
-                SQLiteParameter account = new("@account", UserAccount);
-                SQLiteParameter password = new("@password", UserPassword);
-                DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-
-                SQLiteCommand HaveAccountCmd = new("SELECT * FROM UserData Where account = @account", connection);
-                HaveAccountCmd.Parameters.Add(account);
-                SQLiteCommand UpdateAccountCmd = new("Update UserData Set account = @account", connection);
-                UpdateAccountCmd.Parameters.Add(account);
-                SQLiteCommand InsertAccountCmd = new("Insert Into UserData (account) Values(@account);", connection);
-                InsertAccountCmd.Parameters.Add(account);
-                SQLiteCommand UpdatePasswordCmd = new("Update UserData Set password = @password Where account = @account", connection);
-                UpdatePasswordCmd.Parameters.Add(password);
-                UpdatePasswordCmd.Parameters.Add(account);
-
-                DbDataReader dbDataReader = await HaveAccountCmd.ExecuteReaderAsync();
-                DataTable dataTable = new();
-                dataTable.Load(dbDataReader);
-
-                if (dataTable.Rows.Count > 0)
-                    if (SaveUserAccount)
-                        await UpdateAccountCmd.ExecuteNonQueryAsync();
-                    else
-                    if (SaveUserAccount && dataTable.Rows.Count == 0)
-                        await InsertAccountCmd.ExecuteNonQueryAsync();
-
-                if (SaveUserPassword && dataTable.Rows.Count > 0)
-                    await UpdatePasswordCmd.ExecuteNonQueryAsync();
-                await connection.CloseAsync();
-            }
-            #endregion
-
             #region 进行登录
             JObject result = [];
             try
@@ -309,7 +270,28 @@ namespace cbhk
                     MessageBox.Show("密码错误");
                 else
                 {
-                    if (result.SelectToken("data.avatar") is JObject avatar && result.SelectToken("data.avatar").ToString().Contains('?'))
+                    #region 保存账号和密码
+                    if (SaveUserAccount || SaveUserPassword)
+                    {
+                        SQLiteConnection connection = new("Data Source=" + AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db");
+                        await connection.OpenAsync();
+                        SQLiteParameter account = new("@account", UserAccount);
+                        SQLiteParameter password = new("@password", UserPassword);
+                        DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
+
+                        SQLiteCommand UpdateAccountCmd = new("Update UserData Set Account = @account", connection);
+                        UpdateAccountCmd.Parameters.Add(account);
+                        SQLiteCommand UpdatePasswordCmd = new("Update UserData Set Password = @password", connection);
+                        UpdatePasswordCmd.Parameters.Add(password);
+                        UpdatePasswordCmd.Parameters.Add(account);
+
+                        await UpdateAccountCmd.ExecuteNonQueryAsync();
+                        await UpdatePasswordCmd.ExecuteNonQueryAsync();
+                        await connection.CloseAsync();
+                    }
+                    #endregion
+
+                    if (result.SelectToken("data.avatar") is JToken avatar && result.SelectToken("data.avatar").ToString().Contains('?'))
                     {
                         bool haveHead = await GeneralTools.SignIn.DownLoadUserImage(avatar.ToString(), AppDomain.CurrentDomain.BaseDirectory + "resources\\userHead.png");
                         if (!haveHead && File.Exists(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\command_block.png"))
@@ -334,6 +316,7 @@ namespace cbhk
             else
                 Message.PushMessage(result["message"].ToString(),MessageBoxImage.Error);
             #endregion
+
             IsOpenSignIn = true;
         }
 

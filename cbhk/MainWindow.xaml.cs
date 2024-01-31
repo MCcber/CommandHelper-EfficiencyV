@@ -203,6 +203,7 @@ namespace cbhk
             {
                 cbhkTaskbar.Visibility = Visibility.Collapsed;
                 WindowState = WindowState.Minimized;
+                SystemCommands.CloseWindow(this);
                 Environment.Exit(0);
             }
         }

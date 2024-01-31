@@ -1,9 +1,7 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
+﻿using cbhk.CustomControls;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.EntityGenerator.Components;
-using cbhk.Generators.ItemGenerator.Components;
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -21,25 +19,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.EntityGenerator
 {
-    public class EntityDataContext : ObservableObject
+    public partial class EntityDataContext : ObservableObject
     {
-        #region 返回和运行指令等指令
-        public RelayCommand<CommonWindow> ReturnCommand { get; set; }
-        public RelayCommand RunCommand { get; set; }
-        public RelayCommand SaveAll { get; set; }
-        #endregion
-
-        #region 添加实体、清空实体、导入实体
-        public RelayCommand AddEntity { get; set; }
-        public RelayCommand ClearEntity { get; set; }
-        public RelayCommand ImportEntityFromClipboard { get; set; }
-        public RelayCommand ImportEntityFromFile { get; set; }
-        #endregion
-
         #region 是否展示生成结果
         private bool showGeneratorResult = false;
         public bool ShowGeneratorResult
@@ -59,6 +43,7 @@ namespace cbhk.Generators.EntityGenerator
         private string ModifierOperationTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Entity\\data\\AttributeModifierOperationType.ini";
         string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Entity\\data\\SpecialTags.json";
         public ObservableCollection<string> ModifierOperationTypeSource = [];
+        public JArray SpecialArray = null;
         //实体标签页的数据源
         public ObservableCollection<RichTabItems> EntityPageList { get; set; } = [
             new RichTabItems()
@@ -78,11 +63,30 @@ namespace cbhk.Generators.EntityGenerator
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
             } ];
 
-        //版本数据源
-        public ObservableCollection<string> VersionSource { get; set; } = ["1.20.2+", "1.16-1.20.1", "1.13-1.15", "1.12-"];
+        private RichTabItems selectedEntityPage;
 
-        //实体数据源
-        public ObservableCollection<IconComboBoxItem> EntityIds { get; set; } = [];
+        public RichTabItems SelectedEntityPage
+        {
+            get => selectedEntityPage;
+            set => SetProperty(ref selectedEntityPage, value);
+        }
+
+        #region 版本数据源
+        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+            new TextComboBoxItem() { Text = "1.20.5" },
+            new TextComboBoxItem() { Text = "1.20.2" },
+            new TextComboBoxItem() { Text = "1.20.1" },
+            new TextComboBoxItem() { Text = "1.20.0" },
+            new TextComboBoxItem() { Text = "1.19.0" },
+            new TextComboBoxItem() { Text = "1.17.0" },
+            new TextComboBoxItem() { Text = "1.16.2" },
+            new TextComboBoxItem() { Text = "1.16.0" },
+            new TextComboBoxItem() { Text = "1.15.0" },
+            new TextComboBoxItem() { Text = "1.14.0" },
+            new TextComboBoxItem() { Text = "1.13.0" },
+            new TextComboBoxItem() { Text = "1.12.0" }
+        ];
+        #endregion
 
         #region 能否关闭标签页
         private bool isCloseable = true;
@@ -113,19 +117,6 @@ namespace cbhk.Generators.EntityGenerator
         public DataTable EntityIdTable = null;
         #endregion
 
-        public EntityDataContext()
-        {
-            #region 连接指令
-            ReturnCommand = new RelayCommand<CommonWindow>(return_command);
-            RunCommand = new RelayCommand(run_command);
-            SaveAll = new RelayCommand(SaveAllCommand);
-            AddEntity = new RelayCommand(AddEntityCommand);
-            ClearEntity = new RelayCommand(ClearEntityCommand);
-            ImportEntityFromClipboard = new RelayCommand(ImportEntityFromClipboardCommand);
-            ImportEntityFromFile = new RelayCommand(ImportEntityFromFileCommand);
-            #endregion
-        }
-
         /// <summary>
         /// 实体载入
         /// </summary>
@@ -145,7 +136,7 @@ namespace cbhk.Generators.EntityGenerator
             });
             #endregion
             #region 载入实体预设数据
-            await Task.Run(async () =>
+            await Task.Run(() =>
             {
                 if (File.Exists(ModifierOperationTypeFilePath))
                 {
@@ -156,29 +147,8 @@ namespace cbhk.Generators.EntityGenerator
                     }
                 }
                 string SpecialData = File.ReadAllText(SpecialNBTStructureFilePath);
-                JArray specialArray = JArray.Parse(SpecialData);
-                string entityImageFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    for (int i = 0; i < specialArray.Count; i++)
-                    {
-                        IconComboBoxItem item = new();
-                        string entityID = specialArray[i]["type"].ToString();
-                        DataRow entityRow = EntityIdTable.Select("id='minecraft:" + entityID + "'").First();
-                        #region 设置实体图标、名称和ID
-                        if (entityRow is not null)
-                        {
-                            string iconPath = File.Exists(entityImageFolderPath + entityID + "_spawn_egg.png") ? entityImageFolderPath + entityID + "_spawn_egg.png" : entityImageFolderPath + entityID + ".png";
-                            if (File.Exists(iconPath))
-                                item.ComboBoxItemIcon = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
-                            item.ComboBoxItemText = entityRow["name"].ToString();
-                            item.ComboBoxItemId = entityID;
-                            EntityIds.Add(item);
-                        }
-                        #endregion
-                    }
-                });
-                await Application.Current.Dispatcher.InvokeAsync(() =>
+                SpecialArray = JArray.Parse(SpecialData);
+                Application.Current.Dispatcher.Invoke(() =>
                 {
                     EntityPages entityPages = new();
                     EntityPagesDataContext entityPagesDataContext = entityPages.DataContext as EntityPagesDataContext;
@@ -189,10 +159,29 @@ namespace cbhk.Generators.EntityGenerator
             #endregion
         }
 
+        [RelayCommand]
+        /// <summary>
+        /// 清除不需要的数据
+        /// </summary>
+        private void ClearUnnecessaryData()
+        {
+            EntityPages entityPages = SelectedEntityPage.Content as EntityPages;
+            EntityPagesDataContext entityPagesDataContext = entityPages.DataContext as EntityPagesDataContext;
+            Grid currentGrid = entityPagesDataContext.SpecialDataDictionary[entityPagesDataContext.SelectedEntityIDString];
+            entityPagesDataContext.SpecialDataDictionary.Clear();
+            entityPagesDataContext.SpecialDataDictionary.Add(entityPagesDataContext.SelectedEntityIDString, currentGrid);
+            foreach (var item in entityPagesDataContext.SpecialTagsResult)
+            {
+                if (item.Key != entityPagesDataContext.SelectedEntityIDString)
+                    item.Value.Clear();
+            }
+        }
+
+        [RelayCommand]
         /// <summary>
         /// 从文件导入实体
         /// </summary>
-        private void ImportEntityFromFileCommand()
+        private void ImportEntityFromFile()
         {
             Microsoft.Win32.OpenFileDialog dialog = new()
             {
@@ -210,28 +199,31 @@ namespace cbhk.Generators.EntityGenerator
                 }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从剪切板导入实体
         /// </summary>
-        private void ImportEntityFromClipboardCommand()
+        private void ImportEntityFromClipboard()
         {
             ObservableCollection<RichTabItems> result = EntityPageList;
             ExternalDataImportManager.ImportEntityDataHandler(Clipboard.GetText(), ref result,false);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 清空实体
         /// </summary>
-        private void ClearEntityCommand()
+        private void ClearEntity()
         {
             if (IsCloseable)
                 EntityPageList.Clear();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 添加实体
         /// </summary>
-        public void AddEntityCommand()
+        public void AddEntity()
         {
             if(EntityPageList.Count > 0)
             {
@@ -269,11 +261,12 @@ namespace cbhk.Generators.EntityGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void return_command(CommonWindow win)
+        private void Return(CommonWindow win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -282,10 +275,11 @@ namespace cbhk.Generators.EntityGenerator
             win.Close();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 全部生成
         /// </summary>
-        private async void run_command()
+        private async Task Run()
         {
             StringBuilder Result = new();
             foreach (var entityPage in EntityPageList)
@@ -294,7 +288,7 @@ namespace cbhk.Generators.EntityGenerator
                 {
                     EntityPages entityPages = entityPage.Content as EntityPages;
                     EntityPagesDataContext pageContext = entityPages.DataContext as EntityPagesDataContext;
-                    string result = pageContext.run_command(false) + "\r\n";
+                    string result = pageContext.Run(false) + "\r\n";
                     Result.Append(result);
                 });
             }
@@ -311,10 +305,11 @@ namespace cbhk.Generators.EntityGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 生成并保存所有的实体数据为文件
         /// </summary>
-        private async void SaveAllCommand()
+        private async Task SaveAll()
         {
             await GeneratorAndSaveAllEntites();
         }
@@ -334,7 +329,7 @@ namespace cbhk.Generators.EntityGenerator
                 {
                     EntityPages entityPages = entityPage.Content as EntityPages;
                     EntityPagesDataContext pageContext = entityPages.DataContext as EntityPagesDataContext;
-                    string result = pageContext.run_command(false);
+                    string result = pageContext.Run(false);
                     string nbt = "";
                     if (result.Contains('{'))
                     {
@@ -353,7 +348,7 @@ namespace cbhk.Generators.EntityGenerator
                         if(nbt.Length > 0)
                         entityIDPath = "CustomName";
                     JToken name = resultJSON.SelectToken(entityIDPath);
-                    FileNameList.Add(pageContext.SelectedEntityIdString + (name != null?"-" + name.ToString():""));
+                    FileNameList.Add(pageContext.SelectedEntityIDString + (name != null?"-" + name.ToString():""));
                     Result.Add(result);
                 });
             }

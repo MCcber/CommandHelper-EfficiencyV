@@ -53,7 +53,7 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// 添加属性
         /// </summary>
         /// <param name="obj"></param>
-        private async void AddAttributeCommand(FrameworkElement obj)
+        private void AddAttributeCommand(FrameworkElement obj)
         {
             AttributeItems attributeItems = new()
             {
@@ -62,7 +62,6 @@ namespace cbhk.Generators.ItemGenerator.Components
             AttributeSource.Add(attributeItems);
             ItemPageDataContext itemPageDataContext = attributeItems.FindParent<ItemPages>().DataContext as ItemPageDataContext;
             itemPageDataContext.VersionComponents.Add(attributeItems);
-            await attributeItems.Upgrade(itemPageDataContext.CurrentMinVersion);
         }
 
         /// <summary>
@@ -76,6 +75,7 @@ namespace cbhk.Generators.ItemGenerator.Components
             {
                 itemPageDataContext.VersionComponents.Remove(AttributeSource[i]);
                 AttributeSource.RemoveAt(i);
+                i--;
             }
         }
 

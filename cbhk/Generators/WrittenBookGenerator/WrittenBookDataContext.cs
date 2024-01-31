@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -25,22 +24,14 @@ using Image = System.Windows.Controls.Image;
 
 namespace cbhk.Generators.WrittenBookGenerator
 {
-    public class WrittenBookDataContext: ObservableObject
+    public partial class WrittenBookDataContext: ObservableObject
     {
-        #region 生成与返回
-        public RelayCommand RunCommand { get; set; }
-
-        public RelayCommand<CommonWindow> ReturnCommand { get; set; }
-        #endregion
-
         #region 字段
         //成书编辑框引用
         public RichTextBox WrittenBookEditor = null;
 
         //成书背景文件路径
         string backgroundFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\images\\written_book_background.png";
-        //成书背景控件引用
-        Border written_book_background = null;
         //左箭头背景文件路径
         string leftArrowFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\images\\left_arrow.png";
         //右箭头背景文件路径
@@ -57,8 +48,6 @@ namespace cbhk.Generators.WrittenBookGenerator
         string signatureAndCloseFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\images\\setting_signature.png";
         //署名完毕背景文件路径
         string sureToSignatureFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\images\\sure_to_signature.png";
-        //署名完毕按钮引用
-        Button sureToSignatureButton = null;
         //取消署名背景文件路径
         string signatureCancelFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\images\\cancel_signature.png";
         //混淆文本配置文件路径
@@ -100,11 +89,6 @@ namespace cbhk.Generators.WrittenBookGenerator
         /// 保存最终结果的首个json对象
         /// </summary>
         public string object_result = "";
-
-        //取消署名按钮引用
-        Button signatureCancelButton = null;
-        //署名按钮
-        Button SignatureButton = null;
 
         //保存成书的文档链表，用于显示和编辑
         public List<EnabledFlowDocument> HistroyFlowDocumentList = [];
@@ -166,33 +150,6 @@ namespace cbhk.Generators.WrittenBookGenerator
             get => currentRichRun;
             set => SetProperty(ref currentRichRun,value);
         }
-        #endregion
-
-        #region 设置选定文本样式指令
-        /// <summary>
-        /// 粗体
-        /// </summary>
-        public RelayCommand BoldTextCommand { get; set; }
-        /// <summary>
-        /// 斜体
-        /// </summary>
-        public RelayCommand ItalicTextCommand { get; set; }
-        /// <summary>
-        /// 下划线
-        /// </summary>
-        public RelayCommand UnderlinedTextCommand { get; set; }
-        /// <summary>
-        /// 删除线
-        /// </summary>
-        public RelayCommand StrikethroughTextCommand { get; set; }
-        /// <summary>
-        /// 混淆文本
-        /// </summary>
-        public RelayCommand ObfuscateTextCommand { get; set; }
-        /// <summary>
-        /// 重置文本
-        /// </summary>
-        public RelayCommand ResetTextCommand { get; set; }
         #endregion
 
         #region 开启点击事件
@@ -329,19 +286,6 @@ namespace cbhk.Generators.WrittenBookGenerator
         }
         #endregion
 
-        #region 控制上方样式切换面板显示
-        private Visibility displayStylePanel = Visibility.Visible;
-        public Visibility DisplayStylePanel
-        {
-            get { return displayStylePanel; }
-            set
-            {
-                displayStylePanel = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
         #region 显示结果
         private bool showGeneratorResult = false;
         public bool ShowGeneratorResult
@@ -376,41 +320,20 @@ namespace cbhk.Generators.WrittenBookGenerator
         Frame PageFrame = new() { NavigationUIVisibility = NavigationUIVisibility.Hidden };
         EditPage editPage = new();
         SignaturePage signaturePage = new();
-        bool WindowLoaded = false;
         #endregion
-
-        /// <summary>
-        /// 是否作为内部工具被调用
-        /// </summary>
-        /// <param name="AsAnInternalTool"></param>
-        public WrittenBookDataContext()
-        {
-            #region 链接指令
-            RunCommand = new RelayCommand(run_command);
-            ReturnCommand = new RelayCommand<CommonWindow>(return_command);
-            BoldTextCommand = new RelayCommand(boldTextCommand);
-            ItalicTextCommand = new RelayCommand(italicTextCommand);
-            UnderlinedTextCommand = new RelayCommand(underlinedTextCommand);
-            StrikethroughTextCommand = new RelayCommand(strikethroughTextCommand);
-            ObfuscateTextCommand = new RelayCommand(obfuscateTextCommand);
-            ResetTextCommand = new RelayCommand(resetTextCommand);
-            #endregion
-
-            #region 初始化编辑和署名页
-            editPage.DataContext = this;
-            signaturePage.DataContext = this;
-            #endregion
-        }
 
         /// <summary>
         /// 载入编辑页
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void EditPage_Loaded(object sender, RoutedEventArgs e)
+        public void PageFrame_Loaded(object sender, RoutedEventArgs e)
         {
+            editPage.DataContext = signaturePage.DataContext = this;
+            RichParagraph richParagraph = editPage.richTextBox.Document.Blocks.FirstBlock as RichParagraph;
+            RichRun richRun = richParagraph.Inlines.FirstInline as RichRun;
+            richRun.Foreground = Brushes.Black;
             ContentControl contentControl = sender as ContentControl;
-            editPage.DataContext = this;
             PageFrame.Content = editPage;
             contentControl.Content = PageFrame;
         }
@@ -432,10 +355,11 @@ namespace cbhk.Generators.WrittenBookGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 重置选中文本的所有属性
         /// </summary>
-        private void resetTextCommand()
+        private void ResetText()
         {
             if (WrittenBookEditor.Selection.End.Parent is RichRun endRun && WrittenBookEditor.Selection.Start.Parent is RichRun startRun)
             {
@@ -495,10 +419,11 @@ namespace cbhk.Generators.WrittenBookGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 选中文本切换混淆文字
         /// </summary>
-        private void obfuscateTextCommand()
+        private void ObfuscateText()
         {
             if (WrittenBookEditor.Selection == null) return;
             if (WrittenBookEditor.Selection.Text.Length == 0) return;
@@ -512,10 +437,11 @@ namespace cbhk.Generators.WrittenBookGenerator
             ObfuscateRunHelper.Run(ref WrittenBookEditor);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 选中文本切换删除线
         /// </summary>
-        private void strikethroughTextCommand()
+        private void StrikethroughText()
         {
             if (WrittenBookEditor.Selection == null)
                 return;
@@ -544,10 +470,11 @@ namespace cbhk.Generators.WrittenBookGenerator
                 textRange.ApplyPropertyValue(TextBlock.TextDecorationsProperty, TextDecorations.Strikethrough);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 选中文本切换下划线
         /// </summary>
-        private void underlinedTextCommand()
+        private void UnderlinedText()
         {
             if (WrittenBookEditor.Selection == null)
                 return;
@@ -579,10 +506,11 @@ namespace cbhk.Generators.WrittenBookGenerator
                 textRange.ApplyPropertyValue(TextBlock.TextDecorationsProperty, TextDecorations.Baseline);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 选中文本切换斜体
         /// </summary>
-        private void italicTextCommand()
+        private void ItalicText()
         {
             if (WrittenBookEditor.Selection == null)
                 return;
@@ -595,10 +523,11 @@ namespace cbhk.Generators.WrittenBookGenerator
                 textRange.ApplyPropertyValue(TextBlock.FontStyleProperty, FontStyles.Normal);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 选中文本切换粗体
         /// </summary>
-        private void boldTextCommand()
+        private void BoldText()
         {
             if (WrittenBookEditor.Selection == null || WrittenBookEditor.Selection.Text.Length == 0)
                 return;
@@ -609,11 +538,12 @@ namespace cbhk.Generators.WrittenBookGenerator
                 textRange.ApplyPropertyValue(TextBlock.FontWeightProperty, FontWeights.Normal);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void return_command(CommonWindow win)
+        private void Return(CommonWindow win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -622,10 +552,11 @@ namespace cbhk.Generators.WrittenBookGenerator
             win.Close();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 执行生成
         /// </summary>
-        private void run_command()
+        private void Run()
         {
             if (!AsInternalTool)
             {
@@ -738,8 +669,10 @@ namespace cbhk.Generators.WrittenBookGenerator
                 #region 设置数据
                 RichRun startRun = WrittenBookEditor.Selection.Start.Parent as RichRun;
                 RichRun endRun = WrittenBookEditor.Selection.End.Parent as RichRun;
-                startRun ??= new RichRun() { Text = startRun.Text };
-                endRun ??= new RichRun() { Text = endRun.Text };
+                if (startRun is Run)
+                    startRun ??= new RichRun() { Text = startRun.Text };
+                if (endRun is Run)
+                    endRun ??= new RichRun() { Text = endRun.Text };
                 if (endRun is null)
                 {
                     Paragraph paragraph = WrittenBookEditor.Selection.Start.Paragraph;
@@ -992,8 +925,8 @@ namespace cbhk.Generators.WrittenBookGenerator
         /// <param name="e"></param>
         public void WrittenBoxBackgroundLoaded(object sender, RoutedEventArgs e)
         {
-            written_book_background = sender as Border;
-            written_book_background.Background = new ImageBrush(new BitmapImage(new Uri(backgroundFilePath, UriKind.Absolute)));
+            Image image = sender as Image;
+            image.Source = new BitmapImage(new Uri(backgroundFilePath, UriKind.Absolute));
         }
 
         /// <summary>
@@ -1004,9 +937,8 @@ namespace cbhk.Generators.WrittenBookGenerator
         public void WrittenBoxLoaded(object sender, RoutedEventArgs e)
         {
             //初始化
-            if(!WindowLoaded)
+            if(WrittenBookPages.Count == 0 || CurrentPageIndex < 0 || CurrentPageIndex > WrittenBookPages.Count)
             {
-                WindowLoaded = true;
                 WrittenBookEditor = sender as RichTextBox;
                 //初始化文档链表
                 if (HistroyFlowDocumentList.Count == 0)
@@ -1075,42 +1007,13 @@ namespace cbhk.Generators.WrittenBookGenerator
             }
         }
 
-        /// <summary>
-        /// 载入署名并关闭背景
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SignatureAndCloseLoaded(object sender, RoutedEventArgs e)
-        {
-            if (File.Exists(signatureAndCloseFilePath))
-            {
-                sureToSignatureButton = sender as Button;
-                sureToSignatureButton.Click += SignatureAndCloseClicked;
-            }
-        }
-
-        /// <summary>
-        /// 取消署名背景
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SignatureCancelLoaded(object sender, RoutedEventArgs e)
-        {
-            signatureCancelButton = sender as Button;
-            signatureCancelButton.Click += SignatureCancelClicked;
-        }
-
+        [RelayCommand]
         /// <summary>
         /// 取消署名
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void SignatureCancelClicked(object sender, RoutedEventArgs e)
-        {
-            DisplayStylePanel = SignatureButton.Visibility = Visibility.Visible;
-            sureToSignatureButton.Visibility = signatureCancelButton.Visibility = Visibility.Collapsed;
-            PageFrame.Content = editPage;
-        }
+        public void SignatureCancel() => PageFrame.Content = editPage;
 
         /// <summary>
         /// 鼠标移到左箭头处显示高亮图像
@@ -1168,33 +1071,13 @@ namespace cbhk.Generators.WrittenBookGenerator
             }
         }
 
-        /// <summary>
-        /// 载入署名背景
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SignatureButtonBackgroundLoaded(object sender, RoutedEventArgs e)
-        {
-            if (File.Exists(signatureFilePath))
-            {
-                SignatureButton = sender as Button;
-                //SignatureButton.Background = new ImageBrush(new BitmapImage(new Uri(signatureFilePath, UriKind.Absolute)));
-            }
-        }
-
+        [RelayCommand]
         /// <summary>
         /// 署名
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void SignatureClick(object sender, RoutedEventArgs e)
-        {
-            signaturePage ??= new SignaturePage();
-            signaturePage.DataContext ??= this;
-            PageFrame.Content = signaturePage;
-            DisplayStylePanel = SignatureButton.Visibility = Visibility.Collapsed;
-            signatureCancelButton.Visibility = sureToSignatureButton.Visibility = Visibility.Visible;
-        }
+        public void Signature() => PageFrame.Content = signaturePage;
 
         /// <summary>
         /// 载入署名页背景
@@ -1205,20 +1088,18 @@ namespace cbhk.Generators.WrittenBookGenerator
         {
             if(File.Exists(signatureBackgroundFilePath))
             {
-                Border border = sender as Border;
-                border.Background = new ImageBrush(new BitmapImage(new Uri(signatureBackgroundFilePath,UriKind.Absolute)));
+                Image image = sender as Image;
+                image.Source = new BitmapImage(new Uri(signatureBackgroundFilePath,UriKind.Absolute));
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 署名并关闭
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void SignatureAndCloseClicked(object sender, RoutedEventArgs e)
-        {
-            run_command();
-        }
+        private void SignatureAndClose() => Run();
 
         /// <summary>
         /// 向左翻页

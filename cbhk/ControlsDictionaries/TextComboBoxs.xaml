@@ -184,6 +184,7 @@
                         <ScrollViewer
                             x:Name="DropDownScrollViewer"
                             Width="{TemplateBinding Width}"
+                            MaxHeight="200"
                             VirtualizingPanel.ScrollUnit="Pixel">
                             <Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
                                 <Canvas
@@ -230,7 +231,7 @@
                     DataContext="{StaticResource TextSearcherDataContext}"
                     Foreground="White"
                     IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource TemplatedParent}}"
-                    Text="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay, Path=SelectedItem, Converter={StaticResource ConvertComboBoxItemConverter}}">
+                    Text="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay, Path=SelectedItem.Text, Converter={StaticResource ConvertComboBoxItemConverter}}">
                     <behavior:Interaction.Triggers>
                         <behavior:EventTrigger EventName="KeyUp">
                             <behavior:CallMethodAction MethodName="ItemSearcher" TargetObject="{Binding}" />
@@ -361,7 +362,10 @@
     </ControlTemplate>
 
     <DataTemplate x:Key="DisplayTemplate">
-        <TextBlock Foreground="White" Text="{Binding}" />
+        <TextBlock
+            FontFamily="{Binding ItemFont}"
+            Foreground="White"
+            Text="{Binding Text}" />
     </DataTemplate>
 
     <Style x:Key="TextComboBoxStyle" TargetType="{x:Type ComboBox}">

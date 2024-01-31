@@ -31,6 +31,10 @@ namespace cbhk.ControlsDataContexts
 
                 #region 打开下拉框
                 ObservableCollection<string> dataGroup = current_box.ItemsSource as ObservableCollection<string>;
+                if(dataGroup is null || box is null)
+                {
+                    return;
+                }
                 var target_data_groups = dataGroup.Where(item => item.StartsWith(box.Text.Trim()));
                 if (target_data_groups.Count() > 1 && box.Text.Trim().Length > 0)
                 {

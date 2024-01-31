@@ -32,7 +32,6 @@
                 VerticalContentAlignment="Center"
                 Loaded="AttributeIdsLoaded"
                 SelectedIndex="0"
-                SelectedItem="{Binding AttributeID, Mode=TwoWay}"
                 Style="{DynamicResource TextComboBoxStyle}" />
             <TextBlock
                 Margin="5,0"
@@ -47,7 +46,6 @@
                 VerticalContentAlignment="Center"
                 Loaded="AttributeSlotsLoaded"
                 SelectedIndex="0"
-                SelectedItem="{Binding AttributeSlot, Mode=TwoWay}"
                 Style="{DynamicResource TextComboBoxStyle}" />
             <TextBlock
                 Margin="5,0"
@@ -93,8 +91,7 @@
                 Foreground="White"
                 Maximum="2147483647"
                 Minimum="-2147483648"
-                Style="{DynamicResource NumberBoxStyle}"
-                Value="{Binding AttributeValue, Mode=TwoWay}" />
+                Style="{DynamicResource NumberBoxStyle}" />
         </DockPanel>
         <DockPanel>
             <TextBlock
@@ -112,8 +109,7 @@
                 VerticalAlignment="Center"
                 BorderBrush="Black"
                 BorderThickness="1"
-                Foreground="White"
-                Text="{Binding AttributeName, Mode=TwoWay}" />
+                Foreground="White" />
         </DockPanel>
     </StackPanel>
 </UserControl>

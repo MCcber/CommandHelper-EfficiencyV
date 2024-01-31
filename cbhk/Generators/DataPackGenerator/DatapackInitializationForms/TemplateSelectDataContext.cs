@@ -1,4 +1,5 @@
-﻿using cbhk.GeneralTools;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools;
 using cbhk.Generators.DataPackGenerator.Components.TemplateSelectPage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -66,23 +67,23 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         /// <summary>
         /// 存放版本列表
         /// </summary>
-        public ObservableCollection<string> VersionList { get; set; } = [];
+        public ObservableCollection<TextComboBoxItem> VersionList { get; set; } = [];
         /// <summary>
         /// 存放模板类型列表
         /// </summary>
-        public ObservableCollection<string> DeveloperNameList { get; set; } = [];
+        public ObservableCollection<TextComboBoxItem> DeveloperNameList { get; set; } = [];
         /// <summary>
         /// 包功能类型列表
         /// </summary>
-        public ObservableCollection<string> FunctionTypeList { get; set; } = [];
+        public ObservableCollection<TextComboBoxItem> FunctionTypeList { get; set; } = [];
 
         [GeneratedRegex(@"(?<=包版本-)[0-9]+")]
         private static partial Regex packVersionComparer();
         #endregion
 
         #region 存储已选择的版本
-        private string selectedVersion = "";
-        public string SelectedVersion
+        private TextComboBoxItem selectedVersion;
+        public TextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
             set
@@ -106,8 +107,8 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         #endregion
 
         #region 存储已选择的开发者名称
-        private string selectedDeveloperName = "";
-        public string SelectedDeveloperName
+        private TextComboBoxItem selectedDeveloperName;
+        public TextComboBoxItem SelectedDeveloperName
         {
             get => selectedDeveloperName;
             set
@@ -127,8 +128,8 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         #endregion
 
         #region 存储已选择的功能类型
-        private string selectedFunctionType = "全部";
-        public string SelectedFunctionType
+        private TextComboBoxItem selectedFunctionType;
+        public TextComboBoxItem SelectedFunctionType
         {
             get => selectedFunctionType;
             set
@@ -177,11 +178,6 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         }
         #endregion
 
-        #region 上一步、下一步命令
-        public RelayCommand<Page> TemplateLastStep { get; set; }
-        public RelayCommand<Page> TemplateNextStep { get; set; }
-        #endregion
-
         #region 清除过滤参数可见性
         private Visibility clearAllParametersVisibility = Visibility.Hidden;
         public Visibility ClearAllParametersVisibility
@@ -194,14 +190,6 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         #region 主窗体引用
         Datapack dataPack = null;
         #endregion
-
-        public TemplateSelectDataContext()
-        {
-            #region 链接命令
-            TemplateLastStep = new RelayCommand<Page>(TemplateLastStepCommand);
-            TemplateNextStep = new RelayCommand<Page>(TemplateNextStepCommand);
-            #endregion
-        }
 
         /// <summary>
         /// 异步加载数据
@@ -219,9 +207,9 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
                     SolutionTemplateList.Clear();
                     DeveloperNameList.Clear();
                     FunctionTypeList.Clear();
-                    VersionList.Add("全部");
-                    DeveloperNameList.Add("全部");
-                    FunctionTypeList.Add("全部");
+                    VersionList.Add(new TextComboBoxItem() { Text = "全部" });
+                    DeveloperNameList.Add(new TextComboBoxItem() { Text = "全部" });
+                    FunctionTypeList.Add(new TextComboBoxItem() { Text = "全部" });
                     #endregion
                     #region 载入版本
                     if (File.Exists(databaseFilePath))
@@ -230,7 +218,7 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
                         DataTable versionTable = await dataCommunicator.GetData("SELECT * FROM DatapackVersions");
                         for (int i = versionTable.Rows.Count - 1; i >= 0 ; i--)
                         {
-                            VersionList.Add(versionTable.Rows[i]["value"].ToString());
+                            VersionList.Add(new TextComboBoxItem() { Text = versionTable.Rows[i]["value"].ToString() });
                         }
                     }
                     #endregion
@@ -278,13 +266,13 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
                                     if (data.SelectToken("Developer") is JToken developer)
                                     {
                                         solutionTemplateItems.Developer.Text = developer.ToString();
-                                        if (!DeveloperNameList.Contains(developer.ToString()))
-                                            DeveloperNameList.Add(developer.ToString());
+                                        if (!DeveloperNameList.Any(item => item.Text == developer.ToString()))
+                                            DeveloperNameList.Add(new TextComboBoxItem() { Text = developer.ToString() });
                                     }
                                     if (data.SelectToken("Type") is JToken type)
                                     {
-                                        if (!FunctionTypeList.Contains(type.ToString()))
-                                            FunctionTypeList.Add(type.ToString());
+                                        if (!FunctionTypeList.Any(item=>item.Text == type.ToString()))
+                                            FunctionTypeList.Add(new TextComboBoxItem() { Text = type.ToString() });
                                         TextBlock textBlock = new()
                                         {
                                             VerticalAlignment = VerticalAlignment.Center,
@@ -357,21 +345,23 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
             ClearAllParametersVisibility = Visibility.Hidden;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回起始页
         /// </summary>
         /// <param name="page"></param>
-        private void TemplateLastStepCommand(Page page)
+        private void TemplateLastStep(Page page)
         {
             DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
             NavigationService.GetNavigationService(context.frame).Navigate(context.homePage);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 进入包参数设置页
         /// </summary>
         /// <param name="page"></param>
-        private async void TemplateNextStepCommand(Page page)
+        private async Task TemplateNextStep(Page page)
         {
             await NavigationToGenerateSetupPage();
         }
@@ -397,7 +387,7 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
                 description = solutionTemplateItems.Description.Text.StartsWith(SearchText) || solutionTemplateItems.Description.Text.Contains(SearchText);
             }
             //if(solutionTemplateItems.CurrentType == SolutionTemplateItems.ItemTypes.Datapack)
-            version = versionValue == packVersionComparer().Match(currentVersion).ToString() || SelectedVersion == "全部";
+            version = versionValue == packVersionComparer().Match(currentVersion).ToString() || SelectedVersion.Text == "全部";
             string developerValue = solutionTemplateItems.Developer.Text;
             List<string> typeValue = [];
             foreach (Border item in solutionTemplateItems.TypePanel.Children)
@@ -407,10 +397,10 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
             }
             bool developer = false;
             if(SelectedDeveloperName != null)
-            developer = SelectedDeveloperName == "全部" || SelectedDeveloperName.StartsWith(developerValue) || SelectedDeveloperName.Contains(developerValue);
+            developer = SelectedDeveloperName.Text == "全部" || SelectedDeveloperName.Text.StartsWith(developerValue) || SelectedDeveloperName.Text.Contains(developerValue);
             bool type = false;
             if(SelectedFunctionType != null)
-            type = SelectedFunctionType == "全部" || typeValue.Contains(SelectedFunctionType);
+            type = SelectedFunctionType.Text == "全部" || typeValue.Contains(SelectedFunctionType.Text);
             e.Accepted = SearchText.Length > 0?((name || description) && version && developer && type) : version && developer && type;
         }
 

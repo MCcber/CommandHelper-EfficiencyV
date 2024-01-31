@@ -32,7 +32,7 @@ namespace cbhk.Generators.RecipeGenerator.Components
         }
     }
 
-    public class craftingTableDataContext:ObservableObject
+    public partial class craftingTableDataContext:ObservableObject
     {
         #region 字段与引用
         BitmapImage emptyImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Recipe\\images\\Empty.png"));
@@ -220,19 +220,12 @@ namespace cbhk.Generators.RecipeGenerator.Components
             set => SetProperty(ref count, value);
         }
         #endregion
-        /// <summary>
-        /// 运行配方
-        /// </summary>
-        public RelayCommand Run { get; set; }
         #endregion
 
         DataTable ItemTable = null;
 
         public craftingTableDataContext()
         {
-            #region 绑定指令
-            Run = new RelayCommand(RunCommand);
-            #endregion
             #region 初始化数据
             for (int i = 0; i < 9; i++)
             {
@@ -450,12 +443,13 @@ namespace cbhk.Generators.RecipeGenerator.Components
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 执行配方
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void RunCommand()
+        public void Run()
         {
             #region 合成最终数据
             Result = "";

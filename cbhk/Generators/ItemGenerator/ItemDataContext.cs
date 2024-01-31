@@ -1,5 +1,4 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
+﻿using cbhk.CustomControls;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.ItemGenerator.Components;
@@ -19,24 +18,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.ItemGenerator
 {
-    public class ItemDataContext:ObservableObject
+    public partial class ItemDataContext:ObservableObject
     {
-        #region 返回、运行和保存等指令
-        public RelayCommand<CommonWindow> ReturnCommand { get; set; }
-        public RelayCommand RunCommand { get; set; }
-        public RelayCommand SaveAll { get; set; }
-        public RelayCommand AddItem { get; set; }
-        public RelayCommand ClearItem { get; set; }
-        public RelayCommand ImportItemFromClipboard { get; set; }
-        public RelayCommand ImportItemFromFile { get; set; }
-
-        public RelayCommand ClearUnnecessaryData { get; set; }
-        #endregion
-
         #region 显示结果
         private bool showGeneratorResult = false;
         public bool ShowGeneratorResult
@@ -82,18 +68,53 @@ namespace cbhk.Generators.ItemGenerator
         }
         #endregion
 
-        //版本列表
-        public ObservableCollection<string> VersionList = ["1.12-","1.13+"];
-        //物品ID列表
-        public ObservableCollection<IconComboBoxItem> ItemIDs { get; set; } = [];
+        #region 版本列表
+        public ObservableCollection<TextComboBoxItem> VersionList { get; set; } = [
+            new TextComboBoxItem() { Text = "1.20.5" }, 
+            new TextComboBoxItem() { Text = "1.20.2" },
+            new TextComboBoxItem() { Text = "1.20.0" },
+            new TextComboBoxItem() { Text = "1.19.4" },
+            new TextComboBoxItem() { Text = "1.19.3" },
+            new TextComboBoxItem() { Text = "1.19.0" },
+            new TextComboBoxItem() { Text = "1.16.2" },
+            new TextComboBoxItem() { Text = "1.16.0" },
+            new TextComboBoxItem() { Text = "1.15.0" },
+            new TextComboBoxItem() { Text = "1.14.0" },
+            new TextComboBoxItem() { Text = "1.13.1" },
+            new TextComboBoxItem() { Text = "1.13.0" }, 
+            new TextComboBoxItem() { Text = "1.12.0" }];
+        #endregion
+
+        #region 版本ID数据源
+        private ObservableCollection<VersionID> versionIDList = [];
+
+        public ObservableCollection<VersionID> VersionIDList
+        {
+            get => versionIDList;
+            set => SetProperty(ref versionIDList, value);
+        }
+        #endregion
 
         #region 当前选中的物品页
-        private TabItem selectedItemPage = null;
-        public TabItem SelectedItemPage
+        private RichTabItems selectedItemPage = null;
+        public RichTabItems SelectedItemPage
         {
             get => selectedItemPage;
             set => SetProperty(ref selectedItemPage,value);
         }
+        #endregion
+
+        #region 数据表
+        public DataTable ItemTable = null;
+        public DataTable BlockVersionIDTable = null;
+        public DataTable EnchantmentTable = null;
+        public DataTable AttributeTable = null;
+        public DataTable AttributeSlotTable = null;
+        public DataTable AttributeValueTypeTable = null;
+        public DataTable EffectTable = null;
+        public DataTable HideInfomationTable = null;
+        public DataTable BlockTable = null;
+        public DataTable BlockStateTable = null;
         #endregion
 
         /// <summary>
@@ -102,87 +123,37 @@ namespace cbhk.Generators.ItemGenerator
         string icon_path = "pack://application:,,,/cbhk;component/resources/common/images/spawnerIcons/IconItems.png";
         #endregion
 
-        #region 数据表
-        public DataTable EnchantmentTable = null;
-        public DataTable BlockTable = null;
-        public DataTable BlockStateTable = null;
-        public DataTable ItemTable = null;
-        public DataTable AttributeTable = null;
-        public DataTable AttributeSlotTable = null;
-        public DataTable AttributeValueTypeTable = null;
-        public DataTable EffectTable = null;
-        public DataTable HideInfomationTable = null;
-        #endregion
-
-        public ItemDataContext()
-        {
-            #region 链接指令
-            RunCommand = new RelayCommand(run_command);
-            ReturnCommand = new RelayCommand<CommonWindow>(return_command);
-            SaveAll = new RelayCommand(SaveAllCommand);
-            AddItem = new RelayCommand(AddItemCommand);
-            ClearItem = new RelayCommand(ClearItemCommand);
-            ClearUnnecessaryData = new RelayCommand(ClearUnnecessaryDataCommand);
-            ImportItemFromClipboard = new RelayCommand(ImportItemFromClipboardCommand);
-            ImportItemFromFile = new RelayCommand(ImportItemFromFileCommand);
-            #endregion
-        }
-
         public async void Item_Loaded(object sender,RoutedEventArgs e)
         {
             #region 初始化数据表与物品页
             DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
             await Task.Run(async () =>
             {
+                BlockVersionIDTable = await dataCommunicator.GetData("SELECT * FROM VersionBlock");
+                ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
                 EnchantmentTable = await dataCommunicator.GetData("SELECT * FROM Enchantments");
                 BlockTable = await dataCommunicator.GetData("SELECT * FROM Blocks");
                 BlockStateTable = await dataCommunicator.GetData("SELECT * FROM BlockStates");
-                ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
                 AttributeTable = await dataCommunicator.GetData("SELECT * FROM MobAttributes");
                 AttributeSlotTable = await dataCommunicator.GetData("SELECT * FROM AttributeSlots");
                 AttributeValueTypeTable = await dataCommunicator.GetData("SELECT * FROM AttributeValueTypes");
                 EffectTable = await dataCommunicator.GetData("SELECT * FROM MobEffects");
                 HideInfomationTable = await dataCommunicator.GetData("SELECT * FROM HideInfomation");
-
-                #region 初始化物品ID列表
-                string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                foreach (DataRow row in ItemTable.Rows)
-                {
-                    string id = row["id"].ToString();
-                    string imagePath = "";
-                    if (File.Exists(currentPath + id + ".png"))
-                        imagePath = currentPath + id + ".png";
-                    else
-                        if (File.Exists(currentPath + id + "_spawn_egg.png"))
-                        imagePath = currentPath + id + "_spawn_egg.png";
-                    await Application.Current.Dispatcher.InvokeAsync(() =>
-                    {
-                        ItemIDs.Add(new IconComboBoxItem()
-                        {
-                            ComboBoxItemId = id,
-                            ComboBoxItemText = row["name"].ToString(),
-                            ComboBoxItemIcon = File.Exists(imagePath) ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : null
-                        });
-                    });
-                }
-                #endregion
             });
             #endregion
             #region 初始化物品页
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                ItemPages itemPages = new();
-                ItemPageDataContext itemPageDataContext = itemPages.DataContext as ItemPageDataContext;
-                itemPageDataContext.UseForTool = !IsCloseable;
-                ItemPageList[0].Content = itemPages;
-            });
+            ItemPages itemPages = new();
+            ItemPageDataContext itemPageDataContext = itemPages.DataContext as ItemPageDataContext;
+            itemPageDataContext.UseForTool = !IsCloseable;
+            ItemPageList[0].Content = itemPages;
             #endregion
         }
 
+        [RelayCommand]
         /// <summary>
         /// 清除不需要的特指数据
         /// </summary>
-        private void ClearUnnecessaryDataCommand()
+        private void ClearUnnecessaryData()
         {
             ItemPageDataContext itemPageDataContext = (SelectedItemPage.Content as ItemPages).DataContext as ItemPageDataContext;
             if (itemPageDataContext.specialDataDictionary.TryGetValue(itemPageDataContext.SelectedItemId.ComboBoxItemId, out Grid grid))
@@ -192,10 +163,11 @@ namespace cbhk.Generators.ItemGenerator
             itemPageDataContext.specialDataDictionary.Add(itemPageDataContext.SelectedItemId.ComboBoxItemId, grid);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 添加物品
         /// </summary>
-        private void AddItemCommand()
+        private void AddItem()
         {
             if(ItemPageList.Count > 0)
             {
@@ -234,19 +206,21 @@ namespace cbhk.Generators.ItemGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 清空物品
         /// </summary>
-        private void ClearItemCommand()
+        private void ClearItem()
         {
             if (IsCloseable)
                 ItemPageList.Clear();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从文件导入
         /// </summary>
-        private void ImportItemFromFileCommand()
+        private void ImportItemFromFile()
         {
             Microsoft.Win32.OpenFileDialog dialog = new()
             {
@@ -264,19 +238,21 @@ namespace cbhk.Generators.ItemGenerator
                 }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从剪切板导入
         /// </summary>
-        private void ImportItemFromClipboardCommand()
+        private void ImportItemFromClipboard()
         {
             ObservableCollection<RichTabItems> result = ItemPageList;
             ExternalDataImportManager.ImportItemDataHandler(Clipboard.GetText(), ref result, false);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 保存所有物品
         /// </summary>
-        private async void SaveAllCommand()
+        private async Task SaveAll()
         {
             List<string> Result = [];
             List<string> FileNameList = [];
@@ -287,7 +263,7 @@ namespace cbhk.Generators.ItemGenerator
                 {
                     ItemPages itemPages = itemPage.Content as ItemPages;
                     ItemPageDataContext context = itemPages.DataContext as ItemPageDataContext;
-                    string result = await context.run_command(false);
+                    string result = await context.Run(false);
                     string nbt = "";
                     if (result.Contains('{'))
                     {
@@ -328,11 +304,12 @@ namespace cbhk.Generators.ItemGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void return_command(CommonWindow win)
+        private void Return(CommonWindow win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -341,10 +318,11 @@ namespace cbhk.Generators.ItemGenerator
             win.Close();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 全部生成
         /// </summary>
-        private async void run_command()
+        private async Task Run()
         {
             StringBuilder Result = new();
             foreach (var itemPage in ItemPageList)
@@ -352,7 +330,7 @@ namespace cbhk.Generators.ItemGenerator
                 await itemPage.Dispatcher.InvokeAsync(() =>
                 {
                     ItemPageDataContext context = (itemPage.Content as ItemPages).DataContext as ItemPageDataContext;
-                    string result = context.run_command(false) + "\r\n";
+                    string result = context.Run(false) + "\r\n";
                     Result.Append(result);
                 });
             }
@@ -368,5 +346,12 @@ namespace cbhk.Generators.ItemGenerator
                 Message.PushMessage("物品全部生成成功！数据已进入剪切板", MessageBoxImage.Information);
             }
         }
+    }
+
+    public class VersionID
+    {
+        public string HighVersionID { get; set; } = "";
+        public string LowVersionID { get; set; } = "";
+        public int Damage { get; set; } = 0;
     }
 }

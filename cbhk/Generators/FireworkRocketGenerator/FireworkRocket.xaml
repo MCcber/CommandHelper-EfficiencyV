@@ -44,6 +44,12 @@
             CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local_window:CommonWindow}}" />
     </Window.InputBindings>
 
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:CallMethodAction MethodName="FireworkRocket_Loaded" TargetObject="{Binding}" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
@@ -61,7 +67,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource LeftArrow}"
                 BorderThickness="0"
-                Command="{Binding Return}"
+                Command="{Binding ReturnCommand}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
@@ -80,7 +86,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource RightArrow}"
                 BorderThickness="0"
-                Command="{Binding Run}"
+                Command="{Binding RunCommand}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
@@ -99,7 +105,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource Save}"
                 BorderThickness="0"
-                Command="{Binding SaveAll}"
+                Command="{Binding SaveAllCommand}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTip="保存"
@@ -109,7 +115,7 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 Background="{DynamicResource ButtonNormal}"
-                Command="{Binding AddFireworkRocket}"
+                Command="{Binding AddFireworkRocketCommand}"
                 Content="添加"
                 PressedBackground="{DynamicResource ButtonPressed}"
                 Style="{DynamicResource IconTextButton}" />
@@ -118,7 +124,7 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 Background="{DynamicResource ButtonNormal}"
-                Command="{Binding ClearFireworkRocket}"
+                Command="{Binding ClearFireworkRocketCommand}"
                 Content="清空"
                 PressedBackground="{DynamicResource ButtonPressed}"
                 Style="{DynamicResource IconTextButton}" />
@@ -128,10 +134,10 @@
                 Background="#EFF2F1"
                 BorderThickness="4,4,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ImportFireworkRocketFromClipboard}"
+                Command="{Binding ImportFireworkRocketFromClipboardCommand}"
                 Content="从剪切板导入"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4 4 4 4"
+                PressedBorderThickness="4"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
                 PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
                 PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
@@ -145,10 +151,28 @@
                 Background="#EFF2F1"
                 BorderThickness="4,4,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ImportFireworkRocketFromFile}"
+                Command="{Binding ImportFireworkRocketFromFileCommand}"
                 Content="从文件导入"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4 4 4 4"
+                PressedBorderThickness="4"
+                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+                RightBorderTexture="{StaticResource ButtonNormalRight}"
+                Style="{DynamicResource StereoTextButton}"
+                TopBorderTexture="{StaticResource ButtonNormalTop}" />
+            <CustomControls:StereoTextButton
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="#EFF2F1"
+                BorderThickness="4,4,4,7"
+                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+                Command="{Binding PreviewEffectCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Content="预览效果"
+                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+                PressedBorderThickness="4"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
                 PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
                 PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
@@ -172,9 +196,9 @@
             Margin="0,-5,0,0"
             Background="Transparent"
             BorderThickness="0"
-            Cursor=""
             ItemsSource="{Binding FireworkRocketPageList}"
             SelectedIndex="0"
+            SelectedItem="{Binding SelectedFireworkRocketPage, Mode=OneWayToSource}"
             Style="{DynamicResource TabControlWithScrollBar}"
             VirtualizingPanel.IsVirtualizing="False" />
         <Image
@@ -194,7 +218,7 @@
             RenderOptions.EdgeMode="Aliased">
             <behavior:Interaction.Triggers>
                 <behavior:EventTrigger EventName="Loaded">
-                    <behavior:CallMethodAction MethodName="GetViewport3DLoaded" TargetObject="{Binding}" />
+                    <behavior:CallMethodAction MethodName="View_Loaded" TargetObject="{Binding}" />
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
             <Viewport3D.Camera>

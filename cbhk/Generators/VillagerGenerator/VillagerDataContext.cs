@@ -23,43 +23,34 @@ using cbhk.GeneralTools.MessageTip;
 
 namespace cbhk.Generators.VillagerGenerator
 {
-    public class VillagerDataContext:ObservableObject
+    public partial class VillagerDataContext:ObservableObject
     {
         public DataTable ItemTable = null;
+
         #region 处理拖拽
         public static bool IsGrabingItem = false;
         Image drag_source = null;
         Image GrabedImage = null;
         #endregion
 
-        #region 生成、返回、保存指令
-        public RelayCommand RunCommand { get; set; }
-        public RelayCommand<CommonWindow> ReturnCommand { get; set; }
-        public RelayCommand Save { get; set; }
-        public RelayCommand ImportFromClipboard { get; set; }
-        public RelayCommand ImportFromFile { get; set; }
-        public RelayCommand CloseTransactionDataGrid { get; set; }
-        #endregion
-
         #region 版本源
-        private string selectedVersion = "";
-        public string SelectedVersion
+        private TextComboBoxItem selectedVersion;
+        public TextComboBoxItem SelectedVersion
         {
-            get
-            {
-                return selectedVersion;
-            }
+            get => selectedVersion;
             set
             {
-                selectedVersion = value;
-                if ((CanEditBrain || CanEditGossips) && selectedVersion == "1.13-")
+                SetProperty(ref selectedVersion, value);
+                if ((CanEditBrain || CanEditGossips) && SelectedVersion.Text == "1.20.2")
                     CanEditBrain = CanEditGossips = false;
-                CanTouchBrain = CanTouchGossips = selectedVersion != "1.13-";
-                OnPropertyChanged();
+                CanTouchBrain = CanTouchGossips = SelectedVersion.Text != "1.20.2";
             }
         }
 
-        public ObservableCollection<string> VersionSource { get; set; } = ["1.13-","1.14+"];
+        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+            new TextComboBoxItem() { Text = "1.20.2" },
+            new TextComboBoxItem() { Text = "1.13.0" }
+            ];
         #endregion
 
         #region 是否显示结果
@@ -100,10 +91,21 @@ namespace cbhk.Generators.VillagerGenerator
         }
         #endregion
 
+        #region 已选中的搜索言论成员
+        private TextComboBoxItem selectedSearchGossipItem;
+
+        public TextComboBoxItem SelectedSearchGossipItem
+        {
+            get => selectedSearchGossipItem;
+            set => SetProperty(ref selectedSearchGossipItem, value);
+        }
+
+        #endregion
+
         //言论搜索目标引用
         TextBox GossipSearchTarget = null;
         //言论搜索类型引用
-        ComboBox GossipSearchType = null;
+        ComboBox GossipSearchTypeBox = null;
         //言论数据源所在视图引用
         ScrollViewer GossipViewer = null;
         /// <summary>
@@ -117,7 +119,7 @@ namespace cbhk.Generators.VillagerGenerator
         //物品描述引用
         public ObservableCollection<string> BagItemToolTips { get; set; } = [];
         //言论搜索类型数据源
-        ObservableCollection<string> gossipSearchType = [];
+        ObservableCollection<TextComboBoxItem> GossipSearchType = [];
         //言论搜索类型配置文件路径
         string gossipSearchTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Villager\\data\\GossipSearchTypes.ini";
         //维度数据源
@@ -262,12 +264,8 @@ namespace cbhk.Generators.VillagerGenerator
         private Visibility isEditGossips = Visibility.Collapsed;
         public Visibility IsEditGossips
         {
-            get { return isEditGossips; }
-            set
-            {
-                isEditGossips = value;
-                OnPropertyChanged();
-            }
+            get => isEditGossips;
+            set => SetProperty(ref isEditGossips, value);
         }
         #endregion
 
@@ -278,8 +276,7 @@ namespace cbhk.Generators.VillagerGenerator
             get { return canEditGossips; }
             set
             {
-                canEditGossips = value;
-                OnPropertyChanged();
+                SetProperty(ref canEditGossips, value);
                 IsEditGossips = CanEditGossips ? Visibility.Visible:Visibility.Collapsed;
                 //恢复所有交易项的价格
                 if (!CanEditGossips)
@@ -295,12 +292,8 @@ namespace cbhk.Generators.VillagerGenerator
         private bool canTouchGossips = true;
         public bool CanTouchGossips
         {
-            get { return canTouchGossips; }
-            set
-            {
-                canTouchGossips = value;
-                OnPropertyChanged();
-            }
+            get => canTouchGossips;
+            set => SetProperty(ref canTouchGossips, value);
         }
         #endregion
 
@@ -308,12 +301,8 @@ namespace cbhk.Generators.VillagerGenerator
         private bool canTouchBrain = true;
         public bool CanTouchBrain
         {
-            get { return canTouchBrain; }
-            set
-            {
-                canTouchBrain = value;
-                OnPropertyChanged();
-            }
+            get => canTouchBrain;
+            set => SetProperty(ref canTouchBrain, value);
         }
         #endregion
 
@@ -321,12 +310,8 @@ namespace cbhk.Generators.VillagerGenerator
         private Visibility isEditBrain = Visibility.Collapsed;
         public Visibility IsEditBrain
         {
-            get { return isEditBrain; }
-            set
-            {
-                isEditBrain = value;
-                OnPropertyChanged();
-            }
+            get => isEditBrain;
+            set => SetProperty(ref isEditBrain,value);
         }
         #endregion
 
@@ -334,11 +319,10 @@ namespace cbhk.Generators.VillagerGenerator
         private bool canEditBrain = false;
         public bool CanEditBrain
         {
-            get { return canEditBrain; }
+            get => canEditBrain;
             set
             {
-                canEditBrain = value;
-                OnPropertyChanged();
+                SetProperty(ref canEditBrain, value);
                 IsEditBrain = CanEditBrain ? Visibility.Visible : Visibility.Collapsed;
                 OnlyEditItem = !CanEditBrain && !CanEditGossips ?Visibility.Collapsed:Visibility.Visible;
             }
@@ -349,12 +333,8 @@ namespace cbhk.Generators.VillagerGenerator
         private Visibility onlyEditItem = Visibility.Visible;
         public Visibility OnlyEditItem
         {
-            get { return onlyEditItem; }
-            set
-            {
-                onlyEditItem = value;
-                OnPropertyChanged();
-            }
+            get => onlyEditItem;
+            set => SetProperty(ref onlyEditItem, value);
         }
         #endregion
 
@@ -362,15 +342,8 @@ namespace cbhk.Generators.VillagerGenerator
         private ItemStructure selectedItem = null;
         public ItemStructure SelectedItem
         {
-            get
-            {
-                return selectedItem;
-            }
-            set
-            {
-                selectedItem = value;
-                OnPropertyChanged();
-            }
+            get => selectedItem;
+            set => SetProperty(ref selectedItem,value);
         }
         #endregion
 
@@ -437,36 +410,26 @@ namespace cbhk.Generators.VillagerGenerator
         private double meeting_pointX = 0;
         public double MeetingPointX
         {
-            set { meeting_pointX = value; OnPropertyChanged(); }
-            get{ return meeting_pointX; }
+            set => SetProperty(ref meeting_pointX, value);
+            get => meeting_pointX;
         }
         private double meeting_pointY = 0;
         public double MeetingPointY
         {
-            set { meeting_pointY = value; OnPropertyChanged(); }
-            get
-            {
-                return meeting_pointY;
-            }
+            set => SetProperty(ref meeting_pointY, value);
+            get => meeting_pointY;
         }
         private double meeting_pointZ = 0;
         public double MeetingPointZ
         {
-            set { meeting_pointZ = value; OnPropertyChanged(); }
-            get
-            {
-                return meeting_pointZ;
-            }
+            set => SetProperty(ref meeting_pointZ, value);
+            get => meeting_pointZ;
         }
         private string meetingPointDimension = null;
         public string MeetingPointDimension
         {
-            get { return meetingPointDimension; }
-            set
-            {
-                meetingPointDimension = value;
-                OnPropertyChanged();
-            }
+            get => meetingPointDimension;
+            set => SetProperty(ref meetingPointDimension, value);
         }
         private string MeetingPointDimensionString
         {
@@ -636,14 +599,14 @@ namespace cbhk.Generators.VillagerGenerator
         public Dictionary<string, string> VillagerTypeDataBase = [];
         public Dictionary<string, string> VillagerProfessionTypeDataBase = [];
 
-        public ObservableCollection<string> VillagerTypeSource { get; set; } = [];
-        public ObservableCollection<string> VillagerProfessionTypeSource { get; set; } = [];
-        public ObservableCollection<string> VillagerLevelSource { get; set; } = [];
+        public ObservableCollection<TextComboBoxItem> VillagerTypeSource { get; set; } = [];
+        public ObservableCollection<TextComboBoxItem> VillagerProfessionTypeSource { get; set; } = [];
+        public ObservableCollection<TextComboBoxItem> VillagerLevelSource { get; set; } = [];
         #endregion
 
         #region 村民种类
-        private string villagerType = "";
-        public string VillagerType
+        private TextComboBoxItem villagerType;
+        public TextComboBoxItem VillagerType
         {
             get
             {
@@ -660,15 +623,15 @@ namespace cbhk.Generators.VillagerGenerator
             get
             {
                 string result = "type:\"minecraft:";
-                result = result + VillagerTypeDataBase.Where(item => item.Value == VillagerType).First().Key + "\",";
+                result = result + VillagerTypeDataBase.Where(item => item.Value == VillagerType.Text).First().Key + "\",";
                 return result;
             }
         }
         #endregion
 
         #region 村民职业
-        private string villagerProfessionType = "";
-        public string VillagerProfessionType
+        private TextComboBoxItem villagerProfessionType;
+        public TextComboBoxItem VillagerProfessionType
         {
             get { return villagerProfessionType; }
             set
@@ -682,15 +645,15 @@ namespace cbhk.Generators.VillagerGenerator
             get
             {
                 string result = "profession:\"minecraft:";
-                result = result + VillagerProfessionTypeDataBase.Where(item => item.Value == VillagerProfessionType).First().Key + "\",";
+                result = result + VillagerProfessionTypeDataBase.Where(item => item.Value == VillagerProfessionType.Text).First().Key + "\",";
                 return result;
             }
         }
         #endregion
 
         #region 村民交易等级
-        private string villagerLevel = "0";
-        public string VillagerLevel
+        private TextComboBoxItem villagerLevel;
+        public TextComboBoxItem VillagerLevel
         {
             get { return villagerLevel; }
             set
@@ -704,7 +667,7 @@ namespace cbhk.Generators.VillagerGenerator
             get
             {
                 string result = "level:";
-                result = result + VillagerLevel + ",";
+                result = result + VillagerLevel.Text + ",";
                 return result;
             }
         }
@@ -778,16 +741,6 @@ namespace cbhk.Generators.VillagerGenerator
         private SolidColorBrush blackBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#000000"));
         #endregion
 
-        #region 添加与清空交易项
-        public RelayCommand AddTransactionItem { get; set; }
-        public RelayCommand ClearTransactionItem { get; set; }
-        #endregion
-
-        #region 添加与清空言论
-        public RelayCommand AddGossipItem { get; set; }
-        public RelayCommand ClearGossipItem { get; set; }
-        #endregion
-
         public VillagerDataContext()
         {
             #region 初始化主、副、结果空图像
@@ -803,19 +756,6 @@ namespace cbhk.Generators.VillagerGenerator
             }
             #endregion
 
-            #region 链接指令
-            RunCommand = new RelayCommand(run_command);
-            ReturnCommand = new RelayCommand<CommonWindow>(return_command);
-            AddTransactionItem = new RelayCommand(AddTransactionItemCommand);
-            ClearTransactionItem = new RelayCommand(ClearTransactionItemCommand);
-            AddGossipItem = new RelayCommand(AddGossipItemCommand);
-            ClearGossipItem = new RelayCommand(ClearGossipItemCommand);
-            Save = new RelayCommand(SaveCommand);
-            ImportFromFile = new RelayCommand(ImportFromFileCommand);
-            ImportFromClipboard = new RelayCommand(ImportFromClipboardCommand);
-            CloseTransactionDataGrid = new RelayCommand(CloseTransactionDataGridCommand);
-            #endregion
-
             #region 初始化数据源
             if (File.Exists(VillagerTypeSourceFilePath))
             {
@@ -825,9 +765,8 @@ namespace cbhk.Generators.VillagerGenerator
                     string[] item = data[i].Split('.');
                     string id = item[0];
                     string name = item[1];
-                    if (!VillagerTypeDataBase.ContainsKey(id))
-                        VillagerTypeDataBase.Add(id, name);
-                    VillagerTypeSource.Add(name);
+                    VillagerTypeDataBase.TryAdd(id, name);
+                    VillagerTypeSource.Add(new TextComboBoxItem() { Text = name });
                 }
             }
             if (File.Exists(VillagerProfessionsSourceFilePath))
@@ -842,7 +781,7 @@ namespace cbhk.Generators.VillagerGenerator
                     if (!VillagerProfessionTypeDataBase.ContainsKey(id))
                         VillagerProfessionTypeDataBase.Add(id, name);
 
-                    VillagerProfessionTypeSource.Add(name);
+                    VillagerProfessionTypeSource.Add(new TextComboBoxItem() { Text = name });
                 }
             }
             if (File.Exists(VillagerLevelSourceFilePath))
@@ -850,7 +789,7 @@ namespace cbhk.Generators.VillagerGenerator
                 int level = int.Parse(File.ReadAllText(VillagerLevelSourceFilePath));
                 for (int i = 1; i <= level; i++)
                 {
-                    VillagerLevelSource.Add(i.ToString());
+                    VillagerLevelSource.Add(new TextComboBoxItem() { Text = i.ToString() });
                 }
             }
             #endregion
@@ -923,10 +862,11 @@ namespace cbhk.Generators.VillagerGenerator
             CustomViewSource.Filter += CollectionViewSource_Filter;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 关闭交易数据设置面板
         /// </summary>
-        private void CloseTransactionDataGridCommand()
+        private void CloseTransactionDataGrid()
         {
             TransactionDataGridVisibility = Visibility.Collapsed;
             //更新当前交易项的数量显示
@@ -935,10 +875,11 @@ namespace cbhk.Generators.VillagerGenerator
             CurrentItem.SellCountDisplay.Text = "x" + CurrentItem.SellCount.ToString();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从文件导入
         /// </summary>
-        private void ImportFromFileCommand()
+        private void ImportFromFile()
         {
             Microsoft.Win32.OpenFileDialog dialog = new()
             {
@@ -952,10 +893,11 @@ namespace cbhk.Generators.VillagerGenerator
                 ExternalDataImportManager.ImportVillagerDataHandler(dialog.FileName, this);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从剪切板导入
         /// </summary>
-        private void ImportFromClipboardCommand()
+        private void ImportFromClipboard()
         {
             ExternalDataImportManager.ImportVillagerDataHandler(Clipboard.GetText(),this,false);
         }
@@ -965,7 +907,7 @@ namespace cbhk.Generators.VillagerGenerator
         /// </summary>
         private void SaveCommand()
         {
-            run_command(false);
+            Run(false);
             Microsoft.Win32.SaveFileDialog saveFileDialog = new()
             {
                 Title = "请选择村民保存路径",
@@ -1043,11 +985,12 @@ namespace cbhk.Generators.VillagerGenerator
             GossipViewer = sender as ScrollViewer;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void return_command(CommonWindow win)
+        private void Return(CommonWindow win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -1060,7 +1003,7 @@ namespace cbhk.Generators.VillagerGenerator
         /// 为保存行为执行生成
         /// </summary>
         /// <param name="showResult"></param>
-        private void run_command(bool showResult)
+        private void Run(bool showResult)
         {
             Result = "";
             Result += WillingString + VillagerData + Offers + Gossips + Brain + LastRestockString + XpString;
@@ -1076,10 +1019,11 @@ namespace cbhk.Generators.VillagerGenerator
                 Clipboard.SetText(Result);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 执行生成
         /// </summary>
-        private void run_command()
+        private void Run()
         {
             Result = "";
             Result += WillingString + VillagerData + Offers + Gossips + Brain + LastRestockString + XpString;
@@ -1098,12 +1042,13 @@ namespace cbhk.Generators.VillagerGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 添加一个交易项控件
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void AddTransactionItemCommand()
+        public void AddTransactionItem()
         {
             TransactionItems transaction = new()
             {
@@ -1112,20 +1057,22 @@ namespace cbhk.Generators.VillagerGenerator
             transactionItems.Add(transaction);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 清空交易项控件
         /// </summary>
-        private void ClearTransactionItemCommand()
+        private void ClearTransactionItem()
         {
             transactionItems.Clear();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 添加一个言论控件
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void AddGossipItemCommand()
+        public void AddGossipItem()
         {
             GossipsItems gossipsItem = new()
             {
@@ -1137,10 +1084,11 @@ namespace cbhk.Generators.VillagerGenerator
             gossipItems.Add(gossipsItem);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 清空言论控件
         /// </summary>
-        private void ClearGossipItemCommand()
+        private void ClearGossipItem()
         {
             gossipItems.Clear();
         }
@@ -1184,17 +1132,17 @@ namespace cbhk.Generators.VillagerGenerator
         /// <param name="e"></param>
         public void GossipSearchTypeLoaded(object sender, RoutedEventArgs e)
         {
-            GossipSearchType = sender as ComboBox;
+            GossipSearchTypeBox = sender as ComboBox;
             if(File.Exists(gossipSearchTypeFilePath))
             {
                 string[] types = File.ReadAllLines(gossipSearchTypeFilePath);
                 for (int i = 0; i < types.Length; i++)
                 {
-                    gossipSearchType.Add(types[i]);
+                    GossipSearchType.Add(new TextComboBoxItem() { Text = types[i] });
                 }
             }
-            GossipSearchType.ItemsSource = gossipSearchType;
-            GossipSearchType.SelectedIndex = 0;
+            GossipSearchTypeBox.ItemsSource = GossipSearchType;
+            GossipSearchTypeBox.SelectedIndex = 0;
         }
 
         /// <summary>
@@ -1206,7 +1154,7 @@ namespace cbhk.Generators.VillagerGenerator
         {
             if(CanEditGossips)
             {
-                string current_type = GossipSearchType.SelectedItem as string;
+                string current_type = SelectedSearchGossipItem.Text;
                 List<GossipsItems> target_gossip = gossipItems.Where(gossip =>
                 {
                     string type = gossip.Type.SelectedItem as string;

@@ -6,44 +6,85 @@
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:cbhk.Generators.WrittenBookGenerator.Components"
+    xmlns:localDataContext="clr-namespace:cbhk.Generators.WrittenBookGenerator"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="SignaturePage"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
 
-    <Grid>
-        <Border>
-            <behavior:Interaction.Triggers>
-                <behavior:EventTrigger EventName="Loaded">
-                    <behavior:CallMethodAction MethodName="SignatureBackgroundLoaded" TargetObject="{Binding}" />
-                </behavior:EventTrigger>
-            </behavior:Interaction.Triggers>
-            <Grid>
-                <TextBox
-                    Height="32"
-                    Margin="35,115,35,0"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Top"
-                    VerticalContentAlignment="Center"
-                    Panel.ZIndex="1"
-                    BorderBrush="Black"
-                    FontFamily="Minecraft AE Pixel"
-                    FontSize="20"
-                    Foreground="White"
-                    Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBox
-                    Margin="35,150,160,0"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Top"
-                    VerticalContentAlignment="Center"
-                    Panel.ZIndex="1"
-                    BorderBrush="Black"
-                    FontFamily="Minecraft AE Pixel"
-                    FontSize="20"
-                    Foreground="White"
-                    Text="{Binding Author, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            </Grid>
-        </Border>
-    </Grid>
+    <StackPanel>
+        <Grid>
+            <Image Panel.ZIndex="0">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Loaded">
+                        <behavior:CallMethodAction MethodName="SignatureBackgroundLoaded" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </Image>
+            <TextBox
+                Grid.Row="0"
+                Height="35"
+                Margin="45,130,45,0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                VerticalContentAlignment="Center"
+                Panel.ZIndex="1"
+                BorderBrush="Black"
+                FontFamily="Minecraft AE Pixel"
+                FontSize="20"
+                Foreground="White"
+                Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox
+                Grid.Row="1"
+                Height="35"
+                Margin="45,165,200,0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                VerticalContentAlignment="Center"
+                Panel.ZIndex="1"
+                BorderBrush="Black"
+                FontFamily="Minecraft AE Pixel"
+                FontSize="20"
+                Foreground="White"
+                Text="{Binding Author, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+        <CustomControls:StereoTextButton
+            Height="28"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Bottom"
+            Background="#EFF2F1"
+            BorderThickness="4,3,4,7"
+            BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+            Command="{Binding SignatureAndCloseCommand}"
+            Content="署名并关闭"
+            Foreground="Black"
+            LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+            PressedBorderThickness="4"
+            PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+            PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+            PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+            PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+            RightBorderTexture="{StaticResource ButtonNormalRight}"
+            Style="{DynamicResource StereoTextButton}"
+            TopBorderTexture="{StaticResource ButtonNormalTop}" />
+        <CustomControls:StereoTextButton
+            Height="28"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Bottom"
+            Background="#EFF2F1"
+            BorderThickness="4,3,4,7"
+            BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+            Command="{Binding SignatureCancelCommand}"
+            Content="取消"
+            LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+            PressedBorderThickness="4"
+            PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+            PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+            PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+            PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+            RightBorderTexture="{StaticResource ButtonNormalRight}"
+            Style="{DynamicResource StereoTextButton}"
+            TopBorderTexture="{StaticResource ButtonNormalTop}" />
+    </StackPanel>
 </Page>

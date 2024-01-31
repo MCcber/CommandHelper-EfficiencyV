@@ -14,7 +14,7 @@
 
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
-            <behavior:CallMethodAction MethodName="FireworkRocketLoaded" TargetObject="{Binding}" />
+            <behavior:CallMethodAction MethodName="FireworkRocket_Loaded" TargetObject="{Binding}" />
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
 
@@ -47,7 +47,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource RightArrow}"
                 BorderThickness="0"
-                Command="{Binding Run}"
+                Command="{Binding RunCommand}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
@@ -67,7 +67,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource Save}"
                 BorderThickness="0"
-                Command="{Binding Save}"
+                Command="{Binding SaveCommand}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTip="保存"
@@ -87,15 +87,10 @@
                 VerticalContentAlignment="Center"
                 FontSize="15"
                 IsReadOnly="True"
+                ItemsSource="{Binding VersionSource}"
                 SelectedIndex="1"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}">
-                <behavior:Interaction.Triggers>
-                    <behavior:EventTrigger EventName="Loaded">
-                        <behavior:CallMethodAction MethodName="VersionLoaded" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
-                </behavior:Interaction.Triggers>
-            </ComboBox>
+                Style="{DynamicResource TextComboBoxStyle}" />
             <CustomControls:RadiusToggleButtons
                 HorizontalAlignment="Left"
                 Foreground="White"
@@ -123,26 +118,15 @@
                 TrueLeftBorderTexture="{StaticResource TextToggleButtonTrueLeftFrame}"
                 TrueRightBorderTexture="{StaticResource TextToggleButtonTrueRightFrame}"
                 TrueTopBorderTexture="{StaticResource TextToggleButtonTrueTopFrame}" />
-            <CustomControls:IconTextButtons
-                Padding="5"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource ButtonNormal}"
-                BorderThickness="0"
-                Command="{Binding PreviewEffect}"
-                Content="预览效果"
-                FontSize="15"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
             <CustomControls:RadiusToggleButtons
                 VerticalContentAlignment="Center"
                 Foreground="White"
                 IsChecked="{Binding GeneratorFireStar, Mode=TwoWay}"
-                SelectedToggleText="生成烟花火箭"
+                SelectedToggleText="生成烟火之星"
                 Style="{DynamicResource RadiusToggleButton}"
                 ToggleHeight="26"
                 ToggleWidth="45"
-                UnSelectedToggleText="生成烟火之星" />
+                UnSelectedToggleText="生成烟花火箭" />
             <CustomControls:RadiusToggleButtons
                 VerticalContentAlignment="Center"
                 Foreground="White"
@@ -164,12 +148,12 @@
                     Title="原版颜色库"
                     HorizontalAlignment="Stretch"
                     Background="#FFE5B663"
-                    Fresh="{Binding ReverseAllStructureColor}"
+                    Fresh="{Binding ReverseAllStructureColorCommand}"
                     FreshForeground="Black"
                     FreshName="反选"
                     FreshVisibility="Visible"
                     IsExpanded="True"
-                    Modify="{Binding SelectedAllStructureColor}"
+                    Modify="{Binding SelectedAllStructureColorCommand}"
                     ModifyForeground="Black"
                     ModifyName="全选"
                     ModifyVisibility="Visible"
@@ -180,12 +164,13 @@
                         Background="Transparent"
                         HorizontalScrollBarVisibility="Disabled"
                         VerticalScrollBarVisibility="Auto">
-                        <behavior:Interaction.Triggers>
-                            <behavior:EventTrigger EventName="Loaded">
-                                <behavior:CallMethodAction MethodName="StructureColorList_Loaded" TargetObject="{Binding}" />
-                            </behavior:EventTrigger>
-                        </behavior:Interaction.Triggers>
-                        <UniformGrid Columns="6" />
+                        <UniformGrid Columns="6">
+                            <behavior:Interaction.Triggers>
+                                <behavior:EventTrigger EventName="Loaded">
+                                    <behavior:CallMethodAction MethodName="StructureColor_Loaded" TargetObject="{Binding}" />
+                                </behavior:EventTrigger>
+                            </behavior:Interaction.Triggers>
+                        </UniformGrid>
                     </ScrollViewer>
                 </CustomControls:Accordion>
                 <CustomControls:StereoToggleButton
@@ -209,7 +194,7 @@
                     HorizontalAlignment="Stretch"
                     Panel.ZIndex="0"
                     Background="#FFE5B663"
-                    Fresh="{Binding ClearMainColor}"
+                    Fresh="{Binding ClearMainColorCommand}"
                     FreshForeground="Black"
                     FreshName="清空"
                     FreshVisibility="Visible"
@@ -233,7 +218,7 @@
                             VerticalScrollBarVisibility="Disabled">
                             <behavior:Interaction.Triggers>
                                 <behavior:EventTrigger EventName="Loaded">
-                                    <behavior:CallMethodAction MethodName="MainColorGridScrollViewerLoaded" TargetObject="{Binding}" />
+                                    <behavior:CallMethodAction MethodName="MainColorGridScrollViewer_Loaded" TargetObject="{Binding}" />
                                 </behavior:EventTrigger>
                             </behavior:Interaction.Triggers>
                             <ItemsControl
@@ -284,7 +269,7 @@
                     HorizontalAlignment="Stretch"
                     Panel.ZIndex="0"
                     Background="#FFE5B663"
-                    Fresh="{Binding ClearFadeColor}"
+                    Fresh="{Binding ClearFadeColorCommand}"
                     FreshForeground="Black"
                     FreshName="清空"
                     FreshVisibility="Visible"
@@ -306,7 +291,7 @@
                             VerticalScrollBarVisibility="Disabled">
                             <behavior:Interaction.Triggers>
                                 <behavior:EventTrigger EventName="Loaded">
-                                    <behavior:CallMethodAction MethodName="FadeColorGridScrollViewerLoaded" TargetObject="{Binding}" />
+                                    <behavior:CallMethodAction MethodName="FadeColorGridScrollViewer_Loaded" TargetObject="{Binding}" />
                                 </behavior:EventTrigger>
                             </behavior:Interaction.Triggers>
                             <ItemsControl
@@ -363,7 +348,7 @@
                         SelectColor="{Binding SelectedColor, Mode=TwoWay}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
-                                <behavior:CallMethodAction MethodName="ColorPickerLoaded" TargetObject="{Binding}" />
+                                <behavior:CallMethodAction MethodName="ColorPicker_Loaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
                     </ColorPicker:ColorPickers>

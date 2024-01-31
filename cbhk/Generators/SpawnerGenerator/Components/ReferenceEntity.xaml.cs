@@ -2,10 +2,8 @@
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.EntityGenerator;
 using cbhk.Generators.EntityGenerator.Components;
-using HelixToolkit.Wpf;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Immutable;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;

@@ -27,11 +27,6 @@ namespace cbhk.Generators.DataPackGenerator
 {
     public partial class EditPageDataContext : ObservableObject
     {
-        #region 命令
-        public RelayCommand Return { get; set; }
-        public RelayCommand BackToHomePage { get; set; }
-        #endregion
-
         #region 数据包搜索文本框内容
         private string datapackSeacherValue = "";
         public string DatapackSeacherValue
@@ -67,21 +62,6 @@ namespace cbhk.Generators.DataPackGenerator
             get => selectedFileItem;
             set => SetProperty(ref selectedFileItem, value);
         }
-        #endregion
-
-        #region 数据包管理器右键菜单指令集
-        public RelayCommand AddNewItem { get; set; }
-        public RelayCommand AddExistingItems { get; set; }
-        public RelayCommand AddNewFolder { get; set; }
-        public RelayCommand Cut { get; set; }
-        public RelayCommand Copy { get; set; }
-        public RelayCommand Paste { get; set; }
-        public RelayCommand CopyFullPath { get; set; }
-        public RelayCommand OpenWithResourceManagement { get; set; }
-        public RelayCommand ExcludeFromProject { get; set; }
-        public RelayCommand OpenWithTerminal { get; set; }
-        public RelayCommand Delete { get; set; }
-        public RelayCommand Attribute { get; set; }
         #endregion
 
         #region 初始标签页
@@ -214,32 +194,16 @@ namespace cbhk.Generators.DataPackGenerator
 
         public EditPageDataContext()
         {
-            #region 链接指令
-            AddNewItem = new RelayCommand(AddItemCommand);
-            AddExistingItems = new RelayCommand(AddExistingItemsCommand);
-            AddNewFolder = new RelayCommand(AddFolderCommand);
-            Cut = new RelayCommand(CutCommand);
-            Copy = new RelayCommand(CopyCommand);
-            Paste = new RelayCommand(PasteCommand);
-            CopyFullPath = new RelayCommand(CopyFullPathCommand);
-            OpenWithResourceManagement = new RelayCommand(OpenWithResourceManagementCommand);
-            ExcludeFromProject = new RelayCommand(ExcludeFromProjectCommand);
-            OpenWithTerminal = new RelayCommand(OpenWithTerminalCommand);
-            Delete = new RelayCommand(DeleteCommand);
-            Attribute = new RelayCommand(AttributeCommand);
-
-            Return = new(ReturnCommand);
-            BackToHomePage = new(BackToHomePageCommand);
-            #endregion
             #region 客户端连接语言服务器
             client.Connect(new IPEndPoint(IPAddress.Parse(ipString), port));
             #endregion
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回主页
         /// </summary>
-        private void ReturnCommand()
+        private void Return()
         {
             DatapackDataContext context = datapack.DataContext as DatapackDataContext;
             context.home.WindowState = WindowState.Normal;
@@ -249,10 +213,11 @@ namespace cbhk.Generators.DataPackGenerator
             datapack.Close();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回起始页
         /// </summary>
-        private async void BackToHomePageCommand()
+        private async Task BackToHomePage()
         {
             DatapackDataContext context = datapack.DataContext as DatapackDataContext;
             await datapack.Dispatcher.InvokeAsync(() =>
@@ -730,10 +695,11 @@ namespace cbhk.Generators.DataPackGenerator
             return matchHeaderContent;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 新建项
         /// </summary>
-        private void AddItemCommand()
+        private void AddItem()
         {
             if(Directory.Exists(SolutionViewSelectedItem.Uid))
             {
@@ -770,10 +736,11 @@ namespace cbhk.Generators.DataPackGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 现有项
         /// </summary>
-        private void AddExistingItemsCommand()
+        private void AddExistingItems()
         {
             Microsoft.Win32.OpenFileDialog openFileDialog = new()
             {
@@ -808,10 +775,11 @@ namespace cbhk.Generators.DataPackGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 添加文件夹
         /// </summary>
-        private void AddFolderCommand()
+        private void AddFolder()
         {
             if(Directory.Exists(SolutionViewSelectedItem.Uid))
             {
@@ -834,29 +802,32 @@ namespace cbhk.Generators.DataPackGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 剪切
         /// </summary>
-        private void CutCommand()
+        private void Cut()
         {
             Clipboard.SetText(SolutionViewSelectedItem.Uid);
             BeCopyOrCutNode = SolutionViewSelectedItem;
             IsCuted = true;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 复制对象
         /// </summary>
-        private void CopyCommand()
+        private void Copy()
         {
             Clipboard.SetText(SolutionViewSelectedItem.Uid);
             BeCopyOrCutNode = SolutionViewSelectedItem;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 粘贴对象
         /// </summary>
-        private void PasteCommand()
+        private void Paste()
         {
             string path = Clipboard.GetText();
             TreeViewItem currentParent;
@@ -914,18 +885,20 @@ namespace cbhk.Generators.DataPackGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 复制完整路径
         /// </summary>
-        private void CopyFullPathCommand()
+        private void CopyFullPath()
         {
             Clipboard.SetText(SolutionViewSelectedItem.Uid);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从资源管理器打开
         /// </summary>
-        private void OpenWithResourceManagementCommand()
+        private void OpenWithResourceManagement()
         {
             if (File.Exists(SolutionViewSelectedItem.Uid))
                 OpenFolderThenSelectFiles.ExplorerFile(SolutionViewSelectedItem.Uid);
@@ -933,10 +906,11 @@ namespace cbhk.Generators.DataPackGenerator
                 Process.Start("explorer.exe",SolutionViewSelectedItem.Uid);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从项目中排除
         /// </summary>
-        private void ExcludeFromProjectCommand()
+        private void ExcludeFromProject()
         {
             #region 编辑区对应标签页改为未保存
             foreach (RichTabItems tab in FunctionModifyTabItems)
@@ -960,20 +934,22 @@ namespace cbhk.Generators.DataPackGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 在终端打开
         /// </summary>
-        private void OpenWithTerminalCommand()
+        private void OpenWithTerminal()
         {
             //TemplateItems templateItems = TreeViewItem.Header as TemplateItems;
             //if(Directory.Exists(templateItems.Uid))
             //Process.Start(@"explorer.exe", "cd " + templateItems.Uid);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 删除对象
         /// </summary>
-        private void DeleteCommand()
+        private void Delete()
         {
             #region 删除文件或文件夹
             if (Directory.Exists(SolutionViewSelectedItem.Uid))
@@ -983,13 +959,14 @@ namespace cbhk.Generators.DataPackGenerator
                 File.Delete(SolutionViewSelectedItem.Uid);
             #endregion
             //删除右侧树视图中对应的节点
-            ExcludeFromProjectCommand();
+            ExcludeFromProject();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 查看属性
         /// </summary>
-        private void AttributeCommand()
+        private void Attribute()
         {
 
         }

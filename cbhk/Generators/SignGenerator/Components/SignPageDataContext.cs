@@ -1,4 +1,5 @@
 ﻿using cbhk.CustomControls;
+using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.GenerateResultDisplayer;
@@ -10,6 +11,7 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,7 +24,7 @@ using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.SignGenerator.Components
 {
-    public class SignPageDataContext : ObservableObject
+    public partial class SignPageDataContext : ObservableObject
     {
         #region 字段
         public ObservableCollection<string> SignTypeSource { get; set; } = [];
@@ -30,8 +32,8 @@ namespace cbhk.Generators.SignGenerator.Components
         public string Result { get; set; } = "";
 
         #region 告示牌类型
-        private string selectedSignType = "";
-        public string SelectedSignType
+        private TextComboBoxItem selectedSignType;
+        public TextComboBoxItem SelectedSignType
         {
             get => selectedSignType;
             set
@@ -39,7 +41,7 @@ namespace cbhk.Generators.SignGenerator.Components
                 SetProperty(ref selectedSignType, value);
                 if (value == null)
                     return;
-                SignPanelSource = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\"+SelectedSignType+"SignPanel.png",UriKind.Absolute));
+                SignPanelSource = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\"+SelectedSignType.Text+"SignPanel.png",UriKind.Absolute));
             }
         }
         #endregion
@@ -53,23 +55,60 @@ namespace cbhk.Generators.SignGenerator.Components
         }
         #endregion
 
+        #region 生成方式
+        private bool setblock;
+
+        public bool Setblock
+        {
+            get => setblock;
+            set => SetProperty(ref setblock, value);
+        }
+        #endregion
+
         #region 已选择的版本
-        private string selectedVersion = "";
-        public string SelectedVersion
+        private TextComboBoxItem selectedVersion;
+        public TextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
             set
             {
                 SetProperty(ref selectedVersion,value);
+                CurrentMinVersion = int.Parse(selectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
                 VersionMask();
+            }
+        }
+
+        private int currentMinVersion = 1202;
+        public int CurrentMinVersion
+        {
+            get => currentMinVersion;
+            set => currentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
+        }
+        #endregion
+
+        #region 是否有低版本样式
+        private bool isNoStyleText;
+
+        public bool IsNoStyleText
+        {
+            get => isNoStyleText;
+            set
+            {
+                SetProperty(ref isNoStyleText, value);
+                if (!IsNoStyleText)
+                    Setblock = false;
             }
         }
         #endregion
 
-        /// <summary>
-        /// 版本数据源
-        /// </summary>
-        public ObservableCollection<string> VersionSource { get; set; } = ["1.13-","1.14~1.16","1.17~1.19.3", "1.19.4","1.20+"];
+        #region 版本数据源
+        public ObservableCollection<TextComboBoxItem> versionSource = [];
+        public ObservableCollection<TextComboBoxItem> VersionSource
+        {
+            get => versionSource;
+            set => SetProperty(ref versionSource, value);
+        }
+        #endregion
 
         /// <summary>
         /// 不同版本拥有的类型映射图
@@ -77,18 +116,22 @@ namespace cbhk.Generators.SignGenerator.Components
         private Dictionary<string, List<string>> TypeVersionMap = [];
 
         #region 告示牌类型数据源
-        public ObservableCollection<string> typeSource = [];
-        public ObservableCollection<string> TypeSource
-        {
-            get => typeSource;
-            set => SetProperty(ref typeSource, value);
-        }
+        public ObservableCollection<TextComboBoxItem> TypeSource { get; set; } = [];
         #endregion
 
         /// <summary>
         /// 正反面文档
         /// </summary>
         public ObservableCollection<EnabledFlowDocument> SignDocuments { get; set; } = [new EnabledFlowDocument(),new EnabledFlowDocument()];
+
+        /// <summary>
+        /// 需要适应版本变化的特指数据所属控件的事件
+        /// </summary>
+        public Dictionary<FrameworkElement, Action<FrameworkElement, RoutedEventArgs>> VersionNBTList = [];
+        /// <summary>
+        /// 版本控件
+        /// </summary>
+        public List<IVersionUpgrader> VersionComponents { get; set; } = [];
 
         /// <summary>
         /// 告示牌编辑器
@@ -99,17 +142,6 @@ namespace cbhk.Generators.SignGenerator.Components
         /// 事件设置控件
         /// </summary>
         TextEvent EventComponent = new() { };
-
-        #region 给予或设置
-        private bool give;
-
-        public bool Give
-        {
-            get => give;
-            set => SetProperty(ref give,value);
-        }
-
-        #endregion
 
         #region 是否被裱
         public bool isWaxed = true;
@@ -139,7 +171,7 @@ namespace cbhk.Generators.SignGenerator.Components
             set
             {
                 SetProperty(ref selectionColor, value);
-                SetColorCommand();
+                SetColor();
             }
         }
         #endregion
@@ -159,7 +191,7 @@ namespace cbhk.Generators.SignGenerator.Components
         #endregion
 
         #region 能否悬挂
-        private bool canHanging = false;
+        private bool canHanging = true;
         public bool CanHanging
         {
             get => canHanging;
@@ -228,17 +260,6 @@ namespace cbhk.Generators.SignGenerator.Components
 
         #endregion
 
-        #region 运行、保存等命令
-        public RelayCommand Save { get; set; }
-        public RelayCommand Run { get; set; }
-        public RelayCommand SetBold { get; set; }
-        public RelayCommand SetItalic { get; set; }
-        public RelayCommand SetUnderlined { get; set; }
-        public RelayCommand SetStrikethrough { get; set; }
-        public RelayCommand SetObfuscated { get; set; }
-        public RelayCommand Reset { get; set; }
-        #endregion
-
         #region 普通字体与混淆字体
         string commonFontFamily = "Microsoft YaHei UI";
         string obfuscatedFontFamily = "Bitstream Vera Sans Mono";
@@ -266,37 +287,34 @@ namespace cbhk.Generators.SignGenerator.Components
 
         public SignPageDataContext()
         {
-            #region 链接命令
-            Save = new(SaveCommand);
-            Run = new(RunCommand);
-            SetBold = new(SetBoldCommand);
-            SetItalic = new(SetItalicCommand);
-            SetUnderlined = new(SetUnderlinedCommand);
-            SetStrikethrough = new(SetStrikethoughCommand);
-            SetObfuscated = new(SetObfuscatedCommand);
-            Reset = new(ResetCommand);
-            #endregion
-            #region 设置版本
-            SelectedVersion = VersionSource[^1];
-            #endregion
             #region 处理正反面文档
             SignPanelSource = new()
             {
                 CacheOption = BitmapCacheOption.OnLoad
             };
-            //SignDocuments[0].Sections.Add(new Section());
-            //SignDocuments[1].Sections.Add(new Section());
             for (int i = 0; i < 4; i++)
             {
                 SignDocuments[0].Blocks.Add(new RichParagraph() { FontFamily = new FontFamily(commonFontFamily), FontSize = 40, TextAlignment = TextAlignment.Center, Margin = new(0, 2.5, 0, 2.5) });
                 SignDocuments[1].Blocks.Add(new RichParagraph() { FontFamily = new FontFamily(commonFontFamily), FontSize = 40, TextAlignment = TextAlignment.Center, Margin = new(0, 2.5, 0, 2.5) });
             }
             #endregion
+        }
+
+        /// <summary>
+        /// 载入告示牌页面
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void SignPage_Loaded(object sender,RoutedEventArgs e)
+        {
+            SignDataContext signDataContext = Window.GetWindow(sender as SignPage).DataContext as SignDataContext;
+            VersionSource = signDataContext.VersionSource;
+
             #region 异步载入告示牌类型和版本映射图
             //载入进程锁
             object tagItemsLock = new();
             BindingOperations.EnableCollectionSynchronization(SignTypeSource, tagItemsLock);
-            Task.Run(async () =>
+            await Task.Run(async () =>
             {
                 DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
                 DataTable ItemTable = await dataCommunicator.GetData("SELECT * FROM SignTypes");
@@ -314,12 +332,57 @@ namespace cbhk.Generators.SignGenerator.Components
                 }
                 typeSource.Sort();
                 foreach (var item in typeSource)
-                    TypeSource.Add(item);
+                    TypeSource.Add(new TextComboBoxItem() { Text = item });
             });
             #endregion
         }
 
-        private void SetBoldCommand()
+        public void SignID_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            FrameworkElement frameworkElement = sender as FrameworkElement;
+            RichTabItems richTabItems = frameworkElement.FindParent<SignPage>().Parent as RichTabItems;
+            richTabItems.Header = SelectedSignType.Text;
+        }
+
+        public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            CancellationTokenSource cancellationTokenSource = new();
+            CancellationToken cancellationToken = new();
+            await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
+            {
+                if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 113)
+                {
+                    StylizedTextBox stylizedTextBox = VersionComponents[i] as StylizedTextBox;
+                    if (stylizedTextBox.richTextBox.Document.Blocks.Count > 0)
+                    {
+                        Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
+                        if (paragraph.Inlines.Count > 0)
+                        {
+                            RichRun richRun = paragraph.Inlines.FirstInline as RichRun;
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                IsNoStyleText = richRun.Text.Trim().Length > 0;
+                            });
+                        }
+                        else
+                            IsNoStyleText = false;
+                    }
+                    else
+                        IsNoStyleText = false;
+                }
+                else
+                    IsNoStyleText = true;
+                await VersionComponents[i].Upgrade(CurrentMinVersion);
+            });
+            await Parallel.ForEachAsync(VersionNBTList, async (item, cancellationToken) =>
+            {
+                await Task.Delay(0, cancellationToken);
+                item.Value.Invoke(item.Key, null);
+            });
+        }
+
+        [RelayCommand]
+        private void SetBold()
         {
             if (SignTextEditor.Selection == null || SignTextEditor.Selection.Text.Length == 0)
                 return;
@@ -330,7 +393,8 @@ namespace cbhk.Generators.SignGenerator.Components
                 textRange.ApplyPropertyValue(TextBlock.FontWeightProperty, FontWeights.Normal);
         }
 
-        private void SetItalicCommand()
+        [RelayCommand]
+        private void SetItalic()
         {
             if (SignTextEditor.Selection == null || SignTextEditor.Selection.Text.Length == 0)
                 return;
@@ -341,7 +405,8 @@ namespace cbhk.Generators.SignGenerator.Components
                 textRange.ApplyPropertyValue(TextBlock.FontStyleProperty, FontStyles.Normal);
         }
 
-        private void SetUnderlinedCommand()
+        [RelayCommand]
+        private void SetUnderlined()
         {
             if (SignTextEditor.Selection == null || SignTextEditor.Selection.Text.Length == 0)
                 return;
@@ -371,7 +436,8 @@ namespace cbhk.Generators.SignGenerator.Components
                 textRange.ApplyPropertyValue(TextBlock.TextDecorationsProperty, TextDecorations.Baseline);
         }
 
-        private void SetStrikethoughCommand()
+        [RelayCommand]
+        private void SetStrikethough()
         {
             if (SignTextEditor.Selection == null || SignTextEditor.Selection.Text.Length == 0)
                 return;
@@ -397,7 +463,8 @@ namespace cbhk.Generators.SignGenerator.Components
                 textRange.ApplyPropertyValue(TextBlock.TextDecorationsProperty, TextDecorations.Strikethrough);
         }
 
-        private void SetObfuscatedCommand()
+        [RelayCommand]
+        private void SetObfuscated()
         {
             if (SignTextEditor.Selection == null) return;
             if (SignTextEditor.Selection.Text.Length == 0) return;
@@ -534,7 +601,8 @@ namespace cbhk.Generators.SignGenerator.Components
             }
         }
 
-        private void ResetCommand()
+        [RelayCommand]
+        private void Reset()
         {
             if (SignTextEditor.Selection.End.Parent is RichRun end_run && SignTextEditor.Selection.Start.Parent is RichRun start_run)
             {
@@ -594,7 +662,8 @@ namespace cbhk.Generators.SignGenerator.Components
             }
         }
 
-        private void SetColorCommand()
+        [RelayCommand]
+        private void SetColor()
         {
             TextRange textRange = new(SignTextEditor.Selection.Start, SignTextEditor.Selection.End);
             textRange.ApplyPropertyValue(TextBlock.ForegroundProperty, SelectionColor);
@@ -792,21 +861,23 @@ namespace cbhk.Generators.SignGenerator.Components
             SignTextEditor.Document = IsBack ? SignDocuments[1] : SignDocuments[0];
         }
 
+        [RelayCommand]
         /// <summary>
         /// 保存告示牌
         /// </summary>
-        private void SaveCommand()
+        private void Save()
         {
         }
 
+        [RelayCommand]
         /// <summary>
         /// 生成告示牌
         /// </summary>
-        public void RunCommand()
+        public void Run()
         {
             StringBuilder frontResult = new();
             StringBuilder backResult = new();
-            bool IsOrBigger1_20 = SelectedVersion == "1.20+";
+            bool IsOrBigger1_20 = SelectedVersion.Text == "1.20.0";
             if (IsOrBigger1_20)
             {
                 frontResult.Append("messages:[");
@@ -896,16 +967,16 @@ namespace cbhk.Generators.SignGenerator.Components
             else
                 Result = frontResult.ToString();
 
-            if(Give)
+            if(Setblock)
             {
-                if (SelectedVersion != "1.13-")
+                if (CurrentMinVersion >= 1130)
                     Result = "/give @p " + signId + "{BlockEntityTag:{" + Result + "}}";
                 else
                     Result = "/give @p standing_sign 1 0" + "{BlockEntityTag:{" + Result + "}}";
             }
             else
             {
-                if (SelectedVersion != "1.13-")
+                if (CurrentMinVersion >= 1130)
                     Result = "/setblock ~ ~1 ~ " + signId + "{" + Result + "}";
                 else
                     Result = "/setblock ~ ~1 ~ standing_sign {" + Result + "}";
@@ -929,15 +1000,13 @@ namespace cbhk.Generators.SignGenerator.Components
         private void VersionMask()
         {
             CanWaxed = HaveBackFace = CanGlowing = CanHanging = false;
-            switch (SelectedVersion)
-            {
-                case "1.17~1.19.3":
-                    CanGlowing = CanHanging = true;
-                    break;
-            }
-            if(SelectedVersion == VersionSource[^1])
+            if(CurrentMinVersion >= 1193)
+            CanGlowing = CanHanging = true;
+            if(CurrentMinVersion >= 117)
+            CanGlowing = true;
+            if(SelectedVersion == VersionSource[0])
                 CanWaxed = HaveBackFace = CanGlowing = CanHanging = true;
-            VersionTypesFilter(SelectedVersion);
+            VersionTypesFilter(SelectedVersion.Text);
         }
 
         /// <summary>
@@ -963,14 +1032,14 @@ namespace cbhk.Generators.SignGenerator.Components
                         itemCopy = itemCopy.Replace(".", "").Split('~')[1];
                     if (currentVersion.Contains('~'))
                         currentVersion = currentVersion.Split('~')[1];
-                    if (int.Parse(itemCopy) <= int.Parse(currentVersion) || VersionSource[^1].Contains(version))
+                    if (int.Parse(itemCopy) <= int.Parse(currentVersion) || VersionSource[^1].Text.Contains(version))
                         for (int i = 0; i < item.Value.Count; i++)
                             Result.Add(item.Value[i]);
                 }
             }
             Result.Sort();
             foreach (var item in Result)
-                TypeSource.Add(item);
+                TypeSource.Add(new TextComboBoxItem(){ Text = item });
             SelectedSignType = TypeSource[0];
         }
 

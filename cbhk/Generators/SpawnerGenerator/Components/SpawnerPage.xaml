@@ -23,6 +23,12 @@
         <ImageBrush x:Key="Save" ImageSource="/cbhk;component/resources/common/images/Save.png" />
     </UserControl.Resources>
 
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:CallMethodAction MethodName="SpawnerPage_Loaded" TargetObject="{Binding}" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="25" />
@@ -36,7 +42,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource RightArrow}"
                 BorderThickness="0"
-                Command="{Binding Run}"
+                Command="{Binding RunCommand}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
@@ -45,6 +51,25 @@
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
+                        Foreground="White" />
+                </CustomControls:IconTextButtons.ToolTip>
+            </CustomControls:IconTextButtons>
+            <CustomControls:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource Save}"
+                BorderThickness="0"
+                Command="{Binding SaveCommand}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControls:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="保存"
                         Foreground="White" />
                 </CustomControls:IconTextButtons.ToolTip>
             </CustomControls:IconTextButtons>
@@ -61,25 +86,6 @@
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
                 Style="{DynamicResource TextComboBoxStyle}" />
-            <CustomControls:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource Save}"
-                BorderThickness="0"
-                Command="{Binding Save}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
-                ToolTipService.BetweenShowDelay="0"
-                ToolTipService.InitialShowDelay="0">
-                <CustomControls:IconTextButtons.ToolTip>
-                    <ToolTip
-                        Background="#484848"
-                        Content="保存"
-                        Foreground="White" />
-                </CustomControls:IconTextButtons.ToolTip>
-            </CustomControls:IconTextButtons>
             <CustomControls:RadiusToggleButtons
                 Foreground="White"
                 IsChecked="{Binding ShowResult, Mode=TwoWay}"
@@ -97,7 +103,7 @@
             <Grid Grid.Row="0">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="Loaded">
-                        <behavior:CallMethodAction MethodName="ComponentsGridLoaded" TargetObject="{Binding}" />
+                        <behavior:CallMethodAction MethodName="ComponentsGrid_Loaded" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
                 <Grid.ColumnDefinitions>

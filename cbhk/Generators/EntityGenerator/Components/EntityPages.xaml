@@ -11,7 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignWidth="950"
     mc:Ignorable="d">
 
     <behavior:Interaction.Triggers>
@@ -96,7 +96,7 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 IsReadOnly="True"
-                ItemsSource="{Binding VersionSource, Mode=TwoWay}"
+                ItemsSource="{Binding VersionSource, Mode=OneWay}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
                 Style="{DynamicResource TextComboBoxStyle}">
@@ -113,13 +113,13 @@
                 Foreground="White"
                 Text="ID" />
             <ComboBox
-                Width="180"
+                Width="235"
                 Height="25"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
                 Foreground="White"
-                ItemsSource="{Binding EntityIds, Mode=TwoWay}"
+                ItemsSource="{Binding EntityIDList, Mode=OneWay}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedEntityId, Mode=TwoWay}"
                 Style="{DynamicResource IconComboBoxStyle}" />
@@ -134,8 +134,8 @@
                 IsChecked="{Binding Give, Mode=TwoWay}"
                 SelectedToggleText="给予"
                 Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
+                ToggleHeight="26"
+                ToggleWidth="46"
                 UnSelectedToggleText="召唤" />
             <CustomControls:StereoToggleButton
                 HorizontalAlignment="Left"
@@ -155,33 +155,6 @@
                 TrueLeftBorderTexture="{StaticResource TextToggleButtonTrueLeftFrame}"
                 TrueRightBorderTexture="{StaticResource TextToggleButtonTrueRightFrame}"
                 TrueTopBorderTexture="{StaticResource TextToggleButtonTrueTopFrame}" />
-            <CustomControls:StereoTextButton
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
-                Background="#EFF2F1"
-                BorderThickness="4,2,4,5"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ClearUnnecessaryData}"
-                Content="冻结数据"
-                Foreground="Black"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                ToolTipService.BetweenShowDelay="0"
-                ToolTipService.InitialShowDelay="0"
-                TopBorderTexture="{StaticResource ButtonNormalTop}">
-                <CustomControls:StereoTextButton.ToolTip>
-                    <ToolTip
-                        Background="#2F2F2F"
-                        Content="点击后清除历史实体的特指数据"
-                        Foreground="White" />
-                </CustomControls:StereoTextButton.ToolTip>
-            </CustomControls:StereoTextButton>
             <TextBlock
                 Margin="2,0"
                 HorizontalAlignment="Left"

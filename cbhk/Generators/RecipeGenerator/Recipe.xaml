@@ -65,7 +65,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource LeftArrow}"
                 BorderThickness="0"
-                Command="{Binding Return}"
+                Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local_window:CommonWindow}}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
@@ -86,7 +86,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource RightArrow}"
                 BorderThickness="0"
-                Command="{Binding Run}"
+                Command="{Binding RunCommand}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
@@ -117,7 +117,7 @@
                     <MenuItem
                         Uid="crafting_table"
                         Background="#424242"
-                        Command="{Binding AddRecipe}"
+                        Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
                         Header="工作台">
@@ -130,7 +130,7 @@
                     <MenuItem
                         Uid="furnace"
                         Background="#424242"
-                        Command="{Binding AddRecipe}"
+                        Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
                         Header="熔炉">
@@ -143,7 +143,7 @@
                     <MenuItem
                         Uid="smoker"
                         Background="#424242"
-                        Command="{Binding AddRecipe}"
+                        Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
                         Header="烟熏炉">
@@ -156,7 +156,7 @@
                     <MenuItem
                         Uid="blast_furnace"
                         Background="#424242"
-                        Command="{Binding AddRecipe}"
+                        Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
                         Header="高炉">
@@ -169,7 +169,7 @@
                     <MenuItem
                         Uid="campfire"
                         Background="#424242"
-                        Command="{Binding AddRecipe}"
+                        Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
                         Header="篝火">
@@ -182,7 +182,7 @@
                     <MenuItem
                         Uid="smithing_table"
                         Background="#424242"
-                        Command="{Binding AddRecipe}"
+                        Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
                         Header="锻造台">
@@ -195,7 +195,7 @@
                     <MenuItem
                         Uid="stonecutter"
                         Background="#424242"
-                        Command="{Binding AddRecipe}"
+                        Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
                         Header="切石机">
@@ -316,12 +316,13 @@
                 </MenuItem>
             </Menu>
             <CustomControls:StereoTextButton
-                Height="35"
+                Margin="0,0,0,3"
                 HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
                 Background="#EFF2F1"
-                BorderThickness="4,4,4,8"
+                BorderThickness="4,3,4,8"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ImportFromClipboard}"
+                Command="{Binding ImportFromClipboardCommand}"
                 Content="从剪切板导入"
                 FontSize="15"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
@@ -334,12 +335,13 @@
                 Style="{DynamicResource StereoTextButton}"
                 TopBorderTexture="{StaticResource ButtonNormalTop}" />
             <CustomControls:StereoTextButton
-                Height="35"
+                Margin="0,0,0,3"
                 HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
                 Background="#EFF2F1"
                 BorderThickness="4,4,4,8"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ImportFromFile}"
+                Command="{Binding ImportFromFileCommand}"
                 Content="从文件导入"
                 FontSize="15"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
@@ -473,10 +475,10 @@
                             <ItemsPanelTemplate>
                                 <VirtualizingWrapPanel:VirtualizingWrapPanel
                                     Background="#555956"
-                                    ScrollViewer.CanContentScroll="True"
                                     VirtualizingPanel.CacheLength="200 200"
                                     VirtualizingPanel.CacheLengthUnit="Pixel"
-                                    VirtualizingPanel.IsVirtualizing="True" />
+                                    VirtualizingPanel.IsVirtualizing="True"
+                                    VirtualizingPanel.ScrollUnit="Pixel" />
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
@@ -534,12 +536,12 @@
                         VirtualizingPanel.VirtualizationMode="Recycling">
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <VirtualizingWrapPanel:VirtualizingWrapPanel
+                                <VirtualizingWrapPanel:VirtualizingWrapPanelWithItemExpansion
                                     Background="#555956"
-                                    ScrollViewer.CanContentScroll="True"
                                     VirtualizingPanel.CacheLength="200 200"
                                     VirtualizingPanel.CacheLengthUnit="Pixel"
-                                    VirtualizingPanel.IsVirtualizing="True" />
+                                    VirtualizingPanel.IsVirtualizing="True"
+                                    VirtualizingPanel.ScrollUnit="Pixel" />
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>

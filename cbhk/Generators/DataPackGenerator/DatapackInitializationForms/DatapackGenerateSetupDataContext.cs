@@ -1,4 +1,5 @@
-﻿using cbhk.GeneralTools.MessageTip;
+﻿using cbhk.CustomControls;
+using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.DataPackGenerator.Components;
 using cbhk.Generators.DataPackGenerator.Components.EditPage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,6 +11,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
@@ -19,14 +21,8 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
     /// <summary>
     /// 属性设置窗体逻辑处理
     /// </summary>
-    public class DatapackGenerateSetupDataContext: ObservableObject
+    public partial class DatapackGenerateSetupDataContext: ObservableObject
     {
-        #region 属性设置窗体:上一步、下一步和设置路径等指令
-        public RelayCommand<FrameworkElement> AttributeLastStep { get; set; }
-        public RelayCommand<FrameworkElement> AttributeNextStep { get; set; }
-        public RelayCommand SetSolutionPath { get; set; }
-        #endregion
-
         #region 存储解决方案的名称
         private string solutionName = "Datapack";
         public string SolutionName
@@ -63,7 +59,7 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
 
         #region 生成路径、描述等数据
         public string SolutionTemplatePath = "";
-        public ObservableCollection<string> GeneratorPathList { get; set; } = [];
+        public ObservableCollection<TextComboBoxItem> GeneratorPathList { get; set; } = [];
         public string Description { get; set; } = "";
 
         private readonly string DatapackGeneratorFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Datapack\\data\\GeneratorPathes.ini";
@@ -75,22 +71,18 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
 
         public DatapackGenerateSetupDataContext()
         {
-            #region 链接指令
-            AttributeLastStep = new RelayCommand<FrameworkElement>(AttributeLastStepCommand);
-            AttributeNextStep = new RelayCommand<FrameworkElement>(AttributeNextStepCommand);
-            SetSolutionPath = new RelayCommand(SetSolutionPathCommand);
-            #endregion
             #region 初始化数据
             List<string> generatorList = [.. File.ReadAllLines(DatapackGeneratorFilePath)];
             foreach (var item in generatorList)
-                GeneratorPathList.Add(item);
+                GeneratorPathList.Add(new TextComboBoxItem() { Text = item });
             #endregion
         }
 
+        [RelayCommand]
         /// <summary>
         /// 设置解决方案的路径
         /// </summary>
-        private void SetSolutionPathCommand()
+        private void SetSolutionPath()
         {
             OpenFolderDialog openFolderDialog = new()
             {
@@ -107,23 +99,24 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
                     SelectedSolutionPath = selectedPath;
                     if (GeneratorPathList.Count > 0)
                     {
-                        if (!GeneratorPathList.Contains(selectedPath))
+                        if (GeneratorPathList.Any(item => item.Text == selectedPath))
                         {
-                            GeneratorPathList.Insert(0,selectedPath);
+                            GeneratorPathList.Insert(0, new TextComboBoxItem() { Text = selectedPath });
                             if (GeneratorPathList.Count > 100)
                                 GeneratorPathList.Remove(GeneratorPathList.Last());
                         }
                     }
                     else
-                        GeneratorPathList.Insert(0,selectedPath);
+                        GeneratorPathList.Insert(0, new TextComboBoxItem() { Text = selectedPath });
                 }
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 属性设置窗体进入下一步
         /// </summary>
-        private async void AttributeNextStepCommand(FrameworkElement ele)
+        private async Task AttributeNextStep(FrameworkElement ele)
         {
             #region 解决方案无名称不生成
             if (SolutionName.Trim().Length == 0 || GeneratorPathList.Count == 0)
@@ -198,16 +191,17 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
             }
             #endregion
             #region 把当前生成路径集合写入指定文件
-            await File.WriteAllLinesAsync(DatapackGeneratorFilePath, GeneratorPathList);
+            await File.WriteAllLinesAsync(DatapackGeneratorFilePath, GeneratorPathList.Select(item=>item.Text));
             #endregion
             //导航到编辑页
             NavigationService.GetNavigationService(context.frame).Navigate(context.editPage);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 属性设置窗体进入上一步
         /// </summary>
-        private void AttributeLastStepCommand(FrameworkElement ele)
+        private void AttributeLastStep(FrameworkElement ele)
         {
             //返回模板选择页
             Datapack datapack = Window.GetWindow(ele) as Datapack;

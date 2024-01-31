@@ -46,7 +46,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource LeftArrow}"
                 BorderThickness="0"
-                Command="{Binding Return}"
+                Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local_window:CommonWindow}}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
@@ -66,7 +66,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource RightArrow}"
                 BorderThickness="0"
-                Command="{Binding Run}"
+                Command="{Binding RunCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local_window:CommonWindow}}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
@@ -86,7 +86,7 @@
                 VerticalContentAlignment="Center"
                 Background="{StaticResource SaveAll}"
                 BorderThickness="0"
-                Command="{Binding SaveAll}"
+                Command="{Binding SaveAllCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local_window:CommonWindow}}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
@@ -102,28 +102,28 @@
             <CustomControls:IconTextButtons
                 Padding="5"
                 Background="{DynamicResource ButtonNormal}"
-                Command="{Binding AddSpawner}"
+                Command="{Binding AddSpawnerCommand}"
                 Content="添加"
                 PressedBackground="{DynamicResource ButtonPressed}"
                 Style="{DynamicResource IconTextButton}" />
             <CustomControls:IconTextButtons
                 Padding="5"
                 Background="{DynamicResource ButtonNormal}"
-                Command="{Binding ClearSpawner}"
+                Command="{Binding ClearSpawnerCommand}"
                 Content="清除"
                 PressedBackground="{DynamicResource ButtonPressed}"
                 Style="{DynamicResource IconTextButton}" />
             <CustomControls:IconTextButtons
                 Padding="5"
                 Background="{DynamicResource ButtonNormal}"
-                Command="{Binding ImportFromClipboard}"
+                Command="{Binding ImportFromClipboardCommand}"
                 Content="从剪切板导入"
                 PressedBackground="{DynamicResource ButtonPressed}"
                 Style="{DynamicResource IconTextButton}" />
             <CustomControls:IconTextButtons
                 Padding="5"
                 Background="{DynamicResource ButtonNormal}"
-                Command="{Binding ImportFromFile}"
+                Command="{Binding ImportFromFileCommand}"
                 Content="从文件导入"
                 PressedBackground="{DynamicResource ButtonPressed}"
                 Style="{DynamicResource IconTextButton}" />

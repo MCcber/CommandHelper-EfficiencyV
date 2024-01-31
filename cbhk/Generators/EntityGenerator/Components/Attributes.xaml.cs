@@ -29,7 +29,9 @@ namespace cbhk.Generators.EntityGenerator.Components
                 string result = "";
                 string SelectedName = AttributeName.SelectedValue.ToString();
                 if(SelectedName.Length > 0)
-                result = "{Base: " + Base.Value + "d" + (AttributeModifiersSource.Count > 0 ? ",Modifiers:[" + string.Join(',', AttributeModifiersSource.Select(item => (item as IVersionUpgrader).Result())) + "]" : "") + ",Name:\"" + SelectedName[(SelectedName.IndexOf(':') + 1)..SelectedName.LastIndexOf(':')] + "\"}";
+                {
+                    result = "{Base: " + Base.Value + "d" + (AttributeModifiersSource.Count > 0 ? ",Modifiers:[" + string.Join(',', AttributeModifiersSource.Select(item => (item as IVersionUpgrader).Result().Result)) + "]" : "") + ",Name:\"" + SelectedName[(SelectedName.IndexOf(':') + 1)..SelectedName.LastIndexOf(':')] + "\"}";
+                }
                 return result;
             }
         }

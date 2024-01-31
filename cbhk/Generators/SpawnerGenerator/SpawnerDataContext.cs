@@ -19,18 +19,8 @@ using System.Windows.Media;
 
 namespace cbhk.Generators.SpawnerGenerator
 {
-    public class SpawnerDataContext: ObservableObject
+    public partial class SpawnerDataContext: ObservableObject
     {
-        #region 返回和运行等指令
-        public RelayCommand<CommonWindow> Return { get; set; }
-        public RelayCommand Run { get; set; }
-        public RelayCommand SaveAll { get; set; }
-        public RelayCommand AddSpawner { get; set; }
-        public RelayCommand ClearSpawner { get; set; }
-        public RelayCommand ImportFromFile { get; set; }
-        public RelayCommand ImportFromClipboard { get; set; }
-        #endregion
-
         #region 存储结果
         public StringBuilder Result { get; set; }
         #endregion
@@ -45,13 +35,10 @@ namespace cbhk.Generators.SpawnerGenerator
         #endregion
 
         #region 选中版本以及版本数据源
-        private string selectedVersion = "1.13+";
-        public string SelectedVersion
-        {
-            get => selectedVersion;
-            set => SetProperty(ref selectedVersion, value);
-        }
-        public ObservableCollection<string> VersionSource { get; set; } = ["1.13+","1.12-"];
+        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+            new TextComboBoxItem() { Text = "1.13.0" },
+            new TextComboBoxItem() { Text = "1.12.0" }
+        ];
         #endregion
 
         #region 字段与引用
@@ -90,25 +77,16 @@ namespace cbhk.Generators.SpawnerGenerator
 
         public SpawnerDataContext()
         {
-            #region 绑定指令
-            Return = new RelayCommand<CommonWindow>(return_command);
-            Run = new RelayCommand(run_command);
-            SaveAll = new RelayCommand(SaveAllCommand);
-            AddSpawner = new RelayCommand(AddSpawnerCommand);
-            ClearSpawner = new RelayCommand(ClearSpawnerCommand);
-            ImportFromClipboard = new RelayCommand(ImportFromClipboardCommand);
-            ImportFromFile = new RelayCommand(ImportFromFileCommand);
-            #endregion
-
             #region 初始化数据
             SpawnerPages[0].Content = new SpawnerPage() { FontWeight = FontWeights.Normal };
             #endregion
         }
 
+        [RelayCommand]
         /// <summary>
         /// 添加刷怪笼
         /// </summary>
-        private void AddSpawnerCommand()
+        private void AddSpawner()
         {
             RichTabItems richTabItems = new()
             {
@@ -132,27 +110,30 @@ namespace cbhk.Generators.SpawnerGenerator
             SelectedItem = richTabItems;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 清空刷怪笼
         /// </summary>
-        private void ClearSpawnerCommand()
+        private void ClearSpawner()
         {
             SpawnerPages.Clear();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从剪切板导入刷怪笼
         /// </summary>
-        private void ImportFromClipboardCommand()
+        private void ImportFromClipboard()
         {
             ObservableCollection<RichTabItems> items = SpawnerPages;
             ExternalDataImportManager.ImportSpawnerDataHandler(Clipboard.GetText(),ref items,false);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从文件导入刷怪笼
         /// </summary>
-        private void ImportFromFileCommand()
+        private void ImportFromFile()
         {
             Microsoft.Win32.OpenFileDialog openFileDialog = new()
             {
@@ -171,11 +152,12 @@ namespace cbhk.Generators.SpawnerGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void return_command(CommonWindow win)
+        private void Return(CommonWindow win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -184,10 +166,11 @@ namespace cbhk.Generators.SpawnerGenerator
             win.Close();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 执行生成
         /// </summary>
-        private void run_command()
+        private void Run()
         {
             Result = new();
             //await Task.Run(() =>
@@ -197,7 +180,7 @@ namespace cbhk.Generators.SpawnerGenerator
                     SpawnerPage spawnerPage = item.Content as SpawnerPage;
                     SpawnerPageDataContext context = spawnerPage.DataContext as SpawnerPageDataContext;
                     context.ShowResult = false;
-                    context.run_command();
+                    context.Run();
                     Result.Append(context.Result + "\r\n");
                 }
             //});
@@ -218,10 +201,11 @@ namespace cbhk.Generators.SpawnerGenerator
             #endregion
         }
 
+        [RelayCommand]
         /// <summary>
         /// 保存所有刷怪笼
         /// </summary>
-        private async void SaveAllCommand()
+        private async Task SaveAll()
         {
             List<string> Results = [];
             await Task.Run(() =>
@@ -233,7 +217,7 @@ namespace cbhk.Generators.SpawnerGenerator
                         SpawnerPage spawnerPage = item.Content as SpawnerPage;
                         SpawnerPageDataContext context = spawnerPage.DataContext as SpawnerPageDataContext;
                         context.ShowResult = false;
-                        context.run_command();
+                        context.Run();
                         Results.Add(context.Result);
                     });
                 }

@@ -12,15 +12,12 @@
     d:DesignWidth="800"
     Cursor="Hand"
     mc:Ignorable="d">
-    <behavior:Interaction.Triggers>
-        <behavior:EventTrigger EventName="MouseEnter">
-            <behavior:CallMethodAction MethodName="Grid_MouseEnter" TargetObject="{Binding}" />
-        </behavior:EventTrigger>
-        <behavior:EventTrigger EventName="MouseLeave">
-            <behavior:CallMethodAction MethodName="Grid_MouseLeave" TargetObject="{Binding}" />
-        </behavior:EventTrigger>
-    </behavior:Interaction.Triggers>
-    <Grid Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=CustomControls:RichTreeViewItems}, Path=ActualWidth}" Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=CustomControls:RichTreeViewItems}, Path=ActualHeight}">
+
+    <Grid
+        Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=CustomControls:RichTreeViewItems}, Path=ActualWidth}"
+        Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=CustomControls:RichTreeViewItems}, Path=ActualHeight}"
+        MouseEnter="Grid_MouseEnter"
+        MouseLeave="Grid_MouseLeave">
         <Grid.Style>
             <Style TargetType="{x:Type Grid}">
                 <Style.Triggers>
@@ -95,18 +92,10 @@
             Height="Auto"
             Margin="10,0,20,0"
             HorizontalAlignment="Right"
-            VerticalAlignment="Center">
-            <behavior:Interaction.Triggers>
-                <behavior:EventTrigger EventName="MouseLeftButtonUp">
-                    <behavior:CallMethodAction MethodName="Border_MouseLeftButtonUp" TargetObject="{Binding}" />
-                </behavior:EventTrigger>
-                <behavior:EventTrigger EventName="MouseEnter">
-                    <behavior:CallMethodAction MethodName="Border_MouseEnter" TargetObject="{Binding}" />
-                </behavior:EventTrigger>
-                <behavior:EventTrigger EventName="MouseLeave">
-                    <behavior:CallMethodAction MethodName="Border_MouseLeave" TargetObject="{Binding}" />
-                </behavior:EventTrigger>
-            </behavior:Interaction.Triggers>
+            VerticalAlignment="Center"
+            MouseEnter="Border_MouseEnter"
+            MouseLeave="Border_MouseLeave"
+            MouseLeftButtonUp="Border_MouseLeftButtonUp">
             <Border.Style>
                 <Style TargetType="{x:Type Border}">
                     <Style.Triggers>

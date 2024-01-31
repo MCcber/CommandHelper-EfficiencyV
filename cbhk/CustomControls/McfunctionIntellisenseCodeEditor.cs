@@ -71,7 +71,6 @@ namespace cbhk.CustomControls
         /// 补全框与它的显示状态
         /// </summary>
         public bool isCompletionWindowShowing = true;
-
         public bool IsCompletionWindowShowing
         {
             get => isCompletionWindowShowing;
@@ -79,9 +78,13 @@ namespace cbhk.CustomControls
             {
                 isCompletionWindowShowing = value;
                 if (isCompletionWindowShowing)
+                {
                     completionWindow.Show();
+                }
                 else
+                {
                     completionWindow.Close();
+                }
             }
         }
 
@@ -161,7 +164,6 @@ namespace cbhk.CustomControls
         private static partial Regex IsWord();
         #endregion
 
-        #region 与服务器交流
         public McfunctionIntellisenseCodeEditor()
         {
             #region 设置属性、订阅事件
@@ -181,8 +183,6 @@ namespace cbhk.CustomControls
             #region 初始化补全框
             CompleteViewSource.Source = CompletedSource;
             CompleteViewSource.Filter += CompletedViewSource_Filter;
-            completionWindow = new(TextArea);
-            completionWindow.CompletionList.ListBox.ItemsSource = CompleteViewSource.View;
             #endregion
             //安装折叠管理器，设置语法高亮文件，初始化补全框
             Loaded += TextBox_Loaded;
@@ -200,6 +200,8 @@ namespace cbhk.CustomControls
 
             CompleteViewSource.Source = CompletedSource;
         }
+
+        #region 与服务器交流
 
         /// <summary>
         /// 接收数据
@@ -265,23 +267,27 @@ namespace cbhk.CustomControls
         /// </summary>
         private void InitAndShowCompletionWindow()
         {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                completionWindow = new(TextArea)
+                {
+                    Background = grayBrush,
+                    WindowStyle = WindowStyle.None,
+                    Style = null,
+                    ResizeMode = ResizeMode.NoResize,
+                    MaxHeight = 250,
+                    SizeToContent = SizeToContent.WidthAndHeight,
+                    CloseWhenCaretAtBeginning = true
+                };
+                completionWindow.CompletionList.ListBox.ItemsSource = CompleteViewSource.View;
+                completionWindow.PreviewKeyDown += CompletionWindow_PreviewKeyDown;
+            });
             if (CompletedSource is not null && CompletedSource.Count > 0 && DisplayCount > 0)
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     ScrollViewer.SetHorizontalScrollBarVisibility(completionWindow.CompletionList.ListBox, ScrollBarVisibility.Disabled);
                     ScrollViewer.SetVerticalScrollBarVisibility(completionWindow.CompletionList.ListBox, ScrollBarVisibility.Auto);
-                    completionWindow = new(TextArea)
-                    {
-                        Background = grayBrush,
-                        WindowStyle = WindowStyle.None,
-                        Style = null,
-                        ResizeMode = ResizeMode.NoResize,
-                        MaxHeight = 250,
-                        SizeToContent = SizeToContent.WidthAndHeight,
-                        CloseWhenCaretAtBeginning = true
-                    };
-                    completionWindow.PreviewKeyDown += CompletionWindow_PreviewKeyDown;
                     ListBox listBox = completionWindow.CompletionList.ListBox;
                     listBox.ItemsSource = CompleteViewSource.View;
                     CompleteViewSource.Source = CompletedSource;
@@ -1676,6 +1682,10 @@ namespace cbhk.CustomControls
         private void CompletedItemData_StatusUpdated(int CompletionLength)
         {
             communiteTokenSource.Cancel();
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                completionWindow = new(TextArea);
+            });
             IsCompletionWindowShowing = false;
             if (dataContext.CurrentCode.TrimStart().StartsWith('$') && CompletionLength > 0)
             {
@@ -2101,6 +2111,7 @@ namespace cbhk.CustomControls
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
+                            completionWindow = new(TextArea);
                             IsCompletionWindowShowing = false;
                         });
                         dataContext.CommandPath = "";
@@ -2220,6 +2231,7 @@ namespace cbhk.CustomControls
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
+                            completionWindow = new(TextArea);
                             IsCompletionWindowShowing = false;
                         });
                     }

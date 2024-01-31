@@ -1,5 +1,4 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
+﻿using cbhk.CustomControls;
 using cbhk.GeneralTools;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -12,21 +11,31 @@ namespace cbhk.Generators.ItemGenerator.Components
     /// </summary>
     public partial class CanDestroyItems : UserControl
     {
-        private IconComboBoxItem block;
-        public IconComboBoxItem Block
-        {
-            get => block;
-            set => block = value;
-        }
-
+        ItemPageDataContext itemPageDataContext = null;
         public string Result
         {
-            get => "\"" + Block.ComboBoxItemId.Replace("minecraft:", "") + "\"";
+            get
+            {
+                string result;
+                string currentBlockID = (ID.SelectedItem as IconComboBoxItem).ComboBoxItemId.Replace("minecraft:", "");
+                string id = currentBlockID;
+                result = "\"" + id + "\"";
+                for (int i = 0; i < itemPageDataContext.VersionIDList.Count; i++)
+                {
+                    if (itemPageDataContext.VersionIDList[i].HighVersionID == currentBlockID && itemPageDataContext.CurrentMinVersion < 113)
+                    {
+                        id = itemPageDataContext.VersionIDList[i].LowVersionID;
+                        result = "\"" + id + "\"";
+                        break;
+                    }
+                }
+                return result;
+            }
         }
+
         public CanDestroyItems()
         {
             InitializeComponent();
-            DataContext = this;
         }
 
         /// <summary>
@@ -50,9 +59,9 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// <param name="e"></param>
         private void CanDestroyItemLoaded(object sender, RoutedEventArgs e)
         {
-            ComboBox comboBoxs = sender as ComboBox;
-            ItemPageDataContext itemPageDataContext = this.FindParent<ItemPages>().DataContext as ItemPageDataContext;
-            comboBoxs.ItemsSource = itemPageDataContext.BlockList;
+            ComboBox comboBox = sender as ComboBox;
+            itemPageDataContext = comboBox.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            comboBox.ItemsSource = itemPageDataContext.BlockIdList;
         }
     }
 }

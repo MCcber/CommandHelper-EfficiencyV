@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Diagnostics;
 using System;
-using System.Threading;
 using System.Windows;
 
 namespace cbhk.Generators.DataPackGenerator

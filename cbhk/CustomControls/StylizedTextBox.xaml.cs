@@ -27,7 +27,7 @@ namespace cbhk.CustomControls
                 currentVersion = value;
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    IsPresetMode = currentVersion < 113;
+                    IsPresetMode = CurrentVersion < 113;
                 });
             }
         }

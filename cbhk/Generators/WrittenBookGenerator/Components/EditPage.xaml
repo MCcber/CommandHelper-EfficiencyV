@@ -6,63 +6,73 @@
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:cbhk.Generators.WrittenBookGenerator.Components"
-    xmlns:local_datacontext="clr-namespace:cbhk.Generators.WrittenBookGenerator"
+    xmlns:localDataContext="clr-namespace:cbhk.Generators.WrittenBookGenerator"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="EditPage"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
 
-    <Grid>
-        <DockPanel
-            Grid.Row="0"
-            Grid.Column="1"
-            Margin="35,45,0,0"
-            HorizontalAlignment="Left"
-            Panel.ZIndex="1"
-            Visibility="{Binding DisplayExceedsCount, Mode=OneWay}">
-            <TextBlock
-                FontSize="15"
-                Foreground="Black"
-                Text="查看超出的字符数:">
+    <StackPanel>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Image Grid.RowSpan="2" Grid.ColumnSpan="2">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="Loaded">
-                        <behaviors:CallMethodAction MethodName="ExceedsTextBlockLoaded" TargetObject="{Binding}" />
+                        <behaviors:CallMethodAction MethodName="WrittenBoxBackgroundLoaded" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
-            </TextBlock>
+            </Image>
+            <DockPanel
+                Grid.Row="0"
+                Grid.Column="0"
+                Margin="35,45,0,0"
+                HorizontalAlignment="Left"
+                Panel.ZIndex="1"
+                Visibility="{Binding DisplayExceedsCount, Mode=OneWay}">
+                <TextBlock
+                    FontSize="15"
+                    Foreground="Black"
+                    Text="查看超出的字符数:">
+                    <behaviors:Interaction.Triggers>
+                        <behaviors:EventTrigger EventName="Loaded">
+                            <behaviors:CallMethodAction MethodName="ExceedsTextBlockLoaded" TargetObject="{Binding}" />
+                        </behaviors:EventTrigger>
+                    </behaviors:Interaction.Triggers>
+                </TextBlock>
+                <TextBlock
+                    FontSize="15"
+                    Foreground="Red"
+                    Text="{Binding ExceedsCount, Mode=OneWay}" />
+            </DockPanel>
             <TextBlock
-                FontSize="15"
-                Foreground="Red"
-                Text="{Binding ExceedsCount, Mode=OneWay}" />
-        </DockPanel>
-        <TextBlock
-            Grid.Row="0"
-            Grid.Column="1"
-            Margin="0,40,40,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Panel.ZIndex="1"
-            Background="#FDF7E8"
-            FontFamily="Minecraft AE Pixel"
-            FontSize="25"
-            Foreground="Black"
-            Text="{Binding PageData, Mode=OneWay}"
-            TextAlignment="Center" />
-        <Border Panel.ZIndex="0">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:CallMethodAction MethodName="WrittenBoxBackgroundLoaded" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
-            <RichTextBox
                 Grid.Row="0"
                 Grid.Column="1"
-                Margin="35,70,35,60"
-                Padding="0,5,0,0"
+                Margin="0,40,40,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="1"
+                Background="#FDF7E8"
+                FontFamily="Minecraft AE Pixel"
+                FontSize="25"
+                Foreground="Black"
+                Text="{Binding PageData, Mode=OneWay}"
+                TextAlignment="Center" />
+            <RichTextBox
+                x:Name="richTextBox"
+                Grid.Row="1"
+                Grid.ColumnSpan="2"
+                Margin="45,5,45,65"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                Panel.ZIndex="1"
+                Panel.ZIndex="0"
                 Background="Transparent"
                 BorderThickness="0"
                 CaretBrush="Black"
@@ -95,50 +105,74 @@
                     </CustomControls:RichParagraph>
                 </CustomControls:EnabledFlowDocument>
             </RichTextBox>
-        </Border>
-        <Image
-            Width="64"
-            Height="30"
-            Margin="180,0,0,30"
+            <Image
+                Grid.Row="1"
+                Grid.Column="1"
+                Width="64"
+                Height="30"
+                Margin="60,0,0,30"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Panel.ZIndex="1"
+                Visibility="{Binding DisplayRightArrow, Mode=OneWay}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="Loaded">
+                        <behaviors:CallMethodAction MethodName="RightArrowLoaded" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger EventName="MouseEnter">
+                        <behaviors:CallMethodAction MethodName="RightArrowMouseEnter" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger EventName="MouseLeave">
+                        <behaviors:CallMethodAction MethodName="RightArrowMouseLeave" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
+                        <behaviors:CallMethodAction MethodName="RightArrowMouseLeftButtonDown" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </Image>
+            <Image
+                Grid.Row="1"
+                Grid.Column="0"
+                Width="64"
+                Height="30"
+                Margin="0,0,50,30"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Panel.ZIndex="1"
+                Visibility="{Binding DisplayLeftArrow, Mode=OneWay}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="Loaded">
+                        <behaviors:CallMethodAction MethodName="LeftArrowLoaded" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger EventName="MouseEnter">
+                        <behaviors:CallMethodAction MethodName="LeftArrowMouseEnter" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger EventName="MouseLeave">
+                        <behaviors:CallMethodAction MethodName="LeftArrowMouseLeave" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
+                        <behaviors:CallMethodAction MethodName="LeftArrowMouseLeftButtonDown" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </Image>
+        </Grid>
+        <CustomControls:StereoTextButton
+            Height="50"
+            HorizontalAlignment="Stretch"
             VerticalAlignment="Bottom"
-            Visibility="{Binding DisplayRightArrow, Mode=OneWay}">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:CallMethodAction MethodName="RightArrowLoaded" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger EventName="MouseEnter">
-                    <behaviors:CallMethodAction MethodName="RightArrowMouseEnter" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger EventName="MouseLeave">
-                    <behaviors:CallMethodAction MethodName="RightArrowMouseLeave" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                    <behaviors:CallMethodAction MethodName="RightArrowMouseLeftButtonDown" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
-        </Image>
-        <Image
-            Grid.Row="0"
-            Grid.Column="1"
-            Width="64"
-            Height="30"
-            Margin="0,0,180,30"
-            VerticalAlignment="Bottom"
-            Visibility="{Binding DisplayLeftArrow, Mode=OneWay}">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:CallMethodAction MethodName="LeftArrowLoaded" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger EventName="MouseEnter">
-                    <behaviors:CallMethodAction MethodName="LeftArrowMouseEnter" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger EventName="MouseLeave">
-                    <behaviors:CallMethodAction MethodName="LeftArrowMouseLeave" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                    <behaviors:CallMethodAction MethodName="LeftArrowMouseLeftButtonDown" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
-        </Image>
-    </Grid>
+            Background="#EFF2F1"
+            BorderThickness="4,6,4,11.5"
+            BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+            Command="{Binding SignatureCommand}"
+            Content="署名"
+            LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+            PressedBorderThickness="4"
+            PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+            PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+            PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+            PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+            RightBorderTexture="{StaticResource ButtonNormalRight}"
+            Style="{DynamicResource StereoTextButton}"
+            TopBorderTexture="{StaticResource ButtonNormalTop}" />
+    </StackPanel>
 </Page>

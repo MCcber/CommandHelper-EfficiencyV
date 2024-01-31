@@ -23,7 +23,7 @@ using System.Windows.Navigation;
 
 namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
 {
-    public class HomePageDataContext:ObservableObject
+    public partial class HomePageDataContext:ObservableObject
     {
         #region 字段
         /// <summary>
@@ -106,13 +106,6 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         }
         #endregion
 
-        #region 初始化页面右侧按钮的指令列表
-        public RelayCommand OpenLocalProject { get; set; }
-        public RelayCommand OpenLocalFolder { get; set; }
-        public RelayCommand OpenLocalFile { get; set; }
-        public RelayCommand CreateLocalDataPack { get; set; }
-        #endregion
-
         #region 近期内容父级日期节点
         public ObservableCollection<TreeViewItem> RecentContentDateItemList { get; set; } =
                 [
@@ -163,16 +156,6 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
         #region 主窗体引用
         Datapack dataPack = null;
         #endregion
-
-        public HomePageDataContext()
-        {
-            #region 链接指令
-            OpenLocalProject = new RelayCommand(OpenLocalProjectCommand);
-            OpenLocalFolder = new RelayCommand(OpenLocalFolderCommand);
-            CreateLocalDataPack = new RelayCommand(CreateLocalDataPackCommand);
-            OpenLocalFile = new RelayCommand(OpenLocalFileCommand);
-            #endregion
-        }
 
         /// <summary>
         /// 使用右下角箭头获取数据包所在窗体的调度器以执行异步任务：加载固定和非固定的近期解决方案
@@ -401,10 +384,11 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
             });
         }
 
+        [RelayCommand]
         /// <summary>
         /// 打开本地文件
         /// </summary>
-        private async void OpenLocalFileCommand()
+        private async Task OpenLocalFile()
         {
             OpenFileDialog fileBrowser = new()
             {
@@ -418,11 +402,12 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
                 await LoadLocalFileLoop(fileBrowser.FileNames);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 打开本地文件夹
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
-        private async void OpenLocalFolderCommand()
+        private async Task OpenLocalFolder()
         {
             OpenFolderDialog openFolderDialog = new()
             {
@@ -437,10 +422,11 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 打开本地项目
         /// </summary>
-        private void OpenLocalProjectCommand()
+        private void OpenLocalProject()
         {
             System.Windows.Forms.OpenFileDialog openFileDialog = new()
             {
@@ -473,11 +459,12 @@ namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
             }
         }
 
+        [RelayCommand]
         /// <summary>
         ///  创建本地数据包
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
-        private void CreateLocalDataPackCommand()
+        private void CreateLocalDataPack()
         {
             DatapackDataContext context = dataPack.DataContext as DatapackDataContext;
             context.templateSelectPage ??= new();

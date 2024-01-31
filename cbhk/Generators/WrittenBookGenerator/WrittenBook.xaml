@@ -286,103 +286,13 @@
         </DockPanel>
         <ContentControl
             Grid.Row="1"
-            Width="350"
-            Height="480"
             HorizontalAlignment="Center"
-            VerticalAlignment="Top">
+            VerticalAlignment="Stretch">
             <behavior:Interaction.Triggers>
                 <behavior:EventTrigger EventName="Loaded">
-                    <behavior:CallMethodAction MethodName="EditPage_Loaded" TargetObject="{Binding}" />
+                    <behavior:CallMethodAction MethodName="PageFrame_Loaded" TargetObject="{Binding}" />
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
         </ContentControl>
-        <Grid
-            Grid.Row="2"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Top">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <CustomControls:StereoTextButton
-                Grid.Row="0"
-                Grid.RowSpan="2"
-                Panel.ZIndex="1"
-                Background="#EFF2F1"
-                BorderThickness="10,8,10,15"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Content="署名"
-                FontSize="30"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="10 8 10 8"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}">
-                <behavior:Interaction.Triggers>
-                    <behavior:EventTrigger EventName="Click">
-                        <behavior:CallMethodAction MethodName="SignatureClick" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
-                    <behavior:EventTrigger EventName="Loaded">
-                        <behavior:CallMethodAction MethodName="SignatureButtonBackgroundLoaded" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
-                </behavior:Interaction.Triggers>
-            </CustomControls:StereoTextButton>
-            <CustomControls:StereoTextButton
-                Grid.Row="0"
-                HorizontalAlignment="Stretch"
-                Background="#EFF2F1"
-                BorderThickness="10,4,10,10"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Content="署名并关闭"
-                FontSize="20"
-                Foreground="Black"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="10 4 10 5"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}"
-                Visibility="Collapsed">
-                <behavior:Interaction.Triggers>
-                    <behavior:EventTrigger EventName="Loaded">
-                        <behavior:CallMethodAction MethodName="SignatureAndCloseLoaded" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
-                </behavior:Interaction.Triggers>
-            </CustomControls:StereoTextButton>
-            <CustomControls:StereoTextButton
-                Grid.Row="1"
-                HorizontalAlignment="Stretch"
-                Background="#EFF2F1"
-                BorderThickness="10,4,10,10"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Content="取消"
-                FontSize="20"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="10 4 10 5"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}"
-                Visibility="Collapsed">
-                <behavior:Interaction.Triggers>
-                    <behavior:EventTrigger EventName="Click">
-                        <behavior:CallMethodAction MethodName="SignatureCancelClicked" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
-                    <behavior:EventTrigger EventName="Loaded">
-                        <behavior:CallMethodAction MethodName="SignatureCancelLoaded" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
-                </behavior:Interaction.Triggers>
-            </CustomControls:StereoTextButton>
-        </Grid>
     </StackPanel>
 </local_window:CommonWindow>

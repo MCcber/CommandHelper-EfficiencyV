@@ -15,26 +15,14 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
 namespace cbhk.Generators.FireworkRocketGenerator
 {
-    public class FireworkRocketDataContext: ObservableObject
+    public partial class FireworkRocketDataContext: ObservableObject
     {
-        #region 返回和运行等指令
-        public RelayCommand<CommonWindow> Return { get; set; }
-        public RelayCommand Run { get; set; }
-        public RelayCommand SaveAll { get; set; }
-        #endregion
-
-        #region 添加、清空、导入烟花等指令
-        public RelayCommand AddFireworkRocket { get; set; }
-        public RelayCommand ClearFireworkRocket { get; set; }
-        public RelayCommand ImportFireworkRocketFromClipboard { get; set; }
-        public RelayCommand ImportFireworkRocketFromFile { get; set; }
-        #endregion
-
         #region 是否展示生成结果
         private bool showGeneratorResult = false;
         public bool ShowGeneratorResult
@@ -78,23 +66,52 @@ namespace cbhk.Generators.FireworkRocketGenerator
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush, } ];
 
+        private RichTabItems selectedFireworkRocketPage;
+
+        public RichTabItems SelectedFireworkRocketPage
+        {
+            get => selectedFireworkRocketPage;
+            set => SetProperty(ref selectedFireworkRocketPage, value);
+        }
+
+        #region 版本数据源
+        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+            new TextComboBoxItem() { Text = "1.13" },
+            new TextComboBoxItem() { Text = "1.12" }
+            ] ;
+        #endregion
+
+        /// <summary>
+        /// 原版颜色库面板
+        /// </summary>
+        public List<IconCheckBoxs> StructureColorList = [];
         /// <summary>
         /// 三维视图
         /// </summary>
-        public Viewport3D viewport3D = null;
+        public Viewport3D View = null;
+
+        /// <summary>
+        /// 形状数据源
+        /// </summary>
+        public ObservableCollection<string> ShapeList { get; set; } = [];
+
+        /// <summary>
+        /// 形状路径
+        /// </summary>
+        string shapePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\FireworkRocket\\data\\shapes.ini";
 
         public FireworkRocketDataContext()
         {
-            #region 连接指令
-            Return = new RelayCommand<CommonWindow>(return_command);
-            Run = new RelayCommand(run_command);
-            SaveAll = new RelayCommand(SaveAllCommand);
-            AddFireworkRocket = new RelayCommand(AddFireworkRocketCommand);
-            ClearFireworkRocket = new RelayCommand(ClearFireworkRocketCommand);
-            ImportFireworkRocketFromFile = new RelayCommand(ImportFireworkRocketFromFileCommand);
-            ImportFireworkRocketFromClipboard = new RelayCommand(ImportFireworkRocketFromClipboardCommand);
+            #region 初始化数据
+            if (ShapeList.Count == 0 && File.Exists(shapePath))
+            {
+                string[] shapes = File.ReadAllLines(shapePath);
+                foreach (string shape in shapes)
+                {
+                    ShapeList.Add(shape[(shape.LastIndexOf(':') + 1)..]);
+                }
+            }
             #endregion
-
             #region 初始化成员
             FireworkRocketPages fireworkRocketPages = new() { FontWeight = FontWeights.Normal };
             FireworkRocketPageList[0].Content = fireworkRocketPages;
@@ -105,10 +122,66 @@ namespace cbhk.Generators.FireworkRocketGenerator
             #endregion
         }
 
+        public void FireworkRocket_Loaded(object sender,RoutedEventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// 载入视图
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void View_Loaded(object sender,RoutedEventArgs e) => View = sender as Viewport3D;
+
+        [RelayCommand]
+        /// <summary>
+        /// 预览效果
+        /// </summary>
+        private void PreviewEffect(FrameworkElement frameworkElement)
+        {
+            FireworkRocket fireworkRocket = Window.GetWindow(frameworkElement) as FireworkRocket;
+            FireworkRocketPages fireworkRocketPages = SelectedFireworkRocketPage.Content as FireworkRocketPages;
+            FireworkRocketPagesDataContext fireworkRocketPagesDataContext = fireworkRocketPages.DataContext as FireworkRocketPagesDataContext;
+            if (fireworkRocketPagesDataContext.MainColors.Count + fireworkRocketPagesDataContext.FadeColors.Count == 0) return;
+
+            //烟花火箭模型引用
+            TranslateTransform3D fireworkModel = fireworkRocket.FireworkModel;
+            //获取用户摄像机
+            TranslateTransform3D userCamera = fireworkRocket.UserCamera;
+            //清除上一个烟花粒子簇
+            fireworkRocketPagesDataContext.ParticleContainer.Children.Clear();
+
+            #region 初始化动画
+            DoubleAnimation cameraAnimation = new()
+            {
+                From = 10,
+                By = fireworkRocketPagesDataContext.FireworkFlyHeight * (fireworkRocketPagesDataContext.Duration <= 0 ? 1 : fireworkRocketPagesDataContext.Duration),
+                Duration = new Duration(TimeSpan.FromSeconds(0.5)),
+                AutoReverse = false,
+                FillBehavior = FillBehavior.HoldEnd
+            };
+            DoubleAnimation fireworkRocketAnimation = new()
+            {
+                From = 1,
+                By = fireworkRocketPagesDataContext.FireworkFlyHeight * (fireworkRocketPagesDataContext.Duration <= 0 ? 1 : fireworkRocketPagesDataContext.Duration),
+                Duration = new Duration(TimeSpan.FromSeconds(0.5)),
+                AutoReverse = false,
+                FillBehavior = FillBehavior.Stop
+            };
+            #endregion
+            #region 执行动画
+            fireworkRocketAnimation.Completed += fireworkRocketPagesDataContext.FireworkExploded;
+            userCamera.BeginAnimation(TranslateTransform3D.OffsetYProperty, cameraAnimation);
+            fireworkModel.BeginAnimation(TranslateTransform3D.OffsetYProperty, fireworkRocketAnimation);
+            #endregion
+        }
+
+        [RelayCommand]
         /// <summary>
         /// 添加烟花火箭
         /// </summary>
-        private void AddFireworkRocketCommand()
+        private void AddFireworkRocket()
         {
             FireworkRocketPages fireworkRocketPages = new() { FontWeight = FontWeights.Normal };
             RichTabItems richTabItems = new()
@@ -137,19 +210,21 @@ namespace cbhk.Generators.FireworkRocketGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 清空烟花火箭
         /// </summary>
-        private void ClearFireworkRocketCommand()
+        private void ClearFireworkRocket()
         {
             FireworkRocketPageList.Clear();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从文件导入烟花火箭
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
-        private void ImportFireworkRocketFromFileCommand()
+        private void ImportFireworkRocketFromFile()
         {
             Microsoft.Win32.OpenFileDialog dialog = new()
             {
@@ -167,20 +242,22 @@ namespace cbhk.Generators.FireworkRocketGenerator
                 }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 从剪切板导入烟花火箭
         /// </summary>
-        private void ImportFireworkRocketFromClipboardCommand()
+        private void ImportFireworkRocketFromClipboard()
         {
             ObservableCollection<RichTabItems> result = FireworkRocketPageList;
             ExternalDataImportManager.ImportFireworkDataHandler(Clipboard.GetText(), ref result, false);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void return_command(CommonWindow win)
+        private void Return(CommonWindow win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -189,10 +266,11 @@ namespace cbhk.Generators.FireworkRocketGenerator
             win.Close();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 执行生成
         /// </summary>
-        private async void run_command()
+        private async Task Run()
         {
             StringBuilder Result = new();
             foreach (var itemPage in FireworkRocketPageList)
@@ -200,7 +278,7 @@ namespace cbhk.Generators.FireworkRocketGenerator
                 await itemPage.Dispatcher.InvokeAsync(() =>
                 {
                     FireworkRocketPagesDataContext context = (itemPage.Content as FireworkRocketPages).DataContext as FireworkRocketPagesDataContext;
-                    string result = context.run_command(false) + "\r\n";
+                    string result = context.Run(false) + "\r\n";
                     Result.Append(result);
                 });
             }
@@ -217,15 +295,11 @@ namespace cbhk.Generators.FireworkRocketGenerator
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 保存所有烟花火箭
         /// </summary>
-        private async void SaveAllCommand()
-        {
-            await GeneratorAndSaveAllFireworks();
-        }
-
-        private async Task GeneratorAndSaveAllFireworks()
+        private async Task SaveAll()
         {
             List<string> Result = [];
             List<string> FileNameList = [];
@@ -235,8 +309,8 @@ namespace cbhk.Generators.FireworkRocketGenerator
                 await itemPage.Dispatcher.InvokeAsync(() =>
                 {
                     FireworkRocketPagesDataContext context = (itemPage.Content as FireworkRocketPages).DataContext as FireworkRocketPagesDataContext;
-                    string result = context.run_command(false);
-                    FileNameList.Add(context.Give? "FireworkStar" : "FireworkRocket");
+                    string result = context.Run(false);
+                    FileNameList.Add(context.Give ? "FireworkStar" : "FireworkRocket");
                     Result.Add(result);
                 });
             }
@@ -317,21 +391,11 @@ namespace cbhk.Generators.FireworkRocketGenerator
         /// <param name="numPoints"></param>
         /// <param name="radius"></param>
         /// <returns></returns>
-        public Vector3D GetCreeperFaceRandom(int numPoints, double radius)
+        public List<Vector3D> GetCreeperFaceRandom(int numPoints, double radius)
         {
-            Vector3D result = new();
+            List<Vector3D> result = [];
 
             return result;
-        }
-
-        /// <summary>
-        /// 获取Viewport3D引用
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void GetViewport3DLoaded(object sender,RoutedEventArgs e)
-        {
-            viewport3D = sender as Viewport3D;
         }
     }
 }

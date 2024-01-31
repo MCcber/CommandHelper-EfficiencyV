@@ -14,11 +14,11 @@ namespace cbhk.Generators.EntityGenerator.Components
         Random random = new();
 
         #region 合并结果
-        int currentVersion = 0;
+        int CurrentVersion = 1202;
         string UUIDString = "";
         async Task<string> IVersionUpgrader.Result()
         {
-            await Upgrade(currentVersion);
+            await Upgrade(CurrentVersion);
             string result = "{Amount:" + Amount.Value + "d," + (ModifierName.Text.Length > 0 ? "Name:\"" + ModifierName.Text + "\"," : ",") + "Operation:" + Operation.SelectedIndex + "," + UUIDString + "}";
             return result;
         }
@@ -42,7 +42,7 @@ namespace cbhk.Generators.EntityGenerator.Components
 
         public async Task Upgrade(int version)
         {
-            currentVersion = version;
+            CurrentVersion = version;
             if (version < 116)
                 UUIDString = "UUIDLeast:" + random.NextInt64() + ",UUIDMost:" + random.NextInt64();
             else

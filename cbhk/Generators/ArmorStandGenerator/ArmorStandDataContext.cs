@@ -45,7 +45,7 @@ namespace cbhk.Generators.ArmorStandGenerator
                 if(!permission_switch_lock)
                 {
                     permission_switch_lock = !permission_switch_lock;
-                    UseMainHandPermission = SelectedVersion == "1.9+" ? Visibility.Collapsed : Visibility.Visible;
+                    UseMainHandPermission = SelectedVersion.Text == "1.9.0" ? Visibility.Collapsed : Visibility.Visible;
                     permission_switch_lock = false;
                 }
                 OnPropertyChanged();
@@ -64,7 +64,7 @@ namespace cbhk.Generators.ArmorStandGenerator
                 if(!permission_switch_lock)
                 {
                     permission_switch_lock = !permission_switch_lock;
-                    HaveOffHandPermission = SelectedVersion == "1.8-" ? Visibility.Collapsed : Visibility.Visible;
+                    HaveOffHandPermission = SelectedVersion.Text == "1.8.0" ? Visibility.Collapsed : Visibility.Visible;
                     permission_switch_lock = false;
                 }
                 OnPropertyChanged();
@@ -1107,20 +1107,26 @@ namespace cbhk.Generators.ArmorStandGenerator
 
         //布尔NBT集合
         StackPanel NBTList = null;
-        /// <summary>
-        /// 版本数据源
-        /// </summary>
-        public ObservableCollection<string> VersionSource { get; set; } = ["1.13+","1.9-1.12", "1.8-"];
+
+        #region 版本数据源
+        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+            new TextComboBoxItem() { Text = "1.20.5" },
+            new TextComboBoxItem() { Text = "1.13.0" },
+            new TextComboBoxItem() { Text = "1.12.0" },
+            new TextComboBoxItem() { Text = "1.9.0" },
+            new TextComboBoxItem() { Text = "1.8.0" }
+            ];
+        #endregion
 
         #region 已选择的版本
-        private string selectedVersion = "";
-        public string SelectedVersion
+        private TextComboBoxItem selectedVersion;
+        public TextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
             set
             {
                 SetProperty(ref selectedVersion, value);
-                CurrentMinVersion = int.Parse(SelectedVersion.Replace(".", "").Replace("+", "").Split('-')[0]);
+                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
             }
         }
 
@@ -1194,7 +1200,6 @@ namespace cbhk.Generators.ArmorStandGenerator
         public void CustomNameBox_Loaded(object sender, RoutedEventArgs e)
         {
             stylizedTextBox = sender as StylizedTextBox;
-            stylizedTextBox.IsPresetMode = true;
         }
 
         /// <summary>
@@ -1203,6 +1208,13 @@ namespace cbhk.Generators.ArmorStandGenerator
         /// <param name="sender"></param>
         /// <param name="e"></param>
         public void TagRichTextBox_Loaded(object sender, RoutedEventArgs e) => tagRichTextBox = sender as TagRichTextBox;
+
+        /// <summary>
+        /// 版本更新事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void Version_SelectionChanged(object sender,RoutedEventArgs e) => await stylizedTextBox.Upgrade(CurrentMinVersion);
 
         /// <summary>
         /// 检测名称文本框内容为空
@@ -1432,7 +1444,10 @@ namespace cbhk.Generators.ArmorStandGenerator
             await tagRichTextBox.GetResult();
             string CustomNameValue = await stylizedTextBox.Result();
             if (CustomNameValue.Trim().Length > 0)
+            {
                 CustomName = "CustomName:" + (CurrentMinVersion >= 113 ? "'[" : @"\\\\\\\""") + CustomNameValue.TrimEnd(',') + (CurrentMinVersion >= 113 ? "]'" : @"\\\\\\\""") + ",";
+                CustomName = CustomName.Replace(@"\\n","");
+            }
 
             #region 拼接指令数据
 

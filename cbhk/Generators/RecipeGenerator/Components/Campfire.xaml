@@ -338,7 +338,7 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Background="{DynamicResource RightArrow}"
-            Command="{Binding Run}"
+            Command="{Binding RunCommand}"
             Style="{DynamicResource IconTextButton}"
             ToolTipService.BetweenShowDelay="0"
             ToolTipService.InitialShowDelay="0">

@@ -50,7 +50,7 @@ namespace cbhk.Generators.DataPackGenerator.Components.EditPage
         }
     }
 
-    public class AddFileFormDataContext:ObservableObject
+    public partial class AddFileFormDataContext:ObservableObject
     {
         private string FileTemplatesFolder = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Datapack\\data\\FileTemplates";
         private object tagItemsLock = new();
@@ -58,8 +58,6 @@ namespace cbhk.Generators.DataPackGenerator.Components.EditPage
 
         private CollectionViewSource NewItemStyleSource = null;
         public ObservableCollection<string> SortBySource { get; set; } = [];
-        public RelayCommand<Window> ClickTrue { get; set; }
-        public RelayCommand<Window> ClickFalse { get; set; }
 
         #region 与窗体绑定的属性
         private string searchText = "";
@@ -119,11 +117,6 @@ namespace cbhk.Generators.DataPackGenerator.Components.EditPage
 
         public AddFileFormDataContext()
         {
-            #region 链接指令
-            ClickTrue = new RelayCommand<Window>(ClickTrueCommand);
-            ClickFalse = new RelayCommand<Window>(ClickFalseCommand);
-            #endregion
-
             #region 异步载入标签成员
             if(NewItemStyles.Count == 0)
             {
@@ -239,20 +232,22 @@ namespace cbhk.Generators.DataPackGenerator.Components.EditPage
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 确定选择的文件并已命名
         /// </summary>
         /// <param name="window"></param>
-        private void ClickTrueCommand(Window window)
+        private void ClickTrue(Window window)
         {
             window.DialogResult = true;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 返回
         /// </summary>
         /// <param name="window"></param>
-        private void ClickFalseCommand(Window window)
+        private void ClickFalse(Window window)
         {
             window.DialogResult = false;
         }

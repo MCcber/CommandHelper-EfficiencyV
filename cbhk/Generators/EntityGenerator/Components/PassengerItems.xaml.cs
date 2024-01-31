@@ -111,8 +111,8 @@ namespace cbhk.Generators.EntityGenerator.Components
                     pageContext.UseForReference = true;
                     if (slider.Value < entityContext.EntityPageList.Count && currentIndex != index)
                     {
-                        DisplayEntity.Tag = pageContext.run_command(false);
-                        (DisplayEntity.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + pageContext.SelectedEntityIdString + "_spawn_egg.png", UriKind.RelativeOrAbsolute));
+                        DisplayEntity.Tag = pageContext.Run(false);
+                        (DisplayEntity.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + pageContext.SelectedEntityIDString + "_spawn_egg.png", UriKind.RelativeOrAbsolute));
                     }
                     else
                     {

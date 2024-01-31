@@ -20,6 +20,7 @@ namespace cbhk.Generators.ItemGenerator.Components
         public ObservableCollection<string> HideFlagsSource { get; set; } = [];
         ItemPageDataContext itemPageDataContext = null;
         private int CurrentMinVersion = 1202;
+
         #region 保存物品信息隐藏选项
         private string ItemHideFlags
         {
@@ -98,7 +99,12 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// <param name="e"></param>
         private void Common_Loaded(object sender,RoutedEventArgs e)
         {
-            itemPageDataContext = (sender as Common).FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            ItemPages itemPages = (sender as Common).FindParent<ItemPages>();
+            if (itemPages is null)
+            {
+                return;
+            }
+            itemPageDataContext = itemPages.DataContext as ItemPageDataContext;
             itemPageDataContext.VersionComponents.Add(ItemName);
             itemPageDataContext.VersionComponents.Add(ItemLore);
         }

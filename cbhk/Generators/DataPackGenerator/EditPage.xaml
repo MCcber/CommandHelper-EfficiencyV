@@ -21,7 +21,7 @@
     </behavior:Interaction.Triggers>
 
     <Page.Resources>
-        <ImageBrush x:Key="BackToHomePage" ImageSource="/cbhk;component/resources/common/images/backToHomePage.png" />
+        <ImageBrush x:Key="BackToHomePage" ImageSource="/cbhk;component/resources/cbhk/images/IconHome.png" />
         <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowLeft.png" />
         <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/resources/common/images/IconArrowRight.png" />
         <ImageBrush x:Key="EditBox" ImageSource="/cbhk;component/resources/common/images/TextEditBox.png" />
@@ -41,7 +41,7 @@
                 </MenuItem.Icon>
                 <MenuItem
                     Background="#2F2F2F"
-                    Command="{Binding AddNewItem}"
+                    Command="{Binding AddItemCommand}"
                     Foreground="White"
                     Header="新建项">
                     <MenuItem.Icon>
@@ -53,7 +53,7 @@
                 </MenuItem>
                 <MenuItem
                     Background="#2F2F2F"
-                    Command="{Binding AddExistingItems}"
+                    Command="{Binding AddExistingItemsCommand}"
                     Foreground="White"
                     Header="现有项">
                     <MenuItem.Icon>
@@ -65,7 +65,7 @@
                 </MenuItem>
                 <MenuItem
                     Background="#2F2F2F"
-                    Command="{Binding AddNewFolder}"
+                    Command="{Binding AddFolderCommand}"
                     Foreground="White"
                     Header="新建文件夹">
                     <MenuItem.Icon>
@@ -78,7 +78,7 @@
             </MenuItem>
             <MenuItem
                 Background="#2F2F2F"
-                Command="{Binding Cut}"
+                Command="{Binding CutCommand}"
                 Foreground="White"
                 Header="剪切">
                 <MenuItem.Icon>
@@ -90,7 +90,7 @@
             </MenuItem>
             <MenuItem
                 Background="#2F2F2F"
-                Command="{Binding Copy}"
+                Command="{Binding CopyCommand}"
                 Foreground="White"
                 Header="复制">
                 <MenuItem.Icon>
@@ -102,7 +102,7 @@
             </MenuItem>
             <MenuItem
                 Background="#2F2F2F"
-                Command="{Binding Paste}"
+                Command="{Binding PasteCommand}"
                 Foreground="White"
                 Header="粘贴">
                 <MenuItem.Icon>
@@ -114,7 +114,7 @@
             </MenuItem>
             <MenuItem
                 Background="#2F2F2F"
-                Command="{Binding CopyFullPath}"
+                Command="{Binding CopyFullPathCommand}"
                 Foreground="White"
                 Header="复制完整路径">
                 <MenuItem.Icon>
@@ -126,7 +126,7 @@
             </MenuItem>
             <MenuItem
                 Background="#2F2F2F"
-                Command="{Binding OpenWithResourceManagement}"
+                Command="{Binding OpenWithResourceManagementCommand}"
                 Foreground="White"
                 Header="在文件资源管理器中打开">
                 <MenuItem.Icon>
@@ -138,7 +138,7 @@
             </MenuItem>
             <MenuItem
                 Background="#2F2F2F"
-                Command="{Binding ExcludeFromProject}"
+                Command="{Binding ExcludeFromProjectCommand}"
                 Foreground="White"
                 Header="从项目中排除">
                 <MenuItem.Icon>
@@ -150,7 +150,7 @@
             </MenuItem>
             <MenuItem
                 Background="#2F2F2F"
-                Command="{Binding OpenWithTerminal}"
+                Command="{Binding OpenWithTerminalCommand}"
                 Foreground="White"
                 Header="在终端中打开">
                 <MenuItem.Icon>
@@ -162,7 +162,7 @@
             </MenuItem>
             <MenuItem
                 Background="#2F2F2F"
-                Command="{Binding Delete}"
+                Command="{Binding DeleteCommand}"
                 Foreground="White"
                 Header="删除">
                 <MenuItem.Icon>
@@ -174,7 +174,7 @@
             </MenuItem>
             <MenuItem
                 Background="#2F2F2F"
-                Command="{Binding Attribute}"
+                Command="{Binding AttributeCommand}"
                 Foreground="White"
                 Header="属性">
                 <MenuItem.Icon>
@@ -836,12 +836,12 @@
             Grid.Row="0"
             Grid.Column="0"
             Width="25"
-            Height="20"
+            Height="25"
             HorizontalContentAlignment="Center"
             VerticalContentAlignment="Center"
             Background="{StaticResource BackToHomePage}"
             BorderThickness="0"
-            Command="{Binding BackToHomePage}"
+            Command="{Binding BackToHomePageCommand}"
             CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=localWindow:CommonWindow}}"
             FontSize="15"
             Style="{DynamicResource IconTextButton}"
@@ -863,7 +863,7 @@
             VerticalContentAlignment="Center"
             Background="{StaticResource LeftArrow}"
             BorderThickness="0"
-            Command="{Binding Return}"
+            Command="{Binding ReturnCommand}"
             CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=localWindow:CommonWindow}}"
             FontSize="15"
             Style="{DynamicResource IconTextButton}"

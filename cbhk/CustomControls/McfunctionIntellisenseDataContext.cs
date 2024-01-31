@@ -224,7 +224,7 @@ namespace cbhk.CustomControls
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public int CompareTo(CompletedItemData? other)
+        public int CompareTo(CompletedItemData other)
         {
             return Text.CompareTo(other!.Text);
         }

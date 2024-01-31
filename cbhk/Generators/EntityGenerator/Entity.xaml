@@ -104,7 +104,7 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 Background="{StaticResource Save}"
-                Command="{Binding SaveAll}"
+                Command="{Binding SaveAllCommand}"
                 Style="{DynamicResource IconTextButton}" />
             <CustomControls:StereoTextButton
                 HorizontalAlignment="Left"
@@ -112,7 +112,7 @@
                 Background="#EFF2F1"
                 BorderThickness="4,3,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding AddEntity}"
+                Command="{Binding AddEntityCommand}"
                 Content="添加"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4"
@@ -129,7 +129,7 @@
                 Background="#EFF2F1"
                 BorderThickness="4,3,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ClearEntity}"
+                Command="{Binding ClearEntityCommand}"
                 Content="清空"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4"
@@ -146,7 +146,7 @@
                 Background="#EFF2F1"
                 BorderThickness="4,3,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ImportEntityFromClipboard}"
+                Command="{Binding ImportEntityFromClipboardCommand}"
                 Content="从剪切板导入"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4"
@@ -163,7 +163,7 @@
                 Background="#EFF2F1"
                 BorderThickness="4,3,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ImportEntityFromFile}"
+                Command="{Binding ImportEntityFromFileCommand}"
                 Content="从文件导入"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4"
@@ -174,6 +174,33 @@
                 RightBorderTexture="{StaticResource ButtonNormalRight}"
                 Style="{DynamicResource StereoTextButton}"
                 TopBorderTexture="{StaticResource ButtonNormalTop}" />
+            <CustomControls:StereoTextButton
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Background="#EFF2F1"
+                BorderThickness="4,3,4,7"
+                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+                Command="{Binding ClearUnnecessaryDataCommand}"
+                Content="冻结数据"
+                Foreground="Black"
+                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
+                PressedBorderThickness="4"
+                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
+                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
+                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
+                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
+                RightBorderTexture="{StaticResource ButtonNormalRight}"
+                Style="{DynamicResource StereoTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0"
+                TopBorderTexture="{StaticResource ButtonNormalTop}">
+                <CustomControls:StereoTextButton.ToolTip>
+                    <ToolTip
+                        Background="#2F2F2F"
+                        Content="点击后清除历史实体的特指数据"
+                        Foreground="White" />
+                </CustomControls:StereoTextButton.ToolTip>
+            </CustomControls:StereoTextButton>
             <CustomControls:RadiusToggleButtons
                 VerticalContentAlignment="Center"
                 Foreground="White"
@@ -181,7 +208,7 @@
                 SelectedToggleText="显示结果"
                 Style="{DynamicResource RadiusToggleButton}"
                 ToggleHeight="26"
-                ToggleWidth="45"
+                ToggleWidth="46"
                 UnSelectedToggleText="隐藏结果" />
         </DockPanel>
         <TabControl
@@ -190,6 +217,7 @@
             BorderThickness="0"
             ItemsSource="{Binding EntityPageList, IsAsync=True}"
             SelectedIndex="0"
+            SelectedItem="{Binding SelectedEntityPage, Mode=OneWayToSource}"
             Style="{DynamicResource TabControlWithScrollBar}" />
     </Grid>
 

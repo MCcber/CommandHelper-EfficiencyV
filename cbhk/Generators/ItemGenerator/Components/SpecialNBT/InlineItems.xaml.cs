@@ -94,10 +94,17 @@ namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
             if (ReferenceMode.IsChecked.Value)
             {
                 pageContext.UseForReference = true;
+                string imagePath = "";
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItemId.ComboBoxItemId + ".png"))
+                    imagePath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItemId.ComboBoxItemId + ".png";
+                else
+                    if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItemId.ComboBoxItemId + "_spawn_egg.png"))
+                    imagePath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItemId.ComboBoxItemId + "_spawn_egg.png";
+
                 if (slider.Value < itemContext.ItemPageList.Count && currentIndex != index)
                 {
-                    DisplayItem.Tag = await pageContext.run_command(false);
-                    (DisplayItem.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItemId.ComboBoxItemId + "_spawn_egg.png", UriKind.RelativeOrAbsolute));
+                    DisplayItem.Tag = await pageContext.Run(false);
+                    (DisplayItem.Child as Image).Source = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.RelativeOrAbsolute)) : null;
                 }
                 else
                 {

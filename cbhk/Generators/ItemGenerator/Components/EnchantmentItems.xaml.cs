@@ -1,6 +1,6 @@
-﻿using cbhk.CustomControls.Interfaces;
+﻿using cbhk.CustomControls;
+using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
-using System;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
@@ -15,15 +15,15 @@ namespace cbhk.Generators.ItemGenerator.Components
     /// </summary>
     public partial class EnchantmentItems : UserControl, IVersionUpgrader
     {
-        DataTable EnchantmentTable = null;
-        ItemPageDataContext dataContext = null;
+        ItemPageDataContext itemPageDataContext = null;
+        ItemDataContext itemDataContext = null;
 
         #region 合并结果
         string id = "";
-        int currentVersion = 1202;
+        int currentVersion = 1205;
         async Task<string> IVersionUpgrader.Result()
         {
-            await Upgrade(currentVersion);
+            await Task.Delay(0);
             if (id.Length > 0)
             {
                 string result = "{id:" + id + ",lvl:" + Level.Value + "s}";
@@ -44,27 +44,12 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void EnchantmentIdLoaded(object sender, RoutedEventArgs e)
+        private void EnchantmentIdLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox comboBoxs = sender as ComboBox;
-            if (comboBoxs.ItemsSource != null) return;
-            dataContext = this.FindParent<ItemPages>().DataContext as ItemPageDataContext;
-            ItemDataContext context = Window.GetWindow(this).DataContext as ItemDataContext;
-            EnchantmentTable = context.EnchantmentTable;
-            ObservableCollection<string> source = [];
-            string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-
-            await Task.Run(() =>
-            {
-                foreach (DataRow row in EnchantmentTable.Rows)
-                {
-                    string id = row["id"].ToString();
-                    string name = row["name"].ToString();
-                    string imagePath = id + ".png";
-                    source.Add(name);
-                }
-            });
-            comboBoxs.ItemsSource = source;
+            itemDataContext = Window.GetWindow(comboBoxs).DataContext as ItemDataContext;
+            itemPageDataContext = comboBoxs.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            comboBoxs.ItemsSource = itemPageDataContext.EnchantmentIDList;
         }
 
         /// <summary>
@@ -87,12 +72,7 @@ namespace cbhk.Generators.ItemGenerator.Components
             (sender as Button).Focus();
         }
 
-        private async void EnchantmentID_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            id = "";
-            ItemPageDataContext itemPageDataContext = this.FindParent<ItemPages>().DataContext as ItemPageDataContext;
-            await Upgrade(itemPageDataContext.CurrentMinVersion);
-        }
+        private void EnchantmentID_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateEnchantmentID();
 
         /// <summary>
         /// 用于根据版本更新ID
@@ -100,30 +80,35 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// <param name="version"></param>
         public async Task Upgrade(int version)
         {
+            await Task.Delay(0);
             currentVersion = version;
-            await Task.Run(() =>
+            UpdateEnchantmentID();
+        }
+
+        private void UpdateEnchantmentID()
+        {
+            id = "";
+            if (currentVersion < 113)
             {
-                id = "";
-                if (version < 113)
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        object numberResult = EnchantmentTable.Select("name='" + ID.SelectedValue.ToString() + "'").First()?["number"];
-                        if (numberResult is not null)
-                            id = numberResult.ToString();
-                    });
-                }
-                else
+                    object numberResult = itemDataContext.EnchantmentTable.Select("name='" + (ID.SelectedItem as TextComboBoxItem).Text + "'").First()?["number"];
+                    if (numberResult is not null)
+                        id = numberResult.ToString();
+                });
+            }
+            else
+            {
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
+                    if (ID.SelectedItem is not null)
                     {
-                        if (ID.SelectedItem is not null)
-                        {
-                            id = "\"minecraft:" + EnchantmentTable.Select("name='" + ID.SelectedValue.ToString() + "'").First()?["id"].ToString() + "\"";
-                        }
-                    });
-                }
-            });
+                        DataRow[] dataRows = itemDataContext.EnchantmentTable.Select("name='" + (ID.SelectedItem as TextComboBoxItem).Text + "'");
+                        if (dataRows.Length > 0)
+                            id = "\"minecraft:" + dataRows.First()?["id"].ToString() + "\"";
+                    }
+                });
+            }
         }
     }
 }

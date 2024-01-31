@@ -33,7 +33,6 @@
             Background="Transparent"
             Loaded="CanPlaceOnItemLoaded"
             SelectedIndex="0"
-            SelectedItem="{Binding Block, Mode=TwoWay}"
             Style="{DynamicResource IconComboBoxStyle}" />
         <CustomControls:IconTextButtons
             Grid.Column="2"

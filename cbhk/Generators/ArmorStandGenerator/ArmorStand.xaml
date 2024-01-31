@@ -104,12 +104,17 @@
                 Width="110"
                 Height="30"
                 HorizontalAlignment="Left"
-                FontSize="20"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}" />
+                Style="{DynamicResource TextComboBoxStyle}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="SelectionChanged">
+                        <behaviors:CallMethodAction MethodName="Version_SelectionChanged" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </CustomControls:TextComboBoxs>
             <TextBlock
                 Margin="5,5,5,0"
                 HorizontalAlignment="Left"

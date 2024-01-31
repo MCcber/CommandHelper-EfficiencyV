@@ -2,7 +2,6 @@
 using cbhk.GeneralTools;
 using System;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,76 +14,37 @@ namespace cbhk.Generators.ItemGenerator.Components
     /// </summary>
     public partial class AttributeItems : UserControl,IVersionUpgrader
     {
-        #region 属性分量
-        private string attributeID;
-        private string attributeIDString = "";
-        public string AttributeID
-        {
-            get => attributeID;
-            set
-            {
-                attributeID = value;
-                attributeIDString = AttributeTable.Select("name='" + value + "'").First()["id"].ToString();
-            }
-        }
-
-        private double attributeValue = 0;
-        public double AttributeValue
-        {
-            get => attributeValue;
-            set => attributeValue = value;
-        }
-
-        private string attributeName = "";
-        public string AttributeName
-        {
-            get => attributeName;
-            set => attributeName = value;
-        }
-
-        public string attributeSlot = "";
-        public string AttributeSlot
-        {
-            get => attributeSlot;
-            set => attributeSlot = value;
-        }
-        #endregion
-
-        #region 数据表
-        DataTable AttributeTable = null;
-        DataTable AttributeSlotTable = null;
-        DataTable AttributeValueTypeTable = null;
-        #endregion
-
         #region 合并数据
-        int currentVersion = 0;
+        int currentVersion = 1205;
         async Task<string> IVersionUpgrader.Result()
         {
             await Upgrade(currentVersion);
-            string attributeSlotString = AttributeSlotTable.Select("value='" + AttributeSlot + "'").First()["id"].ToString();
+            string attributeIDString = itemDataContext.AttributeTable.Select("name='" + AttributeNameBox.SelectedItem.ToString() + "'").First()["id"].ToString();
+            string attributeSlotString = itemDataContext.AttributeSlotTable.Select("value='" + Slot.SelectedItem.ToString() + "'").First()["id"].ToString();
             string slotData = attributeSlotString == "all" ? "" : ",Slot:\"" + attributeSlotString + "\"";
-            string result = "{AttributeName:\"" + attributeIDString + "\",Name:\"" + AttributeName + "\",Amount:" + AttributeValue + "d,Operation:" + Operations.SelectedIndex + UUIDString + slotData + "}";
+            string result = "{AttributeName:\"" + attributeIDString + "\",Name:\"" + NameBox.Text + "\",Amount:" + Amount.Value.ToString() + "d,Operation:" + Operations.SelectedIndex + UUIDString + slotData + "}";
             return result;
         }
         #endregion
 
         private string UUIDString = "";
+        ItemPageDataContext itemPageDataContext = null;
+        ItemDataContext itemDataContext = null;
 
         public AttributeItems()
         {
             InitializeComponent();
-            DataContext = this;
         }
 
+        /// <summary>
+        /// 载入属性控件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void AttributeItems_Loaded(object sender, RoutedEventArgs e)
         {
-            ItemDataContext context = Window.GetWindow(this)?.DataContext as ItemDataContext;
-            if (context is not null)
-            {
-                AttributeTable = context.AttributeTable;
-                AttributeSlotTable = context.AttributeSlotTable;
-                AttributeValueTypeTable = context.AttributeValueTypeTable;
-            }
+            itemPageDataContext = (sender as UserControl).FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            itemDataContext = Window.GetWindow(sender as UserControl).DataContext as ItemDataContext;
         }
 
         /// <summary>
@@ -95,12 +55,7 @@ namespace cbhk.Generators.ItemGenerator.Components
         private void AttributeIdsLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox comboBox = sender as ComboBox;
-            ObservableCollection<string> source = [];
-            foreach (DataRow row in AttributeTable.Rows)
-            {
-                source.Add(row["name"].ToString());
-            }
-            comboBox.ItemsSource = source;
+            comboBox.ItemsSource = itemPageDataContext.AttributeIDList;
         }
 
         /// <summary>
@@ -111,10 +66,7 @@ namespace cbhk.Generators.ItemGenerator.Components
         private void AttributeSlotsLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox comboBox = sender as ComboBox;
-            ObservableCollection<string> source = [];
-            foreach (DataRow row in AttributeSlotTable.Rows)
-                source.Add(row["value"].ToString());
-            comboBox.ItemsSource = source;
+            comboBox.ItemsSource = itemPageDataContext.AttributeSlotList;
         }
 
         /// <summary>
@@ -125,10 +77,7 @@ namespace cbhk.Generators.ItemGenerator.Components
         private void AttributeValueTypesLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox comboBox = sender as ComboBox;
-            ObservableCollection<string> source = [];
-            foreach (DataRow row in AttributeValueTypeTable.Rows)
-                source.Add(row["value"].ToString());
-            comboBox.ItemsSource = source;
+            comboBox.ItemsSource = itemPageDataContext.AttributeValueTypeList;
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
+﻿using cbhk.CustomControls;
 using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
@@ -14,7 +13,6 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,12 +27,6 @@ namespace cbhk.Generators.EntityGenerator.Components
 {
     public partial class EntityPagesDataContext : ObservableObject
     {
-        #region 运行指令、保存等指令
-        public RelayCommand RunCommand { get; set; }
-        public RelayCommand SaveCommand { get; set; }
-        public RelayCommand ClearUnnecessaryData { get; set; }
-        #endregion
-
         #region 指示是否需要展示生成结果
         private bool showResult = false;
         public bool ShowResult
@@ -59,11 +51,6 @@ namespace cbhk.Generators.EntityGenerator.Components
         #endregion
 
         #region 通用NBT
-
-        #region 全选和反选bool型NBT
-        public RelayCommand<FrameworkElement> SelectAllBoolNBTs { get; set; }
-        public RelayCommand<FrameworkElement> ReverseAllBoolNBTs { get; set; }
-        #endregion
 
         #region 共通标签是否开放编辑
 
@@ -268,7 +255,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                 });
             }
         }
-        public string SelectedEntityIdString
+        public string SelectedEntityIDString
         {
             get
             {
@@ -278,15 +265,24 @@ namespace cbhk.Generators.EntityGenerator.Components
         }
         #endregion
 
-        #region 版本
-        private string selectedVersion = "";
-        public string SelectedVersion
+        #region 版本数据源
+        private ObservableCollection<TextComboBoxItem> versionSource = [];
+        public ObservableCollection<TextComboBoxItem> VersionSource
+        {
+            get => versionSource;
+            set => SetProperty(ref versionSource, value);
+        }
+        #endregion
+
+        #region 已选版本
+        private TextComboBoxItem selectedVersion;
+        public TextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
             set
             {
                 SetProperty(ref selectedVersion, value);
-                CurrentMinVersion = int.Parse(selectedVersion.Replace(".", "").Replace("+", "").Split('-')[0]);
+                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
             }
         }
 
@@ -294,7 +290,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         public int CurrentMinVersion
         {
             get => currentMinVersion;
-            set => currentMinVersion = int.Parse(SelectedVersion.Replace(".", "").Replace("+", "").Split('-')[0]);
+            set => currentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
         }
         #endregion
 
@@ -326,26 +322,13 @@ namespace cbhk.Generators.EntityGenerator.Components
         string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\Entity\\data\\SpecialTags.json";
 
         //实体数据源
-        private ObservableCollection<IconComboBoxItem> entityIds = [];
-        public ObservableCollection<IconComboBoxItem> EntityIds
-        {
-            get => entityIds;
-            set => SetProperty(ref entityIds, value);
-        }
+        public ObservableCollection<IconComboBoxItem> EntityIDList { get; set; } = [];
+        private Dictionary<string, List<IconComboBoxItem>> EntityIDListCopy { get; set; } = [];
 
         //属性数据
         public ObservableCollection<NBTDataStructure> AttributeResult { get; set; } = [];
         //存储当前实体的乘客
         public ObservableCollection<NBTDataStructure> PassengerResult { get; set; } = [];
-
-        #region 版本数据源
-        private ObservableCollection<string> versionSource = [];
-        public ObservableCollection<string> VersionSource
-        {
-            get => versionSource;
-            set => SetProperty(ref versionSource, value);
-        }
-        #endregion
 
         /// <summary>
         /// 需要适应版本变化的特指数据所属控件的事件
@@ -390,25 +373,15 @@ namespace cbhk.Generators.EntityGenerator.Components
         //特殊实体的共通标签链表
         List<string> specialEntityCommonTagList = [];
         //特殊实体特指标签字典,用于动态切换内容
-        Dictionary<string,Grid> specialDataDictionary = [];
+        public Dictionary<string,Grid> SpecialDataDictionary = [];
         //特殊标签面板
-        ScrollViewer? SpecialViewer = null;
-        DataTable EntityIdTable = null;
-        DataTable BlockTable = null;
+        ScrollViewer SpecialViewer = null;
         //存储最终的结果
         public string Result { get; set; }
         #endregion
 
         public EntityPagesDataContext()
         {
-            #region 连接指令
-            RunCommand = new RelayCommand(run_command);
-            SaveCommand = new RelayCommand(save_command);
-            SelectAllBoolNBTs = new RelayCommand<FrameworkElement>(SelectAllBoolNBTsCommand);
-            ReverseAllBoolNBTs = new RelayCommand<FrameworkElement>(ReverseAllBoolNBTsCommand);
-            ClearUnnecessaryData = new RelayCommand(ClearUnnecessaryDataCommand);
-            #endregion
-
             #region 初始化字段
             buttonNormalBrush = new ImageBrush(new BitmapImage(new Uri(buttonNormalImage, UriKind.RelativeOrAbsolute)));
             Grid contentGrid = new();
@@ -445,12 +418,39 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void EntityPages_Loaded(object sender,RoutedEventArgs e)
+        public async void EntityPages_Loaded(object sender,RoutedEventArgs e)
         {
             currentEntityPage = sender as EntityPages;
-            EntityDataContext entityDataContext = (Window.GetWindow(currentEntityPage) as Entity).DataContext as EntityDataContext;
-            EntityIds = entityDataContext.EntityIds;
+            EntityDataContext entityDataContext = Window.GetWindow(currentEntityPage).DataContext as EntityDataContext;
             VersionSource = entityDataContext.VersionSource;
+            string entityImageFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                for (int i = 0; i < entityDataContext.EntityIdTable.Rows.Count; i++)
+                {
+                    DataRow entityRow = entityDataContext.EntityIdTable.Rows[i];
+                    #region 设置实体图标、名称和ID
+                    if (entityRow is not null && entityRow["id"] is string entityID)
+                    {
+                        string iconPath = File.Exists(entityImageFolderPath + entityID + "_spawn_egg.png") ? entityImageFolderPath + entityID + "_spawn_egg.png" : entityImageFolderPath + entityID + ".png";
+                        IconComboBoxItem iconComboBoxItem = new()
+                        {
+                            ComboBoxItemIcon = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
+                            ComboBoxItemText = entityRow["name"] is not null ? entityRow["name"].ToString() : "",
+                            ComboBoxItemId = entityID
+                        };
+                        EntityIDList.Add(iconComboBoxItem);
+                        if (entityDataContext.EntityIdTable.Rows[i]["Version"] is string version)
+                        {
+                            if (EntityIDListCopy.TryGetValue(version, out List<IconComboBoxItem> list))
+                                list.Add(iconComboBoxItem);
+                            else
+                                EntityIDListCopy.Add(version, [iconComboBoxItem]);
+                        }
+                    }
+                    #endregion
+                }
+            });
         }
 
         /// <summary>
@@ -460,8 +460,8 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// <param name="e"></param>
         public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            #region 处理版本控件的数据更新
             CancellationTokenSource cancellationTokenSource = new();
-            CancellationToken cancellationToken = new();
             await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
             {
                 await VersionComponents[i].Upgrade(CurrentMinVersion);
@@ -471,6 +471,32 @@ namespace cbhk.Generators.EntityGenerator.Components
                 await Task.Delay(0, cancellationToken);
                 item.Value.Invoke(item.Key, null);
             });
+            #endregion
+            #region 处理版本实体ID的更新
+            List<object> NeedRemovedItemList = [];
+            foreach (var item in EntityIDListCopy)
+            {
+                string versionString = item.Key.Replace(".", "");
+                if (int.Parse(versionString) <= CurrentMinVersion)
+                {
+                    if (!EntityIDList.Contains(item.Value[0]))
+                    {
+                        for (int i = 0; i < item.Value.Count; i++)
+                        {
+                            EntityIDList.Add(item.Value[i]);
+                        }
+                    }
+                }
+                else
+                {
+                    NeedRemovedItemList.AddRange(item.Value);
+                }
+            }
+            foreach (var item in NeedRemovedItemList)
+            {
+                EntityIDList.Remove(item as IconComboBoxItem);
+            }
+            #endregion
         }
 
         /// <summary>
@@ -484,7 +510,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             JObject targetObj = array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityIdString)
+                if (currentObj["type"].ToString() == SelectedEntityIDString)
                     return true;
                 return false;
             }).First() as JObject;
@@ -500,7 +526,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         private void FinalSettlement(object MultipleOrExtern)
         {
             CollectionCommonTagsMark();
-            Result = string.Join(",",SpecialTagsResult[SelectedEntityIdString].Select(item =>
+            Result = string.Join(",",SpecialTagsResult[SelectedEntityIDString].Select(item =>
             {
                 if (item != null && item.Result.Length > 0)
                     return item.Result;
@@ -514,13 +540,13 @@ namespace cbhk.Generators.EntityGenerator.Components
             }));
             Result = Result.Trim(',');
             if (!Give)
-            Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIdString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIdString + " ~ ~ ~";
+            Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
             else
             {
-                if (SelectedVersion == "1.12-")
-                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIdString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
+                if (CurrentMinVersion < 1130)
+                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
                 else
-                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIdString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
+                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
             }
 
             if(bool.Parse(MultipleOrExtern.ToString()))
@@ -543,10 +569,11 @@ namespace cbhk.Generators.EntityGenerator.Components
             settlement.Start(MultipleOrExtern);
         }
 
+        [RelayCommand]
         /// <summary>
         /// 运行保存
         /// </summary>
-        private void save_command()
+        private void Save()
         {
             //执行生成
             FinalSettlement(false);
@@ -569,14 +596,15 @@ namespace cbhk.Generators.EntityGenerator.Components
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 运行生成
         /// </summary>
-        private void run_command()
+        private void Run()
         {
             CollectionCommonTagsMark();
 
-            Result = (SpecialTagsResult.TryGetValue(SelectedEntityIdString, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
+            Result = (SpecialTagsResult.TryGetValue(SelectedEntityIDString, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
             {
                 if (item != null && item.Result.Length > 0)
                     return item.Result;
@@ -592,20 +620,20 @@ namespace cbhk.Generators.EntityGenerator.Components
 
             if (UseForTool)
             {
-                Result = "{id:\"minecraft:" + SelectedEntityIdString + "\"" + (Result != null && Result.Length > 0 ? "," + Result : "") + "}";
+                Result = "{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result != null && Result.Length > 0 ? "," + Result : "") + "}";
                 Entity entity = Window.GetWindow(currentEntityPage) as Entity;
                 entity.DialogResult = true;
                 return;
             }
 
             if (!Give)
-                Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIdString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIdString + " ~ ~ ~";
+                Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
             else
             {
-                if (SelectedVersion == "1.12-")
-                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIdString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
+                if (CurrentMinVersion < 1130)
+                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
                 else
-                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIdString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
+                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
             }
 
             if(SyncToFile && ExternFilePath.Length > 0 && File.Exists(ExternFilePath))
@@ -632,7 +660,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// </summary>
         /// <param name="showResult"></param>
         /// <returns></returns>
-        public string run_command(bool showResult)
+        public string Run(bool showResult)
         {
             CollectionCommonTagsMark();
             Result = "";
@@ -641,7 +669,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             string PassengersData = PassengerResult.Count > 0 ? "Passengers:[" + string.Join(",", PassengerResult.Select(item => item.Result)).Trim(',') + "]" : "";
             PassengersData = PassengersData == "Passengers:[]" ? "" : PassengersData;
 
-            Result = (SpecialTagsResult.TryGetValue(SelectedEntityIdString, out ObservableCollection<NBTDataStructure> value) && value.Count > 0? string.Join(",", value.Select(item =>
+            Result = (SpecialTagsResult.TryGetValue(SelectedEntityIDString, out ObservableCollection<NBTDataStructure> value) && value.Count > 0? string.Join(",", value.Select(item =>
             {
                 if (item != null && item.Result.Length > 0)
                     return item.Result;
@@ -658,19 +686,19 @@ namespace cbhk.Generators.EntityGenerator.Components
             if(UseForReference)
             {
                 Result = "";
-                Result = "{id:\"minecraft:" + SelectedEntityIdString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}";
+                Result = "{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}";
                 Entity entity = Window.GetWindow(currentEntityPage) as Entity;
                 return Result;
             }
 
             if (!Give)
-                Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIdString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIdString + " ~ ~ ~";
+                Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
             else
             {
-                if (SelectedVersion == "1.12-")
-                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIdString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
+                if (CurrentMinVersion < 1130)
+                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
                 else
-                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIdString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
+                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
             }
 
             if (showResult)
@@ -685,21 +713,6 @@ namespace cbhk.Generators.EntityGenerator.Components
             else
                 Clipboard.SetText(Result);
             return Result;
-        }
-
-        /// <summary>
-        /// 清除不需要的数据
-        /// </summary>
-        private void ClearUnnecessaryDataCommand()
-        {
-            Grid currentGrid = specialDataDictionary[SelectedEntityIdString];
-            specialDataDictionary.Clear();
-            specialDataDictionary.Add(SelectedEntityIdString, currentGrid);
-            foreach (var item in SpecialTagsResult)
-            {
-                if (item.Key != SelectedEntityIdString)
-                    item.Value.Clear();
-            }
         }
 
         /// <summary>
@@ -1927,11 +1940,11 @@ namespace cbhk.Generators.EntityGenerator.Components
                             Path = new PropertyPath(Request.nbtType + "Visibility"),
                             Source = this
                         };
-                        TextBox stringBox = new() { BorderBrush = blackBrush, Foreground = whiteBrush, Uid = Request.nbtType, Name = Request.key,Tag = new NBTDataStructure() { Result = "",Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
+                        TextBox stringBox = new() { BorderBrush = blackBrush, Foreground = whiteBrush, Uid = Request.nbtType, Name = Request.key, Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
                         displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         stringBox.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         stringBox.GotFocus += componentEvents.ValueChangedHandler;
-                        if(Request.dataType == "TAG_String_List")
+                        if (Request.dataType == "TAG_String_List")
                         {
                             string NewToolTip = Request.toolTip + "(以,分割成员,请遵守NBT语法)";
                             ToolTip toolTip = new()
@@ -1944,17 +1957,73 @@ namespace cbhk.Generators.EntityGenerator.Components
                         }
                         result.Add(stringBox);
                         #region 分析是否需要代入导入的数据
-                        if(ImportMode)
+                        if (ImportMode)
                         {
                             string key = Request.key;
                             if (!!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                            if(currentObj != null)
+                            if (currentObj != null)
                             {
-                                stringBox.Text = currentObj.ToString().Replace("\"","");
+                                stringBox.Text = currentObj.ToString().Replace("\"", "");
                             }
                             stringBox.Focus();
+                        }
+                        #endregion
+                    }
+                    break;
+                case "TAG_JsonComponent":
+                    {
+                        Binding visibilityBinder = new()
+                        {
+                            Mode = BindingMode.OneWay,
+                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Source = this
+                        };
+                        StylizedTextBox stylizedTextBox = new()
+                        {
+                            BorderBrush = blackBrush,
+                            Foreground = whiteBrush,
+                            Uid = Request.nbtType,
+                            Name = Request.key,
+                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                        };
+                        displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
+                        stylizedTextBox.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
+
+                        if (!VersionNBTList.ContainsKey(stylizedTextBox))
+                            VersionNBTList.Add(stylizedTextBox, componentEvents.StylizedTextBox_LostFocus);
+                        if (!VersionComponents.Contains(stylizedTextBox))
+                            VersionComponents.Add(stylizedTextBox);
+
+                        stylizedTextBox.GotFocus += componentEvents.ValueChangedHandler;
+                        if (Request.dataType == "TAG_JsonComponent")
+                        {
+                            string NewToolTip = Request.toolTip;
+                            ToolTip toolTip = new()
+                            {
+                                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
+                                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#484848")),
+                                Content = NewToolTip
+                            };
+                            displayText.ToolTip = toolTip;
+                        }
+                        result.Add(stylizedTextBox);
+                        #region 分析是否需要代入导入的数据
+                        if (ImportMode)
+                        {
+                            string key = Request.key;
+                            if (!!Give)
+                                key = "EntityTag." + key;
+                            JToken currentObj = ExternallyReadEntityData.SelectToken(key);
+                            if (currentObj != null)
+                            {
+                                RichParagraph richParagraph = new();
+                                RichRun richRun = richParagraph.Inlines.FirstInline as RichRun;
+                                stylizedTextBox.richTextBox.Document.Blocks.Add(richParagraph);
+                                richRun.Text = currentObj.ToString().Replace("\"", "");
+                            }
+                            stylizedTextBox.Focus();
                         }
                         #endregion
                     }
@@ -2144,6 +2213,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// </summary>
         public async Task UpdateUILayOut(Task task = null)
         {
+            SelectedEntityId ??= EntityIDList[0];
             string data = File.ReadAllText(SpecialNBTStructureFilePath);
             JArray array = JArray.Parse(data);
             //更新标签页显示文本
@@ -2154,7 +2224,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             List<JToken> targetList = array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityIdString)
+                if (currentObj["type"].ToString() == SelectedEntityIDString)
                     return true;
                 return false;
             }).ToList();
@@ -2168,7 +2238,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                 //计算本次与上次共通标签的差集,关闭指定菜单，而不是全部关闭再依次判断打开
                 List<string> closedCommonTagList = specialEntityCommonTagList.Except(commonTagList).ToList();
                 #region 处理特指NBT
-                if (!specialDataDictionary.TryGetValue(SelectedEntityIdString, out Grid value))
+                if (!SpecialDataDictionary.TryGetValue(SelectedEntityIDString, out Grid value))
                 {
                     JArray children = JArray.Parse(targetObj["children"].ToString());
                     List<FrameworkElement> components = [];
@@ -2207,7 +2277,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                                 LeftIndex = !LeftIndex;
                             }
                         }
-                        specialDataDictionary.TryAdd(SelectedEntityIdString, CacheGrid);
+                        SpecialDataDictionary.TryAdd(SelectedEntityIDString, CacheGrid);
                         if (SpecialViewer is not null)
                             SpecialViewer.Content = CacheGrid;
                         if (CacheGrid.Children.Count == 0)
@@ -2312,7 +2382,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             JObject targetObj = array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityIdString)
+                if (currentObj["type"].ToString() == SelectedEntityIDString)
                     return true;
                 return false;
             }).First() as JObject;
@@ -2340,7 +2410,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                     bool IsNumber = numberType == "pos" || numberType == "float_array" || numberType == "uuid" || numberType == "float" || numberType == "short" || numberType == "byte" || numberType == "int" || numberType == "long" || numberType == "double";
                     IsNumber = IsNumber && currentUID == "number";
                     string currentComponentType = dataType.ToLower().Replace("tag_", "");
-                    if (((currentComponentType == currentUID || currentComponentType == (currentUID + "_list") || IsNumber) && tabControl.SelectedIndex <= 5) || tabControl.SelectedIndex > 5)
+                    if (((currentComponentType == currentUID || currentComponentType == (currentUID + "_list") || IsNumber || (currentUID == "string" && currentComponentType == "jsoncomponent")) && tabControl.SelectedIndex <= 5) || tabControl.SelectedIndex > 5)
                     {
                         List<FrameworkElement> result = JsonToComponentConverter(commonItem, commonString);
                         result.Sort((x, y) => sortOrder.IndexOf(x.Uid).CompareTo(sortOrder.IndexOf(y.Uid)));
@@ -2408,7 +2478,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             JObject targetObj = array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityIdString)
+                if (currentObj["type"].ToString() == SelectedEntityIDString)
                     return true;
                 return false;
             }).First() as JObject;
@@ -2500,11 +2570,12 @@ namespace cbhk.Generators.EntityGenerator.Components
             return componentGroup;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 反选所有bool型NBT
         /// </summary>
         /// <param name="ele"></param>
-        private void ReverseAllBoolNBTsCommand(FrameworkElement ele)
+        private void ReverseAllBoolNBTs(FrameworkElement ele)
         {
             Accordion accordion = ele as Accordion;
             ScrollViewer scrollViewer = accordion.Content as ScrollViewer;
@@ -2520,10 +2591,11 @@ namespace cbhk.Generators.EntityGenerator.Components
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 全选所有bool型NBT
         /// </summary>
-        private void SelectAllBoolNBTsCommand(FrameworkElement ele)
+        private void SelectAllBoolNBTs(FrameworkElement ele)
         {
             Accordion accordion = ele as Accordion;
             ScrollViewer scrollViewer = accordion.Content as ScrollViewer;

@@ -1,11 +1,9 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
+﻿using cbhk.CustomControls;
 using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -13,7 +11,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Input;
 
 namespace cbhk.Generators.EntityGenerator.Components
 {
@@ -40,12 +37,30 @@ namespace cbhk.Generators.EntityGenerator.Components
                 Mode = BindingMode.OneWayToSource,
                 Converter = new TagToString()
             };
-            if (!context.SpecialTagsResult.ContainsKey(context.SelectedEntityIdString))
-                context.SpecialTagsResult.Add(context.SelectedEntityIdString, []);
+            if (!context.SpecialTagsResult.ContainsKey(context.SelectedEntityIDString))
+                context.SpecialTagsResult.Add(context.SelectedEntityIDString, []);
+            #endregion
+
+            #region 是否为Json组件
+            if (sender is StylizedTextBox stylizedTextBox && stylizedTextBox.Name == "CustomName")
+            {
+                stylizedTextBox.GotFocus -= ValueChangedHandler;
+                NBTDataStructure dataStructure = stylizedTextBox.Tag as NBTDataStructure;
+                stylizedTextBox.LostFocus += StylizedTextBox_LostFocus;
+                
+                context.CommonResult.Add(dataStructure);
+                currentIndex = context.CommonResult.Count - 1;
+                propertyPath = new PropertyPath("CommonResult[" + currentIndex + "]");
+
+                valueBinder.Path = propertyPath;
+                var currentTag = stylizedTextBox.Tag;
+                BindingOperations.SetBinding(stylizedTextBox, FrameworkElement.TagProperty, valueBinder);
+                stylizedTextBox.Tag = currentTag;
+            }
             #endregion
 
             #region 是否为穿戴装备的掉率
-            if(sender is Accordion && (sender as FrameworkElement).Name == "ArmorDropChances")
+            if (sender is Accordion && (sender as FrameworkElement).Name == "ArmorDropChances")
             {
                 Accordion accordion = sender as Accordion;
                 accordion.GotFocus -= ValueChangedHandler;
@@ -145,9 +160,9 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult["+ context.SelectedEntityIdString + "][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult["+ context.SelectedEntityIDString + "][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -175,9 +190,9 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
-                    string selectedEntityIdString = context.SelectedEntityIdString;
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    string selectedEntityIdString = context.SelectedEntityIDString;
                     propertyPath = new PropertyPath("SpecialTagsResult["+ selectedEntityIdString + "][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
@@ -206,9 +221,9 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult["+ context.SelectedEntityIdString + "][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult["+ context.SelectedEntityIDString + "][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = areaEffectCloudEffectsAccordion.Tag;
@@ -242,7 +257,8 @@ namespace cbhk.Generators.EntityGenerator.Components
             if (sender is Accordion && (sender as Accordion).Name == "Leash")
             {
                 Accordion accordion = sender as Accordion;
-                context.VersionNBTList.Add(accordion,Leash_LostFocus);
+                if (!context.VersionNBTList.ContainsKey(accordion))
+                    context.VersionNBTList.Add(accordion, Leash_LostFocus);
                 accordion.GotFocus -= ValueChangedHandler;
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += Leash_LostFocus;
@@ -255,10 +271,10 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
                     accordion.Uid = currentIndex.ToString();
-                    propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedEntityIdString + "][" + currentIndex + "]");
+                    propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedEntityIDString + "][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -274,10 +290,10 @@ namespace cbhk.Generators.EntityGenerator.Components
                 NBTDataStructure dataStructure = suspectsEntities.Tag as NBTDataStructure;
                 suspectsEntities.GotFocus -= ValueChangedHandler;
                 suspectsEntities.LostFocus += SuspectsEntities_LostFocus;
-                context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
+                context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
                 suspectsEntities.Uid = currentIndex.ToString();
-                propertyPath = new("SpecialTagsResult[context.SelectedEntityIdString][" + currentIndex + "]");
+                propertyPath = new("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = suspectsEntities.Tag;
@@ -293,10 +309,10 @@ namespace cbhk.Generators.EntityGenerator.Components
                 vibrationMonitors.GotFocus -= ValueChangedHandler;
                 NBTDataStructure dataStructure = vibrationMonitors.Tag as NBTDataStructure;
                 vibrationMonitors.LostFocus += VibrationMonitors_LostFocus;
-                context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
+                context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
                 vibrationMonitors.Uid = currentIndex.ToString();
-                propertyPath = new("SpecialTagsResult[context.SelectedEntityIdString][" + currentIndex + "]");
+                propertyPath = new("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = vibrationMonitors.Tag;
@@ -323,10 +339,10 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
                     accordion.Uid = currentIndex.ToString();
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIdString][" + currentIndex + "]");
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -353,10 +369,10 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
                     uUIDOrPosGroup.Uid = currentIndex.ToString();
-                    propertyPath = new("SpecialTagsResult[context.SelectedEntityIdString][" + currentIndex + "]");
+                    propertyPath = new("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = uUIDOrPosGroup.Tag;
@@ -371,7 +387,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                 BlockState blockState = sender as BlockState;
                 blockState.GotFocus -= ValueChangedHandler;
                 NBTDataStructure dataStructure = blockState.Tag as NBTDataStructure;
-                blockState.MouseLeave += BlockState_MouseLeave;
+                blockState.LostFocus += BlockState_LostFocus;
                 if (parent.Uid != "SpecialTags")
                 {
                     context.CommonResult.Add(dataStructure);
@@ -381,10 +397,10 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
                     blockState.Uid = currentIndex.ToString();
-                    propertyPath = new("SpecialTagsResult[context.SelectedEntityIdString][" + currentIndex + "]");
+                    propertyPath = new("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = blockState.Tag;
@@ -422,9 +438,9 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIdString][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = grid.Tag;
@@ -448,9 +464,9 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIdString][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = slider.Tag;
@@ -481,9 +497,9 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(textBox.Tag as NBTDataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIdString][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(textBox.Tag as NBTDataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
                 }
 
                 valueBinder.Path = propertyPath;
@@ -493,7 +509,7 @@ namespace cbhk.Generators.EntityGenerator.Components
             }
             #endregion
 
-            #region 当前为是否框
+            #region 当前为布尔值
             if (sender is TextCheckBoxs)
             {
                 TextCheckBoxs textCheckBoxs = sender as TextCheckBoxs;
@@ -510,9 +526,9 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIdString][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
                 }
 
                 valueBinder.Path = propertyPath;
@@ -538,10 +554,10 @@ namespace cbhk.Generators.EntityGenerator.Components
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIdString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIdString].Count - 1;
+                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
                     comboBox.Uid = currentIndex.ToString();
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIdString][" + currentIndex + "]");
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = comboBox.Tag;
@@ -549,6 +565,23 @@ namespace cbhk.Generators.EntityGenerator.Components
                 comboBox.Tag = currentTag;
             }
             #endregion
+        }
+
+        /// <summary>
+        /// 整合Json组件数据
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void StylizedTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            StylizedTextBox stylizedTextBox = sender as StylizedTextBox;
+            await Application.Current.Dispatcher.Invoke(async () =>
+            {
+                NBTDataStructure dataStructure = stylizedTextBox.Tag as NBTDataStructure;
+                string result = await stylizedTextBox.Result();
+                string quotationMark = stylizedTextBox.CurrentVersion < 113 ? "\"" : "'";
+                dataStructure.Result = "CustomName:" + quotationMark + result + quotationMark;
+            });
         }
 
         /// <summary>
@@ -706,7 +739,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                 if (result.Length > 0)
                 {
                     result = result.Remove(result.Length - 1, 1);
-                    dataStructure.Result = accordion.Name + ":[" + result.ToString().TrimEnd(',') + "]";
+                    dataStructure.Result = "ActiveEffects:[" + result.ToString().TrimEnd(',') + "]";
                 }
                 else
                     dataStructure.Result = "";
@@ -866,7 +899,7 @@ namespace cbhk.Generators.EntityGenerator.Components
                         string effectString = await (item as IVersionUpgrader).Result();
                         result.Append(effectString + ",");
                     }
-                    dataStructure.Result = accordion.Name + ":[" + result.ToString().TrimEnd(',') + "]";
+                    dataStructure.Result = "Effects:[" + result.ToString().TrimEnd(',') + "]";
                 }
                 else
                     dataStructure.Result = "";
@@ -1030,7 +1063,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void BlockState_MouseLeave(object sender, MouseEventArgs e)
+        private void BlockState_LostFocus(object sender, RoutedEventArgs e)
         {
             BlockState blockState = sender as BlockState;
             NBTDataStructure dataStructure = blockState.Tag as NBTDataStructure;

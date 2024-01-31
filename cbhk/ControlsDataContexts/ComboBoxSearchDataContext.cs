@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System;
 using System.Text.RegularExpressions;
+using cbhk.CustomControls;
 
 namespace cbhk.ControlsDataContexts
 {
@@ -126,13 +127,5 @@ namespace cbhk.ControlsDataContexts
             current_box.SelectedItem = selected_item;
             pop.IsOpen = false;
         }
-    }
-
-    public class IconComboBoxItem
-    {
-        public ImageSource ComboBoxItemIcon { get; set; } = new BitmapImage();
-
-        public string ComboBoxItemText { get; set; } = "";
-        public string ComboBoxItemId { get; set; } = "";
     }
 }

@@ -1,13 +1,8 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
+﻿using cbhk.CustomControls;
 using cbhk.GeneralTools;
-using System;
 using System.Collections.ObjectModel;
-using System.Data;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 
 namespace cbhk.Generators.ItemGenerator.Components
 {
@@ -16,22 +11,31 @@ namespace cbhk.Generators.ItemGenerator.Components
     /// </summary>
     public partial class CanPlaceOnItems : UserControl
     {
-        private IconComboBoxItem block;
-        public IconComboBoxItem Block
-        {
-            get => block;
-            set => block = value;
-        }
-
+        ItemPageDataContext itemPageDataContext = null;
         public string Result
         {
-            get => "\"" + Block.ComboBoxItemId.Replace("minecraft:", "") + "\"";
+            get
+            {
+                string result;
+                string currentBlockID = (ID.SelectedItem as IconComboBoxItem).ComboBoxItemId.Replace("minecraft:", "");
+                string id = currentBlockID;
+                result = "\"" + id + "\"";
+                for (int i = 0; i < itemPageDataContext.VersionIDList.Count; i++)
+                {
+                    if (itemPageDataContext.VersionIDList[i].HighVersionID == currentBlockID && itemPageDataContext.CurrentMinVersion < 113)
+                    {
+                        id = itemPageDataContext.VersionIDList[i].LowVersionID;
+                        result = "\"" + id + "\"";
+                        break;
+                    }
+                }
+                return result;
+            }
         }
 
         public CanPlaceOnItems()
         {
             InitializeComponent();
-            DataContext = this;
         }
 
         /// <summary>
@@ -55,9 +59,9 @@ namespace cbhk.Generators.ItemGenerator.Components
         /// <param name="e"></param>
         private void CanPlaceOnItemLoaded(object sender, RoutedEventArgs e)
         {
-            ComboBox comboBoxs = sender as ComboBox;
-            ItemPageDataContext itemPageDataContext = this.FindParent<ItemPages>().DataContext as ItemPageDataContext;
-            comboBoxs.ItemsSource = itemPageDataContext.BlockList;
+            ComboBox comboBox = sender as ComboBox;
+            itemPageDataContext = comboBox.FindParent<ItemPages>().DataContext as ItemPageDataContext;
+            comboBox.ItemsSource = itemPageDataContext.BlockIdList;
         }
     }
 }

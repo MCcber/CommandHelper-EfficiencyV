@@ -170,16 +170,18 @@ namespace cbhk.CustomControls
                         if (textString.Length > 0)
                         {
                             string colorString = Foreground.ToString().Remove(1, 2);
-                            string colorKey = ColorPickers.ColorPickers.PresetColorList[(Foreground as SolidColorBrush).Color];
                             if (CurrentVersion >= 113)
                                 result = "{\"text\":\"" + textString + (IsLastRun ? "\\\\n" : "") + "\"" + (colorString != "#000000" ? ",\"color\":\"" + colorString + "\"" : "") + (FontStyle == FontStyles.Italic ? ",\"italic\":true" : "") + (FontWeight == FontWeights.Bold ? ",\"bold\":true" : "") + (TextDecorations.Contains(underlined_style) ? ",\"underlined\":true" : "") + (TextDecorations.Contains(strikethrough_style) ? ",\"strikethrough\":true" : "") + (IsObfuscated && ObfuscateTimer.IsEnabled ? ",\"obfuscated\":true" : "") + EventData + "},";
                             else
+                            {
+                                string colorKey = ColorPickers.ColorPickers.PresetColorList[(Foreground as SolidColorBrush).Color];
                                 result = (colorKey.Length > 0 && colorKey != @"\\u00a7f" ? colorKey:"") +
                                     (FontStyle == FontStyles.Italic ? @"\\u00a7o" : "") +
                                     (FontWeight == FontWeights.Bold ? @"\\u00a7l" : "") +
                                     (TextDecorations.Contains(underlined_style) ? @"\\u00a7n" : "") +
                                     (TextDecorations.Contains(strikethrough_style) ? @"\\u00a7m" : "") +
                                     (IsObfuscated ? @"\\u00a7k" : "") + textString;
+                            }
                             if (result.Length > textString.Length && CurrentVersion < 113)
                                 result += @"\\u00a7r";
                         }
@@ -210,7 +212,6 @@ namespace cbhk.CustomControls
         /// </summary>
         public RichRun()
         {
-            Foreground = new SolidColorBrush(Colors.White);
             FontFamily = OriginFontFamily;
             ObfuscateTimer.Tick += ObfuscateTick;
             MouseEnter += ObfuscateTextMouseEnter;

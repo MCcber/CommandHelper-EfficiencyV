@@ -102,7 +102,7 @@ namespace cbhk.Generators.ItemGenerator.Components
         #endregion
 
         #region 合并结果
-        int currentVersion = 1202;
+        int currentVersion = 1205;
         async Task<string> IVersionUpgrader.Result()
         {
             await Upgrade(currentVersion);
@@ -144,6 +144,7 @@ namespace cbhk.Generators.ItemGenerator.Components
             {
                 itemPageDataContext.VersionComponents.Remove(EnchantmentItemsSource[i]);
                 EnchantmentItemsSource.RemoveAt(i);
+                i--;
             }
         }
 

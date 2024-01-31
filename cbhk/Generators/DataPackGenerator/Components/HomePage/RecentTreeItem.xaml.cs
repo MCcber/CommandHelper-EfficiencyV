@@ -20,7 +20,6 @@ namespace cbhk.Generators.DataPackGenerator.Components.HomePage
         public RecentTreeItem()
         {
             InitializeComponent();
-            DataContext = this;
         }
 
         /// <summary>
@@ -28,7 +27,7 @@ namespace cbhk.Generators.DataPackGenerator.Components.HomePage
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void Border_MouseEnter(object sender,MouseEventArgs e)
+        private void Border_MouseEnter(object sender,MouseEventArgs e)
         {
             MouseEnterPinZone = true;
         }
@@ -38,17 +37,17 @@ namespace cbhk.Generators.DataPackGenerator.Components.HomePage
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void Border_MouseLeave(object sender, MouseEventArgs e)
+        private void Border_MouseLeave(object sender, MouseEventArgs e)
         {
             MouseEnterPinZone = false;
         }
 
-        public void Grid_MouseEnter(object sender, MouseEventArgs e)
+        private void Grid_MouseEnter(object sender, MouseEventArgs e)
         {
             pinBox.Visibility = Visibility.Visible;
         }
 
-        public void Grid_MouseLeave(object sender, MouseEventArgs e)
+        private void Grid_MouseLeave(object sender, MouseEventArgs e)
         {
             pinBox.Visibility = Visibility.Hidden;
         }
@@ -58,7 +57,7 @@ namespace cbhk.Generators.DataPackGenerator.Components.HomePage
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void Border_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void Border_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             Border border = sender as Border;
             HomePageDataContext context = border.FindParent<DatapackInitializationForms.HomePage>().DataContext as HomePageDataContext;

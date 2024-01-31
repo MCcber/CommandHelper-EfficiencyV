@@ -108,7 +108,7 @@ namespace cbhk.GeneralTools
                         case "crafting_shapeness":
                             {
                                 RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.CraftingTable;
-                                CraftingTable craftingTable = recipeContext.AddRecipeCommand(type) as CraftingTable;
+                                CraftingTable craftingTable = recipeContext.AddExternRecipe(type) as CraftingTable;
                                 craftingTableDataContext context = craftingTable.DataContext as craftingTableDataContext;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
@@ -118,7 +118,7 @@ namespace cbhk.GeneralTools
                         case "smithing_trim":
                             {
                                 RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.SmithingTable;
-                                SmithingTable smithingTable = recipeContext.AddRecipeCommand(type) as SmithingTable;
+                                SmithingTable smithingTable = recipeContext.AddExternRecipe(type) as SmithingTable;
                                 smithingTableDataContext context = smithingTable.DataContext as smithingTableDataContext;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
@@ -127,7 +127,7 @@ namespace cbhk.GeneralTools
                         case "blasting":
                             {
                                 RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.BlastFurnace;
-                                BlastFurnace blastFurnace = recipeContext.AddRecipeCommand(type) as BlastFurnace;
+                                BlastFurnace blastFurnace = recipeContext.AddExternRecipe(type) as BlastFurnace;
                                 blastFurnaceDataContext context = blastFurnace.DataContext as blastFurnaceDataContext;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
@@ -136,7 +136,7 @@ namespace cbhk.GeneralTools
                         case "campfire_cooking":
                             {
                                 RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Campfire;
-                                Campfire campfire = recipeContext.AddRecipeCommand(type) as Campfire;
+                                Campfire campfire = recipeContext.AddExternRecipe(type) as Campfire;
                                 campfireDataContext context = campfire.DataContext as campfireDataContext;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
@@ -145,7 +145,7 @@ namespace cbhk.GeneralTools
                         case "smelting":
                             {
                                 RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Furnace;
-                                Furnace furnace = recipeContext.AddRecipeCommand(type) as Furnace;
+                                Furnace furnace = recipeContext.AddExternRecipe(type) as Furnace;
                                 furnaceDataContext context = furnace.DataContext as furnaceDataContext;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
@@ -154,7 +154,7 @@ namespace cbhk.GeneralTools
                         case "smoker":
                             {
                                 RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Smoker;
-                                Smoker smoker = recipeContext.AddRecipeCommand(type) as Smoker;
+                                Smoker smoker = recipeContext.AddExternRecipe(type) as Smoker;
                                 smokerDataContext context = smoker.DataContext as smokerDataContext;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
@@ -163,7 +163,7 @@ namespace cbhk.GeneralTools
                         case "stonecutting":
                             {
                                 RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Stonecutter;
-                                Stonecutter stonecutter = recipeContext.AddRecipeCommand(type) as Stonecutter;
+                                Stonecutter stonecutter = recipeContext.AddExternRecipe(type) as Stonecutter;
                                 stonecutterDataContext context = stonecutter.DataContext as stonecutterDataContext;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
@@ -201,7 +201,7 @@ namespace cbhk.GeneralTools
                 JObject nbtObj = JObject.Parse(nbtData);
                 //确定版本
                 bool version1_12 = Regex.IsMatch(data, @"^/setblock (minecraft:)?mob_spawner");
-                AddSpawnerData(nbtObj,version1_12?"1.12-":"1.13+",itemPageList);
+                AddSpawnerData(nbtObj,version1_12?"1.12.0":"1.13.0",itemPageList);
             }
             catch
             {
@@ -248,7 +248,7 @@ namespace cbhk.GeneralTools
             };
             SpawnerPageDataContext context = spawnerPage.DataContext as SpawnerPageDataContext;
             itemPageList.Add(richTabItems);
-            context.SelectedVersion = version;
+            context.SelectedVersion = version == "1.12.0" ? context.VersionSource[1] : context.VersionSource[0];
 
             #region 开启导入模式，为外部数据赋值
             context.ExternalSpawnerData = nbtObj;
@@ -260,7 +260,7 @@ namespace cbhk.GeneralTools
             {
                 foreach (JObject spawnPotential in spawnPotentials.Cast<JObject>())
                 {
-                    context.AddSpawnPotentialCommand(null);
+                    context.AddSpawnPotential(null);
                     SpawnPotential spawnPotentialInstance = context.SpawnPotentials[^1];
                     if (spawnPotential.SelectToken("weight") is JToken weight)
                         spawnPotentialInstance.weight.Value = short.Parse(weight.ToString());
@@ -453,7 +453,7 @@ namespace cbhk.GeneralTools
                     if (buyID.Length > 0)
                     {
                         ExistItem = true;
-                        context.AddTransactionItemCommand();
+                        context.AddTransactionItem();
                         string iconPath = rootPath + buyID + ".png";
                         if (File.Exists(iconPath))
                             context.transactionItems[^1].Buy.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
@@ -537,7 +537,7 @@ namespace cbhk.GeneralTools
             {
                 foreach (JObject gossip in Gossips.Cast<JObject>())
                 {
-                    context.AddGossipItemCommand();
+                    context.AddGossipItem();
                     JArray targetUID = gossip.SelectToken("Target") as JArray;
                     JObject type = gossip.SelectToken("Type") as JObject;
                     JToken value = gossip.SelectToken("Value");
@@ -558,11 +558,17 @@ namespace cbhk.GeneralTools
                 JToken profession = VillagerData.SelectToken("profession");
                 JToken type = VillagerData.SelectToken("type");
                 if(level != null)
-                context.VillagerLevel = level.ToString();
+                context.VillagerLevel = context.VillagerLevelSource.Where(item=>item.Text == level.ToString()).First();
                 if(profession != null)
-                    context.VillagerProfessionType = context.VillagerProfessionTypeDataBase.Where(item => item.Key == profession.ToString().Replace("minecraft:","")).First().Value;
+                {
+                    string professionType = context.VillagerProfessionTypeDataBase.Where(item => item.Key == profession.ToString().Replace("minecraft:", "")).First().Value;
+                    context.VillagerProfessionType = context.VillagerProfessionTypeSource.Where(item => item.Text == professionType).First();
+                }
                 if(type != null)
-                    context.VillagerType = context.VillagerTypeDataBase.Where(item => item.Key == type.ToString().Replace("minecraft:", "")).First().Value;
+                {
+                    string villagerType = context.VillagerTypeDataBase.Where(item => item.Key == type.ToString().Replace("minecraft:", "")).First().Value;
+                    context.VillagerType = context.VillagerTypeSource.Where(item => item.Text == villagerType).First();
+                }
             }
             #endregion
 
@@ -684,8 +690,8 @@ namespace cbhk.GeneralTools
                     context.ExternFilePath = filePath;
                 context.ExternallyReadEntityData = externData;
                 if (version1_12)
-                    context.SelectedVersion = "1.12-";
-                context.SelectedEntityId = context.EntityIds.Where(item => item.ComboBoxItemText == selectedEntityID).First();
+                    context.SelectedVersion = context.VersionSource[^1];
+                context.SelectedEntityId = context.EntityIDList.Where(item => item.ComboBoxItemText == selectedEntityID).First();
             }
             richTabItems.Content = entityPages;
             itemPageList.Add(richTabItems);
@@ -838,7 +844,7 @@ namespace cbhk.GeneralTools
                 context.ExternallyReadEntityData = externData;
             }
             if (version1_12)
-                context.SelectedVersion = "1.12-";
+                context.SelectedVersion.Text = "1.12-";
             DataRow item = ItemTable.Select("id='minecraft:"+selectedItemID+"'").First();
             context.SelectedItemId.ComboBoxItemId = item["id"].ToString();
 

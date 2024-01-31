@@ -31,13 +31,8 @@ namespace cbhk.Generators.RecipeGenerator.Components
         }
     }
 
-    public class stonecutterDataContext : ObservableObject
+    public partial class stonecutterDataContext : ObservableObject
     {
-        /// <summary>
-        /// 运行配方
-        /// </summary>
-        public RelayCommand Run { get; set; }
-
         #region 字段与引用
         /// <summary>
         /// 存储最终结果
@@ -168,20 +163,18 @@ namespace cbhk.Generators.RecipeGenerator.Components
 
         public stonecutterDataContext()
         {
-            #region 绑定指令
-            Run = new RelayCommand(RunCommand);
-            #endregion
             #region 初始化数据
             MaterialTag.Add("");
             #endregion
         }
 
+        [RelayCommand]
         /// <summary>
         /// 执行配方
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void RunCommand()
+        public void Run()
         {
             #region 合成最终数据
             Result = "{\r\n  \"type\": \"minecraft:stonecutting\",";
