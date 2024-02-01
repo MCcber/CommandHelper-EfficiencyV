@@ -276,7 +276,7 @@ namespace cbhk.Generators.ItemGenerator.Components
         {
             currentVersion = version;
             await Task.Delay(0);
-            if (version < 113)
+            if (version < 1130)
                 enchantmentKey = "ench";
             else
                 enchantmentKey = "Enchantments";

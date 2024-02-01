@@ -574,13 +574,26 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// <param name="e"></param>
         public async void StylizedTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            StylizedTextBox stylizedTextBox = sender as StylizedTextBox;
             await Application.Current.Dispatcher.Invoke(async () =>
             {
+                StylizedTextBox stylizedTextBox = sender as StylizedTextBox;
+                EntityPages entityPages = stylizedTextBox.FindParent<EntityPages>();
+                if (entityPages is null)
+                {
+                    return;
+                }
+                EntityPagesDataContext entityPagesDataContext = entityPages.DataContext as EntityPagesDataContext;
+                await stylizedTextBox.Upgrade(entityPagesDataContext.CurrentMinVersion);
                 NBTDataStructure dataStructure = stylizedTextBox.Tag as NBTDataStructure;
+                dataStructure.Result = "";
                 string result = await stylizedTextBox.Result();
-                string quotationMark = stylizedTextBox.CurrentVersion < 113 ? "\"" : "'";
-                dataStructure.Result = "CustomName:" + quotationMark + result + quotationMark;
+                string nameResult = (stylizedTextBox.CurrentVersion >= 1130 ? "'[" : @"\\\\\\\""") + result.TrimEnd(',') + (stylizedTextBox.CurrentVersion >= 1130 ? "]'" : @"\\\\\\\""");
+                nameResult = nameResult.Replace(@"\\n", "");
+                if (nameResult.Trim().Length > 0)
+                {
+                    entityPagesDataContext.HaveCustomName = true;
+                    dataStructure.Result = "CustomName:" + nameResult;
+                }
             });
         }
 

@@ -88,7 +88,7 @@ namespace cbhk.Generators.ItemGenerator.Components
         private void UpdateEnchantmentID()
         {
             id = "";
-            if (currentVersion < 113)
+            if (currentVersion < 1130)
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {

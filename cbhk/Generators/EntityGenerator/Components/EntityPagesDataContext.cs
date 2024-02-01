@@ -43,6 +43,8 @@ namespace cbhk.Generators.EntityGenerator.Components
             get => give;
             set => SetProperty(ref give, value);
         }
+
+        public bool HaveCustomName = false;
         #endregion
 
         #region 作为工具或引用
@@ -507,13 +509,18 @@ namespace cbhk.Generators.EntityGenerator.Components
             #region 搜索当前实体ID对应的JSON对象
             string data = File.ReadAllText(SpecialNBTStructureFilePath);
             JArray array = JArray.Parse(data);
-            JObject targetObj = array.Where(item =>
+            List<JToken> result = array.Where(item =>
             {
                 JObject currentObj = item as JObject;
                 if (currentObj["type"].ToString() == SelectedEntityIDString)
                     return true;
                 return false;
-            }).First() as JObject;
+            }).ToList();
+            if(result.Count == 0)
+            {
+                return;
+            }
+            JObject targetObj = result[0] as JObject;
             #endregion
             CurrentCommonTags.Clear();
             CurrentCommonTags = JArray.Parse(targetObj["common"].ToString()).ToList().ConvertAll(item=>item.ToString());
@@ -540,11 +547,16 @@ namespace cbhk.Generators.EntityGenerator.Components
             }));
             Result = Result.Trim(',');
             if (!Give)
-            Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
+            {
+                if (CurrentMinVersion < 1130 && HaveCustomName)
+                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~") + @"\\\""}\""}}""}}";
+                else
+                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
+            }
             else
             {
-                if (CurrentMinVersion < 1130)
-                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
+                if (CurrentMinVersion < 1130 && HaveCustomName)
+                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
                 else
                     Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
             }
@@ -627,11 +639,21 @@ namespace cbhk.Generators.EntityGenerator.Components
             }
 
             if (!Give)
-                Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
+            {
+                if (CurrentMinVersion < 1130 && HaveCustomName)
+                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~") + @"\\\""}\""}}""}}";
+                else
+                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
+            }
             else
             {
                 if (CurrentMinVersion < 1130)
-                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
+                {
+                    if (!HaveCustomName)
+                        Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
+                    else
+                        Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
+                }
                 else
                     Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
             }
@@ -685,16 +707,23 @@ namespace cbhk.Generators.EntityGenerator.Components
 
             if(UseForReference)
             {
-                Result = "";
                 Result = "{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}";
                 Entity entity = Window.GetWindow(currentEntityPage) as Entity;
                 return Result;
             }
 
             if (!Give)
-                Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
+            {
+                if (CurrentMinVersion < 1130 && HaveCustomName)
+                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~") + @"\\\""}\""}}""}}";
+                else
+                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
+            }
             else
             {
+                if (CurrentMinVersion < 1130 && HaveCustomName)
+                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
+                else
                 if (CurrentMinVersion < 1130)
                     Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
                 else
@@ -1990,11 +2019,13 @@ namespace cbhk.Generators.EntityGenerator.Components
                         };
                         displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         stylizedTextBox.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
+                        stylizedTextBox.colorPicker.PropertyChanged += (a,b) =>
+                        {
+                            componentEvents.StylizedTextBox_LostFocus(stylizedTextBox,null);
+                        };
 
                         if (!VersionNBTList.ContainsKey(stylizedTextBox))
                             VersionNBTList.Add(stylizedTextBox, componentEvents.StylizedTextBox_LostFocus);
-                        if (!VersionComponents.Contains(stylizedTextBox))
-                            VersionComponents.Add(stylizedTextBox);
 
                         stylizedTextBox.GotFocus += componentEvents.ValueChangedHandler;
                         if (Request.dataType == "TAG_JsonComponent")
@@ -2352,10 +2383,9 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void TagsTab_SelectionChanged(object sender, SelectionChangedEventArgs e) => await GeneratorSpecifyTags(sender as TabControl);
-
-        private async Task GeneratorSpecifyTags(TabControl tabControl)
+        public async void TagsTab_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            TabControl tabControl = sender as TabControl;
             if (tabControl.SelectedItem is not TextTabItems textTabItem) return;
             string currentUID = textTabItem.Uid;
             ScrollViewer tabContent = textTabItem.Content as ScrollViewer;
@@ -2379,13 +2409,18 @@ namespace cbhk.Generators.EntityGenerator.Components
             #region 搜索当前实体ID对应的JSON对象
             string data = File.ReadAllText(SpecialNBTStructureFilePath);
             JArray array = JArray.Parse(data);
-            JObject targetObj = array.Where(item =>
+            List<JToken> result = array.Where(item =>
             {
                 JObject currentObj = item as JObject;
                 if (currentObj["type"].ToString() == SelectedEntityIDString)
                     return true;
                 return false;
-            }).First() as JObject;
+            }).ToList();
+            if(result.Count == 0)
+            {
+                return;
+            }
+            JObject targetObj = result[0] as JObject;
             #endregion
 
             string type = targetObj["type"].ToString();
@@ -2412,9 +2447,9 @@ namespace cbhk.Generators.EntityGenerator.Components
                     string currentComponentType = dataType.ToLower().Replace("tag_", "");
                     if (((currentComponentType == currentUID || currentComponentType == (currentUID + "_list") || IsNumber || (currentUID == "string" && currentComponentType == "jsoncomponent")) && tabControl.SelectedIndex <= 5) || tabControl.SelectedIndex > 5)
                     {
-                        List<FrameworkElement> result = JsonToComponentConverter(commonItem, commonString);
-                        result.Sort((x, y) => sortOrder.IndexOf(x.Uid).CompareTo(sortOrder.IndexOf(y.Uid)));
-                        components.AddRange(result);
+                        List<FrameworkElement> currentResult = JsonToComponentConverter(commonItem, commonString);
+                        currentResult.Sort((x, y) => sortOrder.IndexOf(x.Uid).CompareTo(sortOrder.IndexOf(y.Uid)));
+                        components.AddRange(currentResult);
                     }
                 }
             }
@@ -2425,6 +2460,10 @@ namespace cbhk.Generators.EntityGenerator.Components
             {
                 foreach (FrameworkElement item in components)
                 {
+                    if(item is IVersionUpgrader versionUpgrader)
+                    {
+                        versionUpgrader.Upgrade(CurrentMinVersion);
+                    }
                     if (LeftIndex || subGrid.RowDefinitions.Count == 0)
                         subGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
                     subGrid.Children.Add(item);

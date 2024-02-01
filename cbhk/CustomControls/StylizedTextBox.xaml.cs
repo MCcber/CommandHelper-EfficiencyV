@@ -10,6 +10,7 @@ using System.Windows.Input;
 using cbhk.CustomControls.Interfaces;
 using System.Threading.Tasks;
 using System.Text;
+using cbhk.Generators.SignGenerator;
 
 namespace cbhk.CustomControls
 {
@@ -27,7 +28,7 @@ namespace cbhk.CustomControls
                 currentVersion = value;
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    IsPresetMode = CurrentVersion < 113;
+                    IsPresetMode = CurrentVersion < 1130;
                 });
             }
         }
@@ -44,6 +45,8 @@ namespace cbhk.CustomControls
 
         public static readonly DependencyProperty IsPresetModeProperty =
             DependencyProperty.Register("IsPresetMode", typeof(bool), typeof(StylizedTextBox), new PropertyMetadata(default(bool)));
+
+        public bool IsMultiLine = false;
 
         public StylizedTextBox()
         {
@@ -220,7 +223,7 @@ namespace cbhk.CustomControls
             }
         }
 
-        private void CannotPressKey_KeyDown(object sender, KeyEventArgs e) => e.Handled = e.Key == Key.Enter;
+        private void CannotPressKey_KeyDown(object sender, KeyEventArgs e) => e.Handled = e.Key == Key.Enter && !IsMultiLine;
 
         public async Task Upgrade(int version)
         {
@@ -231,16 +234,42 @@ namespace cbhk.CustomControls
         public async Task<string> Result()
         {
             string result = "";
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 StringBuilder runResultList = new();
                 Paragraph paragraph = richTextBox.Document.Blocks.FirstBlock as Paragraph;
-                List<RichRun> richRuns = paragraph.Inlines.Cast<RichRun>().ToList();
-                foreach (var item in richRuns)
+                List<RichRun> richRuns = [];
+                if (IsMultiLine)
                 {
-                    item.CurrentVersion = CurrentVersion;
-                    runResultList.Append(item.Result);
+                    foreach (var item in richTextBox.Document.Blocks.Cast<Paragraph>())
+                    {
+                        richRuns.AddRange(item.Inlines.Cast<RichRun>().ToList());
+                    }
                 }
+                else
+                    richRuns = paragraph.Inlines.Cast<RichRun>().ToList();
+                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                {
+                    await Task.Delay(0);
+                    if (Name == "ItemLore" && CurrentVersion >= 1130)
+                        runResultList.Append("'[");
+                    foreach (var item in richRuns)
+                    {
+                        item.CurrentVersion = CurrentVersion;
+                        string currentResult = item.Result;
+                        int commaIndex = currentResult.IndexOf(',');
+                        if (commaIndex > -1 && currentResult[(commaIndex - 4)..(commaIndex - 1)] == @"\\n" && Name == "ItemLore" && CurrentVersion >= 1130)
+                            runResultList.Append(currentResult.TrimEnd(',').Remove(commaIndex - 4, 3) + "]','[");
+                        else
+                            runResultList.Append(currentResult.TrimEnd('\n'));
+                    }
+                    if (Name == "ItemLore" && CurrentVersion >= 1130)
+                        runResultList.Append("]'");
+                });
+                if (runResultList.ToString().EndsWith(",'[]'"))
+                    runResultList.Remove(runResultList.Length - 5, 5);
+                if (runResultList.ToString() == "'[]'")
+                    runResultList.Clear();
                 result = runResultList.ToString();
             });
             return result.TrimEnd(',');

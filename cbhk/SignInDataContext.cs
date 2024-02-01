@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Input;
@@ -16,7 +15,6 @@ using cbhk.GeneralTools.MessageTip;
 using System.Data;
 using cbhk.GeneralTools;
 using System.Data.SQLite;
-using System.Data.Common;
 
 namespace cbhk
 {

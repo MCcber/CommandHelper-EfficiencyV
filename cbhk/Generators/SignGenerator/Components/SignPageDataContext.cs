@@ -350,7 +350,7 @@ namespace cbhk.Generators.SignGenerator.Components
             CancellationToken cancellationToken = new();
             await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
             {
-                if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 113)
+                if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 1130)
                 {
                     StylizedTextBox stylizedTextBox = VersionComponents[i] as StylizedTextBox;
                     if (stylizedTextBox.richTextBox.Document.Blocks.Count > 0)

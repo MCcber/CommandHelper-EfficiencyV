@@ -13,6 +13,7 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -58,7 +59,7 @@ namespace cbhk.Generators.ItemGenerator.Components
             set
             {
                 SetProperty(ref selectedVersion, value);
-                CurrentMinVersion = int.Parse(selectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
+                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
             }
         }
 
@@ -110,7 +111,7 @@ namespace cbhk.Generators.ItemGenerator.Components
                 SetProperty(ref selectedItemId, value);
                 SpecialViewer?.Dispatcher.Invoke(UpdateUILayOut);
                 LowVersionId = "";
-                if (CurrentMinVersion < 113)
+                if (CurrentMinVersion < 1130)
                 {
                     List<VersionID> matchVersionIDList = VersionIDList.Where(item => item.HighVersionID == SelectedItemId.ComboBoxItemId).ToList();
                     if (matchVersionIDList.Count > 0)
@@ -440,6 +441,7 @@ namespace cbhk.Generators.ItemGenerator.Components
                     {
                         HideInfomationTable = datacontext.HideInfomationTable
                     };
+                    VersionComponents.Add(common);
                     ObservableCollection<string> HideFlagsSource = [];
                     (item.Content as ScrollViewer).Content = common;
                     foreach (DataRow row in datacontext.HideInfomationTable.Rows)
@@ -459,9 +461,8 @@ namespace cbhk.Generators.ItemGenerator.Components
                 if(item.Uid == "Function")
                 {
                     function = new();
-                    VersionComponents.Add(function as IVersionUpgrader);
+                    VersionComponents.Add(function);
                     (item.Content as ScrollViewer).Content = function;
-                    VersionComponents.Add(function as IVersionUpgrader);
                 }
                 item.DataContext = this;
             }
@@ -608,7 +609,7 @@ namespace cbhk.Generators.ItemGenerator.Components
             #region 更新子控件的版本以及执行数据更新事件
             await Parallel.ForAsync(0,VersionComponents.Count,async (i, cancellationTokenSource) =>
             {
-                if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 113)
+                if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 1130)
                 {
                     StylizedTextBox stylizedTextBox = VersionComponents[i] as StylizedTextBox;
                     if (stylizedTextBox.richTextBox.Document.Blocks.Count > 0)
@@ -655,7 +656,7 @@ namespace cbhk.Generators.ItemGenerator.Components
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                data.ItemDamage.IsEnabled = CurrentMinVersion >= 113;
+                data.ItemDamage.IsEnabled = CurrentMinVersion >= 1130;
                 if (!data.ItemDamage.IsEnabled)
                 {
                     SelectedItemId ??= ItemIDList[0];
@@ -683,7 +684,7 @@ namespace cbhk.Generators.ItemGenerator.Components
                 ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItemId.ComboBoxItemId];
                 nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
             }
-            string commonResult = await common.GetResult();
+            string commonResult = await common.Result();
             string functionResult = await (function as IVersionUpgrader).Result();
             string dataResult = await data.Result();
             nbt.Append(commonResult + functionResult + dataResult);
@@ -762,10 +763,11 @@ namespace cbhk.Generators.ItemGenerator.Components
                 ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItemId.ComboBoxItemId];
                 nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
             }
-            string commonData = await common?.GetResult();
+
+            string commonData = await common.Result();
             string functionData = await (function as IVersionUpgrader).Result();
             string dataResult = await data.Result();
-            nbt.Append(commonData + functionData + dataResult + (!Summon && CurrentMinVersion >= 113  && data?.ItemDamage.Value > 0 ? "Damage:" + data?.ItemDamage.Value : ""));
+            nbt.Append(commonData + functionData + dataResult + (!Summon && CurrentMinVersion >= 1130  && data?.ItemDamage.Value > 0 ? "Damage:" + data?.ItemDamage.Value : ""));
             if (nbt.ToString().EndsWith(','))
                 nbt.Remove(nbt.ToString().Length - 1, 1);
 
@@ -807,6 +809,9 @@ namespace cbhk.Generators.ItemGenerator.Components
             else
                 Result = "summon item" + " ~ ~ ~ {Item:" + nbt + "}";
 
+            if (CurrentMinVersion < 1130 && (common.ItemNameValue.Length > 0 || common.ItemLoreValue.Length > 0))
+                Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + Result + @"\\\""}\""}}""}}";
+
             if (ShowGeneratorResult)
             {
                 Displayer displayer = Displayer.GetContentDisplayer();
@@ -828,7 +833,7 @@ namespace cbhk.Generators.ItemGenerator.Components
                 ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItemId.ComboBoxItemId];
                 nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
             }
-            string CommonResult = await common.GetResult();
+            string CommonResult = await common.Result();
             string FunctionResult = await (function as IVersionUpgrader).Result();
             string dataResult = await data.Result();
             nbt.Append(CommonResult + FunctionResult + dataResult + (!Summon && SelectedVersion.Text == "1.13+" && data.ItemDamage.Value > 0 ? "Damage:" + data.ItemDamage.Value : ""));

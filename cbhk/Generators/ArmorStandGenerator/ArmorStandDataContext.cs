@@ -1445,7 +1445,7 @@ namespace cbhk.Generators.ArmorStandGenerator
             string CustomNameValue = await stylizedTextBox.Result();
             if (CustomNameValue.Trim().Length > 0)
             {
-                CustomName = "CustomName:" + (CurrentMinVersion >= 113 ? "'[" : @"\\\\\\\""") + CustomNameValue.TrimEnd(',') + (CurrentMinVersion >= 113 ? "]'" : @"\\\\\\\""") + ",";
+                CustomName = "CustomName:" + (CurrentMinVersion >= 1130 ? "'[" : @"\\\\\\\""") + CustomNameValue.TrimEnd(',') + (CurrentMinVersion >= 1130 ? "]'" : @"\\\\\\\""") + ",";
                 CustomName = CustomName.Replace(@"\\n","");
             }
 
@@ -1457,10 +1457,10 @@ namespace cbhk.Generators.ArmorStandGenerator
             #region Result
             string nbt = CustomName + BoolNBTs + Equipments + DisabledValue + CustomNameVisibleString + Tags + PoseString;
             nbt = nbt.TrimEnd(',');
-            if (CurrentMinVersion >= 113)
+            if (CurrentMinVersion >= 1130)
                 result = "summon armor_stand ~ ~ ~" + (nbt != "" ? " {" + nbt + "}" : "");
             else
-                result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右键戳我\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""summon armor_stand ~ ~ ~ {" + nbt + @"}\\\""}\""}}""}}";
+                result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""summon armor_stand ~ ~ ~ {" + nbt + @"}\\\""}\""}}""}}";
             #endregion
 
             #endregion

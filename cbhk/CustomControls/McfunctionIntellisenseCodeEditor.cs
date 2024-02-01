@@ -79,9 +79,11 @@ namespace cbhk.CustomControls
                 isCompletionWindowShowing = value;
                 if (isCompletionWindowShowing)
                 {
+                    completionWindow.StartOffset = TextArea.Caret.Offset;
                     completionWindow.Show();
                 }
                 else
+                if(completionWindow is not null)
                 {
                     completionWindow.Close();
                 }
@@ -227,7 +229,7 @@ namespace cbhk.CustomControls
                     //}
                     string message = Encoding.UTF8.GetString(data, 0, dataLength);
                     //result.Clear();
-                    McfunctionIntellisenseDataContext context = JsonSerializer.Deserialize<McfunctionIntellisenseDataContext>(message)!;
+                    McfunctionIntellisenseDataContext context = JsonSerializer.Deserialize<McfunctionIntellisenseDataContext>(message);
                     dataContext = context;
                     IntellisenseService();
                     InitAndShowCompletionWindow();
@@ -269,6 +271,7 @@ namespace cbhk.CustomControls
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
+                IsCompletionWindowShowing = false;
                 completionWindow = new(TextArea)
                 {
                     Background = grayBrush,
@@ -296,6 +299,7 @@ namespace cbhk.CustomControls
                     listBox.SelectedIndex = 0;
                     listBox.SetValue(VirtualizingStackPanel.IsVirtualizingProperty, true);
                     listBox.SetValue(VirtualizingStackPanel.VirtualizationModeProperty, VirtualizationMode.Recycling);
+                    completionWindow.StartOffset = TextArea.Caret.Offset;
                     IsCompletionWindowShowing = true;
                 });
             }
@@ -1618,7 +1622,21 @@ namespace cbhk.CustomControls
         private async Task PushContextToServer(bool NeedCalculate = true)
         {
             dataContext.IsNeedCalculate = NeedCalculate;
-            await SendData();
+            try
+            {
+                communiteTokenSource.Cancel();
+            }
+            catch { }
+
+            // 创建新的延迟任务
+            communiteTokenSource = new CancellationTokenSource();
+
+            try
+            {
+                await Task.Delay(250, communiteTokenSource.Token);
+                await SendData();
+            }
+            catch { }
         }
 
         /// <summary>
@@ -1685,6 +1703,7 @@ namespace cbhk.CustomControls
             Application.Current.Dispatcher.Invoke(() =>
             {
                 completionWindow = new(TextArea);
+                IsCompletionWindowShowing = false;
             });
             IsCompletionWindowShowing = false;
             if (dataContext.CurrentCode.TrimStart().StartsWith('$') && CompletionLength > 0)
@@ -1854,6 +1873,7 @@ namespace cbhk.CustomControls
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
+                        if(completionWindow.CompletionList.ListBox.SelectedIndex > 0)
                         completionWindow.CompletionList.ListBox.SelectedIndex--;
                         completionWindow.CompletionList.ScrollViewer.ScrollToVerticalOffset(0);
                     });
@@ -1975,7 +1995,7 @@ namespace cbhk.CustomControls
             e.Handled = e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.Space;
             if (e.Handled)
             {
-                communiteTokenSource = new();
+                communiteTokenSource.Cancel();
                 GetCurrentLineText();
                 GetTypingText();
                 dataContext.CurrentLineIndex = TextArea.Caret.Line - 1;
@@ -2111,8 +2131,8 @@ namespace cbhk.CustomControls
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            completionWindow = new(TextArea);
                             IsCompletionWindowShowing = false;
+                            completionWindow = new(TextArea);
                         });
                         dataContext.CommandPath = "";
                     }
@@ -2231,8 +2251,8 @@ namespace cbhk.CustomControls
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            completionWindow = new(TextArea);
                             IsCompletionWindowShowing = false;
+                            completionWindow = new(TextArea);
                         });
                     }
                 }, communiteTokenSource.Token);

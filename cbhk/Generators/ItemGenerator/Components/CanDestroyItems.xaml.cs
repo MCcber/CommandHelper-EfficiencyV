@@ -22,7 +22,7 @@ namespace cbhk.Generators.ItemGenerator.Components
                 result = "\"" + id + "\"";
                 for (int i = 0; i < itemPageDataContext.VersionIDList.Count; i++)
                 {
-                    if (itemPageDataContext.VersionIDList[i].HighVersionID == currentBlockID && itemPageDataContext.CurrentMinVersion < 113)
+                    if (itemPageDataContext.VersionIDList[i].HighVersionID == currentBlockID && itemPageDataContext.CurrentMinVersion < 1130)
                     {
                         id = itemPageDataContext.VersionIDList[i].LowVersionID;
                         result = "\"" + id + "\"";

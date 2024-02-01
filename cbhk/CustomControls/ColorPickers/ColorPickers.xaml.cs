@@ -35,7 +35,7 @@ namespace cbhk.CustomControls.ColorPickers
             }
         }
 
-        public static Dictionary<Color, string> PresetColorList = new() { { Colors.Black, @"\\u00a70" }, { Colors.DarkBlue, @"\\u00a71" }, { Colors.DarkGreen, @"\\u00a72" },{ Colors.Cyan,@"\\u00a73" }, { Colors.DarkRed, @"\\u00a74" }, { Colors.Purple, @"\\u00a75" }, { Colors.Gold, @"\\u00a76" }, { Colors.LightGray, @"\\u00a77" }, { Colors.DarkGray, @"\\u00a78" }, { Colors.Blue, @"\\u00a79" }, { Colors.Green, @"\\u00a7a" }, { Colors.LightBlue, @"\\u00a7b" }, { Colors.Red, @"\\u00a7c" }, { Colors.Pink, @"\\u00a7d" }, { Colors.Yellow, @"\\u00a7e" }, { Colors.White, @"\\u00a7f" } };
+        public static Dictionary<Color, string> PresetColorList = new() { { Colors.Black, @"\\u00a70" }, { Colors.DarkBlue, @"\\u00a71" }, { Colors.DarkGreen, @"\\u00a72" },{ Colors.Cyan,@"\\u00a73" }, { Colors.DarkRed, @"\\u00a74" }, { Colors.Purple, @"\\u00a75" }, { Colors.Gold, @"\\u00a76" }, { Colors.LightGray, @"\\u00a77" }, { Colors.DarkGray, @"\\u00a78" }, { Colors.Blue, @"\\u00a79" }, { Colors.LightGreen, @"\\u00a7a" }, { Colors.LightBlue, @"\\u00a7b" }, { Colors.Red, @"\\u00a7c" }, { Colors.Pink, @"\\u00a7d" }, { Colors.Yellow, @"\\u00a7e" }, { Colors.White, @"\\u00a7f" } };
 
         public ColorPickers()
         {

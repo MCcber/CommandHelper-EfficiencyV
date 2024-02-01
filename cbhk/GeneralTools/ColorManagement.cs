@@ -1,76 +1,38 @@
 ﻿using System;
-using System.Collections;
-using System.Drawing;
-using System.Reflection;
+using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace cbhk.GeneralTools
 {
     public static class ColorManagement
     {
-        private static ArrayList Hex;
-        /// <summary>
-        /// Returns the "nearest" color from a given "color space"
-        /// </summary>
-        /// <param name="input_color">The color to be approximated</param>
-        /// <returns>The nearest color</returns>
-        public static Color GetNearestWebColor(Color input_color)
+        private static List<Color> PresetColorList = [Colors.Black, Colors.DarkBlue, Colors.DarkGreen, Colors.Cyan, Colors.DarkRed, Colors.Purple, Colors.Gold, Colors.LightGray, Colors.DarkGray, Colors.Blue, Colors.LightGreen, Colors.LightBlue, Colors.Red, Colors.Pink, Colors.Yellow, Colors.White];
+        public static Color ToNearestPredefinedColor(this Color color)
         {
-            // get the colorspace as an ArrayList
-            Hex = GetHex();
-            // initialize the RGB-Values of input_color
-            double dbl_input_red = Convert.ToDouble(input_color.R);
-            double dbl_input_green = Convert.ToDouble(input_color.G);
-            double dbl_input_blue = Convert.ToDouble(input_color.B);
-            // the Euclidean distance to be computed
-            // set this to an arbitrary number
-            // must be greater than the largest possible distance (appr. 441.7)
-            double distance = 500.0;
-            // store the interim result
-            double temp;
-            // RGB-Values of test colors
-            double dbl_test_red;
-            double dbl_test_green;
-            double dbl_test_blue;
-            // initialize the result
-            Color nearest_color = Color.Empty;
-            foreach (object o in Hex)
+            double minDistance = double.MaxValue;
+            Color nearestColor = default;
+
+            foreach (var item in PresetColorList)
             {
-                // compute the Euclidean distance between the two colors
-                // note, that the alpha-component is not used in this example
-                dbl_test_red = Math.Pow(Convert.ToDouble(((Color)o).R) - dbl_input_red, 2.0);
-                dbl_test_green = Math.Pow(Convert.ToDouble(((Color)o).G) - dbl_input_green, 2.0);
-                dbl_test_blue = Math.Pow(Convert.ToDouble(((Color)o).B) - dbl_input_blue, 2.0);
-                temp = Math.Sqrt(dbl_test_blue + dbl_test_green + dbl_test_red);
-                // explore the result and store the nearest color
-                if (temp < distance)
+                var distance = GetDistance(color, item);
+                if (distance < minDistance)
                 {
-                    distance = temp;
-                    nearest_color = (Color)o;
+                    minDistance = distance;
+                    nearestColor = item;
                 }
             }
-            // done :-)
-            return nearest_color;
+
+            return nearestColor;
         }
 
-        /// <summary>
-        /// Returns an ArrayList filled with "Hex"
-        /// </summary>
-        /// <returns>Hex</returns>
-        /// <remarks>Many thanks to Julijan Sribar for his excellent article (http://www.codeproject.com/cs/miscctrl/MultiTabColorPicker.asp)</remarks>
-        private static ArrayList GetHex()
+        private static double GetDistance(Color color1, Color color2)
         {
-            Type color = (typeof(Color));
-            PropertyInfo[] propertyInfos = color.GetProperties(BindingFlags.Public | BindingFlags.Static);
-            ArrayList colors = [];
-            foreach (PropertyInfo pi in propertyInfos)
-            {
-                if (pi.PropertyType.Equals(typeof(Color)))
-                {
-                    Color c = (Color)pi.GetValue((object)(typeof(Color)), null);
-                    colors.Add(c);
-                }
-            }
-            return colors;
+            int rDiff = color1.R - color2.R;
+            int gDiff = color1.G - color2.G;
+            int bDiff = color1.B - color2.B;
+            int aDiff = color1.A - color2.A;
+
+            return Math.Sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff + aDiff * aDiff);
         }
     }
 }

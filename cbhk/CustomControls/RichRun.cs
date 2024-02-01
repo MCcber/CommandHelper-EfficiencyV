@@ -1,4 +1,5 @@
-﻿using System;
+﻿using cbhk.GeneralTools;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -170,19 +171,28 @@ namespace cbhk.CustomControls
                         if (textString.Length > 0)
                         {
                             string colorString = Foreground.ToString().Remove(1, 2);
-                            if (CurrentVersion >= 113)
+                            if (CurrentVersion >= 1130)
                                 result = "{\"text\":\"" + textString + (IsLastRun ? "\\\\n" : "") + "\"" + (colorString != "#000000" ? ",\"color\":\"" + colorString + "\"" : "") + (FontStyle == FontStyles.Italic ? ",\"italic\":true" : "") + (FontWeight == FontWeights.Bold ? ",\"bold\":true" : "") + (TextDecorations.Contains(underlined_style) ? ",\"underlined\":true" : "") + (TextDecorations.Contains(strikethrough_style) ? ",\"strikethrough\":true" : "") + (IsObfuscated && ObfuscateTimer.IsEnabled ? ",\"obfuscated\":true" : "") + EventData + "},";
                             else
                             {
-                                string colorKey = ColorPickers.ColorPickers.PresetColorList[(Foreground as SolidColorBrush).Color];
-                                result = (colorKey.Length > 0 && colorKey != @"\\u00a7f" ? colorKey:"") +
+                                Color currentColor = (Foreground as SolidColorBrush).Color;
+                                Color systemColor = currentColor;
+                                string colorKey = "";
+                                if (ColorPickers.ColorPickers.PresetColorList.TryGetValue(systemColor, out string value))
+                                    colorKey = value;
+                                else
+                                {
+                                    systemColor = currentColor.ToNearestPredefinedColor();
+                                    colorKey = ColorPickers.ColorPickers.PresetColorList[systemColor];
+                                }
+                                result = (colorKey.Length > 0 && colorKey != @"\\u00a7f" ? colorKey : "") +
                                     (FontStyle == FontStyles.Italic ? @"\\u00a7o" : "") +
                                     (FontWeight == FontWeights.Bold ? @"\\u00a7l" : "") +
                                     (TextDecorations.Contains(underlined_style) ? @"\\u00a7n" : "") +
                                     (TextDecorations.Contains(strikethrough_style) ? @"\\u00a7m" : "") +
                                     (IsObfuscated ? @"\\u00a7k" : "") + textString;
                             }
-                            if (result.Length > textString.Length && CurrentVersion < 113)
+                            if (result.Length > textString.Length && CurrentVersion < 1130)
                                 result += @"\\u00a7r";
                         }
                     });

@@ -1,11 +1,10 @@
 ﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
+using cbhk.CustomControls.Interfaces;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 
@@ -14,7 +13,7 @@ namespace cbhk.Generators.ItemGenerator.Components
     /// <summary>
     /// Common.xaml 的交互逻辑
     /// </summary>
-    public partial class Common : UserControl
+    public partial class Common : UserControl,IVersionUpgrader
     {
         public DataTable HideInfomationTable = null;
         public ObservableCollection<string> HideFlagsSource { get; set; } = [];
@@ -35,27 +34,27 @@ namespace cbhk.Generators.ItemGenerator.Components
         }
         #endregion
         #region 保存名称与描述
-        string itemName = "";
-        string itemLore = "";
+        public string ItemNameValue = "";
+        public string ItemLoreValue = "";
         private string ItemDisplay
         {
             get
             {
                 string DisplayNameString = ""; 
                 string ItemLoreString = "";
-                if(itemName.Trim() != "")
+                if(ItemNameValue.Trim() != "")
                 {
-                    if (CurrentMinVersion >= 113)
-                        DisplayNameString = @"Name:'[" + itemName + "]',";
+                    if (CurrentMinVersion >= 1130)
+                        DisplayNameString = @"Name:'[" + ItemNameValue.Replace(@"\\n", "") + "]',";
                     else
-                        DisplayNameString = @"Name:""" + itemName.Replace(@"""", @"\\\""") + @""",";
+                        DisplayNameString = @"Name:\\\\\\\""" + ItemNameValue.Replace(@"\\n","").Replace(@"""", @"\\\""") + @"\\\\\\\"",";
                 }
-                if (itemLore.Trim() != "")
+                if (ItemLoreValue.Trim() != "")
                 {
-                    if (CurrentMinVersion >= 113)
-                        ItemLoreString = @"Lore:[""['" + itemLore + @"']""]";
+                    if (CurrentMinVersion >= 1130)
+                        ItemLoreString = "Lore:[" + ItemLoreValue + "]";
                     else
-                        ItemLoreString = @"Lore:[""" + itemLore.Replace(@"""", @"\\\""") + @"""]";
+                        ItemLoreString = @"Lore:[\\\\\\\""" + ItemLoreValue.Replace(@"""", @"\\\""") + @"\\\\\\\""]";
                 }
                 string result = DisplayNameString != "" || ItemLoreString != "" ? "display:{" + (DisplayNameString + ItemLoreString).TrimEnd(',') + "}," : "";
                 return result;
@@ -90,23 +89,8 @@ namespace cbhk.Generators.ItemGenerator.Components
         public Common()
         {
             InitializeComponent();
-        }
-
-        /// <summary>
-        /// 常用控件载入
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Common_Loaded(object sender,RoutedEventArgs e)
-        {
-            ItemPages itemPages = (sender as Common).FindParent<ItemPages>();
-            if (itemPages is null)
-            {
-                return;
-            }
-            itemPageDataContext = itemPages.DataContext as ItemPageDataContext;
-            itemPageDataContext.VersionComponents.Add(ItemName);
-            itemPageDataContext.VersionComponents.Add(ItemLore);
+            ItemLore.Name = "ItemLore";
+            ItemLore.IsMultiLine = true;
         }
 
         /// <summary>
@@ -163,14 +147,24 @@ namespace cbhk.Generators.ItemGenerator.Components
             }
         }
 
-        public async Task<string> GetResult()
+        public async Task Upgrade(int version)
+        {
+            await Task.Delay(0);
+            CurrentMinVersion = version;
+            await ItemName.Upgrade(version);
+            await ItemLore.Upgrade(version);
+        }
+
+        public async Task<string> Result()
         {
             if (itemPageDataContext is not null)
                 CurrentMinVersion = itemPageDataContext.CurrentMinVersion;
+            await ItemName.Upgrade(CurrentMinVersion);
+            await ItemLore.Upgrade(CurrentMinVersion);
             await CustomTag.GetResult();
             string tag = CustomTag.Result;
-            itemName = await ItemName.Result();
-            itemLore = await ItemLore.Result();
+            ItemNameValue = await ItemName.Result();
+            ItemLoreValue = await ItemLore.Result();
             string result = tag + ItemDisplay + ItemHideFlags + UnbreakableString + CustomCreativeLockResult + CustomModelDataResult + RepairCostResult;
             return result;
         }
