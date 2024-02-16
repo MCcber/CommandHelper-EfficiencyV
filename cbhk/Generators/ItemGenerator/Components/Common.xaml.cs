@@ -25,10 +25,15 @@ namespace cbhk.Generators.ItemGenerator.Components
         {
             get
             {
+                string result = "";
                 if (HideFlagsBox.SelectedValue == null) return "";
-                string selectedItem = HideFlagsBox.SelectedValue.ToString();
-                string key = HideInfomationTable.Select("name='" + selectedItem + "'").First()["id"].ToString();
-                string result = key != "0" ? "HideFlags:" + key + "," : "";
+                Dispatcher.Invoke(() =>
+                {
+
+                    string selectedItem = HideFlagsBox.SelectedValue.ToString();
+                    string key = HideInfomationTable.Select("name='" + selectedItem + "'").First()["id"].ToString();
+                    result = key != "0" ? "HideFlags:" + key + "," : "";
+                });
                 return result;
             }
         }
@@ -40,14 +45,14 @@ namespace cbhk.Generators.ItemGenerator.Components
         {
             get
             {
-                string DisplayNameString = ""; 
+                string DisplayNameString = "";
                 string ItemLoreString = "";
-                if(ItemNameValue.Trim() != "")
+                if (ItemNameValue.Trim() != "")
                 {
                     if (CurrentMinVersion >= 1130)
                         DisplayNameString = @"Name:'[" + ItemNameValue.Replace(@"\\n", "") + "]',";
                     else
-                        DisplayNameString = @"Name:\\\\\\\""" + ItemNameValue.Replace(@"\\n","").Replace(@"""", @"\\\""") + @"\\\\\\\"",";
+                        DisplayNameString = @"Name:\\\\\\\""" + ItemNameValue.Replace(@"\\n", "").Replace(@"""", @"\\\""") + @"\\\\\\\"",";
                 }
                 if (ItemLoreValue.Trim() != "")
                 {
@@ -64,25 +69,37 @@ namespace cbhk.Generators.ItemGenerator.Components
         #region 无法破坏
         private string UnbreakableString
         {
-            get => Unbreakable.IsChecked.Value ? "Unbreakable:1b," : "";
+            get => Dispatcher.Invoke(() =>
+            {
+                return Unbreakable.IsChecked.Value ? "Unbreakable:1b," : "";
+            }); 
         }
         #endregion
         #region 交互锁定
         private string CustomCreativeLockResult
         {
-            get => CustomCreativeLock.IsChecked.Value ? "CustomCreativeLock:{}," : "";
+            get => Dispatcher.Invoke(() =>
+            {
+                return CustomCreativeLock.IsChecked.Value ? "CustomCreativeLock:{}," : "";
+            }); 
         }
         #endregion
         #region 物品模型
         private string CustomModelDataResult
         {
-            get => CustomModelData.Value >= 0 ? "CustomModelData:" + CustomModelData.Value + "," : "";
+            get => Dispatcher.Invoke(() =>
+            {
+                return CustomModelData.Value >= 0 ? "CustomModelData:" + CustomModelData.Value + "," : "";
+            }); 
         }
         #endregion
         #region 修理损耗
         private string RepairCostResult
         {
-            get => RepairCost.Value > 0 ? "RepairCost:" + RepairCost.Value + "," : "";
+            get => Dispatcher.Invoke(() =>
+            {
+                return RepairCost.Value > 0 ? "RepairCost:" + RepairCost.Value + "," : "";
+            }); 
         }
         #endregion
 
@@ -157,15 +174,17 @@ namespace cbhk.Generators.ItemGenerator.Components
 
         public async Task<string> Result()
         {
+            string result = "";
+            string tag = "";
             if (itemPageDataContext is not null)
                 CurrentMinVersion = itemPageDataContext.CurrentMinVersion;
             await ItemName.Upgrade(CurrentMinVersion);
             await ItemLore.Upgrade(CurrentMinVersion);
             await CustomTag.GetResult();
-            string tag = CustomTag.Result;
+            tag = CustomTag.Result;
             ItemNameValue = await ItemName.Result();
             ItemLoreValue = await ItemLore.Result();
-            string result = tag + ItemDisplay + ItemHideFlags + UnbreakableString + CustomCreativeLockResult + CustomModelDataResult + RepairCostResult;
+            result = tag + ItemDisplay + ItemHideFlags + UnbreakableString + CustomCreativeLockResult + CustomModelDataResult + RepairCostResult;
             return result;
         }
     }

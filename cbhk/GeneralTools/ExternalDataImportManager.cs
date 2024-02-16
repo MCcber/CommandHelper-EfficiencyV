@@ -939,7 +939,7 @@ namespace cbhk.GeneralTools
                     context.ExternFilePath = filePath;
                 context.ExternallyReadEntityData = externData;
                 if (version1_12)
-                    context.SelectedVersion = "1.12-";
+                    context.SelectedVersion.Text = "1.12-";
             }
             itemPageList.Add(richTabItems);
             if (itemPageList.Count == 1)

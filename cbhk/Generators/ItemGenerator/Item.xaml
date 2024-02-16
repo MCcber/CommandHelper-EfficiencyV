@@ -148,11 +148,11 @@
             <CustomControls:StereoTextButton
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
+                Command="{Binding ImportItemFromClipboardCommand}"
+                Content="从剪切板导入"
                 Background="#EFF2F1"
                 BorderThickness="4,4,4,7"
                 BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ImportItemFromClipboardCommand}"
-                Content="从剪切板导入"
                 LeftBorderTexture="{StaticResource ButtonNormalLeft}"
                 PressedBorderThickness="4 4 4 4"
                 PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"

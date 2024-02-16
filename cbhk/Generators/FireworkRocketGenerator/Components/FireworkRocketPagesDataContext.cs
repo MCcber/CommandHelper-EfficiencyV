@@ -1,5 +1,5 @@
 ﻿using cbhk.CustomControls;
-using cbhk.CustomControls.ColorPickers;
+using cbhk.CustomControls.ColorPickerComponents;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.GenerateResultDisplayer;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -24,16 +24,16 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
 {
     public partial class FireworkRocketPagesDataContext:ObservableObject
     {
-        #region 版本
-        private string selectedVersion = "";
-        public string SelectedVersion
+        #region 已选版本
+        private TextComboBoxItem selectedVersion;
+        public TextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
             set => SetProperty(ref selectedVersion, value);
         }
         #endregion
 
-        #region 数据源
+        #region 版本数据源
         private ObservableCollection<TextComboBoxItem> versionSource = [];
         public ObservableCollection<TextComboBoxItem> VersionSource
         {
@@ -989,14 +989,14 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                 Result = Result.Trim(',');
                 if (!GeneratorFireStar)
                 {
-                    if (SelectedVersion == "1.13+")
+                    if (SelectedVersion.Text == "1.13+")
                         Result = "give @p " + "firework_rocket{Fireworks:{" + Result + "}}";
                     else
                         Result = "give @p " + "firework_rocket" + " 1 0 {Fireworks:{" + Result + "}}";
                 }
                 else
                 {
-                    if (SelectedVersion == "1.13+")
+                    if (SelectedVersion.Text == "1.13+")
                         Result = "give @p " + "firework_star{" + Result + "}";
                     else
                         Result = "give @p " + "firework_star" + " 1 0 {" + Result + "}";
@@ -1051,14 +1051,14 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                 Result = Result.Trim(',');
                 if (!GeneratorFireStar)
                 {
-                    if (SelectedVersion == "1.13+")
+                    if (SelectedVersion.Text == "1.13+")
                         Result = "give @p " + "firework_rocket{Fireworks:{" + Result + "}}";
                     else
                         Result = "give @p " + "firework_rocket" + " 1 0 {Fireworks:{" + Result + "}}";
                 }
                 else
                 {
-                    if (SelectedVersion == "1.13+")
+                    if (SelectedVersion.Text == "1.13+")
                         Result = "give @p " + "firework_star{" + Result + "}";
                     else
                         Result = "give @p " + "firework_star" + " 1 0 {" + Result + "}";

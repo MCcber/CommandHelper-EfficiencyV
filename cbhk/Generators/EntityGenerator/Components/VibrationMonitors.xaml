@@ -88,6 +88,7 @@
                             <TextBox
                                 x:Name="game_event"
                                 Height="25"
+                                VerticalContentAlignment="Center"
                                 BorderBrush="Black"
                                 Foreground="White" />
                         </DockPanel>
@@ -283,6 +284,7 @@
                                 Text="类型" />
                             <ComboBox
                                 x:Name="VibrationMonitorTypeBox"
+                                Height="30"
                                 Margin="29,0,0,0"
                                 Style="{DynamicResource TextComboBoxStyle}" />
                         </DockPanel>

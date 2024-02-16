@@ -41,6 +41,24 @@ namespace cbhk.Generators.EntityGenerator.Components
                 context.SpecialTagsResult.Add(context.SelectedEntityIDString, []);
             #endregion
 
+            #region 是否为标签集合
+            if (sender is TagRichTextBox tagRichTextBox && tagRichTextBox.Name == "Tags")
+            {
+                tagRichTextBox.GotFocus -= ValueChangedHandler;
+                NBTDataStructure dataStructure = tagRichTextBox.Tag as NBTDataStructure;
+                tagRichTextBox.LostFocus += TagRichTextBox_LostFocus;
+
+                context.CommonResult.Add(dataStructure);
+                currentIndex = context.CommonResult.Count - 1;
+                propertyPath = new PropertyPath("CommonResult[" + currentIndex + "]");
+
+                valueBinder.Path = propertyPath;
+                var currentTag = tagRichTextBox.Tag;
+                BindingOperations.SetBinding(tagRichTextBox, FrameworkElement.TagProperty, valueBinder);
+                tagRichTextBox.Tag = currentTag;
+            }
+            #endregion
+
             #region 是否为Json组件
             if (sender is StylizedTextBox stylizedTextBox && stylizedTextBox.Name == "CustomName")
             {
@@ -565,6 +583,28 @@ namespace cbhk.Generators.EntityGenerator.Components
                 comboBox.Tag = currentTag;
             }
             #endregion
+        }
+
+        /// <summary>
+        /// 整合Tags数据
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void TagRichTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            await Application.Current.Dispatcher.Invoke(async () =>
+            {
+                TagRichTextBox tagRichTextBox = sender as TagRichTextBox;
+                EntityPages entityPages = tagRichTextBox.FindParent<EntityPages>();
+                if (entityPages is null)
+                {
+                    return;
+                }
+                await tagRichTextBox.GetResult();
+                EntityPagesDataContext entityPagesDataContext = entityPages.DataContext as EntityPagesDataContext;
+                NBTDataStructure dataStructure = tagRichTextBox.Tag as NBTDataStructure;
+                dataStructure.Result = tagRichTextBox.Result;
+            });
         }
 
         /// <summary>

@@ -36,7 +36,7 @@ namespace cbhk.Generators.SpawnerGenerator
 
         #region 选中版本以及版本数据源
         public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
-            new TextComboBoxItem() { Text = "1.13.0" },
+            new TextComboBoxItem() { Text = "1.20.5" },
             new TextComboBoxItem() { Text = "1.12.0" }
         ];
         #endregion

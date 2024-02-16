@@ -10,7 +10,7 @@ using System.Windows.Input;
 using cbhk.CustomControls.Interfaces;
 using System.Threading.Tasks;
 using System.Text;
-using cbhk.Generators.SignGenerator;
+using System.Threading;
 
 namespace cbhk.CustomControls
 {
@@ -231,48 +231,55 @@ namespace cbhk.CustomControls
             CurrentVersion = version;
         }
 
-        public async Task<string> Result()
+        public Task<string> Result()
         {
-            string result = "";
-            await Task.Run(async () =>
+            TaskCompletionSource<string> tcs = new();
+            Thread thread = new(async () =>
             {
-                StringBuilder runResultList = new();
-                Paragraph paragraph = richTextBox.Document.Blocks.FirstBlock as Paragraph;
-                List<RichRun> richRuns = [];
-                if (IsMultiLine)
+                await Task.Run(async () =>
                 {
-                    foreach (var item in richTextBox.Document.Blocks.Cast<Paragraph>())
+                    StringBuilder runResultList = new();
+                    Paragraph paragraph = richTextBox.Document.Blocks.FirstBlock as Paragraph;
+                    List<RichRun> richRuns = [];
+                    if (IsMultiLine)
                     {
-                        richRuns.AddRange(item.Inlines.Cast<RichRun>().ToList());
+                        foreach (var item in richTextBox.Document.Blocks.Cast<Paragraph>())
+                        {
+                            richRuns.AddRange(item.Inlines.Cast<RichRun>().ToList());
+                        }
                     }
-                }
-                else
-                    richRuns = paragraph.Inlines.Cast<RichRun>().ToList();
-                await Application.Current.Dispatcher.InvokeAsync(async () =>
-                {
-                    await Task.Delay(0);
-                    if (Name == "ItemLore" && CurrentVersion >= 1130)
-                        runResultList.Append("'[");
-                    foreach (var item in richRuns)
+                    else
+                        richRuns = paragraph.Inlines.Cast<RichRun>().ToList();
+                    await Application.Current.Dispatcher.InvokeAsync(async () =>
                     {
-                        item.CurrentVersion = CurrentVersion;
-                        string currentResult = item.Result;
-                        int commaIndex = currentResult.IndexOf(',');
-                        if (commaIndex > -1 && currentResult[(commaIndex - 4)..(commaIndex - 1)] == @"\\n" && Name == "ItemLore" && CurrentVersion >= 1130)
-                            runResultList.Append(currentResult.TrimEnd(',').Remove(commaIndex - 4, 3) + "]','[");
-                        else
-                            runResultList.Append(currentResult.TrimEnd('\n'));
-                    }
-                    if (Name == "ItemLore" && CurrentVersion >= 1130)
-                        runResultList.Append("]'");
+                        await Task.Delay(0);
+                        if (Name == "ItemLore" && CurrentVersion >= 1130)
+                            runResultList.Append("'[");
+                        foreach (var item in richRuns)
+                        {
+                            item.CurrentVersion = CurrentVersion;
+                            string currentResult = item.Result;
+                            int commaIndex = currentResult.IndexOf(',');
+                            if (commaIndex > -1 && currentResult[(commaIndex - 4)..(commaIndex - 1)] == @"\\n" && Name == "ItemLore" && CurrentVersion >= 1130)
+                                runResultList.Append(currentResult.TrimEnd(',').Remove(commaIndex - 4, 3) + "]','[");
+                            else
+                                runResultList.Append(currentResult.TrimEnd('\n'));
+                        }
+                        if (Name == "ItemLore" && CurrentVersion >= 1130)
+                            runResultList.Append("]'");
+                    });
+                    if (runResultList.ToString().EndsWith(",'[]'"))
+                        runResultList.Remove(runResultList.Length - 5, 5);
+                    if (runResultList.ToString() == "'[]'")
+                        runResultList.Clear();
+                    tcs.SetResult(runResultList.ToString());
+                    //result = runResultList.ToString();
                 });
-                if (runResultList.ToString().EndsWith(",'[]'"))
-                    runResultList.Remove(runResultList.Length - 5, 5);
-                if (runResultList.ToString() == "'[]'")
-                    runResultList.Clear();
-                result = runResultList.ToString();
             });
-            return result.TrimEnd(',');
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            return tcs.Task;
+            //return result.TrimEnd(',');
         }
     }
 }

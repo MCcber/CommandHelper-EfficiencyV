@@ -1093,24 +1093,32 @@
                             VirtualizingPanel.VirtualizationMode="Recycling">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <Image
-                                        x:Name="contentImage"
-                                        Width="60"
-                                        Height="60"
-                                        RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                        RenderOptions.ClearTypeHint="Enabled"
-                                        SnapsToDevicePixels="True"
-                                        Source="{Binding Path=ImagePath, Converter={StaticResource UriToBitmapImage}, Mode=OneWay, IsAsync=True}"
-                                        ToolTipService.BetweenShowDelay="0"
-                                        ToolTipService.InitialShowDelay="0"
-                                        UseLayoutRounding="True">
-                                        <Image.ToolTip>
-                                            <ToolTip
-                                                Background="#424242"
-                                                Content="{Binding Path=IDAndName, Mode=OneWay, IsAsync=True}"
-                                                Foreground="White" />
-                                        </Image.ToolTip>
-                                    </Image>
+                                    <Grid>
+                                        <Image
+                                            Width="60"
+                                            Height="60"
+                                            Panel.ZIndex="0"
+                                            Source="{StaticResource Slot}" />
+                                        <Image
+                                            x:Name="contentImage"
+                                            Width="60"
+                                            Height="60"
+                                            Panel.ZIndex="1"
+                                            RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                            RenderOptions.ClearTypeHint="Enabled"
+                                            SnapsToDevicePixels="True"
+                                            Source="{Binding Path=ImagePath, Converter={StaticResource UriToBitmapImage}, Mode=OneWay, IsAsync=True}"
+                                            ToolTipService.BetweenShowDelay="0"
+                                            ToolTipService.InitialShowDelay="0"
+                                            UseLayoutRounding="True">
+                                            <Image.ToolTip>
+                                                <ToolTip
+                                                    Background="#424242"
+                                                    Content="{Binding Path=IDAndName, Mode=OneWay, IsAsync=True}"
+                                                    Foreground="White" />
+                                            </Image.ToolTip>
+                                        </Image>
+                                    </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                             <ListView.ItemsPanel>
@@ -1158,25 +1166,33 @@
                             VirtualizingPanel.VirtualizationMode="Recycling">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <Image
-                                        x:Name="contentImage"
-                                        Width="60"
-                                        Height="60"
-                                        RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                        RenderOptions.ClearTypeHint="Enabled"
-                                        SnapsToDevicePixels="True"
-                                        Source="{Binding Path=ImagePath, Converter={StaticResource UriToBitmapImage}, Mode=OneWay, IsAsync=True}"
-                                        Tag="{Binding Path=NBT, Mode=OneWay, IsAsync=True}"
-                                        ToolTipService.BetweenShowDelay="0"
-                                        ToolTipService.InitialShowDelay="0"
-                                        UseLayoutRounding="True">
-                                        <Image.ToolTip>
-                                            <ToolTip
-                                                Background="#424242"
-                                                Content="{Binding Path=IDAndName, Mode=OneWay, IsAsync=True}"
-                                                Foreground="White" />
-                                        </Image.ToolTip>
-                                    </Image>
+                                    <Grid>
+                                        <Image
+                                            Width="60"
+                                            Height="60"
+                                            Panel.ZIndex="0"
+                                            Source="{StaticResource Slot}" />
+                                        <Image
+                                            x:Name="contentImage"
+                                            Width="60"
+                                            Height="60"
+                                            Panel.ZIndex="1"
+                                            RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                            RenderOptions.ClearTypeHint="Enabled"
+                                            SnapsToDevicePixels="True"
+                                            Source="{Binding Path=ImagePath, Converter={StaticResource UriToBitmapImage}, Mode=OneWay, IsAsync=True}"
+                                            Tag="{Binding Path=NBT, Mode=OneWay, IsAsync=True}"
+                                            ToolTipService.BetweenShowDelay="0"
+                                            ToolTipService.InitialShowDelay="0"
+                                            UseLayoutRounding="True">
+                                            <Image.ToolTip>
+                                                <ToolTip
+                                                    Background="#424242"
+                                                    Content="{Binding Path=IDAndName, Mode=OneWay, IsAsync=True}"
+                                                    Foreground="White" />
+                                            </Image.ToolTip>
+                                        </Image>
+                                    </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                             <ListView.ItemsPanel>

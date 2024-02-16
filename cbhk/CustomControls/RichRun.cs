@@ -10,6 +10,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using cbhk.CustomControls.ColorPickerComponents;
 
 namespace cbhk.CustomControls
 {
@@ -178,12 +179,12 @@ namespace cbhk.CustomControls
                                 Color currentColor = (Foreground as SolidColorBrush).Color;
                                 Color systemColor = currentColor;
                                 string colorKey = "";
-                                if (ColorPickers.ColorPickers.PresetColorList.TryGetValue(systemColor, out string value))
+                                if (ColorPickers.PresetColorList.TryGetValue(systemColor, out string value))
                                     colorKey = value;
                                 else
                                 {
                                     systemColor = currentColor.ToNearestPredefinedColor();
-                                    colorKey = ColorPickers.ColorPickers.PresetColorList[systemColor];
+                                    colorKey = ColorPickers.PresetColorList[systemColor];
                                 }
                                 result = (colorKey.Length > 0 && colorKey != @"\\u00a7f" ? colorKey : "") +
                                     (FontStyle == FontStyles.Italic ? @"\\u00a7o" : "") +
@@ -206,9 +207,9 @@ namespace cbhk.CustomControls
 
         #region 事件数据
         //点击事件数据源
-        public static ObservableCollection<string> clickEventSource { get; set; } = [];
+        public static ObservableCollection<TextComboBoxItem> clickEventSource { get; set; } = [];
         //悬浮事件数据源
-        public static ObservableCollection<string> hoverEventSource { get; set; } = [];
+        public static ObservableCollection<TextComboBoxItem> hoverEventSource { get; set; } = [];
         //点击事件数据源文件路径
         string clickEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\data\\clickEventActions.ini";
         //悬浮事件数据源文件路径
@@ -246,7 +247,7 @@ namespace cbhk.CustomControls
                 for (int i = 0; i < source.Length; i++)
                 {
                     string[] data = source[i].Split('.');
-                    clickEventSource.Add(data[1]);
+                    clickEventSource.Add(new TextComboBoxItem() { Text = data[1] });
                     if (!EventDataBase.ContainsKey(data[0]))
                         EventDataBase.Add(data[0], data[1]);
                 }
@@ -260,7 +261,7 @@ namespace cbhk.CustomControls
                 for (int i = 0; i < source.Length; i++)
                 {
                     string[] data = source[i].Split('.');
-                    hoverEventSource.Add(data[1]);
+                    hoverEventSource.Add(new TextComboBoxItem() { Text = data[1] });
                     if (!EventDataBase.ContainsKey(data[0]))
                         EventDataBase.Add(data[0], data[1]);
                 }

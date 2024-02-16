@@ -30,6 +30,7 @@
                 Foreground="White"
                 TextWrapping="Wrap" />
             <local:IconButtons
+                x:Name="CloseButton"
                 Grid.Column="1"
                 Width="15"
                 Height="15"

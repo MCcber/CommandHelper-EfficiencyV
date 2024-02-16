@@ -12,11 +12,15 @@ namespace cbhk.Generators.EntityGenerator.Components
     public partial class VibrationMonitors : UserControl
     {
         #region 振动监听器类型数据源
-        public ObservableCollection<string> VibrationMonitorType { get; set; } = ["block","entity"];
+        public ObservableCollection<TextComboBoxItem> VibrationMonitorType { get; set; } = [new TextComboBoxItem() { Text = "block" }, new TextComboBoxItem() { Text = "entity" }];
         #endregion
 
         #region 目标实体类型切换数据源
-        public ObservableCollection<string> TargetEntitySwitcher { get; set; } = ["ID", "UUID", "Data"];
+        public ObservableCollection<TextComboBoxItem> TargetEntitySwitcher { get; set; } = [
+            new TextComboBoxItem() { Text = "ID" },
+            new TextComboBoxItem() { Text = "UUID" },
+            new TextComboBoxItem() { Text = "Data" }
+        ];
         #endregion
 
         public VibrationMonitors()
@@ -92,7 +96,7 @@ namespace cbhk.Generators.EntityGenerator.Components
         /// <param name="e"></param>
         private void VibrationMonitorsSourceType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string selectedItem = TargetEntitySwitcher[VibrationMonitorsSourceType.SelectedIndex];
+            string selectedItem = TargetEntitySwitcher[VibrationMonitorsSourceType.SelectedIndex].Text;
             switch (selectedItem)
             {
                 case "ID":

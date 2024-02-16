@@ -179,8 +179,8 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="resources\cbhk\images\empty.png" />
-    <Resource Include="resources\common\images\backToHomePage.png" />
     <Resource Include="resources\common\images\BlackEdit.png" />
+    <Resource Include="resources\common\images\Boots.png" />
     <Resource Include="resources\common\images\ButtonFrame.png" />
   </ItemGroup>
   <ItemGroup>
@@ -213,6 +213,7 @@
     </Resource>
     <Resource Include="resources\common\images\CheckboxChecked.png" />
     <Resource Include="resources\common\images\CheckboxEmpty.png" />
+    <Resource Include="resources\common\images\Chestplate.png" />
     <Resource Include="resources\common\images\ColorPicker.png" />
     <Resource Include="resources\common\images\ContentBox.png" />
     <Resource Include="resources\common\images\eyeHide.png">
@@ -222,6 +223,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="resources\common\images\Frame.png" />
+    <Resource Include="resources\common\images\Helmet.png" />
     <Resource Include="resources\common\images\IconFree.png" />
     <Resource Include="resources\common\images\IconFresh.png" />
     <Resource Include="resources\common\images\IconGaze.png" />
@@ -234,6 +236,7 @@
     <Resource Include="resources\common\images\itemFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="resources\common\images\Leggings.png" />
     <Resource Include="resources\common\images\RadiusToggleButtonOff.png" />
     <Resource Include="resources\common\images\RadiusToggleButtonOffLocked.png" />
     <Resource Include="resources\common\images\RadiusToggleButtonOn.png" />
@@ -253,6 +256,7 @@
     <Resource Include="resources\common\images\SliderButton.png" />
     <Resource Include="resources\common\images\SliderButtonLocked.png" />
     <Resource Include="resources\common\images\Slot.png" />
+    <Resource Include="resources\common\images\SmithingTemplate.png" />
     <Resource Include="resources\common\images\spyglass_scope.png" />
     <Resource Include="resources\common\images\TabItemLeft.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -307,6 +311,7 @@
     <Resource Include="resources\common\images\TextToggleButtonTrueTopFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="resources\common\images\TrimMaterial.png" />
     <Resource Include="resources\common\images\WhiteEdit.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -457,8 +462,8 @@
     <None Remove="resources\cbhk\images\LoginX.png" />
     <None Remove="resources\cbhk\images\more\github.png" />
     <None Remove="resources\cbhk\images\SigninBackground.png" />
-    <None Remove="resources\common\images\backToHomePage.png" />
     <None Remove="resources\common\images\BlackEdit.png" />
+    <None Remove="resources\common\images\Boots.png" />
     <None Remove="resources\common\images\ButtonFrame.png" />
     <None Remove="resources\common\images\ButtonNormalBottom.png" />
     <None Remove="resources\common\images\ButtonNormalLeft.png" />
@@ -468,9 +473,11 @@
     <None Remove="resources\common\images\ButtonPressedLeft.png" />
     <None Remove="resources\common\images\ButtonPressedRight.png" />
     <None Remove="resources\common\images\ButtonPressedTop.png" />
+    <None Remove="resources\common\images\Chestplate.png" />
     <None Remove="resources\common\images\ColorPicker.png" />
     <None Remove="resources\common\images\eyeHide.png" />
     <None Remove="resources\common\images\eyeShow.png" />
+    <None Remove="resources\common\images\Helmet.png" />
     <None Remove="resources\common\images\IconFree.png" />
     <None Remove="resources\common\images\IconFresh.png" />
     <None Remove="resources\common\images\IconGaze.png" />
@@ -481,12 +488,14 @@
     <None Remove="resources\common\images\IconThirdPerson.png" />
     <None Remove="resources\common\images\IconVisible.png" />
     <None Remove="resources\common\images\itemFrame.png" />
+    <None Remove="resources\common\images\Leggings.png" />
     <None Remove="resources\common\images\Save.png" />
     <None Remove="resources\common\images\SaveAs.png" />
     <None Remove="resources\common\images\SelectedTabItemLeft.png" />
     <None Remove="resources\common\images\SelectedTabItemRight.png" />
     <None Remove="resources\common\images\SelectedTabItemTop.png" />
     <None Remove="resources\common\images\Slot.png" />
+    <None Remove="resources\common\images\SmithingTemplate.png" />
     <None Remove="resources\common\images\spyglass_scope.png" />
     <None Remove="resources\common\images\TabItemLeft.png" />
     <None Remove="resources\common\images\TabItemRight.png" />
@@ -501,6 +510,7 @@
     <None Remove="resources\common\images\TextToggleButtonTrueLeftFrame.png" />
     <None Remove="resources\common\images\TextToggleButtonTrueRightFrame.png" />
     <None Remove="resources\common\images\TextToggleButtonTrueTopFrame.png" />
+    <None Remove="resources\common\images\TrimMaterial.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />

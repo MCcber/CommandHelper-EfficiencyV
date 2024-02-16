@@ -201,6 +201,15 @@ namespace cbhk.CustomControls
             #endregion
 
             CompleteViewSource.Source = CompletedSource;
+
+            Document.Changing += Document_Changing;
+        }
+
+        private void Document_Changing(object sender, DocumentChangeEventArgs e)
+        {
+            int offset = e.Offset; // 更改的起始位置
+            int removedLength = e.RemovalLength; // 被删除的文本的长度
+            string removedText = e.RemovedText.Text; // 被删除的文本
         }
 
         #region 与服务器交流

@@ -1,6 +1,6 @@
 ﻿using System.Windows.Media;
 
-namespace cbhk.CustomControls.ColorPickers.Media
+namespace cbhk.CustomControls.ColorPickerComponents.Media
 {
     public class HsbaColor
     {

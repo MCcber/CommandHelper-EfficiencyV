@@ -14,6 +14,7 @@ using System.Data;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -196,6 +197,7 @@ namespace cbhk.Generators.ItemGenerator
             };
             ItemPages itemPage = new() { FontWeight = FontWeights.Normal };
             ItemPageDataContext pageContext = itemPage.DataContext as ItemPageDataContext;
+            pageContext.UseForReference = false;
             pageContext.UseForTool = !IsCloseable;
             richTabItems.Content = itemPage;
             ItemPageList.Add(richTabItems);
@@ -327,12 +329,9 @@ namespace cbhk.Generators.ItemGenerator
             StringBuilder Result = new();
             foreach (var itemPage in ItemPageList)
             {
-                await itemPage.Dispatcher.InvokeAsync(() =>
-                {
-                    ItemPageDataContext context = (itemPage.Content as ItemPages).DataContext as ItemPageDataContext;
-                    string result = context.Run(false) + "\r\n";
-                    Result.Append(result);
-                });
+                ItemPageDataContext context = (itemPage.Content as ItemPages).DataContext as ItemPageDataContext;
+                string currentResult = await context.Run(false);
+                Result.Append(currentResult + "\r\n");
             }
             if (ShowGeneratorResult)
             {

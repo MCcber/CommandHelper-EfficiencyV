@@ -57,7 +57,7 @@ namespace cbhk
 
             SetupExceptionHandling();
             base.OnStartup(e);
-            new SignIn().Show();
+            new MainWindow([]).Show();
         }
 
         /// <summary>

@@ -49,7 +49,7 @@ namespace cbhk.Generators.SpawnerGenerator.Components
             set => SetProperty(ref versionSource, value);
         }
 
-        private int CurrentMinVersion = 1130;
+        private int CurrentMinVersion = 1205;
         #endregion
 
         #region 字段与引用
@@ -117,19 +117,13 @@ namespace cbhk.Generators.SpawnerGenerator.Components
         /// <summary>
         /// 添加潜在实体
         /// </summary>
-        public void AddSpawnPotential(FrameworkElement ele)
-        {
-            SpawnPotentials.Add(new SpawnPotential());
-        }
+        public void AddSpawnPotential(FrameworkElement ele) => SpawnPotentials.Add(new SpawnPotential());
 
         [RelayCommand]
         /// <summary>
         /// 清空潜在实体
         /// </summary>
-        private void ClearSpawnPotential(FrameworkElement ele)
-        {
-            SpawnPotentials.Clear();
-        }
+        private void ClearSpawnPotential(FrameworkElement ele) => SpawnPotentials.Clear();
 
         [RelayCommand]
         /// <summary>

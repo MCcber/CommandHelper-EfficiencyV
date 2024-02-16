@@ -1,5 +1,5 @@
 ﻿using cbhk.CustomControls;
-using cbhk.CustomControls.ColorPickers;
+using cbhk.CustomControls.ColorPickerComponents;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.WrittenBookGenerator.Components;
@@ -8,8 +8,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -92,6 +94,25 @@ namespace cbhk.Generators.WrittenBookGenerator
 
         //保存成书的文档链表，用于显示和编辑
         public List<EnabledFlowDocument> HistroyFlowDocumentList = [];
+        #endregion
+
+        #region 版本数据源与已选择版本
+        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+            new TextComboBoxItem() { Text = "1.20.5+" },
+            new TextComboBoxItem() { Text = "1.12" }
+            ];
+        private TextComboBoxItem selectedVersion;
+
+        public TextComboBoxItem SelectedVersion
+        {
+            get => selectedVersion;
+            set
+            {
+                SetProperty(ref selectedVersion, value);
+                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
+            }
+        }
+        private int CurrentMinVersion = 1205;
         #endregion
 
         #region 字符超出数量
@@ -209,57 +230,6 @@ namespace cbhk.Generators.WrittenBookGenerator
         }
         #endregion
 
-        #region 保存作者
-        //标记当前背景样式
-        bool HaveAuthor = false;
-        private string author = "cber";
-        public string Author
-        {
-            get { return author; }
-            set
-            {
-                author = value;
-                OnPropertyChanged();
-                if(author.Trim() != "" && File.Exists(sureToSignatureFilePath) && !HaveAuthor)
-                {
-                    HaveAuthor = true;
-                }
-                else
-                    if(author.Trim() == "" && File.Exists(signatureAndCloseFilePath) && HaveAuthor)
-                {
-                    HaveAuthor = false;
-                }
-            }
-        }
-        private string AuthorString
-        {
-            get
-            {
-                return "author:\"" + Author + "\",";
-            }
-        }
-        #endregion
-
-        #region 保存标题
-        private string title = "我是标题";
-        public string Title
-        {
-            get { return title; }
-            set
-            {
-                title = value;
-                OnPropertyChanged();
-            }
-        }
-        private string TitleString
-        {
-            get
-            {
-                return "title:\"" + Title + "\",";
-            }
-        }
-        #endregion
-
         #region 是否显示左箭头
         private Visibility displayLeftArrow = Visibility.Collapsed;
         public Visibility DisplayLeftArrow
@@ -353,6 +323,39 @@ namespace cbhk.Generators.WrittenBookGenerator
                     CurrentPageIndex = JumpSpecificPageNumber - 1;
                 }
             }
+        }
+
+        /// <summary>
+        /// 版本更换
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            await signaturePage.title.Upgrade(CurrentMinVersion);
+            await signaturePage.author.Upgrade(CurrentMinVersion);
+        }
+
+        /// <summary>
+        /// 异步获取标题
+        /// </summary>
+        /// <returns></returns>
+        private async Task<string> GetTitle()
+        {
+            string result = await signaturePage.title.Result();
+            string quotation = CurrentMinVersion < 113 ? "\"" : "'";
+            return "title:" + quotation + result.TrimEnd(',') + quotation + ",";
+        }
+
+        /// <summary>
+        /// 异步获取作者
+        /// </summary>
+        /// <returns></returns>
+        private async Task<string> GetAuthor()
+        {
+            string result = await signaturePage.author.Result();
+            string quotation = CurrentMinVersion < 113 ? "\"" : "'";
+            return "author:" + quotation + result.TrimEnd(',') + quotation + ",";
         }
 
         [RelayCommand]
@@ -556,14 +559,14 @@ namespace cbhk.Generators.WrittenBookGenerator
         /// <summary>
         /// 执行生成
         /// </summary>
-        private void Run()
+        private async Task Run()
         {
             if (!AsInternalTool)
             {
                 //最终结果
-                string result = "/give @p written_book";
+                string result = "give @p written_book";
                 //合并所有页数据
-                string pages_string = "pages:[";
+                string pagesString = "pages:[";
                 //每一页的数据
                 string page_string = "";
                 //遍历所有文档
@@ -580,18 +583,25 @@ namespace cbhk.Generators.WrittenBookGenerator
                     }
                     page_string = page_string.TrimEnd(',') + "]',";
                 }
-                pages_string += page_string.TrimEnd(',') + "]";
-                pages_string = pages_string.Trim() == "pages:['[\"\"]']" || pages_string.Trim() == "pages:['[\"\",{\"text\":\"\"}]']" ? "" : pages_string;
+                pagesString += page_string.TrimEnd(',') + "]";
+                pagesString = pagesString.Trim() == "pages:['[\"\"]']" || pagesString.Trim() == "pages:['[\"\",{\"text\":\"\"}]']" ? "" : pagesString;
                 string NBTData = "";
-                NBTData += TitleString + AuthorString + pages_string;
+                string TitleString = await GetTitle();
+                string AuthorString = await GetAuthor();
+                NBTData += TitleString + AuthorString + pagesString;
                 NBTData = "{" + NBTData.TrimEnd(',') + "}";
-                result += NBTData;
+                result += (CurrentMinVersion < 1130 ? " 1 0 " : "") + NBTData;
 
-                if(ShowGeneratorResult)
+                if(CurrentMinVersion < 1130)
                 {
-                GenerateResultDisplayer.Displayer displayer = GenerateResultDisplayer.Displayer.GetContentDisplayer();
-                displayer.GeneratorResult(result,"成书",icon_path);
-                displayer.Show();
+                    result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + result.Replace(@"""",@"\\\\\\\""") + @"\\\""}\""}}""}}";
+                }
+
+                if (ShowGeneratorResult)
+                {
+                    GenerateResultDisplayer.Displayer displayer = GenerateResultDisplayer.Displayer.GetContentDisplayer();
+                    displayer.GeneratorResult(result, "成书", icon_path);
+                    displayer.Show();
                 }
                 else
                 {
@@ -1122,7 +1132,7 @@ namespace cbhk.Generators.WrittenBookGenerator
             MaxPage = WrittenBookPages.Count;
             if (MaxPage <= (CurrentPageIndex + 1))
             {
-                WrittenBookPages.Add(new EnabledFlowDocument() { FontFamily = new FontFamily("Bitstream Vera Sans Mono"), FontSize = 12, LineHeight = 10 });
+                WrittenBookPages.Add(new EnabledFlowDocument() { FontFamily = new FontFamily("Bitstream Vera Sans Mono"), LineHeight = 10 });
             }
             CurrentPageIndex++;
             WrittenBookEditor.Document = WrittenBookPages[CurrentPageIndex];

@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -2059,6 +2060,60 @@ namespace cbhk.Generators.EntityGenerator.Components
                         #endregion
                     }
                     break;
+                case "TAG_Tags":
+                    {
+                        Binding visibilityBinder = new()
+                        {
+                            Mode = BindingMode.OneWay,
+                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Source = this
+                        };
+                        TagRichTextBox tagRichTextBox = new()
+                        {
+                            BorderBrush = blackBrush,
+                            Foreground = whiteBrush,
+                            Uid = Request.nbtType,
+                            Name = Request.key,
+                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                        };
+                        displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
+                        tagRichTextBox.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
+
+                        tagRichTextBox.GotFocus += componentEvents.ValueChangedHandler;
+                        if (Request.dataType == "TAG_Tags")
+                        {
+                            string NewToolTip = Request.toolTip;
+                            ToolTip toolTip = new()
+                            {
+                                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
+                                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#484848")),
+                                Content = NewToolTip
+                            };
+                            displayText.ToolTip = toolTip;
+                        }
+                        result.Add(tagRichTextBox);
+                        #region 分析是否需要代入导入的数据
+                        if (ImportMode)
+                        {
+                            string key = Request.key;
+                            if (!!Give)
+                                key = "EntityTag." + key;
+                            JToken currentObj = ExternallyReadEntityData.SelectToken(key);
+                            if (currentObj is JArray tags)
+                            {
+                                Paragraph paragraph = tagRichTextBox.tagBox.Document.Blocks.FirstBlock as Paragraph;
+                                foreach (JToken item in tags)
+                                {
+                                    TagBlock tagBlock = new();
+                                    tagBlock.TextBlock.Text = item.ToString();
+                                    paragraph.Inlines.Add(tagBlock);
+                                }
+                            }
+                            tagRichTextBox.Focus();
+                        }
+                        #endregion
+                    }
+                    break;
                 case "TAG_StringReference":
                     {
                         Binding visibilityBinder = new()
@@ -2445,7 +2500,11 @@ namespace cbhk.Generators.EntityGenerator.Components
                     bool IsNumber = numberType == "pos" || numberType == "float_array" || numberType == "uuid" || numberType == "float" || numberType == "short" || numberType == "byte" || numberType == "int" || numberType == "long" || numberType == "double";
                     IsNumber = IsNumber && currentUID == "number";
                     string currentComponentType = dataType.ToLower().Replace("tag_", "");
-                    if (((currentComponentType == currentUID || currentComponentType == (currentUID + "_list") || IsNumber || (currentUID == "string" && currentComponentType == "jsoncomponent")) && tabControl.SelectedIndex <= 5) || tabControl.SelectedIndex > 5)
+                    if (((currentComponentType == currentUID || 
+                        currentComponentType == (currentUID + "_list") || 
+                        IsNumber || 
+                        (currentUID == "string" && currentComponentType == "jsoncomponent") || 
+                        (currentUID == "string" && currentComponentType == "tags")) && tabControl.SelectedIndex <= 5) || tabControl.SelectedIndex > 5)
                     {
                         List<FrameworkElement> currentResult = JsonToComponentConverter(commonItem, commonString);
                         currentResult.Sort((x, y) => sortOrder.IndexOf(x.Uid).CompareTo(sortOrder.IndexOf(y.Uid)));

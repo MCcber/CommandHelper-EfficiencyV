@@ -36,7 +36,9 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Foreground="White"
-            Text="weight">
+            Text="weight"
+            ToolTipService.BetweenShowDelay="0"
+            ToolTipService.InitialShowDelay="0">
             <TextBlock.ToolTip>
                 <ToolTip
                     Background="#484848"
@@ -256,7 +258,9 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Foreground="White"
-            Text="entity">
+            Text="entity"
+            ToolTipService.BetweenShowDelay="0"
+            ToolTipService.InitialShowDelay="0">
             <TextBlock.ToolTip>
                 <ToolTip
                     Background="#484848"

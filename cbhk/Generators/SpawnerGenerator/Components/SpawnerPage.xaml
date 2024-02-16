@@ -398,16 +398,19 @@
             <CustomControls:Accordion
                 Title="SpawnPotentials"
                 Grid.Row="1"
+                VerticalAlignment="Top"
                 Background="#FFE5B663"
-                Fresh="{Binding ClearSpawnPotential}"
+                Fresh="{Binding ClearSpawnPotentialCommand}"
                 FreshForeground="Black"
                 FreshName="清除"
                 IsExpanded="True"
-                Modify="{Binding AddSpawnPotential}"
+                Modify="{Binding AddSpawnPotentialCommand}"
                 ModifyForeground="Black"
                 ModifyName="添加"
                 Style="{DynamicResource AccordionStyle}"
-                TitleForeground="Black">
+                TitleForeground="Black"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
                 <CustomControls:Accordion.ToolTip>
                     <ToolTip
                         Background="#484848"

@@ -840,6 +840,7 @@ namespace cbhk.Generators.ArmorStandGenerator
             get => leftHandItemImage;
             set => SetProperty(ref leftHandItemImage, value);
         }
+
         private ImageSource rightHandItemImage;
 
         public ImageSource RightHandItemImage
@@ -847,28 +848,32 @@ namespace cbhk.Generators.ArmorStandGenerator
             get => rightHandItemImage;
             set => SetProperty(ref rightHandItemImage, value);
         }
-        private ImageSource headItemImage;
+
+        private ImageSource headItemImage = new BitmapImage(new Uri("/cbhk;component/resources/common/images/Helmet.png", UriKind.RelativeOrAbsolute));
 
         public ImageSource HeadItemImage
         {
             get => headItemImage;
             set => SetProperty(ref headItemImage, value);
         }
-        private ImageSource chestItemImage;
+
+        private ImageSource chestItemImage = new BitmapImage(new Uri("/cbhk;component/resources/common/images/Chestplate.png", UriKind.RelativeOrAbsolute));
 
         public ImageSource ChestItemImage
         {
             get => chestItemImage;
             set => SetProperty(ref chestItemImage, value);
         }
-        private ImageSource legItemImage;
+
+        private ImageSource legItemImage = new BitmapImage(new Uri("/cbhk;component/resources/common/images/Leggings.png", UriKind.RelativeOrAbsolute));
 
         public ImageSource LegItemImage
         {
             get => legItemImage;
             set => SetProperty(ref legItemImage, value);
         }
-        private ImageSource feetItemImage;
+
+        private ImageSource feetItemImage = new BitmapImage(new Uri("/cbhk;component/resources/common/images/Boots.png", UriKind.RelativeOrAbsolute));
 
         public ImageSource FeetItemImage
         {
@@ -1110,7 +1115,7 @@ namespace cbhk.Generators.ArmorStandGenerator
 
         #region 版本数据源
         public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
-            new TextComboBoxItem() { Text = "1.20.5" },
+            new TextComboBoxItem() { Text = "1.20.2" },
             new TextComboBoxItem() { Text = "1.13.0" },
             new TextComboBoxItem() { Text = "1.12.0" },
             new TextComboBoxItem() { Text = "1.9.0" },
@@ -1373,7 +1378,7 @@ namespace cbhk.Generators.ArmorStandGenerator
                 {
                     case "Head":
                         if (File.Exists(filePath))
-                            HeadItemImage = new BitmapImage(new Uri(filePath,UriKind.Absolute));
+                            HeadItemImage = new BitmapImage(new Uri(filePath, UriKind.Absolute));
                         HeadItem = Result;
                         break;
                     case "Body":
@@ -1833,7 +1838,7 @@ namespace cbhk.Generators.ArmorStandGenerator
                         HeaderWidth = 20,
                         HorizontalAlignment = HorizontalAlignment.Stretch,
                         VerticalAlignment = VerticalAlignment.Center,
-                        Style = (NBTList.Children[0] as TextCheckBoxs).Style
+                        Style = Application.Current.Resources["TextCheckBox"] as Style
                     };
                     NBTList.Children.Add(textCheckBox);
                     textCheckBox.Checked += NBTChecked;
@@ -1854,7 +1859,6 @@ namespace cbhk.Generators.ArmorStandGenerator
                             }
                     }
                 }
-                NBTList.Children.RemoveAt(0);
             }
         }
 

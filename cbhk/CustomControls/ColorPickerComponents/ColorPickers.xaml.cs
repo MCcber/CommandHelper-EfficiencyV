@@ -1,4 +1,4 @@
-﻿using cbhk.CustomControls.ColorPickers.Media;
+﻿using cbhk.CustomControls.ColorPickerComponents.Media;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,7 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
-namespace cbhk.CustomControls.ColorPickers
+namespace cbhk.CustomControls.ColorPickerComponents
 {
     /// <summary>
     /// ColorPickers.xaml 的交互逻辑
@@ -214,7 +214,7 @@ namespace cbhk.CustomControls.ColorPickers
             TextA.Text = Hcolor.A.ToString();
         }
 
-        private void ColorChange(RgbaColor Hcolor)
+        private void ColorChange(Media.RgbaColor Hcolor)
         {
             TextR.Text = Hcolor.R.ToString();
             TextG.Text = Hcolor.G.ToString();

@@ -22,32 +22,30 @@
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
             </Image>
-            <TextBox
+            <CustomControls:StylizedTextBox
+                x:Name="title"
                 Grid.Row="0"
-                Height="35"
-                Margin="45,130,45,0"
+                Margin="45,115,45,0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
                 VerticalContentAlignment="Center"
                 Panel.ZIndex="1"
+                Background="#2F2F2F"
                 BorderBrush="Black"
                 FontFamily="Minecraft AE Pixel"
-                FontSize="20"
-                Foreground="White"
-                Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBox
+                Foreground="White" />
+            <CustomControls:StylizedTextBox
+                x:Name="author"
                 Grid.Row="1"
-                Height="35"
-                Margin="45,165,200,0"
+                Margin="45,165,195,0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
                 VerticalContentAlignment="Center"
                 Panel.ZIndex="1"
+                Background="#2F2F2F"
                 BorderBrush="Black"
                 FontFamily="Minecraft AE Pixel"
-                FontSize="20"
-                Foreground="White"
-                Text="{Binding Author, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                Foreground="White" />
         </Grid>
         <CustomControls:StereoTextButton
             Height="28"

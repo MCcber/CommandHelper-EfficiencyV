@@ -13,7 +13,6 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -842,7 +841,7 @@ namespace cbhk.Generators.ItemGenerator.Components
 
             string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItemId.ComboBoxItemId;
 
-            if (!Summon)
+            if (Summon)
             {
                 nbt.Insert(0, "id:\"minecraft:" + CurrentItemID + "\",tag:{");
                 nbt.Append("},Count:" + data.ItemCount.Value + "b");

@@ -484,22 +484,30 @@
                         <ListView.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel>
-                                    <Image
-                                        Width="60"
-                                        Height="60"
-                                        RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                        SnapsToDevicePixels="True"
-                                        Source="{Binding Path=ImagePath, IsAsync=True, Converter={StaticResource UriToBitmapImage}, Mode=OneWay}"
-                                        ToolTipService.BetweenShowDelay="0"
-                                        ToolTipService.InitialShowDelay="0"
-                                        UseLayoutRounding="True">
-                                        <Image.ToolTip>
-                                            <ToolTip
-                                                Background="#484848"
-                                                Content="{Binding IsAsync=True, Path=IDAndName, Mode=OneWay}"
-                                                Foreground="White" />
-                                        </Image.ToolTip>
-                                    </Image>
+                                    <Grid>
+                                        <Image
+                                            Width="60"
+                                            Height="60"
+                                            Panel.ZIndex="0"
+                                            Source="{StaticResource Slot}" />
+                                        <Image
+                                            Width="60"
+                                            Height="60"
+                                            Panel.ZIndex="1"
+                                            RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                            SnapsToDevicePixels="True"
+                                            Source="{Binding Path=ImagePath, IsAsync=True, Converter={StaticResource UriToBitmapImage}, Mode=OneWay}"
+                                            ToolTipService.BetweenShowDelay="0"
+                                            ToolTipService.InitialShowDelay="0"
+                                            UseLayoutRounding="True">
+                                            <Image.ToolTip>
+                                                <ToolTip
+                                                    Background="#484848"
+                                                    Content="{Binding IsAsync=True, Path=IDAndName, Mode=OneWay}"
+                                                    Foreground="White" />
+                                            </Image.ToolTip>
+                                        </Image>
+                                    </Grid>
                                 </DockPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>
@@ -547,23 +555,31 @@
                         <ListView.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel>
-                                    <Image
-                                        Width="60"
-                                        Height="60"
-                                        RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                        RenderOptions.ClearTypeHint="Enabled"
-                                        SnapsToDevicePixels="True"
-                                        Source="{Binding Path=ImagePath, IsAsync=True, Converter={StaticResource UriToBitmapImage}, Mode=OneWay}"
-                                        ToolTipService.BetweenShowDelay="0"
-                                        ToolTipService.InitialShowDelay="0"
-                                        UseLayoutRounding="True">
-                                        <Image.ToolTip>
-                                            <ToolTip
-                                                Background="#484848"
-                                                Content="{Binding IsAsync=True, Path=IDAndName, Mode=OneWay}"
-                                                Foreground="White" />
-                                        </Image.ToolTip>
-                                    </Image>
+                                    <Grid>
+                                        <Image
+                                            Width="60"
+                                            Height="60"
+                                            Panel.ZIndex="0"
+                                            Source="{StaticResource Slot}" />
+                                        <Image
+                                            Width="60"
+                                            Height="60"
+                                            Panel.ZIndex="1"
+                                            RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                            RenderOptions.ClearTypeHint="Enabled"
+                                            SnapsToDevicePixels="True"
+                                            Source="{Binding Path=ImagePath, IsAsync=True, Converter={StaticResource UriToBitmapImage}, Mode=OneWay}"
+                                            ToolTipService.BetweenShowDelay="0"
+                                            ToolTipService.InitialShowDelay="0"
+                                            UseLayoutRounding="True">
+                                            <Image.ToolTip>
+                                                <ToolTip
+                                                    Background="#484848"
+                                                    Content="{Binding IsAsync=True, Path=IDAndName, Mode=OneWay}"
+                                                    Foreground="White" />
+                                            </Image.ToolTip>
+                                        </Image>
+                                    </Grid>
                                 </DockPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>
