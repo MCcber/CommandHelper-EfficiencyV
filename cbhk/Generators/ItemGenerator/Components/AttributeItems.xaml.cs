@@ -1,4 +1,5 @@
-﻿using cbhk.CustomControls.Interfaces;
+﻿using cbhk.CustomControls;
+using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using System;
 using System.Collections.ObjectModel;
@@ -19,8 +20,8 @@ namespace cbhk.Generators.ItemGenerator.Components
         async Task<string> IVersionUpgrader.Result()
         {
             await Upgrade(currentVersion);
-            string attributeIDString = itemDataContext.AttributeTable.Select("name='" + AttributeNameBox.SelectedItem.ToString() + "'").First()["id"].ToString();
-            string attributeSlotString = itemDataContext.AttributeSlotTable.Select("value='" + Slot.SelectedItem.ToString() + "'").First()["id"].ToString();
+            string attributeIDString = itemDataContext.AttributeTable.Select("name='" + (AttributeNameBox.SelectedItem as TextComboBoxItem).Text + "'").First()["id"].ToString();
+            string attributeSlotString = itemDataContext.AttributeSlotTable.Select("value='" + (Slot.SelectedItem as TextComboBoxItem).Text + "'").First()["id"].ToString();
             string slotData = attributeSlotString == "all" ? "" : ",Slot:\"" + attributeSlotString + "\"";
             string result = "{AttributeName:\"" + attributeIDString + "\",Name:\"" + NameBox.Text + "\",Amount:" + Amount.Value.ToString() + "d,Operation:" + Operations.SelectedIndex + UUIDString + slotData + "}";
             return result;
