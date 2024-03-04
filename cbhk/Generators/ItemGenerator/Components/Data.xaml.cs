@@ -35,7 +35,7 @@ namespace cbhk.Generators.ItemGenerator.Components
                     modifierElement = await (AttributeSource[i] as IVersionUpgrader).Result();
                     modifierString.Append(modifierElement + ",");
                 }
-                result = "AttributeModifiers:[" + modifierString.ToString().TrimEnd(',') + "]";
+                result = "AttributeModifiers:[" + modifierString.ToString().TrimEnd(',') + "],";
             }
             return result;
         }

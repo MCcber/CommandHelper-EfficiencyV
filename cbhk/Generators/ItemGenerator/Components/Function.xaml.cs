@@ -61,7 +61,7 @@ namespace cbhk.Generators.ItemGenerator.Components
                     if (enchantmentElement is not null)
                         enchantString.Append(enchantmentElement + ",");
                 }
-                result = enchantmentKey + ":[" + enchantString.ToString().TrimEnd(',') + "]";
+                result = enchantmentKey + ":[" + enchantString.ToString().TrimEnd(',') + "],";
             }
             return result;
         }
