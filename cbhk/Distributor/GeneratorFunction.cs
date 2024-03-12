@@ -4,42 +4,13 @@ using System.Windows;
 
 namespace cbhk.Distributor
 {
-    public class GeneratorFunction: ObservableObject
+    public partial class GeneratorFunction: ObservableObject
     {
         private MainWindow cbhk;
-
-        #region 启动命令
-        public RelayCommand StartOoc { get; set; }
-        public RelayCommand StartSpawner { get; set; }
-        public RelayCommand StartArmorStand { get; set; }
-        public RelayCommand StartTags { get; set; }
-        public RelayCommand StartItems { get; set; }
-        public RelayCommand StartEntities { get; set; }
-        public RelayCommand StartFireworks { get; set; }
-        public RelayCommand StartRecipes { get; set; }
-        public RelayCommand StartVillagers { get; set; }
-        public RelayCommand StartWrittenBook { get; set; }
-        public RelayCommand StartDatapack { get; set; }
-        public RelayCommand StartSign { get; set; }
-        #endregion
 
         public GeneratorFunction(MainWindow win)
         {
             cbhk = win;
-            #region 链接命令
-            StartOoc = new(StartOnlyOneCommandGeneratorCommand);
-            StartSpawner = new(StartSpawnerGeneratorCommand);
-            StartArmorStand = new(StartArmorStandsGeneratorCommand);
-            StartTags = new(StartTagsGeneratorCommand);
-            StartItems = new(StartItemsGeneratorCommand);
-            StartEntities = new(StartEntitiesGeneratorCommand);
-            StartFireworks = new(StartFireworksGeneratorCommand);
-            StartRecipes = new(StartRecipesGeneratorCommand);
-            StartVillagers = new(StartVillagersGeneratorCommand);
-            StartWrittenBook = new(StartWrittenBooksGeneratorCommand);
-            StartDatapack = new(StartDatapacksGeneratorCommand);
-            StartSign = new(StartSignCommand);
-            #endregion
         }
 
         /// <summary>
@@ -56,10 +27,11 @@ namespace cbhk.Distributor
             };
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动ooc生成器
         /// </summary>
-        public void StartOnlyOneCommandGeneratorCommand()
+        public void StartOnlyOneCommandGenerator()
         {
             Generators.OnlyOneCommandGenerator.OnlyOneCommand ooc = new();
             Generators.OnlyOneCommandGenerator.OnlyOneCommandDataContext context = ooc.DataContext as Generators.OnlyOneCommandGenerator.OnlyOneCommandDataContext;
@@ -69,10 +41,11 @@ namespace cbhk.Distributor
             ooc.Focus();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动刷怪笼生成器
         /// </summary>
-        private void StartSpawnerGeneratorCommand()
+        private void StartSpawnerGenerator()
         {
             Generators.SpawnerGenerator.Spawner spawner = new();
             SetCBHKState();
@@ -82,10 +55,11 @@ namespace cbhk.Distributor
             spawner.Focus();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动as生成器
         /// </summary>
-        private void StartArmorStandsGeneratorCommand()
+        private void StartArmorStandsGenerator()
         {
             Generators.ArmorStandGenerator.ArmorStand armorStand = new();
             Generators.ArmorStandGenerator.ArmorStandDataContext context = armorStand.DataContext as Generators.ArmorStandGenerator.ArmorStandDataContext;
@@ -95,10 +69,11 @@ namespace cbhk.Distributor
             armorStand.Focus();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动tag生成器
         /// </summary>
-        private void StartTagsGeneratorCommand()
+        private void StartTagsGenerator()
         {
             Generators.TagGenerator.Tag tag = new();
             Generators.TagGenerator.TagDataContext context = tag.DataContext as Generators.TagGenerator.TagDataContext;
@@ -108,10 +83,11 @@ namespace cbhk.Distributor
             tag.Focus();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动物品生成器
         /// </summary>
-        private void StartItemsGeneratorCommand()
+        private void StartItemsGenerator()
         {
             Generators.ItemGenerator.Item item = new();
             Generators.ItemGenerator.ItemDataContext context = item.DataContext as Generators.ItemGenerator.ItemDataContext;
@@ -121,10 +97,11 @@ namespace cbhk.Distributor
             item.Focus();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动实体生成器
         /// </summary>
-        private void StartEntitiesGeneratorCommand()
+        private void StartEntitiesGenerator()
         {
             Generators.EntityGenerator.Entity entity = new();
             Generators.EntityGenerator.EntityDataContext context = entity.DataContext as Generators.EntityGenerator.EntityDataContext;
@@ -134,10 +111,11 @@ namespace cbhk.Distributor
             entity.Focus();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动烟花生成器
         /// </summary>
-        private void StartFireworksGeneratorCommand()
+        private void StartFireworksGenerator()
         {
             Generators.FireworkRocketGenerator.FireworkRocket fireworkRocket = new();
             Generators.FireworkRocketGenerator.FireworkRocketDataContext context = fireworkRocket.DataContext as Generators.FireworkRocketGenerator.FireworkRocketDataContext;
@@ -147,10 +125,11 @@ namespace cbhk.Distributor
             fireworkRocket.Focus();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动配方生成器
         /// </summary>
-        private void StartRecipesGeneratorCommand()
+        private void StartRecipesGenerator()
         {
             Generators.RecipeGenerator.Recipe recipe = new();
             Generators.RecipeGenerator.RecipeDataContext context = recipe.DataContext as Generators.RecipeGenerator.RecipeDataContext;
@@ -160,10 +139,11 @@ namespace cbhk.Distributor
             recipe.Focus();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动村民生成器
         /// </summary>
-        private void StartVillagersGeneratorCommand()
+        private void StartVillagersGenerator()
         {
             Generators.VillagerGenerator.Villager villager = new();
             Generators.VillagerGenerator.VillagerDataContext context = villager.DataContext as Generators.VillagerGenerator.VillagerDataContext;
@@ -173,10 +153,11 @@ namespace cbhk.Distributor
             villager.Focus();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动成书生成器
         /// </summary>
-        private void StartWrittenBooksGeneratorCommand()
+        private void StartWrittenBooksGenerator()
         {
             Generators.WrittenBookGenerator.WrittenBook writtenBook = new();
             Generators.WrittenBookGenerator.WrittenBookDataContext context = writtenBook.DataContext as Generators.WrittenBookGenerator.WrittenBookDataContext;
@@ -186,10 +167,11 @@ namespace cbhk.Distributor
             writtenBook.Focus();
         }
 
+        [RelayCommand]
         /// <summary>
         /// 启动数据包生成器
         /// </summary>
-        private void StartDatapacksGeneratorCommand()
+        private void StartDatapacksGenerator()
         {
             Generators.DataPackGenerator.Datapack dataPack = new();
             Generators.DataPackGenerator.DatapackDataContext context = dataPack.DataContext as Generators.DataPackGenerator.DatapackDataContext;
@@ -199,7 +181,11 @@ namespace cbhk.Distributor
             dataPack.Focus();
         }
 
-        private void StartSignCommand()
+        [RelayCommand]
+        /// <summary>
+        /// 启动告示牌生成器
+        /// </summary>
+        private void StartSign()
         {
             Generators.SignGenerator.Sign sign = new();
             Generators.SignGenerator.SignDataContext context = sign.DataContext as Generators.SignGenerator.SignDataContext;
@@ -207,6 +193,20 @@ namespace cbhk.Distributor
             SetCBHKState();
             sign.Show();
             sign.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动指定的自定义世界生成器
+        /// </summary>
+        private void StartCustomWorld()
+        {
+            Generators.CustomWorldGenerators.CustomWorldBaseWindow customWorldBaseWindow = new();
+            Generators.CustomWorldGenerators.CustomWorldBaseWindowDataContext context = customWorldBaseWindow.DataContext as Generators.CustomWorldGenerators.CustomWorldBaseWindowDataContext;
+            context.home = cbhk;
+            SetCBHKState();
+            customWorldBaseWindow.Show();
+            customWorldBaseWindow.Focus();
         }
     }
 
@@ -218,22 +218,23 @@ namespace cbhk.Distributor
         /// <param name="id"></param>
         /// <param name="function"></param>
         /// <returns></returns>
-        public static RelayCommand Set(string id, GeneratorFunction function)
+        public static IRelayCommand Set(string id, GeneratorFunction function)
         {
-            RelayCommand result = id switch
+            IRelayCommand result = id switch
             {
-                "Ooc" => function.StartOoc,
-                "Datapack" => function.StartDatapack,
-                "Armorstand" => function.StartArmorStand,
-                "Writtenbook" => function.StartWrittenBook,
-                "Spawners" => function.StartSpawner,
-                "Recipes" => function.StartRecipes,
-                "Villagers" => function.StartVillagers,
-                "Tags" => function.StartTags,
-                "Items" => function.StartItems,
-                "Fireworks" => function.StartFireworks,
-                "Entities" => function.StartEntities,
-                "Signs" => function.StartSign,
+                "Ooc" => function.StartOnlyOneCommandGeneratorCommand,
+                "Datapack" => function.StartDatapacksGeneratorCommand,
+                "Armorstand" => function.StartArmorStandsGeneratorCommand,
+                "Writtenbook" => function.StartWrittenBooksGeneratorCommand,
+                "Spawners" => function.StartSpawnerGeneratorCommand,
+                "Recipes" => function.StartRecipesGeneratorCommand,
+                "Villagers" => function.StartVillagersGeneratorCommand,
+                "Tags" => function.StartTagsGeneratorCommand,
+                "Items" => function.StartItemsGeneratorCommand,
+                "Fireworks" => function.StartFireworksGeneratorCommand,
+                "Entities" => function.StartEntitiesGeneratorCommand,
+                "Signs" => function.StartSignCommand,
+                "Customworld"=>function.StartCustomWorldCommand,
                 _ => null
             };
             return result;

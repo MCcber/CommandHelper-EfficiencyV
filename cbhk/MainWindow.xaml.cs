@@ -168,7 +168,7 @@ namespace cbhk
                             button.Title = currentName;
                         if (currentName is not null)
                             button.SubTitle = currentId;
-                        RelayCommand behavior = GeneratorClickEvent.Set(currentId, generatorFunction);
+                        IRelayCommand behavior = GeneratorClickEvent.Set(currentId, generatorFunction);
                         button.Command = behavior;
                         GeneratorTable.Children.Add(button);
                         if (columnIndex > GeneratorTable.ColumnDefinitions.Count - 1)

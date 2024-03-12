@@ -515,4 +515,7 @@
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Generators\CustomWorldGenerators\DimensionTypeGenerator\" />
+  </ItemGroup>
 </Project>

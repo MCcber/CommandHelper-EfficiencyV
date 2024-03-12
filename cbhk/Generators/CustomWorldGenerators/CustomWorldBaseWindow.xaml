@@ -1,0 +1,39 @@
+﻿<localWindow:CommonWindow
+    x:Class="cbhk.Generators.CustomWorldGenerators.CustomWorldBaseWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dataContext="clr-namespace:cbhk.Generators.CustomWorldGenerators"
+    xmlns:local="clr-namespace:cbhk.Generators.CustomWorldGenerators"
+    xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="自定义世界生成-"
+    Width="800"
+    Height="450"
+    Background="#2F2F2F"
+    mc:Ignorable="d">
+
+    <Window.DataContext>
+        <dataContext:CustomWorldBaseWindowDataContext />
+    </Window.DataContext>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TreeView
+            Grid.Column="0"
+            Background="Transparent"
+            BorderThickness="0" />
+        <avalonedit:TextEditor
+            Grid.Column="1"
+            CustomControls:AvalonEditExtensions.CodeText="{Binding JsonData}"
+            Background="Transparent"
+            Foreground="White"
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Auto" />
+    </Grid>
+</localWindow:CommonWindow>
