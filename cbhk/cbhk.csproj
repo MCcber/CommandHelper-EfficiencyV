@@ -50,9 +50,13 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Generators\CustomWorldGenerators\DimensionTypeGenerator\**" />
     <Compile Remove="纹理\**" />
+    <EmbeddedResource Remove="Generators\CustomWorldGenerators\DimensionTypeGenerator\**" />
     <EmbeddedResource Remove="纹理\**" />
+    <None Remove="Generators\CustomWorldGenerators\DimensionTypeGenerator\**" />
     <None Remove="纹理\**" />
+    <Page Remove="Generators\CustomWorldGenerators\DimensionTypeGenerator\**" />
     <Page Remove="纹理\**" />
   </ItemGroup>
   <ItemGroup>
@@ -514,8 +518,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Generators\CustomWorldGenerators\DimensionTypeGenerator\" />
   </ItemGroup>
 </Project>
