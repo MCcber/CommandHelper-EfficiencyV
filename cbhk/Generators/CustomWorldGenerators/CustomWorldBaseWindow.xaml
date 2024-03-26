@@ -4,14 +4,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
     xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dataContext="clr-namespace:cbhk.Generators.CustomWorldGenerators"
     xmlns:local="clr-namespace:cbhk.Generators.CustomWorldGenerators"
     xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="自定义世界生成-"
-    Width="800"
-    Height="450"
+    Title="{Binding TitleString}"
+    Width="1080"
+    Height="700"
     Background="#2F2F2F"
     mc:Ignorable="d">
 
@@ -19,21 +20,57 @@
         <dataContext:CustomWorldBaseWindowDataContext />
     </Window.DataContext>
 
+    <Window.Resources>
+        <HierarchicalDataTemplate x:Key="JsonTreeViewItem" DataType="TreeViewItem">
+            <DockPanel LastChildFill="False">
+                <TextBlock Text="{Binding DisplayText}" />
+                <ComboBox ItemsSource="{Binding ValueTypeList}" SelectedItem="{Binding CurrentValueType}" />
+                <TextBox Text="{Binding Value, Mode=TwoWay}" />
+                <Image
+                    Source="{StaticResource ExclamationIcon}"
+                    ToolTip="{Binding ToolTipText}"
+                    Visibility="{Binding TipIconVisibility}" />
+            </DockPanel>
+        </HierarchicalDataTemplate>
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="350" MinWidth="350" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <TreeView
             Grid.Column="0"
             Background="Transparent"
-            BorderThickness="0" />
-        <avalonedit:TextEditor
+            BorderThickness="0"
+            ItemTemplate="{StaticResource JsonTreeViewItem}"
+            ItemsSource="{Binding CustomWorldItemsSource}" />
+        <GridSplitter
             Grid.Column="1"
-            CustomControls:AvalonEditExtensions.CodeText="{Binding JsonData}"
+            Width="5"
+            VerticalAlignment="Stretch"
+            Background="Transparent"
+            BorderBrush="Gray"
+            BorderThickness="1,0,1,0" />
+        <avalonedit:TextEditor
+            Grid.Column="2"
+            Margin="5"
             Background="Transparent"
             Foreground="White"
             HorizontalScrollBarVisibility="Auto"
-            VerticalScrollBarVisibility="Auto" />
+            LineNumbersForeground="White"
+            ShowLineNumbers="True"
+            VerticalScrollBarVisibility="Auto"
+            WordWrap="True">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="Loaded">
+                    <behaviors:CallMethodAction MethodName="TextEditor_Loaded" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+                <behaviors:EventTrigger EventName="TextChanged">
+                    <behaviors:CallMethodAction MethodName="TextEditor_TextChanged" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
+        </avalonedit:TextEditor>
     </Grid>
 </localWindow:CommonWindow>

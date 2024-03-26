@@ -34,4 +34,39 @@
             <GeometryDrawing Brush="#7799D4" Geometry="M176 24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64c-35.3 0-64 28.7-64 64H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H64v56H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H64v56H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H64c0 35.3 28.7 64 64 64v40c0 13.3 10.7 24 24 24s24-10.7 24-24V448h56v40c0 13.3 10.7 24 24 24s24-10.7 24-24V448h56v40c0 13.3 10.7 24 24 24s24-10.7 24-24V448c35.3 0 64-28.7 64-64h40c13.3 0 24-10.7 24-24s-10.7-24-24-24H448V280h40c13.3 0 24-10.7 24-24s-10.7-24-24-24H448V176h40c13.3 0 24-10.7 24-24s-10.7-24-24-24H448c0-35.3-28.7-64-64-64V24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H280V24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H176V24zM160 128H352c17.7 0 32 14.3 32 32V352c0 17.7-14.3 32-32 32H160c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32zm192 32H160V352H352V160z" />
         </DrawingImage.Drawing>
     </DrawingImage>
+
+    <DrawingImage x:Key="ExclamationIcon">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="#E21E1E" Geometry="M512 512m-512 0a512 512 0 1 0 1024 0 512 512 0 1 0-1024 0Z" />
+                <GeometryDrawing Brush="#FFFFFF" Geometry="M512 704a64 64 0 1 1 0 128 64 64 0 0 1 0-128z m0-512a64 64 0 0 1 64 64v320a64 64 0 1 1-128 0V256a64 64 0 0 1 64-64z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="InfoIcon">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="M0 0h1024v1024H0z" />
+                <GeometryDrawing Brush="#3F3F3F" Geometry="M512 85.333333c235.648 0 426.666667 191.018667 426.666667 426.666667s-191.018667 426.666667-426.666667 426.666667S85.333333 747.648 85.333333 512 276.352 85.333333 512 85.333333z m0 64a362.666667 362.666667 0 1 0 0 725.333334 362.666667 362.666667 0 0 0 0-725.333334z m32.426667 266.24l-0.042667 277.76H597.333333v64h-170.666666v-64h52.906666v-212.906666H426.666667V415.573333h117.76zM512 256a53.333333 53.333333 0 1 1 0 106.666667A53.333333 53.333333 0 0 1 512 256z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <BitmapImage x:Key="AddIcon" UriSource="/cbhk;component/resources/common/images/Add.png" />
+    <BitmapImage x:Key="AttributeIcon" UriSource="/cbhk;component/resources/common/images/Attribute.png" />
+    <BitmapImage x:Key="CopyIcon" UriSource="/cbhk;component/resources/common/images/Copy.png" />
+    <BitmapImage x:Key="CopyAllIcon" UriSource="/cbhk;component/resources/common/images/CopyAll.png" />
+    <BitmapImage x:Key="CutIcon" UriSource="/cbhk;component/resources/common/images/Cut.png" />
+    <BitmapImage x:Key="DeleteIcon" UriSource="/cbhk;component/resources/common/images/Delete.png" />
+    <BitmapImage x:Key="FoldIcon" UriSource="/cbhk;component/resources/common/images/Fold.png" />
+    <BitmapImage x:Key="HistoryIcon" UriSource="/cbhk;component/resources/common/images/History.png" />
+    <BitmapImage x:Key="OpenIcon" UriSource="/cbhk;component/resources/common/images/Open.png" />
+    <BitmapImage x:Key="Open2Icon" UriSource="/cbhk;component/resources/common/images/Open2.png" />
+    <BitmapImage x:Key="OpenTerminalIcon" UriSource="/cbhk;component/resources/common/images/OpenTerminal.png" />
+    <BitmapImage x:Key="PasteIcon" UriSource="/cbhk;component/resources/common/images/Paste.png" />
+    <BitmapImage x:Key="RevokeIcon" UriSource="/cbhk;component/resources/common/images/Revoke.png" />
+    <BitmapImage x:Key="SubmitIcon" UriSource="/cbhk;component/resources/common/images/Submit.png" />
+
+
 </ResourceDictionary>

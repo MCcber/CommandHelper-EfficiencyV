@@ -199,7 +199,7 @@ namespace cbhk.Distributor
         /// <summary>
         /// 启动指定的自定义世界生成器
         /// </summary>
-        private void StartCustomWorld()
+        private void StartCustomWorldGenerator()
         {
             Generators.CustomWorldGenerators.CustomWorldBaseWindow customWorldBaseWindow = new();
             Generators.CustomWorldGenerators.CustomWorldBaseWindowDataContext context = customWorldBaseWindow.DataContext as Generators.CustomWorldGenerators.CustomWorldBaseWindowDataContext;
@@ -207,6 +207,34 @@ namespace cbhk.Distributor
             SetCBHKState();
             customWorldBaseWindow.Show();
             customWorldBaseWindow.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动维度生成器
+        /// </summary>
+        private void StartDimensionGenerator()
+        {
+            Generators.DimensionGenerator.Dimension dimension = new();
+            Generators.DimensionGenerator.DimensionDataContext context = dimension.DataContext as Generators.DimensionGenerator.DimensionDataContext;
+            context.home = cbhk;
+            SetCBHKState();
+            dimension.Show();
+            dimension.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动维度类型生成器
+        /// </summary>
+        private void StartDimensionTypeGenerator()
+        {
+            Generators.DimensionTypeGenerator.DimensionType dimensionType = new();
+            Generators.DimensionTypeGenerator.DimensionTypeDataContext context = dimensionType.DataContext as Generators.DimensionTypeGenerator.DimensionTypeDataContext;
+            context.home = cbhk;
+            SetCBHKState();
+            dimensionType.Show();
+            dimensionType.Focus();
         }
     }
 
@@ -225,7 +253,7 @@ namespace cbhk.Distributor
                 "Ooc" => function.StartOnlyOneCommandGeneratorCommand,
                 "Datapack" => function.StartDatapacksGeneratorCommand,
                 "Armorstand" => function.StartArmorStandsGeneratorCommand,
-                "Writtenbook" => function.StartWrittenBooksGeneratorCommand,
+                "WrittenBook" => function.StartWrittenBooksGeneratorCommand,
                 "Spawners" => function.StartSpawnerGeneratorCommand,
                 "Recipes" => function.StartRecipesGeneratorCommand,
                 "Villagers" => function.StartVillagersGeneratorCommand,
@@ -234,7 +262,9 @@ namespace cbhk.Distributor
                 "Fireworks" => function.StartFireworksGeneratorCommand,
                 "Entities" => function.StartEntitiesGeneratorCommand,
                 "Signs" => function.StartSignCommand,
-                "Customworld"=>function.StartCustomWorldCommand,
+                "CustomWorld"=>function.StartCustomWorldGeneratorCommand,
+                "Dimensions"=>function.StartDimensionGeneratorCommand,
+                "DimensionType"=>function.StartDimensionTypeGeneratorCommand,
                 _ => null
             };
             return result;

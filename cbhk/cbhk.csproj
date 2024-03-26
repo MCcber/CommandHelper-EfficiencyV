@@ -154,7 +154,7 @@
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf">
       <Version>1.1.0</Version>
     </PackageReference>
-    <PackageReference Include="HelixToolkit.Wpf" Version="2.24.0" />
+    <PackageReference Include="HelixToolkit.Wpf" Version="2.25.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies">
       <Version>1.0.3</Version>
@@ -183,6 +183,8 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="resources\cbhk\images\empty.png" />
+    <Resource Include="resources\common\images\Add.png" />
+    <Resource Include="resources\common\images\Attribute.png" />
     <Resource Include="resources\common\images\BlackEdit.png" />
     <Resource Include="resources\common\images\Boots.png" />
     <Resource Include="resources\common\images\ButtonFrame.png" />
@@ -220,14 +222,20 @@
     <Resource Include="resources\common\images\Chestplate.png" />
     <Resource Include="resources\common\images\ColorPicker.png" />
     <Resource Include="resources\common\images\ContentBox.png" />
+    <Resource Include="resources\common\images\Copy.png" />
+    <Resource Include="resources\common\images\CopyAll.png" />
+    <Resource Include="resources\common\images\Cut.png" />
+    <Resource Include="resources\common\images\Delete.png" />
     <Resource Include="resources\common\images\eyeHide.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="resources\common\images\eyeShow.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="resources\common\images\Fold.png" />
     <Resource Include="resources\common\images\Frame.png" />
     <Resource Include="resources\common\images\Helmet.png" />
+    <Resource Include="resources\common\images\History.png" />
     <Resource Include="resources\common\images\IconFree.png" />
     <Resource Include="resources\common\images\IconFresh.png" />
     <Resource Include="resources\common\images\IconGaze.png" />
@@ -241,10 +249,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="resources\common\images\Leggings.png" />
+    <Resource Include="resources\common\images\Open.png" />
+    <Resource Include="resources\common\images\Open2.png" />
+    <Resource Include="resources\common\images\OpenTerminal.png" />
+    <Resource Include="resources\common\images\Paste.png" />
     <Resource Include="resources\common\images\RadiusToggleButtonOff.png" />
     <Resource Include="resources\common\images\RadiusToggleButtonOffLocked.png" />
     <Resource Include="resources\common\images\RadiusToggleButtonOn.png" />
     <Resource Include="resources\common\images\RadiusToggleButtonOnLocked.png" />
+    <Resource Include="resources\common\images\Revoke.png" />
     <Resource Include="resources\common\images\Save.png" />
     <Resource Include="resources\common\images\SaveAs.png" />
     <Resource Include="resources\common\images\SelectedTabItemLeft.png">
@@ -262,6 +275,7 @@
     <Resource Include="resources\common\images\Slot.png" />
     <Resource Include="resources\common\images\SmithingTemplate.png" />
     <Resource Include="resources\common\images\spyglass_scope.png" />
+    <Resource Include="resources\common\images\Submit.png" />
     <Resource Include="resources\common\images\TabItemLeft.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -466,6 +480,8 @@
     <None Remove="resources\cbhk\images\LoginX.png" />
     <None Remove="resources\cbhk\images\more\github.png" />
     <None Remove="resources\cbhk\images\SigninBackground.png" />
+    <None Remove="resources\common\images\Add.png" />
+    <None Remove="resources\common\images\Attribute.png" />
     <None Remove="resources\common\images\BlackEdit.png" />
     <None Remove="resources\common\images\Boots.png" />
     <None Remove="resources\common\images\ButtonFrame.png" />
@@ -479,9 +495,15 @@
     <None Remove="resources\common\images\ButtonPressedTop.png" />
     <None Remove="resources\common\images\Chestplate.png" />
     <None Remove="resources\common\images\ColorPicker.png" />
+    <None Remove="resources\common\images\Copy.png" />
+    <None Remove="resources\common\images\CopyAll.png" />
+    <None Remove="resources\common\images\Cut.png" />
+    <None Remove="resources\common\images\Delete.png" />
     <None Remove="resources\common\images\eyeHide.png" />
     <None Remove="resources\common\images\eyeShow.png" />
+    <None Remove="resources\common\images\Fold.png" />
     <None Remove="resources\common\images\Helmet.png" />
+    <None Remove="resources\common\images\History.png" />
     <None Remove="resources\common\images\IconFree.png" />
     <None Remove="resources\common\images\IconFresh.png" />
     <None Remove="resources\common\images\IconGaze.png" />
@@ -493,6 +515,11 @@
     <None Remove="resources\common\images\IconVisible.png" />
     <None Remove="resources\common\images\itemFrame.png" />
     <None Remove="resources\common\images\Leggings.png" />
+    <None Remove="resources\common\images\Open.png" />
+    <None Remove="resources\common\images\Open2.png" />
+    <None Remove="resources\common\images\OpenTerminal.png" />
+    <None Remove="resources\common\images\Paste.png" />
+    <None Remove="resources\common\images\Revoke.png" />
     <None Remove="resources\common\images\Save.png" />
     <None Remove="resources\common\images\SaveAs.png" />
     <None Remove="resources\common\images\SelectedTabItemLeft.png" />
@@ -501,6 +528,7 @@
     <None Remove="resources\common\images\Slot.png" />
     <None Remove="resources\common\images\SmithingTemplate.png" />
     <None Remove="resources\common\images\spyglass_scope.png" />
+    <None Remove="resources\common\images\Submit.png" />
     <None Remove="resources\common\images\TabItemLeft.png" />
     <None Remove="resources\common\images\TabItemRight.png" />
     <None Remove="resources\common\images\TabItemTop.png" />

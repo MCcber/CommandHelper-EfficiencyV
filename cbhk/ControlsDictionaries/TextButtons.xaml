@@ -45,8 +45,7 @@
                         <Image
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"
-                            Source="{TemplateBinding ThicknessBackground}"
-                            Visibility="Collapsed" />
+                            Source="{TemplateBinding ThicknessBackground}" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="true">
