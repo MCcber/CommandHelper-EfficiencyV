@@ -39,7 +39,7 @@ namespace cbhk.GeneralTools.ScrollViewerHelper
         protected override void Invoke(object parameter)
         {
             //TargetControl = Generators.TagGenerator.TagDataContext.TargetBox;
-            if (TargetControl == null || ScrollViewer == null)
+            if (TargetControl is null || ScrollViewer is null)
             {
                 throw new ArgumentNullException($"{ScrollViewer} or {TargetControl} cannot be null");
             }
@@ -47,7 +47,7 @@ namespace cbhk.GeneralTools.ScrollViewerHelper
             // 检查指定的控件是否在指定的 ScrollViewer 中
             // TODO: 这里只是指定离它最近的 ScrollViewer，并没有继续向上找
             var container = TargetControl.FindParent<ScrollViewer>();
-            if (container == null || container != ScrollViewer)
+            if (container is null || container != ScrollViewer)
             {
                 throw new Exception("The TargetControl is not in the target ScrollViewer");
             }

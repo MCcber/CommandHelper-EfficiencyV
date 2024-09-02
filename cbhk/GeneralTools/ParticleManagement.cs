@@ -138,7 +138,7 @@ namespace cbhk.GeneralTools
         //private ParticleManagement ps;
         //private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         //{
-        //    Geometry g = CreateTextPath("M", new Point(cvs_particleContainer.Margin.Left, cvs_particleContainer.Margin.Top), new Typeface(new FontFamily("Arial"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal), 150);
+        //    Geometry g = CreateTextPath("M", new Point(cvs_particleContainer.Margin.Offset, cvs_particleContainer.Margin.Top), new Typeface(new FontFamily("Arial"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal), 150);
         //    ps = new ParticleManagement(g, 10, 200, cvs_particleContainer);
         //}
         ///// <summary>

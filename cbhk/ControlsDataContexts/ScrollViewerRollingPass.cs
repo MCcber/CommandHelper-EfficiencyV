@@ -13,7 +13,7 @@ namespace cbhk.ControlsDataContexts
             if (scrollViewer.VerticalOffset == scrollViewer.ScrollableHeight || scrollViewer.VerticalOffset == 0)
             {
                 ScrollViewer parent = scrollViewer.FindParent<ScrollViewer>();
-                if (parent == null) return;
+                if (parent is null) return;
                 var eventArg = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
                 {
                     RoutedEvent = UIElement.MouseWheelEvent,

@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 
 namespace cbhk.GeneralTools
 {
@@ -17,7 +12,7 @@ namespace cbhk.GeneralTools
 		[Obsolete]
 		public static string GetDataByPost(string account, string password)
 		{
-			string content = "https://mc.metamo.cn/api/market/open/verifyEmail?token=0e805eb9ea5b2d7a266f29af992704c9&email="+account+"&password="+password;
+			string content = "https://api.metamo.cn/market/open/verifyEmail?token=0e805eb9ea5b2d7a266f29af992704c9&email=" + account+"&password="+password;
             using WebClient webClient = new();
             webClient.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded; charset=utf-8";
             string result = webClient.DownloadString(content);

@@ -1,59 +1,34 @@
 ﻿using cbhk.CustomControls.Interfaces;
+using cbhk.Interface.Json;
+using CommunityToolkit.Mvvm.ComponentModel;
+using ICSharpCode.AvalonEdit.Document;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
 
 namespace cbhk.CustomControls.JsonTreeViewComponents
 {
-    public class JsonTreeViewItem(int lineNumber, int lineStartPosition): INotifyPropertyChanged
+    public partial class JsonTreeViewItem : ObservableObject, ICloneable
     {
         #region Property
-        private string path;
-
-        public string Path
-        {
-            get => path;
-            set
-            {
-                path = value;
-                OnPropertyChanged();
-            }
-        }
-
-
-        private string key = "";
+        [ObservableProperty]
+        public string _path = "";
 
         /// <summary>
         /// 键
         /// </summary>
-        public string Key
-        {
-            get => key;
-            set
-            {
-                key = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private string displayText = "";
+        [ObservableProperty]
+        public string _key = "";
 
         /// <summary>
         /// 所显示的键
         /// </summary>
-        public string DisplayText
-        {
-            get => displayText;
-            set
-            {
-                displayText = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        public string _displayText = "";
 
         private string infoTiptext = "";
 
@@ -65,15 +40,13 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             get => infoTiptext;
             set
             {
-                infoTiptext = value;
+                SetProperty(ref infoTiptext, value);
                 if (infoTiptext.Trim().Length > 0)
                 {
                     InfoIconVisibility = Visibility.Visible;
-                    InfoTipIcon = InfoTipIcon;
                 }
                 else
                     InfoIconVisibility = Visibility.Visible;
-                OnPropertyChanged();
             }
         }
 
@@ -87,32 +60,30 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             get => errorTiptext;
             set
             {
-                errorTiptext = value;
+                SetProperty(ref errorTiptext, value);
                 if (errorTiptext.Trim().Length > 0)
                 {
                     ErrorIconVisibility = Visibility.Visible;
-                    ErrorTipIcon = ErrorTipIcon;
                 }
                 else
                     ErrorIconVisibility = Visibility.Visible;
-                OnPropertyChanged();
             }
         }
 
-        private Visibility boolButtonVisibility = Visibility.Collapsed;
+        [ObservableProperty]
+        public string _elementButtonTip = "添加在顶部";
 
         /// <summary>
         /// bool切换按钮可见性
         /// </summary>
-        public Visibility BoolButtonVisibility
-        {
-            get => boolButtonVisibility;
-            set
-            {
-                boolButtonVisibility = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        public Visibility _boolButtonVisibility = Visibility.Collapsed;
+
+        [ObservableProperty]
+        public Visibility _removeElementButtonVisibility = Visibility.Collapsed;
+
+        [ObservableProperty]
+        public Visibility _sortButtonVisibility = Visibility.Collapsed;
 
         private bool mutuLock = false;
         private bool isFalse = true;
@@ -121,8 +92,8 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             get => isFalse;
             set
             {
-                isFalse = value;
-                if(!mutuLock)
+                SetProperty(ref isFalse, value);
+                if (!mutuLock)
                 {
                     mutuLock = true;
                     if (!IsCanBeDefaulted)
@@ -134,7 +105,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 }
                 if (IsFalse)
                     Value = false;
-                OnPropertyChanged();
             }
         }
 
@@ -144,7 +114,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             get => isTrue;
             set
             {
-                isTrue = value;
+                SetProperty(ref isTrue, value);
                 if (!mutuLock)
                 {
                     mutuLock = true;
@@ -157,269 +127,97 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 }
                 if (IsTrue)
                     Value = true;
-                OnPropertyChanged();
             }
         }
 
-        private bool isCanBeDefaulted = false;
+        public IJsonItemTool JsonItemTool;
+
+        private dynamic defaultValue = null;
+        public dynamic DefaultValue
+        {
+            get => defaultValue;
+            set => SetProperty(ref defaultValue, value);
+        }
+
+        [ObservableProperty]
+        public DataTypes _defaultType = DataTypes.Input;
 
         /// <summary>
         /// 可缺省
         /// </summary>
-        public bool IsCanBeDefaulted
-        {
-            get => isCanBeDefaulted;
-            set
-            {
-                isCanBeDefaulted = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private bool isEnumType = false;
-
-        /// <summary>
-        /// 为枚举类型
-        /// </summary>
-        public bool IsEnumType
-        {
-            get => isEnumType;
-            set
-            {
-                isEnumType = value;
-                if (isEnumType)
-                    EnumBoxVisibility = Visibility.Visible;
-                else
-                    EnumBoxVisibility = Visibility.Collapsed;
-                OnPropertyChanged();
-            }
-        }
-
-        private ObservableCollection<TextComboBoxItem> enumItemsSource = [];
+        [ObservableProperty]
+        public bool _isCanBeDefaulted = false;
 
         /// <summary>
         /// 枚举数据源
         /// </summary>
-        public ObservableCollection<TextComboBoxItem> EnumItemsSource
-        {
-            get => enumItemsSource;
-            set
-            {
-                enumItemsSource = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _enumItemsSource = [];
 
-        public TextComboBoxItem oldSelectedEnumItem = null;
-        private TextComboBoxItem selectedEnumItem;
+        public TextComboBoxItem oldSelectedEnumItem;
 
         /// <summary>
         /// 已选中的枚举成员
         /// </summary>
-        public TextComboBoxItem SelectedEnumItem
-        {
-            get => selectedEnumItem;
-            set
-            {
-                selectedEnumItem = value;
-                OnPropertyChanged();
-            }
-        }
-
-
-        private Visibility enumBoxVisibility = Visibility.Collapsed;
+        [ObservableProperty]
+        public TextComboBoxItem _selectedEnumItem = null;
 
         /// <summary>
         /// 枚举下拉框可见性
         /// </summary>
-        public Visibility EnumBoxVisibility
-        {
-            get => enumBoxVisibility;
-            set
-            {
-                enumBoxVisibility = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        public Visibility _enumBoxVisibility = Visibility.Collapsed;
 
+        [ObservableProperty]
+        public Visibility _inputBoxVisibility = Visibility.Collapsed;
 
-        private bool isBoolType = false;
+        [ObservableProperty]
+        public TextComboBoxItem _currentValueType = null;
+
+        private dynamic oldValue = null;
         /// <summary>
-        /// 是否为bool
+        /// 旧值
         /// </summary>
-        public bool IsBoolType
+        public dynamic OldValue
         {
-            get => isBoolType;
-            set
-            {
-                isBoolType = value;
-                if (isBoolType)
-                {
-                    BoolButtonVisibility = Visibility.Visible;
-                    InputBoxVisibility = Visibility.Collapsed;
-                }
-                else
-                    BoolButtonVisibility = Visibility.Collapsed;
-                OnPropertyChanged();
-            }
-        }
-
-        private bool isNumberType = false;
-
-        /// <summary>
-        /// 是否为实数
-        /// </summary>
-        public bool IsNumberType
-        {
-            get => isNumberType;
-            set
-            {
-                isNumberType = value;
-                if (isNumberType)
-                    InputBoxVisibility = Visibility.Visible;
-                else
-                    InputBoxVisibility = Visibility.Collapsed;
-                OnPropertyChanged();
-            }
-        }
-
-        private bool isStringType;
-
-        /// <summary>
-        /// 是否为字符串
-        /// </summary>
-        public bool IsStringType
-        {
-            get => isStringType;
-            set
-            {
-                isStringType = value;
-                if (isStringType)
-                    InputBoxVisibility = Visibility.Visible;
-                else
-                    InputBoxVisibility = Visibility.Collapsed;
-                OnPropertyChanged();
-            }
+            get => oldValue;
+            set => SetProperty(ref oldValue, value);
         }
 
 
-        private bool isCompoundType;
-
-        /// <summary>
-        /// 是否为复合节点
-        /// </summary>
-        public bool IsCompoundType
-        {
-            get => isCompoundType;
-            set
-            {
-                isCompoundType = value;
-                if (isCompoundType)
-                    SwitchBoxVisibility = Visibility.Visible;
-                else
-                    SwitchBoxVisibility = Visibility.Collapsed;
-                OnPropertyChanged();
-            }
-        }
-
-        private Visibility inputBoxVisibility = Visibility.Collapsed;
-
-        public Visibility InputBoxVisibility
-        {
-            get => inputBoxVisibility;
-            set
-            {
-                inputBoxVisibility = value;
-                OnPropertyChanged();
-            }
-        }
-
-
-        private Visibility switchBoxVisibility = Visibility.Collapsed;
-
-        public Visibility SwitchBoxVisibility
-        {
-            get => switchBoxVisibility;
-            set
-            {
-                switchBoxVisibility = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public ObservableCollection<TextComboBoxItem> ValueTypeList { get; set; } = [];
-
-        private TextComboBoxItem currentValueType;
-        public TextComboBoxItem CurrentValueType
-        {
-            get => currentValueType;
-            set
-            {
-                currentValueType = value;
-                OnPropertyChanged();
-            }
-        }
-
+        private dynamic currentValue = null;
         /// <summary>
         /// 当前值
         /// </summary>
-        public dynamic Value { get; set; }
+        public dynamic Value
+        {
+            get => currentValue;
+            set => SetProperty(ref currentValue, value);
+        }
 
-        private Visibility infoIconVisibility = Visibility.Collapsed;
         /// <summary>
         /// 信息图标可见性
         /// </summary>
-        public Visibility InfoIconVisibility
-        {
-            get => infoIconVisibility;
-            set
-            {
-                infoIconVisibility = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        public Visibility _infoIconVisibility = Visibility.Collapsed;
 
-        private Visibility errorIconVisibility = Visibility.Collapsed;
         /// <summary>
         /// 错误图标可见性
         /// </summary>
-        public Visibility ErrorIconVisibility
-        {
-            get => errorIconVisibility;
-            set
-            {
-                errorIconVisibility = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        public Visibility _errorIconVisibility = Visibility.Collapsed;
 
-        private ImageSource infoTipIcon = Application.Current.Resources["InfoIcon"] as DrawingImage;
         /// <summary>
         /// 信息图标
         /// </summary>
-        public ImageSource InfoTipIcon
-        {
-            get => infoTipIcon;
-            set
-            {
-                infoTipIcon = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        public ImageSource _infoTipIcon = Application.Current.Resources["InfoIcon"] as DrawingImage;
 
-        private ImageSource errorTipIcon = Application.Current.Resources["ExclamationIcon"] as DrawingImage;
         /// <summary>
         /// 错误图标
         /// </summary>
-        public ImageSource ErrorTipIcon
-        {
-            get => errorTipIcon;
-            set
-            {
-                errorTipIcon = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        public ImageSource _errorTipIcon = Application.Current.Resources["ExclamationIcon"] as DrawingImage;
 
         /// <summary>
         /// 最小值
@@ -446,124 +244,55 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// </summary>
         public string RangeType { get; set; }
 
-        private SolidColorBrush verifyBrush = Brushes.Gray;
-
-        public SolidColorBrush VerifyBrush
-        {
-            get => verifyBrush;
-            set
-            {
-                verifyBrush = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
+        [ObservableProperty]
+        public SolidColorBrush _verifyBrush = Brushes.Gray;
 
         /// <summary>
-        /// 行号
+        /// 起始行号
         /// </summary>
-        public int LineNumber { get; set; } = lineNumber;
+        public int StartLineNumber { get; set; }
 
         /// <summary>
-        /// 行偏移
+        /// 起始行
         /// </summary>
-        public int LineStartPosition { get; set; } = lineStartPosition;
+        public DocumentLine StartLine { get; set; }
 
         /// <summary>
         /// 层数
         /// </summary>
         public int LayerCount { get; set; } = 1;
 
-        private Enums.DataTypes DataType { get; set; } = Enums.DataTypes.String;
-
-        private bool isArray { get; set; } = false;
-        /// <summary>
-        /// 是否为Json数组
-        /// </summary>
-        public bool IsArray
-        {
-            get => isArray;
-            set
-            {
-                isArray = value;
-                if (isArray)
-                    AddElementButtonVisibility = Visibility.Visible;
-                else
-                    AddElementButtonVisibility = Visibility.Collapsed;
-                OnPropertyChanged();
-            }
-        }
-
-        private Visibility addElementButtonVisibility = Visibility.Collapsed;
-
-        public Visibility AddElementButtonVisibility
-        {
-            get => addElementButtonVisibility;
-            set
-            {
-                addElementButtonVisibility = value;
-                OnPropertyChanged();
-            }
-        }
-
+        [ObservableProperty]
+        public DataTypes _dataType = DataTypes.Input;
 
         /// <summary>
         /// 父节点
         /// </summary>
-        public JsonTreeViewItem Parent { get; set; } = null;
+        public CompoundJsonTreeViewItem Parent { get; set; } = null;
         /// <summary>
         /// 上一个节点
         /// </summary>
         public JsonTreeViewItem Last { get; set; } = null;
-
         /// <summary>
-        /// 子节点集合
+        /// 下一个节点
         /// </summary>
-        public ObservableCollection<JsonTreeViewItem> Children { get; set; } = [];
-
-        /// <summary>
-        /// 可切换的子节点集合
-        /// </summary>
-
-        private ObservableCollection<JsonTreeViewItem> switchChildren = [];
-        public ObservableCollection<JsonTreeViewItem> SwitchChildren
-        {
-            get => switchChildren;
-            set
-            {
-                switchChildren = value;
-                OnPropertyChanged();
-            }
-        }
+        public JsonTreeViewItem Next { get; set; } = null;
         #endregion
 
         #region Field
-        public static List<string> NumberTypes = ["TAG_Byte", "TAG_Short", "TAG_Int", "TAG_Float", "TAG_Double", "TAG_Long","TAG_Decimal"];
+        public static List<string> NumberTypes = ["TAG_Byte", "TAG_Short", "TAG_Int", "TAG_Float", "TAG_Double", "TAG_Long", "TAG_Decimal"];
         private SolidColorBrush CorrectBrush = Brushes.Gray;
         private SolidColorBrush ErrorBrush = Brushes.Red;
+        public ICustomWorldUnifiedPlan Plan { get; set; } = null;
         #endregion
 
+        #region Event
         /// <summary>
-        /// 属性变更事件
+        /// 获取焦点时设置旧值
         /// </summary>
-        /// <param name="propertyName"></param>
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            if (propertyName is not null)
-            {
-                switch (propertyName)
-                {
-                    case "CurrentValueType":
-                        Children.Clear();
-                        int currentindex = ValueTypeList.IndexOf(CurrentValueType);
-                        if (SwitchChildren.Count > 0)
-                            Children.Add(SwitchChildren[currentindex]);
-                        break;
-                }
-            }
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void TextBox_GotFocus(object sender, RoutedEventArgs e) => OldValue = (sender as TextBox).Text;
 
         /// <summary>
         /// 处理字符串及数字类型的值更新
@@ -572,29 +301,42 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// <param name="e"></param>
         public void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            TextBox textBox = sender as TextBox;
+            if (StartLine.IsDeleted && Last is not null)
+            {
+                StartLine = Plan.GetLineByNumber(Last is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine.LineNumber + 1 : Last.StartLine.LineNumber + 1);
+            }
+            if ((Value is not null && ((string)Value).Trim().Length > 0 && (Last is null || Last.StartLine.LineNumber != StartLine.LineNumber)) || DefaultValue is not null || (DefaultValue is null && SelectedEnumItem is not null))
+            {
+                if (((string)Value).Trim().Length == 0)
+                    Value = DefaultValue;
+                Plan.UpdateValueBySpecifyingInterval(this, DataType is DataTypes.Input ? ReplaceType.Input : ReplaceType.String, Value + "", Next is null);
+            }
+            else
+            if (Value is not null && ((string)Value).Trim().Length > 0 && DefaultValue is null)//有值
+            {
+                StartLine = Last is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine : Last.StartLine;
+                Plan.UpdateNullValueBySpecifyingInterval(StartLine.EndOffset, "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\": " + Value + ",");
+                StartLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
+            }
+            else
+            if (OldValue != Value && Value is not null)//无值时删除本行，回归初始状态
+            {
+                DocumentLine lastLine = Plan.GetLineByNumber(StartLine.LineNumber - 1);
+                DocumentLine nextLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
+                Plan.DeleteAllLinesInTheSpecifiedRange(StartLine.Offset, nextLine.Offset);
+                StartLine = lastLine;
+            }
         }
 
         /// <summary>
-        /// 处理枚举值和数据类型的变更
+        /// 获得焦点时设置旧的枚举值
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        public void ComboBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            ComboBox comboBox = sender as ComboBox;
-            Window window = Window.GetWindow(comboBox);
-            if (window.DataContext is ICustomWorldUnifiedPlan customWorldUnifiedPlan)
-            {
-                switch (comboBox.Uid)
-                {
-                    case "ValueTypeList":
-                        break;
-                    case "EnumItemsSource":
-                        oldSelectedEnumItem = SelectedEnumItem;
-                        break;
-                }
-            }
+            oldSelectedEnumItem = SelectedEnumItem;
+            OldValue = Value;
         }
 
         /// <summary>
@@ -606,105 +348,53 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         {
             FrameworkElement toggleButton = sender as FrameworkElement;
             Window window = Window.GetWindow(toggleButton);
-            if(window.DataContext is ICustomWorldUnifiedPlan customWorldUnifiedPlan)
+            if (window.DataContext is ICustomWorldUnifiedPlan customWorldUnifiedPlan)
             {
-                JsonTreeViewContext context = customWorldUnifiedPlan.KeyValueOffsetDictionary[Path];
-                string currentValue = (!(bool)Value).ToString();
-                customWorldUnifiedPlan.UpdateValueBySpecifyingInterval(new JsonViewInterval() { StartOffset = context.ValueStartOffset, EndOffset = context.ValueEndOffset }, currentValue);
-                customWorldUnifiedPlan.UpdateAllSubsequentOffsetMembers(this, toggleButton);
-                context.ValueEndOffset = context.ValueStartOffset + currentValue.Length;
+                string currentValue = ((bool)Value).ToString().ToLower();
+                customWorldUnifiedPlan.UpdateValueBySpecifyingInterval(this, ReplaceType.Input, currentValue, Next is null);
             }
         }
 
-        /// <summary>
-        /// 更新自身键值对偏移量
-        /// </summary>
-        /// <param name="plan"></param>
-        public void UpdateSelfOffset(ICustomWorldUnifiedPlan plan)
+        public object Clone()
         {
-            JsonTreeViewContext context = plan.KeyValueOffsetDictionary[Path];
-            JsonTreeViewContext lastContext = plan.KeyValueOffsetDictionary[Last.Path];
-            context.KeyStartOffset = lastContext.ValueEndOffset + LayerCount * 4;
-            context.KeyEndOffset = context.KeyStartOffset + context.Item.Value.Length + 2;
-            context.ValueStartOffset = context.KeyEndOffset + 2;
-            context.ValueEndOffset = context.ValueStartOffset + context.Item.Value.Length;
+            #region 处理各类属性
+            JsonTreeViewItem result = new()
+            {
+                StartLineNumber = StartLineNumber,
+                StartLine = StartLine,
+                CurrentValueType = CurrentValueType,
+                DataType = DataType,
+                DisplayText = DisplayText,
+                EnumItemsSource = EnumItemsSource,
+                ErrorTipIcon = ErrorTipIcon,
+                ErrorTiptext = ErrorTiptext,
+                InfoTipIcon = InfoTipIcon,
+                InfoTiptext = InfoTiptext,
+                InputBoxVisibility = InputBoxVisibility,
+                ErrorIconVisibility = ErrorIconVisibility,
+                InfoIconVisibility = InfoIconVisibility,
+                IsFalse = IsFalse,
+                IsTrue = IsTrue,
+                Key = Key,
+                Last = Last,
+                Next = Next,
+                LayerCount = LayerCount,
+                Magnification = Magnification,
+                MaxValue = MaxValue,
+                MinValue = MinValue,
+                MultiplierMode = MultiplierMode,
+                Parent = Parent,
+                Path = Path,
+                JsonItemTool = JsonItemTool,
+                Plan = Plan,
+                RangeType = RangeType,
+                SelectedEnumItem = SelectedEnumItem,
+                Value = Value
+            };
+            #endregion
+
+            return result;
         }
-
-        ///// <summary>
-        ///// 通过偏移量获取对应的节点
-        ///// </summary>
-        ///// <param name="Offset">目标偏移量</param>
-        ///// <returns>找到的节点</returns>
-        //public static JsonTreeViewItem GetItemByOffset(Dictionary<string, JsonTreeViewItem> FlatJsonTreeViewItem, int lineNumber, int Offset)
-        //{
-        //    JsonTreeViewItem result = null;
-        //    Parallel.ForEach(FlatJsonTreeViewItem.Keys, (key, ParallelLoopState) =>
-        //    {
-        //        JsonTreeViewItem CurrentTreeViewItem = FlatJsonTreeViewItem[key];
-        //        int number = CurrentTreeViewItem.LineNumber;
-        //        int position = CurrentTreeViewItem.LineStartPosition;
-        //        //偏移量在区间内并且需要节点的Json格式合法
-        //        if (number == lineNumber && position == Offset && CurrentTreeViewItem.IsItTrue())
-        //        {
-        //            result = CurrentTreeViewItem;
-        //            ParallelLoopState.Break();
-        //        }
-        //    });
-        //    return result;
-        //}
-
-        ///// <summary>
-        ///// 通过修改区间更新树的数据
-        ///// </summary>
-        ///// <param name="StartOffset">起始偏移量</param>
-        ///// <param name="EndOffset">末尾偏移量</param>
-        //public static void UpdateTreeDataByRange(Dictionary<string, JsonTreeViewItem> FlatJsonTreeViewItem, int StartLineIndex, int EndLineIndex, int StartOffset, int EndOffset)
-        //{
-        //    JsonTreeViewItem startTargetItem = GetItemByOffset(FlatJsonTreeViewItem, StartLineIndex, StartOffset);
-        //    JsonTreeViewItem endTargetItem = GetItemByOffset(FlatJsonTreeViewItem, EndLineIndex, EndOffset);
-        //    if (startTargetItem is not null)
-        //    {
-        //        startTargetItem.CurrentJsonData = startTargetItem.CurrentJsonData[..StartOffset];
-        //    }
-        //    if (endTargetItem is not null)
-        //    {
-        //        endTargetItem.CurrentJsonData = endTargetItem.CurrentJsonData[..EndOffset];
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 验证目标Json是否合法
-        ///// </summary>
-        ///// <returns></returns>
-        //public bool IsItTrue()
-        //{
-        //    //string data = PresetJsonData[CurrentDataType];
-        //    //try
-        //    //{
-        //    //    _ = new JsonTextReader(new StringReader(data));
-        //    //    return true;
-        //    //}
-        //    //catch
-        //    //{
-        //    //    return false;
-        //    //}
-        //    return true;
-        //}
-
-        ///// <summary>
-        ///// 逐层向上遍历验证合法性
-        ///// </summary>
-        //public JsonTreeViewItem VerifyLegalityLayerByLayerUpwards()
-        //{
-        //    JsonTreeViewItem ParentItem = Parent;
-        //    while (ParentItem is not null)
-        //    {
-        //        if (!ParentItem.IsItTrue())
-        //            ParentItem = ParentItem.Parent;
-        //        else
-        //            break;
-        //    }
-        //    return ParentItem;
-        //}
+        #endregion
     }
 }

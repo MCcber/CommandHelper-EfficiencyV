@@ -182,10 +182,10 @@ namespace cbhk.WindowDictionaries
             Storyboard newStoryboard = source.GetStoryboard(newTransition);
 
             // unable to find the transition.
-            if (newStoryboard == null)
+            if (newStoryboard is null)
             {
                 // could be during initialization of xaml that presentationgroups was not yet defined
-                if (VisualStates.TryGetVisualStateGroup(source, PresentationGroup) == null)
+                if (VisualStates.TryGetVisualStateGroup(source, PresentationGroup) is null)
                 {
                     // will delay check
                     source.CurrentTransition = null;
@@ -286,7 +286,7 @@ namespace cbhk.WindowDictionaries
             // hookup currenttransition
             Storyboard transition = GetStoryboard(Transition);
             CurrentTransition = transition;
-            if (transition == null)
+            if (transition is null)
             {
                 string invalidTransition = Transition;
                 // revert to default

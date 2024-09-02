@@ -1,0 +1,78 @@
+﻿<localWindow:CommonWindow
+    x:Class="cbhk.Generators.DimensionTypeGenerator.DimensionTypeView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CompoundItem="clr-namespace:cbhk.CustomControls.JsonTreeViewComponents"
+    xmlns:ConverterSpace="clr-namespace:cbhk.GeneralTools.TreeViewComponentsHelper"
+    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk.Generators.DimensionTypeGenerator"
+    xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Title="维度类型"
+    Width="1080"
+    Height="700"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="#1B1B1B"
+    mc:Ignorable="d">
+
+    <Window.Resources>
+        <ConverterSpace:JsonToJsonTreeViewItemConverter x:Key="JsonToJsonTreeViewItem" />
+        <CompoundItem:JsonTreeViewTemplateSelector
+            x:Key="JsonTreeViewTemplateSelector"
+            CompoundJsonTreeViewItemTemplate="{StaticResource CompoundJsonTreeViewItem}"
+            JsonTreeViewItemTemplate="{StaticResource JsonTreeViewItem}" />
+    </Window.Resources>
+
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="Closing">
+            <behaviors:CallMethodAction MethodName="CommonWindow_Closing" TargetObject="{Binding}" />
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <TreeView
+            Grid.Column="0"
+            MinWidth="200"
+            Background="Transparent"
+            BorderThickness="0"
+            ItemTemplateSelector="{StaticResource JsonTreeViewTemplateSelector}"
+            ItemsSource="{Binding DimensionTypeItemString, Converter={StaticResource JsonToJsonTreeViewItem}, Mode=OneWay, ConverterParameter={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+            Style="{DynamicResource TreeViewWithScrollBar}" />
+        <GridSplitter
+            Grid.Column="1"
+            VerticalAlignment="Stretch"
+            Background="Transparent"
+            BorderBrush="Gray"
+            BorderThickness="1,0,1,0" />
+        <avalonedit:TextEditor
+            Grid.Column="2"
+            MinWidth="200"
+            Margin="5"
+            Background="Transparent"
+            FontFamily="JetBrains Mono"
+            Foreground="White"
+            HorizontalScrollBarVisibility="Auto"
+            LineNumbersForeground="White"
+            ShowLineNumbers="True"
+            VerticalScrollBarVisibility="Auto"
+            WordWrap="True">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="Loaded">
+                    <behaviors:CallMethodAction MethodName="TextEditor_Loaded" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+                <behaviors:EventTrigger EventName="LostFocus">
+                    <behaviors:CallMethodAction MethodName="TextEditor_LostFocus" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
+        </avalonedit:TextEditor>
+    </Grid>
+</localWindow:CommonWindow>

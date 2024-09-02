@@ -80,7 +80,7 @@ namespace cbhk.WindowDictionaries
         private void ShowSystemMenu(object sender, ExecutedRoutedEventArgs e)
         {
             var element = e.OriginalSource as FrameworkElement;
-            if (element == null)
+            if (element is null)
                 return;
 
             var point = WindowState == WindowState.Maximized ? new Point(0, element.ActualHeight)

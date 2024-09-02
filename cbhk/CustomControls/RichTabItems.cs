@@ -209,7 +209,7 @@ namespace cbhk.CustomControls
             }
             RichTabItems item = (sender as FrameworkElement).TemplatedParent as RichTabItems;
             TabControl parent = item.FindParent<TabControl>();
-            if(parent.ItemsSource == null)
+            if(parent.ItemsSource is null)
             parent.Items.Remove(item);
             else
             {
@@ -290,7 +290,7 @@ namespace cbhk.CustomControls
                         new_select_item.MouseEnter += TabItem_MouseEnter;
                         new_current_item.MouseEnter += TabItem_MouseEnter;
 
-                        if(current_parent.ItemsSource == null)
+                        if(current_parent.ItemsSource is null)
                         {
                             current_parent.Items.RemoveAt(select_index);
                             current_parent.Items.Insert(select_index, new_current_item);
@@ -323,7 +323,7 @@ namespace cbhk.CustomControls
                 RichTabItems current_item = sender as RichTabItems;
                 select_item = current_item;
                 TabControl current_parent = current_item.FindParent<TabControl>();
-                if(current_parent.ItemsSource == null)
+                if(current_parent.ItemsSource is null)
                 select_index = current_parent.Items.IndexOf(current_item);
                 else
                 {
@@ -333,7 +333,7 @@ namespace cbhk.CustomControls
             }
 
             Grid grid = Template.FindName("templateRoot", this) as Grid;
-            if (grid.ToolTip == null && (File.Exists(Uid) || Directory.Exists(Uid)))
+            if (grid.ToolTip is null && (File.Exists(Uid) || Directory.Exists(Uid)))
             {
                 grid.ToolTip = Uid;
                 ToolTipService.SetInitialShowDelay(grid, 0);
@@ -347,7 +347,7 @@ namespace cbhk.CustomControls
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null) return null;
+            if (value is null) return null;
             bool state = bool.Parse(value.ToString());
             if (state)
                 return Visibility.Hidden;

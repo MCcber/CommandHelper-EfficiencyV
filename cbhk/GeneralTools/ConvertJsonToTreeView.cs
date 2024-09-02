@@ -30,7 +30,7 @@ namespace cbhk.GeneralTools
 
         public static ConvertJsonToTreeView FromJToken(JToken jtoken)
         {
-            if (jtoken == null)
+            if (jtoken is null)
             {
                 throw new ArgumentNullException("jtoken");
             }
@@ -39,7 +39,7 @@ namespace cbhk.GeneralTools
             {
                 var jvalue = (JValue)jtoken;
                 var value = jvalue.Value;
-                if (value == null)
+                if (value is null)
                 {
                     value = NULL_TEXT;
                 }

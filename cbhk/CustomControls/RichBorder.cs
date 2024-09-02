@@ -173,7 +173,7 @@ namespace cbhk.CustomControls
                 };
                 if (useLayoutRounding)
                 {
-                    pen.Thickness = BorderThickness.Left;/*UlementEx.RoundLayoutValue(borderThickness.Left, DoubleUtil.DpiScaleX);*/
+                    pen.Thickness = BorderThickness.Left;/*UlementEx.RoundLayoutValue(borderThickness.Offset, DoubleUtil.DpiScaleX);*/
                 }
                 else
                 {

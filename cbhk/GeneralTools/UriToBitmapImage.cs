@@ -9,7 +9,7 @@ namespace cbhk.GeneralTools
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null) return null;
+            if (value is null) return null;
             return new BitmapImage((Uri)value);
         }
 

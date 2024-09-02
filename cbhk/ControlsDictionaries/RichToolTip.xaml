@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControls="clr-namespace:cbhk.CustomControls">
 
-    <BitmapImage x:Key="Slot" UriSource="pack://application:,,,/cbhk;component/resources/common/images/Slot.png" />
+    <BitmapImage x:Key="Slot" UriSource="pack://application:,,,/cbhk;component/Resource/Common/Image/Slot.png" />
 
     <Style x:Key="DisplayDataStyle" TargetType="CustomControls:RichToolTip">
         <Setter Property="BorderThickness" Value="0" />

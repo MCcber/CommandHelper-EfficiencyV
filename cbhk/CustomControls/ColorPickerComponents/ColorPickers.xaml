@@ -14,7 +14,7 @@
             <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
             <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
-            <Setter Property="Template">
+            <!--<Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type local:ThumbPro}">
                         <Canvas
@@ -47,13 +47,13 @@
                         </Canvas>
                     </ControlTemplate>
                 </Setter.Value>
-            </Setter>
+            </Setter>-->
         </Style>
         <Style x:Key="ThumbStyle2" TargetType="{x:Type local:ThumbPro}">
             <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
             <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
-            <Setter Property="Template">
+            <!--<Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type local:ThumbPro}">
                         <Canvas
@@ -67,11 +67,10 @@
                                 Height="20"
                                 Stroke="Black"
                                 StrokeThickness="1" />
-
                         </Canvas>
                     </ControlTemplate>
                 </Setter.Value>
-            </Setter>
+            </Setter>-->
         </Style>
         <Style x:Key="FocusVisual2">
             <Setter Property="Control.Template">
@@ -122,7 +121,7 @@
             Panel.ZIndex="1"
             IsHitTestVisible="False"
             RenderOptions.BitmapScalingMode="NearestNeighbor"
-            Source="/cbhk;component/resources/common/images/ColorPicker.png" />
+            Source="/cbhk;component/Resource/Common/Image/ColorPicker.png" />
         <Button
             x:Name="btn"
             Panel.ZIndex="0"

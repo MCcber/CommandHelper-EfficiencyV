@@ -4,21 +4,21 @@
     xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
     xmlns:local_window="clr-namespace:cbhk.WindowDictionaries">
 
-    <ImageBrush x:Key="Minimize" ImageSource="/cbhk;component/resources/common/images/Minimize.png" />
-    <ImageBrush x:Key="MinimizeHover" ImageSource="/cbhk;component/resources/common/images/MinimizeHover.png" />
-    <ImageBrush x:Key="Window" ImageSource="/cbhk;component/resources/common/images/Window.png" />
-    <ImageBrush x:Key="WindowHover" ImageSource="/cbhk;component/resources/common/images/WindowHover.png" />
-    <ImageBrush x:Key="Maxmize" ImageSource="/cbhk;component/resources/common/images/Maxmize.png" />
-    <ImageBrush x:Key="MaxmizeHover" ImageSource="/cbhk;component/resources/common/images/MaxmizeHover.png" />
-    <ImageBrush x:Key="Close" ImageSource="/cbhk;component/resources/common/images/Close.png" />
-    <ImageBrush x:Key="CloseHover" ImageSource="/cbhk;component/resources/common/images/CloseHover.png" />
+    <ImageBrush x:Key="Minimize" ImageSource="/cbhk;component/Resource/Common/Image/Minimize.png" />
+    <ImageBrush x:Key="MinimizeHover" ImageSource="/cbhk;component/Resource/Common/Image/MinimizeHover.png" />
+    <ImageBrush x:Key="Window" ImageSource="/cbhk;component/Resource/Common/Image/Window.png" />
+    <ImageBrush x:Key="WindowHover" ImageSource="/cbhk;component/Resource/Common/Image/WindowHover.png" />
+    <ImageBrush x:Key="Maxmize" ImageSource="/cbhk;component/Resource/Common/Image/Maxmize.png" />
+    <ImageBrush x:Key="MaxmizeHover" ImageSource="/cbhk;component/Resource/Common/Image/MaxmizeHover.png" />
+    <ImageBrush x:Key="Close" ImageSource="/cbhk;component/Resource/Common/Image/Close.png" />
+    <ImageBrush x:Key="CloseHover" ImageSource="/cbhk;component/Resource/Common/Image/CloseHover.png" />
 
     <!--<DataTemplate x:Key="Minimize">
         <Grid>
             <Image
                 Width="12"
                 Height="12"
-                Source="/cbhk;component/resources/common/images/Minimize.png" />
+                Source="/cbhk;component/Resource/Common/Image/Minimize.png" />
         </Grid>
     </DataTemplate>
     <DataTemplate x:Key="MinimizeHover">
@@ -26,7 +26,7 @@
             <Image
                 Width="12"
                 Height="12"
-                Source="/cbhk;component/resources/common/images/MinimizeHover.png" />
+                Source="/cbhk;component/Resource/Common/Image/MinimizeHover.png" />
         </Grid>
     </DataTemplate>-->
 
@@ -35,7 +35,7 @@
             <Image
                 Width="12"
                 Height="12"
-                Source="/cbhk;component/resources/common/images/Window.png" />
+                Source="/cbhk;component/Resource/Common/Image/Window.png" />
         </Grid>
     </DataTemplate>
     <DataTemplate x:Key="WindowHover">
@@ -43,7 +43,7 @@
             <Image
                 Width="12"
                 Height="12"
-                Source="/cbhk;component/resources/common/images/WindowHover.png" />
+                Source="/cbhk;component/Resource/Common/Image/WindowHover.png" />
         </Grid>
     </DataTemplate>
 
@@ -52,7 +52,7 @@
             <Image
                 Width="12"
                 Height="12"
-                Source="/cbhk;component/resources/common/images/Maxmize.png" />
+                Source="/cbhk;component/Resource/Common/Image/Maxmize.png" />
         </Grid>
     </DataTemplate>
     <DataTemplate x:Key="MaxmizeHover">
@@ -60,7 +60,7 @@
             <Image
                 Width="12"
                 Height="12"
-                Source="/cbhk;component/resources/common/images/MaxmizeHover.png" />
+                Source="/cbhk;component/Resource/Common/Image/MaxmizeHover.png" />
         </Grid>
     </DataTemplate>
 
@@ -69,7 +69,7 @@
             <Image
                 Width="12"
                 Height="12"
-                Source="/cbhk;component/resources/common/images/Close.png" />
+                Source="/cbhk;component/Resource/Common/Image/Close.png" />
         </Grid>
     </DataTemplate>
     <DataTemplate x:Key="CloseHover">
@@ -77,7 +77,7 @@
             <Image
                 Width="12"
                 Height="12"
-                Source="/cbhk;component/resources/common/images/CloseHover.png" />
+                Source="/cbhk;component/Resource/Common/Image/CloseHover.png" />
         </Grid>
     </DataTemplate>-->
 
@@ -132,14 +132,14 @@
     <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4" />
     <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
     <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
-    <ImageBrush x:Key="BorderTop" ImageSource="/cbhk;component/resources/cbhk/images/Top.png" />
-    <ImageBrush x:Key="BorderBottom" ImageSource="/cbhk;component/resources/cbhk/images/Bottom.png" />
-    <ImageBrush x:Key="BorderLeft" ImageSource="/cbhk;component/resources/cbhk/images/Left.png" />
-    <ImageBrush x:Key="BorderRight" ImageSource="/cbhk;component/resources/cbhk/images/Right.png" />
-    <ImageBrush x:Key="BorderTopLeft" ImageSource="/cbhk;component/resources/cbhk/images/TopLeft.png" />
-    <ImageBrush x:Key="BorderTopRight" ImageSource="/cbhk;component/resources/cbhk/images/TopRight.png" />
-    <ImageBrush x:Key="BorderBottomLeft" ImageSource="/cbhk;component/resources/cbhk/images/BottomLeft.png" />
-    <ImageBrush x:Key="BorderBottomRight" ImageSource="/cbhk;component/resources/cbhk/images/BottomRight.png" />
+    <ImageBrush x:Key="BorderTop" ImageSource="/cbhk;component/Resource/CBHK/Image/Top.png" />
+    <ImageBrush x:Key="BorderBottom" ImageSource="/cbhk;component/Resource/CBHK/Image/Bottom.png" />
+    <ImageBrush x:Key="BorderLeft" ImageSource="/cbhk;component/Resource/CBHK/Image/Left.png" />
+    <ImageBrush x:Key="BorderRight" ImageSource="/cbhk;component/Resource/CBHK/Image/Right.png" />
+    <ImageBrush x:Key="BorderTopLeft" ImageSource="/cbhk;component/Resource/CBHK/Image/TopLeft.png" />
+    <ImageBrush x:Key="BorderTopRight" ImageSource="/cbhk;component/Resource/CBHK/Image/TopRight.png" />
+    <ImageBrush x:Key="BorderBottomLeft" ImageSource="/cbhk;component/Resource/CBHK/Image/BottomLeft.png" />
+    <ImageBrush x:Key="BorderBottomRight" ImageSource="/cbhk;component/Resource/CBHK/Image/BottomRight.png" />
 
     <Style x:Key="HollowResizeGrip" TargetType="ResizeGrip">
         <Setter Property="Template">
@@ -227,8 +227,8 @@
                             <Grid
                                 Grid.Row="2"
                                 Grid.Column="0"
-                                Width="42"
-                                Height="42"
+                                Width="43"
+                                Height="43"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Bottom"
                                 Panel.ZIndex="1"
@@ -237,8 +237,8 @@
                             <Grid
                                 Grid.Row="0"
                                 Grid.Column="2"
-                                Width="95"
-                                Height="45"
+                                Width="94"
+                                Height="45.5"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Top"
                                 Panel.ZIndex="1"
@@ -256,9 +256,9 @@
                                     <!--  ContentTemplate="{StaticResource Minimize}"  -->
                                     <CustomControls:TextButtons
                                         x:Name="Minimize"
-                                        Width="20"
-                                        Height="20"
-                                        Margin="0,0,4,0"
+                                        Width="22"
+                                        Height="22"
+                                        Margin="0,0,2,0"
                                         HorizontalAlignment="Left"
                                         Panel.ZIndex="1"
                                         Background="{StaticResource Minimize}"
@@ -330,7 +330,7 @@
                                         x:Name="Close"
                                         Width="20"
                                         Height="20"
-                                        Margin="0,2,23.5,0"
+                                        Margin="0,2,24,0"
                                         HorizontalAlignment="Left"
                                         Panel.ZIndex="1"
                                         Background="{StaticResource Close}"
@@ -392,8 +392,8 @@
                             <Grid
                                 Grid.Row="2"
                                 Grid.Column="2"
-                                Width="44"
-                                Height="44"
+                                Width="43"
+                                Height="43"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Bottom"
                                 Panel.ZIndex="1"

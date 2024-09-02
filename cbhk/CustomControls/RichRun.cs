@@ -144,7 +144,12 @@ namespace cbhk.CustomControls
             get
             {
                 string result = "";
-                string clickEventAction = EventDataBase.Where(item => item.Value == ClickEventActionItem.Trim()).First().Key;
+                string clickEventAction = "";
+
+                if (EventDataBase.Count > 0)
+                    clickEventAction = EventDataBase.Where(item => item.Value == ClickEventActionItem.Trim()).First().Key;
+                else
+                    clickEventAction = "";
                 string ClickEventString = HasClickEvent ? ",\"clickEvent\":{\"action\":\"" + clickEventAction + "\",\"value\":\"" + (clickEventAction.Trim() == "open_url" ? "http://" : "") + ClickEventValue + "\"}" : "";
 
                 string HoverEventString = HasHoverEvent ? ",\"hoverEvent\":{\"action\":\"" + (EventDataBase.Where(item => item.Value == HoverEventActionItem.Trim()).First().Key) + "\",\"value\":\"" + HoverEventValue + "\"}" : "";
@@ -211,9 +216,9 @@ namespace cbhk.CustomControls
         //悬浮事件数据源
         public static ObservableCollection<TextComboBoxItem> hoverEventSource { get; set; } = [];
         //点击事件数据源文件路径
-        string clickEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\data\\clickEventActions.ini";
+        string clickEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Data\clickEventActions.ini";
         //悬浮事件数据源文件路径
-        string hoverEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\WrittenBook\\data\\hoverEventActions.ini";
+        string hoverEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Data\hoverEventActions.ini";
         //事件数据库
         private static Dictionary<string, string> EventDataBase = [];
         #endregion
@@ -231,11 +236,11 @@ namespace cbhk.CustomControls
             MouseLeftButtonUp += ObfuscateTextMouseLeftButtonUp;
 
             #region 读取混淆文本配置
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\WrittenBook\data\obfuscateChars.ini"))
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Data\obfuscateChars.ini"))
             {
                 Obfuscates =
                 [
-                    .. File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"resources\configs\WrittenBook\data\obfuscateChars.ini").ToCharArray(),
+                    .. File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Data\obfuscateChars.ini").ToCharArray(),
                 ];
             }
             #endregion

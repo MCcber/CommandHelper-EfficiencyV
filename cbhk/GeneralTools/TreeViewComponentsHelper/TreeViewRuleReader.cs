@@ -1,17 +1,12 @@
-﻿using cbhk.CustomControls.JsonTreeViewComponents;
-using cbhk.CustomControls.JsonTreeViewComponents.ValueComponents;
+﻿using cbhk.CustomControls;
+using cbhk.CustomControls.JsonTreeViewComponents;
+using cbhk.Model.Common;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Windows;
-using Windows.System.RemoteSystems;
-using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
 
 namespace cbhk.GeneralTools.TreeViewComponentsHelper
 {
@@ -20,381 +15,182 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
     /// </summary>
     public class TreeViewRuleReader
     {
-        public static List<string> BlockTagList = [];
-        public static List<string> ItemTagList = [];
-
-        private static DataStructure RecursivelyTraverseEachMember(DataStructure result, JArray array, int lineNumber, int lineStartPosition, int layerCount, JsonTreeViewItem ParentItem = null,JsonTreeViewItem Last = null)
+        /// <summary>
+        /// 递归整理子结构上下文
+        /// </summary>
+        /// <param name="list">当前节点集合</param>
+        /// <param name="Parent">当前父级节点</param>
+        /// <param name="dictionary">当前上下文字典</param>
+        /// <returns>整理后的节点集合</returns>
+        public static ObservableCollection<JsonTreeViewItem> RecursivelyUpdateMemberLayer(CompoundJsonTreeViewItem Parent, Dictionary<string, JsonTreeViewItem> dictionary, ObservableCollection<JsonTreeViewItem> list, int lineNumber, int layer = 2)
         {
-            foreach (var token in array)
+            bool haveCompoundHead = false;
+            bool haveSwitchKey = false;
+            string ParentCompoundHead = "";
+            //string ParentSwitchKey = "";
+            for (int i = 0; i < list.Count; i++)
             {
-                if (result.ResultString.Length == 0)
-                    result.ResultString.Append("{\r\n");
+                //CompoundHead和SwitchKey都会占用一行，所以遇到需要让行号加1
 
-                JsonTreeViewItem item = new(lineNumber, lineStartPosition);
-                JsonTreeViewContext currentContext = new();
-
-                if (token["tags"] is JToken tagsToken)
+                #region 处理CompoundHead
+                if (list[i].Parent.CompoundHead is not null && list[i].Parent.CompoundHead.Length > 0 && !haveCompoundHead)
                 {
-                    foreach (var valueType in tagsToken.Select(item => item.ToString()))
-                    {
-                        item.ValueTypeList.Add(new CustomControls.TextComboBoxItem()
-                        {
-                            Text = valueType
-                        });
-                    }
-
-                    if (item.ValueTypeList.Count > 0)
-                    {
-                        #region 计算值默认值
-                        if (JsonTreeViewItem.NumberTypes.Contains(item.ValueTypeList[0].Text) && token["defaultValue"] is null)
-                            item.Value = item.MinValue;
-                        #endregion
-
-                        #region 处理值类型
-                        switch (item.ValueTypeList[0].Text)
-                        {
-                            case "TAG_Bool":
-                            case "TAG_Byte":
-                            case "TAG_Short":
-                            case "TAG_Int":
-                            case "TAG_Float":
-                            case "TAG_Double":
-                            case "TAG_Long":
-                            case "TAG_Decimal":
-                            case "TAG_String":
-                            case "TAG_Enum":
-                            case "TAG_BlockTag":
-                            case "TAG_ItemTag":
-                                {
-                                    if (token["key"] is JToken keyToken)
-                                    {
-                                        string key = keyToken.ToString();
-                                        item.Key = key;
-                                        for (int i = 0; i < layerCount * 4; i++)
-                                        {
-                                            result.ResultString.Append(' ');
-                                        }
-
-                                        if (string.IsNullOrEmpty(item.DisplayText))
-                                            item.DisplayText = key;
-
-                                        if (item.ValueTypeList[0].Text == "TAG_Enum" || item.ValueTypeList[0].Text == "TAG_BlockTag" || item.ValueTypeList[0].Text == "TAG_ItemTag")
-                                        {
-                                            item.IsEnumType = true;
-                                            if (item.ValueTypeList[0].Text == "TAG_Enum" && token["valueList"] is JArray valueList)
-                                            {
-                                                foreach (var enumValue in valueList)
-                                                {
-                                                    item.EnumItemsSource.Add(new CustomControls.TextComboBoxItem() { Text = enumValue.ToString() });
-                                                }
-                                            }
-                                            else
-                                            {
-                                                if(item.ValueTypeList[0].Text == "TAG_BlockTag")
-                                                {
-                                                    foreach (var blockTag in BlockTagList)
-                                                    {
-                                                        item.EnumItemsSource.Add(new CustomControls.TextComboBoxItem() { Text = blockTag });
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    foreach (var itemTag in ItemTagList)
-                                                    {
-                                                        item.EnumItemsSource.Add(new CustomControls.TextComboBoxItem() { Text = itemTag });
-                                                    }
-                                                }
-                                            }
-
-                                            currentContext.KeyStartOffset = result.ResultString.Length;
-                                            result.ResultString.Append("\"" + key + "\"");
-                                            currentContext.KeyEndOffset = result.ResultString.Length;
-                                            currentContext.ValueStartOffset = currentContext.KeyEndOffset + 2;
-                                            result.ResultString.Append(": \"" + item.EnumItemsSource[0].Text + "\"");
-                                            currentContext.ValueEndOffset = result.ResultString.Length;
-                                            item.SelectedEnumItem = item.EnumItemsSource[0];
-                                            break;
-                                        }
-
-                                        if (token["defaultValue"] is JToken defaultValueToken)
-                                        {
-                                            currentContext.KeyStartOffset = result.ResultString.Length;
-                                            result.ResultString.Append("\"" + key.ToLower() + "\"");
-                                            currentContext.KeyEndOffset = result.ResultString.Length;
-                                            string defaultValue = defaultValueToken.ToString();
-                                            currentContext.ValueStartOffset = currentContext.KeyEndOffset + 2;
-
-                                            if (bool.TryParse(defaultValue, out bool boolValue))
-                                            {
-                                                item.IsBoolType = true;
-                                                item.Value = boolValue;
-                                                result.ResultString.Append(": " + ((bool)item.Value).ToString().ToLower());
-                                            }
-                                            else
-                                                if (int.TryParse(defaultValue, out int intValue))
-                                            {
-                                                item.IsNumberType = true;
-                                                item.Value = intValue;
-                                                result.ResultString.Append(": " + item.Value);
-                                            }
-                                            else
-                                            {
-                                                item.IsStringType = true;
-                                                item.Value = "\"" + defaultValue + "\"";
-                                                result.ResultString.Append(": " + item.Value);
-                                            }
-                                            currentContext.ValueEndOffset = result.ResultString.Length;
-                                        }
-                                        else
-                                        {
-                                            if (JsonTreeViewItem.NumberTypes.Contains(item.ValueTypeList[0].Text))
-                                            {
-                                                item.IsNumberType = true;
-                                            }
-                                            else
-                                            if (item.ValueTypeList[0].Text == "TAG_Bool")
-                                            {
-                                                item.IsBoolType = true;
-                                            }
-                                            else
-                                                if (item.ValueTypeList[0].Text == "TAG_String")
-                                            {
-                                                item.IsStringType = true;
-                                            }
-                                            string currentLastChar = result.ResultString.ToString()[(result.ResultString.Length - 1)..];
-                                            while (currentLastChar != "\n" && currentLastChar != "\r")
-                                            {
-                                                result.ResultString = result.ResultString.Remove(result.ResultString.Length - 1, 1);
-                                                currentLastChar = result.ResultString.ToString()[(result.ResultString.Length - 1)..];
-                                            }
-                                            result.ResultString = result.ResultString.Remove(result.ResultString.Length - 2, 2);
-                                            currentContext.KeyStartOffset = result.Context[Last.Path].ValueEndOffset;
-                                            currentContext.KeyEndOffset = result.Context[Last.Path].ValueEndOffset;
-                                            currentContext.ValueStartOffset = result.Context[Last.Path].ValueEndOffset;
-                                            currentContext.ValueEndOffset = result.Context[Last.Path].ValueEndOffset;
-                                        }
-                                    }
-                                }
-                                break;
-                            case "TAG_Compound":
-                                {
-                                    currentContext.KeyStartOffset = result.ResultString.Length;
-                                    if (token["key"] is JToken keyToken)
-                                        result.ResultString.Append("\"" + keyToken.ToString() + "\"");
-                                    currentContext.KeyEndOffset = result.ResultString.Length;
-                                    currentContext.ValueStartOffset = result.ResultString.Length + 2;
-                                    if (token["Children"] is null)
-                                        result.ResultString.Append(": {\r\n");
-                                    item.IsCompoundType = true;
-                                    item.ValueTypeList.Clear();
-
-                                    foreach (var valueType in token["valueList"].Select(item => item.ToString()))
-                                    {
-                                        item.ValueTypeList.Add(new CustomControls.TextComboBoxItem()
-                                        {
-                                            Text = valueType
-                                        });
-                                    }
-                                    item.CurrentValueType = item.ValueTypeList[0];
-                                }
-                                break;
-                            case "TAG_Array":
-                                {
-                                    item.IsArray = true;
-                                    currentContext.KeyStartOffset = result.ResultString.Length;
-                                    if (token["key"] is JToken keyToken)
-                                        result.ResultString.Append("\"" + keyToken.ToString() + "\"");
-                                    currentContext.KeyEndOffset = result.ResultString.Length;
-                                    result.ResultString.Append(": [\r\n");
-                                    currentContext.ValueStartOffset = currentContext.KeyEndOffset + 2;
-                                }
-                                break;
-                            case "TAG_IntProvider":
-                                {
-                                    if (token["key"] is JToken keyToken)
-                                    {
-                                        string key = keyToken.ToString();
-                                        item = new IntProvider(currentContext, lineNumber, lineStartPosition)
-                                        {
-                                            IsEnumType = true,
-                                            LayerCount = layerCount
-                                        };
-                                        foreach (var valueType in tagsToken.Select(item => item.ToString()))
-                                        {
-                                            item.ValueTypeList.Add(new CustomControls.TextComboBoxItem()
-                                            {
-                                                Text = valueType
-                                            });
-                                        }
-
-                                        if (string.IsNullOrEmpty(item.DisplayText))
-                                            item.DisplayText = key;
-
-                                        foreach (var member in Enum.GetValues(typeof(IntProviderStructures)))
-                                        {
-                                            item.EnumItemsSource.Add(new CustomControls.TextComboBoxItem()
-                                            {
-                                                Text = member.ToString()
-                                            });
-                                        }
-
-                                        for (int i = 0; i < layerCount * 4; i++)
-                                        {
-                                            result.ResultString.Append(' ');
-                                        }
-
-                                        currentContext.KeyStartOffset = result.ResultString.Length;
-                                        result.ResultString.Append("\"" + key + "\"");
-                                        currentContext.KeyEndOffset = result.ResultString.Length;
-
-
-                                        currentContext.ValueStartOffset = result.ResultString.Length;
-                                        result.ResultString.Append(": 0");
-                                        currentContext.ValueEndOffset = result.ResultString.Length;
-
-                                        item.Value = 0;
-                                        item.SelectedEnumItem = item.EnumItemsSource[0];
-                                        item.SwitchChildren.Add(item);
-                                        ObservableCollection<JsonTreeViewItem> defaultSubStructure = IntProvider.StructureChildren[(item as IntProvider).CurrentStructure];
-                                        if (defaultSubStructure.Count > 1)
-                                            foreach (var subStructure in defaultSubStructure)
-                                            {
-                                                item.Children.Add(subStructure);
-                                            }
-                                        else
-                                            item.IsNumberType = true;
-                                    }
-                                }
-                                break;
-                        }
-                        #endregion
-                    }
-                }
-
-                #region 处理值、范围、显示文本等数据
-                if (token["displayText"] is JToken displayTextToken)
-                {
-                    item.DisplayText = displayTextToken.ToString();
-                }
-
-                if (token["range"] is JToken rangeToken)
-                {
-                    string range = rangeToken.ToString();
-                    if (range.Contains('-'))
-                    {
-                        int index = range.LastIndexOf('-');
-                        item.MinValue = range[..index];
-                        item.MaxValue = range[(index + 1)..];
-                    }
-                }
-
-                if (token["infoToolTip"] is JToken infoToolTipToken)
-                {
-                    item.InfoTiptext = infoToolTipToken.ToString();
-                    item.InfoIconVisibility = Visibility.Visible;
-                }
-
-                if (token["rangeType"] is JToken rangeTypeToken)
-                {
-                    string rangeType = rangeTypeToken.ToString();
-                    if (!rangeType.Contains('{'))
-                    {
-                        item.MultiplierMode = true;
-                        item.Magnification = int.Parse(rangeType.ToString()[..^1]);
-                    }
+                    ParentCompoundHead = list[i].Parent.CompoundHead + ".";
+                    haveCompoundHead = true;
+                    lineNumber++;
                 }
                 #endregion
 
-                #region 计算复合型节点的值的末尾偏移，处理子节点结构
-                if (token["children"] is JArray children && children.Count > 0)
+                #region 处理SwitchKey
+                if (list[i].Parent.SwitchKey is not null && list[i].Parent.SwitchKey.Length > 0 && !haveSwitchKey)
                 {
-                    DataStructure currentResult = RecursivelyTraverseEachMember(result, children, lineNumber, lineStartPosition + 4, layerCount++, item, Last);
-
-                    if (item.IsCompoundType && item.ValueTypeList.Count > 0 && (Last is not null || ParentItem is not null))
-                    {
-                        currentContext.ValueEndOffset = result.Context[(Last is not null ? Last : ParentItem).Path].ValueEndOffset + 2 + (layerCount * 4) + 1;
-                        foreach (var resultItem in currentResult.Result)
-                        {
-                            item.SwitchChildren.Add(resultItem);
-                        }
-                        item.Children.Add(result.Result[0]);
-                    }
-                    else
-                    {
-                        foreach (var subItem in result.Result)
-                        {
-                            item.Children.Add(subItem);
-                        }
-                    }
-
-                    if (item.IsArray)
-                        result.ResultString.Append(']');
-                    else
-                        result.ResultString.Append('}');
+                    //ParentSwitchKey = list[i].Parent.SwitchKey + ".";
+                    haveSwitchKey = true;
+                    lineNumber++;
                 }
                 #endregion
 
-                #region 处理命名空间和生成器上下文
-                if (ParentItem is not null && item.Parent is null)
-                {
-                    item.Parent = ParentItem;
-                    currentContext.Path = ParentItem.Path + "." + item.Key;
-                }
-                else
-                {
-                    currentContext.Path = item.Path = item.Key;
-                }
-                result.Context.TryAdd(item.Path, currentContext);
+                #region 处理首行与尾行、拼接节点路径
+                if (list[i].Parent.SwitchKey.Length > 0)
+                    list[i].Parent = Parent;
+                list[i].Path = list[i].Parent.Path + "." + ParentCompoundHead + list[i].Key;
+                list[i].StartLineNumber = lineNumber;
+                //判断是否为复合数据类型
+                if (list[i] is CompoundJsonTreeViewItem compoundJsonTreeViewItem && (compoundJsonTreeViewItem.DataType is Enums.DataTypes.Array || compoundJsonTreeViewItem.DataType is Enums.DataTypes.Compound || compoundJsonTreeViewItem.DataType is Enums.DataTypes.EnumCompound || compoundJsonTreeViewItem.DataType is Enums.DataTypes.MultiType || compoundJsonTreeViewItem.DataType is Enums.DataTypes.ValueProvider))
+                    compoundJsonTreeViewItem.EndLineNumber = lineNumber;
                 #endregion
 
-                #region 处理后导逗号、复合结构收尾、换行等操作
-                if (!token.Equals(array.Last) && (item.Value is not null || item.SelectedEnumItem is not null))
-                    result.ResultString.Append(',');
+                #region 绑定前后关系
+                if (i > 0)
+                {
+                    list[i].Last = list[i - 1];
+                    list[i - 1].Next = list[i];
+                }
+                #endregion
 
-                result.ResultString.Append("\r\n");
-                result.Result.Add(item);
-                item.LineNumber = lineNumber++;
+                #region 处理节点层级
+                int currentLayerCount = layer;
+                if (ParentCompoundHead.Length > 0 && list[i].Last is null)
+                    currentLayerCount += 1;
+                if ((list[i].Parent.DataType is Enums.DataTypes.Array || list[i].Parent.DataType is Enums.DataTypes.ArrayElement) && list[i].Last is null)
+                    currentLayerCount += 1;
+                list[i].LayerCount = layer = currentLayerCount;
+                #endregion
 
-                if (item.IsCompoundType)
-                    result.ResultString.Append("}\r\n");
-                //存储上一个成员
-                Last = item;
+                #region 将处理完的节点添加到当前上下文字典中、递归处理
+                if (!dictionary.ContainsKey(list[i].Path))
+                    dictionary.Add(list[i].Path, list[i]);
+                if (list[i] is CompoundJsonTreeViewItem compound && compound.Children.Count > 0)
+                {
+                    RecursivelyUpdateMemberLayer(compound, dictionary, list, lineNumber + 1, layer + 1);
+                }
+                #endregion
+
+                #region 复合标头复位、行号自增1
+                ParentCompoundHead /*= ParentSwitchKey */= "";
+                lineNumber++;
                 #endregion
             }
-
-            //整个json收尾
-            result.ResultString.Append('}');
-            return result;
+            return list;
         }
 
         /// <summary>
-        /// 执行分析
+        /// 读取值提供器
         /// </summary>
-        /// <param name="filePath">目标文件路径</param>
-        /// <returns>返回从文件解析出的成员列表</returns>
-        public static DataStructure Read(string filePath)
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public static Dictionary<string, CompoundJsonTreeViewItem> LoadValueProviderStructure(string filePath)
         {
-            DataStructure result = new();
+            Dictionary<string, CompoundJsonTreeViewItem> result = [];
             if (File.Exists(filePath))
             {
-                string originData = File.ReadAllText(filePath);
-                JArray jsonArray = JArray.Parse(originData);
-                DataStructure currentResult = RecursivelyTraverseEachMember(new(), jsonArray, 2, 2, 1);
-                result.ResultString = currentResult.ResultString;
-                foreach (var item in currentResult.Result)
+                string data = File.ReadAllText(filePath);
+                JArray valueProviderArray = JArray.Parse(data);
+                foreach (var obj in valueProviderArray.Cast<JObject>())
                 {
-                    result.Result.Add(item);
+                    #region 读取一个提供器类型
+                    if (obj["key"] is JToken keyToken)
+                    {
+                        #region 确认值模板类型
+                        CompoundJsonTreeViewItem jsonTreeViewItem = new(null, null)
+                        {
+                            Key = keyToken.ToString(),
+                            DataType = Enums.DataTypes.ValueProvider,
+                            Plan = JsonToJsonTreeViewItemConverter.plan
+                        };
+
+                        if (Enum.TryParse(keyToken.ToString(), true, out Enums.ValueProviderTypes valueProviderType))
+                            jsonTreeViewItem.ValueProviderType = valueProviderType;
+                        #endregion
+
+                        #region 值
+                        if (obj["value"] is JToken valueToken)
+                            jsonTreeViewItem.Value = valueToken.ToString();
+                        #endregion
+
+                        #region 数据类型
+                        if (obj["dataType"] is JToken dataTypeToken)
+                            jsonTreeViewItem.ValueTypeList.Add(new TextComboBoxItem() { Text = dataTypeToken.ToString() });
+                        #endregion
+
+                        #region 枚举列表
+                        if (obj["enumList"] is JArray tagsToken)
+                        {
+                            foreach (var tag in tagsToken)
+                            {
+                                string text = tag.ToString();
+                                string[] textList = text.Split('_');
+                                for (int i = 0; i < textList.Length; i++)
+                                {
+                                    textList[i] = textList[i][0].ToString().ToUpper() + textList[i][1..];
+                                }
+                                text = string.Join(' ', textList);
+                                jsonTreeViewItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = text });
+                            }
+                        }
+                        #endregion
+
+                        #region 解析当前提供器的结构
+                        if (obj["children"] is JArray childrenToken)
+                        {
+                            ObservableCollection<JsonTreeViewItem> switchList = [];
+                            foreach (var structure in childrenToken)
+                            {
+                                CompoundJsonTreeViewItem subItem = new(null, null);
+                                if (structure["switchKey"] is JToken structureKeyToken)
+                                {
+                                    subItem.SwitchKey = structureKeyToken.ToString();
+                                    if (structure["displayText"] is JToken displayTextToken)
+                                        subItem.DisplayText = displayTextToken.ToString();
+                                    else
+                                        subItem.DisplayText = subItem.Key;
+
+                                    if (structure["value"] is JToken subValueToken)
+                                    {
+                                        subItem.DefaultValue = subValueToken.ToString();
+                                    }
+                                    if (structure["peerNodeList"] is JArray peerNodeListToken)
+                                    {
+                                        JsonTreeViewDataStructure dataStructure = JsonToJsonTreeViewItemConverter.RecursivelyTraverseEachMember(new(), peerNodeListToken, 2, 1, subItem, null, true);
+                                        subItem.Children = dataStructure.Result;
+                                        switchList.Add(subItem);
+                                    }
+                                    if (structure["compoundHead"] is JToken compoundHeadToken)
+                                    {
+                                        subItem.CompoundHead = compoundHeadToken.ToString();
+                                    }
+                                }
+                            }
+                            jsonTreeViewItem.SwitchChildren = switchList;
+                        }
+                        #endregion
+
+                        result.Add(keyToken.ToString(), jsonTreeViewItem);
+                    }
+                    #endregion
                 }
-                result.Context = currentResult.Context;
             }
             return result;
         }
-    }
-
-    public class DataStructure
-    {
-        public ObservableCollection<JsonTreeViewItem> Result { get; set; } = [];
-        public StringBuilder ResultString { get; set; } = new();
-        public Dictionary<string,JsonTreeViewContext> Context { get; set; } = [];
     }
 }

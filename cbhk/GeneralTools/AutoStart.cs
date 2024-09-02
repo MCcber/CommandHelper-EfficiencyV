@@ -56,7 +56,7 @@ namespace cbhk.GeneralTools
                 bool _exist = false;
                 RegistryKey local = Registry.LocalMachine;
                 RegistryKey runs = local.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-                if (runs == null)
+                if (runs is null)
                 {
                     RegistryKey key2 = local.CreateSubKey("SOFTWARE");
                     RegistryKey key3 = key2.CreateSubKey("Microsoft");
@@ -96,7 +96,7 @@ namespace cbhk.GeneralTools
             {
                 RegistryKey local = Registry.LocalMachine;
                 RegistryKey key = local.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-                if (key == null)
+                if (key is null)
                 {
                     local.CreateSubKey("SOFTWARE//Microsoft//Windows//CurrentVersion//Run");
                 }

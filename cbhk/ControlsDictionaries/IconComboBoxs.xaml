@@ -6,8 +6,8 @@
     xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2">
 
     <SolidColorBrush x:Key="TextBox.Static.Background" Color="#FFFFFFFF" />
-    <ImageBrush x:Key="TextEditBox" ImageSource="/cbhk;component/resources/common/images/TextEditBox.png" />
-    <ImageBrush x:Key="Frame" ImageSource="/cbhk;component/resources/common/images/Frame.png" />
+    <ImageBrush x:Key="TextEditBox" ImageSource="/cbhk;component/Resource/Common/Image/TextEditBox.png" />
+    <ImageBrush x:Key="Frame" ImageSource="/cbhk;component/Resource/Common/Image/Frame.png" />
 
     <ControlDataContexts:ConvertIconComboBoxItemImage x:Key="IconComboBoxImageConverter" />
     <ControlDataContexts:ConvertIconComboBoxItemText x:Key="IconComboBoxTextConverter" />

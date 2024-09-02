@@ -7,8 +7,8 @@
 
     <LocalContext:RichTabItems x:Key="RichTabItemDataContext" />
     <LocalContext:RichTabItemsSaveMarkVisibilityController x:Key="SaveMarkController" />
-    <ImageBrush x:Key="CloseButtonNormal" ImageSource="/cbhk;component/resources/common/images/CloseWhite.png" />
-    <ImageBrush x:Key="CloseButtonHightLight" ImageSource="/cbhk;component/resources/common/images/CloseWhiteHover.png" />
+    <ImageBrush x:Key="CloseButtonNormal" ImageSource="/cbhk;component/Resource/Common/Image/CloseWhite.png" />
+    <ImageBrush x:Key="CloseButtonHightLight" ImageSource="/cbhk;component/Resource/Common/Image/CloseWhiteHover.png" />
     <LinearGradientBrush x:Key="TabItem.Static.Background" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Offset="0.0" Color="#F0F0F0" />
         <GradientStop Offset="1.0" Color="#E5E5E5" />

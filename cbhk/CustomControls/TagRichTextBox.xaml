@@ -86,7 +86,7 @@
         <RichTextBox
             x:Name="tagBox"
             Grid.Row="1"
-            Background="Transparent"
+            Background="#565A57"
             BorderThickness="0"
             CaretBrush="White"
             Foreground="White"

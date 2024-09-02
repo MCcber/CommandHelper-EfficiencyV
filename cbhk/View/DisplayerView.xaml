@@ -1,0 +1,43 @@
+﻿<local_window:CommonWindow
+    x:Class="cbhk.View.DisplayerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local_window="clr-namespace:cbhk.WindowDictionaries"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Title="生成结果"
+    Width="950"
+    Height="560"
+    MinWidth="950"
+    MinHeight="560"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="#2F2F2F"
+    ResizeMode="CanResizeWithGrip"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
+
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="Closing">
+            <behaviors:CallMethodAction MethodName="Displayer_Closing" TargetObject="{Binding}" />
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
+
+    <Grid>
+        <TabControl
+            Background="Transparent"
+            BorderBrush="#3D3D3D"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            ScrollViewer.VerticalScrollBarVisibility="Auto"
+            Style="{DynamicResource TabControlWithScrollBar}">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="Loaded">
+                    <behaviors:CallMethodAction MethodName="ResultTabControl_Loaded" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
+        </TabControl>
+    </Grid>
+
+</local_window:CommonWindow>

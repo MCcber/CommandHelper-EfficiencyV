@@ -1,0 +1,258 @@
+﻿<UserControl
+    x:Class="cbhk.Generators.ItemGenerator.Components.ItemPagesView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:Special="clr-namespace:cbhk.Generators.ItemGenerator.Components.SpecialNBT"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk.Generators.ItemGenerator.Components"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    mc:Ignorable="d">
+
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:CallMethodAction MethodName="ItemPages_Loaded" TargetObject="{Binding}" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+
+    <UserControl.Resources>
+        <ImageBrush x:Key="Save" ImageSource="/cbhk;component/Resource/Common/Image/Save.png" />
+        <ImageBrush x:Key="IssueIcon" ImageSource="/cbhk;component/Resource/Common/Image/Issue.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowRight.png" />
+    </UserControl.Resources>
+
+    <UserControl.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding RunCommand}" />
+    </UserControl.InputBindings>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="9*" />
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0">
+            <CustomControls:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource RightArrow}"
+                BorderThickness="0"
+                Command="{Binding RunCommand}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControls:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="F5:运行"
+                        Foreground="White" />
+                </CustomControls:IconTextButtons.ToolTip>
+            </CustomControls:IconTextButtons>
+            <CustomControls:IconTextButtons
+                Width="20"
+                Height="20"
+                Margin="5,0"
+                Padding="5"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="{StaticResource Save}"
+                Command="{Binding SaveCommand}"
+                Style="{DynamicResource IconTextButton}" />
+            <TextBlock
+                Margin="10,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="版本"
+                TextAlignment="Center" />
+            <ComboBox
+                Width="110"
+                Height="25"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                FontSize="15"
+                IsReadOnly="True"
+                ItemsSource="{Binding VersionSource, IsAsync=True}"
+                SelectedIndex="0"
+                SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+                Style="{DynamicResource TextComboBoxStyle}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="SelectionChanged">
+                        <behavior:CallMethodAction MethodName="Version_SelectionChanged" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </ComboBox>
+            <TextBlock
+                Margin="5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="ID" />
+            <ComboBox
+                Width="300"
+                Height="25"
+                HorizontalAlignment="Left"
+                VerticalContentAlignment="Center"
+                Foreground="White"
+                ItemsSource="{Binding ItemIDList, Mode=OneWay}"
+                SelectedItem="{Binding SelectedItemId, Mode=TwoWay}"
+                Style="{DynamicResource IconComboBoxStyle}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="SelectionChanged">
+                        <behavior:CallMethodAction MethodName="ItemID_SelectionChanged" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </ComboBox>
+            <CustomControls:RadiusToggleButtons
+                Foreground="White"
+                IsChecked="{Binding Summon, Mode=TwoWay}"
+                IsEnabled="{Binding IsNoStyleText, Mode=OneWay}"
+                SelectedToggleText="召唤"
+                Style="{DynamicResource RadiusToggleButton}"
+                ToggleHeight="25"
+                ToggleWidth="45"
+                UnSelectedToggleText="给予" />
+            <CustomControls:RadiusToggleButtons
+                VerticalContentAlignment="Center"
+                Foreground="White"
+                IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
+                SelectedToggleText="显示结果"
+                Style="{DynamicResource RadiusToggleButton}"
+                ToggleHeight="26"
+                ToggleWidth="45"
+                UnSelectedToggleText="隐藏结果" />
+        </DockPanel>
+        <TabControl
+            Grid.Row="1"
+            Margin="0,-2,0,0"
+            BorderThickness="0"
+            SelectedIndex="0"
+            Style="{DynamicResource TabControlWithScrollBar}">
+            <behavior:Interaction.Triggers>
+                <behavior:EventTrigger EventName="SelectionChanged">
+                    <behavior:CallMethodAction MethodName="TabControl_SelectionChanged" TargetObject="{Binding}" />
+                </behavior:EventTrigger>
+                <behavior:EventTrigger EventName="Loaded">
+                    <behavior:CallMethodAction MethodName="SpecialTagsPanelLoaded" TargetObject="{Binding}" />
+                </behavior:EventTrigger>
+            </behavior:Interaction.Triggers>
+            <CustomControls:TextTabItems
+                Uid="Special"
+                Background="#48382C"
+                BorderThickness="4,4,4,0"
+                Foreground="White"
+                Header="特指"
+                LeftBorderTexture="{StaticResource TabItemLeft}"
+                RightBorderTexture="{StaticResource TabItemRight}"
+                SelectedBackground="#CC6B23"
+                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                Style="{DynamicResource TextTabItemStyle}"
+                TopBorderTexture="{StaticResource TabItemTop}">
+                <ScrollViewer
+                    FontWeight="Normal"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer.Resources>
+                        <VisualBrush
+                            x:Key="BackgroundBrush"
+                            AlignmentX="Center"
+                            AlignmentY="Center"
+                            Stretch="None">
+                            <VisualBrush.Visual>
+                                <Grid Width="{Binding RelativeSource={RelativeSource AncestorType=ScrollViewer}, Path=ActualWidth}" Height="{Binding RelativeSource={RelativeSource AncestorType=ScrollViewer}, Path=ActualHeight}">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Background="Transparent"
+                                        FontSize="12"
+                                        Foreground="#D6D6D6"
+                                        Text="此物品没有特指NBT"
+                                        TextAlignment="Center" />
+                                </Grid>
+                            </VisualBrush.Visual>
+                        </VisualBrush>
+                    </ScrollViewer.Resources>
+                    <ScrollViewer.Style>
+                        <Style TargetType="ScrollViewer">
+                            <Style.Triggers>
+                                <Trigger Property="Content" Value="{x:Null}">
+                                    <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ScrollViewer.Style>
+                </ScrollViewer>
+            </CustomControls:TextTabItems>
+            <CustomControls:TextTabItems
+                Uid="Common"
+                Background="#48382C"
+                BorderThickness="4,4,4,0"
+                Foreground="White"
+                Header="常用"
+                LeftBorderTexture="{StaticResource TabItemLeft}"
+                RightBorderTexture="{StaticResource TabItemRight}"
+                SelectedBackground="#CC6B23"
+                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                Style="{DynamicResource TextTabItemStyle}"
+                TopBorderTexture="{StaticResource TabItemTop}">
+                <ScrollViewer
+                    Background="#2F2F2F"
+                    FontWeight="Normal"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto" />
+            </CustomControls:TextTabItems>
+            <CustomControls:TextTabItems
+                Uid="Function"
+                Background="#48382C"
+                BorderThickness="4,4,4,0"
+                Foreground="White"
+                Header="功能"
+                LeftBorderTexture="{StaticResource TabItemLeft}"
+                RightBorderTexture="{StaticResource TabItemRight}"
+                SelectedBackground="#CC6B23"
+                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                Style="{DynamicResource TextTabItemStyle}"
+                TopBorderTexture="{StaticResource TabItemTop}">
+                <ScrollViewer
+                    Background="#2F2F2F"
+                    FontWeight="Normal"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto" />
+            </CustomControls:TextTabItems>
+            <CustomControls:TextTabItems
+                Uid="Data"
+                Background="#48382C"
+                BorderThickness="4,4,4,0"
+                Foreground="White"
+                Header="数据"
+                LeftBorderTexture="{StaticResource TabItemLeft}"
+                RightBorderTexture="{StaticResource TabItemRight}"
+                SelectedBackground="#CC6B23"
+                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                Style="{DynamicResource TextTabItemStyle}"
+                TopBorderTexture="{StaticResource TabItemTop}">
+                <ScrollViewer
+                    Background="#2F2F2F"
+                    FontWeight="Normal"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto" />
+            </CustomControls:TextTabItems>
+        </TabControl>
+    </Grid>
+</UserControl>

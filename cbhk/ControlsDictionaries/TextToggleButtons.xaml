@@ -3,9 +3,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControls="clr-namespace:cbhk.CustomControls">
 
-    <ImageBrush x:Key="UnSelectedBackground" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonNormal.png" />
-    <ImageBrush x:Key="SelectedBackground" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonPressed.png" />
-    <ImageBrush x:Key="UnlSelectedBackgroundLocked" ImageSource="/cbhk;component/resources/common/images/TextToggleButtonLocked.png" />
+    <ImageBrush x:Key="UnSelectedBackground" ImageSource="/cbhk;component/Resource/Common/Image/TextToggleButtonNormal.png" />
+    <ImageBrush x:Key="SelectedBackground" ImageSource="/cbhk;component/Resource/Common/Image/TextToggleButtonPressed.png" />
+    <ImageBrush x:Key="UnlSelectedBackgroundLocked" ImageSource="/cbhk;component/Resource/Common/Image/TextToggleButtonLocked.png" />
     <SolidColorBrush x:Key="Button.Static.Background" Color="Gray" />
     <SolidColorBrush x:Key="Button.Static.Border" Color="Black" />
     <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#FFBEE6FD" />

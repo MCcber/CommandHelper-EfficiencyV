@@ -462,14 +462,14 @@ namespace cbhk.CustomControls
 
         public void Draw(TextView textView, DrawingContext drawingContext)
         {
-            if (textView == null || textView.VisualLinesValid == false)
+            if (textView is null || textView.VisualLinesValid == false)
                 return;
 
             int startOffset = textView.Document.GetOffset(startLocation.Line, startLocation.Column);
             //int endOffset = startOffset + textToRender.Length;
             VisualLine vl = textView.GetVisualLine(startLocation.Line);
 
-            if (vl == null) return;
+            if (vl is null) return;
 
             int visualColumn = vl.GetVisualColumn(startOffset);
             double topLeft = vl.GetTextLineVisualXPosition(vl.TextLines[0], visualColumn);

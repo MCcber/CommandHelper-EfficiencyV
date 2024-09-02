@@ -1,0 +1,434 @@
+﻿<UserControl
+    x:Class="cbhk.Generators.EntityGenerator.Components.VibrationMonitors"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:cbhk.Generators.EntityGenerator.Components"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk;component/Resource/Common/Image/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk;component/Resource/Common/Image/ButtonPressed.png" />
+    </UserControl.Resources>
+
+    <StackPanel>
+        <CustomControls:RadiusToggleButtons
+            x:Name="VibrationMonitorsEnableButton"
+            Height="30"
+            VerticalContentAlignment="Center"
+            Foreground="White"
+            IsChecked="False"
+            SelectedToggleText="启用振动监听器"
+            Style="{DynamicResource RadiusToggleButton}"
+            ToggleHeight="25"
+            ToggleWidth="50"
+            UnSelectedToggleText="禁用振动监听器" />
+        <DockPanel Margin="2,2,2,0">
+            <TextBlock
+                Margin="5,0"
+                VerticalAlignment="Center"
+                FontSize="15"
+                Foreground="White"
+                Text="延迟" />
+            <Slider
+                x:Name="EventDelay"
+                Uid=""
+                Height="25"
+                Loaded="Slider_Loaded"
+                Style="{DynamicResource NumberBoxStyle}" />
+        </DockPanel>
+        <DockPanel Margin="2,2,2,0">
+            <TextBlock
+                Margin="5,0"
+                VerticalAlignment="Center"
+                FontSize="15"
+                Foreground="White"
+                Text="半径" />
+            <Slider
+                x:Name="Range"
+                Uid=""
+                Height="25"
+                Loaded="Slider_Loaded"
+                Style="{DynamicResource NumberBoxStyle}" />
+        </DockPanel>
+        <TabControl
+            Margin="2,2,2,0"
+            Background="Transparent"
+            BorderThickness="0">
+            <CustomControls:TextTabItems
+                x:Name="event"
+                Background="#48382C"
+                BorderThickness="4,4,4,0"
+                Foreground="White"
+                Header="游戏事件"
+                LeftBorderTexture="{StaticResource TabItemLeft}"
+                LostFocus="event_LostFocus"
+                RightBorderTexture="{StaticResource TabItemRight}"
+                SelectedBackground="#CC6B23"
+                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                Style="{DynamicResource TextTabItemStyle}"
+                TopBorderTexture="{StaticResource TabItemTop}">
+                <ScrollViewer
+                    FontWeight="Normal"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <DockPanel Margin="2,2,2,0">
+                            <TextBlock
+                                Margin="8,0"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="游戏事件ID" />
+                            <TextBox
+                                x:Name="game_event"
+                                Height="25"
+                                VerticalContentAlignment="Center"
+                                BorderBrush="Black"
+                                Foreground="White" />
+                        </DockPanel>
+                        <DockPanel Margin="2,2,2,0">
+                            <TextBlock
+                                Margin="23,0,0,0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="距离" />
+                            <Slider
+                                x:Name="distance"
+                                Height="25"
+                                Margin="30,0,0,0"
+                                Loaded="Slider_Loaded"
+                                Style="{DynamicResource NumberBoxStyle}" />
+                        </DockPanel>
+                        <DockPanel Margin="2,2,2,0">
+                            <TextBlock
+                                Margin="8,0,8,0"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="振动源位置" />
+                            <local:UUIDOrPosGroup
+                                x:Name="VibrationSourcePos"
+                                Margin="1,0,0,0"
+                                IsUUID="False" />
+                        </DockPanel>
+                        <DockPanel Margin="2,2,2,0">
+                            <TextBlock
+                                Margin="5,0,0,0"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="振动源UUID" />
+                            <local:UUIDOrPosGroup
+                                x:Name="TargetUUID"
+                                Margin="5,0,0,0"
+                                IsUUID="True" />
+                        </DockPanel>
+                        <DockPanel Margin="2,2,2,0">
+                            <TextBlock
+                                Margin="5,0,0,0"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="弹射物UUID" />
+                            <local:UUIDOrPosGroup
+                                x:Name="ProjectileUUID"
+                                Margin="5,0,0,0"
+                                IsUUID="True" />
+                        </DockPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </CustomControls:TextTabItems>
+            <CustomControls:TextTabItems
+                x:Name="selector"
+                Background="#48382C"
+                BorderThickness="4,4,4,0"
+                Foreground="White"
+                Header="振动选择器"
+                LeftBorderTexture="{StaticResource TabItemLeft}"
+                LostFocus="selector_LostFocus"
+                RightBorderTexture="{StaticResource TabItemRight}"
+                SelectedBackground="#CC6B23"
+                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                Style="{DynamicResource TextTabItemStyle}"
+                TopBorderTexture="{StaticResource TabItemTop}">
+                <ScrollViewer
+                    FontWeight="Normal"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <DockPanel Margin="2,2,2,0">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="振动时间" />
+                            <Slider
+                                x:Name="tick"
+                                Uid=""
+                                Margin="5,0,0,0"
+                                BorderBrush="Black"
+                                Foreground="White"
+                                Maximum="{Binding IntMaxValue}"
+                                Minimum="{Binding IntMinValue}"
+                                Style="{DynamicResource NumberBoxStyle}" />
+                        </DockPanel>
+                        <CustomControls:Accordion
+                            Title="候选事件"
+                            Margin="2,2,2,0"
+                            Background="#FFE5B663"
+                            FreshVisibility="Collapsed"
+                            ModifyName=""
+                            ModifyVisibility="Hidden"
+                            Style="{DynamicResource AccordionStyle}"
+                            TitleForeground="Black">
+                            <StackPanel Background="#2F2F2F">
+                                <DockPanel Margin="2,2,2,0">
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="White"
+                                        Text="游戏事件ID" />
+                                    <TextBox
+                                        x:Name="game_eventC"
+                                        Uid="game_event"
+                                        Height="25"
+                                        Margin="10,0,0,0"
+                                        BorderBrush="Black"
+                                        Foreground="White" />
+                                </DockPanel>
+                                <DockPanel Margin="2,2,2,0">
+                                    <TextBlock
+                                        Margin="20,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="White"
+                                        Text="距离" />
+                                    <Slider
+                                        x:Name="distanceC"
+                                        Uid="f"
+                                        Height="25"
+                                        Margin="32,0,0,0"
+                                        Loaded="Slider_Loaded"
+                                        Style="{DynamicResource NumberBoxStyle}"
+                                        Value="{Binding Distance, Mode=OneWayToSource}" />
+                                </DockPanel>
+                                <DockPanel Margin="2,2,2,0">
+                                    <TextBlock
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="White"
+                                        Text="振动源位置" />
+                                    <local:UUIDOrPosGroup
+                                        x:Name="VibrationSourcePosC"
+                                        Uid="pos"
+                                        Margin="6,0,0,0"
+                                        IsUUID="False" />
+                                </DockPanel>
+                                <DockPanel Margin="2,2,2,0">
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="White"
+                                        Text="振动源UUID" />
+                                    <local:UUIDOrPosGroup
+                                        x:Name="TargetUUIDC"
+                                        Uid="source"
+                                        Margin="4,0,0,0"
+                                        IsUUID="True" />
+                                </DockPanel>
+                                <DockPanel Margin="2,2,2,0">
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="White"
+                                        Text="弹射物UUID" />
+                                    <local:UUIDOrPosGroup
+                                        x:Name="ProjectileUUIDC"
+                                        Uid="projectile_owner"
+                                        Margin="4,0,0,0"
+                                        IsUUID="True" />
+                                </DockPanel>
+                            </StackPanel>
+                        </CustomControls:Accordion>
+                    </StackPanel>
+                </ScrollViewer>
+            </CustomControls:TextTabItems>
+            <CustomControls:TextTabItems
+                x:Name="source"
+                Background="#48382C"
+                BorderThickness="4,4,4,0"
+                Foreground="White"
+                Header="振动监听器"
+                LeftBorderTexture="{StaticResource TabItemLeft}"
+                LostFocus="source_LostFocus"
+                RightBorderTexture="{StaticResource TabItemRight}"
+                SelectedBackground="#CC6B23"
+                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
+                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
+                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
+                Style="{DynamicResource TextTabItemStyle}"
+                TopBorderTexture="{StaticResource TabItemTop}">
+                <ScrollViewer
+                    FontWeight="Normal"
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <DockPanel Margin="2,2,2,0">
+                            <TextBlock
+                                Margin="15,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="类型" />
+                            <ComboBox
+                                x:Name="VibrationMonitorTypeBox"
+                                Height="30"
+                                Margin="29,0,0,0"
+                                Style="{DynamicResource TextComboBoxStyle}" />
+                        </DockPanel>
+                        <DockPanel x:Name="BlockGroup" Margin="2,2,2,0">
+                            <TextBlock
+                                Margin="15,0"
+                                VerticalAlignment="Center"
+                                Text="位置" />
+                            <local:UUIDOrPosGroup
+                                x:Name="pos"
+                                Uid="pos"
+                                Margin="14,0,0,0"
+                                IsUUID="False" />
+                        </DockPanel>
+                        <DockPanel
+                            x:Name="EntityGroup0"
+                            Margin="2,2,2,0"
+                            LastChildFill="False">
+                            <TextBlock
+                                Margin="5,0"
+                                VerticalAlignment="Center"
+                                Text="目标实体" />
+                            <CustomControls:TextComboBoxs
+                                x:Name="VibrationMonitorsSourceType"
+                                Uid="type"
+                                Grid.Column="0"
+                                Width="80"
+                                Margin="10,0,0,0"
+                                SelectionChanged="VibrationMonitorsSourceType_SelectionChanged"
+                                Style="{DynamicResource TextComboBoxStyle}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Slider
+                                    x:Name="source_entityValue"
+                                    Uid=""
+                                    Grid.Column="0"
+                                    Width="110"
+                                    Height="25"
+                                    Loaded="Slider_Loaded"
+                                    Style="{DynamicResource NumberBoxStyle}" />
+                                <local:UUIDOrPosGroup
+                                    x:Name="source_entityUUID"
+                                    Grid.Column="1"
+                                    IsUUID="True" />
+                                <Border
+                                    x:Name="sourceEntityDisplayer"
+                                    Grid.Column="2"
+                                    BorderBrush="#FFE5B663"
+                                    BorderThickness="1">
+                                    <Image Width="30" Height="30" />
+                                </Border>
+                                <CustomControls:IconTextButtons
+                                    x:Name="source_entityReference"
+                                    Grid.Column="3"
+                                    Padding="5"
+                                    Background="{StaticResource ButtonNormal}"
+                                    Content="引用"
+                                    PressedBackground="{StaticResource ButtonPressed}"
+                                    Style="{DynamicResource IconTextButton}" />
+                                <CustomControls:IconTextButtons
+                                    x:Name="source_entityGenerator"
+                                    Grid.Column="4"
+                                    Padding="5"
+                                    Background="{StaticResource ButtonNormal}"
+                                    Content="生成实体"
+                                    PressedBackground="{StaticResource ButtonPressed}"
+                                    Style="{DynamicResource IconTextButton}" />
+                            </Grid>
+                        </DockPanel>
+                        <Grid x:Name="EntityGroup1" Margin="2,2,2,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="119*" />
+                                <ColumnDefinition Width="579*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Column="0"
+                                Margin="10,0,10,0"
+                                VerticalAlignment="Center"
+                                Text="偏移量" />
+                            <Slider
+                                x:Name="y_offset"
+                                Uid="f"
+                                Grid.Column="1"
+                                Grid.ColumnSpan="2"
+                                Height="25"
+                                Margin="12,0,0,0"
+                                Loaded="Slider_Loaded"
+                                Style="{DynamicResource NumberBoxStyle}" />
+                            <CustomControls:TextToggleButtons
+                                x:Name="offsetEnableButton"
+                                Grid.Column="3"
+                                Padding="5"
+                                Content="启用"
+                                Style="{DynamicResource TextToggleButtonsStyle}" />
+                        </Grid>
+                        <DockPanel Margin="2,2,2,0" Visibility="Collapsed">
+                            <TextBlock
+                                Margin="5,0"
+                                VerticalAlignment="Center"
+                                Text="源实体" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Slider
+                                    Grid.Column="0"
+                                    Height="25"
+                                    Style="{DynamicResource NumberBoxStyle}" />
+                                <Slider
+                                    Grid.Column="1"
+                                    Height="25"
+                                    Style="{DynamicResource NumberBoxStyle}" />
+                                <Slider
+                                    Grid.Column="2"
+                                    Height="25"
+                                    Style="{DynamicResource NumberBoxStyle}" />
+                                <CustomControls:IconTextButtons
+                                    Grid.Column="3"
+                                    Background="{DynamicResource ButtonNormal}"
+                                    Content="生成"
+                                    PressedBackground="{DynamicResource ButtonPressed}"
+                                    Style="{DynamicResource IconTextButton}" />
+                                <CustomControls:TextToggleButtons
+                                    Grid.Column="4"
+                                    Content="启用"
+                                    Style="{DynamicResource TextToggleButtonsStyle}" />
+                            </Grid>
+                        </DockPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </CustomControls:TextTabItems>
+        </TabControl>
+    </StackPanel>
+</UserControl>

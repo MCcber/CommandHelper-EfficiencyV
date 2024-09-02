@@ -90,7 +90,7 @@ namespace cbhk.ControlsDataContexts
 
             ListBox listbox = new()
             {
-                Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/resources/common/images/Frame.png"))),
+                Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/Resource/Common/Image/Frame.png"))),
                 Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 MinWidth = 200,
                 MaxHeight = 250,
@@ -122,7 +122,7 @@ namespace cbhk.ControlsDataContexts
         private void Listbox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             ListBox box = sender as ListBox;
-            if (box.SelectedItem == null) return;
+            if (box.SelectedItem is null) return;
             IconComboBoxItem selected_item = box.SelectedItem as IconComboBoxItem;
             current_box.SelectedItem = selected_item;
             pop.IsOpen = false;

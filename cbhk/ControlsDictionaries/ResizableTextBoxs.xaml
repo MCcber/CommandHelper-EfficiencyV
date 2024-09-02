@@ -5,7 +5,7 @@
     xmlns:local_context="clr-namespace:cbhk.ControlsDataContexts">
 
     <SolidColorBrush x:Key="ResizeGripBackgroundColorBrush" Color="Transparent" />
-    <ImageBrush x:Key="BoxBackground" ImageSource="/cbhk;component/resources/common/images/TextEditBox.png" />
+    <ImageBrush x:Key="BoxBackground" ImageSource="/cbhk;component/Resource/Common/Image/TextEditBox.png" />
 
     <local_context:ResizableTextBoxHander x:Key="ResizableTextBoxHander" />
 

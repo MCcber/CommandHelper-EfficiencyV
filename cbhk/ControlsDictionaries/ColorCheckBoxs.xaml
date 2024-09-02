@@ -3,8 +3,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControls="clr-namespace:cbhk.CustomControls">
 
-    <ImageBrush x:Key="CheckBoxEmpty" ImageSource="/cbhk;component/resources/common/images/CheckboxEmpty.png" />
-    <ImageBrush x:Key="CheckboxChecked" ImageSource="/cbhk;component/resources/common/images/CheckboxChecked.png" />
+    <ImageBrush x:Key="CheckBoxEmpty" ImageSource="/cbhk;component/Resource/Common/Image/CheckboxEmpty.png" />
+    <ImageBrush x:Key="CheckboxChecked" ImageSource="/cbhk;component/Resource/Common/Image/CheckboxChecked.png" />
     <SolidColorBrush x:Key="OptionMark.Static.Background" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="OptionMark.Static.Border" Color="#FF707070" />
     <SolidColorBrush x:Key="OptionMark.Static.Glyph" Color="#FF212121" />

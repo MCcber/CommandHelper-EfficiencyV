@@ -1,10 +1,12 @@
 ﻿using cbhk.Generators.DataPackGenerator;
+using cbhk.ViewModel.Generators.Datapack;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -118,7 +120,7 @@ namespace cbhk.CustomControls
         /// 语法字典
         /// </summary>
         public Dictionary<string, Dictionary<string, List<SyntaxTreeItem>>> SyntaxItemDicionary = [];
-        private EditPageDataContext editPageDataContext = new();
+        private EditPageViewModel editPageDataContext = null;
         #endregion
 
         #region 执行延迟
@@ -166,7 +168,7 @@ namespace cbhk.CustomControls
         private static partial Regex IsWord();
         #endregion
 
-        public McfunctionIntellisenseCodeEditor()
+        public McfunctionIntellisenseCodeEditor(EditPageView editPageView)
         {
             #region 设置属性、订阅事件
             AllowDrop = true;
@@ -199,6 +201,8 @@ namespace cbhk.CustomControls
             //记录选中内容的起始和末尾偏移量
             PreviewKeyUp += TextEditor_PreviewKeyUp;
             #endregion
+
+            editPageDataContext = editPageView.DataContext as EditPageViewModel;
 
             CompleteViewSource.Source = CompletedSource;
 
@@ -1897,8 +1901,8 @@ namespace cbhk.CustomControls
         /// <param name="e"></param>
         public void TextBox_Loaded(object sender, RoutedEventArgs e)
         {
-            DatapackDataContext datapackDataContext = Window.GetWindow(this).DataContext as DatapackDataContext;
-            editPageDataContext = datapackDataContext.editPage.DataContext as EditPageDataContext;
+            DatapackViewModel datapackDataContext = Window.GetWindow(this).DataContext as DatapackViewModel;
+            editPageDataContext = datapackDataContext.editPage.DataContext as EditPageViewModel;
             client = editPageDataContext.client;
             SyntaxItemDicionary = editPageDataContext.SyntaxItemDicionary;
             Thread thread = new(ReceiveData);

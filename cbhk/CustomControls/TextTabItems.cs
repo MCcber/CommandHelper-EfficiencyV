@@ -212,7 +212,7 @@ namespace cbhk.CustomControls
             }
 
             Grid grid = Template.FindName("templateRoot", this) as Grid;
-            if (grid.ToolTip == null && (File.Exists(Uid) || Directory.Exists(Uid)))
+            if (grid.ToolTip is null && (File.Exists(Uid) || Directory.Exists(Uid)))
             {
                 grid.ToolTip = Uid;
                 ToolTipService.SetInitialShowDelay(grid, 0);

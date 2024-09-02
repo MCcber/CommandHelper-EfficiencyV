@@ -22,7 +22,7 @@ namespace cbhk.CustomControls.ColorPickerComponents
             set
             {
                 isPresetColorMode = value;
-                if(IsPresetColorMode)
+                if (IsPresetColorMode)
                 {
                     SelectPoint.Visibility = CustomColorGrid.Visibility = Visibility.Collapsed;
                     PresetColorGrid.Visibility = Visibility.Visible;
@@ -35,7 +35,7 @@ namespace cbhk.CustomControls.ColorPickerComponents
             }
         }
 
-        public static Dictionary<Color, string> PresetColorList = new() { { Colors.Black, @"\\u00a70" }, { Colors.DarkBlue, @"\\u00a71" }, { Colors.DarkGreen, @"\\u00a72" },{ Colors.Cyan,@"\\u00a73" }, { Colors.DarkRed, @"\\u00a74" }, { Colors.Purple, @"\\u00a75" }, { Colors.Gold, @"\\u00a76" }, { Colors.LightGray, @"\\u00a77" }, { Colors.DarkGray, @"\\u00a78" }, { Colors.Blue, @"\\u00a79" }, { Colors.LightGreen, @"\\u00a7a" }, { Colors.LightBlue, @"\\u00a7b" }, { Colors.Red, @"\\u00a7c" }, { Colors.Pink, @"\\u00a7d" }, { Colors.Yellow, @"\\u00a7e" }, { Colors.White, @"\\u00a7f" } };
+        public static Dictionary<Color, string> PresetColorList = new() { { Colors.Black, @"\\u00a70" }, { Colors.DarkBlue, @"\\u00a71" }, { Colors.DarkGreen, @"\\u00a72" }, { Colors.Cyan, @"\\u00a73" }, { Colors.DarkRed, @"\\u00a74" }, { Colors.Purple, @"\\u00a75" }, { Colors.Gold, @"\\u00a76" }, { Colors.LightGray, @"\\u00a77" }, { Colors.DarkGray, @"\\u00a78" }, { Colors.Blue, @"\\u00a79" }, { Colors.LightGreen, @"\\u00a7a" }, { Colors.LightBlue, @"\\u00a7b" }, { Colors.Red, @"\\u00a7c" }, { Colors.Pink, @"\\u00a7d" }, { Colors.Yellow, @"\\u00a7e" }, { Colors.White, @"\\u00a7f" } };
 
         public ColorPickers()
         {
@@ -195,7 +195,7 @@ namespace cbhk.CustomControls.ColorPickerComponents
             R = Rvalue; G = Gvalue; _B = Bvalue; A = Avalue;
 
 
-            RgbaColor Hcolor = new RgbaColor(R, G, _B,A);
+            RgbaColor Hcolor = new RgbaColor(R, G, _B, A);
             SelectColor = Hcolor.SolidColorBrush;
 
             TextHex.Text = Hcolor.HexString;
@@ -261,16 +261,16 @@ namespace cbhk.CustomControls.ColorPickerComponents
             DependencyProperty.Register("Top", typeof(double), typeof(ThumbPro), new PropertyMetadata(0.0));
 
 
-        //距离Canvas的Top,模板中需要Canvas.Left 绑定此Left
+        //距离Canvas的Top,模板中需要Canvas.Offset 绑定此Left
         public double Left
         {
             get { return (double)GetValue(LeftProperty); }
             set { SetValue(LeftProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for Left.  This enables animation, styling, binding, etc...
+        // Using a DependencyProperty as the backing store for Offset.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty LeftProperty =
-            DependencyProperty.Register("Left", typeof(double), typeof(ThumbPro), new PropertyMetadata(0.0));
+            DependencyProperty.Register("Offset", typeof(double), typeof(ThumbPro), new PropertyMetadata(0.0));
 
         double FirstTop;
         double FirstLeft;

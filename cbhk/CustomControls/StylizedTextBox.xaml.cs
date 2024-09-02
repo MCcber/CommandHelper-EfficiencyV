@@ -67,7 +67,7 @@ namespace cbhk.CustomControls
 
         private void SetBold_Click(object sender, RoutedEventArgs e)
         {
-            if (richTextBox.Selection == null || richTextBox.Selection.Text.Length == 0)
+            if (richTextBox.Selection is null || richTextBox.Selection.Text.Length == 0)
                 return;
             TextRange textRange = new(richTextBox.Selection.Start, richTextBox.Selection.End);
             if (Equals(textRange.GetPropertyValue(TextBlock.FontWeightProperty), FontWeights.Normal))
@@ -78,7 +78,7 @@ namespace cbhk.CustomControls
 
         private void SetItalic_Click(object sender, RoutedEventArgs e)
         {
-            if (richTextBox.Selection == null)
+            if (richTextBox.Selection is null)
                 return;
             if (richTextBox.Selection.Text.Length == 0)
                 return;
@@ -91,7 +91,7 @@ namespace cbhk.CustomControls
 
         private void SetUnderlined_Click(object sender, RoutedEventArgs e)
         {
-            if (richTextBox.Selection == null)
+            if (richTextBox.Selection is null)
                 return;
             if (richTextBox.Selection.Text.Length == 0)
                 return;
@@ -123,7 +123,7 @@ namespace cbhk.CustomControls
 
         private void SetStrikethrough_Click(object sender, RoutedEventArgs e)
         {
-            if (richTextBox.Selection == null)
+            if (richTextBox.Selection is null)
                 return;
             if (richTextBox.Selection.Text.Length == 0)
                 return;

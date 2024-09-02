@@ -13,7 +13,7 @@ namespace cbhk.GeneralTools
         /// <returns></returns>
         public static T FindChild<T>(this DependencyObject depObj,string targetUid = "") where T : DependencyObject
         {
-            if (depObj == null) return null;
+            if (depObj is null) return null;
 
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
             {

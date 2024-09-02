@@ -172,7 +172,7 @@ namespace cbhk.CustomControls
             DependencyPropertyChangedEventArgs e)
         {
             PasswordBox passwordBox = sender as PasswordBox;
-            if (passwordBox == null)
+            if (passwordBox is null)
                 return;
             if ((bool)e.OldValue)
             {

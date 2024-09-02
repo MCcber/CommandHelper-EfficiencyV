@@ -1,6 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <ImageBrush x:Key="TextBoxBackground" ImageSource="/cbhk;component/resources/common/images/TextEditBox.png" />
+    <ImageBrush x:Key="TextBoxBackground" ImageSource="/cbhk;component/Resource/Common/Image/TextEditBox.png" />
     <Style TargetType="{x:Type TextBox}">
         <Setter Property="AllowDrop" Value="true" />
         <Setter Property="Background" Value="{StaticResource TextBoxBackground}" />

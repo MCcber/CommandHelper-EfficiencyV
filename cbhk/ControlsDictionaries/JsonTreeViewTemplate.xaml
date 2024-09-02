@@ -1,0 +1,399 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:compoundItem="clr-namespace:cbhk.CustomControls.JsonTreeViewComponents">
+    <HierarchicalDataTemplate x:Key="JsonTreeViewItem" DataType="TreeViewItem">
+        <DockPanel LastChildFill="False">
+            <Border
+                Height="35"
+                Margin="0,0.8"
+                Padding="3"
+                Background="#1B1B1B"
+                BorderBrush="#3F3F3F"
+                BorderThickness="1"
+                CornerRadius="2">
+                <DockPanel LastChildFill="False">
+                    <CustomControls:IconButtons
+                        Width="25"
+                        Background="#9B341B"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        IconColor="White"
+                        IconData="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"
+                        IconHeight="15"
+                        IconMargin="5"
+                        IconWidth="15"
+                        PressedBackground="#922D13"
+                        Style="{DynamicResource IconButtons}"
+                        ToolTip="删除"
+                        ToolTipService.BetweenShowDelay="0"
+                        ToolTipService.InitialShowDelay="0"
+                        Visibility="{Binding RemoveElementButtonVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="Click">
+                                <behaviors:CallMethodAction MethodName="RemoveElement_Click" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </CustomControls:IconButtons>
+                    <Grid Visibility="{Binding SortButtonVisibility}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <CustomControls:IconButtons
+                            Grid.Row="0"
+                            Width="25"
+                            Margin="5,0"
+                            Background="#272727"
+                            Cursor="Hand"
+                            IconColor="White"
+                            IconData="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z"
+                            IconHeight="5"
+                            IconMargin="8 0 0 0"
+                            IconWidth="20"
+                            PressedBackground="#1F1F1F"
+                            Style="{DynamicResource IconButtons}">
+                            <behaviors:Interaction.Triggers>
+                                <behaviors:EventTrigger EventName="Click">
+                                    <behaviors:CallMethodAction MethodName="MoveItemUp_Click" TargetObject="{Binding}" />
+                                </behaviors:EventTrigger>
+                            </behaviors:Interaction.Triggers>
+                        </CustomControls:IconButtons>
+                        <CustomControls:IconButtons
+                            Grid.Row="1"
+                            Width="25"
+                            Margin="5,0"
+                            Background="#272727"
+                            Cursor="Hand"
+                            IconColor="White"
+                            IconData="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"
+                            IconHeight="5"
+                            IconMargin="8 0 0 0"
+                            IconWidth="20"
+                            PressedBackground="#1F1F1F"
+                            Style="{DynamicResource IconButtons}">
+                            <behaviors:Interaction.Triggers>
+                                <behaviors:EventTrigger EventName="Click">
+                                    <behaviors:CallMethodAction MethodName="MoveItemDown_Click" TargetObject="{Binding}" />
+                                </behaviors:EventTrigger>
+                            </behaviors:Interaction.Triggers>
+                        </CustomControls:IconButtons>
+                    </Grid>
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        FontSize="18"
+                        Foreground="White"
+                        Text="{Binding DisplayText}" />
+                    <ComboBox
+                        Uid="EnumItemsSource"
+                        Width="235"
+                        BorderThickness="0"
+                        ItemsSource="{Binding EnumItemsSource}"
+                        SelectedItem="{Binding SelectedEnumItem}"
+                        Style="{DynamicResource TextComboBoxStyle}"
+                        Visibility="{Binding EnumBoxVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="GotFocus">
+                                <behaviors:CallMethodAction MethodName="ComboBox_GotFocus" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                            <behaviors:EventTrigger EventName="SelectionChanged">
+                                <behaviors:CallMethodAction MethodName="EnumType_SelectionChanged" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </ComboBox>
+                    <TextBox
+                        Width="235"
+                        Padding="3,0,0,0"
+                        VerticalContentAlignment="Center"
+                        BorderBrush="{Binding VerifyBrush}"
+                        BorderThickness="0"
+                        FontSize="18"
+                        Foreground="White"
+                        Text="{Binding Value, Mode=TwoWay}"
+                        Visibility="{Binding InputBoxVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="GotFocus">
+                                <behaviors:CallMethodAction MethodName="TextBox_GotFocus" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                            <behaviors:EventTrigger EventName="LostFocus">
+                                <behaviors:CallMethodAction MethodName="TextBox_LostFocus" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </TextBox>
+                    <CustomControls:TextToggleButtons
+                        Padding="5"
+                        Background="Transparent"
+                        Content="False"
+                        Cursor="Hand"
+                        Foreground="White"
+                        IsChecked="{Binding IsFalse}"
+                        Style="{DynamicResource TextToggleButtonsStyle}"
+                        Visibility="{Binding BoolButtonVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="Click">
+                                <behaviors:CallMethodAction MethodName="BoolButton_Click" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </CustomControls:TextToggleButtons>
+                    <CustomControls:TextToggleButtons
+                        Padding="5"
+                        Background="Transparent"
+                        Content="True"
+                        Cursor="Hand"
+                        Foreground="White"
+                        IsChecked="{Binding IsTrue}"
+                        Style="{DynamicResource TextToggleButtonsStyle}"
+                        Visibility="{Binding BoolButtonVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="Click">
+                                <behaviors:CallMethodAction MethodName="BoolButton_Click" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </CustomControls:TextToggleButtons>
+                </DockPanel>
+            </Border>
+            <Image
+                Width="25"
+                Height="25"
+                Margin="2.5,0"
+                Source="{Binding ErrorTipIcon}"
+                ToolTip="{Binding ErrorTiptext}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0"
+                Visibility="{Binding ErrorIconVisibility}" />
+            <Image
+                Width="30"
+                Height="30"
+                Margin="2.5,0"
+                Source="{Binding InfoTipIcon}"
+                ToolTip="{Binding InfoTiptext}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0"
+                Visibility="{Binding InfoIconVisibility}" />
+        </DockPanel>
+    </HierarchicalDataTemplate>
+
+    <HierarchicalDataTemplate
+        x:Key="CompoundJsonTreeViewItem"
+        DataType="compoundItem:CompoundJsonTreeViewItem"
+        ItemsSource="{Binding Children}">
+        <DockPanel LastChildFill="False">
+            <Border
+                Height="35"
+                Margin="0,0.8"
+                Padding="3"
+                Background="#1B1B1B"
+                BorderBrush="#3F3F3F"
+                BorderThickness="1"
+                CornerRadius="2">
+                <DockPanel LastChildFill="False">
+                    <CustomControls:IconButtons
+                        Width="25"
+                        Background="#9B341B"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        IconColor="White"
+                        IconData="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"
+                        IconHeight="15"
+                        IconMargin="5"
+                        IconWidth="15"
+                        PressedBackground="#922D13"
+                        Style="{DynamicResource IconButtons}"
+                        ToolTip="删除"
+                        ToolTipService.BetweenShowDelay="0"
+                        ToolTipService.InitialShowDelay="0"
+                        Visibility="{Binding RemoveElementButtonVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="Click">
+                                <behaviors:CallMethodAction MethodName="RemoveSubStructure_Click" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </CustomControls:IconButtons>
+                    <Grid Visibility="{Binding SortButtonVisibility}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <CustomControls:IconButtons
+                            Grid.Row="0"
+                            Width="25"
+                            Margin="5,0"
+                            Background="#272727"
+                            Cursor="Hand"
+                            IconColor="White"
+                            IconData="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z"
+                            IconHeight="5"
+                            IconMargin="8 0 0 0"
+                            IconWidth="20"
+                            PressedBackground="#1F1F1F"
+                            Style="{DynamicResource IconButtons}">
+                            <behaviors:Interaction.Triggers>
+                                <behaviors:EventTrigger EventName="Click">
+                                    <behaviors:CallMethodAction MethodName="MoveItemUp_Click" TargetObject="{Binding}" />
+                                </behaviors:EventTrigger>
+                            </behaviors:Interaction.Triggers>
+                        </CustomControls:IconButtons>
+                        <CustomControls:IconButtons
+                            Grid.Row="1"
+                            Width="25"
+                            Margin="5,0"
+                            Background="#272727"
+                            Cursor="Hand"
+                            IconColor="White"
+                            IconData="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"
+                            IconHeight="5"
+                            IconMargin="8 0 0 0"
+                            IconWidth="20"
+                            PressedBackground="#1F1F1F"
+                            Style="{DynamicResource IconButtons}">
+                            <behaviors:Interaction.Triggers>
+                                <behaviors:EventTrigger EventName="Click">
+                                    <behaviors:CallMethodAction MethodName="MoveItemDown_Click" TargetObject="{Binding}" />
+                                </behaviors:EventTrigger>
+                            </behaviors:Interaction.Triggers>
+                        </CustomControls:IconButtons>
+                    </Grid>
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        FontSize="18"
+                        Foreground="White"
+                        Text="{Binding DisplayText}" />
+                    <ComboBox
+                        Uid="ValueTypeList"
+                        Width="235"
+                        BorderThickness="0"
+                        ItemsSource="{Binding ValueTypeList}"
+                        SelectedItem="{Binding CurrentValueType}"
+                        Style="{DynamicResource TextComboBoxStyle}"
+                        Visibility="{Binding SwitchBoxVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="SelectionChanged">
+                                <behaviors:CallMethodAction MethodName="ValueType_SelectionChanged" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </ComboBox>
+                    <ComboBox
+                        Uid="EnumItemsSource"
+                        Width="235"
+                        BorderThickness="0"
+                        ItemsSource="{Binding EnumItemsSource}"
+                        SelectedItem="{Binding SelectedEnumItem}"
+                        Style="{DynamicResource TextComboBoxStyle}"
+                        Visibility="{Binding EnumBoxVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="GotFocus">
+                                <behaviors:CallMethodAction MethodName="ComboBox_GotFocus" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                            <behaviors:EventTrigger EventName="SelectionChanged">
+                                <behaviors:CallMethodAction MethodName="EnumType_SelectionChanged" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </ComboBox>
+                    <TextBox
+                        Width="235"
+                        Padding="3,0,0,0"
+                        VerticalContentAlignment="Center"
+                        BorderBrush="{Binding VerifyBrush}"
+                        BorderThickness="0"
+                        FontSize="18"
+                        Foreground="White"
+                        Text="{Binding Value, Mode=TwoWay}"
+                        Visibility="{Binding InputBoxVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="GotFocus">
+                                <behaviors:CallMethodAction MethodName="TextBox_GotFocus" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                            <behaviors:EventTrigger EventName="LostFocus">
+                                <behaviors:CallMethodAction MethodName="TextBox_LostFocus" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </TextBox>
+                    <CustomControls:TextToggleButtons
+                        Padding="5"
+                        Background="Transparent"
+                        Content="False"
+                        Cursor="Hand"
+                        Foreground="White"
+                        IsChecked="{Binding IsFalse}"
+                        Style="{DynamicResource TextToggleButtonsStyle}"
+                        Visibility="{Binding BoolButtonVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="Click">
+                                <behaviors:CallMethodAction MethodName="BoolButton_Click" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </CustomControls:TextToggleButtons>
+                    <CustomControls:TextToggleButtons
+                        Padding="5"
+                        Background="Transparent"
+                        Content="True"
+                        Cursor="Hand"
+                        Foreground="White"
+                        IsChecked="{Binding IsTrue}"
+                        Style="{DynamicResource TextToggleButtonsStyle}"
+                        Visibility="{Binding BoolButtonVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="Click">
+                                <behaviors:CallMethodAction MethodName="BoolButton_Click" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </CustomControls:TextToggleButtons>
+                    <!--
+                        MouseLeftDownBackground="#3E7409"
+                        MouseOverBackground="#3E7409"
+                    -->
+                    <CustomControls:IconButtons
+                        Background="#487C13"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        IconColor="White"
+                        IconData="M512 92.7c231.9 0 420.5 188.6 420.5 420.5S743.9 933.7 512 933.7 91.5 745 91.5 513.2 280.1 92.7 512 92.7m0-87C231.7 5.7 4.5 232.9 4.5 513.2s227.2 507.5 507.5 507.5 507.5-227.2 507.5-507.5S792.3 5.7 512 5.7z M700.5 469.7h-145v-145c0-24-19.5-43.5-43.5-43.5s-43.5 19.5-43.5 43.5v145h-145c-24 0-43.5 19.5-43.5 43.5s19.5 43.5 43.5 43.5h145v145c0 24 19.5 43.5 43.5 43.5s43.5-19.5 43.5-43.5v-145h145c24 0 43.5-19.5 43.5-43.5 0-24.1-19.5-43.5-43.5-43.5z"
+                        IconHeight="15"
+                        IconMargin="5"
+                        IconWidth="15"
+                        PressedBackground="#3E7409"
+                        Style="{DynamicResource IconButtons}"
+                        ToolTip="{Binding ElementButtonTip}"
+                        ToolTipService.BetweenShowDelay="0"
+                        ToolTipService.InitialShowDelay="0"
+                        Visibility="{Binding AddElementButtonVisibility}">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger EventName="Click">
+                                <behaviors:CallMethodAction MethodName="AddSubStructure_Click" TargetObject="{Binding}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
+                    </CustomControls:IconButtons>
+                </DockPanel>
+            </Border>
+            <Image
+                Width="25"
+                Height="25"
+                Margin="2.5,0"
+                Source="{Binding ErrorTipIcon}"
+                ToolTip="{Binding ErrorTiptext}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0"
+                Visibility="{Binding ErrorIconVisibility}" />
+            <Image
+                Width="30"
+                Height="30"
+                Margin="2.5,0"
+                Source="{Binding InfoTipIcon}"
+                ToolTip="{Binding InfoTiptext}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0"
+                Visibility="{Binding InfoIconVisibility}" />
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="Loaded">
+                    <behaviors:CallMethodAction MethodName="TreeItem_Loaded" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
+        </DockPanel>
+    </HierarchicalDataTemplate>
+</ResourceDictionary>

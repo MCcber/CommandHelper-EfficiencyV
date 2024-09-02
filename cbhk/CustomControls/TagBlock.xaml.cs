@@ -1,5 +1,5 @@
 ﻿using cbhk.GeneralTools;
-using cbhk.Generators.EntityGenerator.Components;
+using cbhk.View.Components.Entity;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;

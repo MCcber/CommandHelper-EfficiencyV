@@ -18,7 +18,7 @@ namespace cbhk.WindowDictionaries
         public static VisualStateGroup TryGetVisualStateGroup(DependencyObject dependencyObject, string groupName)
         {
             FrameworkElement root = GetImplementationRoot(dependencyObject);
-            if (root == null)
+            if (root is null)
             {
                 return null;
             }

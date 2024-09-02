@@ -16,7 +16,7 @@ namespace cbhk.ControlsDataContexts
 
             RichTreeViewItems item = values[2] as RichTreeViewItems;
             ItemsControl ic = ItemsControl.ItemsControlFromItemContainer(item);
-            if (ic == null) return null;
+            if (ic is null) return null;
             bool isLastOne = ic.ItemContainerGenerator.IndexFromContainer(item) == ic.Items.Count - 1;
 
             Rectangle rectangle = values[3] as Rectangle;

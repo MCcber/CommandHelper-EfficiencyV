@@ -34,7 +34,7 @@
                         <Trigger Property="IsMouseOver" Value="true">
                             <Setter TargetName="border" Property="BorderBrush">
                                 <Setter.Value>
-                                    <ImageBrush ImageSource="/cbhk;component/resources/common/images/ButtonFrame.png" />
+                                    <ImageBrush ImageSource="/cbhk;component/Resource/Common/Image/ButtonFrame.png" />
                                 </Setter.Value>
                             </Setter>
                             <Setter TargetName="border" Property="BorderThickness" Value="7.5" />
@@ -42,7 +42,7 @@
                         <Trigger Property="IsPressed" Value="true">
                             <Setter TargetName="border" Property="BorderBrush">
                                 <Setter.Value>
-                                    <ImageBrush ImageSource="/cbhk;component/resources/common/images/ButtonFrame.png" />
+                                    <ImageBrush ImageSource="/cbhk;component/Resource/Common/Image/ButtonFrame.png" />
                                 </Setter.Value>
                             </Setter>
                             <Setter TargetName="border" Property="BorderThickness" Value="7.5" />

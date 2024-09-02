@@ -50,67 +50,63 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Generators\CustomWorldGenerators\DimensionTypeGenerator\**" />
     <Compile Remove="纹理\**" />
-    <EmbeddedResource Remove="Generators\CustomWorldGenerators\DimensionTypeGenerator\**" />
     <EmbeddedResource Remove="纹理\**" />
-    <None Remove="Generators\CustomWorldGenerators\DimensionTypeGenerator\**" />
     <None Remove="纹理\**" />
-    <Page Remove="Generators\CustomWorldGenerators\DimensionTypeGenerator\**" />
     <Page Remove="纹理\**" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="cb.ico" />
     <Resource Include="FilePathComparator.cs" />
-    <Resource Include="Generators\DataPackGenerator\Images\Command1.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\Command2.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\Command3.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconArrowLeft.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconArrowRight.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconDataPack.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconFolder.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconLink.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconNew.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconProject.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconSmall1.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconSmall2.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconSmall3.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconSmallLocked.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconSmallPlus.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconSmallYes.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconTemplate.png" />
-    <Resource Include="Generators\RecipeGenerator\Images\Cell.png" />
-    <Resource Include="Generators\RecipeGenerator\Images\CraftingTable.png" />
-    <Resource Include="Generators\RecipeGenerator\Images\Arrow.png" />
-    <Resource Include="Generators\RecipeGenerator\Images\BlastFurnace.png" />
-    <Resource Include="Generators\RecipeGenerator\Images\Furnace.png" />
-    <Resource Include="Generators\RecipeGenerator\Images\SmithingTable.png" />
-    <Resource Include="Generators\RecipeGenerator\Images\Smoker.png" />
-    <Resource Include="resources\cbhk\images\Error.png">
+    <Resource Include="Resource\Common\Image\Datapack\Command1.png" />
+    <Resource Include="Resource\Common\Image\Datapack\Command2.png" />
+    <Resource Include="Resource\Common\Image\Datapack\Command3.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconArrowLeft.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconArrowRight.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconDataPack.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconFolder.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconLink.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconNew.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconProject.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmall1.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmall2.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmall3.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmallLocked.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmallPlus.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmallYes.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconTemplate.png" />
+    <Resource Include="Resource\Common\Image\Recipe\Cell.png" />
+    <Resource Include="Resource\Common\Image\Recipe\CraftingTable.png" />
+    <Resource Include="Resource\Common\Image\Recipe\Arrow.png" />
+    <Resource Include="Resource\Common\Image\Recipe\BlastFurnace.png" />
+    <Resource Include="Resource\Common\Image\Recipe\Furnace.png" />
+    <Resource Include="Resource\Common\Image\Recipe\SmithingTable.png" />
+    <Resource Include="Resource\Common\Image\Recipe\Smoker.png" />
+    <Resource Include="Resource\CBHK\Image\Error.png">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\cbhk\images\eyeHide.png" />
-    <Resource Include="resources\cbhk\images\eyeShow.png" />
-    <Resource Include="resources\cbhk\images\GeneratorButtonBackground.png" />
-    <Resource Include="resources\cbhk\images\IconMore.png" />
-    <Resource Include="resources\cbhk\images\IconSetting.png" />
-    <Resource Include="resources\cbhk\images\IconTeach.png" />
-    <Resource Include="resources\cbhk\images\IconUser.png" />
-    <Resource Include="resources\cbhk\images\Info.png">
+    <Resource Include="Resource\CBHK\Image\eyeHide.png" />
+    <Resource Include="Resource\CBHK\Image\eyeShow.png" />
+    <Resource Include="Resource\CBHK\Image\GeneratorButtonBackground.png" />
+    <Resource Include="Resource\CBHK\Image\IconMore.png" />
+    <Resource Include="Resource\CBHK\Image\IconSetting.png" />
+    <Resource Include="Resource\CBHK\Image\IconTeach.png" />
+    <Resource Include="Resource\CBHK\Image\IconUser.png" />
+    <Resource Include="Resource\CBHK\Image\Info.png">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\cbhk\images\login.jpg" />
-    <Resource Include="resources\cbhk\images\LoginMinimize.png" />
-    <Resource Include="resources\cbhk\images\LoginText.png" />
-    <Resource Include="resources\cbhk\images\LoginX.png" />
-    <Resource Include="resources\cbhk\images\more\github.png" />
-    <Resource Include="resources\cbhk\images\SignInBackground.png" />
-    <Resource Include="resources\common\fonts\MinecraftAE.ttf" />
+    <Resource Include="Resource\CBHK\Image\login.jpg" />
+    <Resource Include="Resource\CBHK\Image\LoginMinimize.png" />
+    <Resource Include="Resource\CBHK\Image\LoginText.png" />
+    <Resource Include="Resource\CBHK\Image\LoginX.png" />
+    <Resource Include="Resource\CBHK\Image\More\github.png" />
+    <Resource Include="Resource\CBHK\Image\SignInBackground.png" />
+    <Resource Include="Resource\Common\Fonts\MinecraftAE.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk\images\cbhk_group.jpg" />
-    <Resource Include="resources\cbhk\images\my_qq.png" />
-    <Resource Include="resources\cbhk\images\special_thanks.jpg" />
+    <Resource Include="Resource\CBHK\Image\cbhk_group.jpg" />
+    <Resource Include="Resource\CBHK\Image\my_qq.png" />
+    <Resource Include="Resource\CBHK\Image\special_thanks.jpg" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">
@@ -124,12 +120,12 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk\images\command_classes\advance.png" />
-    <Resource Include="resources\cbhk\images\command_classes\basic.png" />
-    <Resource Include="resources\cbhk\images\command_classes\original_edition_mod.png" />
+    <Resource Include="Resource\CBHK\Image\CommandClasses\advance.png" />
+    <Resource Include="Resource\CBHK\Image\CommandClasses\basic.png" />
+    <Resource Include="Resource\CBHK\Image\CommandClasses\original_edition_mod.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk\images\more\conversation_group.png">
+    <Resource Include="Resource\CBHK\Image\More\conversation_group.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
@@ -150,283 +146,280 @@
     <PackageReference Include="CommunityToolkit.Mvvm">
       <Version>8.2.2</Version>
     </PackageReference>
-    <PackageReference Include="Cyotek.Data.Nbt" Version="3.1.1" />
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf">
       <Version>1.1.0</Version>
     </PackageReference>
-    <PackageReference Include="HelixToolkit.Wpf" Version="2.25.0" />
+    <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.25.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies">
-      <Version>1.0.3</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications">
-      <Version>7.1.3</Version>
-    </PackageReference>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.77</Version>
+      <Version>1.1.122</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.3</Version>
     </PackageReference>
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="SingleInstanceCore" Version="2.2.2" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="PixiEditor.ColorPicker" Version="3.4.1" />
+    <PackageReference Include="Prism.Core" Version="9.0.537" />
+    <PackageReference Include="Prism.DryIoc" Version="9.0.537" />
+    <PackageReference Include="Prism.Wpf" Version="9.0.537" />
+    <PackageReference Include="Serilog" Version="4.0.1" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.2" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="SharpNBT" Version="1.3.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
     <PackageReference Include="System.Management" Version="8.0.0" />
-    <PackageReference Include="System.Runtime.WindowsRuntime.UI.Xaml">
-      <Version>4.7.0</Version>
-    </PackageReference>
-    <PackageReference Include="VirtualizingWrapPanel" Version="2.0.5" />
+    <PackageReference Include="VirtualizingWrapPanel" Version="2.0.10" />
     <PackageReference Include="WriteableBitmapEx" Version="1.6.8" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk\images\empty.png" />
-    <Resource Include="resources\common\images\Add.png" />
-    <Resource Include="resources\common\images\Attribute.png" />
-    <Resource Include="resources\common\images\BlackEdit.png" />
-    <Resource Include="resources\common\images\Boots.png" />
-    <Resource Include="resources\common\images\ButtonFrame.png" />
+    <Resource Include="Resource\CBHK\Image\empty.png" />
+    <Resource Include="Resource\Common\Image\Add.png" />
+    <Resource Include="Resource\Common\Image\Attribute.png" />
+    <Resource Include="Resource\Common\Image\BlackEdit.png" />
+    <Resource Include="Resource\Common\Image\Boots.png" />
+    <Resource Include="Resource\Common\Image\ButtonFrame.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\ButtonLocked.png" />
-    <Resource Include="resources\common\images\ButtonNormal.png" />
-    <Resource Include="resources\common\images\ButtonNormalBottom.png">
+    <Resource Include="Resource\Common\Image\ButtonLocked.png" />
+    <Resource Include="Resource\Common\Image\ButtonNormal.png" />
+    <Resource Include="Resource\Common\Image\ButtonNormalBottom.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\ButtonNormalLeft.png">
+    <Resource Include="Resource\Common\Image\ButtonNormalLeft.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\ButtonNormalRight.png">
+    <Resource Include="Resource\Common\Image\ButtonNormalRight.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\ButtonNormalTop.png">
+    <Resource Include="Resource\Common\Image\ButtonNormalTop.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\ButtonPressed.png" />
-    <Resource Include="resources\common\images\ButtonPressedBottom.png">
+    <Resource Include="Resource\Common\Image\ButtonPressed.png" />
+    <Resource Include="Resource\Common\Image\ButtonPressedBottom.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\ButtonPressedLeft.png">
+    <Resource Include="Resource\Common\Image\ButtonPressedLeft.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\ButtonPressedRight.png">
+    <Resource Include="Resource\Common\Image\ButtonPressedRight.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\ButtonPressedTop.png">
+    <Resource Include="Resource\Common\Image\ButtonPressedTop.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\CheckboxChecked.png" />
-    <Resource Include="resources\common\images\CheckboxEmpty.png" />
-    <Resource Include="resources\common\images\Chestplate.png" />
-    <Resource Include="resources\common\images\ColorPicker.png" />
-    <Resource Include="resources\common\images\ContentBox.png" />
-    <Resource Include="resources\common\images\Copy.png" />
-    <Resource Include="resources\common\images\CopyAll.png" />
-    <Resource Include="resources\common\images\Cut.png" />
-    <Resource Include="resources\common\images\Delete.png" />
-    <Resource Include="resources\common\images\eyeHide.png">
+    <Resource Include="Resource\Common\Image\CheckboxChecked.png" />
+    <Resource Include="Resource\Common\Image\CheckboxEmpty.png" />
+    <Resource Include="Resource\Common\Image\Chestplate.png" />
+    <Resource Include="Resource\Common\Image\ColorPicker.png" />
+    <Resource Include="Resource\Common\Image\ContentBox.png" />
+    <Resource Include="Resource\Common\Image\Copy.png" />
+    <Resource Include="Resource\Common\Image\CopyAll.png" />
+    <Resource Include="Resource\Common\Image\Cut.png" />
+    <Resource Include="Resource\Common\Image\Delete.png" />
+    <Resource Include="Resource\Common\Image\eyeHide.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\eyeShow.png">
+    <Resource Include="Resource\Common\Image\eyeShow.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\Fold.png" />
-    <Resource Include="resources\common\images\Frame.png" />
-    <Resource Include="resources\common\images\Helmet.png" />
-    <Resource Include="resources\common\images\History.png" />
-    <Resource Include="resources\common\images\IconFree.png" />
-    <Resource Include="resources\common\images\IconFresh.png" />
-    <Resource Include="resources\common\images\IconGaze.png" />
-    <Resource Include="resources\common\images\IconInvisible.png" />
-    <Resource Include="resources\common\images\IconPlay.png" />
-    <Resource Include="resources\common\images\IconReset.png" />
-    <Resource Include="resources\common\images\IconShouder.png" />
-    <Resource Include="resources\common\images\IconThirdPerson.png" />
-    <Resource Include="resources\common\images\IconVisible.png" />
-    <Resource Include="resources\common\images\itemFrame.png">
+    <Resource Include="Resource\Common\Image\Fold.png" />
+    <Resource Include="Resource\Common\Image\Frame.png" />
+    <Resource Include="Resource\Common\Image\Helmet.png" />
+    <Resource Include="Resource\Common\Image\History.png" />
+    <Resource Include="Resource\Common\Image\IconFree.png" />
+    <Resource Include="Resource\Common\Image\IconFresh.png" />
+    <Resource Include="Resource\Common\Image\IconGaze.png" />
+    <Resource Include="Resource\Common\Image\IconInvisible.png" />
+    <Resource Include="Resource\Common\Image\IconPlay.png" />
+    <Resource Include="Resource\Common\Image\IconReset.png" />
+    <Resource Include="Resource\Common\Image\IconShouder.png" />
+    <Resource Include="Resource\Common\Image\IconThirdPerson.png" />
+    <Resource Include="Resource\Common\Image\IconVisible.png" />
+    <Resource Include="Resource\Common\Image\itemFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\Leggings.png" />
-    <Resource Include="resources\common\images\Open.png" />
-    <Resource Include="resources\common\images\Open2.png" />
-    <Resource Include="resources\common\images\OpenTerminal.png" />
-    <Resource Include="resources\common\images\Paste.png" />
-    <Resource Include="resources\common\images\RadiusToggleButtonOff.png" />
-    <Resource Include="resources\common\images\RadiusToggleButtonOffLocked.png" />
-    <Resource Include="resources\common\images\RadiusToggleButtonOn.png" />
-    <Resource Include="resources\common\images\RadiusToggleButtonOnLocked.png" />
-    <Resource Include="resources\common\images\Revoke.png" />
-    <Resource Include="resources\common\images\Save.png" />
-    <Resource Include="resources\common\images\SaveAs.png" />
-    <Resource Include="resources\common\images\SelectedTabItemLeft.png">
+    <Resource Include="Resource\Common\Image\Leggings.png" />
+    <Resource Include="Resource\Common\Image\Open.png" />
+    <Resource Include="Resource\Common\Image\Open2.png" />
+    <Resource Include="Resource\Common\Image\OpenTerminal.png" />
+    <Resource Include="Resource\Common\Image\Paste.png" />
+    <Resource Include="Resource\Common\Image\RadiusToggleButtonOff.png" />
+    <Resource Include="Resource\Common\Image\RadiusToggleButtonOffLocked.png" />
+    <Resource Include="Resource\Common\Image\RadiusToggleButtonOn.png" />
+    <Resource Include="Resource\Common\Image\RadiusToggleButtonOnLocked.png" />
+    <Resource Include="Resource\Common\Image\Revoke.png" />
+    <Resource Include="Resource\Common\Image\Save.png" />
+    <Resource Include="Resource\Common\Image\SaveAs.png" />
+    <Resource Include="Resource\Common\Image\SelectedTabItemLeft.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\SelectedTabItemRight.png">
+    <Resource Include="Resource\Common\Image\SelectedTabItemRight.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\SelectedTabItemTop.png">
+    <Resource Include="Resource\Common\Image\SelectedTabItemTop.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\SliderBar.png" />
-    <Resource Include="resources\common\images\SliderButton.png" />
-    <Resource Include="resources\common\images\SliderButtonLocked.png" />
-    <Resource Include="resources\common\images\Slot.png" />
-    <Resource Include="resources\common\images\SmithingTemplate.png" />
-    <Resource Include="resources\common\images\spyglass_scope.png" />
-    <Resource Include="resources\common\images\Submit.png" />
-    <Resource Include="resources\common\images\TabItemLeft.png">
+    <Resource Include="Resource\Common\Image\SliderBar.png" />
+    <Resource Include="Resource\Common\Image\SliderButton.png" />
+    <Resource Include="Resource\Common\Image\SliderButtonLocked.png" />
+    <Resource Include="Resource\Common\Image\Slot.png" />
+    <Resource Include="Resource\Common\Image\SmithingTemplate.png" />
+    <Resource Include="Resource\Common\Image\spyglass_scope.png" />
+    <Resource Include="Resource\Common\Image\Submit.png" />
+    <Resource Include="Resource\Common\Image\TabItemLeft.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TabItemRight.png">
+    <Resource Include="Resource\Common\Image\TabItemRight.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TabItemTop.png">
+    <Resource Include="Resource\Common\Image\TabItemTop.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TextEditBox.png" />
-    <Resource Include="resources\common\images\TextToggleButtonFalseBottomFrame.png">
+    <Resource Include="Resource\Common\Image\TextEditBox.png" />
+    <Resource Include="Resource\Common\Image\TextToggleButtonFalseBottomFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TextToggleButtonFalseFrame.png">
+    <Resource Include="Resource\Common\Image\TextToggleButtonFalseFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TextToggleButtonFalseLeftFrame.png">
+    <Resource Include="Resource\Common\Image\TextToggleButtonFalseLeftFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TextToggleButtonFalseRightFrame.png">
+    <Resource Include="Resource\Common\Image\TextToggleButtonFalseRightFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TextToggleButtonFalseTopFrame.png">
+    <Resource Include="Resource\Common\Image\TextToggleButtonFalseTopFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TextToggleButtonLocked.png" />
-    <Resource Include="resources\common\images\TextToggleButtonNormal.png" />
-    <Resource Include="resources\common\images\TextToggleButtonPressed.png" />
+    <Resource Include="Resource\Common\Image\TextToggleButtonLocked.png" />
+    <Resource Include="Resource\Common\Image\TextToggleButtonNormal.png" />
+    <Resource Include="Resource\Common\Image\TextToggleButtonPressed.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\Switch.png" />
+    <Resource Include="Resource\Common\Image\Switch.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\AccordionArrow.png" />
+    <Resource Include="Resource\Common\Image\AccordionArrow.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\Close.png" />
-    <Resource Include="resources\common\images\CloseHover.png" />
-    <Resource Include="resources\common\images\TextToggleButtonTrueBottomFrame.png">
+    <Resource Include="Resource\Common\Image\Close.png" />
+    <Resource Include="Resource\Common\Image\CloseHover.png" />
+    <Resource Include="Resource\Common\Image\TextToggleButtonTrueBottomFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TextToggleButtonTrueFrame.png">
+    <Resource Include="Resource\Common\Image\TextToggleButtonTrueFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TextToggleButtonTrueLeftFrame.png">
+    <Resource Include="Resource\Common\Image\TextToggleButtonTrueLeftFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TextToggleButtonTrueRightFrame.png">
+    <Resource Include="Resource\Common\Image\TextToggleButtonTrueRightFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TextToggleButtonTrueTopFrame.png">
+    <Resource Include="Resource\Common\Image\TextToggleButtonTrueTopFrame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\TrimMaterial.png" />
-    <Resource Include="resources\common\images\WhiteEdit.png">
+    <Resource Include="Resource\Common\Image\TrimMaterial.png" />
+    <Resource Include="Resource\Common\Image\WhiteEdit.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\Maxmize.png" />
-    <Resource Include="resources\common\images\MaxmizeHover.png" />
-    <Resource Include="resources\common\images\Minimize.png" />
-    <Resource Include="resources\common\images\MinimizeHover.png" />
-    <Resource Include="resources\common\images\Remove.png" />
-    <Resource Include="resources\common\images\Window.png" />
-    <Resource Include="resources\common\images\WindowHover.png" />
+    <Resource Include="Resource\Common\Image\Maxmize.png" />
+    <Resource Include="Resource\Common\Image\MaxmizeHover.png" />
+    <Resource Include="Resource\Common\Image\Minimize.png" />
+    <Resource Include="Resource\Common\Image\MinimizeHover.png" />
+    <Resource Include="Resource\Common\Image\Remove.png" />
+    <Resource Include="Resource\Common\Image\Window.png" />
+    <Resource Include="Resource\Common\Image\WindowHover.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\AccordionArrowHightLight.png" />
+    <Resource Include="Resource\Common\Image\AccordionArrowHightLight.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\CloseWhite.png" />
-    <Resource Include="resources\common\images\CloseWhiteHover.png" />
-    <Resource Include="resources\common\images\Divide.png" />
-    <Resource Include="resources\common\images\TabBack.png" />
-    <Resource Include="resources\common\images\TabFront.png" />
+    <Resource Include="Resource\Common\Image\CloseWhite.png" />
+    <Resource Include="Resource\Common\Image\CloseWhiteHover.png" />
+    <Resource Include="Resource\Common\Image\Divide.png" />
+    <Resource Include="Resource\Common\Image\TabBack.png" />
+    <Resource Include="Resource\Common\Image\TabFront.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\TradeRightArrow.png" />
+    <Resource Include="Resource\Common\Image\TradeRightArrow.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\spawnerIcons\IconAdvancements.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconArmorStand.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconBiome.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconCommandBlock.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconDimensions.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconEntities.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconFireworks.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconItems.png">
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconAdvancements.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconArmorStand.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconBiome.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconCommandBlock.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconDimensions.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconEntities.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconFireworks.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconItems.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="resources\common\images\spawnerIcons\IconRecipes.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconSpawner.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconTags.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconVillagers.png" />
-    <Resource Include="resources\common\images\spawnerIcons\IconWrittenBook.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconRecipes.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconSpawner.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconTags.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconVillagers.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconWrittenBook.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\Issue.png" />
+    <Resource Include="Resource\Common\Image\Issue.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk\images\Bottom.png" />
-    <Resource Include="resources\cbhk\images\BottomLeft.png" />
-    <Resource Include="resources\cbhk\images\BottomRight.png" />
-    <Resource Include="resources\cbhk\images\Left.png" />
-    <Resource Include="resources\cbhk\images\Right.png" />
-    <Resource Include="resources\cbhk\images\Top.png" />
-    <Resource Include="resources\cbhk\images\TopLeft.png" />
-    <Resource Include="resources\cbhk\images\TopRight.png" />
+    <Resource Include="Resource\CBHK\Image\Bottom.png" />
+    <Resource Include="Resource\CBHK\Image\BottomLeft.png" />
+    <Resource Include="Resource\CBHK\Image\BottomRight.png" />
+    <Resource Include="Resource\CBHK\Image\Left.png" />
+    <Resource Include="Resource\CBHK\Image\Right.png" />
+    <Resource Include="Resource\CBHK\Image\Top.png" />
+    <Resource Include="Resource\CBHK\Image\TopLeft.png" />
+    <Resource Include="Resource\CBHK\Image\TopRight.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\spawnerIcons\IconDataPack.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconDataPack.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\common\images\IconArrowLeft.png" />
-    <Resource Include="resources\common\images\IconArrowRight.png" />
+    <Resource Include="Resource\Common\Image\IconArrowLeft.png" />
+    <Resource Include="Resource\Common\Image\IconArrowRight.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk\images\IconHome.png" />
-    <Resource Include="resources\cbhk\images\IconLink.png" />
+    <Resource Include="Resource\CBHK\Image\IconHome.png" />
+    <Resource Include="Resource\CBHK\Image\IconLink.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resources\cbhk\images\more\thanks\1.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\1Hover.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\2.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\2Hover.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\3.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\3Hover.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\4.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\4Hover.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\5.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\5Hover.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\6.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\6Hover.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\7.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\7Hover.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\8.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\8Hover.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\9.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\9Hover.png" />
-    <Resource Include="resources\cbhk\images\more\thanks\Title.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\1.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\1Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\2.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\2Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\3.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\3Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\4.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\4Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\5.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\5Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\6.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\6Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\7.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\7Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\8.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\8Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\9.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\9Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\Title.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Generators\DataPackGenerator\Images\dataPackIcon.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\folderIcon.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\mcfIcon.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\lockIcon.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\plusIcon.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\IconSmallUnlocked.png" />
-    <Resource Include="Generators\DataPackGenerator\Images\editedIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\dataPackIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\folderIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\mcfIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\lockIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\plusIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmallUnlocked.png" />
+    <Resource Include="Resource\Common\Image\Datapack\editedIcon.png" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="FilePathComparator.cs" />
+    <Compile Remove="GeneralTools\TreeViewComponentsHelper\HeaderToJson.cs" />
+    <Compile Remove="GeneralTools\TreeViewComponentsHelper\ReturnTargetComponents.cs" />
+    <Compile Remove="GeneralTools\TreeViewComponentsHelper\TagToHeader.cs" />
+    <Compile Remove="GeneralTools\TreeViewComponentsHelper\TreeViewConveter.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell2.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell3.cs" />
@@ -438,113 +431,89 @@
   <ItemGroup>
     <None Remove="cb.ico" />
     <None Remove="GeneralTools\jsonReader - v1.3.js" />
-    <None Remove="Generators\DataPackGenerator\Images\Command1.png" />
-    <None Remove="Generators\DataPackGenerator\Images\Command2.png" />
-    <None Remove="Generators\DataPackGenerator\Images\Command3.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconArrowLeft.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconArrowRight.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconDataPack.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconFolder.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconLink.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconNew.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconProject.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconSmall1.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconSmall2.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconSmall3.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconSmallLocked.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconSmallPlus.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconSmallYes.png" />
-    <None Remove="Generators\DataPackGenerator\Images\IconTemplate.png" />
-    <None Remove="Generators\RecipeGenerator\cell.png" />
-    <None Remove="Generators\RecipeGenerator\Components\Empty.png" />
-    <None Remove="Generators\RecipeGenerator\crafting_table.png" />
-    <None Remove="Generators\RecipeGenerator\Images\arrow.png" />
-    <None Remove="Generators\RecipeGenerator\Images\BlastFurnace.png" />
-    <None Remove="Generators\RecipeGenerator\Images\cell.png" />
-    <None Remove="Generators\RecipeGenerator\Images\CraftingTable.png" />
-    <None Remove="Generators\RecipeGenerator\Images\furnace.png" />
-    <None Remove="Generators\RecipeGenerator\Images\SmithingTable.png" />
-    <None Remove="Generators\RecipeGenerator\Images\smoker.png" />
-    <None Remove="resources\cbhk\images\Error.png" />
-    <None Remove="resources\cbhk\images\eyeHide.png" />
-    <None Remove="resources\cbhk\images\eyeShow.png" />
-    <None Remove="resources\cbhk\images\GeneratorButtonBackground.png" />
-    <None Remove="resources\cbhk\images\IconMore.png" />
-    <None Remove="resources\cbhk\images\IconSetting.png" />
-    <None Remove="resources\cbhk\images\IconTeach.png" />
-    <None Remove="resources\cbhk\images\IconUser.png" />
-    <None Remove="resources\cbhk\images\Info.png" />
-    <None Remove="resources\cbhk\images\login.jpg" />
-    <None Remove="resources\cbhk\images\LoginMinimize.png" />
-    <None Remove="resources\cbhk\images\LoginText.png" />
-    <None Remove="resources\cbhk\images\LoginX.png" />
-    <None Remove="resources\cbhk\images\more\github.png" />
-    <None Remove="resources\cbhk\images\SigninBackground.png" />
-    <None Remove="resources\common\images\Add.png" />
-    <None Remove="resources\common\images\Attribute.png" />
-    <None Remove="resources\common\images\BlackEdit.png" />
-    <None Remove="resources\common\images\Boots.png" />
-    <None Remove="resources\common\images\ButtonFrame.png" />
-    <None Remove="resources\common\images\ButtonNormalBottom.png" />
-    <None Remove="resources\common\images\ButtonNormalLeft.png" />
-    <None Remove="resources\common\images\ButtonNormalRight.png" />
-    <None Remove="resources\common\images\ButtonNormalTop.png" />
-    <None Remove="resources\common\images\ButtonPressedBottom.png" />
-    <None Remove="resources\common\images\ButtonPressedLeft.png" />
-    <None Remove="resources\common\images\ButtonPressedRight.png" />
-    <None Remove="resources\common\images\ButtonPressedTop.png" />
-    <None Remove="resources\common\images\Chestplate.png" />
-    <None Remove="resources\common\images\ColorPicker.png" />
-    <None Remove="resources\common\images\Copy.png" />
-    <None Remove="resources\common\images\CopyAll.png" />
-    <None Remove="resources\common\images\Cut.png" />
-    <None Remove="resources\common\images\Delete.png" />
-    <None Remove="resources\common\images\eyeHide.png" />
-    <None Remove="resources\common\images\eyeShow.png" />
-    <None Remove="resources\common\images\Fold.png" />
-    <None Remove="resources\common\images\Helmet.png" />
-    <None Remove="resources\common\images\History.png" />
-    <None Remove="resources\common\images\IconFree.png" />
-    <None Remove="resources\common\images\IconFresh.png" />
-    <None Remove="resources\common\images\IconGaze.png" />
-    <None Remove="resources\common\images\IconInvisible.png" />
-    <None Remove="resources\common\images\IconPlay.png" />
-    <None Remove="resources\common\images\IconReset.png" />
-    <None Remove="resources\common\images\IconShouder.png" />
-    <None Remove="resources\common\images\IconThirdPerson.png" />
-    <None Remove="resources\common\images\IconVisible.png" />
-    <None Remove="resources\common\images\itemFrame.png" />
-    <None Remove="resources\common\images\Leggings.png" />
-    <None Remove="resources\common\images\Open.png" />
-    <None Remove="resources\common\images\Open2.png" />
-    <None Remove="resources\common\images\OpenTerminal.png" />
-    <None Remove="resources\common\images\Paste.png" />
-    <None Remove="resources\common\images\Revoke.png" />
-    <None Remove="resources\common\images\Save.png" />
-    <None Remove="resources\common\images\SaveAs.png" />
-    <None Remove="resources\common\images\SelectedTabItemLeft.png" />
-    <None Remove="resources\common\images\SelectedTabItemRight.png" />
-    <None Remove="resources\common\images\SelectedTabItemTop.png" />
-    <None Remove="resources\common\images\Slot.png" />
-    <None Remove="resources\common\images\SmithingTemplate.png" />
-    <None Remove="resources\common\images\spyglass_scope.png" />
-    <None Remove="resources\common\images\Submit.png" />
-    <None Remove="resources\common\images\TabItemLeft.png" />
-    <None Remove="resources\common\images\TabItemRight.png" />
-    <None Remove="resources\common\images\TabItemTop.png" />
-    <None Remove="resources\common\images\TextToggleButtonFalseBottomFrame.png" />
-    <None Remove="resources\common\images\TextToggleButtonFalseFrame.png" />
-    <None Remove="resources\common\images\TextToggleButtonFalseLeftFrame.png" />
-    <None Remove="resources\common\images\TextToggleButtonFalseRightFrame.png" />
-    <None Remove="resources\common\images\TextToggleButtonFalseTopFrame.png" />
-    <None Remove="resources\common\images\TextToggleButtonTrueBottomFrame.png" />
-    <None Remove="resources\common\images\TextToggleButtonTrueFrame.png" />
-    <None Remove="resources\common\images\TextToggleButtonTrueLeftFrame.png" />
-    <None Remove="resources\common\images\TextToggleButtonTrueRightFrame.png" />
-    <None Remove="resources\common\images\TextToggleButtonTrueTopFrame.png" />
-    <None Remove="resources\common\images\TrimMaterial.png" />
+    <None Remove="Resource\CBHK\Image\Error.png" />
+    <None Remove="Resource\CBHK\Image\eyeHide.png" />
+    <None Remove="Resource\CBHK\Image\eyeShow.png" />
+    <None Remove="Resource\CBHK\Image\GeneratorButtonBackground.png" />
+    <None Remove="Resource\CBHK\Image\IconMore.png" />
+    <None Remove="Resource\CBHK\Image\IconSetting.png" />
+    <None Remove="Resource\CBHK\Image\IconTeach.png" />
+    <None Remove="Resource\CBHK\Image\IconUser.png" />
+    <None Remove="Resource\CBHK\Image\Info.png" />
+    <None Remove="Resource\CBHK\Image\login.jpg" />
+    <None Remove="Resource\CBHK\Image\LoginMinimize.png" />
+    <None Remove="Resource\CBHK\Image\LoginText.png" />
+    <None Remove="Resource\CBHK\Image\LoginX.png" />
+    <None Remove="Resource\CBHK\Image\More\github.png" />
+    <None Remove="Resource\CBHK\Image\SigninBackground.png" />
+    <None Remove="Resource\Common\Image\Add.png" />
+    <None Remove="Resource\Common\Image\Attribute.png" />
+    <None Remove="Resource\Common\Image\BlackEdit.png" />
+    <None Remove="Resource\Common\Image\Boots.png" />
+    <None Remove="Resource\Common\Image\ButtonFrame.png" />
+    <None Remove="Resource\Common\Image\ButtonNormalBottom.png" />
+    <None Remove="Resource\Common\Image\ButtonNormalLeft.png" />
+    <None Remove="Resource\Common\Image\ButtonNormalRight.png" />
+    <None Remove="Resource\Common\Image\ButtonNormalTop.png" />
+    <None Remove="Resource\Common\Image\ButtonPressedBottom.png" />
+    <None Remove="Resource\Common\Image\ButtonPressedLeft.png" />
+    <None Remove="Resource\Common\Image\ButtonPressedRight.png" />
+    <None Remove="Resource\Common\Image\ButtonPressedTop.png" />
+    <None Remove="Resource\Common\Image\Chestplate.png" />
+    <None Remove="Resource\Common\Image\ColorPicker.png" />
+    <None Remove="Resource\Common\Image\Copy.png" />
+    <None Remove="Resource\Common\Image\CopyAll.png" />
+    <None Remove="Resource\Common\Image\Cut.png" />
+    <None Remove="Resource\Common\Image\Delete.png" />
+    <None Remove="Resource\Common\Image\eyeHide.png" />
+    <None Remove="Resource\Common\Image\eyeShow.png" />
+    <None Remove="Resource\Common\Image\Fold.png" />
+    <None Remove="Resource\Common\Image\Helmet.png" />
+    <None Remove="Resource\Common\Image\History.png" />
+    <None Remove="Resource\Common\Image\IconFree.png" />
+    <None Remove="Resource\Common\Image\IconFresh.png" />
+    <None Remove="Resource\Common\Image\IconGaze.png" />
+    <None Remove="Resource\Common\Image\IconInvisible.png" />
+    <None Remove="Resource\Common\Image\IconPlay.png" />
+    <None Remove="Resource\Common\Image\IconReset.png" />
+    <None Remove="Resource\Common\Image\IconShouder.png" />
+    <None Remove="Resource\Common\Image\IconThirdPerson.png" />
+    <None Remove="Resource\Common\Image\IconVisible.png" />
+    <None Remove="Resource\Common\Image\itemFrame.png" />
+    <None Remove="Resource\Common\Image\Leggings.png" />
+    <None Remove="Resource\Common\Image\Open.png" />
+    <None Remove="Resource\Common\Image\Open2.png" />
+    <None Remove="Resource\Common\Image\OpenTerminal.png" />
+    <None Remove="Resource\Common\Image\Paste.png" />
+    <None Remove="Resource\Common\Image\Revoke.png" />
+    <None Remove="Resource\Common\Image\Save.png" />
+    <None Remove="Resource\Common\Image\SaveAs.png" />
+    <None Remove="Resource\Common\Image\SelectedTabItemLeft.png" />
+    <None Remove="Resource\Common\Image\SelectedTabItemRight.png" />
+    <None Remove="Resource\Common\Image\SelectedTabItemTop.png" />
+    <None Remove="Resource\Common\Image\Slot.png" />
+    <None Remove="Resource\Common\Image\SmithingTemplate.png" />
+    <None Remove="Resource\Common\Image\spyglass_scope.png" />
+    <None Remove="Resource\Common\Image\Submit.png" />
+    <None Remove="Resource\Common\Image\TabItemLeft.png" />
+    <None Remove="Resource\Common\Image\TabItemRight.png" />
+    <None Remove="Resource\Common\Image\TabItemTop.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonFalseBottomFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonFalseFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonFalseLeftFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonFalseRightFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonFalseTopFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonTrueBottomFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonTrueFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonTrueLeftFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonTrueRightFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonTrueTopFrame.png" />
+    <None Remove="Resource\Common\Image\TrimMaterial.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Model\CustomControls\" />
   </ItemGroup>
 </Project>

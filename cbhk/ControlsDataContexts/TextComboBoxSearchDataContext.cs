@@ -18,7 +18,7 @@ namespace cbhk.ControlsDataContexts
         public void ItemSearcher(object sender, KeyEventArgs e)
         {
             TextBox box = sender as TextBox;
-            if (box == null) return;
+            if (box is null) return;
             if (box.Text.Trim().Length == 0)
             {
                 pop.IsOpen = false;
@@ -102,7 +102,7 @@ namespace cbhk.ControlsDataContexts
         private void Listbox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             ListBox box = sender as ListBox;
-            if (box.SelectedItem == null) return;
+            if (box.SelectedItem is null) return;
             string selected_item = box.SelectedItem.ToString();
             current_box.SelectedItem = selected_item;
             pop.IsOpen = false;

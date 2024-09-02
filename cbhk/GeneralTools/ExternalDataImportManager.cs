@@ -6,8 +6,12 @@ using cbhk.Generators.ItemGenerator.Components;
 using cbhk.Generators.RecipeGenerator;
 using cbhk.Generators.RecipeGenerator.Components;
 using cbhk.Generators.SpawnerGenerator.Components;
-using cbhk.Generators.TagGenerator;
 using cbhk.Generators.VillagerGenerator;
+using cbhk.Model.Generator.Tag;
+using cbhk.View.Compoments.Spawner;
+using cbhk.ViewModel.Components.Recipe;
+using cbhk.ViewModel.Components.Villager;
+using cbhk.ViewModel.Generators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -30,7 +34,7 @@ namespace cbhk.GeneralTools
         private static DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
         private static DataTable ItemTable = null;
         private static DataTable EntityTable = null;
-        static ExternalDataImportManager()
+        public static void Init()
         {
             Task.Run(async () =>
             {
@@ -40,10 +44,8 @@ namespace cbhk.GeneralTools
         }
 
         #region 处理导入外部标签
-        public static void ImportTagDataHandler(string filePathOrData, ref ObservableCollection<TagItemTemplate> itemList,ref TagDataContext context, bool IsPath = true)
+        public static void ImportTagDataHandler(string filePathOrData, ref ObservableCollection<TagItemTemplate> itemList,ref TagViewModel context, bool IsPath = true)
         {
-
-            
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
             try
@@ -64,13 +66,13 @@ namespace cbhk.GeneralTools
                         {
                             switch (item.DataType)
                             {
-                                case "Item":
+                                case "ItemView":
                                     context.Items.Add(id.ToString());
                                     break;
-                                case "Block&Item":
+                                case "Block&ItemView":
                                     context.Blocks.Add(id.ToString());
                                     break;
-                                case "Entity":
+                                case "EntityView":
                                     context.Entities.Add(id.ToString());
                                     break;
                                 case "GameEvent":
@@ -92,10 +94,8 @@ namespace cbhk.GeneralTools
         #endregion
 
         #region 处理导入外部配方
-        public static void ImportRecipeDataHandler(string filePathOrData, ref RecipeDataContext recipeContext, bool IsPath = true)
+        public static void ImportRecipeDataHandler(string filePathOrData, ref RecipeViewModel recipeContext, bool IsPath = true)
         {
-
-            
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
             try
             {
@@ -107,9 +107,9 @@ namespace cbhk.GeneralTools
                         case "crafting_shaped":
                         case "crafting_shapeness":
                             {
-                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.CraftingTable;
-                                CraftingTable craftingTable = recipeContext.AddExternRecipe(type) as CraftingTable;
-                                craftingTableDataContext context = craftingTable.DataContext as craftingTableDataContext;
+                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.CraftingTable;
+                                CraftingTableView craftingTable = recipeContext.AddExternRecipe(type) as CraftingTableView;
+                                CraftingTableViewModel context = craftingTable.DataContext as CraftingTableViewModel;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
                             }
@@ -117,54 +117,54 @@ namespace cbhk.GeneralTools
                         case "smithing_transform":
                         case "smithing_trim":
                             {
-                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.SmithingTable;
-                                SmithingTable smithingTable = recipeContext.AddExternRecipe(type) as SmithingTable;
-                                smithingTableDataContext context = smithingTable.DataContext as smithingTableDataContext;
+                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.SmithingTable;
+                                SmithingTableView smithingTable = recipeContext.AddExternRecipe(type) as SmithingTableView;
+                                SmithingTableViewModel context = smithingTable.DataContext as SmithingTableViewModel;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
                             }
                             break;
                         case "blasting":
                             {
-                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.BlastFurnace;
-                                BlastFurnace blastFurnace = recipeContext.AddExternRecipe(type) as BlastFurnace;
-                                blastFurnaceDataContext context = blastFurnace.DataContext as blastFurnaceDataContext;
+                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.BlastFurnace;
+                                BlastFurnaceView blastFurnace = recipeContext.AddExternRecipe(type) as BlastFurnaceView;
+                                BlastFurnaceViewModel context = blastFurnace.DataContext as BlastFurnaceViewModel;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
                             }
                             break;
                         case "campfire_cooking":
                             {
-                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Campfire;
-                                Campfire campfire = recipeContext.AddExternRecipe(type) as Campfire;
-                                campfireDataContext context = campfire.DataContext as campfireDataContext;
+                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.Campfire;
+                                CampfireView campfire = recipeContext.AddExternRecipe(type) as CampfireView;
+                                CampfireViewModel context = campfire.DataContext as CampfireViewModel;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
                             }
                             break;
                         case "smelting":
                             {
-                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Furnace;
-                                Furnace furnace = recipeContext.AddExternRecipe(type) as Furnace;
-                                furnaceDataContext context = furnace.DataContext as furnaceDataContext;
+                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.Furnace;
+                                FurnaceView furnace = recipeContext.AddExternRecipe(type) as FurnaceView;
+                                FurnaceViewModel context = furnace.DataContext as FurnaceViewModel;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
                             }
                             break;
                         case "smoker":
                             {
-                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Smoker;
-                                Smoker smoker = recipeContext.AddExternRecipe(type) as Smoker;
-                                smokerDataContext context = smoker.DataContext as smokerDataContext;
+                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.Smoker;
+                                SmokerView smoker = recipeContext.AddExternRecipe(type) as SmokerView;
+                                SmokerViewModel context = smoker.DataContext as SmokerViewModel;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
                             }
                             break;
                         case "stonecutting":
                             {
-                                RecipeDataContext.RecipeType type = RecipeDataContext.RecipeType.Stonecutter;
-                                Stonecutter stonecutter = recipeContext.AddExternRecipe(type) as Stonecutter;
-                                stonecutterDataContext context = stonecutter.DataContext as stonecutterDataContext;
+                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.Stonecutter;
+                                StonecutterView stonecutter = recipeContext.AddExternRecipe(type) as StonecutterView;
+                                StonecutterViewModel context = stonecutter.DataContext as StonecutterViewModel;
                                 context.ImportMode = true;
                                 context.ExternalData = json;
                             }
@@ -238,15 +238,25 @@ namespace cbhk.GeneralTools
         /// <param name="itemPageList"></param>
         private static void AddSpawnerData(JObject nbtObj,string version, ObservableCollection<RichTabItems> itemPageList)
         {
-            SpawnerPage spawnerPage = new() { FontWeight = FontWeights.Normal };
+            SpawnerPageView spawnerPage = new() { FontWeight = FontWeights.Normal };
             RichTabItems richTabItems = new()
             {
                 Header = "刷怪笼",
                 IsContentSaved = true,
                 Content = spawnerPage,
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style
+                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
+                BorderThickness = new(4, 4, 4, 0),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                Foreground = new SolidColorBrush(Colors.White),
+                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
+                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
+                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
+                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
+                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
             };
-            SpawnerPageDataContext context = spawnerPage.DataContext as SpawnerPageDataContext;
+            SpawnerPageViewModel context = spawnerPage.DataContext as SpawnerPageViewModel;
             itemPageList.Add(richTabItems);
             context.SelectedVersion = version == "1.12.0" ? context.VersionSource[1] : context.VersionSource[0];
 
@@ -364,7 +374,7 @@ namespace cbhk.GeneralTools
                     JObject resultObj = JObject.Parse(result);
                     JToken idObj = resultObj.SelectToken("id");
                     idObj ??= resultObj.SelectToken("EntityTag.id");
-                    if (idObj == null)
+                    if (idObj is null)
                         resultObj.Add("id", "\"minecraft:" + entityID + "\"");
                     result = resultObj.ToString();
                 }
@@ -381,7 +391,7 @@ namespace cbhk.GeneralTools
         /// <summary>
         /// 导入村民数据
         /// </summary>
-        public static void ImportVillagerDataHandler(string filePathOrData,VillagerDataContext context, bool IsPath = true)
+        public static void ImportVillagerDataHandler(string filePathOrData,VillagerViewModel context, bool IsPath = true)
         {
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
@@ -415,7 +425,7 @@ namespace cbhk.GeneralTools
         /// </summary>
         /// <param name="nbtObj"></param>
         /// <param name="context"></param>
-        private static void AddVillagerData(JObject nbtObj,VillagerDataContext context)
+        private static void AddVillagerData(JObject nbtObj,VillagerViewModel context)
         {
             #region 处理交易数据
             if(nbtObj.SelectToken("Offers.Recipes") is JArray Recipes)
@@ -454,19 +464,19 @@ namespace cbhk.GeneralTools
                     {
                         ExistItem = true;
                         context.AddTransactionItem();
+                        TransactionItemsViewModel transactionItemsViewModel = context.transactionItems[^1].DataContext as TransactionItemsViewModel;
                         string iconPath = rootPath + buyID + ".png";
                         if (File.Exists(iconPath))
-                            context.transactionItems[^1].Buy.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                            transactionItemsViewModel.Buy.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
                         if (buyCountObj != null)
                         {
-                            context.transactionItems[^1].BuyCount = int.Parse(buyCountObj.ToString());
-                            context.transactionItems[^1].BuyCountDisplay.Text = "x" + int.Parse(buyCountObj.ToString());
+                            transactionItemsViewModel.BuyCountDisplayText = "x" + int.Parse(buyCountObj.ToString());
                         }
                         Uri iconUri = new(iconPath, UriKind.Absolute);
                         ItemStructure imageTag = new(iconUri, buyID, recipe.SelectToken("buy.tag") is JObject buyTagObj ? buyTagObj.ToString() : "");
-                        context.transactionItems[^1].Buy.Source = new BitmapImage(iconUri);
-                        context.transactionItems[^1].Buy.Tag = imageTag;
+                        transactionItemsViewModel.Buy.Source = new BitmapImage(iconUri);
+                        transactionItemsViewModel.Buy.Tag = imageTag;
                     }
                     #endregion
                     #region buyB
@@ -477,18 +487,18 @@ namespace cbhk.GeneralTools
                         if (buyBID.Length > 0)
                         {
                             string iconPath = rootPath + buyBID + ".png";
+                            TransactionItemsViewModel transactionItemsViewModel = context.transactionItems[^1].DataContext as TransactionItemsViewModel;
                             if (File.Exists(iconPath))
-                                context.transactionItems[^1].BuyB.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                                transactionItemsViewModel.BuyB.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
                             if (buyBCountObj != null)
                             {
-                                context.transactionItems[^1].BuyBCount = int.Parse(buyCountObj.ToString());
-                                context.transactionItems[^1].BuyBCountDisplay.Text = "x" + int.Parse(buyCountObj.ToString());
+                                transactionItemsViewModel.BuyBCountDisplayText = "x" + int.Parse(buyCountObj.ToString());
                             }
                             Uri iconUri = new(iconPath, UriKind.Absolute);
                             ItemStructure imageTag = new(iconUri, buyBID, recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : "");
-                            context.transactionItems[^1].BuyB.Source = new BitmapImage(iconUri);
-                            context.transactionItems[^1].BuyB.Tag = imageTag;
+                            transactionItemsViewModel.BuyB.Source = new BitmapImage(iconUri);
+                            transactionItemsViewModel.BuyB.Tag = imageTag;
                         }
                     }
                     #endregion
@@ -500,31 +510,32 @@ namespace cbhk.GeneralTools
                         if (sellID.Length > 0)
                         {
                             string iconPath = rootPath + sellID + ".png";
+                            TransactionItemsViewModel transactionItemsViewModel = context.transactionItems[^1].DataContext as TransactionItemsViewModel;
                             if (File.Exists(iconPath))
-                                context.transactionItems[^1].Sell.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                                transactionItemsViewModel.Sell.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
                             if (sellCountObj != null)
                             {
-                                context.transactionItems[^1].SellCount = int.Parse(sellCountObj.ToString());
-                                context.transactionItems[^1].SellCountDisplay.Text = "x" + int.Parse(sellCountObj.ToString());
+                                transactionItemsViewModel.SellCountDisplayText = "x" + int.Parse(sellCountObj.ToString());
                             }
                             Uri iconUri = new(iconPath, UriKind.Absolute);
                             ItemStructure imageTag = new(iconUri, sellID, recipe.SelectToken("sell.tag") is JObject sellTagObj ? sellTagObj.ToString() : "");
-                            context.transactionItems[^1].Sell.Source = new BitmapImage(iconUri);
-                            context.transactionItems[^1].Sell.Tag = imageTag;
+                            transactionItemsViewModel.Sell.Source = new BitmapImage(iconUri);
+                            transactionItemsViewModel.Sell.Tag = imageTag;
                         }
                     }
                     #endregion
                     #region other
                     if (ExistItem)
                     {
-                        context.transactionItems[^1].Demand = int.Parse(demand.ToString());
-                        context.transactionItems[^1].MaxUses = int.Parse(maxUses.ToString());
-                        context.transactionItems[^1].PriceMultiplier = int.Parse(priceMultiplier.ToString());
-                        context.transactionItems[^1].RewardExp = rewardExp.ToString() == "1" || rewardExp.ToString() == "true";
-                        context.transactionItems[^1].SpecialPrice = int.Parse(specialPrice.ToString());
-                        context.transactionItems[^1].Uses = int.Parse(uses.ToString());
-                        context.transactionItems[^1].Xp = int.Parse(xp.ToString());
+                        TransactionItemsViewModel transactionItemsViewModel = context.transactionItems[^1].DataContext as TransactionItemsViewModel;
+                        transactionItemsViewModel.Demand = int.Parse(demand.ToString());
+                        transactionItemsViewModel.MaxUses = int.Parse(maxUses.ToString());
+                        transactionItemsViewModel.PriceMultiplier = int.Parse(priceMultiplier.ToString());
+                        transactionItemsViewModel.RewardExp = rewardExp.ToString() == "1" || rewardExp.ToString() == "true";
+                        transactionItemsViewModel.SpecialPrice = int.Parse(specialPrice.ToString());
+                        transactionItemsViewModel.Uses = int.Parse(uses.ToString());
+                        transactionItemsViewModel.Xp = int.Parse(xp.ToString());
                     }
                     #endregion
                     #endregion
@@ -538,15 +549,14 @@ namespace cbhk.GeneralTools
                 foreach (JObject gossip in Gossips.Cast<JObject>())
                 {
                     context.AddGossipItem();
-                    JArray targetUID = gossip.SelectToken("Target") as JArray;
-                    JObject type = gossip.SelectToken("Type") as JObject;
                     JToken value = gossip.SelectToken("Value");
-                    if (targetUID != null)
-                        context.gossipItems[^1].Target.Text = targetUID[0].ToString() + "," + targetUID[1].ToString() + "," + targetUID[2].ToString() + "," + targetUID[3].ToString();
-                    if (type != null)
-                        context.gossipItems[^1].Type.SelectedValue = type.ToString();
+                    GossipsItemsViewModel gossipsItemsViewModel = context.gossipItems[^1].DataContext as GossipsItemsViewModel;
+                    if (gossip.SelectToken("Target") is JArray targetUID)
+                        gossipsItemsViewModel.TargetText = targetUID[0].ToString() + "," + targetUID[1].ToString() + "," + targetUID[2].ToString() + "," + targetUID[3].ToString();
+                    if (gossip.SelectToken("Type") is JObject type)
+                        gossipsItemsViewModel.SelectedTypeItemPath = type.ToString();
                     if (value != null)
-                        context.gossipItems[^1].Value.Value = int.Parse(value.ToString());
+                        gossipsItemsViewModel.GossipValue = int.Parse(value.ToString());
                 }
             }
             #endregion
@@ -678,12 +688,22 @@ namespace cbhk.GeneralTools
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 Header = "实体",
-                IsContentSaved = true
+                IsContentSaved = true,
+                BorderThickness = new(4, 4, 4, 0),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                Foreground = new SolidColorBrush(Colors.White),
+                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
+                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
+                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
+                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
+                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
             };
-            Generators.EntityGenerator.Components.EntityPages entityPages = new() { FontWeight = FontWeights.Normal };
+            Generators.EntityGenerator.Components.EntityPagesView entityPages = new() { FontWeight = FontWeights.Normal };
             if (externData != null)
             {
-                Generators.EntityGenerator.Components.EntityPagesDataContext context = entityPages.DataContext as Generators.EntityGenerator.Components.EntityPagesDataContext;
+                Generators.EntityGenerator.Components.EntityPagesViewModel context = entityPages.DataContext as Generators.EntityGenerator.Components.EntityPagesViewModel;
                 context.Give = mode != "Summon";
                 context.ImportMode = true;
                 if (filePath.Length > 0 && File.Exists(filePath))
@@ -714,7 +734,7 @@ namespace cbhk.GeneralTools
             if (Regex.IsMatch(data, @"^/?give (@[apesr])|(\w+) ([\w]+_)?"))
                 itemID = Regex.Match(data, @"(?<=/?give\s@[apesr]\s)(\w+)").ToString();
 
-            if (data == null) return result;
+            if (data is null) return result;
 
             #region 提取可用NBT数据和物品ID
             if (data.Contains('{') && data.Contains('}'))
@@ -729,7 +749,7 @@ namespace cbhk.GeneralTools
             {
                 #region 插入物品ID
                 JObject resultObj = JObject.Parse(result);
-                if (resultObj.SelectToken("Item") is not JObject)
+                if (resultObj.SelectToken("ItemView") is not JObject)
                 {
                     if(!data.StartsWith('{') && !data.EndsWith('}'))
                     {
@@ -739,7 +759,7 @@ namespace cbhk.GeneralTools
                     }
                 }
                 else
-                    if(resultObj.SelectToken("Item") is JObject itemObj)
+                    if(resultObj.SelectToken("ItemView") is JObject itemObj)
                     resultObj = JObject.Parse(itemObj.ToString());
                     result = Regex.Replace(resultObj.ToString(),@"\s+","");
                 #endregion
@@ -752,13 +772,12 @@ namespace cbhk.GeneralTools
         {
             string GeneratorMode = "";
             bool version1_12 = false;
-
             
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
             #region 提取可用NBT数据和实体ID
             string nbtData = "", itemID = "";
-            if(data.Contains("{") && data.Contains("}"))
+            if(data.Contains('{') && data.Contains('}'))
             nbtData = data[data.IndexOf('{')..(data.LastIndexOf('}') + 1)];
             //补齐缺失双引号对的key
             nbtData = Regex.Replace(nbtData, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
@@ -775,8 +794,8 @@ namespace cbhk.GeneralTools
                 if (Regex.IsMatch(data, @"^/?give (@[apesr])|(\w+) ([\w]+_)?"))
             {
                 GeneratorMode = "Give";
-                bool v1_13 = Regex.IsMatch(data, @"(?<=/?give\s@[apesr]\s)(\w+)");
-                itemID = Regex.Match(data, @"(?<=/?give\s@[apesr]\s)(\w+)").ToString();
+                bool v1_13 = Regex.IsMatch(data, @"(?<=/?give\s@[apesr]\s?)(\w+)");
+                itemID = Regex.Match(data, @"(?<=/?give\s@[apesr]\s?)(\w+)").ToString();
                 if (!v1_13)
                     version1_12 = true;
             }
@@ -789,7 +808,7 @@ namespace cbhk.GeneralTools
 
             try
             {
-                JToken itemTagID = JObject.Parse(nbtData).SelectToken("Item.id");
+                JToken itemTagID = JObject.Parse(nbtData).SelectToken("ItemView.id");
                 itemTagID ??= JObject.Parse(nbtData).SelectToken("id");
                 if (itemTagID != null && itemID.Length == 0)
                     itemID = itemTagID.ToString();
@@ -807,10 +826,10 @@ namespace cbhk.GeneralTools
             {
                 JObject nbtObj = JObject.Parse(nbtData);
                 //启用外部导入模式
-                DataRow result = ItemTable.Select("id='minecraft:"+itemID+"'").First();
-                if (result != null)
+                DataRow[] results = ItemTable.Select("id='"+itemID+"'");
+                if (results.Length > 0)
                 {
-                    itemID = result["id"].ToString();
+                    itemID = results[0]["id"].ToString();
                     //添加实体命令
                     if(!ReferenceMode)
                     AddItemCommand(nbtObj, itemID, version1_12, GeneratorMode, IsPath ? filePathOrData : "", ref itemPageList);
@@ -831,10 +850,20 @@ namespace cbhk.GeneralTools
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 Header = "物品",
-                IsContentSaved = true
+                IsContentSaved = true,
+                BorderThickness = new(4, 4, 4, 0),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                Foreground = new SolidColorBrush(Colors.White),
+                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
+                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
+                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
+                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
+                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
             };
-            ItemPages itemPages = new() { FontWeight = FontWeights.Normal };
-            ItemPageDataContext context = itemPages.DataContext as ItemPageDataContext;
+            ItemPagesView itemPages = new() { FontWeight = FontWeights.Normal };
+            ItemPageViewModel context = itemPages.DataContext as ItemPageViewModel;
             context.Summon = mode == "Summon";
             if (filePath.Length > 0 && File.Exists(filePath))
                 context.ExternFilePath = filePath;
@@ -845,15 +874,18 @@ namespace cbhk.GeneralTools
             }
             if (version1_12)
                 context.SelectedVersion.Text = "1.12-";
-            DataRow item = ItemTable.Select("id='minecraft:"+selectedItemID+"'").First();
-            context.SelectedItemId.ComboBoxItemId = item["id"].ToString();
+            context.SelectedItemId = new IconComboBoxItem() { ComboBoxItemId = selectedItemID };
 
             richTabItems.Content = itemPages;
             itemPageList.Add(richTabItems);
+            TabControl tabControl = richTabItems.FindParent<TabControl>();
             if (itemPageList.Count == 1)
             {
-                TabControl tabControl = richTabItems.FindParent<TabControl>();
                 tabControl.SelectedIndex = 0;
+            }
+            else
+            {
+                tabControl.SelectedIndex = tabControl.Items.Count - 1;
             }
         }
         #endregion
@@ -897,7 +929,7 @@ namespace cbhk.GeneralTools
 
             try
             {
-                JToken itemTagID = JObject.Parse(nbtData).SelectToken("Item.id");
+                JToken itemTagID = JObject.Parse(nbtData).SelectToken("ItemView.id");
             }
             catch
             {
@@ -927,10 +959,20 @@ namespace cbhk.GeneralTools
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 Header = "烟花",
-                IsContentSaved = true
+                IsContentSaved = true,
+                BorderThickness = new(4, 4, 4, 0),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                Foreground = new SolidColorBrush(Colors.White),
+                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
+                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
+                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
+                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
+                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
             };
-            FireworkRocketPages itemPages = new() { FontWeight = FontWeights.Normal };
-            FireworkRocketPagesDataContext context = itemPages.DataContext as FireworkRocketPagesDataContext;
+            FireworkRocketPagesView itemPages = new() { FontWeight = FontWeights.Normal };
+            FireworkRocketPagesViewModel context = itemPages.DataContext as FireworkRocketPagesViewModel;
             if (externData != null)
             {
                 context.Give = mode != "Summon";

@@ -8,7 +8,7 @@ namespace cbhk.ControlsDataContexts
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null) return null;
+            if (value is null) return null;
             bool success = float.TryParse(value.ToString(),out float result);
             if(success)
                 return result;

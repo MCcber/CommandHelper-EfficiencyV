@@ -1,15 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace cbhk.CustomControls.JsonTreeViewComponents
+﻿namespace cbhk.CustomControls.JsonTreeViewComponents
 {
     public class Enums
     {
+        public enum ModifyType
+        {
+            Remove,
+            Get
+        }
+
+        public enum ReplaceType
+        {
+            Direct,
+            Input,
+            String,
+            AddElement,
+            RemoveElement,
+            AddArrayElement,
+            RemoveArrayElement,
+            Compound
+        }
+
         public enum DataTypes
         {
+            Input,
+            Bool,
             String,
             BlockID,
             ItemID,
@@ -18,13 +32,38 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             Enum,
             EntityID,
             Byte,
+            Decimal,
             Short,
             Int,
             Float,
             Double,
             Long,
             Compound,
-            Array
+            CustomCompound,
+            OptionalCompound,
+            NullableCompound,
+            EnumCompound,
+            MultiType,
+            ArrayElement,
+            Array,
+            InnerArray,
+            ValueProvider
+        }
+
+        public enum ValueProviderTypes
+        {
+            IntProvider,
+            BlockState,
+            FloatProvider,
+            HeightProvider,
+            VerticalAnchor,
+            ParameterPoint,
+            PositionRuleTest,
+            PositionSource,
+            Processor,
+            RuleTest,
+            SurfaceRule,
+            SurfaceRuleCondition
         }
 
         public enum IntProviderStructures

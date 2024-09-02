@@ -24,7 +24,7 @@ namespace cbhk.GeneralTools.MessageTip
 
         public void PushMessage(string message, MessageBoxImage type = MessageBoxImage.Information)
         {
-            if (listBox == null)
+            if (listBox is null)
             {
                 listBox = new ListBox
                 {
@@ -69,7 +69,7 @@ namespace cbhk.GeneralTools.MessageTip
             get => _child;
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     RemoveVisualChild(_child);
                     _child = value;

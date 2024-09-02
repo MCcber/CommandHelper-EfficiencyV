@@ -1,17 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using cbhk.GeneralTools;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace cbhk.CustomControls.AnimationComponents
 {
@@ -20,9 +10,22 @@ namespace cbhk.CustomControls.AnimationComponents
     /// </summary>
     public partial class AnimationUnitTimePoint : UserControl
     {
+        public Point Position { get; set; }
         public AnimationUnitTimePoint()
         {
             InitializeComponent();
+            Loaded += AnimationUnitTimePoint_Loaded;
+        }
+
+        private void AnimationUnitTimePoint_Loaded(object sender, RoutedEventArgs e)
+        {
+            AnimationTimeScale animationTimeScale = this.FindParent<AnimationTimeScale>();
+            if(animationTimeScale is not null)
+            {
+                GeneralTransform generalTransform = TransformToAncestor(animationTimeScale);
+                if (generalTransform is not null)
+                    Position = generalTransform.Transform(new(0, 0));
+            }
         }
     }
 }

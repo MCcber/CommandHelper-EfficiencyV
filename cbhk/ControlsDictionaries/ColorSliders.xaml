@@ -19,8 +19,8 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <ImageBrush x:Key="SliderBackground" ImageSource="/cbhk;component/resources/common/images/SliderBar.png" />
-    <ImageBrush x:Key="SliderButton" ImageSource="/cbhk;component/resources/common/images/SliderButton.png" />
+    <ImageBrush x:Key="SliderBackground" ImageSource="/cbhk;component/Resource/Common/Image/SliderBar.png" />
+    <ImageBrush x:Key="SliderButton" ImageSource="/cbhk;component/Resource/Common/Image/SliderButton.png" />
     <SolidColorBrush x:Key="SliderThumb.Static.Background" Color="Black" />
     <SolidColorBrush x:Key="SliderThumb.Static.Border" Color="#FFACACAC" />
     <SolidColorBrush x:Key="SliderThumb.Static.Foreground" Color="#FFE5E5E5" />
