@@ -288,7 +288,8 @@ namespace cbhk.Generators.EntityGenerator.Components
             set
             {
                 SetProperty(ref selectedVersion, value);
-                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
+                if (SelectedVersion is not null)
+                    CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
             }
         }
 

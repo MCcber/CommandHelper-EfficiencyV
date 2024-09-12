@@ -39,7 +39,7 @@
             <Image Source="pack://application:,,,/cbhk;component/Resource/CBHK/Image/CommandClasses/basic.png" Stretch="Uniform">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="MouseLeftButtonUp">
-                        <behaviors:CallMethodAction MethodName="OpenBasicClasses" />
+                        <behaviors:CallMethodAction MethodName="OpenBasicClasses" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
@@ -61,7 +61,7 @@
             <Image Source="pack://application:,,,/cbhk;component/Resource/CBHK/Image/CommandClasses/advance.png" Stretch="Uniform">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="MouseLeftButtonUp">
-                        <behaviors:CallMethodAction MethodName="OpenAdvanceClasses" />
+                        <behaviors:CallMethodAction MethodName="OpenAdvanceClasses" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
@@ -83,7 +83,7 @@
             <Image Source="pack://application:,,,/cbhk;component/Resource/CBHK/Image/CommandClasses/original_edition_mod.png" Stretch="Uniform">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="MouseLeftButtonUp">
-                        <behaviors:CallMethodAction MethodName="OpenOriginalEditionModClasses" />
+                        <behaviors:CallMethodAction MethodName="OpenOriginalEditionModClasses" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>

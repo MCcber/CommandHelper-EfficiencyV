@@ -16,6 +16,9 @@ using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using cbhk.View.Common;
 using cbhk.ViewModel.Common;
+using HtmlAgilityPack;
+using System.Collections.ObjectModel;
+using cbhk.CustomControls.JsonTreeViewComponents;
 
 namespace cbhk.ViewModel
 {
@@ -35,6 +38,7 @@ namespace cbhk.ViewModel
         private Grid UserGrid = null;
         private IProgress<DataTable> SetGeneratorButtonHandler = null;
         DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
+        private string AdvancementWikiFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\1.20.4.wiki";
         #endregion
 
         #region Property
@@ -56,6 +60,8 @@ namespace cbhk.ViewModel
         public BitmapImage _userBackground = null;
         private IContainerProvider _container;
 
+        [ObservableProperty]
+        public ObservableCollection<JsonTreeViewItem> _advancementTreeViewItemList = [];
         #endregion
 
         public MainViewModel(IContainerProvider container)
@@ -119,8 +125,35 @@ namespace cbhk.ViewModel
                 }
             });
 
+            await AnalyzeHTMLData();
             await ReadDataSource();
             await Task.Run(InitUIData).ContinueWith(StopSkeletonScreen);
+        }
+
+        private async Task AnalyzeHTMLData()
+        {
+            await Task.Run(() =>
+            {
+                HtmlDocument doc = new()
+                {
+                    OptionFixNestedTags = true,
+                    OptionAutoCloseOnEnd = true
+                };
+                string wikiData = File.ReadAllText(AdvancementWikiFilePath);
+                doc.LoadHtml(wikiData);
+                HtmlNodeCollection divNodes = doc.DocumentNode.SelectNodes("//div");
+
+                if (divNodes is not null)
+                {
+                    List<JsonTreeViewItem> result = GetItemList([], divNodes, null);
+                    AdvancementTreeViewItemList = new(result);
+                }
+            });
+        }
+
+        private List<JsonTreeViewItem> GetItemList(List<JsonTreeViewItem> result, HtmlNodeCollection divNodes, object value2)
+        {
+            return result;
         }
 
         public void GeneratorTable_Loaded(object sender, RoutedEventArgs e) => GeneratorTable = sender as Grid;
@@ -221,14 +254,14 @@ namespace cbhk.ViewModel
             {
                 SkeletonGrid.Visibility = Visibility.Collapsed;
                 GeneratorTable.Visibility = Visibility.Visible;
+                if (MainWindowProperties.ShowNotice)
+                {
+                    NoticeToUsersView noticeToUsers = _container.Resolve<NoticeToUsersView>();
+                    NoticeToUsersViewModel notichViewModel = noticeToUsers.DataContext as NoticeToUsersViewModel;
+                    if (noticeToUsers.ShowDialog().Value)
+                        MainWindowProperties.ShowNotice = !notichViewModel.DonotShowNextTime;
+                }
             });
-            if (MainWindowProperties.ShowNotice)
-            {
-                NoticeToUsersView noticeToUsers = _container.Resolve<NoticeToUsersView>();
-                NoticeToUsersViewModel notichViewModel = noticeToUsers.DataContext as NoticeToUsersViewModel;
-                if (noticeToUsers.ShowDialog().Value)
-                    MainWindowProperties.ShowNotice = !notichViewModel.DonotShowNextTime;
-            }
         }
 
         /// <summary>
@@ -239,19 +272,23 @@ namespace cbhk.ViewModel
             if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
             {
                 DataTable dataTable = await dataCommunicator.GetData("SELECT * FROM EnvironmentConfigs");
-                MainViewVisibility = dataTable.Rows[0]["Visibility"].ToString() switch
+                if(dataTable.Rows.Count > 0)
                 {
-                    "KeepState" => MainWindowProperties.Visibility.KeepState,
-                    "MinState" => MainWindowProperties.Visibility.MinState,
-                    "Close" => MainWindowProperties.Visibility.Close,
-                    _ => throw new NotImplementedException()
-                };
-                if (dataTable.Rows[0]["ShowNotice"] is decimal showNotice)
-                    MainWindowProperties.ShowNotice = showNotice == 1;
-                if (dataTable.Rows[0]["CloseToTray"] is decimal closeToTray)
-                    MainWindowProperties.CloseToTray = closeToTray == 1;
-                if (dataTable.Rows[0]["LinkAnimationDelay"] is decimal linkAnimationDelay)
-                    MainWindowProperties.LinkAnimationDelay = (int)linkAnimationDelay;
+                    if (dataTable.Rows[0]["Visibility"] is string Visibility)
+                    {
+                        MainViewVisibility = Visibility switch
+                        {
+                            "KeepState" => MainWindowProperties.Visibility.KeepState,
+                            "MinState" => MainWindowProperties.Visibility.MinState,
+                            "Close" => MainWindowProperties.Visibility.Close,
+                            _ => throw new NotImplementedException()
+                        };
+                    }
+                    if (dataTable.Rows[0]["ShowNotice"] is decimal showNotice)
+                        MainWindowProperties.ShowNotice = showNotice == 1;
+                    if (dataTable.Rows[0]["CloseToTray"] is decimal closeToTray)
+                        MainWindowProperties.CloseToTray = closeToTray == 1;
+                }
             }
         }
 

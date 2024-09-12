@@ -11,7 +11,6 @@ using cbhk.Model;
 using cbhk.View;
 using cbhk.View.Generators;
 using cbhk.ViewModel;
-using cbhk.ViewModel.Generators.Datapack;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
@@ -42,7 +41,7 @@ namespace cbhk.GeneralTools
                 MainWindowProperties.Visibility.MinState => WindowState.Minimized,
                 MainWindowProperties.Visibility.KeepState => WindowState.Normal,
                 MainWindowProperties.Visibility.Close => WindowState.Minimized,
-                _ => throw new System.NotImplementedException()
+                _ => WindowState.Normal
             };
         }
 

@@ -7,11 +7,6 @@
         /// </summary>
         public static bool CloseToTray { get; set; } = false;
 
-        /// <summary>
-        /// 轮播图播放延迟
-        /// </summary>
-        public static int LinkAnimationDelay { get; set; } = 3;
-
         public static bool ShowNotice { get; set; } = true;
 
         /// <summary>
