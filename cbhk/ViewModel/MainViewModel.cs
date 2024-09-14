@@ -16,9 +16,6 @@ using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using cbhk.View.Common;
 using cbhk.ViewModel.Common;
-using HtmlAgilityPack;
-using System.Collections.ObjectModel;
-using cbhk.CustomControls.JsonTreeViewComponents;
 
 namespace cbhk.ViewModel
 {
@@ -38,7 +35,6 @@ namespace cbhk.ViewModel
         private Grid UserGrid = null;
         private IProgress<DataTable> SetGeneratorButtonHandler = null;
         DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-        private string AdvancementWikiFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\1.20.4.wiki";
         #endregion
 
         #region Property
@@ -59,9 +55,6 @@ namespace cbhk.ViewModel
         [ObservableProperty]
         public BitmapImage _userBackground = null;
         private IContainerProvider _container;
-
-        [ObservableProperty]
-        public ObservableCollection<JsonTreeViewItem> _advancementTreeViewItemList = [];
         #endregion
 
         public MainViewModel(IContainerProvider container)
@@ -128,32 +121,6 @@ namespace cbhk.ViewModel
             await AnalyzeHTMLData();
             await ReadDataSource();
             await Task.Run(InitUIData).ContinueWith(StopSkeletonScreen);
-        }
-
-        private async Task AnalyzeHTMLData()
-        {
-            await Task.Run(() =>
-            {
-                HtmlDocument doc = new()
-                {
-                    OptionFixNestedTags = true,
-                    OptionAutoCloseOnEnd = true
-                };
-                string wikiData = File.ReadAllText(AdvancementWikiFilePath);
-                doc.LoadHtml(wikiData);
-                HtmlNodeCollection divNodes = doc.DocumentNode.SelectNodes("//div");
-
-                if (divNodes is not null)
-                {
-                    List<JsonTreeViewItem> result = GetItemList([], divNodes, null);
-                    AdvancementTreeViewItemList = new(result);
-                }
-            });
-        }
-
-        private List<JsonTreeViewItem> GetItemList(List<JsonTreeViewItem> result, HtmlNodeCollection divNodes, object value2)
-        {
-            return result;
         }
 
         public void GeneratorTable_Loaded(object sender, RoutedEventArgs e) => GeneratorTable = sender as Grid;
