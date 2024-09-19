@@ -118,7 +118,6 @@ namespace cbhk.ViewModel
                 }
             });
 
-            await AnalyzeHTMLData();
             await ReadDataSource();
             await Task.Run(InitUIData).ContinueWith(StopSkeletonScreen);
         }

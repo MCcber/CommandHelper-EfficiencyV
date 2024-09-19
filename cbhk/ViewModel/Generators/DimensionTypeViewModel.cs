@@ -24,7 +24,6 @@ using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using cbhk.Model.Common;
 using System.Linq;
-using static cbhk.Model.MainWindowProperties;
 
 namespace cbhk.Generators.DimensionTypeGenerator
 {
@@ -40,21 +39,27 @@ namespace cbhk.Generators.DimensionTypeGenerator
         private IContainerProvider _container;
         private string AdvancementWikiFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\1.20.4.wiki";
         JsonTreeViewItemExtension jsonTool = new();
+        private Dictionary<int,string> WikiDesignateLine = [];
+        private string[] ProgressClassList = ["treeview"];
+        private Dictionary<string, List<JsonTreeViewItem>> CriteriaDataList = [];
 
-        [GeneratedRegex(@"^\:?\*+\{\{nbt\|(?<1>[a-z]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"^\:?\s+?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetNodeTypeAndKey();
 
         [GeneratedRegex(@"^\:?\*+(?<branch>\{\{nbt\|[a-z]+\}\})+(\{\{nbt\|(?<1>[a-z]+)\|(?<2>[a-z_]+)\}\})", RegexOptions.IgnoreCase)]
         private static partial Regex GetMultiTypeAndKeyOfNode();
 
-        [GeneratedRegex(@"（可选，默认为\{\{cd\|[a-z]+\}\}）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetDefaultStringValue();
+        [GeneratedRegex(@"（可选，默认为\{\{cd\|[a-z_]+\}\}）", RegexOptions.IgnoreCase)]
+        private static partial Regex GetOptionalDefaultStringValue();
 
         [GeneratedRegex(@"（可选，默认为\d+）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetDefaultNumberValue();
+        private static partial Regex GetOptionalDefaultNumberValue();
 
         [GeneratedRegex(@"（可选，默认为\{\{cd\|(true|false)\}\}）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetDefaultBoolValue();
+        private static partial Regex GetOptionalDefaultBoolValue();
+
+        [GeneratedRegex(@"（可选）", RegexOptions.IgnoreCase)]
+        private static partial Regex GetOptionalKey();
 
         [GeneratedRegex(@"\[\[方块标签\]\]", RegexOptions.IgnoreCase)]
         private static partial Regex GetBlcokTagValue();
@@ -64,6 +69,9 @@ namespace cbhk.Generators.DimensionTypeGenerator
 
         [GeneratedRegex(@"\{\{cd\|[a-z:_]+\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetEnumValue();
+
+        [GeneratedRegex(@"====\s(minecraft\:[a-z_]+)\s====", RegexOptions.IgnoreCase)]
+        private static partial Regex GetBoldKeywords();
         #endregion
 
         #region Property
@@ -82,9 +90,14 @@ namespace cbhk.Generators.DimensionTypeGenerator
             home = mainView;
         }
 
+        public async void Home_Loaded(object sender, RoutedEventArgs e)
+        {
+            await AnalyzeHTMLData();
+        }
+
         private async Task AnalyzeHTMLData()
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 HtmlDocument doc = new()
                 {
@@ -92,27 +105,103 @@ namespace cbhk.Generators.DimensionTypeGenerator
                     OptionAutoCloseOnEnd = true
                 };
                 string wikiData = File.ReadAllText(AdvancementWikiFilePath);
+                string[] wikiLines = await File.ReadAllLinesAsync(AdvancementWikiFilePath);
                 doc.LoadHtml(wikiData);
-                HtmlNodeCollection divNodes = doc.DocumentNode.SelectNodes("//div");
+                List<HtmlNode> treeviewDivs = [.. doc.DocumentNode.SelectNodes("//div[@class='treeview']")];
 
-                if (divNodes is not null)
+                MatchCollection keywordList = GetBoldKeywords().Matches(wikiData);
+
+                for (int i = 0; i < wikiLines.Length; i++)
+                {
+                    Match content = GetBoldKeywords().Match(wikiLines[i]);
+                    if (content is not null && content.Success)
+                    {
+                        WikiDesignateLine.Add(i + 1, content.Groups[1].Value);
+                    }
+                }
+
+                if (treeviewDivs is not null)
                 {
                     JsonTreeViewDataStructure result = new();
-                    //遍历找到的div标签集合
-                    foreach (HtmlNode divNode in divNodes)
+
+                    #region 由于第一个HtmlNode实例的InnerHtml属性总会包含所有标签的内容，所以这里需要进行特殊处理
+
+                    #region 直接覆盖InnerHtml属性会导致内容错误，所以这里直接用链表来提取正确的结构数据
+                    List<string> firstNodeContent = [];
+                    for (int i = 0; i < treeviewDivs[1].Line - 2; i++)
                     {
-                        // 可以在这里对每个 div 标签进行操作，比如获取属性、子节点等
-                        string[] nodeList = divNode.InnerHtml.Split("\r\n");
-                        JsonTreeViewDataStructure data = GetAdvancementItemList(new(), nodeList, 2, 1);
-                        result.Result.AddRange(data.Result);
-                        result.ResultString.Append(data.ResultString);
-                        AdvancementTreeViewItemList = result.Result;
+                        if (wikiLines[i].TrimStart().StartsWith('<') || wikiLines[i].TrimStart().StartsWith('='))
+                        {
+                            continue;
+                        }
+                        firstNodeContent.Add(wikiLines[i]);
                     }
+                    #endregion
+
+                    #region 把VSC排版后的格式重新整理(有些应该归为一行的被排版分割为了多行)
+                    for (int j = 0; j < firstNodeContent.Count; j++)
+                    {
+                        if (firstNodeContent[j].Replace("*", "").Trim().Length == 0)
+                        {
+                            int nextStarLine = j + 1;
+                            while (nextStarLine < firstNodeContent.Count && !firstNodeContent[nextStarLine].TrimStart().StartsWith('*'))
+                            {
+                                firstNodeContent[j] += firstNodeContent[j + 1];
+                                firstNodeContent.RemoveAt(j + 1);
+                            }
+                        }
+                    }
+                    #endregion
+
+                    JsonTreeViewDataStructure firstResultData = GetAdvancementItemList(new(), firstNodeContent, 2, 1, null);
+                    result.Result.AddRange(firstResultData.Result);
+                    result.ResultString.Append(firstResultData.ResultString);
+                    #endregion
+
+                    #region 从第二个节点开始循环处理
+                    for (int i = 1; i < treeviewDivs.Count; i++)
+                    {
+                        IEnumerable<string> classList = treeviewDivs[i].GetClasses();
+                        if (ProgressClassList.Intersect(classList).Any())
+                        {
+                            int line = treeviewDivs[i].Line;
+                            // 可以在这里对每个 div 标签进行操作，比如获取属性、子节点等
+                            List<string> nodeList = [.. treeviewDivs[i].InnerHtml.Split("\r\n")];
+
+                            #region 把VSC排版后的格式重新整理(有些应该归为一行的被排版分割为了多行)
+                            for (int j = 0; j < nodeList.Count; j++)
+                            {
+                                if (nodeList[j].Replace("*", "").Trim().Length == 0)
+                                {
+                                    int nextStarLine = j + 1;
+                                    while (nextStarLine < nodeList.Count && !nodeList[nextStarLine].TrimStart().StartsWith('*'))
+                                    {
+                                        nodeList[j] += nodeList[j + 1];
+                                        nodeList.RemoveAt(j + 1);
+                                    }
+                                }
+                            }
+                            #endregion
+
+                            JsonTreeViewDataStructure data = GetAdvancementItemList(new(), nodeList, 2, 1, null);
+
+                            string currentKey = GetDesignateKeywordByLineNumber(line - 2);
+                            if (currentKey.Length > 0)
+                            {
+                                CriteriaDataList.Add(currentKey, [.. data.Result]);
+                            }
+                            result.Result.AddRange(data.Result);
+                            result.ResultString.Append(data.ResultString);
+                        }
+                    }
+                    #endregion
+
+                    AdvancementTreeViewItemList = result.Result;
                 }
             });
         }
 
-        private JsonTreeViewDataStructure GetAdvancementItemList(JsonTreeViewDataStructure result, string[] array, int lineNumber, int layerCount, CompoundJsonTreeViewItem ParentItem = null, JsonTreeViewItem Last = null, bool isProcessingTemplate = false, int LastStarCount = 1)
+        private JsonTreeViewDataStructure GetAdvancementItemList(JsonTreeViewDataStructure result, List<string> nodeList, int lineNumber, int layerCount,CompoundJsonTreeViewItem Parent, JsonTreeViewItem Last = null, bool isProcessingTemplate = false, int LastStarCount = 1)
         {
             #region 处理起始字符串
             if (result.ResultString.Length == 0)
@@ -120,7 +209,7 @@ namespace cbhk.Generators.DimensionTypeGenerator
             #endregion
 
             // 遍历找到的 div 标签集合
-            foreach (var node in array)
+            foreach (var node in nodeList)
             {
                 #region 判断是否跳过本次处理
                 if (node.Trim().Length == 0)
@@ -141,21 +230,20 @@ namespace cbhk.Generators.DimensionTypeGenerator
                 {
                     StartLineNumber = lineNumber
                 };
-                JsonTreeViewItem lastItem = null, nextItem = null;
                 #endregion
 
                 #region 计算当前行星号数量
-                MatchCollection starCollection = Regex.Matches(node, @"^\*+");
-                int count = starCollection.Count;
+                Match starMatch = Regex.Match(node, @"^\s+?(\*+)");
+                int starCount = starMatch.Value.Trim().Length;
                 #endregion
 
                 #region 处理值类型
                 MatchCollection nodeTypeAndKeyInfoGroupList = GetNodeTypeAndKey().Matches(node);
                 MatchCollection multiNodeTypeAndKeyInfoGroupList = GetMultiTypeAndKeyOfNode().Matches(node);
 
-                if (multiNodeTypeAndKeyInfoGroupList.Count > 0)
+                if (multiNodeTypeAndKeyInfoGroupList.Count > 0 || nodeTypeAndKeyInfoGroupList.Count > 0)
                 {
-                    foreach (var dataType in multiNodeTypeAndKeyInfoGroupList.Cast<Match>())
+                    foreach (var dataType in nodeTypeAndKeyInfoGroupList.Cast<Match>())
                     {
                         #region 确定当前的节点数据类型
                         string key = dataType.Groups[2].Value;
@@ -179,21 +267,24 @@ namespace cbhk.Generators.DimensionTypeGenerator
                                 {
                                     IsSimpleItem = true;
                                     item.DataType = DataTypes.Input;
-                                    if (dataType.Value == "TAG_String")
+                                    if (dataType.Value == "string")
                                         item.DataType = DataTypes.String;
                                     break;
                                 }
                         }
+
                         if (!IsSimpleItem)
                         {
                             if (!isProcessingTemplate)
                             {
-                                lastItem = item.Last;
-                                nextItem = item.Next;
+                                Last = item.Last;
+                                Last.Next = item.Next;
                             }
                             item = new CompoundJsonTreeViewItem(this, jsonTool);
                             if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
                             {
+                                string compoundKey = compoundJsonTreeViewItem.Key;
+                                DataTypes compoundType = compoundJsonTreeViewItem.DataType;
                                 compoundJsonTreeViewItem.ValueTypeList.Add(new CustomControls.TextComboBoxItem()
                                 {
                                     Text = dataType.Value
@@ -214,7 +305,7 @@ namespace cbhk.Generators.DimensionTypeGenerator
                                             item.Key = key;
                                             item.BoolButtonVisibility = Visibility.Visible;
 
-                                            Match boolMatch = GetDefaultBoolValue().Match(node);
+                                            Match boolMatch = GetOptionalDefaultBoolValue().Match(node);
                                             if (boolMatch is not null)
                                             {
                                                 result.ResultString.Append(new string(' ', layerCount * 2));
@@ -242,7 +333,7 @@ namespace cbhk.Generators.DimensionTypeGenerator
                                             item.Key = key;
                                             item.InputBoxVisibility = Visibility.Visible;
 
-                                            Match stringMatch = GetDefaultStringValue().Match(node);
+                                            Match stringMatch = GetOptionalDefaultStringValue().Match(node);
                                             if (stringMatch is not null)
                                             {
                                                 result.ResultString.Append(new string(' ', layerCount * 2));
@@ -270,7 +361,7 @@ namespace cbhk.Generators.DimensionTypeGenerator
                                 case DataTypes.Decimal:
                                 case DataTypes.Long:
                                     {
-                                        Match numberMatch = GetDefaultNumberValue().Match(node);
+                                        Match numberMatch = GetOptionalDefaultNumberValue().Match(node);
                                         if (numberMatch is not null)
                                         {
                                             item.Key = key;
@@ -302,12 +393,11 @@ namespace cbhk.Generators.DimensionTypeGenerator
                         #region 处理复合类型
                         if (item is CompoundJsonTreeViewItem SetTypeCompoundItem)
                         {
-
                             #region 处理枚举型数据
                             MatchCollection EnumCollection = GetEnumValue().Matches(node);
-                            Match BlockTagCollection = GetBlcokTagValue().Match(node);
-                            Match EntityTagCollection = GetEntityTagValue().Match(node);
-                            Match DefaultValueMatch = GetDefaultBoolValue().Match(node);
+                            Match BlockTagMark = GetBlcokTagValue().Match(node);
+                            Match EntityTagMark = GetEntityTagValue().Match(node);
+                            Match DefaultValueMark = GetOptionalDefaultBoolValue().Match(node);
 
                             if (EnumCollection.Count > 0)
                             {
@@ -317,24 +407,24 @@ namespace cbhk.Generators.DimensionTypeGenerator
                                 }
                             }
                             else
-                            if (BlockTagCollection.Count > 0)
+                            if (BlockTagMark.Index > 0)
                             {
-                                foreach (string blockTagMatch in BlockTagList)
+                                foreach (string blockTagMatch in JsonToJsonTreeViewItemConverter.BlockTagList)
                                 {
-                                    SetTypeCompoundItem.EnumItemsSource.Add(new CustomControls.TextComboBoxItem() { Text = blockTagMatch.Value });
+                                    SetTypeCompoundItem.EnumItemsSource.Add(new CustomControls.TextComboBoxItem() { Text = blockTagMatch });
                                 }
                             }
                             else
-                            if (EntityTagCollection.Count > 0)
+                            if (EntityTagMark.Index > 0)
                             {
-                                foreach (string entityTagMatch in ItemTagList)
+                                foreach (string entityTagMatch in JsonToJsonTreeViewItemConverter.ItemTagList)
                                 {
-                                    SetTypeCompoundItem.EnumItemsSource.Add(new CustomControls.TextComboBoxItem() { Text = entityTagMatch.Value });
+                                    SetTypeCompoundItem.EnumItemsSource.Add(new CustomControls.TextComboBoxItem() { Text = entityTagMatch });
                                 }
                             }
 
                             #region 处理默认值
-                            if(EnumCollection.Count > 0 || BlockTagCollection.Count > 0 || EntityTagCollection.Count > 0)
+                            if(EnumCollection.Count > 0 || BlockTagMark.Index > 0 || EntityTagMark.Index > 0)
                             {
                                 #region 控制显示隐藏、Key和前导空格
                                 SetTypeCompoundItem.EnumBoxVisibility = Visibility.Visible;
@@ -346,35 +436,35 @@ namespace cbhk.Generators.DimensionTypeGenerator
                                 result.ResultString.Append("\"" + key.ToLower() + "\"");
                                 result.ResultString.Append(": \"" + SetTypeCompoundItem.EnumItemsSource[0].Text + "\"");
                                 SetTypeCompoundItem.SelectedEnumItem = SetTypeCompoundItem.EnumItemsSource[0];
-                                if (DefaultValueMatch is not null)
-                                {
-                                    result.ResultString.Append("\"" + key.ToLower() + "\"");
-                                    string defaultValue = DefaultValueMatch.Value;
+                                //if (DefaultValueMatch is not null)
+                                //{
+                                //    result.ResultString.Append("\"" + key.ToLower() + "\"");
+                                //    string defaultValue = DefaultValueMatch.Value;
 
-                                    if (bool.TryParse(defaultValue, out bool boolValue))
-                                    {
-                                        SetTypeCompoundItem.DataType = DataTypes.Bool;
-                                        SetTypeCompoundItem.Value = boolValue;
-                                        if (boolValue)
-                                            SetTypeCompoundItem.IsTrue = true;
-                                        else
-                                            SetTypeCompoundItem.IsFalse = true;
-                                        result.ResultString.Append(": " + boolValue.ToString().ToLower());
-                                    }
-                                    else
-                                        if (int.TryParse(defaultValue, out int intValue))
-                                    {
-                                        SetTypeCompoundItem.DataType = DataTypes.Int;
-                                        SetTypeCompoundItem.Value = intValue;
-                                        result.ResultString.Append(": " + intValue);
-                                    }
-                                    else
-                                    {
-                                        SetTypeCompoundItem.DataType = DataTypes.String;
-                                        SetTypeCompoundItem.Value = "\"" + defaultValue + "\"";
-                                        result.ResultString.Append(": \"" + defaultValue + "\"");
-                                    }
-                                }
+                                //    if (bool.TryParse(defaultValue, out bool boolValue))
+                                //    {
+                                //        SetTypeCompoundItem.DataType = DataTypes.Bool;
+                                //        SetTypeCompoundItem.Value = boolValue;
+                                //        if (boolValue)
+                                //            SetTypeCompoundItem.IsTrue = true;
+                                //        else
+                                //            SetTypeCompoundItem.IsFalse = true;
+                                //        result.ResultString.Append(": " + boolValue.ToString().ToLower());
+                                //    }
+                                //    else
+                                //        if (int.TryParse(defaultValue, out int intValue))
+                                //    {
+                                //        SetTypeCompoundItem.DataType = DataTypes.Int;
+                                //        SetTypeCompoundItem.Value = intValue;
+                                //        result.ResultString.Append(": " + intValue);
+                                //    }
+                                //    else
+                                //    {
+                                //        SetTypeCompoundItem.DataType = DataTypes.String;
+                                //        SetTypeCompoundItem.Value = "\"" + defaultValue + "\"";
+                                //        result.ResultString.Append(": \"" + defaultValue + "\"");
+                                //    }
+                                //}
                                 #endregion
                             }
                             #endregion
@@ -386,25 +476,27 @@ namespace cbhk.Generators.DimensionTypeGenerator
                             //case "nullableCompound":
                             //case "compound":
                             //case "customCompound":
-                            if (dataType == "TAG_NullableCompound" || dataType == "TAG_OptionalCompound")
+                            if(dataType.Value == "compound")
                             {
-                                SetTypeCompoundItem.DataType = dataType == "TAG_NullableCompound" ? DataTypes.NullableCompound : DataTypes.OptionalCompound;
-                            }
-                            else
-                        if (dataType == "TAG_CustomCompound")
-                            {
-                                SetTypeCompoundItem.DataType = DataTypes.CustomCompound;
-                            }
-                            else
-                            {
-                                SetTypeCompoundItem.DataType = DataTypes.Compound;
+                                if (dataType.Value == "nullableCompound" || dataType.Value == "optionalCompound")
+                                {
+                                    SetTypeCompoundItem.DataType = dataType.Value == "nullableCompound" ? DataTypes.NullableCompound : DataTypes.OptionalCompound;
+                                }
+                                else
+                                if (dataType.Value == "customCompound")
+                                {
+                                    SetTypeCompoundItem.DataType = DataTypes.CustomCompound;
+                                }
+                                else
+                                {
+                                    SetTypeCompoundItem.DataType = DataTypes.Compound;
+                                }
                             }
 
                             #region 计算当前数据类型、追加Key、前置追加空格
-                            string key = "";
                             SetTypeCompoundItem.DefaultValue = "";
-                            if (token["key"] is JToken keyToken)
-                                SetTypeCompoundItem.Key = key = keyToken.ToString();
+                            if (key is not null)
+                                SetTypeCompoundItem.Key = key;
                             if (SetTypeCompoundItem.DataType is not DataTypes.OptionalCompound)
                             {
                                 result.ResultString.Append(new string(' ', layerCount * 2));
@@ -421,22 +513,22 @@ namespace cbhk.Generators.DimensionTypeGenerator
                             #endregion
 
                             #region 处理数组与内联数据
-                            if (token["key"] is JToken keyToken)
+                            if (key is not null)
                             {
                                 SetTypeCompoundItem.AddElementButtonVisibility = Visibility.Visible;
                                 SetTypeCompoundItem.DataType = DataTypes.Array;
-                                if (dataType == "TAG_InnerArray")
+                                if (dataType.Value == "innerArray")
                                     SetTypeCompoundItem.DataType = DataTypes.InnerArray;
-                                SetTypeCompoundItem.Key = keyToken.ToString();
+                                SetTypeCompoundItem.Key = key;
                                 SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
                                 if (Last is CompoundJsonTreeViewItem lastCompletedCompoundItem && (lastCompletedCompoundItem.DataType is DataTypes.OptionalCompound || lastCompletedCompoundItem.DataType is DataTypes.NullableCompound || lastCompletedCompoundItem.DataType is DataTypes.Compound || lastCompletedCompoundItem.DataType is DataTypes.CustomCompound))
                                 {
                                     SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lastCompletedCompoundItem.EndLineNumber + 1;
                                 }
 
-                                result.ResultString.Append(new string(' ', layerCount * 2) + (dataType == "TAG_Array" ? "\"" + keyToken.ToString() + "\"" : ""));
+                                result.ResultString.Append(new string(' ', layerCount * 2) + (dataType.Value == "array" ? "\"" + key + "\"" : ""));
                             }
-                            result.ResultString.Append((dataType == "TAG_Array" ? ": " : "") + "[]");
+                            result.ResultString.Append((dataType.Value == "array" ? ": " : "") + "[]");
                             #endregion
 
                             #region 处理各种数值提供器或结构模板
@@ -446,32 +538,28 @@ namespace cbhk.Generators.DimensionTypeGenerator
                             //case "verticalAnchor":
                             //case "blockPredicate":
                             //case "blockStateProvider":
-                                if (token["key"] is JToken keyToken && token["dataTypeList"] is JArray dataTypeList)
+                            if (key is not null && dataType.Groups[2] is Group type && ValueProviderContextDictionary.TryGetValue(type.Value, out CompoundJsonTreeViewItem currentCompoundItem))
                             {
-                                string key = keyToken.ToString();
-                                if (plan.ValueProviderContextDictionary.TryGetValue(dataTypeList[0].ToString().Replace("TAG_", ""), out CompoundJsonTreeViewItem currentCompoundItem))
-                                {
-                                    SetTypeCompoundItem.SwitchChildren = currentCompoundItem.SwitchChildren;
-                                    SetTypeCompoundItem.SwitchKey = currentCompoundItem.SwitchKey;
-                                    SetTypeCompoundItem.CompoundHead = currentCompoundItem.CompoundHead;
-                                    SetTypeCompoundItem.DataType = DataTypes.ValueProvider;
-                                    SetTypeCompoundItem.Value = SetTypeCompoundItem.DefaultValue = "0";
-                                    SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
-                                    SetTypeCompoundItem.EnumBoxVisibility = SetTypeCompoundItem.InputBoxVisibility = Visibility.Visible;
-                                    SetTypeCompoundItem.EnumItemsSource = currentCompoundItem.EnumItemsSource;
-                                    SetTypeCompoundItem.SelectedEnumItem = currentCompoundItem.EnumItemsSource.FirstOrDefault();
-                                    SetTypeCompoundItem.Key = key;
-                                    SetTypeCompoundItem.CurrentValueType = SetTypeCompoundItem.ValueTypeList[0];
-                                    result.ResultString.Append(new string(' ', SetTypeCompoundItem.LayerCount * 2) + "\"" + SetTypeCompoundItem.Key + "\": " + SetTypeCompoundItem.Value);
-                                }
-                                else//表示当前正在初始化值提供器
-                                if (isProcessingTemplate)
-                                {
-                                    SetTypeCompoundItem.Key = key;
-                                    SetTypeCompoundItem.EnumBoxVisibility = Visibility.Visible;
-                                    SetTypeCompoundItem.ValueProviderType = (ValueProviderTypes)Enum.Parse(typeof(ValueProviderTypes), dataTypeList[0].ToString().Replace("TAG_", ""));
-                                    SetTypeCompoundItem.DataType = DataTypes.ValueProvider;
-                                }
+                                SetTypeCompoundItem.SwitchChildren = currentCompoundItem.SwitchChildren;
+                                SetTypeCompoundItem.SwitchKey = currentCompoundItem.SwitchKey;
+                                SetTypeCompoundItem.CompoundHead = currentCompoundItem.CompoundHead;
+                                SetTypeCompoundItem.DataType = DataTypes.ValueProvider;
+                                SetTypeCompoundItem.Value = SetTypeCompoundItem.DefaultValue = "0";
+                                SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
+                                SetTypeCompoundItem.EnumBoxVisibility = SetTypeCompoundItem.InputBoxVisibility = Visibility.Visible;
+                                SetTypeCompoundItem.EnumItemsSource = currentCompoundItem.EnumItemsSource;
+                                SetTypeCompoundItem.SelectedEnumItem = currentCompoundItem.EnumItemsSource.FirstOrDefault();
+                                SetTypeCompoundItem.Key = key;
+                                SetTypeCompoundItem.CurrentValueType = SetTypeCompoundItem.ValueTypeList[0];
+                                result.ResultString.Append(new string(' ', SetTypeCompoundItem.LayerCount * 2) + "\"" + SetTypeCompoundItem.Key + "\": " + SetTypeCompoundItem.Value);
+                            }
+                            else//表示当前正在初始化值提供器
+                            if (isProcessingTemplate && dataType.Groups[2] is Group initType)
+                            {
+                                SetTypeCompoundItem.Key = key;
+                                SetTypeCompoundItem.EnumBoxVisibility = Visibility.Visible;
+                                SetTypeCompoundItem.ValueProviderType = (ValueProviderTypes)Enum.Parse(typeof(ValueProviderTypes), initType.Value);
+                                SetTypeCompoundItem.DataType = DataTypes.ValueProvider;
                             }
                             #endregion
 
@@ -495,8 +583,6 @@ namespace cbhk.Generators.DimensionTypeGenerator
                                 optionalItem.EndLineNumber = lineNumber;
                             }
                         }
-                        if (token["defaultValue"] is JToken DefaultValue)
-                            item.DefaultValue = DefaultValue.ToString();
                         #endregion
 
                         item.Plan = this;
@@ -504,28 +590,41 @@ namespace cbhk.Generators.DimensionTypeGenerator
                 }
                 #endregion
 
-                if (count < LastStarCount)
+                if (starCount < LastStarCount)
                 {
 
                 }
                 else
-                    if (count == LastStarCount)
+                    if (starCount == LastStarCount)
                 {
 
                 }
                 else
-                if (ParentItem is not null)
+                if (Parent is not null)
                 {
-                    ParentItem.Children.Add(item);
+                    Parent.Children.Add(item);
                 }
                 else
                     result.Result.Add(item);
+                LastStarCount = starCount;
             }
 
             #region Json收尾后返回
             result.ResultString.Append("\r\n" + new string(' ', (layerCount - 1) * 2) + '}');
             return result;
             #endregion
+        }
+
+        /// <summary>
+        /// 获取指定行的关键字
+        /// </summary>
+        /// <param name="lineNumber"></param>
+        /// <returns></returns>
+        private string GetDesignateKeywordByLineNumber(int lineNumber)
+        {
+            if (WikiDesignateLine.TryGetValue(lineNumber, out string result))
+                return result;
+            return "";
         }
 
         /// <summary>
