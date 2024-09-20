@@ -42,11 +42,12 @@ namespace cbhk.Generators.DimensionTypeGenerator
         private Dictionary<int,string> WikiDesignateLine = [];
         private string[] ProgressClassList = ["treeview"];
         private Dictionary<string, List<JsonTreeViewItem>> CriteriaDataList = [];
+        private Dictionary<string, List<JsonTreeViewItem>> AdvancementReferenceItemList = [];
 
         [GeneratedRegex(@"^\:?\s+?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetNodeTypeAndKey();
 
-        [GeneratedRegex(@"^\:?\*+(?<branch>\{\{nbt\|[a-z]+\}\})+(\{\{nbt\|(?<1>[a-z]+)\|(?<2>[a-z_]+)\}\})", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"^\:?\s+?\*+\s+?(?<branch>\{\{nbt\|[a-z]+\}\})+(\{\{nbt\|(?<1>[a-z]+)\|(?<2>[a-z_]+)\}\})", RegexOptions.IgnoreCase)]
         private static partial Regex GetMultiTypeAndKeyOfNode();
 
         [GeneratedRegex(@"（可选，默认为\{\{cd\|[a-z_]+\}\}）", RegexOptions.IgnoreCase)]
@@ -283,8 +284,6 @@ namespace cbhk.Generators.DimensionTypeGenerator
                             item = new CompoundJsonTreeViewItem(this, jsonTool);
                             if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
                             {
-                                string compoundKey = compoundJsonTreeViewItem.Key;
-                                DataTypes compoundType = compoundJsonTreeViewItem.DataType;
                                 compoundJsonTreeViewItem.ValueTypeList.Add(new CustomControls.TextComboBoxItem()
                                 {
                                     Text = dataType.Value
