@@ -28,9 +28,6 @@
     </Window.Resources>
 
     <behaviors:Interaction.Triggers>
-        <behaviors:EventTrigger EventName="Loaded">
-            <behaviors:CallMethodAction MethodName="Home_Loaded" TargetObject="{Binding}" />
-        </behaviors:EventTrigger>
         <behaviors:EventTrigger EventName="Closing">
             <behaviors:CallMethodAction MethodName="CommonWindow_Closing" TargetObject="{Binding}" />
         </behaviors:EventTrigger>
