@@ -25,7 +25,7 @@ using System.Text.RegularExpressions;
 using cbhk.Model.Common;
 using System.Linq;
 
-namespace cbhk.Generators.DimensionTypeGenerator
+namespace cbhk.ViewModel.Generators
 {
     public partial class DimensionTypeViewModel : ObservableObject, ICustomWorldUnifiedPlan
     {

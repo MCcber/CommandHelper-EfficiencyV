@@ -3,6 +3,7 @@ using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.EntityGenerator;
 using cbhk.Generators.EntityGenerator.Components;
 using cbhk.View.Generators;
+using cbhk.ViewModel.Generators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;

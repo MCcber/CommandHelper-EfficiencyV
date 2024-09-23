@@ -2,6 +2,7 @@
 using cbhk.CustomControls;
 using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
+using cbhk.ViewModel.Generators;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

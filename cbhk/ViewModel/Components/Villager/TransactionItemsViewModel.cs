@@ -2,6 +2,7 @@
 using cbhk.GeneralTools.Displayer;
 using cbhk.Generators.VillagerGenerator;
 using cbhk.Generators.VillagerGenerator.Components;
+using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;

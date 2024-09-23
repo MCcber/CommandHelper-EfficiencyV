@@ -5,6 +5,7 @@ using cbhk.GeneralTools.MessageTip;
 using cbhk.View;
 using cbhk.View.Components.Entity;
 using cbhk.ViewModel;
+using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;

@@ -5,6 +5,7 @@ using cbhk.GeneralTools;
 using cbhk.Generators.ItemGenerator;
 using cbhk.Generators.ItemGenerator.Components;
 using cbhk.Generators.ItemGenerator.Components.SpecialNBT;
+using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;

@@ -19,6 +19,7 @@ using cbhk.GeneralTools;
 using CommunityToolkit.Mvvm.Input;
 using cbhk.Generators.RecipeGenerator.Components;
 using cbhk.Generators.RecipeGenerator;
+using cbhk.ViewModel.Generators;
 
 namespace cbhk.ViewModel.Components.Recipe
 {

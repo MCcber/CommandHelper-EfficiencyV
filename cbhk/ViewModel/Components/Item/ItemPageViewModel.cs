@@ -7,6 +7,7 @@ using cbhk.Model.Generator.Item;
 using cbhk.View;
 using cbhk.ViewModel;
 using cbhk.ViewModel.Components.Item;
+using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;

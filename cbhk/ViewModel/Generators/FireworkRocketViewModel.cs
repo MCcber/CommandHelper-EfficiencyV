@@ -1,10 +1,9 @@
 ﻿using cbhk.CustomControls;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
+using cbhk.Generators.FireworkRocketGenerator;
 using cbhk.Generators.FireworkRocketGenerator.Components;
 using cbhk.View;
-using cbhk.ViewModel;
-using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -22,7 +21,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
-namespace cbhk.Generators.FireworkRocketGenerator
+namespace cbhk.ViewModel.Generators
 {
     public partial class FireworkRocketViewModel : ObservableObject
     {

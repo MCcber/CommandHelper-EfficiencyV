@@ -2,6 +2,7 @@
 using cbhk.GeneralTools;
 using cbhk.Generators.ItemGenerator;
 using cbhk.Generators.ItemGenerator.Components;
+using cbhk.ViewModel.Generators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;

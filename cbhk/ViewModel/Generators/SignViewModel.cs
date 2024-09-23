@@ -16,7 +16,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.SignGenerator
+namespace cbhk.ViewModel.Generators
 {
     public partial class SignViewModel : ObservableObject
     {

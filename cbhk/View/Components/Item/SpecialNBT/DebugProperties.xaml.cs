@@ -1,6 +1,7 @@
 ﻿using cbhk.ControlsDataContexts;
 using cbhk.CustomControls;
 using cbhk.GeneralTools;
+using cbhk.ViewModel.Generators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.ObjectModel;

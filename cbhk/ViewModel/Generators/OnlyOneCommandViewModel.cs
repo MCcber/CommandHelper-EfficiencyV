@@ -19,8 +19,10 @@ using System.Collections.Generic;
 using System.Linq;
 using cbhk.ViewModel;
 using Prism.Ioc;
+using cbhk.View;
+using cbhk.View.Generators;
 
-namespace cbhk.View.Generators
+namespace cbhk.ViewModel.Generators
 {
     public partial class OnlyOneCommandViewModel : ObservableObject
     {

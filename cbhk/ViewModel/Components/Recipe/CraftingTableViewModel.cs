@@ -3,6 +3,7 @@ using cbhk.GeneralTools.Displayer;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.RecipeGenerator;
 using cbhk.Generators.RecipeGenerator.Components;
+using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;

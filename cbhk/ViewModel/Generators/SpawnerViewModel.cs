@@ -2,8 +2,8 @@
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.SpawnerGenerator.Components;
+using cbhk.View;
 using cbhk.View.Compoments.Spawner;
-using cbhk.ViewModel;
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
-namespace cbhk.View.Generators
+namespace cbhk.ViewModel.Generators
 {
     public partial class SpawnerViewModel: ObservableObject
     {

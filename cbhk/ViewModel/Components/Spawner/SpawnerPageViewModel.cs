@@ -5,6 +5,7 @@ using cbhk.View;
 using cbhk.View.Compoments.Spawner;
 using cbhk.View.Generators;
 using cbhk.ViewModel;
+using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -91,7 +92,7 @@ namespace cbhk.Generators.SpawnerGenerator.Components
         /// <param name="e"></param>
         public void SpawnerPage_Loaded(object sender,RoutedEventArgs e)
         {
-            SpawnerViewModel spawnerDataContext = Window.GetWindow(sender as View.Compoments.Spawner.SpawnerPageView).DataContext as SpawnerViewModel;
+            SpawnerViewModel spawnerDataContext = Window.GetWindow(sender as SpawnerPageView).DataContext as SpawnerViewModel;
             VersionSource = spawnerDataContext.VersionSource;
         }
 

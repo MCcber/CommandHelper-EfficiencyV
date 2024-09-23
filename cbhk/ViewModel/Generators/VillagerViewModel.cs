@@ -21,11 +21,10 @@ using cbhk.GeneralTools;
 using System.Data;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.View;
-using cbhk.ViewModel;
 using Prism.Ioc;
 using cbhk.ViewModel.Components.Villager;
 
-namespace cbhk.Generators.VillagerGenerator
+namespace cbhk.ViewModel.Generators
 {
     public partial class VillagerViewModel:ObservableObject
     {

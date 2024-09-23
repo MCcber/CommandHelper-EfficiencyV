@@ -4,6 +4,7 @@ using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.View;
 using cbhk.ViewModel;
+using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;

@@ -1,6 +1,7 @@
 ﻿using cbhk.CustomControls;
 using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
+using cbhk.ViewModel.Generators;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;

@@ -3,7 +3,6 @@ using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.EntityGenerator.Components;
 using cbhk.View;
-using cbhk.ViewModel;
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -23,7 +22,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace cbhk.Generators.EntityGenerator
+namespace cbhk.ViewModel.Generators
 {
     public partial class EntityViewModel : ObservableObject
     {

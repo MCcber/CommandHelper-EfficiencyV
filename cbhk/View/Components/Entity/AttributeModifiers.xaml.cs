@@ -1,4 +1,5 @@
 ﻿using cbhk.CustomControls.Interfaces;
+using cbhk.ViewModel.Generators;
 using System;
 using System.Threading.Tasks;
 using System.Windows;

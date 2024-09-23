@@ -2,8 +2,8 @@
 using cbhk.CustomControls.ColorPickerComponents;
 using cbhk.GeneralTools;
 using cbhk.GeneralTools.MessageTip;
+using cbhk.View;
 using cbhk.View.Compoments.WrittenBook;
-using cbhk.ViewModel;
 using cbhk.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -26,7 +26,7 @@ using System.Windows.Navigation;
 using EditPage = cbhk.View.Compoments.WrittenBook.EditPage;
 using Image = System.Windows.Controls.Image;
 
-namespace cbhk.View.Generators
+namespace cbhk.ViewModel.Generators
 {
     public partial class WrittenBookViewModel(IContainerProvider container,MainView mainView) : ObservableObject
     {
@@ -1115,7 +1115,7 @@ namespace cbhk.View.Generators
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SignatureAndClose() => Run();
+        private async Task SignatureAndClose() => await Run();
 
         /// <summary>
         /// 向左翻页

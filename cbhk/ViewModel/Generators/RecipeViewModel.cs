@@ -23,7 +23,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.RecipeGenerator
+namespace cbhk.ViewModel.Generators
 {
     public partial class RecipeViewModel : ObservableObject
     {

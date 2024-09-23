@@ -1,6 +1,7 @@
 ﻿using cbhk.CustomControls;
 using cbhk.Generators.VillagerGenerator;
 using cbhk.Generators.VillagerGenerator.Components;
+using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
