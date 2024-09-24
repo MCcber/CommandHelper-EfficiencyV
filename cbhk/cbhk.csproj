@@ -61,7 +61,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="cb.ico" />
-    <Resource Include="FilePathComparator.cs" />
     <Resource Include="Resource\Common\Image\Datapack\Command1.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command2.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command3.png" />
@@ -420,7 +419,6 @@
     <Resource Include="Resource\Common\Image\Datapack\editedIcon.png" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="FilePathComparator.cs" />
     <Compile Remove="GeneralTools\TreeViewComponentsHelper\HeaderToJson.cs" />
     <Compile Remove="GeneralTools\TreeViewComponentsHelper\ReturnTargetComponents.cs" />
     <Compile Remove="GeneralTools\TreeViewComponentsHelper\TagToHeader.cs" />

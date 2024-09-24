@@ -1,13 +1,12 @@
-﻿using cbhk.CustomControls.JsonTreeViewComponents;
-using cbhk.GeneralTools.TreeViewComponentsHelper;
-using cbhk.Model.Common;
-using cbhk.ViewModel.Generators;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Windows;
 using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
 using cbhk.CustomControls;
+using CBHKTester.Model;
+using CBHKTester.ViewModel;
+using CBHKTester.Tool;
 
 namespace CBHKTester
 {
@@ -17,9 +16,21 @@ namespace CBHKTester
         #region Field
         public Dictionary<string, CompoundJsonTreeViewItem> ValueProviderContextDictionary { get; set; } = [];
 
-        DimensionTypeViewModel plan = new(null,null);
+        DimensionTypeViewModel plan = new(null, null);
 
         JsonTreeViewItemExtension jsonTool = new();
+
+        [GeneratedRegex(@"^\s+?\:?\s+?(\*+)")]
+        private static partial Regex GetLineStarCount();
+
+        [GeneratedRegex(@"{{Nbt inherit/[a-z_\s]+}}", RegexOptions.IgnoreCase)]
+        private static partial Regex GetTemplateKey();
+
+        [GeneratedRegex(@"可选", RegexOptions.IgnoreCase)]
+        private static partial Regex GetOptionalKey();
+
+        [GeneratedRegex(@"可以为空", RegexOptions.IgnoreCase)]
+        private static partial Regex GetIsCanNullableKey();
 
         [GeneratedRegex(@"^\:?\s+?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetNodeTypeAndKey();
@@ -36,9 +47,6 @@ namespace CBHKTester
         [GeneratedRegex(@"（可选，默认为\{\{cd\|(true|false)\}\}）", RegexOptions.IgnoreCase)]
         private static partial Regex GetOptionalDefaultBoolValue();
 
-        [GeneratedRegex(@"（可选）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetOptionalKey();
-
         [GeneratedRegex(@"\[\[方块标签\]\]", RegexOptions.IgnoreCase)]
         private static partial Regex GetBlcokTagValue();
 
@@ -51,7 +59,7 @@ namespace CBHKTester
         [GeneratedRegex(@"====\s(minecraft\:[a-z_]+)\s====", RegexOptions.IgnoreCase)]
         private static partial Regex GetBoldKeywords();
 
-        private string AdvancementWikiFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\1.20.4.wiki";
+        private string AdvancementWikiFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\1.20.4.wiki";
         private Dictionary<int, string> WikiDesignateLine = [];
         private string[] ProgressClassList = ["treeview"];
 
@@ -189,7 +197,7 @@ namespace CBHKTester
 
                 int lastCurlyBracesIndex = node.LastIndexOf('}');
 
-                if (lastCurlyBracesIndex > -1 && node[lastCurlyBracesIndex..].Trim() == "根标签")
+                if (lastCurlyBracesIndex > -1 && node[(lastCurlyBracesIndex + 1)..].Trim() == "根标签")
                 {
                     continue;
                 }
@@ -203,7 +211,7 @@ namespace CBHKTester
                 #endregion
 
                 #region 计算当前行星号数量
-                Match starMatch = Regex.Match(node, @"^\s+?\:?\s+?(\*+)");
+                Match starMatch = GetLineStarCount().Match(node);
                 int starCount = starMatch.Value.Trim().Length;
                 #endregion
 
@@ -213,12 +221,12 @@ namespace CBHKTester
 
                 if (multiNodeTypeAndKeyInfoGroupList.Count > 0 || nodeTypeAndKeyInfoGroupList.Count > 0)
                 {
-                    foreach (var dataType in nodeTypeAndKeyInfoGroupList.Cast<Match>())
+                    foreach (var dataMatch in nodeTypeAndKeyInfoGroupList.Cast<Match>())
                     {
                         #region 确定当前的节点数据类型
-                        string key = dataType.Groups[2].Value;
+                        string key = dataMatch.Groups[2].Value;
                         bool IsSimpleItem = false;
-                        switch (dataType.Value)
+                        switch (dataMatch.Groups[1].Value)
                         {
                             case "bool":
                                 {
@@ -237,7 +245,7 @@ namespace CBHKTester
                                 {
                                     IsSimpleItem = true;
                                     item.DataType = DataTypes.Input;
-                                    if (dataType.Value == "string")
+                                    if (dataMatch.Value == "string")
                                         item.DataType = DataTypes.String;
                                     break;
                                 }
@@ -248,14 +256,15 @@ namespace CBHKTester
                             if (!isProcessingTemplate)
                             {
                                 Last = item.Last;
-                                Last.Next = item.Next;
+                                if (Last is not null)
+                                    Last.Next = item.Next;
                             }
                             item = new CompoundJsonTreeViewItem(plan, jsonTool);
                             if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
                             {
                                 compoundJsonTreeViewItem.ValueTypeList.Add(new TextComboBoxItem()
                                 {
-                                    Text = dataType.Value
+                                    Text = dataMatch.Groups[1].Value
                                 });
                             }
                         }
@@ -268,7 +277,7 @@ namespace CBHKTester
                             {
                                 case DataTypes.Bool:
                                     {
-                                        if (dataType.Groups.Count > 1)
+                                        if (dataMatch.Groups.Count > 1)
                                         {
                                             item.Key = key;
                                             item.BoolButtonVisibility = Visibility.Visible;
@@ -296,7 +305,7 @@ namespace CBHKTester
                                 case DataTypes.Input:
                                 case DataTypes.String:
                                     {
-                                        if (dataType.Groups.Count > 1)
+                                        if (dataMatch.Groups.Count > 1)
                                         {
                                             item.Key = key;
                                             item.InputBoxVisibility = Visibility.Visible;
@@ -361,12 +370,18 @@ namespace CBHKTester
                         #region 处理复合类型
                         if (item is CompoundJsonTreeViewItem SetTypeCompoundItem)
                         {
+                            //设置key
+                            SetTypeCompoundItem.Key = key;
+
                             #region 处理枚举型数据
+
+                            #region 抓取数据
                             MatchCollection EnumCollection = GetEnumValue().Matches(node);
                             Match BlockTagMark = GetBlcokTagValue().Match(node);
                             Match EntityTagMark = GetEntityTagValue().Match(node);
-                            Match DefaultValueMark = GetOptionalDefaultBoolValue().Match(node);
+                            #endregion
 
+                            #region 添加枚举成员
                             if (EnumCollection.Count > 0)
                             {
                                 foreach (Match enumMatch in EnumCollection)
@@ -390,86 +405,44 @@ namespace CBHKTester
                                     SetTypeCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = entityTagMatch });
                                 }
                             }
+                            #endregion
 
-                            #region 处理默认值
+                            #region 处理Key与外观
                             if (EnumCollection.Count > 0 || BlockTagMark.Index > 0 || EntityTagMark.Index > 0)
                             {
-                                #region 控制显示隐藏、Key和前导空格
+                                SetTypeCompoundItem.DataType = DataTypes.Enum;
                                 SetTypeCompoundItem.EnumBoxVisibility = Visibility.Visible;
-                                SetTypeCompoundItem.Key = key;
-                                result.ResultString.Append(new string(' ', layerCount * 2));
-                                #endregion
+                                SetTypeCompoundItem.SelectedEnumItem = SetTypeCompoundItem.EnumItemsSource[0];
 
-                                #region 添加Key与默认值
+                                result.ResultString.Append(new string(' ', layerCount * 2));
                                 result.ResultString.Append("\"" + key.ToLower() + "\"");
                                 result.ResultString.Append(": \"" + SetTypeCompoundItem.EnumItemsSource[0].Text + "\"");
-                                SetTypeCompoundItem.SelectedEnumItem = SetTypeCompoundItem.EnumItemsSource[0];
-                                //if (DefaultValueMatch is not null)
-                                //{
-                                //    result.ResultString.Append("\"" + key.ToLower() + "\"");
-                                //    string defaultValue = DefaultValueMatch.Value;
-
-                                //    if (bool.TryParse(defaultValue, out bool boolValue))
-                                //    {
-                                //        SetTypeCompoundItem.DataType = DataTypes.Bool;
-                                //        SetTypeCompoundItem.Value = boolValue;
-                                //        if (boolValue)
-                                //            SetTypeCompoundItem.IsTrue = true;
-                                //        else
-                                //            SetTypeCompoundItem.IsFalse = true;
-                                //        result.ResultString.Append(": " + boolValue.ToString().ToLower());
-                                //    }
-                                //    else
-                                //        if (int.TryParse(defaultValue, out int intValue))
-                                //    {
-                                //        SetTypeCompoundItem.DataType = DataTypes.Int;
-                                //        SetTypeCompoundItem.Value = intValue;
-                                //        result.ResultString.Append(": " + intValue);
-                                //    }
-                                //    else
-                                //    {
-                                //        SetTypeCompoundItem.DataType = DataTypes.String;
-                                //        SetTypeCompoundItem.Value = "\"" + defaultValue + "\"";
-                                //        result.ResultString.Append(": \"" + defaultValue + "\"");
-                                //    }
-                                //}
-                                #endregion
                             }
                             #endregion
 
                             #endregion
 
                             #region 处理不同行为的复合型数据
-                            //case "optionalCompound":
-                            //case "nullableCompound":
-                            //case "compound":
-                            //case "customCompound":
-                            if (dataType.Value == "compound")
+                            if (dataMatch.Groups[1].Value == "compound")
                             {
-                                if (dataType.Value == "nullableCompound" || dataType.Value == "optionalCompound")
+                                if (GetIsCanNullableKey().Match(node).Success)
                                 {
-                                    SetTypeCompoundItem.DataType = dataType.Value == "nullableCompound" ? DataTypes.NullableCompound : DataTypes.OptionalCompound;
+                                    SetTypeCompoundItem.DataType = DataTypes.NullableCompound;
                                 }
                                 else
-                                if (dataType.Value == "customCompound")
+                                if (GetOptionalKey().Match(node).Success)
                                 {
-                                    SetTypeCompoundItem.DataType = DataTypes.CustomCompound;
+                                    SetTypeCompoundItem.DataType = DataTypes.OptionalCompound;
                                 }
-                                else
-                                {
-                                    SetTypeCompoundItem.DataType = DataTypes.Compound;
-                                }
+                                //customCompound类型需要结合整体上下文才能判断，故这里不设置
                             }
 
-                            #region 计算当前数据类型、追加Key、前置追加空格
-                            SetTypeCompoundItem.DefaultValue = "";
-                            if (key is not null)
-                                SetTypeCompoundItem.Key = key;
+                            #region 更新非可选复合型节点的文本值与层数
                             if (SetTypeCompoundItem.DataType is not DataTypes.OptionalCompound)
                             {
                                 result.ResultString.Append(new string(' ', layerCount * 2));
                                 SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
-                                if (key.Length > 0)
+                                if (key is not null && key.Length > 0)
                                 {
                                     result.ResultString.Append("\"" + key + "\": {\r\n");
                                     SetTypeCompoundItem.LayerCount = layerCount;
@@ -481,32 +454,27 @@ namespace CBHKTester
                             #endregion
 
                             #region 处理数组与内联数据
-                            if (key is not null)
-                            {
-                                SetTypeCompoundItem.AddElementButtonVisibility = Visibility.Visible;
-                                SetTypeCompoundItem.DataType = DataTypes.Array;
-                                if (dataType.Value == "innerArray")
-                                    SetTypeCompoundItem.DataType = DataTypes.InnerArray;
-                                SetTypeCompoundItem.Key = key;
-                                SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
-                                if (Last is CompoundJsonTreeViewItem lastCompletedCompoundItem && (lastCompletedCompoundItem.DataType is DataTypes.OptionalCompound || lastCompletedCompoundItem.DataType is DataTypes.NullableCompound || lastCompletedCompoundItem.DataType is DataTypes.Compound || lastCompletedCompoundItem.DataType is DataTypes.CustomCompound))
-                                {
-                                    SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lastCompletedCompoundItem.EndLineNumber + 1;
-                                }
+                            //if (key is not null)
+                            //{
+                            //    SetTypeCompoundItem.AddElementButtonVisibility = Visibility.Visible;
+                            //    SetTypeCompoundItem.DataType = DataTypes.Array;
+                            //    if (dataMatch.Value == "innerArray")
+                            //        SetTypeCompoundItem.DataType = DataTypes.InnerArray;
+                            //    SetTypeCompoundItem.Key = key;
+                            //    SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
+                            //    if (Last is CompoundJsonTreeViewItem lastCompletedCompoundItem && (lastCompletedCompoundItem.DataType is DataTypes.OptionalCompound || lastCompletedCompoundItem.DataType is DataTypes.NullableCompound || lastCompletedCompoundItem.DataType is DataTypes.Compound || lastCompletedCompoundItem.DataType is DataTypes.CustomCompound))
+                            //    {
+                            //        SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lastCompletedCompoundItem.EndLineNumber + 1;
+                            //    }
 
-                                result.ResultString.Append(new string(' ', layerCount * 2) + (dataType.Value == "array" ? "\"" + key + "\"" : ""));
-                            }
-                            result.ResultString.Append((dataType.Value == "array" ? ": " : "") + "[]");
+                            //    result.ResultString.Append(new string(' ', layerCount * 2) + (dataMatch.Value == "array" ? "\"" + key + "\"" : ""));
+                            //}
+                            //result.ResultString.Append((dataMatch.Value == "array" ? ": " : "") + "[]");
                             #endregion
 
                             #region 处理各种数值提供器或结构模板
-                            //case "intProvider":
-                            //case "floatProvider":
-                            //case "heightProvider":
-                            //case "verticalAnchor":
-                            //case "blockPredicate":
-                            //case "blockStateProvider":
-                            if (key is not null && dataType.Groups[2] is Group type && ValueProviderContextDictionary.TryGetValue(type.Value, out CompoundJsonTreeViewItem currentCompoundItem))
+                            Match templateMatch = GetTemplateKey().Match(node);
+                            if (key is not null && templateMatch.Success && templateMatch.Groups[1] is Group type && ValueProviderContextDictionary.TryGetValue(type.Value, out CompoundJsonTreeViewItem? currentCompoundItem) && currentCompoundItem is not null)
                             {
                                 SetTypeCompoundItem.SwitchChildren = currentCompoundItem.SwitchChildren;
                                 SetTypeCompoundItem.SwitchKey = currentCompoundItem.SwitchKey;
@@ -516,15 +484,13 @@ namespace CBHKTester
                                 SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
                                 SetTypeCompoundItem.EnumBoxVisibility = SetTypeCompoundItem.InputBoxVisibility = Visibility.Visible;
                                 SetTypeCompoundItem.EnumItemsSource = currentCompoundItem.EnumItemsSource;
-                                SetTypeCompoundItem.SelectedEnumItem = currentCompoundItem.EnumItemsSource.FirstOrDefault();
-                                SetTypeCompoundItem.Key = key;
+                                SetTypeCompoundItem.SelectedEnumItem = currentCompoundItem.EnumItemsSource.FirstOrDefault()!;
                                 SetTypeCompoundItem.CurrentValueType = SetTypeCompoundItem.ValueTypeList[0];
                                 result.ResultString.Append(new string(' ', SetTypeCompoundItem.LayerCount * 2) + "\"" + SetTypeCompoundItem.Key + "\": " + SetTypeCompoundItem.Value);
                             }
                             else//表示当前正在初始化值提供器
-                            if (isProcessingTemplate && dataType.Groups[2] is Group initType)
+                            if (isProcessingTemplate && dataMatch.Groups[2] is Group initType)
                             {
-                                SetTypeCompoundItem.Key = key;
                                 SetTypeCompoundItem.EnumBoxVisibility = Visibility.Visible;
                                 SetTypeCompoundItem.ValueProviderType = (ValueProviderTypes)Enum.Parse(typeof(ValueProviderTypes), initType.Value);
                                 SetTypeCompoundItem.DataType = DataTypes.ValueProvider;
@@ -539,7 +505,6 @@ namespace CBHKTester
                             }
                             #endregion
                         }
-                        #endregion
 
                         #region 计算可缺省参数的默认值
                         if (((item.DefaultValue is null && item.SelectedEnumItem is null) || (item is CompoundJsonTreeViewItem compoundJsonItem && compoundJsonItem.DataType is DataTypes.OptionalCompound)) && ((Last is not null && Last.StartLineNumber == lineNumber) || (Last is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLineNumber == lineNumber) || (Last is null && lineNumber == 2)))
@@ -554,26 +519,53 @@ namespace CBHKTester
                         #endregion
 
                         item.Plan = plan;
+                        #endregion
                     }
                 }
                 #endregion
 
-                if (starCount < LastStarCount)
-                {
-
-                }
-                else
-                    if (starCount == LastStarCount)
-                {
-
-                }
-                else
-                if (Parent is not null)
+                #region 处理节点的追加
+                if (starCount > LastStarCount && Parent is not null)
                 {
                     Parent.Children.Add(item);
                 }
                 else
+                {
                     result.Result.Add(item);
+                }
+                #endregion
+
+                #region 处理递归
+                //获取下一行的*数量
+                int nextNodeIndex = nodeList.IndexOf(node) + 1;
+                Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
+                {
+                    string nextLineStar = nextLineStarMatch.Groups[2].Value.Trim();
+                    if (nextLineStar.Length > starCount)
+                    {
+                        #region 一次收集所有子节点，执行递归
+                        List<string> subNodeList = [nodeList[nextNodeIndex]];
+                        while (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
+                        {
+                            nextNodeIndex++;
+                            nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                            if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
+                            {
+                                nextLineStar = nextLineStarMatch.Groups[2].Value.Trim();
+                                if (nextLineStar.Length > starCount)
+                                    subNodeList.Add(nextLineStar);
+                            }
+                        }
+
+                        JsonTreeViewDataStructure subResult = GetAdvancementItemList(new(), subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, null, isProcessingTemplate, starCount);
+                        result.ResultString.Append(subResult.ResultString);
+                        result.Result.AddRange(subResult.Result);
+                        #endregion
+                    }
+                }
+                #endregion
+
                 LastStarCount = starCount;
             }
 
