@@ -219,11 +219,22 @@ namespace CBHKTester
                 MatchCollection nodeTypeAndKeyInfoGroupList = GetNodeTypeAndKey().Matches(node);
                 MatchCollection multiNodeTypeAndKeyInfoGroupList = GetMultiTypeAndKeyOfNode().Matches(node);
 
-                if (multiNodeTypeAndKeyInfoGroupList.Count > 0 || nodeTypeAndKeyInfoGroupList.Count > 0)
+                MatchCollection? targetInfoGroupList = null;
+                if (nodeTypeAndKeyInfoGroupList.Count > 0)
+                    targetInfoGroupList = nodeTypeAndKeyInfoGroupList;
+                else
+                if (multiNodeTypeAndKeyInfoGroupList.Count > 0)
+                    targetInfoGroupList = multiNodeTypeAndKeyInfoGroupList;
+
+                if (targetInfoGroupList is not null && targetInfoGroupList.Count > 0)
                 {
-                    foreach (var dataMatch in nodeTypeAndKeyInfoGroupList.Cast<Match>())
+                    foreach (var dataMatch in targetInfoGroupList.Cast<Match>())
                     {
                         #region 确定当前的节点数据类型
+                        if (dataMatch.Groups.Count < 2)
+                        {
+                            continue;
+                        }
                         string key = dataMatch.Groups[2].Value;
                         bool IsSimpleItem = false;
                         switch (dataMatch.Groups[1].Value)
@@ -480,7 +491,7 @@ namespace CBHKTester
                                 SetTypeCompoundItem.SwitchKey = currentCompoundItem.SwitchKey;
                                 SetTypeCompoundItem.CompoundHead = currentCompoundItem.CompoundHead;
                                 SetTypeCompoundItem.DataType = DataTypes.ValueProvider;
-                                SetTypeCompoundItem.Value = SetTypeCompoundItem.DefaultValue = "0";
+                                //SetTypeCompoundItem.Value = SetTypeCompoundItem.DefaultValue = "0";
                                 SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
                                 SetTypeCompoundItem.EnumBoxVisibility = SetTypeCompoundItem.InputBoxVisibility = Visibility.Visible;
                                 SetTypeCompoundItem.EnumItemsSource = currentCompoundItem.EnumItemsSource;
@@ -507,7 +518,7 @@ namespace CBHKTester
                         }
 
                         #region 计算可缺省参数的默认值
-                        if (((item.DefaultValue is null && item.SelectedEnumItem is null) || (item is CompoundJsonTreeViewItem compoundJsonItem && compoundJsonItem.DataType is DataTypes.OptionalCompound)) && ((Last is not null && Last.StartLineNumber == lineNumber) || (Last is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLineNumber == lineNumber) || (Last is null && lineNumber == 2)))
+                        if (((item.DefaultValue is null && item.SelectedEnumItem is null) || item is CompoundJsonTreeViewItem compoundJsonItem && compoundJsonItem.DataType is DataTypes.OptionalCompound) && ((Last is not null && Last.StartLineNumber == lineNumber) || (Last is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLineNumber == lineNumber) || (Last is null && lineNumber == 2 && item is CompoundJsonTreeViewItem firstCompoundItem && firstCompoundItem.DataType is DataTypes.OptionalCompound)))
                         {
                             lineNumber--;
                             item.StartLineNumber = lineNumber;
@@ -518,7 +529,7 @@ namespace CBHKTester
                         }
                         #endregion
 
-                        item.Plan = plan;
+                        item.Plan ??= plan;
                         #endregion
                     }
                 }
@@ -541,26 +552,31 @@ namespace CBHKTester
                 Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
                 if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
                 {
-                    string nextLineStar = nextLineStarMatch.Groups[2].Value.Trim();
+                    string nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
+                    int currentStartCount = starCount;
                     if (nextLineStar.Length > starCount)
                     {
                         #region 一次收集所有子节点，执行递归
                         List<string> subNodeList = [nodeList[nextNodeIndex]];
-                        while (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
+                        while (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > currentStartCount)
                         {
                             nextNodeIndex++;
                             nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
                             if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
                             {
-                                nextLineStar = nextLineStarMatch.Groups[2].Value.Trim();
+                                nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
                                 if (nextLineStar.Length > starCount)
                                     subNodeList.Add(nextLineStar);
                             }
                         }
 
                         JsonTreeViewDataStructure subResult = GetAdvancementItemList(new(), subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, null, isProcessingTemplate, starCount);
-                        result.ResultString.Append(subResult.ResultString);
-                        result.Result.AddRange(subResult.Result);
+
+                        if (subResult.Result.Count > 0)
+                        {
+                            result.ResultString.Append(subResult.ResultString);
+                            result.Result.AddRange(subResult.Result);
+                        }
                         #endregion
                     }
                 }
