@@ -7,6 +7,7 @@ using cbhk.CustomControls;
 using CBHKTester.Model;
 using CBHKTester.ViewModel;
 using CBHKTester.Tool;
+using System.Xml.Linq;
 
 namespace CBHKTester
 {
@@ -187,23 +188,23 @@ namespace CBHKTester
             #endregion
 
             // 遍历找到的 div 标签集合
-            foreach (var node in nodeList)
+            for (int i = 0; i < nodeList.Count; i++)
             {
                 #region 判断是否跳过本次处理
-                if (node.Trim().Length == 0)
+                if (nodeList[i].Trim().Length == 0)
                 {
                     continue;
                 }
 
-                int lastCurlyBracesIndex = node.LastIndexOf('}');
+                int lastCurlyBracesIndex = nodeList[i].LastIndexOf('}');
 
-                if (lastCurlyBracesIndex > -1 && node[(lastCurlyBracesIndex + 1)..].Trim() == "根标签")
+                if (lastCurlyBracesIndex > -1 && nodeList[i][(lastCurlyBracesIndex + 1)..].Trim() == "根标签")
                 {
                     continue;
                 }
                 #endregion
 
-                #region 声明当前节点、连接前后节点
+                #region 声明当前节点
                 JsonTreeViewItem item = new()
                 {
                     StartLineNumber = lineNumber
@@ -211,13 +212,13 @@ namespace CBHKTester
                 #endregion
 
                 #region 计算当前行星号数量
-                Match starMatch = GetLineStarCount().Match(node);
+                Match starMatch = GetLineStarCount().Match(nodeList[i]);
                 int starCount = starMatch.Value.Trim().Length;
                 #endregion
 
                 #region 处理值类型
-                MatchCollection nodeTypeAndKeyInfoGroupList = GetNodeTypeAndKey().Matches(node);
-                MatchCollection multiNodeTypeAndKeyInfoGroupList = GetMultiTypeAndKeyOfNode().Matches(node);
+                MatchCollection nodeTypeAndKeyInfoGroupList = GetNodeTypeAndKey().Matches(nodeList[i]);
+                MatchCollection multiNodeTypeAndKeyInfoGroupList = GetMultiTypeAndKeyOfNode().Matches(nodeList[i]);
 
                 MatchCollection? targetInfoGroupList = null;
                 if (nodeTypeAndKeyInfoGroupList.Count > 0)
@@ -293,7 +294,7 @@ namespace CBHKTester
                                             item.Key = key;
                                             item.BoolButtonVisibility = Visibility.Visible;
 
-                                            Match boolMatch = GetOptionalDefaultBoolValue().Match(node);
+                                            Match boolMatch = GetOptionalDefaultBoolValue().Match(nodeList[i]);
                                             if (boolMatch is not null)
                                             {
                                                 result.ResultString.Append(new string(' ', layerCount * 2));
@@ -321,7 +322,7 @@ namespace CBHKTester
                                             item.Key = key;
                                             item.InputBoxVisibility = Visibility.Visible;
 
-                                            Match stringMatch = GetOptionalDefaultStringValue().Match(node);
+                                            Match stringMatch = GetOptionalDefaultStringValue().Match(nodeList[i]);
                                             if (stringMatch is not null)
                                             {
                                                 result.ResultString.Append(new string(' ', layerCount * 2));
@@ -349,7 +350,7 @@ namespace CBHKTester
                                 case DataTypes.Decimal:
                                 case DataTypes.Long:
                                     {
-                                        Match numberMatch = GetOptionalDefaultNumberValue().Match(node);
+                                        Match numberMatch = GetOptionalDefaultNumberValue().Match(nodeList[i]);
                                         if (numberMatch is not null)
                                         {
                                             item.Key = key;
@@ -370,7 +371,7 @@ namespace CBHKTester
                             }
 
                             item.StartLineNumber = lineNumber;
-                            if (Last is not null && !isProcessingTemplate)
+                            if (Last is not null && !isProcessingTemplate && Last.LayerCount == layerCount)
                             {
                                 Last.Next = item;
                                 item.Last = Last;
@@ -387,9 +388,9 @@ namespace CBHKTester
                             #region 处理枚举型数据
 
                             #region 抓取数据
-                            MatchCollection EnumCollection = GetEnumValue().Matches(node);
-                            Match BlockTagMark = GetBlcokTagValue().Match(node);
-                            Match EntityTagMark = GetEntityTagValue().Match(node);
+                            MatchCollection EnumCollection = GetEnumValue().Matches(nodeList[i]);
+                            Match BlockTagMark = GetBlcokTagValue().Match(nodeList[i]);
+                            Match EntityTagMark = GetEntityTagValue().Match(nodeList[i]);
                             #endregion
 
                             #region 添加枚举成员
@@ -434,19 +435,22 @@ namespace CBHKTester
                             #endregion
 
                             #region 处理不同行为的复合型数据
+
+                            #region 确定数据类型
                             if (dataMatch.Groups[1].Value == "compound")
                             {
-                                if (GetIsCanNullableKey().Match(node).Success)
+                                if (GetIsCanNullableKey().Match(nodeList[i]).Success)
                                 {
                                     SetTypeCompoundItem.DataType = DataTypes.NullableCompound;
                                 }
                                 else
-                                if (GetOptionalKey().Match(node).Success)
+                                if (GetOptionalKey().Match(nodeList[i]).Success)
                                 {
                                     SetTypeCompoundItem.DataType = DataTypes.OptionalCompound;
                                 }
                                 //customCompound类型需要结合整体上下文才能判断，故这里不设置
                             }
+                            #endregion
 
                             #region 更新非可选复合型节点的文本值与层数
                             if (SetTypeCompoundItem.DataType is not DataTypes.OptionalCompound)
@@ -484,14 +488,13 @@ namespace CBHKTester
                             #endregion
 
                             #region 处理各种数值提供器或结构模板
-                            Match templateMatch = GetTemplateKey().Match(node);
+                            Match templateMatch = GetTemplateKey().Match(nodeList[i]);
                             if (key is not null && templateMatch.Success && templateMatch.Groups[1] is Group type && ValueProviderContextDictionary.TryGetValue(type.Value, out CompoundJsonTreeViewItem? currentCompoundItem) && currentCompoundItem is not null)
                             {
                                 SetTypeCompoundItem.SwitchChildren = currentCompoundItem.SwitchChildren;
                                 SetTypeCompoundItem.SwitchKey = currentCompoundItem.SwitchKey;
                                 SetTypeCompoundItem.CompoundHead = currentCompoundItem.CompoundHead;
                                 SetTypeCompoundItem.DataType = DataTypes.ValueProvider;
-                                //SetTypeCompoundItem.Value = SetTypeCompoundItem.DefaultValue = "0";
                                 SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
                                 SetTypeCompoundItem.EnumBoxVisibility = SetTypeCompoundItem.InputBoxVisibility = Visibility.Visible;
                                 SetTypeCompoundItem.EnumItemsSource = currentCompoundItem.EnumItemsSource;
@@ -508,8 +511,8 @@ namespace CBHKTester
                             }
                             #endregion
 
-                            #region 设置前后关系和行号
-                            if (Last is not null && !isProcessingTemplate)
+                            #region 设置前后关系
+                            if (Last is not null && !isProcessingTemplate && Last.LayerCount == layerCount)
                             {
                                 Last.Next = SetTypeCompoundItem;
                                 SetTypeCompoundItem.Last = Last;
@@ -536,7 +539,7 @@ namespace CBHKTester
                 #endregion
 
                 #region 处理节点的追加
-                if (starCount > LastStarCount && Parent is not null)
+                if (starCount > LastStarCount && Parent is not null && item.Key.Length > 0)
                 {
                     Parent.Children.Add(item);
                 }
@@ -548,47 +551,54 @@ namespace CBHKTester
 
                 #region 处理递归
                 //获取下一行的*数量
-                int nextNodeIndex = nodeList.IndexOf(node) + 1;
-                Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
-                if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
+                int nextNodeIndex = nodeList.IndexOf(nodeList[i]) + 1;
+                if (nextNodeIndex < nodeList.Count)
                 {
-                    string nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
-                    int currentStartCount = starCount;
-                    if (nextLineStar.Length > starCount)
+                    Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                    if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
                     {
-                        #region 一次收集所有子节点，执行递归
-                        List<string> subNodeList = [nodeList[nextNodeIndex]];
-                        while (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > currentStartCount)
+                        string nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
+                        if (nextLineStar.Length > starCount)
                         {
-                            nextNodeIndex++;
-                            nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
-                            if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
+                            #region 一次收集所有子节点，执行递归
+                            List<string> subNodeList = [nodeList[nextNodeIndex]];
+                            while (nextLineStarMatch.Success && nextLineStar.Length > starCount)
                             {
+                                nextNodeIndex++;
+                                nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                                if (nextLineStarMatch.Success && nextLineStarMatch.Groups[1].Value.Trim().Length >= nextLineStar.Length)
+                                {
+                                    nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
+                                    if (nextLineStar.Length > starCount)
+                                        subNodeList.Add(nextLineStar);
+                                }
                                 nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
-                                if (nextLineStar.Length > starCount)
-                                    subNodeList.Add(nextLineStar);
                             }
-                        }
 
-                        JsonTreeViewDataStructure subResult = GetAdvancementItemList(new(), subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, null, isProcessingTemplate, starCount);
+                            JsonTreeViewDataStructure subResult = GetAdvancementItemList(new(), subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, null, isProcessingTemplate, starCount);
 
-                        if (subResult.Result.Count > 0)
-                        {
-                            result.ResultString.Append(subResult.ResultString);
-                            result.Result.AddRange(subResult.Result);
+                            i = nextNodeIndex - 1;
+
+                            if (subResult.Result.Count > 0 && subResult.Result[0].Key.Length > 0)
+                            {
+                                result.ResultString.Append(subResult.ResultString);
+                                result.Result.AddRange(subResult.Result);
+                            }
+                            #endregion
                         }
-                        #endregion
                     }
                 }
                 #endregion
 
+                //复合型节点收尾
+                result.ResultString.Append("\r\n" + new string(' ', (layerCount - 1) * 2) + '}');
+                //将当前节点保存为上一个节点
+                Last = item;
+                //保存当前的*号数量
                 LastStarCount = starCount;
             }
 
-            #region Json收尾后返回
-            result.ResultString.Append("\r\n" + new string(' ', (layerCount - 1) * 2) + '}');
             return result;
-            #endregion
         }
 
         /// <summary>
