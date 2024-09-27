@@ -7,7 +7,6 @@ using cbhk.CustomControls;
 using CBHKTester.Model;
 using CBHKTester.ViewModel;
 using CBHKTester.Tool;
-using System.Xml.Linq;
 
 namespace CBHKTester
 {
@@ -32,6 +31,9 @@ namespace CBHKTester
 
         [GeneratedRegex(@"可以为空", RegexOptions.IgnoreCase)]
         private static partial Regex GetIsCanNullableKey();
+
+        [GeneratedRegex(@"^\:?\s+?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
+        private static partial Regex GetExplanationForHierarchicalNodes();
 
         [GeneratedRegex(@"^\:?\s+?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetNodeTypeAndKey();
@@ -133,6 +135,7 @@ namespace CBHKTester
                     JsonTreeViewDataStructure firstResultData = GetAdvancementItemList(new(), firstNodeContent, 2, 1);
                     result.Result.AddRange(firstResultData.Result);
                     result.ResultString.Append(firstResultData.ResultString);
+                    int test = 0;
                     #endregion
 
                     #endregion
@@ -299,17 +302,17 @@ namespace CBHKTester
                                             {
                                                 result.ResultString.Append(new string(' ', layerCount * 2));
                                                 result.ResultString.Append("\"" + key.ToLower() + "\"");
-                                                string defaultValue = boolMatch.Value;
 
-                                                if (bool.TryParse(defaultValue, out bool boolValue))
+                                                if (bool.TryParse(boolMatch.Groups[1].Value, out bool defaultValue))
                                                 {
-                                                    item.Value = item.DefaultValue = boolValue;
-                                                    if (boolValue)
+                                                    item.Value = item.DefaultValue = defaultValue;
+                                                    if (item.Value)
+                                                    {
                                                         item.IsTrue = true;
-                                                    else
-                                                        item.IsFalse = true;
-                                                    result.ResultString.Append(": " + boolValue.ToString().ToLower());
+                                                        item.IsFalse = false;
+                                                    }
                                                 }
+                                                result.ResultString.Append(": " + item.Value.ToString().ToLower());
                                             }
                                         }
                                         break;
@@ -327,17 +330,9 @@ namespace CBHKTester
                                             {
                                                 result.ResultString.Append(new string(' ', layerCount * 2));
                                                 result.ResultString.Append("\"" + key.ToLower() + "\"");
-                                                string defaultValue = stringMatch.Value;
 
-                                                if (bool.TryParse(defaultValue, out bool boolValue))
-                                                {
-                                                    item.Value = item.DefaultValue = boolValue;
-                                                    if (boolValue)
-                                                        item.IsTrue = true;
-                                                    else
-                                                        item.IsFalse = true;
-                                                    result.ResultString.Append(": " + boolValue.ToString().ToLower());
-                                                }
+                                                item.Value = item.DefaultValue = stringMatch.Groups[1].Value;
+                                                result.ResultString.Append(": \"" + item.Value.ToString().ToLower() + "\"");
                                             }
                                         }
                                         break;
@@ -359,12 +354,11 @@ namespace CBHKTester
                                             result.ResultString.Append(new string(' ', layerCount * 2));
                                             item.InputBoxVisibility = Visibility.Visible;
                                             result.ResultString.Append("\"" + key.ToLower() + "\"");
-                                            string defaultValue = numberMatch.Value;
-                                            item.Value = item.DefaultValue = defaultValue;
-                                            if (item.DataType is not DataTypes.String)
-                                                result.ResultString.Append(": " + defaultValue.ToString().ToLower());
-                                            else
-                                                result.ResultString.Append(": \"" + defaultValue.ToString().ToLower() + "\"");
+                                            if (decimal.TryParse(numberMatch.Groups[1].Value, out decimal defaultDecimalValue))
+                                            {
+                                                item.Value = item.DefaultValue = defaultDecimalValue;
+                                            }
+                                            result.ResultString.Append(": " + item.Value.ToString().ToLower());
                                         }
                                         break;
                                     }
@@ -518,6 +512,49 @@ namespace CBHKTester
                                 SetTypeCompoundItem.Last = Last;
                             }
                             #endregion
+
+                            #region 处理递归
+                            //获取下一行的*数量
+                            int nextNodeIndex = nodeList.IndexOf(nodeList[i]) + 1;
+                            if (nextNodeIndex < nodeList.Count)
+                            {
+                                Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                                if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
+                                {
+                                    string nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
+                                    if (nextLineStar.Length > starCount)
+                                    {
+                                        #region 一次收集所有子节点，执行递归
+                                        List<string> subNodeList = [nodeList[nextNodeIndex]];
+                                        while (nextLineStarMatch.Success && nextLineStar.Length > starCount)
+                                        {
+                                            nextNodeIndex++;
+                                            nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                                            if (nextLineStarMatch.Success && nextLineStarMatch.Groups[1].Value.Trim().Length >= nextLineStar.Length)
+                                            {
+                                                nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
+                                                if (nextLineStar.Length > starCount)
+                                                    subNodeList.Add(nextLineStar);
+                                            }
+                                            nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
+                                        }
+
+                                        JsonTreeViewDataStructure subResult = GetAdvancementItemList(result, subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, null, isProcessingTemplate, starCount);
+
+                                        i = nextNodeIndex - 1;
+
+                                        if (subResult.Result.Count > 0 && subResult.Result[0].Key.Length > 0)
+                                        {
+                                            result = subResult;
+                                        }
+                                        #endregion
+                                    }
+                                }
+                            }
+                            #endregion
+
+                            //复合型节点收尾
+                            result.ResultString.Append("\r\n" + new string(' ', (layerCount - 1) * 2) + '}');
                         }
 
                         #region 计算可缺省参数的默认值
@@ -549,49 +586,8 @@ namespace CBHKTester
                 }
                 #endregion
 
-                #region 处理递归
-                //获取下一行的*数量
-                int nextNodeIndex = nodeList.IndexOf(nodeList[i]) + 1;
-                if (nextNodeIndex < nodeList.Count)
-                {
-                    Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
-                    if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
-                    {
-                        string nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
-                        if (nextLineStar.Length > starCount)
-                        {
-                            #region 一次收集所有子节点，执行递归
-                            List<string> subNodeList = [nodeList[nextNodeIndex]];
-                            while (nextLineStarMatch.Success && nextLineStar.Length > starCount)
-                            {
-                                nextNodeIndex++;
-                                nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
-                                if (nextLineStarMatch.Success && nextLineStarMatch.Groups[1].Value.Trim().Length >= nextLineStar.Length)
-                                {
-                                    nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
-                                    if (nextLineStar.Length > starCount)
-                                        subNodeList.Add(nextLineStar);
-                                }
-                                nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
-                            }
-
-                            JsonTreeViewDataStructure subResult = GetAdvancementItemList(new(), subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, null, isProcessingTemplate, starCount);
-
-                            i = nextNodeIndex - 1;
-
-                            if (subResult.Result.Count > 0 && subResult.Result[0].Key.Length > 0)
-                            {
-                                result.ResultString.Append(subResult.ResultString);
-                                result.Result.AddRange(subResult.Result);
-                            }
-                            #endregion
-                        }
-                    }
-                }
-                #endregion
-
-                //复合型节点收尾
-                result.ResultString.Append("\r\n" + new string(' ', (layerCount - 1) * 2) + '}');
+                if (i < nodeList.Count - 1)
+                    result.ResultString.Append(',');
                 //将当前节点保存为上一个节点
                 Last = item;
                 //保存当前的*号数量
@@ -608,7 +604,7 @@ namespace CBHKTester
         /// <returns></returns>
         private string GetDesignateKeywordByLineNumber(int lineNumber)
         {
-            if (WikiDesignateLine.TryGetValue(lineNumber, out string result))
+            if (WikiDesignateLine.TryGetValue(lineNumber, out string? result))
                 return result;
             return "";
         }
