@@ -41,6 +41,7 @@ namespace CBHKTester.Model
             get => dataType;
             set
             {
+                dataType = value;
                 SortButtonVisibility = RemoveElementButtonVisibility = BoolButtonVisibility = EnumBoxVisibility = ErrorIconVisibility = InfoIconVisibility = InputBoxVisibility = EnumBoxVisibility = Visibility.Collapsed;
                 switch (dataType)
                 {
