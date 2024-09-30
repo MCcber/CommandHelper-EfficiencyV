@@ -1180,6 +1180,7 @@ namespace cbhk.ViewModel.Generators
         #endregion
 
         #region Event
+
         /// <summary>
         /// 载入并创建SceneGizmo
         /// </summary>
@@ -1188,6 +1189,8 @@ namespace cbhk.ViewModel.Generators
         public void Gizimo_Loaded(object sender, RoutedEventArgs e)
         {
             SceneGizmo = sender as Viewport3D;
+            GizimoCamera = SceneGizmo.Camera as PerspectiveCamera;
+
             #region z正半轴
             MeshBuilder ZAxisPositiveBuilder = new MeshBuilder(false, false);
             ZAxisPositiveBuilder.AddCone(new Point3D(0, 0, 0), new Vector3D(0, 1, 0), ConeBaseRadius, 0, ConeHeight, true, true, 32);
@@ -1324,6 +1327,7 @@ namespace cbhk.ViewModel.Generators
 
         public void AnimationContainer_Loaded(object sender, RoutedEventArgs e) => animationContainer = sender as AnimationContainer;
 
+        #region 切换运镜模式
         [RelayCommand]
         public void UpdateCameraMovementType(ArmorStandCameraMovementType type)
         {
@@ -1367,6 +1371,7 @@ namespace cbhk.ViewModel.Generators
             ArmorStandViewer.Cursor = Cursors.Arrow;
             ResetCameraState();
         }
+        #endregion
 
         /// <summary>
         /// 载入名称文本框
@@ -2206,6 +2211,7 @@ namespace cbhk.ViewModel.Generators
             ArmorStandViewer = sender as Viewport3D;
             //载入盔甲架整体容器，用于旋转
             ModelGroup = ArmorStandViewer.Children[2] as ModelVisual3D;
+            MainCamera = ArmorStandViewer.Camera as PerspectiveCamera;
             #endregion
 
             #region 载入初始坐标和朝向
@@ -2263,6 +2269,11 @@ namespace cbhk.ViewModel.Generators
         {
             lastMousePosX = e.GetPosition(ArmorStandViewer).X;
             lastMousePosY = e.GetPosition(ArmorStandViewer).Y;
+
+            if(sender is TabControl tabControl)
+            {
+                (tabControl.Items[0] as TabItem).Focus();
+            }
         }
 
         /// <summary>
@@ -2404,11 +2415,11 @@ namespace cbhk.ViewModel.Generators
         /// <param name="d"></param>
         public void Move(double d)
         {
-            double u = 0.05;
+            double scale = 0.05;
             Vector3D lookDirection = MainCamera.LookDirection;
             Point3D position = MainCamera.Position;
             lookDirection.Normalize();
-            position += u * lookDirection * d;
+            position += scale * lookDirection * d;
             MainCamera.Position = position;
         }
 

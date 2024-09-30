@@ -2082,7 +2082,7 @@
                 </behaviors:Interaction.Triggers>
                 <CustomControls:TextTabItems
                     Background="Transparent"
-                    FontSize="20"
+                    FontSize="18"
                     FontWeight="Bold"
                     Foreground="White"
                     Header="{Binding PreviewModeText}"
