@@ -20,15 +20,18 @@ namespace cbhk.GeneralTools
 {
     public partial class DistributorGenerator : ObservableObject
     {
+        #region Field
         private MainViewModel cbhk;
         private readonly IContainerProvider _container;
+        #endregion
 
+        #region Method
         public DistributorGenerator(IContainerProvider container)
         {
             _container = container;
             MainView mainWindow = _container.Resolve<MainView>();
-            if (mainWindow is not null)
-                cbhk = mainWindow.DataContext as MainViewModel;
+            if (mainWindow is not null && mainWindow.DataContext is MainViewModel viewModel)
+                cbhk = viewModel;
         }
 
         /// <summary>
@@ -44,15 +47,15 @@ namespace cbhk.GeneralTools
                 _ => WindowState.Normal
             };
         }
-
+        
         [RelayCommand]
         /// <summary>
         /// 启动ooc生成器
         /// </summary>
         public void StartOnlyOneCommandGenerator()
         {
-            OnlyOneCommandView onlyOneCommandView = _container.Resolve<OnlyOneCommandView>();
             SetCBHKState();
+            OnlyOneCommandView onlyOneCommandView = _container.Resolve<OnlyOneCommandView>();
             onlyOneCommandView.Show();
             onlyOneCommandView.Focus();
         }
@@ -217,6 +220,7 @@ namespace cbhk.GeneralTools
             dimensionType.Show();
             dimensionType.Focus();
         }
+        #endregion
     }
 
     public static class GeneratorClickEvent
