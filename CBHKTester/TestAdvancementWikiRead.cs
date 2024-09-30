@@ -41,14 +41,14 @@ namespace CBHKTester
         [GeneratedRegex(@"^\:?\s+?\*+\s+?(?<branch>\{\{nbt\|[a-z]+\}\})+(\{\{nbt\|(?<1>[a-z]+)\|(?<2>[a-z_]+)\}\})", RegexOptions.IgnoreCase)]
         private static partial Regex GetMultiTypeAndKeyOfNode();
 
-        [GeneratedRegex(@"（可选，默认为\{\{cd\|[a-z_]+\}\}）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetOptionalDefaultStringValue();
+        [GeneratedRegex(@"默认为\{\{cd\|[a-z_]+\}\}", RegexOptions.IgnoreCase)]
+        private static partial Regex GetDefaultStringValue();
 
-        [GeneratedRegex(@"（可选，默认为\d+）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetOptionalDefaultNumberValue();
+        [GeneratedRegex(@"默认为\d+", RegexOptions.IgnoreCase)]
+        private static partial Regex GetDefaultNumberValue();
 
-        [GeneratedRegex(@"（可选，默认为\{\{cd\|(true|false)\}\}）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetOptionalDefaultBoolValue();
+        [GeneratedRegex(@"默认为\{\{cd\|(true|false)\}\}", RegexOptions.IgnoreCase)]
+        private static partial Regex GetDefaultBoolValue();
 
         [GeneratedRegex(@"\[\[方块标签\]\]", RegexOptions.IgnoreCase)]
         private static partial Regex GetBlcokTagValue();
@@ -190,11 +190,17 @@ namespace CBHKTester
                 result.ResultString.Append("{\r\n");
             #endregion
 
-            // 遍历找到的 div 标签集合
+            //遍历找到的 div 标签内容集合
             for (int i = 0; i < nodeList.Count; i++)
             {
-                //判断当前节点是否仅为解释节点
+                #region Field
                 bool IsExplanationNode = GetExplanationForHierarchicalNodes().Match(nodeList[i]).Success;
+                bool IsCurrentOptional = GetOptionalKey().Match(nodeList[i]).Success;
+                bool IsHaveNextNode = i < nodeList.Count - 1;
+                bool IsNextOptionalNode = false;
+                if (IsHaveNextNode)
+                    IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
+                #endregion
 
                 #region 判断是否跳过本次处理
                 if (nodeList[i].Trim().Length == 0)
@@ -278,7 +284,7 @@ namespace CBHKTester
                         {
                             if (!isProcessingTemplate)
                             {
-                                Last = item.Last;
+                                item.Last = Last;
                                 if (Last is not null)
                                     Last.Next = item.Next;
                             }
@@ -305,11 +311,14 @@ namespace CBHKTester
                                             item.Key = key;
                                             item.BoolButtonVisibility = Visibility.Visible;
 
-                                            Match boolMatch = GetOptionalDefaultBoolValue().Match(nodeList[i]);
+                                            Match boolMatch = GetDefaultBoolValue().Match(nodeList[i]);
                                             if (boolMatch is not null)
                                             {
-                                                result.ResultString.Append(new string(' ', layerCount * 2));
-                                                result.ResultString.Append("\"" + key.ToLower() + "\"");
+                                                if (!IsCurrentOptional)
+                                                {
+                                                    result.ResultString.Append(new string(' ', layerCount * 2));
+                                                    result.ResultString.Append("\"" + key.ToLower() + "\"");
+                                                }
 
                                                 if (bool.TryParse(boolMatch.Groups[1].Value, out bool defaultValue))
                                                 {
@@ -320,7 +329,11 @@ namespace CBHKTester
                                                         item.IsFalse = false;
                                                     }
                                                 }
-                                                result.ResultString.Append(": " + item.Value.ToString().ToLower());
+
+                                                if (!IsCurrentOptional)
+                                                {
+                                                    result.ResultString.Append(": " + item.Value.ToString().ToLower());
+                                                }
                                             }
                                         }
                                         break;
@@ -333,14 +346,21 @@ namespace CBHKTester
                                             item.Key = key;
                                             item.InputBoxVisibility = Visibility.Visible;
 
-                                            Match stringMatch = GetOptionalDefaultStringValue().Match(nodeList[i]);
+                                            Match stringMatch = GetDefaultStringValue().Match(nodeList[i]);
                                             if (stringMatch is not null)
                                             {
-                                                result.ResultString.Append(new string(' ', layerCount * 2));
-                                                result.ResultString.Append("\"" + key.ToLower() + "\"");
+                                                if (!IsCurrentOptional)
+                                                {
+                                                    result.ResultString.Append(new string(' ', layerCount * 2));
+                                                    result.ResultString.Append("\"" + key.ToLower() + "\"");
+                                                }
 
                                                 item.Value = item.DefaultValue = stringMatch.Groups[1].Value;
-                                                result.ResultString.Append(": \"" + item.Value.ToString().ToLower() + "\"");
+
+                                                if (!IsCurrentOptional)
+                                                {
+                                                    result.ResultString.Append(": \"" + item.Value.ToString().ToLower() + "\"");
+                                                }
                                             }
                                         }
                                         break;
@@ -353,20 +373,28 @@ namespace CBHKTester
                                 case DataTypes.Decimal:
                                 case DataTypes.Long:
                                     {
-                                        Match numberMatch = GetOptionalDefaultNumberValue().Match(nodeList[i]);
+                                        Match numberMatch = GetDefaultNumberValue().Match(nodeList[i]);
                                         if (numberMatch is not null)
                                         {
                                             item.Key = key;
                                             item.InputBoxVisibility = Visibility.Visible;
 
-                                            result.ResultString.Append(new string(' ', layerCount * 2));
+                                            if (!IsCurrentOptional)
+                                            {
+                                                result.ResultString.Append(new string(' ', layerCount * 2));
+                                                result.ResultString.Append("\"" + key.ToLower() + "\"");
+                                            }
+
                                             item.InputBoxVisibility = Visibility.Visible;
-                                            result.ResultString.Append("\"" + key.ToLower() + "\"");
                                             if (decimal.TryParse(numberMatch.Groups[1].Value, out decimal defaultDecimalValue))
                                             {
                                                 item.Value = item.DefaultValue = defaultDecimalValue;
                                             }
-                                            result.ResultString.Append(": " + item.Value.ToString().ToLower());
+
+                                            if (!IsCurrentOptional)
+                                            {
+                                                result.ResultString.Append(": " + item.Value.ToString().ToLower());
+                                            }
                                         }
                                         break;
                                     }
@@ -446,7 +474,7 @@ namespace CBHKTester
                                     SetTypeCompoundItem.DataType = DataTypes.NullableCompound;
                                 }
                                 else
-                                if (GetOptionalKey().Match(nodeList[i]).Success)
+                                if (IsCurrentOptional)
                                 {
                                     SetTypeCompoundItem.DataType = DataTypes.OptionalCompound;
                                 }
@@ -464,7 +492,7 @@ namespace CBHKTester
                             SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
                             SetTypeCompoundItem.LayerCount = layerCount;
                             SetTypeCompoundItem.CurrentValueType ??= SetTypeCompoundItem.ValueTypeList[0];
-                            if (key is not null && key.Length > 0)
+                            if (key is not null && key.Length > 0 && !IsCurrentOptional)
                             {
                                 if (SetTypeCompoundItem.DataType is DataTypes.Array)
                                 {
@@ -534,7 +562,7 @@ namespace CBHKTester
                             #region 处理递归
                             //获取下一行的*数量
                             int nextNodeIndex = nodeList.IndexOf(nodeList[i]) + 1;
-                            if (nextNodeIndex < nodeList.Count && item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.DataType is not DataTypes.OptionalCompound)
+                            if (nextNodeIndex < nodeList.Count)
                             {
                                 Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
                                 if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
@@ -543,7 +571,9 @@ namespace CBHKTester
                                     if (nextLineStar.Length > starCount)
                                     {
                                         #region 一次收集所有子节点，执行递归
-                                        List<string> subNodeList = [nodeList[nextNodeIndex]];
+                                        List<string> subNodeList = [];
+                                        if (nodeList[nextNodeIndex].Contains('{'))
+                                            subNodeList.Add(nodeList[nextNodeIndex]);
                                         while (nextLineStarMatch.Success && nextLineStar.Length > starCount)
                                         {
                                             nextNodeIndex++;
@@ -553,7 +583,8 @@ namespace CBHKTester
                                                 if (nextLineStarMatch.Success && nextLineStarMatch.Groups[1].Value.Trim().Length > starCount)
                                                 {
                                                     nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
-                                                    subNodeList.Add(nodeList[nextNodeIndex]);
+                                                    if (nodeList[nextNodeIndex].Contains('{'))
+                                                        subNodeList.Add(nodeList[nextNodeIndex]);
                                                 }
                                             }
                                             else
@@ -561,17 +592,11 @@ namespace CBHKTester
                                             nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
                                         }
 
-                                        JsonTreeViewDataStructure subResult = GetAdvancementItemList(result, subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, null, isProcessingTemplate, starCount);
-
-                                        #region 复合型节点收尾
-                                        if (item is CompoundJsonTreeViewItem compound)
+                                        JsonTreeViewDataStructure subResult = new();
+                                        if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.DataType is not DataTypes.OptionalCompound && subNodeList.Count > 0)
                                         {
-                                            if (compound.DataType is not DataTypes.Array && compound.DataType is not DataTypes.InnerArray)
-                                                result.ResultString.Append("\r\n" + new string(' ', (layerCount - 1) * 2) + '}');
-                                            else
-                                                result.ResultString.Append("\r\n" + new string(' ', (layerCount - 1) * 2) + ']');
+                                            subResult = GetAdvancementItemList(result, subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, item, isProcessingTemplate, starCount);
                                         }
-                                        #endregion
 
                                         i = nextNodeIndex - 1;
 
@@ -599,17 +624,23 @@ namespace CBHKTester
                         }
                         #endregion
 
+                        #region 赋予Plan属性以及判断是否需要为上一个复合节点收尾
                         item.Plan ??= plan;
+                        if(Last is CompoundJsonTreeViewItem lastItem && (lastItem.DataType is DataTypes.Compound || lastItem.DataType is DataTypes.NullableCompound) && lastItem.LayerCount + 1 == starCount)
+                        {
+                            result.ResultString.Append('}');
+                        }
+                        #endregion
+
                         #endregion
                     }
                 }
                 #endregion
 
-                //追加逗号
-                if (!IsExplanationNode && item.Key.Length > 0)
+                #region 处理节点的追加与收尾工作
+                if (IsNextOptionalNode && !IsExplanationNode && item.Key.Length > 0 && !IsCurrentOptional)
                     result.ResultString.Append(',');
 
-                #region 处理节点的追加
                 if (starCount > LastStarCount && Parent is not null && item.Key.Length > 0)
                 {
                     Parent.Children.Add(item);
@@ -619,12 +650,22 @@ namespace CBHKTester
                 {
                     result.Result.Add(item);
                 }
+
+                if (item is CompoundJsonTreeViewItem compound && compound.DataType is not DataTypes.OptionalCompound && !IsCurrentOptional)
+                {
+                    if (compound.DataType is not DataTypes.Array && compound.DataType is not DataTypes.InnerArray)
+                        result.ResultString.Append("\r\n" + new string(' ', (layerCount - 1) * 2) + '}');
+                    else
+                        result.ResultString.Append("\r\n" + new string(' ', (layerCount - 1) * 2) + ']');
+                }
                 #endregion
 
+                #region 将当前节点保存为上一个节点
                 //将当前节点保存为上一个节点
                 Last = item;
                 //保存当前的*号数量
                 LastStarCount = starCount;
+                #endregion
             }
 
             return result;
