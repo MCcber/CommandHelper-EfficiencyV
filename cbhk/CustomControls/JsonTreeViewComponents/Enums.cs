@@ -42,6 +42,7 @@
             CustomCompound,
             OptionalCompound,
             NullableCompound,
+            OptionalAndNullableCompound,
             EnumCompound,
             MultiType,
             ArrayElement,

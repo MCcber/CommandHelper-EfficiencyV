@@ -302,7 +302,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         {
             #region 定义列表和统一方案接口
             bool AddToTop = compoundJsonTreeViewItem.DataType is DataTypes.Array;
-            bool AddSubStructure = compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound;
+            bool AddSubStructure = compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound || compoundJsonTreeViewItem.DataType is DataTypes.NullableCompound || compoundJsonTreeViewItem.DataType is DataTypes.OptionalAndNullableCompound;
             ObservableCollection<JsonTreeViewItem> subChildren = [];
             int CurrentStartLineNumber, CurrentEndLineNumber;
             #endregion
@@ -348,8 +348,15 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             #region 处理起始与末尾行号
             if (!AddToTop)
             {
-                CurrentStartLineNumber = (compoundJsonTreeViewItem.Parent.Children[^2] as CompoundJsonTreeViewItem).EndLine.LineNumber;
-                CurrentEndLineNumber = (compoundJsonTreeViewItem.Parent.Children[^2] as CompoundJsonTreeViewItem).EndLine.LineNumber;
+                if (compoundJsonTreeViewItem.Parent is not null)
+                {
+                    CurrentStartLineNumber = (compoundJsonTreeViewItem.Parent.Children[^2] as CompoundJsonTreeViewItem).EndLine.LineNumber;
+                    CurrentEndLineNumber = (compoundJsonTreeViewItem.Parent.Children[^2] as CompoundJsonTreeViewItem).EndLine.LineNumber;
+                }
+                else
+                {
+                    CurrentStartLineNumber = CurrentEndLineNumber = compoundJsonTreeViewItem.StartLine.LineNumber;
+                }
             }
             else
                 if (compoundJsonTreeViewItem.Children.Count - 1 - compoundJsonTreeViewItem.SwitchChildren.Count >= 0)
@@ -364,7 +371,9 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             #endregion
 
             #region 创建新的数组元素
-            int currentElementIndex = AddToTop ? 0 : compoundJsonTreeViewItem.Parent.Children.Count;
+            int currentElementIndex = 0;
+            if (compoundJsonTreeViewItem.Children is not null)
+                currentElementIndex = AddToTop ? 0 : compoundJsonTreeViewItem.Children.Count;
             CompoundJsonTreeViewItem entry = new(compoundJsonTreeViewItem.Plan, compoundJsonTreeViewItem.JsonItemTool)
             {
                 Path = AddToTop ? compoundJsonTreeViewItem.Path + "[" + currentElementIndex + "]" : compoundJsonTreeViewItem.Parent.Path + "[" + (compoundJsonTreeViewItem.Parent.Children.Count - 1) + "]",

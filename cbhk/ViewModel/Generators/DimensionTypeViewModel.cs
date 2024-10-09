@@ -20,6 +20,9 @@ using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
 using Prism.Ioc;
 using cbhk.View;
 using System.Text.RegularExpressions;
+using System.Collections.ObjectModel;
+using cbhk.Model.Common;
+using cbhk.GeneralTools;
 
 namespace cbhk.ViewModel.Generators
 {
@@ -27,13 +30,17 @@ namespace cbhk.ViewModel.Generators
     {
         #region Field
         private Window home = null;
-        private string initRuleFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rules\testForCompound.json";
+        private string initRuleFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rules\1.20.4.wiki";
         private string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rules";
         private string valueProviderFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ValueProviderStructure.json";
         public TextEditor textEditor = null;
         private FoldingManager foldingManager = null;
         private IContainerProvider _container;
         JsonTreeViewItemExtension jsonTool = new();
+
+        private Dictionary<string, List<JsonTreeViewItem>> CriteriaDataList = [];
+        private Dictionary<string, List<JsonTreeViewItem>> AdvancementReferenceItemList = [];
+        public ObservableCollection<JsonTreeViewItem> AdvancementTreeViewItemList = [];
 
         [GeneratedRegex(@"^\:?\s+?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetNodeTypeAndKey();
@@ -125,6 +132,8 @@ namespace cbhk.ViewModel.Generators
                                 }
                         }
                     }
+
+                    JsonTreeViewDataStructure result = HtmlHelper.AnalyzeHTMLData("", []);
                     DimensionTypeItemString = File.ReadAllText(initRuleFilePath);
                     textEditor.Text = JsonToJsonTreeViewItemConverter.CurrentData.ResultString.ToString();
 
@@ -421,7 +430,7 @@ namespace cbhk.ViewModel.Generators
 
         public void DeleteAllLinesInTheSpecifiedRange(CompoundJsonTreeViewItem compoundJsonTreeViewItem)
         {
-            textEditor.Document.Remove(compoundJsonTreeViewItem.StartLine.Offset, compoundJsonTreeViewItem.EndLine.EndOffset - compoundJsonTreeViewItem.StartLine.Offset);
+            textEditor.Document.Remove(compoundJsonTreeViewItem.StartLine.Offset, compoundJsonTreeViewItem.EndLine.EndOffset + 1 - compoundJsonTreeViewItem.StartLine.Offset);
             KeyValueContextDictionary.Remove(compoundJsonTreeViewItem.Path);
 
             #region 这里需要递归遍历每一层的节点来删除字典中所有相关的Pair

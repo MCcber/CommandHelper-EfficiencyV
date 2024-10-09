@@ -239,23 +239,35 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             switch (DataType)
             {
                 case DataTypes.OptionalCompound:
+                case DataTypes.NullableCompound:
+                case DataTypes.OptionalAndNullableCompound:
                     {
                         RemoveElementButtonVisibility = Visibility.Collapsed;
                         AddElementButtonVisibility = Visibility.Visible;
+                        Children.Clear();
                         int startLineNumber = StartLine.LineNumber;
-                        if(startLineNumber - 1 > 0)
+                        if (startLineNumber - 1 > 0)
                         {
                             DocumentLine lastLine = Plan.GetLineByNumber(startLineNumber - 1);
-                            Plan.DeleteAllLinesInTheSpecifiedRange(this);
-                            DocumentLine startLine = Plan.GetLineByNumber(startLineNumber);
-                            Plan.DeleteAllLinesInTheSpecifiedRange(lastLine.EndOffset, startLine.EndOffset);
-                            StartLine = EndLine = lastLine;
+                            if (DataType is DataTypes.OptionalCompound)
+                            {
+                                Plan.DeleteAllLinesInTheSpecifiedRange(this);
+                            }
+                            if (DataType is DataTypes.NullableCompound)
+                            {
+                                DocumentLine startLine = Plan.GetLineByNumber(startLineNumber);
+                                string startLineText = Plan.GetRangeText(startLine.Offset, startLine.EndOffset - startLine.Offset);
+                                string endLineText = Plan.GetRangeText(EndLine.Offset, EndLine.EndOffset - EndLine.Offset);
+                                int startIndex = startLineText.IndexOf('{') + 1;
+                                int endIndex = endLineText.LastIndexOf('}');
+                                Plan.DeleteAllLinesInTheSpecifiedRange(startLine.Offset + startIndex, EndLine.Offset + endIndex);
+                            }
+                            StartLineNumber = EndLineNumber = 0;
+                            if (DataType is DataTypes.OptionalCompound)
+                                StartLine = EndLine = lastLine;
+                            else
+                                EndLine = StartLine;
                         }
-                        Children.Clear();
-                        break;
-                    }
-                case DataTypes.NullableCompound:
-                    {
                         break;
                     }
                 case DataTypes.ArrayElement:
@@ -288,6 +300,14 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         public void MoveItemDown_Click(object sender, RoutedEventArgs e)
         {
             MoveItem(true);
+        }
+        #endregion
+
+        #region Methods
+        public CompoundJsonTreeViewItem(ICustomWorldUnifiedPlan plan, IJsonItemTool jsonItemTool)
+        {
+            Plan = plan;
+            JsonItemTool = jsonItemTool;
         }
 
         /// <summary>
@@ -362,7 +382,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             length = nearbyItem.EndLine.EndOffset - offset;
 
             //当前节点向上移动时需要让邻近节点的所属文本加上替换后的偏移量
-            if(!IsDown)
+            if (!IsDown)
             {
                 nearbyOffset += nearbyLength - length + (Next is null ? 1 : 0);
             }
@@ -406,7 +426,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 currentLineText += ',';
             }
             else
-            if(!CurrentNeedComma)
+            if (!CurrentNeedComma)
             {
                 lastCommaIndex = currentLineText.LastIndexOf(',');
                 if (lastCommaIndex > -1 && currentLineText.TrimEnd().EndsWith(','))
@@ -417,7 +437,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 nearbyLineText += ',';
             }
             else
-            if(!NearbyNeedComma)
+            if (!NearbyNeedComma)
             {
                 lastCommaIndex = nearbyLineText.LastIndexOf(',');
                 if (lastCommaIndex > -1 && nearbyLineText.TrimEnd().EndsWith(','))
@@ -472,14 +492,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             }
             Parent.Children.Add(addToButtomItem);
             #endregion
-        }
-        #endregion
-
-        #region Methods
-        public CompoundJsonTreeViewItem(ICustomWorldUnifiedPlan plan, IJsonItemTool jsonItemTool)
-        {
-            Plan = plan;
-            JsonItemTool = jsonItemTool;
         }
 
         public new object Clone()

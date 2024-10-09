@@ -3,12 +3,10 @@ using cbhk.CustomControls.JsonTreeViewComponents;
 using cbhk.Interface.Json;
 using cbhk.Model.Common;
 using ICSharpCode.AvalonEdit;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Linq;
-using System.Windows;
 using System.Windows.Data;
 
 namespace cbhk.GeneralTools.TreeViewComponentsHelper
@@ -24,7 +22,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         public static TextEditor textEditor = null;
         #endregion
 
-        public static JsonTreeViewDataStructure RecursivelyTraverseEachMember(JsonTreeViewDataStructure result, JArray array, int lineNumber, int layerCount, CompoundJsonTreeViewItem ParentItem = null, JsonTreeViewItem Last = null, bool isProcessingTemplate = false)
+        /*public static JsonTreeViewDataStructure RecursivelyTraverseEachMember(JsonTreeViewDataStructure result, JArray array, int lineNumber, int layerCount, CompoundJsonTreeViewItem ParentItem = null, JsonTreeViewItem Last = null, bool isProcessingTemplate = false)
         {
             foreach (var token in array)
             {
@@ -491,16 +489,12 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             return result;
             #endregion
         }
+        */
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string originData = (string)value;
-            if (originData is null || originData.Length == 0)
-                return null;
-            JArray jsonArray = JArray.Parse(originData);
-            CurrentData = RecursivelyTraverseEachMember(new(), jsonArray, 2, 1);
-
-            return CurrentData.Result;
+            ObservableCollection<JsonTreeViewItem> result = (ObservableCollection<JsonTreeViewItem>)value; 
+            return result;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
