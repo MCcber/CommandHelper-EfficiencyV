@@ -1,12 +1,15 @@
 ﻿using cbhk.CustomControls;
 using cbhk.CustomControls.JsonTreeViewComponents;
+using cbhk.GeneralTools.DataService;
 using cbhk.GeneralTools.TreeViewComponentsHelper;
 using cbhk.Model.Common;
 using cbhk.ViewModel.Generators;
 using HtmlAgilityPack;
+using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -17,11 +20,11 @@ namespace cbhk.GeneralTools
     public partial class HtmlHelper
     {
         #region Field
-        static public Dictionary<string, CompoundJsonTreeViewItem> ValueProviderContextDictionary { get; set; } = [];
+        public Dictionary<string, CompoundJsonTreeViewItem> ValueProviderContextDictionary { get; set; } = [];
 
-        static DimensionTypeViewModel plan = new(null, null);
+        DimensionTypeViewModel plan = new(null, null);
 
-        static JsonTreeViewItemExtension jsonTool = new();
+        JsonTreeViewItemExtension jsonTool = new();
 
         [GeneratedRegex(@"^\s+?\:?\s+?(\*+)")]
         private static partial Regex GetLineStarCount();
@@ -66,11 +69,25 @@ namespace cbhk.GeneralTools
         private static partial Regex GetBoldKeywords();
 
         private string AdvancementWikiFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\1.20.4.wiki";
-        private static Dictionary<int, string> WikiDesignateLine = [];
-        private static string[] ProgressClassList = ["treeview"];
+        private Dictionary<int, string> WikiDesignateLine = [];
+        private string[] ProgressClassList = ["treeview"];
+
+        private BlockService blockService = null;
+        private EntityService entityService = null;
+        private ItemService itemService = null;
+
+        private IContainerProvider _container = null;
         #endregion
 
-        public static JsonTreeViewDataStructure AnalyzeHTMLData(string wikiData, string[] wikiLines)
+        public HtmlHelper(IContainerProvider container)
+        {
+            _container = container;
+            blockService = _container.Resolve<BlockService>();
+            entityService = _container.Resolve<EntityService>();
+            itemService = _container.Resolve<ItemService>();
+        }
+
+        public JsonTreeViewDataStructure AnalyzeHTMLData(string fileName)
         {
             JsonTreeViewDataStructure Result = new();
             HtmlDocument doc = new()
@@ -79,6 +96,8 @@ namespace cbhk.GeneralTools
                 OptionAutoCloseOnEnd = true
             };
 
+            string wikiData = File.ReadAllText(fileName);
+            string[] wikiLines = File.ReadAllLines(fileName);
             doc.LoadHtml(wikiData);
             List<HtmlNode> treeviewDivs = [.. doc.DocumentNode.SelectNodes("//div[@class='treeview']")];
 
@@ -174,7 +193,7 @@ namespace cbhk.GeneralTools
             return Result;
         }
 
-        private static JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int lineNumber, int layerCount, CompoundJsonTreeViewItem Parent = null, JsonTreeViewItem? Last = null, bool isProcessingTemplate = false, int LastStarCount = 1)
+        private JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int lineNumber, int layerCount, CompoundJsonTreeViewItem Parent = null, JsonTreeViewItem Last = null, bool isProcessingTemplate = false, int LastStarCount = 1)
         {
             #region 处理起始字符串
             if (result.ResultString.Length == 0)
@@ -425,17 +444,17 @@ namespace cbhk.GeneralTools
                             else
                             if (BlockTagMark.Index > 0)
                             {
-                                foreach (string blockTagMatch in JsonToJsonTreeViewItemConverter.BlockTagList)
+                                foreach (string blockName in blockService.GetAllBlockName())
                                 {
-                                    SetTypeCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = blockTagMatch });
+                                    SetTypeCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = blockName });
                                 }
                             }
                             else
                             if (EntityTagMark.Index > 0)
                             {
-                                foreach (string entityTagMatch in JsonToJsonTreeViewItemConverter.ItemTagList)
+                                foreach (string entityName in entityService.GetAllEntityName())
                                 {
-                                    SetTypeCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = entityTagMatch });
+                                    SetTypeCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = entityName });
                                 }
                             }
                             #endregion
@@ -667,9 +686,9 @@ namespace cbhk.GeneralTools
         /// </summary>
         /// <param name="lineNumber"></param>
         /// <returns></returns>
-        private static string GetDesignateKeywordByLineNumber(int lineNumber)
+        private string GetDesignateKeywordByLineNumber(int lineNumber)
         {
-            if (WikiDesignateLine.TryGetValue(lineNumber, out string? result))
+            if (WikiDesignateLine.TryGetValue(lineNumber, out string result))
                 return result;
             return "";
         }

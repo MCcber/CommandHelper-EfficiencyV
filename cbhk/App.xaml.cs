@@ -5,6 +5,7 @@ using System.Threading;
 using System.Windows;
 using cbhk.Common;
 using cbhk.GeneralTools;
+using cbhk.GeneralTools.DataService;
 using cbhk.Generators.DataPackGenerator;
 using cbhk.Generators.DataPackGenerator.DatapackInitializationForms;
 using cbhk.Generators.DimensionTypeGenerator;
@@ -43,6 +44,7 @@ namespace cbhk
     public partial class App : PrismApplication
     {
         private static string StartUpTimeString = "";
+
 #pragma warning disable IDE0052
         private Mutex _mutex;
 #pragma warning disable IDE0052
@@ -54,8 +56,11 @@ namespace cbhk
         protected override Window CreateShell()
         {
             ExternalDataImportManager.Init();
+#if DEBUG
             return Container.Resolve<MainView>();
-            //return Container.Resolve<SignInView>();
+#else
+            return Container.Resolve<SignInView>();
+#endif
         }
 
         /// <summary>
@@ -86,12 +91,21 @@ namespace cbhk
                 Current.Shutdown();
             }
 
+            //订阅异常处理
             SetupExceptionHandling();
             base.OnStartup(e);
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            #region Service
+            containerRegistry.RegisterSingleton<BlockService>();
+            containerRegistry.RegisterSingleton<EntityService>();
+            containerRegistry.RegisterSingleton<ItemService>();
+            containerRegistry.RegisterSingleton<HtmlHelper>();
+            #endregion
+
+            #region View
             containerRegistry.RegisterSingleton<MoreView>();
             containerRegistry.RegisterForNavigation<MoreView,MoreViewModel>();
             containerRegistry.RegisterSingleton<NoticeToUsersView>();
@@ -139,6 +153,7 @@ namespace cbhk
             containerRegistry.RegisterForNavigation<DatapackGenerateSetupView,DatapackGenerateSetupViewModel>(Name.DatapackGenerateSetupView);
             containerRegistry.RegisterForNavigation<HomePageView,HomePageViewModel>(Name.HomePageView);
             containerRegistry.RegisterForNavigation<TemplateSelectPageView, TemplateSelectViewModel>(Name.TemplateSelectPageView);
+            #endregion
         }
 
         /// <summary>

@@ -23,12 +23,17 @@ using System.Text.RegularExpressions;
 using System.Collections.ObjectModel;
 using cbhk.Model.Common;
 using cbhk.GeneralTools;
+using cbhk.GeneralTools.DataService;
 
 namespace cbhk.ViewModel.Generators
 {
     public partial class DimensionTypeViewModel : ObservableObject, ICustomWorldUnifiedPlan
     {
         #region Field
+        private HtmlHelper htmlHelper = null;
+        private BlockService blockService = null;
+        private EntityService entityService = null;
+        private ItemService itemService = null;
         private Window home = null;
         private string initRuleFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rules\1.20.4.wiki";
         private string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rules";
@@ -85,6 +90,11 @@ namespace cbhk.ViewModel.Generators
         {
             _container = container;
             home = mainView;
+
+            htmlHelper = _container.Resolve<HtmlHelper>();
+            blockService =  _container.Resolve<BlockService>();
+            entityService = _container.Resolve<EntityService>();
+            itemService = _container.Resolve<ItemService>();
         }
 
         /// <summary>
@@ -107,33 +117,11 @@ namespace cbhk.ViewModel.Generators
             await Task.Run(async () =>
             {
                 textEditor = sender as TextEditor;
-                JsonToJsonTreeViewItemConverter.textEditor = textEditor;
-                JsonToJsonTreeViewItemConverter.plan = this;
                 //生成值提供器字典
                 //ValueProviderContextDictionary = TreeViewRuleReader.LoadValueProviderStructure(valueProviderFilePath);
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    foreach (var item in Directory.GetFiles(configDirectoryPath))
-                    {
-                        string fileName = Path.GetFileNameWithoutExtension(item);
-                        if (File.Exists(item) && fileName == "BlockTag" || fileName == "ItemTag")
-                        {
-                            string data = File.ReadAllText(item);
-                            JArray jArray = JArray.Parse(data);
-                            if (fileName == "BlockTag")
-                                foreach (var tag in jArray)
-                                {
-                                    JsonToJsonTreeViewItemConverter.BlockTagList.Add(tag.ToString());
-                                }
-                            else
-                                foreach (var tag in jArray)
-                                {
-                                    JsonToJsonTreeViewItemConverter.ItemTagList.Add(tag.ToString());
-                                }
-                        }
-                    }
-
-                    JsonTreeViewDataStructure result = HtmlHelper.AnalyzeHTMLData("", []);
+                    JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(initRuleFilePath);
                     DimensionTypeItemString = File.ReadAllText(initRuleFilePath);
                     textEditor.Text = JsonToJsonTreeViewItemConverter.CurrentData.ResultString.ToString();
 

@@ -116,7 +116,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                         {
                             Key = keyToken.ToString(),
                             DataType = Enums.DataTypes.ValueProvider,
-                            Plan = JsonToJsonTreeViewItemConverter.plan
+                            Plan = null
                         };
 
                         if (Enum.TryParse(keyToken.ToString(), true, out Enums.ValueProviderTypes valueProviderType))
@@ -171,7 +171,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                                     }
                                     if (structure["peerNodeList"] is JArray peerNodeListToken)
                                     {
-                                        JsonTreeViewDataStructure dataStructure = JsonToJsonTreeViewItemConverter.RecursivelyTraverseEachMember(new(), peerNodeListToken, 2, 1, subItem, null, true);
+                                        JsonTreeViewDataStructure dataStructure = /*HtmlHelper.AnalyzeHTMLData("")*/null;
                                         subItem.Children = dataStructure.Result;
                                         switchList.Add(subItem);
                                     }
