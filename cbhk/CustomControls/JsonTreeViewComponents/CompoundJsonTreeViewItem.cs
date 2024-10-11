@@ -88,6 +88,10 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     case DataTypes.CustomCompound:
                         AddElementButtonVisibility = InputBoxVisibility = Visibility.Visible;
                         break;
+                    case DataTypes.List:
+                        AddElementButtonVisibility = Visibility.Visible;
+                        InputBoxVisibility = Visibility.Collapsed;
+                        break;
                 }
             }
         }
@@ -509,7 +513,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 {
                     if (item.DataType is DataTypes.ValueProvider && item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && Plan is not null)
                     {
-                        CompoundJsonTreeViewItem subItem = Plan.ValueProviderContextDictionary[compoundJsonTreeViewItem.ValueProviderType.ToString()];
+                        CompoundJsonTreeViewItem subItem = Plan.CurrentTreeViewMap[compoundJsonTreeViewItem.ValueProviderType.ToString()];
                         compoundJsonTreeViewItem.SwitchChildren.Clear();
                         for (int i = 0; i < subItem.SwitchChildren.Count; i++)
                         {

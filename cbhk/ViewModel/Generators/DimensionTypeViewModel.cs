@@ -13,7 +13,6 @@ using cbhk.CustomControls.Interfaces;
 using System.Threading;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using ICSharpCode.AvalonEdit.Document;
 using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
@@ -80,10 +79,10 @@ namespace cbhk.ViewModel.Generators
 
         #region Property
         [ObservableProperty]
-        public string _dimensionTypeItemString = "";
+        public ObservableCollection<JsonTreeViewItem> _dimensionTypeItemList = [];
 
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
-        public Dictionary<string, CompoundJsonTreeViewItem> ValueProviderContextDictionary { get; set; } = [];
+        public Dictionary<string, CompoundJsonTreeViewItem> CurrentTreeViewMap { get; set; } = [];
         #endregion
 
         public DimensionTypeViewModel(IContainerProvider container, MainView mainView)
@@ -92,6 +91,9 @@ namespace cbhk.ViewModel.Generators
             home = mainView;
 
             htmlHelper = _container.Resolve<HtmlHelper>();
+            htmlHelper.plan = this;
+            htmlHelper.jsonTool = jsonTool;
+
             blockService =  _container.Resolve<BlockService>();
             entityService = _container.Resolve<EntityService>();
             itemService = _container.Resolve<ItemService>();
@@ -104,7 +106,7 @@ namespace cbhk.ViewModel.Generators
         /// <param name="e"></param>
         public void CommonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            ValueProviderContextDictionary.Clear();
+            CurrentTreeViewMap.Clear();
         }
 
         /// <summary>
@@ -118,18 +120,18 @@ namespace cbhk.ViewModel.Generators
             {
                 textEditor = sender as TextEditor;
                 //生成值提供器字典
-                //ValueProviderContextDictionary = TreeViewRuleReader.LoadValueProviderStructure(valueProviderFilePath);
+                //CurrentTreeViewMap = TreeViewRuleReader.LoadValueProviderStructure(valueProviderFilePath);
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(initRuleFilePath);
-                    DimensionTypeItemString = File.ReadAllText(initRuleFilePath);
-                    textEditor.Text = JsonToJsonTreeViewItemConverter.CurrentData.ResultString.ToString();
+                    DimensionTypeItemList = result.Result;
+                    textEditor.Text = "{\r\n" + result.ResultString.ToString() + "\r\n}";
 
-                    foreach (var item in JsonToJsonTreeViewItemConverter.CurrentData.Result)
+                    foreach (var item in result.Result)
                     {
                         item.JsonItemTool = new JsonTreeViewItemExtension();
                         item.JsonItemTool.SetDocumentLineByLineNumber(item, textEditor);
-                        //KeyValueContextDictionary.Add(item.Path, item);
+                        KeyValueContextDictionary.TryAdd(item.Path, item);
                     }
 
                     //为代码编辑器安装大纲管理器

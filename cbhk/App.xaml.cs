@@ -121,8 +121,9 @@ namespace cbhk
             containerRegistry.RegisterSingleton<DisplayerView>();
             containerRegistry.RegisterForNavigation<DisplayerView, DisplayerViewModel>(Name.DisplayerView);
             containerRegistry.RegisterForNavigation<SignInView, SignInViewModel>(Name.SignInView);
-            containerRegistry.RegisterSingleton<MainView>();
+            containerRegistry.RegisterSingleton<SignInView>();
             containerRegistry.RegisterForNavigation<MainView, MainViewModel>(Name.MainView);
+            containerRegistry.RegisterSingleton<MainView>();
             containerRegistry.RegisterForNavigation<ArmorStandView, ArmorStandViewModel>(Name.ArmorStandView);
             containerRegistry.RegisterForNavigation<OnlyOneCommandView, OnlyOneCommandViewModel>(Name.OnlyOneCommandView);
             containerRegistry.RegisterForNavigation<TagView, TagViewModel>(Name.TagView);
@@ -134,7 +135,6 @@ namespace cbhk
             containerRegistry.RegisterForNavigation<DimensionTypeView,DimensionTypeViewModel>(Name.DimensionTypeView);
             containerRegistry.RegisterForNavigation<EntityView,EntityViewModel>(Name.EntityView);
             containerRegistry.RegisterForNavigation<EntityPagesView, EntityPagesViewModel>();
-            containerRegistry.RegisterSingleton<EntityPagesView>();
             containerRegistry.RegisterForNavigation<FireworkRocketView, FireworkRocketViewModel>(Name.FireworkRocketView);
             containerRegistry.RegisterForNavigation<ItemView,ItemViewModel>(Name.ItemView);
             containerRegistry.RegisterForNavigation<ItemPagesView, ItemPageViewModel>(Name.ItemView);

@@ -48,6 +48,7 @@
             ArrayElement,
             Array,
             InnerArray,
+            List,
             ValueProvider
         }
 

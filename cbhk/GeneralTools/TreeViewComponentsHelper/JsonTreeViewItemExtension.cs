@@ -90,7 +90,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             {
                 if (item.DataType is DataTypes.ValueProvider && item is CompoundJsonTreeViewItem compound && TempateItem.Plan is not null)
                 {
-                    CompoundJsonTreeViewItem subItem = TempateItem.Plan.ValueProviderContextDictionary[compound.ValueProviderType.ToString()];
+                    CompoundJsonTreeViewItem subItem = TempateItem.Plan.CurrentTreeViewMap[compound.ValueProviderType.ToString()];
                     compound.SwitchChildren.Clear();
                     for (int i = 0; i < subItem.SwitchChildren.Count; i++)
                     {
@@ -227,7 +227,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         /// <param name="textEditor"></param>
         public void SetDocumentLineByLineNumber(JsonTreeViewItem item,TextEditor textEditor)
         {
-            if (item.StartLineNumber > textEditor.Document.LineCount || item.StartLineNumber == 0)
+            if (item.StartLineNumber > textEditor.Document.LineCount || item.StartLineNumber <= 0)
             {
                 return;
             }
@@ -257,7 +257,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                     DataTypes currentType = compound.DataType;
                     subChildren.Add(compound.Clone() as CompoundJsonTreeViewItem);
                     (subChildren[^1] as CompoundJsonTreeViewItem).DataType = currentType;
-                    ObservableCollection<JsonTreeViewItem> templateList = compoundJsonTreeViewItem.Plan.ValueProviderContextDictionary[compound.ValueProviderType.ToString()].SwitchChildren;
+                    ObservableCollection<JsonTreeViewItem> templateList = compoundJsonTreeViewItem.Plan.CurrentTreeViewMap[compound.ValueProviderType.ToString()].SwitchChildren;
                     CompoundJsonTreeViewItem firstTemplateItem = templateList[0] as CompoundJsonTreeViewItem;
                     subChildren[^1].Value = firstTemplateItem.Children[0].Value;
                     if ((subChildren[^1] as CompoundJsonTreeViewItem).DataType  is not DataTypes.Array)
@@ -302,7 +302,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         {
             #region 定义列表和统一方案接口
             bool AddToTop = compoundJsonTreeViewItem.DataType is DataTypes.Array;
-            bool AddSubStructure = compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound || compoundJsonTreeViewItem.DataType is DataTypes.NullableCompound || compoundJsonTreeViewItem.DataType is DataTypes.OptionalAndNullableCompound;
+            bool AddSubStructure = compoundJsonTreeViewItem.DataType is DataTypes.Compound || compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound || compoundJsonTreeViewItem.DataType is DataTypes.NullableCompound || compoundJsonTreeViewItem.DataType is DataTypes.OptionalAndNullableCompound;
             ObservableCollection<JsonTreeViewItem> subChildren = [];
             int CurrentStartLineNumber, CurrentEndLineNumber;
             #endregion
@@ -325,7 +325,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 string optionalSpace = new(' ', compoundJsonTreeViewItem.LayerCount * 2);
 
                 #region 计算应该添加的内容
-                string optionalNewValue = (compoundJsonTreeViewItem.StartLine.LineNumber > 1 ? "," : "") + "\r\n" + optionalSpace + "\"" + compoundJsonTreeViewItem.Key + "\": " + "{" + compoundJsonTreeViewItem.JsonItemTool.RecursiveIntegrationOfSubstructureValuesWhenSwitch(compoundJsonTreeViewItem, compoundJsonTreeViewItem.Children, compoundJsonTreeViewItem.Parent) + optionalSpace + "}" + (compoundJsonTreeViewItem.Next is not null ? ',' : "");
+                string optionalNewValue = (compoundJsonTreeViewItem.StartLine.LineNumber > 2 ? "," : "") + "\r\n" + optionalSpace + "\"" + compoundJsonTreeViewItem.Key + "\": " + "{" + compoundJsonTreeViewItem.JsonItemTool.RecursiveIntegrationOfSubstructureValuesWhenSwitch(compoundJsonTreeViewItem, compoundJsonTreeViewItem.Children, compoundJsonTreeViewItem.Parent) + optionalSpace + "}" + (compoundJsonTreeViewItem.Next is not null ? ',' : "");
                 #endregion
 
                 compoundJsonTreeViewItem.Plan.UpdateNullValueBySpecifyingInterval(compoundJsonTreeViewItem.StartLine.EndOffset, optionalNewValue);

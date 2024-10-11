@@ -20,7 +20,6 @@
     mc:Ignorable="d">
 
     <Window.Resources>
-        <ConverterSpace:JsonToJsonTreeViewItemConverter x:Key="JsonToJsonTreeViewItem" />
         <CompoundItem:JsonTreeViewTemplateSelector
             x:Key="JsonTreeViewTemplateSelector"
             CompoundJsonTreeViewItemTemplate="{StaticResource CompoundJsonTreeViewItem}"
@@ -45,7 +44,7 @@
             Background="Transparent"
             BorderThickness="0"
             ItemTemplateSelector="{StaticResource JsonTreeViewTemplateSelector}"
-            ItemsSource="{Binding DimensionTypeItemString, Converter={StaticResource JsonToJsonTreeViewItem}, Mode=OneWay, ConverterParameter={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+            ItemsSource="{Binding DimensionTypeItemList}"
             Style="{DynamicResource TreeViewWithScrollBar}" />
         <GridSplitter
             Grid.Column="1"

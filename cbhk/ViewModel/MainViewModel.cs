@@ -19,7 +19,7 @@ using cbhk.ViewModel.Common;
 
 namespace cbhk.ViewModel
 {
-    public partial class MainViewModel : ObservableObject
+    public partial class MainViewModel(IContainerProvider container) : ObservableObject
     {
         #region Field
         /// <summary>
@@ -54,13 +54,9 @@ namespace cbhk.ViewModel
 
         [ObservableProperty]
         public BitmapImage _userBackground = null;
-        private IContainerProvider _container;
-        #endregion
+        private IContainerProvider _container = container;
 
-        public MainViewModel(IContainerProvider container)
-        {
-            _container = container;
-        }
+        #endregion
 
         #region Event
         /// <summary>
