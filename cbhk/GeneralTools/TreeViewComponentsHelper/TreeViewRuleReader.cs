@@ -181,7 +181,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                                     }
                                 }
                             }
-                            jsonTreeViewItem.SwitchChildren = switchList;
+                            jsonTreeViewItem.SubChildrenString = /*switchList*/"";
                         }
                         #endregion
 

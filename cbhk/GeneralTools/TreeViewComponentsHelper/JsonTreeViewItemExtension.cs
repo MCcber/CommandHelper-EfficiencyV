@@ -1,5 +1,4 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.Interfaces;
+﻿using cbhk.CustomControls.Interfaces;
 using cbhk.CustomControls.JsonTreeViewComponents;
 using cbhk.Interface.Json;
 using ICSharpCode.AvalonEdit;
@@ -64,23 +63,23 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             }
         }
 
-        public int SetDefaultStructureJsonItem(CompoundJsonTreeViewItem item, ObservableCollection<JsonTreeViewItem> switchChilren)
+        public int SetDefaultStructureJsonItem(CompoundJsonTreeViewItem item, string optionalSwitchString)
         {
             string SelectedEnumItem = item.SelectedEnumItem.Text.ToLower();
-            List<string> presetSwitchKeyList = [..item.EnumItemsSource.Select(item => item.Text.ToLower().Replace("_", " "))];
-            List<string> switchKeyList = [.. switchChilren.Select(item=>((string)item.DefaultValue).ToLower().Replace("_"," "))];
-            int index = presetSwitchKeyList.IndexOf(SelectedEnumItem);
+            //List<string> presetSwitchKeyList = [..item.EnumItemsSource.Select(item => item.Text.ToLower().Replace("_", " "))];
+            //List<string> switchKeyList = [.. switchChilren.Select(item=>((string)item.DefaultValue).ToLower().Replace("_"," "))];
+            int index = /*presetSwitchKeyList.IndexOf(SelectedEnumItem);*/0;
 
-            int count = presetSwitchKeyList.Except(switchKeyList).Count();
+            //int count = presetSwitchKeyList.Except(switchKeyList).Count();
 
-            if (count > 0 && switchKeyList.Contains(SelectedEnumItem))
-                index--;
-            else
-                index = -1;
-            if (index == -1)
-            {
-                item.Value = item.DefaultValue;
-            }
+            //if (count > 0 && switchKeyList.Contains(SelectedEnumItem))
+            //    index--;
+            //else
+            //    index = -1;
+            //if (index == -1)
+            //{
+            //    item.Value = item.DefaultValue;
+            //}
             return index;
         }
 
@@ -91,20 +90,6 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 if (item.DataType is DataTypes.ValueProvider && item is CompoundJsonTreeViewItem compound && TempateItem.Plan is not null)
                 {
                     CompoundJsonTreeViewItem subItem = TempateItem.Plan.CurrentTreeViewMap[compound.ValueProviderType.ToString()];
-                    compound.SwitchChildren.Clear();
-                    for (int i = 0; i < subItem.SwitchChildren.Count; i++)
-                    {
-                        //复制标记，禁止无限克隆值提供器导致栈溢出
-                        if (subItem.SwitchChildren[i] is CompoundJsonTreeViewItem compoundChild)
-                        {
-                            compoundChild.IsCloning = true;
-                            compoundChild.JsonItemTool = compound.JsonItemTool;
-                            compoundChild.Plan = compound.Plan;
-                            JsonTreeViewItem newCompoundChild = compoundChild.Clone() as JsonTreeViewItem;
-                            compound.SwitchChildren.Add(newCompoundChild);
-                            compoundChild.IsCloning = false;
-                        }
-                    }
                     if (item is CompoundJsonTreeViewItem currentCompoundItem && subItem is CompoundJsonTreeViewItem currentSubItem)
                     {
                         currentCompoundItem.ValueTypeList = currentSubItem.ValueTypeList;
@@ -112,9 +97,6 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                         currentCompoundItem.SelectedEnumItem = currentCompoundItem.EnumItemsSource.First();
                     }
                     compound.DataType = DataTypes.ValueProvider;
-
-                    if (subItem is CompoundJsonTreeViewItem subCompoundItem && !subCompoundItem.ValueTypeList[0].Text.Equals(subCompoundItem.SwitchChildren[0].DefaultType + "", StringComparison.CurrentCultureIgnoreCase))
-                        item.InputBoxVisibility = Visibility.Visible;
                     item.EnumBoxVisibility = Visibility.Visible;
                 }
 
@@ -247,53 +229,6 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             }
         }
 
-        public ObservableCollection<JsonTreeViewItem> SetSwitchChildrenOfSubItem(ObservableCollection<JsonTreeViewItem> switchChildren, CompoundJsonTreeViewItem compoundJsonTreeViewItem,CompoundJsonTreeViewItem entry)
-        {
-            ObservableCollection<JsonTreeViewItem> subChildren = [];
-            foreach (var item in switchChildren)
-            {
-                if (item is CompoundJsonTreeViewItem compound)
-                {
-                    DataTypes currentType = compound.DataType;
-                    subChildren.Add(compound.Clone() as CompoundJsonTreeViewItem);
-                    (subChildren[^1] as CompoundJsonTreeViewItem).DataType = currentType;
-                    ObservableCollection<JsonTreeViewItem> templateList = compoundJsonTreeViewItem.Plan.CurrentTreeViewMap[compound.ValueProviderType.ToString()].SwitchChildren;
-                    CompoundJsonTreeViewItem firstTemplateItem = templateList[0] as CompoundJsonTreeViewItem;
-                    subChildren[^1].Value = firstTemplateItem.Children[0].Value;
-                    if ((subChildren[^1] as CompoundJsonTreeViewItem).DataType  is not DataTypes.Array)
-                        subChildren[^1].EnumBoxVisibility = Visibility.Visible;
-                    foreach (var templateItem in templateList)
-                    {
-                        string enumString = (string)templateItem.DefaultValue;
-                        enumString = string.Join(' ', enumString.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..].ToString()));
-                        subChildren[^1].EnumItemsSource.Add(new TextComboBoxItem() { Text = enumString });
-                        subChildren[^1].SelectedEnumItem = subChildren[^1].EnumItemsSource.FirstOrDefault();
-                    }
-                }
-                else
-                {
-                    subChildren.Add(item.Clone() as JsonTreeViewItem);
-                    if (subChildren[^1].DataType is not DataTypes.Bool)
-                    {
-                        subChildren[^1].InputBoxVisibility = Visibility.Visible;
-                        subChildren[^1].BoolButtonVisibility = Visibility.Collapsed;
-                    }
-                    else
-                    {
-                        subChildren[^1].BoolButtonVisibility = Visibility.Visible;
-                        subChildren[^1].InputBoxVisibility = Visibility.Collapsed;
-                    }
-                }
-                if (subChildren[^1].Plan is null)
-                    subChildren[^1].Plan = compoundJsonTreeViewItem.Plan;
-                if (subChildren[^1].JsonItemTool is null)
-                    subChildren[^1].JsonItemTool = compoundJsonTreeViewItem.JsonItemTool;
-                subChildren[^1].Parent = entry;
-                subChildren[^1].Last = subChildren[^1].Next = null;
-            }
-            return subChildren;
-        }
-
         /// <summary>
         /// 添加数组元素
         /// </summary>
@@ -302,7 +237,11 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         {
             #region 定义列表和统一方案接口
             bool AddToTop = compoundJsonTreeViewItem.DataType is DataTypes.Array;
-            bool AddSubStructure = compoundJsonTreeViewItem.DataType is DataTypes.Compound || compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound || compoundJsonTreeViewItem.DataType is DataTypes.NullableCompound || compoundJsonTreeViewItem.DataType is DataTypes.OptionalAndNullableCompound;
+            bool AddSubStructure = 
+                compoundJsonTreeViewItem.DataType is DataTypes.Compound ||
+                compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound ||
+                compoundJsonTreeViewItem.DataType is DataTypes.NullableCompound ||
+                compoundJsonTreeViewItem.DataType is DataTypes.OptionalAndNullableCompound;
             ObservableCollection<JsonTreeViewItem> subChildren = [];
             int CurrentStartLineNumber, CurrentEndLineNumber;
             #endregion
@@ -310,13 +249,6 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             #region 处理可选复合型节点
             if(AddSubStructure)
             {
-                foreach (var item in compoundJsonTreeViewItem.SwitchChildren)
-                {
-                    if (item is CompoundJsonTreeViewItem subCompoundItem)
-                        compoundJsonTreeViewItem.Children.Add(subCompoundItem.Clone() as CompoundJsonTreeViewItem);
-                    else
-                        compoundJsonTreeViewItem.Children.Add(item.Clone() as JsonTreeViewItem);
-                }
                 ObservableCollection<JsonTreeViewItem> optionalResultList = TreeViewRuleReader.RecursivelyUpdateMemberLayer(compoundJsonTreeViewItem, compoundJsonTreeViewItem.Plan.KeyValueContextDictionary, compoundJsonTreeViewItem.Children, compoundJsonTreeViewItem.StartLine.LineNumber + 2, compoundJsonTreeViewItem.LayerCount + 1);
 
                 compoundJsonTreeViewItem.Children = optionalResultList;
@@ -359,7 +291,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 }
             }
             else
-                if (compoundJsonTreeViewItem.Children.Count - 1 - compoundJsonTreeViewItem.SwitchChildren.Count >= 0)
+                if (compoundJsonTreeViewItem.Children.Count - 1 - compoundJsonTreeViewItem.SubChildrenString.Length >= 0)
             {
                 CurrentStartLineNumber = compoundJsonTreeViewItem.StartLine.LineNumber + 1;
                 CurrentEndLineNumber = compoundJsonTreeViewItem.StartLine.LineNumber + 1;
@@ -401,13 +333,15 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             #endregion
 
             #region 克隆模板中的子结构、设置它的数据，设置元素的末尾行号
-            ObservableCollection<JsonTreeViewItem> currentSwitchChildren;
+            string currentSwitchChildren = "";
             if (AddToTop)
-                currentSwitchChildren = compoundJsonTreeViewItem.SwitchChildren;
+                currentSwitchChildren = compoundJsonTreeViewItem.SubChildrenString;
             else
-                currentSwitchChildren = compoundJsonTreeViewItem.Parent.SwitchChildren;
+                currentSwitchChildren = compoundJsonTreeViewItem.Parent.SubChildrenString;
 
-            subChildren = SetSwitchChildrenOfSubItem(currentSwitchChildren,compoundJsonTreeViewItem,entry);
+            //这里需要用HtmlHelper实例来取得对应的子结构
+            //subChildren = SetSwitchChildrenOfSubItem(currentSwitchChildren,compoundJsonTreeViewItem,entry);
+            subChildren = [];
 
             int currentLineNumber = AddToTop ? CurrentStartLineNumber + 2 : (compoundJsonTreeViewItem.Parent.Children[^2] as CompoundJsonTreeViewItem).EndLine.LineNumber + 2;
 
@@ -566,104 +500,6 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                     RecursiveTraverseAndRunOperate(jsonItemList,action);
                 }
             }
-        }
-
-        /// <summary>
-        /// 递归克隆节点
-        /// </summary>
-        /// <param name="list"></param>
-        /// <returns></returns>
-        public ObservableCollection<JsonTreeViewItem> RecursiveCloneItem(ObservableCollection<JsonTreeViewItem> list,CompoundJsonTreeViewItem currentItem)
-        {
-            ObservableCollection<JsonTreeViewItem> result = [];
-            foreach (var item in list)
-            {
-                JsonTreeViewItem newItem = new()
-                {
-                    Plan = currentItem.Plan,
-                    JsonItemTool = currentItem.JsonItemTool,
-                    InputBoxVisibility = item.InputBoxVisibility,
-                    BoolButtonVisibility = item.BoolButtonVisibility,
-                    StartLine = item.StartLine,
-                    CurrentValueType = item.CurrentValueType,
-                    DataType = item.DataType,
-                    DisplayText = item.DisplayText,
-                    EnumItemsSource = item.EnumItemsSource,
-                    ErrorTipIcon = item.ErrorTipIcon,
-                    ErrorTiptext = item.ErrorTiptext,
-                    InfoTipIcon = item.InfoTipIcon,
-                    InfoTiptext = item.InfoTiptext,
-                    ErrorIconVisibility = item.ErrorIconVisibility,
-                    InfoIconVisibility = item.InfoIconVisibility,
-                    Key = item.Key,
-                    IsFalse = currentItem.IsFalse,
-                    IsTrue = currentItem.IsTrue,
-                    Last = item.Last,
-                    Next = item.Next,
-                    LayerCount = item.LayerCount,
-                    Magnification = item.Magnification,
-                    MaxValue = item.MaxValue,
-                    MinValue = item.MinValue,
-                    MultiplierMode = item.MultiplierMode,
-                    Parent = item.Parent,
-                    Path = item.Path,
-                    RangeType = item.RangeType,
-                    SelectedEnumItem = item.SelectedEnumItem,
-                    Value = item.Value,
-                    DefaultValue = item.Value,
-                };
-                CompoundJsonTreeViewItem newCompoundItem = new(item.Plan, currentItem.JsonItemTool)
-                {
-                    StartLine = item.StartLine,
-                    CurrentValueType = item.CurrentValueType,
-                    DataType = item.DataType,
-                    DisplayText = item.DisplayText,
-                    EnumItemsSource = item.EnumItemsSource,
-                    ErrorTipIcon = item.ErrorTipIcon,
-                    ErrorTiptext = item.ErrorTiptext,
-                    InfoTipIcon = item.InfoTipIcon,
-                    InfoTiptext = item.InfoTiptext,
-                    EnumBoxVisibility = item.EnumBoxVisibility,
-                    ErrorIconVisibility = item.ErrorIconVisibility,
-                    InfoIconVisibility = item.InfoIconVisibility,
-                    Key = item.Key,
-                    IsFalse = currentItem.IsFalse,
-                    IsTrue = currentItem.IsTrue,
-                    Last = item.Last,
-                    Next = item.Next,
-                    LayerCount = item.LayerCount,
-                    Magnification = item.Magnification,
-                    MaxValue = item.MaxValue,
-                    MinValue = item.MinValue,
-                    MultiplierMode = item.MultiplierMode,
-                    Parent = item.Parent,
-                    Path = item.Path,
-                    RangeType = item.RangeType,
-                    SelectedEnumItem = item.SelectedEnumItem,
-                    Value = item.Value,
-                    DefaultValue = item.DefaultValue
-                };
-
-                if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
-                {
-                    newCompoundItem.DataType = compoundJsonTreeViewItem.DataType;
-                    if (newCompoundItem.DataType is DataTypes.Array)
-                        newCompoundItem.AddElementButtonVisibility = compoundJsonTreeViewItem.AddElementButtonVisibility;
-                    newCompoundItem.EndLineNumber = compoundJsonTreeViewItem.EndLineNumber;
-                    newCompoundItem.EndLine = compoundJsonTreeViewItem.EndLine;
-                    newCompoundItem.SwitchKey = compoundJsonTreeViewItem.SwitchKey;
-                    newCompoundItem.CompoundHead = compoundJsonTreeViewItem.CompoundHead;
-                    newCompoundItem.ValueTypeList = compoundJsonTreeViewItem.ValueTypeList;
-                    if (compoundJsonTreeViewItem.Children.Count > 0)
-                        newCompoundItem.Children = RecursiveCloneItem(compoundJsonTreeViewItem.Children, currentItem);
-                    if (compoundJsonTreeViewItem.SwitchChildren.Count > 0)
-                        newCompoundItem.SwitchChildren = RecursiveCloneItem(compoundJsonTreeViewItem.SwitchChildren, currentItem);
-                    result.Add(newCompoundItem);
-                }
-                else
-                    result.Add(newItem);
-            }
-            return result;
         }
 
         public void UpdateFlattenDescendantNodeList(CompoundJsonTreeViewItem target, ObservableCollection<JsonTreeViewItem> list)

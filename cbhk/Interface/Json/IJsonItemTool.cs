@@ -2,7 +2,6 @@
 using cbhk.CustomControls.JsonTreeViewComponents;
 using ICSharpCode.AvalonEdit;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
 using System.Windows;
@@ -22,7 +21,7 @@ namespace cbhk.Interface.Json
         /// <param name="item"></param>
         /// <param name="switchChildren"></param>
         /// <returns></returns>
-        int SetDefaultStructureJsonItem(CompoundJsonTreeViewItem item, ObservableCollection<JsonTreeViewItem> switchChildren);
+        int SetDefaultStructureJsonItem(CompoundJsonTreeViewItem item, string optionalSwitchString);
         void SetEnumData(ObservableCollection<JsonTreeViewItem> Children, CompoundJsonTreeViewItem entry, CompoundJsonTreeViewItem TempateItem);
         /// <summary>
         /// 递归删除平铺列表成员
@@ -47,26 +46,11 @@ namespace cbhk.Interface.Json
         /// <param name="action"></param>
         void RecursiveTraverseAndRunOperate(ObservableCollection<JsonTreeViewItem> jsonItemList,Action<JsonTreeViewItem> action);
         /// <summary>
-        /// 递归克隆节点
-        /// </summary>
-        /// <param name="list"></param>
-        /// <param name="currentItem"></param>
-        /// <returns></returns>
-        ObservableCollection<JsonTreeViewItem> RecursiveCloneItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem currentItem);
-        /// <summary>
         /// 通过行号设置DocumentLine实例
         /// </summary>
         /// <param name="jsonTreeViewItem">当前节点</param>
         /// <param name="textEditor">节点所在的代码编辑器</param>
         void SetDocumentLineByLineNumber(JsonTreeViewItem jsonTreeViewItem, TextEditor textEditor);
-        /// <summary>
-        /// 设置分支的子节点
-        /// </summary>
-        /// <param name="switchChildren"></param>
-        /// <param name="compoundJsonTreeViewItem"></param>
-        /// <param name="entry"></param>
-        /// <returns></returns>
-        ObservableCollection<JsonTreeViewItem> SetSwitchChildrenOfSubItem(ObservableCollection<JsonTreeViewItem> switchChildren, CompoundJsonTreeViewItem compoundJsonTreeViewItem, CompoundJsonTreeViewItem entry);
         /// <summary>
         /// 添加数组元素
         /// </summary>
