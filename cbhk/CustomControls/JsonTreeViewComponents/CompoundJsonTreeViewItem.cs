@@ -1,11 +1,9 @@
 ﻿using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
-using cbhk.GeneralTools.TreeViewComponentsHelper;
 using cbhk.Interface.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
 using System.Collections.ObjectModel;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using static cbhk.CustomControls.JsonTreeViewComponents.Enums;

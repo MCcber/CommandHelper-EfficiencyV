@@ -4,6 +4,7 @@ using cbhk.GeneralTools.DataService;
 using cbhk.GeneralTools.TreeViewComponentsHelper;
 using cbhk.Model.Common;
 using cbhk.ViewModel.Generators;
+using DryIoc.ImTools;
 using HtmlAgilityPack;
 using Prism.Ioc;
 using System;
@@ -25,7 +26,7 @@ namespace cbhk.GeneralTools
 
         public JsonTreeViewItemExtension jsonTool = null;
 
-        [GeneratedRegex(@"^\s+?\:?\s+?(\*+)")]
+        [GeneratedRegex(@"^\s*\s?\:?\s*\s?(\*+)")]
         private static partial Regex GetLineStarCount();
 
         [GeneratedRegex(@"{{Nbt inherit/[a-z_\s]+}}", RegexOptions.IgnoreCase)]
@@ -37,13 +38,16 @@ namespace cbhk.GeneralTools
         [GeneratedRegex(@"可以为空", RegexOptions.IgnoreCase)]
         private static partial Regex GetIsCanNullableKey();
 
-        [GeneratedRegex(@"^\:?\s+?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"^\:?\s*\s?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetExplanationForHierarchicalNodes();
 
-        [GeneratedRegex(@"^\:?\s+?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"^\:?\s*\s?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[\u4e00-\u9fff''><a-z_]+)\}\}", RegexOptions.IgnoreCase)]
+        private static partial Regex GetNodeTypeAndCustomKey();
+
+        [GeneratedRegex(@"^\:?\s*\s?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetNodeTypeAndKey();
 
-        [GeneratedRegex(@"^\:?\s+?\*+\s+?(?<branch>\{\{nbt\|[a-z]+\}\})+(\{\{nbt\|(?<1>[a-z]+)\|(?<2>[a-z_]+)\}\})", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"^\:?\s*\s?\*+\s+?(?<1>\{\{nbt\|[a-z]+\}\})+(\{\{nbt\|(?<2>[a-z]+)\|(?<3>[a-z_]+)\}\})", RegexOptions.IgnoreCase)]
         private static partial Regex GetMultiTypeAndKeyOfNode();
 
         [GeneratedRegex(@"默认为\{\{cd\|[a-z_]+\}\}", RegexOptions.IgnoreCase)]
@@ -64,7 +68,7 @@ namespace cbhk.GeneralTools
         [GeneratedRegex(@"\{\{cd\|[a-z:_]+\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetEnumValue();
 
-        [GeneratedRegex(@"====\s(minecraft\:[a-z_]+)\s====", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"====\s*\s?(minecraft\:[a-z_]+)\s*\s?====", RegexOptions.IgnoreCase)]
         private static partial Regex GetBoldKeywords();
 
         private string AdvancementWikiFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\1.20.4.wiki";
@@ -179,7 +183,7 @@ namespace cbhk.GeneralTools
 
                         string currentKey = GetDesignateKeywordByLineNumber(line - 2);
 
-                        if (data.Result.Count > 0 && data.Result[0].Key.Length > 0 && data.Result[0] is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.Children.Count > 0)
+                        if (data.Result.Count > 0 && data.Result[0].Key.Length > 0 && data.Result[0] is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.SubChildrenString.Length > 0)
                         {
                             plan.CurrentTreeViewMap.TryAdd(data.Result[0].Key, data.Result[0] as CompoundJsonTreeViewItem);
                         }
@@ -212,8 +216,6 @@ namespace cbhk.GeneralTools
                 bool IsCurrentOptional = GetOptionalKey().Match(nodeList[i]).Success;
                 bool IsHaveNextNode = i < nodeList.Count - 1;
                 bool IsNextOptionalNode = false;
-                if (IsHaveNextNode)
-                    IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
                 #endregion
 
                 #region 判断是否跳过本次处理
@@ -248,8 +250,12 @@ namespace cbhk.GeneralTools
                 #endregion
 
                 #region 处理两大值类型
+                //匹配节点类型和键
                 MatchCollection nodeTypeAndKeyInfoGroupList = GetNodeTypeAndKey().Matches(nodeList[i]);
+                //匹配多重节点类型和键
                 MatchCollection multiNodeTypeAndKeyInfoGroupList = GetMultiTypeAndKeyOfNode().Matches(nodeList[i]);
+                //匹配自定义节点类型和键
+                MatchCollection customNodeTypeAndKeyInfoGroupList = GetNodeTypeAndCustomKey().Matches(nodeList[i]);
 
                 MatchCollection targetInfoGroupList = null;
                 if (nodeTypeAndKeyInfoGroupList.Count > 0)
@@ -257,6 +263,8 @@ namespace cbhk.GeneralTools
                 else
                 if (multiNodeTypeAndKeyInfoGroupList.Count > 0)
                     targetInfoGroupList = multiNodeTypeAndKeyInfoGroupList;
+                if(customNodeTypeAndKeyInfoGroupList.Count > 0)
+                    targetInfoGroupList = customNodeTypeAndKeyInfoGroupList;
 
                 if (targetInfoGroupList is not null && targetInfoGroupList.Count > 0)
                 {
@@ -632,13 +640,18 @@ namespace cbhk.GeneralTools
                                             nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
                                         }
 
-                                        JsonTreeViewDataStructure subResult = new();
+                                        //JsonTreeViewDataStructure subResult = new();
                                         if (subNodeList.Count > 0)
                                         {
-                                            if (!IsCurrentOptional)
-                                                subResult = GetTreeViewItemResult(result, subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, item, isProcessingCommonTemplate, starCount);
+                                            //if (!IsCurrentOptional)
+                                            //    subResult = GetTreeViewItemResult(result, subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, item, isProcessingCommonTemplate, starCount);
                                             i = nextNodeIndex - 1;
                                         }
+
+                                        IsHaveNextNode = i < nodeList.Count - 1;
+                                        if (IsHaveNextNode)
+                                            IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
+
                                         SetTypeCompoundItem.SubChildrenString = currentSubChildrenString.ToString();
 
                                         #region 赋予Plan属性以及判断是否需要为上一个复合节点收尾
@@ -651,10 +664,11 @@ namespace cbhk.GeneralTools
                                         }
                                         #endregion
 
-                                        if (subResult.Result.Count > 0 && subResult.Result[^1].Key.Length > 0)
-                                        {
-                                            result = subResult;
-                                        }
+                                        //if (subResult.Result.Count > 0 && subResult.Result[^1].Key.Length > 0)
+                                        //{
+                                        //    result.Result.Append(SetTypeCompoundItem);
+                                        //    result = subResult;
+                                        //}
                                         #endregion
                                     }
                                 }
@@ -701,6 +715,30 @@ namespace cbhk.GeneralTools
                 //保存当前的*号数量
                 PreviousStarCount = starCount;
                 #endregion
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 向下结构搜索器
+        /// </summary>
+        /// <param name="treeNodeList">树节点列表</param>
+        /// <param name="targetList">目标链表</param>
+        /// <param name="currentKey">当前Key</param>
+        /// <param name="currentNode">当前div节点</param>
+        /// <returns></returns>
+        private Dictionary<string,JsonTreeViewItem> DownwardStructureSearcher(List<HtmlNode> treeNodeList, string[] targetList, string currentKey, HtmlNode currentNode)
+        {
+            Dictionary<string, JsonTreeViewItem> result = [];
+
+            for (int i = currentNode.Line + 1; i < targetList.Length; i++)
+            {
+                List<HtmlNode> nodeList = treeNodeList.Where(item=>item.Line == i).ToList();
+                if(nodeList.Count > 0)
+                {
+
+                }
             }
 
             return result;

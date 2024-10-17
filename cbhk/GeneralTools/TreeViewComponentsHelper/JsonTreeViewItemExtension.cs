@@ -236,6 +236,8 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         public void AddSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem,UIElement element)
         {
             #region 定义列表和统一方案接口
+            string test = compoundJsonTreeViewItem.SubChildrenString;
+            CompoundJsonTreeViewItem subItem = compoundJsonTreeViewItem.Plan.CurrentTreeViewMap[compoundJsonTreeViewItem.Key];
             bool AddToTop = compoundJsonTreeViewItem.DataType is DataTypes.Array;
             bool AddSubStructure = 
                 compoundJsonTreeViewItem.DataType is DataTypes.Compound ||
