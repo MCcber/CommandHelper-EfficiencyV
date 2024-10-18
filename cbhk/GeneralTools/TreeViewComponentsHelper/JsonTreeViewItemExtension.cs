@@ -1,8 +1,10 @@
 ﻿using cbhk.CustomControls.Interfaces;
 using cbhk.CustomControls.JsonTreeViewComponents;
 using cbhk.Interface.Json;
+using cbhk.Model.Common;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
+using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,8 +16,10 @@ using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
 
 namespace cbhk.GeneralTools.TreeViewComponentsHelper
 {
-    public class JsonTreeViewItemExtension:IJsonItemTool
+    public class JsonTreeViewItemExtension(IContainerProvider container) :IJsonItemTool
     {
+        private IContainerProvider _container = container;
+
         public void RecursiveRemoveFlattenDescendantNodeList(CompoundJsonTreeViewItem CurrentParent, CompoundJsonTreeViewItem Target)
         {
             foreach (var item in Target.Children)
@@ -444,6 +448,14 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             entry.StartLine = compoundJsonTreeViewItem.Plan.GetLineByNumber(entry.Children[0].StartLine.LineNumber - 1);
             entry.EndLine = compoundJsonTreeViewItem.Plan.GetLineByNumber(entry.Children[^1] is CompoundJsonTreeViewItem compoundItem && compoundItem.EndLine is not null ? compoundItem.EndLine.LineNumber + 1 : entry.Children[^1].StartLine.LineNumber + 1);
             #endregion
+
+
+            if(AddSubStructure)
+            {
+                HtmlHelper htmlHelper = _container.Resolve<HtmlHelper>();
+                JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), [.. compoundJsonTreeViewItem.SubChildrenString.Split("\r\n")], compoundJsonTreeViewItem.StartLine.LineNumber + 1, compoundJsonTreeViewItem.LayerCount + 1, compoundJsonTreeViewItem);
+                compoundJsonTreeViewItem.Children.AddRange(result.Result);
+            }
         }
 
         /// <summary>

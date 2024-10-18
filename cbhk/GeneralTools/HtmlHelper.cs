@@ -4,7 +4,6 @@ using cbhk.GeneralTools.DataService;
 using cbhk.GeneralTools.TreeViewComponentsHelper;
 using cbhk.Model.Common;
 using cbhk.ViewModel.Generators;
-using DryIoc.ImTools;
 using HtmlAgilityPack;
 using Prism.Ioc;
 using System;
@@ -29,8 +28,11 @@ namespace cbhk.GeneralTools
         [GeneratedRegex(@"^\s*\s?\:?\s*\s?(\*+)")]
         private static partial Regex GetLineStarCount();
 
-        [GeneratedRegex(@"{{Nbt inherit/[a-z_\s]+}}", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"{{Nbt (inherit/[a-z_\s]+)}}", RegexOptions.IgnoreCase)]
         private static partial Regex GetTemplateKey();
+
+        [GeneratedRegex(@"{{interval\|left=(?<1>\d+)\|right=(?<2>\d+)}}", RegexOptions.IgnoreCase)]
+        private static partial Regex GetNumberRange();
 
         [GeneratedRegex(@"可选", RegexOptions.IgnoreCase)]
         private static partial Regex GetOptionalKey();
@@ -68,12 +70,22 @@ namespace cbhk.GeneralTools
         [GeneratedRegex(@"\{\{cd\|[a-z:_]+\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetEnumValue();
 
+        [GeneratedRegex(@"==\s*\s?([\u4e00-\u9fffa-z_]+)\s*\s?==", RegexOptions.IgnoreCase)]
+        private static partial Regex GetContextReference();
+
         [GeneratedRegex(@"====\s*\s?(minecraft\:[a-z_]+)\s*\s?====", RegexOptions.IgnoreCase)]
         private static partial Regex GetBoldKeywords();
 
         private string AdvancementWikiFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\1.20.4.wiki";
-        private Dictionary<int, string> WikiDesignateLine = [];
-        private string[] ProgressClassList = ["treeview"];
+        /// <summary>
+        /// 包含关键字的行
+        /// </summary>
+        public Dictionary<string, HtmlNode> EnumStructureList = [];
+        /// <summary>
+        /// 当前上下文引用结构
+        /// </summary>
+        public Dictionary<string, HtmlNode> CurrentContextReference = [];
+        public List<string> ProgressClassList = ["treeview"];
 
         private BlockService blockService = null;
         private EntityService entityService = null;
@@ -103,17 +115,6 @@ namespace cbhk.GeneralTools
             string[] wikiLines = File.ReadAllLines(fileName);
             doc.LoadHtml(wikiData);
             List<HtmlNode> treeviewDivs = [.. doc.DocumentNode.SelectNodes("//div[@class='treeview']")];
-
-            MatchCollection keywordList = GetBoldKeywords().Matches(wikiData);
-
-            for (int i = 0; i < wikiLines.Length; i++)
-            {
-                Match content = GetBoldKeywords().Match(wikiLines[i]);
-                if (content is not null && content.Success)
-                {
-                    WikiDesignateLine.TryAdd(i + 1, content.Groups[1].Value);
-                }
-            }
 
             if (treeviewDivs is not null)
             {
@@ -157,6 +158,32 @@ namespace cbhk.GeneralTools
                 #region 从第二个节点开始循环处理
                 for (int i = 1; i < treeviewDivs.Count; i++)
                 {
+                    #region 收集关键字相关结构
+                    int currentLine = treeviewDivs[i].Line - 1;
+                    while (currentLine > -1 && wikiLines[currentLine].TrimStart().StartsWith('=') && !GetBoldKeywords().Match(wikiLines[currentLine]).Success && wikiLines[currentLine].Trim() != "")
+                    {
+                        currentLine--;
+                    }
+                    Match CurrentKeyStructureMatch = GetBoldKeywords().Match(wikiLines[i]);
+                    if (CurrentKeyStructureMatch is not null && CurrentKeyStructureMatch.Success)
+                    {
+                        EnumStructureList.TryAdd(CurrentKeyStructureMatch.Value, treeviewDivs[i]);
+                    }
+                    #endregion
+
+                    #region 收集带引用的文档数据
+                    currentLine = treeviewDivs[i].Line - 1;
+                    while (currentLine > -1 && wikiLines[currentLine].TrimStart().StartsWith('=') && !GetContextReference().Match(wikiLines[currentLine]).Success && wikiLines[currentLine].Trim() != "")
+                    {
+                        currentLine--;
+                    }
+                    Match CurrentContextKeyMatch = GetContextReference().Match(wikiLines[currentLine]);
+                    if (CurrentContextKeyMatch is not null)
+                    {
+                        CurrentContextReference.TryAdd(CurrentContextKeyMatch.Value, treeviewDivs[i]);
+                    }
+                    #endregion
+
                     IEnumerable<string> classList = treeviewDivs[i].GetClasses();
                     if (ProgressClassList.Intersect(classList).Any())
                     {
@@ -181,8 +208,6 @@ namespace cbhk.GeneralTools
 
                         JsonTreeViewDataStructure data = GetTreeViewItemResult(new(), nodeList, 2, 1);
 
-                        string currentKey = GetDesignateKeywordByLineNumber(line - 2);
-
                         if (data.Result.Count > 0 && data.Result[0].Key.Length > 0 && data.Result[0] is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.SubChildrenString.Length > 0)
                         {
                             plan.CurrentTreeViewMap.TryAdd(data.Result[0].Key, data.Result[0] as CompoundJsonTreeViewItem);
@@ -206,7 +231,7 @@ namespace cbhk.GeneralTools
         /// <param name="isProcessingCommonTemplate">是否正在处理模板</param>
         /// <param name="PreviousStarCount">前一个节点星号数量</param>
         /// <returns></returns>
-        private JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int lineNumber, int layerCount, CompoundJsonTreeViewItem Parent = null, JsonTreeViewItem Previous = null, bool isProcessingCommonTemplate = false, int PreviousStarCount = 1)
+        public JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int lineNumber, int layerCount, CompoundJsonTreeViewItem Parent = null, JsonTreeViewItem Previous = null, bool isProcessingCommonTemplate = false, int PreviousStarCount = 1)
         {
             //遍历找到的 div 标签内容集合
             for (int i = 0; i < nodeList.Count; i++)
@@ -742,18 +767,6 @@ namespace cbhk.GeneralTools
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// 获取指定行的关键字
-        /// </summary>
-        /// <param name="lineNumber"></param>
-        /// <returns></returns>
-        private string GetDesignateKeywordByLineNumber(int lineNumber)
-        {
-            if (WikiDesignateLine.TryGetValue(lineNumber, out string result))
-                return result;
-            return "";
         }
     }
 }
