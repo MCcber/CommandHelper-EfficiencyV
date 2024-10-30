@@ -89,7 +89,6 @@ namespace cbhk.ViewModel
         {
             Interval = new TimeSpan(2000),
             IsEnabled = false
-            //test
         };
 
         /// <summary>
