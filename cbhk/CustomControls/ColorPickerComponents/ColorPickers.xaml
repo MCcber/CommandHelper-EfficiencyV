@@ -14,13 +14,13 @@
             <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
             <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
-            <!--<Setter Property="Template">
+            <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type local:ThumbPro}">
                         <Canvas
                             Width="{TemplateBinding Width}"
                             Height="{TemplateBinding Height}"
-                            Background="#00000000">
+                            Background="Transparent">
                             <Path
                                 Canvas.Left="{TemplateBinding Left}"
                                 Canvas.Top="{TemplateBinding Top}"
@@ -47,19 +47,19 @@
                         </Canvas>
                     </ControlTemplate>
                 </Setter.Value>
-            </Setter>-->
+            </Setter>
         </Style>
         <Style x:Key="ThumbStyle2" TargetType="{x:Type local:ThumbPro}">
             <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
             <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
-            <!--<Setter Property="Template">
+            <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type local:ThumbPro}">
                         <Canvas
                             Width="{TemplateBinding Width}"
                             Height="{TemplateBinding Height}"
-                            Background="#00000000">
+                            Background="Transparent">
                             <Ellipse
                                 Canvas.Left="{TemplateBinding Left}"
                                 Canvas.Top="{TemplateBinding Top}"
@@ -70,7 +70,7 @@
                         </Canvas>
                     </ControlTemplate>
                 </Setter.Value>
-            </Setter>-->
+            </Setter>
         </Style>
         <Style x:Key="FocusVisual2">
             <Setter Property="Control.Template">
