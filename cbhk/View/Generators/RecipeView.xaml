@@ -35,11 +35,11 @@
     <Window.InputBindings>
         <KeyBinding
             Key="F5"
-            Command="{Binding Run}"
+            Command="{Binding RunCommand}"
             Modifiers="Ctrl" />
         <KeyBinding
             Key="Esc"
-            Command="{Binding Return}"
+            Command="{Binding ReturnCommand}"
             CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local_window:CommonWindow}}" />
     </Window.InputBindings>
 

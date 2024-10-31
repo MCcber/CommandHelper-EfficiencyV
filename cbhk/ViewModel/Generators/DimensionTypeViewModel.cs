@@ -40,7 +40,7 @@ namespace cbhk.ViewModel.Generators
         public TextEditor textEditor = null;
         private FoldingManager foldingManager = null;
         private IContainerProvider _container;
-        JsonTreeViewItemExtension jsonTool = new();
+        JsonTreeViewItemExtension jsonTool = null;
 
         private Dictionary<string, List<JsonTreeViewItem>> CriteriaDataList = [];
         private Dictionary<string, List<JsonTreeViewItem>> AdvancementReferenceItemList = [];
@@ -92,6 +92,7 @@ namespace cbhk.ViewModel.Generators
 
             htmlHelper = _container.Resolve<HtmlHelper>();
             htmlHelper.plan = this;
+            jsonTool = container.Resolve<JsonTreeViewItemExtension>();
             htmlHelper.jsonTool = jsonTool;
 
             blockService =  _container.Resolve<BlockService>();
@@ -129,7 +130,7 @@ namespace cbhk.ViewModel.Generators
 
                     foreach (var item in result.Result)
                     {
-                        item.JsonItemTool = new JsonTreeViewItemExtension();
+                        item.JsonItemTool = jsonTool;
                         item.JsonItemTool.SetDocumentLineByLineNumber(item, textEditor);
                         KeyValueContextDictionary.TryAdd(item.Path, item);
                     }

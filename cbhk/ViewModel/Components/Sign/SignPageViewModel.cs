@@ -267,7 +267,7 @@ namespace cbhk.Generators.SignGenerator.Components
         #region 当前光标所在的文本对象引用
         private RichRun currentRichRun = null;
         private IContainerProvider _container;
-        private string icon_path = AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\SignView\\images\\icon.png";
+        private string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Sign\Image\icon.png";
 
         public RichRun CurrentRichRun
         {
@@ -341,7 +341,6 @@ namespace cbhk.Generators.SignGenerator.Components
         public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             CancellationTokenSource cancellationTokenSource = new();
-            CancellationToken cancellationToken = new();
             await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
             {
                 if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 1130)
@@ -897,8 +896,9 @@ namespace cbhk.Generators.SignGenerator.Components
                     frontResult = frontResult.Remove(frontResult.Length - 1, 1);
                 frontResult.Append("]',");
             }
-            frontResult = frontResult.Replace("'[]'", "").Replace(",", "");
-            if (frontResult.ToString() == "messages:[")
+            frontResult = frontResult.Remove(frontResult.Length - 1, 1).Replace(",'[]'", "");
+
+            if (frontResult.ToString() == "messages:['[]'")
                 frontResult.Clear();
             #endregion
             #region 反面文档
@@ -919,8 +919,8 @@ namespace cbhk.Generators.SignGenerator.Components
                     backResult.Append("]',");
                 }
             }
-            backResult = backResult.Replace("'[]'", "").Replace(",", "");
-            if (backResult.ToString() == "messages:[")
+            backResult = backResult.Remove(backResult.Length - 1, 1).Replace(",'[]'", "");
+            if (backResult.ToString() == "messages:['[]'")
                 backResult.Clear();
             #endregion
 
@@ -937,18 +937,12 @@ namespace cbhk.Generators.SignGenerator.Components
             else
                 if (CanGlowing && IsFrontGlowing && !IsOrBigger1_20)
                 frontResult.Append(",GlowingText:1b");
-            else
-                if(frontResult.Length > 0)
-                frontResult = frontResult.Remove(frontResult.Length - 1, 1);
 
             if (CanGlowing && IsBackGlowing && IsOrBigger1_20)
                 backResult.Append(",has_glowing_text:1b");
             else
                 if (CanGlowing && IsBackGlowing && !IsOrBigger1_20)
                 backResult.Append(",GlowingText:1b");
-            else
-                if(backResult.Length > 0)
-                backResult = backResult.Remove(backResult.Length - 1, 1);
 
             if (CanWaxed && IsWaxed)
                 Result += "is_waxed:1b,";
@@ -956,7 +950,7 @@ namespace cbhk.Generators.SignGenerator.Components
             string signId = CanHanging && IsHanging ?SelectedSignType.Text+"_hanging_sign": SelectedSignType.Text + "_sign";
 
             if (IsOrBigger1_20)
-                Result = Result + "front_text:{" + frontResult.ToString().TrimEnd(',') + "},back_text:{" + backResult.ToString().TrimEnd(',') + "}";
+                Result = Result + (frontResult.Length > 0 ? "front_text:{" + frontResult.ToString().TrimEnd(',') + "}" : "") + (backResult.Length > 0 ? (frontResult.Length > 0 ? "," : "") + "back_text:{" + backResult.ToString().TrimEnd(',') + "}" : "");
             else
                 Result = frontResult.ToString();
 
@@ -980,7 +974,7 @@ namespace cbhk.Generators.SignGenerator.Components
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
-                    displayerViewModel.GeneratorResult(Result, "告示牌", icon_path);
+                    displayerViewModel.GeneratorResult(Result, "告示牌", iconPath);
                 }
             }
             else
