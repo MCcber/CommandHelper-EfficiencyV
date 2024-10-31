@@ -174,7 +174,7 @@ namespace cbhk.ViewModel.Generators
                 #endregion
                 #region 异步载入自定义物品序列
                 //加载物品集合
-                uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\ItemView\\";
+                uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Item";
                 string[] itemFileList = Directory.GetFiles(uriDirectoryPath);
                 foreach (string item in itemFileList)
                 {

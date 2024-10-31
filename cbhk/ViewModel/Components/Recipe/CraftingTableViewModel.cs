@@ -1,7 +1,6 @@
 ﻿using cbhk.GeneralTools;
 using cbhk.GeneralTools.Displayer;
 using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.RecipeGenerator;
 using cbhk.Generators.RecipeGenerator.Components;
 using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -528,7 +527,7 @@ namespace cbhk.ViewModel.Components.Recipe
                         keyData.Append("{\"item\":\"minecraft:" + itemID + "\"" + (MaterialTag[i].Count > 0 && MaterialTag[i].Count > 0 && MaterialTag[i][0].Length > 0 ? "\",\"tag\":\"" + MaterialTag[i][0] + "\"}," : "},"));
                     }
                     else
-                        if (itemStructures.Count > 1 && MultiSelect)
+                        if (itemStructures.Count > 0 && MultiSelect)
                     {
                         keyData.Append("[");
                         for (int j = 0; j < itemStructures.Count; j++)
