@@ -270,7 +270,7 @@ namespace cbhk.CustomControls.ColorPickerComponents
 
         // Using a DependencyProperty as the backing store for Offset.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty LeftProperty =
-            DependencyProperty.Register("Offset", typeof(double), typeof(ThumbPro), new PropertyMetadata(0.0));
+            DependencyProperty.Register("Left", typeof(double), typeof(ThumbPro), new PropertyMetadata(0.0));
 
         double FirstTop;
         double FirstLeft;

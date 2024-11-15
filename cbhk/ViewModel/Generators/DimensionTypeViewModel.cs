@@ -34,16 +34,12 @@ namespace cbhk.ViewModel.Generators
         private EntityService entityService = null;
         private ItemService itemService = null;
         private Window home = null;
-        private string initRuleFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rules\1.20.4.wiki";
-        private string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rules";
-        private string valueProviderFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ValueProviderStructure.json";
+        private string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rules\1.20.4";
         public TextEditor textEditor = null;
         private FoldingManager foldingManager = null;
         private IContainerProvider _container;
-        JsonTreeViewItemExtension jsonTool = new();
+        JsonTreeViewItemExtension jsonTool = null;
 
-        private Dictionary<string, List<JsonTreeViewItem>> CriteriaDataList = [];
-        private Dictionary<string, List<JsonTreeViewItem>> AdvancementReferenceItemList = [];
         public ObservableCollection<JsonTreeViewItem> AdvancementTreeViewItemList = [];
 
         [GeneratedRegex(@"^\:?\s+?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
@@ -92,6 +88,7 @@ namespace cbhk.ViewModel.Generators
 
             htmlHelper = _container.Resolve<HtmlHelper>();
             htmlHelper.plan = this;
+            jsonTool = container.Resolve<JsonTreeViewItemExtension>();
             htmlHelper.jsonTool = jsonTool;
 
             blockService =  _container.Resolve<BlockService>();
@@ -120,16 +117,16 @@ namespace cbhk.ViewModel.Generators
             {
                 textEditor = sender as TextEditor;
                 //生成值提供器字典
-                //CurrentTreeViewMap = TreeViewRuleReader.LoadValueProviderStructure(valueProviderFilePath);
+                //CurrentTreeViewMap = TreeViewRuleReader.LoadValueProviderStructure(valueProviderPath);
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(initRuleFilePath);
+                    JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(configDirectoryPath);
                     DimensionTypeItemList = result.Result;
                     textEditor.Text = "{\r\n" + result.ResultString.ToString() + "\r\n}";
 
                     foreach (var item in result.Result)
                     {
-                        item.JsonItemTool = new JsonTreeViewItemExtension();
+                        item.JsonItemTool = jsonTool;
                         item.JsonItemTool.SetDocumentLineByLineNumber(item, textEditor);
                         KeyValueContextDictionary.TryAdd(item.Path, item);
                     }
@@ -137,7 +134,7 @@ namespace cbhk.ViewModel.Generators
                     //为代码编辑器安装大纲管理器
                     foldingManager = FoldingManager.Install(textEditor.TextArea);
                     XshdSyntaxDefinition xshdSyntaxDefinition = new();
-                    xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\json.xshd"));
+                    xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\Json.xshd"));
                     IHighlightingDefinition jsonHighlighting = HighlightingLoader.Load(xshdSyntaxDefinition, HighlightingManager.Instance);
                     textEditor.SyntaxHighlighting = jsonHighlighting;
                 });

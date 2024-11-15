@@ -102,119 +102,57 @@ namespace cbhk.GeneralTools
             itemService = _container.Resolve<ItemService>();
         }
 
-        public JsonTreeViewDataStructure AnalyzeHTMLData(string fileName)
+        public JsonTreeViewDataStructure AnalyzeHTMLData(string directoryPath)
         {
             JsonTreeViewDataStructure Result = new();
-            HtmlDocument doc = new()
+            HtmlDocument doc = new();
+
+            foreach (var file in Directory.GetFiles(directoryPath))
             {
-                OptionFixNestedTags = true,
-                OptionAutoCloseOnEnd = true
-            };
+                string wikiData = File.ReadAllText(file);
+                string[] wikiLines = File.ReadAllLines(file);
+                doc.LoadHtml(wikiData);
+                List<HtmlNode> treeviewDivs = [.. doc.DocumentNode.SelectNodes("//div[@class='treeview']")];
 
-            string wikiData = File.ReadAllText(fileName);
-            string[] wikiLines = File.ReadAllLines(fileName);
-            doc.LoadHtml(wikiData);
-            List<HtmlNode> treeviewDivs = [.. doc.DocumentNode.SelectNodes("//div[@class='treeview']")];
-
-            if (treeviewDivs is not null)
-            {
-                #region 由于第一个HtmlNode实例的InnerHtml属性总会包含所有标签的内容，所以这里需要进行特殊处理
-
-                #region 直接覆盖InnerHtml属性会导致内容错误，所以这里直接用链表来提取正确的结构数据
-                List<string> firstNodeContent = [];
-                for (int i = 0; i < treeviewDivs[1].Line - 2; i++)
+                if (treeviewDivs is not null)
                 {
-                    if (wikiLines[i].TrimStart().StartsWith('<') || wikiLines[i].TrimStart().StartsWith('='))
-                    {
-                        continue;
-                    }
-                    firstNodeContent.Add(wikiLines[i]);
-                }
-                #endregion
+                    #region 由于第一个HtmlNode实例的InnerHtml属性总会包含所有标签的内容，所以这里需要进行特殊处理
 
-                #region 把VSC排版后的格式重新整理(有些应该归为一行的被排版分割为了多行)
-                for (int j = 0; j < firstNodeContent.Count; j++)
-                {
-                    if (firstNodeContent[j].Replace("*", "").Trim().Length == 0)
-                    {
-                        int nextStarLine = j + 1;
-                        while (nextStarLine < firstNodeContent.Count && !firstNodeContent[nextStarLine].TrimStart().StartsWith('*'))
-                        {
-                            firstNodeContent[j] += firstNodeContent[j + 1];
-                            firstNodeContent.RemoveAt(j + 1);
-                        }
-                    }
-                }
-                #endregion
-
-                #region 添加第一个div解析后的内容
-                JsonTreeViewDataStructure firstResultData = GetTreeViewItemResult(new(), firstNodeContent, 2, 1);
-                Result.Result.AddRange(firstResultData.Result);
-                Result.ResultString.Append(firstResultData.ResultString);
-                #endregion
-
-                #endregion
-
-                #region 从第二个节点开始循环处理
-                for (int i = 1; i < treeviewDivs.Count; i++)
-                {
-                    #region 收集关键字相关结构
-                    int currentLine = treeviewDivs[i].Line - 1;
-                    while (currentLine > -1 && wikiLines[currentLine].TrimStart().StartsWith('=') && !GetBoldKeywords().Match(wikiLines[currentLine]).Success && wikiLines[currentLine].Trim() != "")
-                    {
-                        currentLine--;
-                    }
-                    Match CurrentKeyStructureMatch = GetBoldKeywords().Match(wikiLines[i]);
-                    if (CurrentKeyStructureMatch is not null && CurrentKeyStructureMatch.Success)
-                    {
-                        EnumStructureList.TryAdd(CurrentKeyStructureMatch.Value, treeviewDivs[i]);
-                    }
+                    #region 直接覆盖InnerHtml属性会导致内容错误，所以这里直接用链表来提取正确的结构数据
+                    List<string> firstNodeContent = treeviewDivs[0].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).ToList();
+                    //for (int i = 0; i < treeviewDivs[0].Line - 2; i++)
+                    //{
+                    //    if (wikiLines[i].TrimStart().StartsWith('<') || wikiLines[i].TrimStart().StartsWith('='))
+                    //    {
+                    //        continue;
+                    //    }
+                    //    firstNodeContent.Add(wikiLines[i]);
+                    //}
                     #endregion
 
-                    #region 收集带引用的文档数据
-                    currentLine = treeviewDivs[i].Line - 1;
-                    while (currentLine > -1 && wikiLines[currentLine].TrimStart().StartsWith('=') && !GetContextReference().Match(wikiLines[currentLine]).Success && wikiLines[currentLine].Trim() != "")
+                    #region 把VSC排版后的格式重新整理(有些应该归为一行的被排版分割为了多行)
+                    for (int j = 0; j < firstNodeContent.Count; j++)
                     {
-                        currentLine--;
-                    }
-                    Match CurrentContextKeyMatch = GetContextReference().Match(wikiLines[currentLine]);
-                    if (CurrentContextKeyMatch is not null)
-                    {
-                        CurrentContextReference.TryAdd(CurrentContextKeyMatch.Value, treeviewDivs[i]);
-                    }
-                    #endregion
-
-                    IEnumerable<string> classList = treeviewDivs[i].GetClasses();
-                    if (ProgressClassList.Intersect(classList).Any())
-                    {
-                        int line = treeviewDivs[i].Line;
-                        // 可以在这里对每个 div 标签进行操作，比如获取属性、子节点等
-                        List<string> nodeList = [.. treeviewDivs[i].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
-
-                        #region 把VSC排版后的格式重新整理(有些应该归为一行的被排版分割为了多行)
-                        for (int j = 0; j < nodeList.Count; j++)
+                        if (firstNodeContent[j].Replace("*", "").Trim().Length == 0)
                         {
-                            if (nodeList[j].Replace("*", "").Trim().Length == 0)
+                            int nextStarLine = j + 1;
+                            while (nextStarLine < firstNodeContent.Count && !firstNodeContent[nextStarLine].TrimStart().StartsWith('*'))
                             {
-                                int nextStarLine = j + 1;
-                                while (nextStarLine < nodeList.Count && !nodeList[nextStarLine].TrimStart().StartsWith('*'))
-                                {
-                                    nodeList[j] += nodeList[j + 1];
-                                    nodeList.RemoveAt(j + 1);
-                                }
+                                firstNodeContent[j] += firstNodeContent[j + 1];
+                                firstNodeContent.RemoveAt(j + 1);
                             }
                         }
-                        #endregion
-
-                        JsonTreeViewDataStructure data = GetTreeViewItemResult(new(), nodeList, 2, 1);
-
-                        if (data.Result.Count > 0 && data.Result[0].Key.Length > 0 && data.Result[0] is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.SubChildrenString.Length > 0)
-                        {
-                            plan.CurrentTreeViewMap.TryAdd(data.Result[0].Key, data.Result[0] as CompoundJsonTreeViewItem);
-                        }
                     }
+                    #endregion
+
+                    #region 添加第一个div解析后的内容
+                    JsonTreeViewDataStructure firstResultData = GetTreeViewItemResult(new(), firstNodeContent, 2, 1);
+                    Result.Result.AddRange(firstResultData.Result);
+                    Result.ResultString.Append(firstResultData.ResultString);
+                    #endregion
+
+                    #endregion
                 }
-                #endregion
             }
             return Result;
         }

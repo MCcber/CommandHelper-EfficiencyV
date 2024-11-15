@@ -99,13 +99,13 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns></returns>
-        public static Dictionary<string, CompoundJsonTreeViewItem> LoadValueProviderStructure(string filePath)
+        public static Dictionary<string, CompoundJsonTreeViewItem> LoadValueProviderStructure(string directoryPath)
         {
             Dictionary<string, CompoundJsonTreeViewItem> result = [];
-            if (File.Exists(filePath))
+            if (Directory.Exists(directoryPath))
             {
-                string data = File.ReadAllText(filePath);
-                JArray valueProviderArray = JArray.Parse(data);
+                string[] dataList = Directory.GetFileSystemEntries(directoryPath, "*.wiki|*.json", SearchOption.AllDirectories);
+                JArray valueProviderArray = JArray.Parse(dataList[0]);
                 foreach (var obj in valueProviderArray.Cast<JObject>())
                 {
                     #region 读取一个提供器类型

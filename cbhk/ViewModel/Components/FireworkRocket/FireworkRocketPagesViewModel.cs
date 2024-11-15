@@ -46,8 +46,8 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         #endregion
 
         #region 形状数据源
-        private ObservableCollection<string> shapeList = [];
-        public ObservableCollection<string> ShapeList
+        private ObservableCollection<TextComboBoxItem> shapeList = [];
+        public ObservableCollection<TextComboBoxItem> ShapeList
         {
             get => shapeList;
             set => SetProperty(ref shapeList, value);

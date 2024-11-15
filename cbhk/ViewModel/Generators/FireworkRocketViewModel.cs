@@ -97,7 +97,7 @@ namespace cbhk.ViewModel.Generators
         /// <summary>
         /// 形状数据源
         /// </summary>
-        public ObservableCollection<string> ShapeList { get; set; } = [];
+        public ObservableCollection<TextComboBoxItem> ShapeList { get; set; } = [];
 
         /// <summary>
         /// 形状路径
@@ -112,7 +112,7 @@ namespace cbhk.ViewModel.Generators
                 string[] shapes = File.ReadAllLines(shapePath);
                 foreach (string shape in shapes)
                 {
-                    ShapeList.Add(shape[(shape.LastIndexOf(':') + 1)..]);
+                    ShapeList.Add(new TextComboBoxItem() { Text = shape[(shape.LastIndexOf(':') + 1)..] });
                 }
             }
             #endregion

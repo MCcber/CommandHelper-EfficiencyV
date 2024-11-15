@@ -16,6 +16,7 @@ using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using cbhk.View.Common;
 using cbhk.ViewModel.Common;
+using cbhk.View;
 
 namespace cbhk.ViewModel
 {
@@ -153,8 +154,9 @@ namespace cbhk.ViewModel
         public void UserGrid_Loaded(object sender, RoutedEventArgs e)
         {
             UserGrid = sender as Grid;
-            if (UserID.Length == 0)
-                UserGrid.Background = Application.Current.Resources["BackgroundBrush"] as Brush;
+            Brush BackgroundBrush = _container.Resolve<MainView>().FindResource("BackgroundBrush") as Brush;
+            if (UserID.Length == 0 && BackgroundBrush is not null)
+                UserGrid.Background = BackgroundBrush;
         }
 
         public void UserHead_Loaded(object sender, RoutedEventArgs e) => UserHead = sender as BitmapImage;
