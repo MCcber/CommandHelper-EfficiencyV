@@ -828,9 +828,8 @@
                     <Image
                         Grid.Row="0"
                         Grid.Column="0"
-                        Width="50"
-                        Height="50"
                         HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
                         Panel.ZIndex="1"
                         Cursor="Hand"
                         RenderOptions.BitmapScalingMode="HighQuality"

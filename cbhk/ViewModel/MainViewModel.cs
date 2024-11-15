@@ -35,6 +35,10 @@ namespace cbhk.ViewModel
         private Grid UserGrid = null;
         private IProgress<DataTable> SetGeneratorButtonHandler = null;
         DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
+        /// <summary>
+        /// 初始化界面数据
+        /// </summary>
+        private IProgress<byte> InitUIDataProgress = null;
         #endregion
 
         #region Property
@@ -114,8 +118,32 @@ namespace cbhk.ViewModel
                 }
             });
 
+            InitUIDataProgress = new Progress<byte>(async (number) =>
+            {
+                #region 加载用户数据
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png"))
+                {
+                    UserHead = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png", UriKind.RelativeOrAbsolute));
+                }
+                if (UserData.TryGetValue("UserID", out string userID))
+                    UserID = userID;
+                if (UserData.TryGetValue("description", out string description))
+                    UserDescription = description;
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"))
+                    UserBackground = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"));
+                #endregion
+                #region 载入生成器按钮
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
+                {
+                    DataTable generatorTable = await dataCommunicator.GetData("SELECT * FROM Generators");
+                    SetGeneratorButtonHandler.Report(generatorTable);
+                }
+                #endregion
+
+                StopSkeletonScreen(Task.CompletedTask);
+            });
+
             await ReadDataSource();
-            await Task.Run(InitUIData).ContinueWith(StopSkeletonScreen);
         }
 
         public void GeneratorTable_Loaded(object sender, RoutedEventArgs e) => GeneratorTable = sender as Grid;
@@ -234,7 +262,7 @@ namespace cbhk.ViewModel
             if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
             {
                 DataTable dataTable = await dataCommunicator.GetData("SELECT * FROM EnvironmentConfigs");
-                if(dataTable.Rows.Count > 0)
+                if (dataTable.Rows.Count > 0)
                 {
                     if (dataTable.Rows[0]["Visibility"] is string Visibility)
                     {
@@ -252,36 +280,8 @@ namespace cbhk.ViewModel
                         MainWindowProperties.CloseToTray = closeToTray == 1;
                 }
             }
-        }
 
-        /// <summary>
-        /// 初始化界面数据
-        /// </summary>
-        private async Task InitUIData()
-        {
-            #region 加载用户数据
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Resource\\UserHead.png"))
-            {
-                UserHead = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "Resource\\UserHead.png", UriKind.Absolute));
-            }
-
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                if (UserData.TryGetValue("UserID", out string userID))
-                    UserID = userID;
-                if (UserData.TryGetValue("description", out string description))
-                    UserDescription = description;
-                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Resource\\userBackground.png"))
-                    UserBackground = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "Resource\\userBackground.png"));
-            });
-            #endregion
-            #region 载入生成器按钮
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
-            {
-                DataTable generatorTable = await dataCommunicator.GetData("SELECT * FROM Generators");
-                SetGeneratorButtonHandler.Report(generatorTable);
-            }
-            #endregion
+            InitUIDataProgress.Report(0);
         }
         #endregion
     }

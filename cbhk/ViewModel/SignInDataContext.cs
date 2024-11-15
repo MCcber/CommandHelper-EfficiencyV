@@ -235,7 +235,8 @@ namespace cbhk.ViewModel
             {
                 string account = Regex.Match(uriencode(Regex.Match(UserAccount, "(.*)").ToString()),@"(.*)").ToString();
                 string pwd = Regex.Match(uriencode(Regex.Match(UserPassword, "(.*)").ToString()), @"(.*)").ToString();
-                result = JsonConvert.DeserializeObject(GeneralTools.SignIn.GetDataByPost(account, pwd)) as JObject;
+                string signResult = await GeneralTools.SignIn.GetDataByPost(account, pwd);
+                result = JsonConvert.DeserializeObject(signResult) as JObject;
             }
             catch(Exception e)
             {
@@ -270,9 +271,9 @@ namespace cbhk.ViewModel
 
                     if (result.SelectToken("data.avatar") is JToken avatar && result.SelectToken("data.avatar").ToString().Contains('?'))
                     {
-                        bool haveHead = await GeneralTools.SignIn.DownLoadUserImage(avatar.ToString(), AppDomain.CurrentDomain.BaseDirectory + "resources\\userHead.png");
+                        bool haveHead = await GeneralTools.SignIn.DownLoadUserImage(avatar.ToString(), AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png");
                         if (!haveHead && File.Exists(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\command_block.png"))
-                            File.Copy(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\command_block.png", AppDomain.CurrentDomain.BaseDirectory + "resources\\userHead.png");
+                            File.Copy(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\command_block.png", AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png");
                     }
                     userInfomation.Add("description", result.SelectToken("data.intro").ToString());
                     SaveUserInfo(result);
@@ -280,7 +281,7 @@ namespace cbhk.ViewModel
                     MainViewModel mainViewModel = mainView.DataContext as MainViewModel;
 
                     if (result.SelectToken("data.bg_bar") is JToken background)
-                        await GeneralTools.SignIn.DownLoadUserImage(background.ToString(), AppDomain.CurrentDomain.BaseDirectory + "resources\\userBackground.png");
+                        await GeneralTools.SignIn.DownLoadUserImage(background.ToString(), AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png");
                     FrontWindow.Close();
 
                     #region 显示管家主窗体
@@ -314,10 +315,12 @@ namespace cbhk.ViewModel
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void UserAccountBoxKeyUp(object sender, KeyEventArgs e)
+        public async void UserAccountBoxKeyUp(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && IsOpenSignIn)
-                SignIn();
+            {
+               await SignIn();
+            }
         }
 
         /// <summary>
@@ -325,10 +328,12 @@ namespace cbhk.ViewModel
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void UserPasswordBoxKeyUp(object sender, KeyEventArgs e)
+        public async void UserPasswordBoxKeyUp(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && IsOpenSignIn)
-                SignIn();
+            {
+                await SignIn();
+            }
         }
         #endregion
     }
