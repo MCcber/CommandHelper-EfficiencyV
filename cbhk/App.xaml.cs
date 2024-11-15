@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 using cbhk.Common;
@@ -77,17 +76,6 @@ namespace cbhk
 
                 var currentProcess = Process.GetCurrentProcess();
                 var processes = Process.GetProcessesByName(currentProcess.ProcessName);
-
-                foreach (var process in processes)
-                {
-                    if (process.Id != currentProcess.Id && process.MainModule.FileName == currentProcess.MainModule.FileName)
-                    {
-                        IntPtr hWnd = NativeMethods.FindWindow(null, process.MainWindowTitle);
-                        NativeMethods.ShowWindow(hWnd, 9); // SW_RESTORE = 9
-                        NativeMethods.SetForegroundWindow(hWnd);
-                        break;
-                    }
-                }
                 Current.Shutdown();
             }
 
@@ -189,19 +177,5 @@ namespace cbhk
                 }
             };
         }
-    }
-
-    public static partial class NativeMethods
-    {
-        [LibraryImport("user32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
-        public static partial IntPtr FindWindow(string lpClassName, string lpWindowName);
-
-        [LibraryImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static partial bool SetForegroundWindow(IntPtr hWnd);
-
-        [LibraryImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
     }
 }

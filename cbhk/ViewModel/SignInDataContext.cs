@@ -97,7 +97,6 @@ namespace cbhk.ViewModel
         Dictionary<string, string> userInfomation = [];
         private readonly IContainerProvider _container;
 
-        [Obsolete]
         public SignInViewModel(IContainerProvider container)
         {
             _container = container;
