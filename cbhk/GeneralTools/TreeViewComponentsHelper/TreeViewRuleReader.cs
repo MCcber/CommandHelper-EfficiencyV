@@ -1,12 +1,6 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.JsonTreeViewComponents;
-using cbhk.Model.Common;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using cbhk.CustomControls.JsonTreeViewComponents;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 
 namespace cbhk.GeneralTools.TreeViewComponentsHelper
 {
@@ -92,105 +86,6 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 #endregion
             }
             return list;
-        }
-
-        /// <summary>
-        /// 读取值提供器
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns></returns>
-        public static Dictionary<string, CompoundJsonTreeViewItem> LoadValueProviderStructure(string directoryPath)
-        {
-            Dictionary<string, CompoundJsonTreeViewItem> result = [];
-            if (Directory.Exists(directoryPath))
-            {
-                string[] dataList = Directory.GetFileSystemEntries(directoryPath, "*.wiki|*.json", SearchOption.AllDirectories);
-                JArray valueProviderArray = JArray.Parse(dataList[0]);
-                foreach (var obj in valueProviderArray.Cast<JObject>())
-                {
-                    #region 读取一个提供器类型
-                    if (obj["key"] is JToken keyToken)
-                    {
-                        #region 确认值模板类型
-                        CompoundJsonTreeViewItem jsonTreeViewItem = new(null, null)
-                        {
-                            Key = keyToken.ToString(),
-                            DataType = Enums.DataTypes.ValueProvider,
-                            Plan = null
-                        };
-
-                        if (Enum.TryParse(keyToken.ToString(), true, out Enums.ValueProviderTypes valueProviderType))
-                            jsonTreeViewItem.ValueProviderType = valueProviderType;
-                        #endregion
-
-                        #region 值
-                        if (obj["value"] is JToken valueToken)
-                            jsonTreeViewItem.Value = valueToken.ToString();
-                        #endregion
-
-                        #region 数据类型
-                        if (obj["dataType"] is JToken dataTypeToken)
-                            jsonTreeViewItem.ValueTypeList.Add(new TextComboBoxItem() { Text = dataTypeToken.ToString() });
-                        #endregion
-
-                        #region 枚举列表
-                        if (obj["enumList"] is JArray tagsToken)
-                        {
-                            foreach (var tag in tagsToken)
-                            {
-                                string text = tag.ToString();
-                                string[] textList = text.Split('_');
-                                for (int i = 0; i < textList.Length; i++)
-                                {
-                                    textList[i] = textList[i][0].ToString().ToUpper() + textList[i][1..];
-                                }
-                                text = string.Join(' ', textList);
-                                jsonTreeViewItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = text });
-                            }
-                        }
-                        #endregion
-
-                        #region 解析当前提供器的结构
-                        if (obj["children"] is JArray childrenToken)
-                        {
-                            ObservableCollection<JsonTreeViewItem> switchList = [];
-                            foreach (var structure in childrenToken)
-                            {
-                                CompoundJsonTreeViewItem subItem = new(null, null);
-                                if (structure["switchKey"] is JToken structureKeyToken)
-                                {
-                                    subItem.SwitchKey = structureKeyToken.ToString();
-                                    if (structure["displayText"] is JToken displayTextToken)
-                                        subItem.DisplayText = displayTextToken.ToString();
-                                    else
-                                        subItem.DisplayText = subItem.Key;
-
-                                    if (structure["value"] is JToken subValueToken)
-                                    {
-                                        subItem.DefaultValue = subValueToken.ToString();
-                                    }
-                                    if (structure["peerNodeList"] is JArray peerNodeListToken)
-                                    {
-                                        JsonTreeViewDataStructure dataStructure = /*HtmlHelper.AnalyzeHTMLData("")*/null;
-                                        subItem.Children = dataStructure.Result;
-                                        switchList.Add(subItem);
-                                    }
-                                    if (structure["compoundHead"] is JToken compoundHeadToken)
-                                    {
-                                        subItem.CompoundHead = compoundHeadToken.ToString();
-                                    }
-                                }
-                            }
-                            jsonTreeViewItem.SubChildrenString = /*switchList*/"";
-                        }
-                        #endregion
-
-                        result.Add(keyToken.ToString(), jsonTreeViewItem);
-                    }
-                    #endregion
-                }
-            }
-            return result;
         }
     }
 }

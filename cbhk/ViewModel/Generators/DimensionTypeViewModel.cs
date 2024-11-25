@@ -117,7 +117,7 @@ namespace cbhk.ViewModel.Generators
             {
                 textEditor = sender as TextEditor;
                 //生成值提供器字典
-                //CurrentTreeViewMap = TreeViewRuleReader.LoadValueProviderStructure(valueProviderPath);
+                //CurrentTreeViewMap = htmlHelper.AnalyzeHTMLData("");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(configDirectoryPath);

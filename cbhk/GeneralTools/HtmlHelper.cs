@@ -105,29 +105,21 @@ namespace cbhk.GeneralTools
         public JsonTreeViewDataStructure AnalyzeHTMLData(string directoryPath)
         {
             JsonTreeViewDataStructure Result = new();
-            HtmlDocument doc = new();
+            HtmlDocument htmlDocument = new();
 
             foreach (var file in Directory.GetFiles(directoryPath))
             {
                 string wikiData = File.ReadAllText(file);
                 string[] wikiLines = File.ReadAllLines(file);
-                doc.LoadHtml(wikiData);
-                List<HtmlNode> treeviewDivs = [.. doc.DocumentNode.SelectNodes("//div[@class='treeview']")];
+                htmlDocument.LoadHtml(wikiData);
+                List<HtmlNode> treeviewDivs = [.. htmlDocument.DocumentNode.SelectNodes("//div[@class='treeview']")];
 
                 if (treeviewDivs is not null)
                 {
                     #region 由于第一个HtmlNode实例的InnerHtml属性总会包含所有标签的内容，所以这里需要进行特殊处理
 
                     #region 直接覆盖InnerHtml属性会导致内容错误，所以这里直接用链表来提取正确的结构数据
-                    List<string> firstNodeContent = treeviewDivs[0].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).ToList();
-                    //for (int i = 0; i < treeviewDivs[0].Line - 2; i++)
-                    //{
-                    //    if (wikiLines[i].TrimStart().StartsWith('<') || wikiLines[i].TrimStart().StartsWith('='))
-                    //    {
-                    //        continue;
-                    //    }
-                    //    firstNodeContent.Add(wikiLines[i]);
-                    //}
+                    List<string> firstNodeContent = [.. treeviewDivs[0].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
                     #endregion
 
                     #region 把VSC排版后的格式重新整理(有些应该归为一行的被排版分割为了多行)
@@ -145,7 +137,7 @@ namespace cbhk.GeneralTools
                     }
                     #endregion
 
-                    #region 添加第一个div解析后的内容
+                    #region 添加解析后的内容
                     JsonTreeViewDataStructure firstResultData = GetTreeViewItemResult(new(), firstNodeContent, 2, 1);
                     Result.Result.AddRange(firstResultData.Result);
                     Result.ResultString.Append(firstResultData.ResultString);
@@ -603,11 +595,8 @@ namespace cbhk.GeneralTools
                                             nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
                                         }
 
-                                        //JsonTreeViewDataStructure subResult = new();
                                         if (subNodeList.Count > 0)
                                         {
-                                            //if (!IsCurrentOptional)
-                                            //    subResult = GetTreeViewItemResult(result, subNodeList, lineNumber + 1, layerCount + 1, item as CompoundJsonTreeViewItem, item, isProcessingCommonTemplate, starCount);
                                             i = nextNodeIndex - 1;
                                         }
 
@@ -627,11 +616,6 @@ namespace cbhk.GeneralTools
                                         }
                                         #endregion
 
-                                        //if (subResult.Result.Count > 0 && subResult.Result[^1].Key.Length > 0)
-                                        //{
-                                        //    result.Result.Append(SetTypeCompoundItem);
-                                        //    result = subResult;
-                                        //}
                                         #endregion
                                     }
                                 }
