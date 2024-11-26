@@ -67,58 +67,6 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             }
         }
 
-        public int SetDefaultStructureJsonItem(CompoundJsonTreeViewItem item, string optionalSwitchString)
-        {
-            string SelectedEnumItem = item.SelectedEnumItem.Text.ToLower();
-            //List<string> presetSwitchKeyList = [..item.EnumItemsSource.Select(item => item.Text.ToLower().Replace("_", " "))];
-            //List<string> switchKeyList = [.. switchChilren.Select(item=>((string)item.DefaultValue).ToLower().Replace("_"," "))];
-            int index = /*presetSwitchKeyList.IndexOf(SelectedEnumItem);*/0;
-
-            //int count = presetSwitchKeyList.Except(switchKeyList).Count();
-
-            //if (count > 0 && switchKeyList.Contains(SelectedEnumItem))
-            //    index--;
-            //else
-            //    index = -1;
-            //if (index == -1)
-            //{
-            //    item.Value = item.DefaultValue;
-            //}
-            return index;
-        }
-
-        public void SetEnumData(ObservableCollection<JsonTreeViewItem> Children,CompoundJsonTreeViewItem Entry,CompoundJsonTreeViewItem TempateItem)
-        {
-            foreach (var item in Children)
-            {
-                if (item.DataType is DataTypes.ValueProvider && item is CompoundJsonTreeViewItem compound && TempateItem.Plan is not null)
-                {
-                    CompoundJsonTreeViewItem subItem = TempateItem.Plan.CurrentTreeViewMap[compound.ValueProviderType.ToString()];
-                    if (item is CompoundJsonTreeViewItem currentCompoundItem && subItem is CompoundJsonTreeViewItem currentSubItem)
-                    {
-                        currentCompoundItem.ValueTypeList = currentSubItem.ValueTypeList;
-                        currentCompoundItem.EnumItemsSource = currentSubItem.EnumItemsSource;
-                        currentCompoundItem.SelectedEnumItem = currentCompoundItem.EnumItemsSource.First();
-                    }
-                    compound.DataType = DataTypes.ValueProvider;
-                    item.EnumBoxVisibility = Visibility.Visible;
-                }
-
-                Entry?.Children.Add(item);
-                if (Entry is not null)
-                    item.Parent = Entry;
-
-                if(Entry is not null && Entry.Children.Count > 1)
-                {
-                    Entry.Children[^2].Next = Entry.Children[^1];
-                    Entry.Children[^1].Last = Entry.Children[^2];
-                }
-
-                if (Entry is not null && !Entry.FlattenDescendantNodeList.Contains(item))
-                    Entry.FlattenDescendantNodeList.Add(item);
-            }
-        }
-
         /// <summary>
         /// 切换子结构时递归整合子结构值
         /// </summary>
@@ -241,7 +189,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         {
             #region 定义列表和统一方案接口
             string test = compoundJsonTreeViewItem.SubChildrenString;
-            CompoundJsonTreeViewItem subItem = compoundJsonTreeViewItem.Plan.CurrentTreeViewMap[compoundJsonTreeViewItem.Key];
+            //CompoundJsonTreeViewItem subItem = compoundJsonTreeViewItem.Plan.CurrentTreeViewMap[compoundJsonTreeViewItem.Key];
             bool AddToTop = compoundJsonTreeViewItem.DataType is DataTypes.Array;
             bool AddSubStructure = 
                 compoundJsonTreeViewItem.DataType is DataTypes.Compound ||
@@ -346,14 +294,11 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 currentSwitchChildren = compoundJsonTreeViewItem.Parent.SubChildrenString;
 
             //这里需要用HtmlHelper实例来取得对应的子结构
-            //subChildren = SetSwitchChildrenOfSubItem(currentSwitchChildren,compoundJsonTreeViewItem,entry);
             subChildren = [];
 
             int currentLineNumber = AddToTop ? CurrentStartLineNumber + 2 : (compoundJsonTreeViewItem.Parent.Children[^2] as CompoundJsonTreeViewItem).EndLine.LineNumber + 2;
 
             ObservableCollection<JsonTreeViewItem> resultList = TreeViewRuleReader.RecursivelyUpdateMemberLayer(AddToTop ? compoundJsonTreeViewItem : compoundJsonTreeViewItem.Parent, compoundJsonTreeViewItem.Plan.KeyValueContextDictionary, subChildren, currentLineNumber, (AddToTop ? compoundJsonTreeViewItem.LayerCount : compoundJsonTreeViewItem.Parent.LayerCount) + 1);
-
-            SetEnumData(resultList,entry, compoundJsonTreeViewItem);
             #endregion
 
             #region 计算前导空格
@@ -448,7 +393,6 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             entry.StartLine = compoundJsonTreeViewItem.Plan.GetLineByNumber(entry.Children[0].StartLine.LineNumber - 1);
             entry.EndLine = compoundJsonTreeViewItem.Plan.GetLineByNumber(entry.Children[^1] is CompoundJsonTreeViewItem compoundItem && compoundItem.EndLine is not null ? compoundItem.EndLine.LineNumber + 1 : entry.Children[^1].StartLine.LineNumber + 1);
             #endregion
-
 
             if(AddSubStructure)
             {

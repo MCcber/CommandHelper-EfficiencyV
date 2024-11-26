@@ -81,7 +81,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         RemoveElementButtonVisibility = Visibility.Visible;
                         break;
                     case DataTypes.OptionalCompound:
-                        AddElementButtonVisibility = Visibility.Visible;
+                        AddElementButtonVisibility = EnumBoxVisibility = Visibility.Visible;
                         break;
                     case DataTypes.CustomCompound:
                         AddElementButtonVisibility = InputBoxVisibility = Visibility.Visible;
@@ -93,8 +93,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 }
             }
         }
-
-        public ValueProviderTypes ValueProviderType;
 
         [ObservableProperty]
         public Visibility _addElementButtonVisibility = Visibility.Collapsed;

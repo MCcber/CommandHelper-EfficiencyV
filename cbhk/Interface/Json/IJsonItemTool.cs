@@ -16,14 +16,6 @@ namespace cbhk.Interface.Json
         /// <param name="jsonTreeViewItems"></param>
         void SetDocumentLineByNumber(ObservableCollection<JsonTreeViewItem> jsonTreeViewItems);
         /// <summary>
-        /// 设置默认子结构
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="switchChildren"></param>
-        /// <returns></returns>
-        int SetDefaultStructureJsonItem(CompoundJsonTreeViewItem item, string optionalSwitchString);
-        void SetEnumData(ObservableCollection<JsonTreeViewItem> Children, CompoundJsonTreeViewItem entry, CompoundJsonTreeViewItem TempateItem);
-        /// <summary>
         /// 递归删除平铺列表成员
         /// </summary>
         /// <param name="CurrentParent">目前父级节点</param>

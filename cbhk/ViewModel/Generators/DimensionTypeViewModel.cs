@@ -78,7 +78,7 @@ namespace cbhk.ViewModel.Generators
         public ObservableCollection<JsonTreeViewItem> _dimensionTypeItemList = [];
 
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
-        public Dictionary<string, CompoundJsonTreeViewItem> CurrentTreeViewMap { get; set; } = [];
+        public Dictionary<string, List<JsonTreeViewItem>> CurrentTreeViewMap { get; set; } = [];
         #endregion
 
         public DimensionTypeViewModel(IContainerProvider container, MainView mainView)

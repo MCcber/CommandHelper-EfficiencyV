@@ -48,24 +48,7 @@
             ArrayElement,
             Array,
             InnerArray,
-            List,
-            ValueProvider
-        }
-
-        public enum ValueProviderTypes
-        {
-            IntProvider,
-            BlockState,
-            FloatProvider,
-            HeightProvider,
-            VerticalAnchor,
-            ParameterPoint,
-            PositionRuleTest,
-            PositionSource,
-            Processor,
-            RuleTest,
-            SurfaceRule,
-            SurfaceRuleCondition
+            List
         }
 
         public enum IntProviderStructures

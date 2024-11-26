@@ -25,10 +25,12 @@ namespace cbhk.GeneralTools
 
         public JsonTreeViewItemExtension jsonTool = null;
 
+        private List<string> EnumKeyList = ["命名空间ID"];
+
         [GeneratedRegex(@"^\s*\s?\:?\s*\s?(\*+)")]
         private static partial Regex GetLineStarCount();
 
-        [GeneratedRegex(@"{{Nbt (inherit/[a-z_\s]+)}}", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"{{(?<1>n|N)bt (?<2>inherit/[a-z_\s]+)}}", RegexOptions.IgnoreCase)]
         private static partial Regex GetTemplateKey();
 
         [GeneratedRegex(@"{{interval\|left=(?<1>\d+)\|right=(?<2>\d+)}}", RegexOptions.IgnoreCase)]
@@ -218,7 +220,7 @@ namespace cbhk.GeneralTools
                 else
                 if (multiNodeTypeAndKeyInfoGroupList.Count > 0)
                     targetInfoGroupList = multiNodeTypeAndKeyInfoGroupList;
-                if(customNodeTypeAndKeyInfoGroupList.Count > 0)
+                if (customNodeTypeAndKeyInfoGroupList.Count > 0)
                     targetInfoGroupList = customNodeTypeAndKeyInfoGroupList;
 
                 if (targetInfoGroupList is not null && targetInfoGroupList.Count > 0)
@@ -249,10 +251,15 @@ namespace cbhk.GeneralTools
                             case "decimal":
                             case "string":
                                 {
-                                    IsSimpleItem = true;
-                                    item.DataType = DataTypes.Input;
-                                    if (dataMatch.Value == "string")
-                                        item.DataType = DataTypes.String;
+                                    //确定字符串节点是否为枚举类型
+                                    int EnumKeyCount = EnumKeyList.Where(item => nodeList[i].Contains(item)).Count();
+                                    if (EnumKeyCount == 0)
+                                    {
+                                        IsSimpleItem = true;
+                                        item.DataType = DataTypes.Input;
+                                        if (dataMatch.Value == "string")
+                                            item.DataType = DataTypes.String;
+                                    }
                                     break;
                                 }
                         }
@@ -441,9 +448,9 @@ namespace cbhk.GeneralTools
                                 SetTypeCompoundItem.EnumBoxVisibility = Visibility.Visible;
                                 SetTypeCompoundItem.SelectedEnumItem = SetTypeCompoundItem.EnumItemsSource[0];
 
-                                result.ResultString.Append(new string(' ', layerCount * 2));
-                                result.ResultString.Append("\"" + key.ToLower() + "\"");
-                                result.ResultString.Append(": \"" + SetTypeCompoundItem.EnumItemsSource[0].Text + "\"");
+                                result.ResultString.Append(new string(' ', layerCount * 2) +
+                                    "\"" + key.ToLower() + "\"" +
+                                    ": \"" + SetTypeCompoundItem.EnumItemsSource[0].Text + "\"");
                             }
                             #endregion
 
@@ -465,7 +472,11 @@ namespace cbhk.GeneralTools
                                 {
                                     SetTypeCompoundItem.DataType = DataTypes.OptionalCompound;
                                 }
-                                //customCompound类型需要结合整体上下文才能判断，故这里不设置
+
+                                if (customNodeTypeAndKeyInfoGroupList.Count > 0)
+                                {
+                                    SetTypeCompoundItem.DataType = DataTypes.CustomCompound;
+                                }
                             }
                             else
                             if (dataMatch.Groups[1].Value == "list")
@@ -501,49 +512,12 @@ namespace cbhk.GeneralTools
 
                             #endregion
 
-                            #region 处理列表与内联列表
-                            //if (key is not null)
-                            //{
-                            //    SetTypeCompoundItem.AddElementButtonVisibility = Visibility.Visible;
-                            //    SetTypeCompoundItem.DataType = DataTypes.Array;
-                            //    if (dataMatch.Value == "innerArray")
-                            //        SetTypeCompoundItem.DataType = DataTypes.InnerArray;
-                            //    SetTypeCompoundItem.Key = key;
-                            //    SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
-                            //    if (Previous is CompoundJsonTreeViewItem lastCompletedCompoundItem && (lastCompletedCompoundItem.DataType is DataTypes.OptionalCompound || lastCompletedCompoundItem.DataType is DataTypes.NullableCompound || lastCompletedCompoundItem.DataType is DataTypes.Compound || lastCompletedCompoundItem.DataType is DataTypes.CustomCompound))
-                            //    {
-                            //        SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lastCompletedCompoundItem.EndLineNumber + 1;
-                            //    }
-
-                            //    result.ResultString.Append(new string(' ', layerCount * 2) + (dataMatch.Value == "array" ? "\"" + key + "\"" : ""));
-                            //}
-                            //result.ResultString.Append((dataMatch.Value == "array" ? ": " : "") + "[]");
-                            #endregion
-
-                            #region 处理各种数值提供器或结构模板
+                            #region 处理顶级数据结构
                             Match templateMatch = GetTemplateKey().Match(nodeList[i]);
-                            if (key is not null && templateMatch.Success && templateMatch.Groups[1] is Group type && plan.CurrentTreeViewMap.TryGetValue(type.Value, out CompoundJsonTreeViewItem currentCompoundItem) && currentCompoundItem is not null)
+                            if (key is not null && templateMatch.Success && templateMatch.Groups[2] is Group type && plan.CurrentTreeViewMap.TryGetValue(type.Value[0].ToString().ToUpper() + type.Value[1..], out List<JsonTreeViewItem> templateCompoundItem) && templateCompoundItem is not null)
                             {
-                                SetTypeCompoundItem.DisplayText = key[0].ToString().ToUpper() + key[1..];
-                                SetTypeCompoundItem.SubChildrenString = currentCompoundItem.SubChildrenString;
-                                SetTypeCompoundItem.SwitchKey = currentCompoundItem.SwitchKey;
-                                SetTypeCompoundItem.CompoundHead = currentCompoundItem.CompoundHead;
-                                SetTypeCompoundItem.DataType = DataTypes.ValueProvider;
-                                SetTypeCompoundItem.StartLineNumber = SetTypeCompoundItem.EndLineNumber = lineNumber;
-                                SetTypeCompoundItem.EnumBoxVisibility = SetTypeCompoundItem.InputBoxVisibility = Visibility.Visible;
-                                SetTypeCompoundItem.EnumItemsSource = currentCompoundItem.EnumItemsSource;
-                                SetTypeCompoundItem.SelectedEnumItem = currentCompoundItem.EnumItemsSource.FirstOrDefault()!;
-                                SetTypeCompoundItem.CurrentValueType = SetTypeCompoundItem.ValueTypeList[0];
-
-                                if (SetTypeCompoundItem.Value is not null)
-                                    result.ResultString.Append(new string(' ', SetTypeCompoundItem.LayerCount * 2) + "\"" + SetTypeCompoundItem.Key + "\": " + SetTypeCompoundItem.Value);
-                            }
-                            else//表示当前正在初始化值提供器
-                            if (isProcessingCommonTemplate && dataMatch.Groups[2] is Group initType)
-                            {
-                                SetTypeCompoundItem.EnumBoxVisibility = Visibility.Visible;
-                                SetTypeCompoundItem.ValueProviderType = (ValueProviderTypes)Enum.Parse(typeof(ValueProviderTypes), initType.Value);
-                                SetTypeCompoundItem.DataType = DataTypes.ValueProvider;
+                                SetTypeCompoundItem.Children.AddRange(templateCompoundItem);
+                                result.ResultString.Append(new string(' ', SetTypeCompoundItem.LayerCount * 2) + "\"" + SetTypeCompoundItem.Key + "\": 0");
                             }
                             #endregion
 
@@ -624,15 +598,10 @@ namespace cbhk.GeneralTools
                         }
 
                         #region 计算可缺省参数的默认值
-                        if (((item.DefaultValue is null && item.SelectedEnumItem is null) || item is CompoundJsonTreeViewItem compoundJsonItem && compoundJsonItem.DataType is DataTypes.OptionalCompound) && ((Previous is not null && Previous.StartLineNumber == lineNumber) || (Previous is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLineNumber == lineNumber) || (Previous is null && lineNumber == 2 && item is CompoundJsonTreeViewItem firstCompoundItem && firstCompoundItem.DataType is DataTypes.OptionalCompound)))
+                        //真正要使用的时候再设置具体行号
+                        if (item is CompoundJsonTreeViewItem compoundJsonItem && IsCurrentOptional)
                         {
-                            if (lineNumber > 1)
-                                lineNumber--;
-                            item.StartLineNumber = lineNumber;
-                            if (item is CompoundJsonTreeViewItem optionalItem)
-                            {
-                                optionalItem.EndLineNumber = lineNumber;
-                            }
+                            compoundJsonItem.StartLineNumber = compoundJsonItem.EndLineNumber = 0;
                         }
                         #endregion
 
@@ -675,14 +644,14 @@ namespace cbhk.GeneralTools
         /// <param name="currentKey">当前Key</param>
         /// <param name="currentNode">当前div节点</param>
         /// <returns></returns>
-        private Dictionary<string,JsonTreeViewItem> DownwardStructureSearcher(List<HtmlNode> treeNodeList, string[] targetList, string currentKey, HtmlNode currentNode)
+        private Dictionary<string, JsonTreeViewItem> DownwardStructureSearcher(List<HtmlNode> treeNodeList, string[] targetList, string currentKey, HtmlNode currentNode)
         {
             Dictionary<string, JsonTreeViewItem> result = [];
 
             for (int i = currentNode.Line + 1; i < targetList.Length; i++)
             {
-                List<HtmlNode> nodeList = treeNodeList.Where(item=>item.Line == i).ToList();
-                if(nodeList.Count > 0)
+                List<HtmlNode> nodeList = treeNodeList.Where(item => item.Line == i).ToList();
+                if (nodeList.Count > 0)
                 {
 
                 }

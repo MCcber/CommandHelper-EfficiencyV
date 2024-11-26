@@ -15,7 +15,7 @@ namespace cbhk.CustomControls.Interfaces
         /// <summary>
         /// 存储值提供器对应的上下文
         /// </summary>
-        public Dictionary<string,CompoundJsonTreeViewItem> CurrentTreeViewMap { get; set; }
+        public Dictionary<string,List<JsonTreeViewItem>> CurrentTreeViewMap { get; set; }
         public void UpdateNullValueBySpecifyingInterval(int endOffset, string newValue = "\r\n");
         /// <summary>
         /// 根据区间更新指定值

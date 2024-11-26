@@ -50,7 +50,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 list[i].Path = list[i].Parent.Path + "." + ParentCompoundHead + list[i].Key;
                 list[i].StartLineNumber = lineNumber;
                 //判断是否为复合数据类型
-                if (list[i] is CompoundJsonTreeViewItem compoundJsonTreeViewItem && (compoundJsonTreeViewItem.DataType is Enums.DataTypes.Array || compoundJsonTreeViewItem.DataType is Enums.DataTypes.Compound || compoundJsonTreeViewItem.DataType is Enums.DataTypes.EnumCompound || compoundJsonTreeViewItem.DataType is Enums.DataTypes.MultiType || compoundJsonTreeViewItem.DataType is Enums.DataTypes.ValueProvider))
+                if (list[i] is CompoundJsonTreeViewItem compoundJsonTreeViewItem && (compoundJsonTreeViewItem.DataType is Enums.DataTypes.Array || compoundJsonTreeViewItem.DataType is Enums.DataTypes.Compound || compoundJsonTreeViewItem.DataType is Enums.DataTypes.EnumCompound || compoundJsonTreeViewItem.DataType is Enums.DataTypes.MultiType))
                     compoundJsonTreeViewItem.EndLineNumber = lineNumber;
                 #endregion
 
