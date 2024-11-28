@@ -41,36 +41,6 @@ namespace cbhk.ViewModel.Generators
         JsonTreeViewItemExtension jsonTool = null;
 
         public ObservableCollection<JsonTreeViewItem> AdvancementTreeViewItemList = [];
-
-        [GeneratedRegex(@"^\:?\s+?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetNodeTypeAndKey();
-
-        [GeneratedRegex(@"^\:?\s+?\*+\s+?(?<branch>\{\{nbt\|[a-z]+\}\})+(\{\{nbt\|(?<1>[a-z]+)\|(?<2>[a-z_]+)\}\})", RegexOptions.IgnoreCase)]
-        private static partial Regex GetMultiTypeAndKeyOfNode();
-
-        [GeneratedRegex(@"（可选，默认为\{\{cd\|[a-z_]+\}\}）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetOptionalDefaultStringValue();
-
-        [GeneratedRegex(@"（可选，默认为\d+）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetOptionalDefaultNumberValue();
-
-        [GeneratedRegex(@"（可选，默认为\{\{cd\|(true|false)\}\}）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetOptionalDefaultBoolValue();
-
-        [GeneratedRegex(@"（可选）", RegexOptions.IgnoreCase)]
-        private static partial Regex GetOptionalKey();
-
-        [GeneratedRegex(@"\[\[方块标签\]\]", RegexOptions.IgnoreCase)]
-        private static partial Regex GetBlcokTagValue();
-
-        [GeneratedRegex(@"\[\[实体标签\]\]", RegexOptions.IgnoreCase)]
-        private static partial Regex GetEntityTagValue();
-
-        [GeneratedRegex(@"\{\{cd\|[a-z:_]+\}\}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetEnumValue();
-
-        [GeneratedRegex(@"====\s(minecraft\:[a-z_]+)\s====", RegexOptions.IgnoreCase)]
-        private static partial Regex GetBoldKeywords();
         #endregion
 
         #region Property
@@ -85,11 +55,6 @@ namespace cbhk.ViewModel.Generators
         {
             _container = container;
             home = mainView;
-
-            htmlHelper = _container.Resolve<HtmlHelper>();
-            htmlHelper.plan = this;
-            jsonTool = container.Resolve<JsonTreeViewItemExtension>();
-            htmlHelper.jsonTool = jsonTool;
 
             blockService =  _container.Resolve<BlockService>();
             entityService = _container.Resolve<EntityService>();
