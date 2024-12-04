@@ -191,7 +191,7 @@ namespace cbhk.GeneralTools
             {
                 #region Field
                 bool IsExplanationNode = GetExplanationForHierarchicalNodes().Match(nodeList[i]).Success;
-                bool IsCurrentOptional = GetOptionalKey().Match(nodeList[i]).Success;
+                bool IsCurrentOptionalNode = GetOptionalKey().Match(nodeList[i]).Success;
                 bool IsHaveNextNode = i < nodeList.Count - 1;
                 bool IsNextOptionalNode = false;
                 #endregion
@@ -284,12 +284,14 @@ namespace cbhk.GeneralTools
                                 {
                                     //确定字符串节点是否为枚举类型
                                     int EnumKeyCount = EnumKeyList.Where(item => nodeList[i].Contains(item)).Count();
-                                    if (EnumKeyCount == 0)
+                                    if (EnumKeyCount > 0)
+                                    {
+                                        item.DataType = DataTypes.Enum;
+                                    }
+                                    else
                                     {
                                         IsSimpleItem = true;
-                                        item.DataType = DataTypes.Input;
-                                        if (dataMatch.Value == "string")
-                                            item.DataType = DataTypes.String;
+                                        item.DataType = DataTypes.String;
                                     }
                                     break;
                                 }
@@ -299,7 +301,7 @@ namespace cbhk.GeneralTools
                         {
                             item.Last = Previous;
                             if (Previous is not null)
-                                Previous.Next = item.Next;
+                                Previous.Next = item;
                             item = new CompoundJsonTreeViewItem(plan, jsonTool);
                             if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && multiNodeTypeAndKeyInfoGroupList.Count > 0)
                             {
@@ -327,13 +329,13 @@ namespace cbhk.GeneralTools
                                             Match boolMatch = GetDefaultBoolValue().Match(nodeList[i]);
                                             if (boolMatch is not null)
                                             {
-                                                if (!IsCurrentOptional)
+                                                if (!IsCurrentOptionalNode)
                                                 {
                                                     result.ResultString.Append(new string(' ', layerCount * 2));
                                                     result.ResultString.Append("\"" + key.ToLower() + "\"");
                                                 }
 
-                                                if (bool.TryParse(boolMatch.Groups[1].Value, out bool defaultValue) && !IsCurrentOptional)
+                                                if (bool.TryParse(boolMatch.Groups[1].Value, out bool defaultValue) && !IsCurrentOptionalNode)
                                                 {
                                                     item.Value = item.DefaultValue = defaultValue;
                                                     if (item.Value)
@@ -348,7 +350,7 @@ namespace cbhk.GeneralTools
                                                     item.IsTrue = item.IsFalse = false;
                                                 }
 
-                                                if (!IsCurrentOptional && boolMatch.Groups.Count > 1)
+                                                if (!IsCurrentOptionalNode && boolMatch.Groups.Count > 1)
                                                 {
                                                     result.ResultString.Append(": " + boolMatch.Groups[1].Value.ToLower());
                                                 }
@@ -368,7 +370,7 @@ namespace cbhk.GeneralTools
                                             Match stringMatch = GetDefaultStringValue().Match(nodeList[i]);
                                             if (stringMatch is not null)
                                             {
-                                                if (!IsCurrentOptional)
+                                                if (!IsCurrentOptionalNode)
                                                 {
                                                     result.ResultString.Append(new string(' ', layerCount * 2));
                                                     result.ResultString.Append("\"" + key.ToLower() + "\"");
@@ -376,7 +378,7 @@ namespace cbhk.GeneralTools
 
                                                 item.Value = item.DefaultValue = stringMatch.Groups[1].Value;
 
-                                                if (!IsCurrentOptional && stringMatch.Groups.Count > 1)
+                                                if (!IsCurrentOptionalNode && stringMatch.Groups.Count > 1)
                                                 {
                                                     result.ResultString.Append(": \"" + stringMatch.Groups[1].Value.ToLower() + "\"");
                                                 }
@@ -399,7 +401,7 @@ namespace cbhk.GeneralTools
                                             item.DisplayText = key[0].ToString().ToUpper() + key[1..];
                                             item.InputBoxVisibility = Visibility.Visible;
 
-                                            if (!IsCurrentOptional)
+                                            if (!IsCurrentOptionalNode)
                                             {
                                                 result.ResultString.Append(new string(' ', layerCount * 2));
                                                 result.ResultString.Append("\"" + key.ToLower() + "\"");
@@ -411,7 +413,7 @@ namespace cbhk.GeneralTools
                                                 item.Value = item.DefaultValue = defaultDecimalValue;
                                             }
 
-                                            if (!IsCurrentOptional && numberMatch.Groups.Count > 1)
+                                            if (!IsCurrentOptionalNode && numberMatch.Groups.Count > 1)
                                             {
                                                 result.ResultString.Append(": " + item.Value.ToString().ToLower());
                                             }
@@ -499,7 +501,7 @@ namespace cbhk.GeneralTools
                                     CurrentCompoundItem.DataType = DataTypes.NullableCompound;
                                 }
                                 else
-                                if (IsCurrentOptional)
+                                if (IsCurrentOptionalNode)
                                 {
                                     CurrentCompoundItem.DataType = DataTypes.OptionalCompound;
                                 }
@@ -529,7 +531,7 @@ namespace cbhk.GeneralTools
                             {
                                 CurrentCompoundItem.CurrentValueType ??= CurrentCompoundItem.ValueTypeList[0];
                             }
-                            if (key is not null && key.Length > 0 && !IsCurrentOptional)
+                            if (key is not null && key.Length > 0 && !IsCurrentOptionalNode)
                             {
                                 if (CurrentCompoundItem.DataType is DataTypes.Array || CurrentCompoundItem.DataType is DataTypes.List)
                                 {
@@ -549,7 +551,8 @@ namespace cbhk.GeneralTools
                             #region 处理所需上下文数据
                             //匹配上下文关键字
                             Match contextKeyMatch = GetContextKey().Match(nodeList[i]);
-                            if(contextKeyMatch is not null && contextKeyMatch.Groups.Count > 1 && plan is not null)
+                            if(contextKeyMatch is not null && contextKeyMatch.Groups.Count > 1 && 
+                                plan is not null && plan.CurrentTreeViewMap.Count > 0)
                             {
                                 IEnumerable<string> keyList = plan.CurrentTreeViewMap.Keys.Where(key=>key.Contains(contextKeyMatch.Groups[1].Value));
                                 List<JsonTreeViewItem> contextTreeViewItemList = plan.CurrentTreeViewMap[keyList.FirstOrDefault()];
@@ -569,7 +572,10 @@ namespace cbhk.GeneralTools
                             if (key is not null && templateMatch.Success && templateMatch.Groups[2] is Group type && plan.CurrentTreeViewMap.TryGetValue(type.Value[0].ToString().ToLower() + string.Join(' ', type.Value[1..].Split('_').Select(item => item[0].ToString().ToUpper() + item[1..])), out List<JsonTreeViewItem> templateCompoundItem) && templateCompoundItem is not null)
                             {
                                 CurrentCompoundItem.Children.AddRange(templateCompoundItem);
-                                result.ResultString.Append(new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": {");
+                                if (CurrentCompoundItem.DataType is not DataTypes.OptionalCompound)
+                                {
+                                    result.ResultString.Append(new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + key + "\": {");
+                                }
                             }
                             #endregion
 
@@ -597,6 +603,7 @@ namespace cbhk.GeneralTools
                                         StringBuilder currentSubChildrenString = new();
                                         if (nodeList[nextNodeIndex].Contains('{'))
                                         {
+                                            //JsonTreeViewDataStructure subResult = GetTreeViewItemResult(result,nodeList,lineNumber,layerCount,CurrentCompoundItem,Previous,PreviousStarCount);
                                             subNodeList.Add(nodeList[nextNodeIndex]);
                                         }
                                         currentSubChildrenString.Append(nodeList[nextNodeIndex] + "\r\n");
@@ -620,29 +627,41 @@ namespace cbhk.GeneralTools
                                                 break;
                                             nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
                                         }
+                                        #endregion
 
+                                        #region 根据递归的情况来向后移动N个迭代单位
                                         if (subNodeList.Count > 0)
                                         {
                                             i = nextNodeIndex - 1;
                                         }
+                                        else
+                                            if (subNodeList.Count == 0 && currentSubChildrenString.Length > 0)
+                                        {
+                                            i++;
+                                        }
+                                        #endregion
 
+                                        #region 判断后一个节点是否可选、存储子节点原始信息
                                         IsHaveNextNode = i < nodeList.Count - 1;
                                         if (IsHaveNextNode)
                                             IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
 
                                         CurrentCompoundItem.SubChildrenString = currentSubChildrenString.ToString();
+                                        #endregion
 
                                         #region 赋予Plan属性以及判断是否需要为上一个复合节点收尾
                                         item.Plan ??= plan;
-                                        if (!IsCurrentOptional)
+                                        if (!IsCurrentOptionalNode)
                                         {
                                             if ((item as CompoundJsonTreeViewItem).Children.Count > 0)
                                                 result.ResultString.Append("\r\n" + new string(' ', layerCount * 2));
                                             result.ResultString.Append('}');
                                         }
                                         #endregion
-
-                                        #endregion
+                                    }
+                                    else
+                                    {
+                                        IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
                                     }
                                 }
                             }
@@ -651,9 +670,14 @@ namespace cbhk.GeneralTools
 
                         #region 计算可缺省参数的默认值
                         //真正要使用的时候再设置具体行号
-                        if (item is CompoundJsonTreeViewItem compoundJsonItem && IsCurrentOptional)
+                        if (item is CompoundJsonTreeViewItem compoundJsonItem && IsCurrentOptionalNode)
                         {
                             compoundJsonItem.StartLineNumber = compoundJsonItem.EndLineNumber = 0;
+                        }
+                        else
+                            if(IsCurrentOptionalNode)
+                        {
+                            item.StartLineNumber = 0;
                         }
                         #endregion
 
@@ -663,8 +687,10 @@ namespace cbhk.GeneralTools
                 #endregion
 
                 #region 处理节点的追加
-                if (IsNextOptionalNode && !IsExplanationNode && item.Key.Length > 0 && !IsCurrentOptional)
+                if (!IsCurrentOptionalNode && !IsNextOptionalNode && !IsExplanationNode && item.Key.Length > 0)
+                {
                     result.ResultString.Append(',');
+                }
 
                 if (starCount > PreviousStarCount && Parent is not null && item.Key.Length > 0)
                 {
@@ -682,6 +708,11 @@ namespace cbhk.GeneralTools
                 Previous = item;
                 //保存当前的*号数量
                 PreviousStarCount = starCount;
+                //行号加1
+                if (!IsCurrentOptionalNode)
+                {
+                    lineNumber++;
+                }
                 #endregion
             }
 
