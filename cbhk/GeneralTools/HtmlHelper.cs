@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
@@ -60,7 +59,7 @@ namespace cbhk.GeneralTools
         [GeneratedRegex(@"默认为\{\{cd\|[a-z_]+\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetDefaultStringValue();
 
-        [GeneratedRegex(@"默认为\d+", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"默认为(\d)+", RegexOptions.IgnoreCase)]
         private static partial Regex GetDefaultNumberValue();
 
         [GeneratedRegex(@"默认为\{\{cd\|(true|false)\}\}", RegexOptions.IgnoreCase)]
@@ -173,7 +172,7 @@ namespace cbhk.GeneralTools
         }
 
         /// <summary>
-        /// 获取树视图成员
+        /// 转换Wiki文档为树视图节点
         /// </summary>
         /// <param name="result">返回结果</param>
         /// <param name="nodeList">需处理的节点文本列表</param>
@@ -291,7 +290,12 @@ namespace cbhk.GeneralTools
                                     else
                                     {
                                         IsSimpleItem = true;
-                                        item.DataType = DataTypes.String;
+                                        object dataTypes = DataTypes.Input;
+                                        bool parseResult = Enum.TryParse(typeof(DataTypes), dataMatch.Groups[1].Value[0].ToString().ToUpper() + dataMatch.Groups[1].Value[1..],out dataTypes);
+                                        if (parseResult)
+                                        {
+                                            item.DataType = (DataTypes)dataTypes;
+                                        }
                                     }
                                     break;
                                 }
@@ -599,14 +603,8 @@ namespace cbhk.GeneralTools
                                     if (nextLineStar.Length > starCount)
                                     {
                                         #region 一次收集所有子节点，执行递归
-                                        List<string> subNodeList = [];
-                                        StringBuilder currentSubChildrenString = new();
-                                        if (nodeList[nextNodeIndex].Contains('{'))
-                                        {
-                                            //JsonTreeViewDataStructure subResult = GetTreeViewItemResult(result,nodeList,lineNumber,layerCount,CurrentCompoundItem,Previous,PreviousStarCount);
-                                            subNodeList.Add(nodeList[nextNodeIndex]);
-                                        }
-                                        currentSubChildrenString.Append(nodeList[nextNodeIndex] + "\r\n");
+                                        List<string> currentSubChildren = [];
+                                        currentSubChildren.Add(nodeList[nextNodeIndex]);
                                         while (nextLineStarMatch.Success && nextLineStar.Length > starCount)
                                         {
                                             nextNodeIndex++;
@@ -618,8 +616,7 @@ namespace cbhk.GeneralTools
                                                     nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
                                                     if (nodeList[nextNodeIndex].Contains('{'))
                                                     {
-                                                        subNodeList.Add(nodeList[nextNodeIndex]);
-                                                        currentSubChildrenString.Append(nodeList[nextNodeIndex] + "\r\n");
+                                                        currentSubChildren.Add(nodeList[nextNodeIndex]);
                                                     }
                                                 }
                                             }
@@ -630,23 +627,39 @@ namespace cbhk.GeneralTools
                                         #endregion
 
                                         #region 根据递归的情况来向后移动N个迭代单位
-                                        if (subNodeList.Count > 0)
+                                        if (currentSubChildren.Count > 0)
                                         {
                                             i = nextNodeIndex - 1;
                                         }
                                         else
-                                            if (subNodeList.Count == 0 && currentSubChildrenString.Length > 0)
+                                            if (currentSubChildren.Count > 0)
                                         {
                                             i++;
                                         }
                                         #endregion
 
-                                        #region 判断后一个节点是否可选、存储子节点原始信息
+                                        #region 是否存储原始信息
+                                        if (CurrentCompoundItem.DataType is DataTypes.Compound || CurrentCompoundItem.DataType is DataTypes.Array)
+                                        {
+                                            JsonTreeViewDataStructure subResult = GetTreeViewItemResult(result, currentSubChildren, lineNumber, layerCount, CurrentCompoundItem);
+                                            if (subResult.Result.Count > 0)
+                                            {
+                                                result.Result.AddRange(subResult.Result);
+                                                result.ResultString.Append(subResult.ResultString);
+                                            }
+                                            else
+                                            {
+                                                CurrentCompoundItem.ChildrenStringList = currentSubChildren;
+                                            }
+                                        }
+                                        else
+                                            CurrentCompoundItem.ChildrenStringList = currentSubChildren;
+                                        #endregion
+
+                                        #region 判断后一个节点是否可选
                                         IsHaveNextNode = i < nodeList.Count - 1;
                                         if (IsHaveNextNode)
                                             IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
-
-                                        CurrentCompoundItem.SubChildrenString = currentSubChildrenString.ToString();
                                         #endregion
 
                                         #region 赋予Plan属性以及判断是否需要为上一个复合节点收尾
@@ -687,9 +700,9 @@ namespace cbhk.GeneralTools
                 #endregion
 
                 #region 处理节点的追加
-                if (!IsCurrentOptionalNode && !IsNextOptionalNode && !IsExplanationNode && item.Key.Length > 0)
+                if (!IsCurrentOptionalNode && !IsNextOptionalNode && !IsExplanationNode)
                 {
-                    result.ResultString.Append(',');
+                    result.ResultString.Append(",\r\n");
                 }
 
                 if (starCount > PreviousStarCount && Parent is not null && item.Key.Length > 0)

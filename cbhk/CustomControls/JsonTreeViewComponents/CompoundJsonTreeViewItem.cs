@@ -3,6 +3,7 @@ using cbhk.GeneralTools;
 using cbhk.Interface.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -104,7 +105,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// 可切换的子节点集合
         /// </summary>
         [ObservableProperty]
-        public string _subChildrenString = "";
+        public List<string> _childrenStringList = [];
 
         /// <summary>
         /// 子节点集合
@@ -148,7 +149,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
 
             #region 处理分支或直接赋值
             //当有分支子级时
-            if (SubChildrenString.Length > 0)
+            if (ChildrenStringList.Count > 0)
             {
                 int index = -1;
 

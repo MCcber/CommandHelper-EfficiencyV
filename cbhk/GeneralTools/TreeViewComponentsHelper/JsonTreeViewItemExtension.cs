@@ -188,7 +188,6 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         public void AddSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem,UIElement element)
         {
             #region 定义列表和统一方案接口
-            string test = compoundJsonTreeViewItem.SubChildrenString;
             //CompoundJsonTreeViewItem subItem = compoundJsonTreeViewItem.Plan.CurrentTreeViewMap[compoundJsonTreeViewItem.Key];
             bool AddToTop = compoundJsonTreeViewItem.DataType is DataTypes.Array;
             bool AddSubStructure = 
@@ -245,7 +244,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 }
             }
             else
-                if (compoundJsonTreeViewItem.Children.Count - 1 - compoundJsonTreeViewItem.SubChildrenString.Length >= 0)
+                if (compoundJsonTreeViewItem.Children.Count - 1 - compoundJsonTreeViewItem.ChildrenStringList.Count >= 0)
             {
                 CurrentStartLineNumber = compoundJsonTreeViewItem.StartLine.LineNumber + 1;
                 CurrentEndLineNumber = compoundJsonTreeViewItem.StartLine.LineNumber + 1;
@@ -287,11 +286,11 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             #endregion
 
             #region 克隆模板中的子结构、设置它的数据，设置元素的末尾行号
-            string currentSwitchChildren = "";
+            List<string> currentSwitchChildren = [];
             if (AddToTop)
-                currentSwitchChildren = compoundJsonTreeViewItem.SubChildrenString;
+                currentSwitchChildren = compoundJsonTreeViewItem.ChildrenStringList;
             else
-                currentSwitchChildren = compoundJsonTreeViewItem.Parent.SubChildrenString;
+                currentSwitchChildren = compoundJsonTreeViewItem.Parent.ChildrenStringList;
 
             //这里需要用HtmlHelper实例来取得对应的子结构
             subChildren = [];
@@ -397,7 +396,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             if(AddSubStructure)
             {
                 HtmlHelper htmlHelper = _container.Resolve<HtmlHelper>();
-                JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), [.. compoundJsonTreeViewItem.SubChildrenString.Split("\r\n")], compoundJsonTreeViewItem.StartLine.LineNumber + 1, compoundJsonTreeViewItem.LayerCount + 1, compoundJsonTreeViewItem);
+                JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), [.. compoundJsonTreeViewItem.ChildrenStringList], compoundJsonTreeViewItem.StartLine.LineNumber + 1, compoundJsonTreeViewItem.LayerCount + 1, compoundJsonTreeViewItem);
                 compoundJsonTreeViewItem.Children.AddRange(result.Result);
             }
         }
