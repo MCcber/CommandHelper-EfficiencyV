@@ -18,7 +18,6 @@ using cbhk.View.Common;
 using cbhk.ViewModel.Common;
 using cbhk.View;
 using cbhk.Model.Common;
-using System.Text.RegularExpressions;
 
 namespace cbhk.ViewModel
 {
