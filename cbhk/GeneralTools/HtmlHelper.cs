@@ -184,17 +184,17 @@ namespace cbhk.GeneralTools
             //遍历找到的 div 标签内容集合
             for (int i = 0; i < nodeList.Count; i++)
             {
+                #region 计算当前行星号数量
+                Match starMatch = GetLineStarCount().Match(nodeList[i]);
+                int starCount = starMatch.Value.Trim().Length;
+                #endregion
+
                 #region 字段
-                bool IsPreviousOptionalNode = false;
+                //bool IsPreviousOptionalNode = false;
                 bool IsExplanationNode = GetExplanationForHierarchicalNodes().Match(nodeList[i]).Success;
                 bool IsCurrentOptionalNode = GetOptionalKey().Match(nodeList[i]).Success;
                 bool IsHaveNextNode = i < nodeList.Count - 1;
                 bool IsNextOptionalNode = false;
-
-                if(i > 0)
-                {
-                    IsPreviousOptionalNode = GetOptionalKey().Match(nodeList[i - 1]).Success;
-                }
                 #endregion
 
                 #region 判断是否跳过本次处理
@@ -221,21 +221,33 @@ namespace cbhk.GeneralTools
                 }
                 #endregion
 
-                #region 声明当前节点
-                if(!IsCurrentOptionalNode && IsPreviousOptionalNode)
-                {
-                    lineNumber++;
-                }
+                #region 得到上一个同级节点的索引
+                //if (i > 0 && !IsCurrentOptionalNode)
+                //{
+                //    int PreviousIndex = i;
+                //    bool PreviousIsBrother = GetLineStarCount().Match(nodeList[PreviousIndex]).Value.Trim().Length > starCount;
+                //    do
+                //    {
+                //        PreviousIndex--;
+                //        PreviousIsBrother = GetLineStarCount().Match(nodeList[PreviousIndex]).Value.Trim().Length > starCount;
+                //    }
+                //    while (PreviousIsBrother);
 
-                JsonTreeViewItem item = new()
-                {
-                    StartLineNumber = lineNumber
-                };
+                //    PreviousIsBrother = PreviousIndex > -1;
+
+                //    if (PreviousIsBrother && PreviousIndex > -1)
+                //    {
+                //        IsPreviousOptionalNode = GetOptionalKey().Match(nodeList[PreviousIndex]).Success;
+                //    }
+                //}
                 #endregion
 
-                #region 计算当前行星号数量
-                Match starMatch = GetLineStarCount().Match(nodeList[i]);
-                int starCount = starMatch.Value.Trim().Length;
+                #region 声明当前节点
+                JsonTreeViewItem item = new()
+                {
+                    StartLineNumber = lineNumber,
+                    LayerCount = layerCount
+                };
                 #endregion
 
                 #region 分析是否需要引用依赖项
@@ -659,7 +671,7 @@ namespace cbhk.GeneralTools
                                             {
                                                 result.ResultString.Append("\r\n");
                                             }
-                                            JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), currentSubChildren, lineNumber, layerCount, CurrentCompoundItem);
+                                            JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), currentSubChildren, lineNumber, layerCount + 1, CurrentCompoundItem);
 
                                             if(subResult.ResultString.ToString().EndsWith(",\r\n"))
                                             {
