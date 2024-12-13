@@ -55,7 +55,9 @@ namespace cbhk.ViewModel.Generators
         {
             _container = container;
             home = mainView;
-
+            htmlHelper = _container.Resolve<HtmlHelper>();
+            htmlHelper.plan = this;
+            htmlHelper.jsonTool = jsonTool = new JsonTreeViewItemExtension(_container);
             blockService =  _container.Resolve<BlockService>();
             entityService = _container.Resolve<EntityService>();
             itemService = _container.Resolve<ItemService>();

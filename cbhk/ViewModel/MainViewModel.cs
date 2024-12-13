@@ -72,9 +72,6 @@ namespace cbhk.ViewModel
         /// <param name="e"></param>
         public async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rules\1.20.4";
-            JsonTreeViewDataStructure result = new HtmlHelper(_container).AnalyzeHTMLData(configDirectoryPath);
-            var test = result;
             SetGeneratorButtonHandler = new Progress<DataTable>((dataTable) =>
             {
                 DistributorGenerator generatorFunction = _container.Resolve<DistributorGenerator>();

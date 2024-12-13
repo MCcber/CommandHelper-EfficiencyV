@@ -17,7 +17,7 @@ using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
 
 namespace cbhk.GeneralTools
 {
-    public partial class HtmlHelper
+    public partial class HtmlHelper(IContainerProvider container)
     {
         #region Field
         public DimensionTypeViewModel plan = null;
@@ -95,18 +95,9 @@ namespace cbhk.GeneralTools
         private EntityService entityService = null;
         private ItemService itemService = null;
 
-        private IContainerProvider _container = null;
-        #endregion
+        private IContainerProvider _container = container;
 
-        public HtmlHelper(IContainerProvider container)
-        {
-            _container = container;
-            plan = _container.Resolve<DimensionTypeViewModel>();
-            jsonTool = _container.Resolve<JsonTreeViewItemExtension>();
-            blockService = _container.Resolve<BlockService>();
-            entityService = _container.Resolve<EntityService>();
-            itemService = _container.Resolve<ItemService>();
-        }
+        #endregion
 
         public JsonTreeViewDataStructure AnalyzeHTMLData(string directoryPath)
         {
@@ -184,17 +175,17 @@ namespace cbhk.GeneralTools
             //遍历找到的 div 标签内容集合
             for (int i = 0; i < nodeList.Count; i++)
             {
-                #region 计算当前行星号数量
-                Match starMatch = GetLineStarCount().Match(nodeList[i]);
-                int starCount = starMatch.Value.Trim().Length;
-                #endregion
-
                 #region 字段
                 //bool IsPreviousOptionalNode = false;
                 bool IsExplanationNode = GetExplanationForHierarchicalNodes().Match(nodeList[i]).Success;
                 bool IsCurrentOptionalNode = GetOptionalKey().Match(nodeList[i]).Success;
-                bool IsHaveNextNode = i < nodeList.Count - 1;
+                bool IsHaveNextNode = i < nodeList.Count - 1 && GetNodeTypeAndKey().Match(nodeList[i + 1]).Success;
                 bool IsNextOptionalNode = false;
+                #endregion
+
+                #region 计算当前行星号数量
+                Match starMatch = GetLineStarCount().Match(nodeList[i]);
+                int starCount = starMatch.Value.Trim().Length;
                 #endregion
 
                 #region 判断是否跳过本次处理
@@ -279,461 +270,450 @@ namespace cbhk.GeneralTools
 
                 if (targetInfoGroupList is not null && targetInfoGroupList.Count > 0)
                 {
-                    foreach (var dataMatch in targetInfoGroupList.Cast<Match>())
+                    Match dataMatch = targetInfoGroupList[0];
+
+                    #region 确定当前的节点数据类型
+                    if (dataMatch.Groups.Count < 2)
                     {
-                        #region 确定当前的节点数据类型
-                        if (dataMatch.Groups.Count < 2)
-                        {
-                            continue;
-                        }
-                        string key = dataMatch.Groups[2].Value;
-                        bool IsSimpleItem = false;
-                        switch (dataMatch.Groups[1].Value)
-                        {
-                            case "bool":
+                        continue;
+                    }
+                    string key = dataMatch.Groups[2].Value;
+                    bool IsSimpleItem = false;
+                    switch (dataMatch.Groups[1].Value)
+                    {
+                        case "bool":
+                            {
+                                IsSimpleItem = true;
+                                item.DataType = DataTypes.Bool;
+                                break;
+                            }
+                        case "byte":
+                        case "short":
+                        case "int":
+                        case "float":
+                        case "double":
+                        case "long":
+                        case "decimal":
+                        case "string":
+                            {
+                                //确定字符串节点是否为枚举类型
+                                int EnumKeyCount = EnumKeyList.Where(item => nodeList[i].Contains(item)).Count();
+                                if (EnumKeyCount > 0)
+                                {
+                                    item.DataType = DataTypes.Enum;
+                                }
+                                else
                                 {
                                     IsSimpleItem = true;
-                                    item.DataType = DataTypes.Bool;
-                                    break;
-                                }
-                            case "byte":
-                            case "short":
-                            case "int":
-                            case "float":
-                            case "double":
-                            case "long":
-                            case "decimal":
-                            case "string":
-                                {
-                                    //确定字符串节点是否为枚举类型
-                                    int EnumKeyCount = EnumKeyList.Where(item => nodeList[i].Contains(item)).Count();
-                                    if (EnumKeyCount > 0)
+                                    object dataTypes = DataTypes.Input;
+                                    bool parseResult = Enum.TryParse(typeof(DataTypes), dataMatch.Groups[1].Value[0].ToString().ToUpper() + dataMatch.Groups[1].Value[1..], out dataTypes);
+                                    if (parseResult)
                                     {
-                                        item.DataType = DataTypes.Enum;
+                                        item.DataType = (DataTypes)dataTypes;
                                     }
-                                    else
-                                    {
-                                        IsSimpleItem = true;
-                                        object dataTypes = DataTypes.Input;
-                                        bool parseResult = Enum.TryParse(typeof(DataTypes), dataMatch.Groups[1].Value[0].ToString().ToUpper() + dataMatch.Groups[1].Value[1..],out dataTypes);
-                                        if (parseResult)
-                                        {
-                                            item.DataType = (DataTypes)dataTypes;
-                                        }
-                                    }
-                                    break;
                                 }
-                        }
-
-                        if (!IsSimpleItem)
-                        {
-                            item = new CompoundJsonTreeViewItem(plan, jsonTool);
-                            if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && multiNodeTypeAndKeyInfoGroupList.Count > 0)
-                            {
-                                compoundJsonTreeViewItem.ValueTypeList.Add(new TextComboBoxItem()
-                                {
-                                    Text = dataMatch.Groups[1].Value
-                                });
+                                break;
                             }
-                        }
-                        #endregion
+                    }
 
-                        #region 处理值类型
-                        if (item is JsonTreeViewItem and not CompoundJsonTreeViewItem)
+                    if (!IsSimpleItem)
+                    {
+                        item = new CompoundJsonTreeViewItem(plan, jsonTool);
+                        if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && multiNodeTypeAndKeyInfoGroupList.Count > 0)
                         {
-                            switch (item.DataType)
+                            compoundJsonTreeViewItem.ValueTypeList.Add(new TextComboBoxItem()
                             {
-                                case DataTypes.Bool:
+                                Text = dataMatch.Groups[1].Value
+                            });
+                        }
+                    }
+                    #endregion
+
+                    #region 处理值类型
+                    if (item is JsonTreeViewItem and not CompoundJsonTreeViewItem)
+                    {
+                        switch (item.DataType)
+                        {
+                            case DataTypes.Bool:
+                                {
+                                    if (dataMatch.Groups.Count > 1)
                                     {
-                                        if (dataMatch.Groups.Count > 1)
+                                        item.Key = key;
+                                        item.DisplayText = key[0].ToString().ToUpper() + key[1..];
+                                        item.BoolButtonVisibility = Visibility.Visible;
+
+                                        Match boolMatch = GetDefaultBoolValue().Match(nodeList[i]);
+                                        if (boolMatch is not null)
                                         {
-                                            item.Key = key;
-                                            item.DisplayText = key[0].ToString().ToUpper() + key[1..];
-                                            item.BoolButtonVisibility = Visibility.Visible;
-
-                                            Match boolMatch = GetDefaultBoolValue().Match(nodeList[i]);
-                                            if (boolMatch is not null)
+                                            if (!IsCurrentOptionalNode)
                                             {
-                                                if (!IsCurrentOptionalNode)
-                                                {
-                                                    result.ResultString.Append(new string(' ', layerCount * 2));
-                                                    result.ResultString.Append("\"" + key.ToLower() + "\"");
-                                                }
+                                                result.ResultString.Append(new string(' ', layerCount * 2));
+                                                result.ResultString.Append("\"" + key.ToLower() + "\"");
+                                            }
 
-                                                if (bool.TryParse(boolMatch.Groups[1].Value, out bool defaultValue) && !IsCurrentOptionalNode)
+                                            if (bool.TryParse(boolMatch.Groups[1].Value, out bool defaultValue) && !IsCurrentOptionalNode)
+                                            {
+                                                item.Value = item.DefaultValue = defaultValue;
+                                                if (item.Value)
                                                 {
-                                                    item.Value = item.DefaultValue = defaultValue;
-                                                    if (item.Value)
-                                                    {
-                                                        item.IsTrue = true;
-                                                        item.IsFalse = false;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    item.IsCanBeDefaulted = true;
-                                                    item.IsTrue = item.IsFalse = false;
-                                                }
-
-                                                if (!IsCurrentOptionalNode && boolMatch.Groups.Count > 1)
-                                                {
-                                                    result.ResultString.Append(": " + boolMatch.Groups[1].Value.ToLower());
+                                                    item.IsTrue = true;
+                                                    item.IsFalse = false;
                                                 }
                                             }
-                                        }
-                                        break;
-                                    }
-                                case DataTypes.Input:
-                                case DataTypes.String:
-                                    {
-                                        if (dataMatch.Groups.Count > 1)
-                                        {
-                                            item.Key = key;
-                                            item.DisplayText = key[0].ToString().ToUpper() + key[1..];
-                                            item.InputBoxVisibility = Visibility.Visible;
-
-                                            Match stringMatch = GetDefaultStringValue().Match(nodeList[i]);
-                                            if (stringMatch is not null)
+                                            else
                                             {
-                                                if (!IsCurrentOptionalNode)
-                                                {
-                                                    result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key.ToLower() + "\"");
-                                                }
+                                                item.IsCanBeDefaulted = true;
+                                                item.IsTrue = item.IsFalse = false;
+                                            }
 
-                                                if (stringMatch.Groups.Count > 1)
-                                                {
-                                                    item.Value = item.DefaultValue = "\"" + stringMatch.Groups[1].Value + "\"";
-                                                }
-
-                                                if (!IsCurrentOptionalNode && stringMatch.Groups.Count > 1)
-                                                {
-                                                    result.ResultString.Append(": \"" + stringMatch.Groups[1].Value.ToLower() + "\"");
-                                                }
-                                                else
-                                                {
-                                                    result.ResultString.Append(": \"\"");
-                                                }
+                                            if (!IsCurrentOptionalNode && boolMatch.Groups.Count > 1)
+                                            {
+                                                result.ResultString.Append(": " + boolMatch.Groups[1].Value.ToLower());
                                             }
                                         }
-                                        break;
                                     }
-                                case DataTypes.Byte:
-                                case DataTypes.Short:
-                                case DataTypes.Int:
-                                case DataTypes.Float:
-                                case DataTypes.Double:
-                                case DataTypes.Decimal:
-                                case DataTypes.Long:
+                                    break;
+                                }
+                            case DataTypes.Input:
+                            case DataTypes.String:
+                                {
+                                    if (dataMatch.Groups.Count > 1)
                                     {
-                                        Match numberMatch = GetDefaultNumberValue().Match(nodeList[i]);
-                                        if (numberMatch is not null)
-                                        {
-                                            item.Key = key;
-                                            item.DisplayText = key[0].ToString().ToUpper() + key[1..];
-                                            item.InputBoxVisibility = Visibility.Visible;
+                                        item.Key = key;
+                                        item.DisplayText = key[0].ToString().ToUpper() + key[1..];
+                                        item.InputBoxVisibility = Visibility.Visible;
 
+                                        Match stringMatch = GetDefaultStringValue().Match(nodeList[i]);
+                                        if (stringMatch is not null)
+                                        {
                                             if (!IsCurrentOptionalNode)
                                             {
                                                 result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key.ToLower() + "\"");
                                             }
 
-                                            item.InputBoxVisibility = Visibility.Visible;
-                                            if (decimal.TryParse(numberMatch.Groups[1].Value, out decimal defaultDecimalValue))
+                                            if (stringMatch.Groups.Count > 1)
                                             {
-                                                item.Value = item.DefaultValue = defaultDecimalValue;
+                                                item.Value = item.DefaultValue = "\"" + stringMatch.Groups[1].Value + "\"";
                                             }
 
-                                            if (!IsCurrentOptionalNode && numberMatch.Groups.Count > 1)
+                                            if (!IsCurrentOptionalNode && stringMatch.Groups.Count > 1)
                                             {
-                                                result.ResultString.Append(": " + item.Value.ToString().ToLower());
+                                                result.ResultString.Append(": \"" + stringMatch.Groups[1].Value.ToLower() + "\"");
+                                            }
+                                            else
+                                            {
+                                                result.ResultString.Append(": \"\"");
                                             }
                                         }
-                                        break;
                                     }
-                            }
+                                    break;
+                                }
+                            case DataTypes.Byte:
+                            case DataTypes.Short:
+                            case DataTypes.Int:
+                            case DataTypes.Float:
+                            case DataTypes.Double:
+                            case DataTypes.Decimal:
+                            case DataTypes.Long:
+                                {
+                                    Match numberMatch = GetDefaultNumberValue().Match(nodeList[i]);
+                                    if (numberMatch is not null)
+                                    {
+                                        item.Key = key;
+                                        item.DisplayText = key[0].ToString().ToUpper() + key[1..];
+                                        item.InputBoxVisibility = Visibility.Visible;
 
-                            if (Previous is not null && Previous.LayerCount == layerCount)
-                            {
-                                Previous.Next = item;
-                                item.Last = Previous;
-                            }
+                                        if (!IsCurrentOptionalNode)
+                                        {
+                                            result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key.ToLower() + "\"");
+                                        }
+
+                                        item.InputBoxVisibility = Visibility.Visible;
+                                        if (decimal.TryParse(numberMatch.Groups[1].Value, out decimal defaultDecimalValue))
+                                        {
+                                            item.Value = item.DefaultValue = defaultDecimalValue;
+                                        }
+
+                                        if (!IsCurrentOptionalNode && numberMatch.Groups.Count > 1)
+                                        {
+                                            result.ResultString.Append(": " + item.Value.ToString().ToLower());
+                                        }
+                                    }
+                                    break;
+                                }
                         }
+
+                        if (Previous is not null && Previous.LayerCount == layerCount)
+                        {
+                            Previous.Next = item;
+                            item.Last = Previous;
+                        }
+                    }
+                    #endregion
+
+                    #region 处理复合类型
+                    if (item is CompoundJsonTreeViewItem CurrentCompoundItem)
+                    {
+                        //设置key
+                        if (CurrentCompoundItem.Key.Length == 0)
+                        {
+                            CurrentCompoundItem.Key = key;
+                        }
+
+                        #region 处理枚举型数据
+
+                        #region 抓取数据
+                        MatchCollection EnumCollection = GetEnumValue().Matches(nodeList[i]);
+                        Match BlockTagMark = GetBlcokTagValue().Match(nodeList[i]);
+                        Match EntityTagMark = GetEntityTagValue().Match(nodeList[i]);
                         #endregion
 
-                        #region 处理复合类型
-                        if (item is CompoundJsonTreeViewItem CurrentCompoundItem)
+                        #region 添加枚举成员
+                        if (EnumCollection.Count > 0)
                         {
-                            //设置key
-                            if (CurrentCompoundItem.Key.Length == 0)
+                            foreach (Match enumMatch in EnumCollection)
                             {
-                                CurrentCompoundItem.Key = key;
+                                CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = enumMatch.Value });
                             }
-
-                            #region 处理枚举型数据
-
-                            #region 抓取数据
-                            MatchCollection EnumCollection = GetEnumValue().Matches(nodeList[i]);
-                            Match BlockTagMark = GetBlcokTagValue().Match(nodeList[i]);
-                            Match EntityTagMark = GetEntityTagValue().Match(nodeList[i]);
-                            #endregion
-
-                            #region 添加枚举成员
-                            if (EnumCollection.Count > 0)
-                            {
-                                foreach (Match enumMatch in EnumCollection)
-                                {
-                                    CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = enumMatch.Value });
-                                }
-                            }
-                            else
-                            if (BlockTagMark.Index > 0)
-                            {
-                                foreach (string blockName in blockService.GetAllBlockName())
-                                {
-                                    CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = blockName });
-                                }
-                            }
-                            else
-                            if (EntityTagMark.Index > 0)
-                            {
-                                foreach (string entityName in entityService.GetAllEntityName())
-                                {
-                                    CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = entityName });
-                                }
-                            }
-                            #endregion
-
-                            #region 处理Key与外观
-                            if (EnumCollection.Count > 0 || BlockTagMark.Index > 0 || EntityTagMark.Index > 0)
-                            {
-                                CurrentCompoundItem.DisplayText = key[0].ToString().ToUpper() + key[1..];
-                                CurrentCompoundItem.DataType = DataTypes.Enum;
-                                CurrentCompoundItem.EnumBoxVisibility = Visibility.Visible;
-                                CurrentCompoundItem.SelectedEnumItem = CurrentCompoundItem.EnumItemsSource[0];
-
-                                result.ResultString.Append(new string(' ', layerCount * 2) +
-                                    "\"" + key.ToLower() + "\"" +
-                                    ": \"" + CurrentCompoundItem.EnumItemsSource[0].Text + "\"");
-                            }
-                            #endregion
-
-                            #endregion
-
-                            #region 处理不同行为的复合型数据
-
-                            #region 确定数据类型
-                            if (dataMatch.Groups[1].Value == "compound")
-                            {
-                                CurrentCompoundItem.AddElementButtonVisibility = Visibility.Visible;
-                                CurrentCompoundItem.ElementButtonTip = "展开";
-                                if (GetIsCanNullableKey().Match(nodeList[i]).Success)
-                                {
-                                    CurrentCompoundItem.DataType = DataTypes.NullableCompound;
-                                }
-                                else
-                                if (IsCurrentOptionalNode)
-                                {
-                                    CurrentCompoundItem.DataType = DataTypes.OptionalCompound;
-                                }
-
-                                if (customNodeTypeAndKeyInfoGroupList.Count > 0 && customNodeTypeAndKeyInfoGroupList[0].Groups.Count > 1)
-                                {
-                                    CurrentCompoundItem.DataType = DataTypes.CustomCompound;
-                                }
-                            }
-                            else
-                            if (dataMatch.Groups[1].Value == "list")
-                            {
-                                CurrentCompoundItem.DataType = DataTypes.List;
-                            }
-                            else
-                                if (dataMatch.Groups[1].Value == "array")
-                            {
-                                CurrentCompoundItem.DataType = DataTypes.Array;
-                            }
-                            #endregion
-
-                            #region 更新非可选复合型节点的文本值与层数
-                            CurrentCompoundItem.DisplayText = key[0].ToString().ToUpper() + key[1..];
-                            CurrentCompoundItem.StartLineNumber = CurrentCompoundItem.EndLineNumber = lineNumber;
-                            CurrentCompoundItem.LayerCount = layerCount;
-                            if (CurrentCompoundItem.ValueTypeList.Count > 0)
-                            {
-                                CurrentCompoundItem.CurrentValueType ??= CurrentCompoundItem.ValueTypeList[0];
-                            }
-                            if (key is not null && key.Length > 0 && !IsCurrentOptionalNode)
-                            {
-                                if (CurrentCompoundItem.DataType is DataTypes.Array || CurrentCompoundItem.DataType is DataTypes.List)
-                                {
-                                    CurrentCompoundItem.AddElementButtonVisibility = Visibility.Visible;
-                                    result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key + "\": []");
-                                }
-                                else
-                                if (CurrentCompoundItem.DataType is not DataTypes.OptionalCompound)
-                                {
-                                    result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key + "\": {");
-                                }
-                            }
-                            #endregion
-
-                            #endregion
-
-                            #region 处理所需上下文数据
-                            //匹配上下文关键字
-                            Match contextKeyMatch = GetContextKey().Match(nodeList[i]);
-                            if(contextKeyMatch is not null && contextKeyMatch.Groups.Count > 1 && 
-                                plan is not null && plan.CurrentTreeViewMap.Count > 0)
-                            {
-                                IEnumerable<string> keyList = plan.CurrentTreeViewMap.Keys.Where(key=>key.Contains(contextKeyMatch.Groups[1].Value));
-                                List<JsonTreeViewItem> contextTreeViewItemList = plan.CurrentTreeViewMap[keyList.FirstOrDefault()];
-                                CurrentCompoundItem.Children.AddRange(contextTreeViewItemList);
-
-                                //判断搜索到的字典链表中的根节点的Key是否包含需要被替代的部分，有则开启当前节点的文本框
-                                if (contextTreeViewItemList[0].Key.Contains('<') && 
-                                    contextTreeViewItemList[0].Key.Contains('\''))
-                                {
-                                    CurrentCompoundItem.InputBoxVisibility = Visibility.Visible;
-                                }
-                            }
-                            #endregion
-
-                            #region 处理顶级数据结构
-                            Match templateMatch = GetTemplateKey().Match(nodeList[i]);
-                            if (key is not null && templateMatch.Success && templateMatch.Groups[2] is Group type && plan.CurrentTreeViewMap.TryGetValue(type.Value[0].ToString().ToLower() + string.Join(' ', type.Value[1..].Split('_').Select(item => item[0].ToString().ToUpper() + item[1..])), out List<JsonTreeViewItem> templateCompoundItem) && templateCompoundItem is not null)
-                            {
-                                CurrentCompoundItem.Children.AddRange(templateCompoundItem);
-                                if (CurrentCompoundItem.DataType is not DataTypes.OptionalCompound)
-                                {
-                                    result.ResultString.Append(new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + key + "\": {");
-                                }
-                            }
-                            #endregion
-
-                            #region 设置前后关系
-                            if (Previous is not null && Previous.LayerCount == layerCount)
-                            {
-                                Previous.Next = CurrentCompoundItem;
-                                CurrentCompoundItem.Last = Previous;
-                            }
-                            #endregion
-
-                            #region 处理递归
-                            //获取下一行的*数量
-                            int nextNodeIndex = i + 1;
-                            if (nextNodeIndex < nodeList.Count)
-                            {
-                                Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
-                                if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
-                                {
-                                    string nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
-                                    if (nextLineStar.Length > starCount)
-                                    {
-                                        #region 一次收集所有子节点，执行递归
-                                        List<string> currentSubChildren = [];
-                                        currentSubChildren.Add(nodeList[nextNodeIndex]);
-                                        while (nextLineStarMatch.Success && nextLineStar.Length > starCount)
-                                        {
-                                            nextNodeIndex++;
-                                            if (nextNodeIndex < nodeList.Count)
-                                            {
-                                                nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
-                                                if (nextLineStarMatch.Success && nextLineStarMatch.Groups[1].Value.Trim().Length > starCount)
-                                                {
-                                                    nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
-                                                    if (nodeList[nextNodeIndex].Contains('{'))
-                                                    {
-                                                        currentSubChildren.Add(nodeList[nextNodeIndex]);
-                                                    }
-                                                }
-                                            }
-                                            else
-                                                break;
-                                            nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
-                                        }
-                                        #endregion
-
-                                        #region 根据递归的情况来向后移动N个迭代单位
-                                        if (currentSubChildren.Count > 0)
-                                        {
-                                            i = nextNodeIndex - 1;
-                                        }
-                                        else
-                                            if (currentSubChildren.Count > 0)
-                                        {
-                                            i++;
-                                        }
-                                        #endregion
-
-                                        #region 是否存储原始信息、处理递归
-                                        if (CurrentCompoundItem.DataType is DataTypes.Compound || CurrentCompoundItem.DataType is DataTypes.Array)
-                                        {
-                                            if (!result.ResultString.ToString().EndsWith("\r\n"))
-                                            {
-                                                result.ResultString.Append("\r\n");
-                                            }
-                                            JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), currentSubChildren, lineNumber, layerCount + 1, CurrentCompoundItem);
-
-                                            if(subResult.ResultString.ToString().EndsWith(",\r\n"))
-                                            {
-                                                subResult.ResultString.Remove(subResult.ResultString.Length - 2, 2);
-                                            }
-
-                                            if (subResult.ResultString.Length > 0)
-                                            {
-                                                result.ResultString.Append(subResult.ResultString);
-                                            }
-                                            else
-                                            {
-                                                CurrentCompoundItem.ChildrenStringList = currentSubChildren;
-                                            }
-                                            result.ResultString.Append((CurrentCompoundItem.Children.Count > 0 ? "\r\n" + new string(' ', layerCount * 2) : "") + '}');
-                                        }
-                                        else
-                                            CurrentCompoundItem.ChildrenStringList = currentSubChildren;
-                                        #endregion
-
-                                        #region 判断后一个节点是否可选
-                                        IsHaveNextNode = i < nodeList.Count - 1;
-                                        if (IsHaveNextNode)
-                                            IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
-                                        #endregion
-
-                                        //赋予Plan属性
-                                        item.Plan ??= plan;
-                                    }
-                                    else
-                                    {
-                                        IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
-                                    }
-                                }
-                            }
-                            #endregion
-                        }
-
-                        #region 计算可缺省参数的默认值
-                        //真正要使用的时候再设置具体行号
-                        if (item is CompoundJsonTreeViewItem compoundJsonItem && IsCurrentOptionalNode)
-                        {
-                            compoundJsonItem.StartLineNumber = compoundJsonItem.EndLineNumber = 0;
                         }
                         else
-                            if(IsCurrentOptionalNode)
+                        if (BlockTagMark.Index > 0)
                         {
-                            item.StartLineNumber = 0;
+                            foreach (string blockName in blockService.GetAllBlockName())
+                            {
+                                CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = blockName });
+                            }
+                        }
+                        else
+                        if (EntityTagMark.Index > 0)
+                        {
+                            foreach (string entityName in entityService.GetAllEntityName())
+                            {
+                                CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = entityName });
+                            }
+                        }
+                        #endregion
+
+                        #region 处理Key与外观
+                        if (EnumCollection.Count > 0 || BlockTagMark.Index > 0 || EntityTagMark.Index > 0)
+                        {
+                            CurrentCompoundItem.DisplayText = key[0].ToString().ToUpper() + key[1..];
+                            CurrentCompoundItem.DataType = DataTypes.Enum;
+                            CurrentCompoundItem.EnumBoxVisibility = Visibility.Visible;
+                            CurrentCompoundItem.SelectedEnumItem = CurrentCompoundItem.EnumItemsSource[0];
+
+                            result.ResultString.Append(new string(' ', layerCount * 2) +
+                                "\"" + key.ToLower() + "\"" +
+                                ": \"" + CurrentCompoundItem.EnumItemsSource[0].Text + "\"");
                         }
                         #endregion
 
                         #endregion
+
+                        #region 处理不同行为的复合型数据
+
+                        #region 确定数据类型
+                        if (dataMatch.Groups[1].Value == "compound")
+                        {
+                            CurrentCompoundItem.AddElementButtonVisibility = Visibility.Visible;
+                            CurrentCompoundItem.ElementButtonTip = "展开";
+                            if (GetIsCanNullableKey().Match(nodeList[i]).Success)
+                            {
+                                CurrentCompoundItem.DataType = DataTypes.NullableCompound;
+                            }
+                            else
+                            if (IsCurrentOptionalNode)
+                            {
+                                CurrentCompoundItem.DataType = DataTypes.OptionalCompound;
+                            }
+
+                            if (customNodeTypeAndKeyInfoGroupList.Count > 0 && customNodeTypeAndKeyInfoGroupList[0].Groups.Count > 1)
+                            {
+                                CurrentCompoundItem.DataType = DataTypes.CustomCompound;
+                            }
+                        }
+                        else
+                        if (dataMatch.Groups[1].Value == "list")
+                        {
+                            CurrentCompoundItem.DataType = DataTypes.List;
+                        }
+                        else
+                            if (dataMatch.Groups[1].Value == "array")
+                        {
+                            CurrentCompoundItem.DataType = DataTypes.Array;
+                        }
+                        #endregion
+
+                        #region 更新非可选复合型节点的文本值与层数
+                        CurrentCompoundItem.DisplayText = key[0].ToString().ToUpper() + key[1..];
+                        CurrentCompoundItem.StartLineNumber = CurrentCompoundItem.EndLineNumber = lineNumber;
+                        CurrentCompoundItem.LayerCount = layerCount;
+                        if (CurrentCompoundItem.ValueTypeList.Count > 0)
+                        {
+                            CurrentCompoundItem.CurrentValueType ??= CurrentCompoundItem.ValueTypeList[0];
+                        }
+                        if (key is not null && key.Length > 0 && !IsCurrentOptionalNode)
+                        {
+                            if (CurrentCompoundItem.DataType is DataTypes.Array || CurrentCompoundItem.DataType is DataTypes.List)
+                            {
+                                CurrentCompoundItem.AddElementButtonVisibility = Visibility.Visible;
+                                result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key + "\": []");
+                            }
+                            else
+                            if (CurrentCompoundItem.DataType is not DataTypes.OptionalCompound)
+                            {
+                                result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key + "\": {");
+                            }
+                        }
+                        #endregion
+
+                        #endregion
+
+                        #region 处理所需上下文数据
+                        //匹配上下文关键字
+                        Match contextKeyMatch = GetContextKey().Match(nodeList[i]);
+                        if (contextKeyMatch is not null && contextKeyMatch.Groups.Count > 1 &&
+                            plan is not null && plan.CurrentTreeViewMap.Count > 0)
+                        {
+                            IEnumerable<string> keyList = plan.CurrentTreeViewMap.Keys.Where(key => key.Contains(contextKeyMatch.Groups[1].Value));
+                            List<JsonTreeViewItem> contextTreeViewItemList = plan.CurrentTreeViewMap[keyList.FirstOrDefault()];
+                            CurrentCompoundItem.Children.AddRange(contextTreeViewItemList);
+
+                            //判断搜索到的字典链表中的根节点的Key是否包含需要被替代的部分，有则开启当前节点的文本框
+                            if (contextTreeViewItemList[0].Key.Contains('<') &&
+                                contextTreeViewItemList[0].Key.Contains('\''))
+                            {
+                                CurrentCompoundItem.InputBoxVisibility = Visibility.Visible;
+                            }
+                        }
+                        #endregion
+
+                        #region 处理顶级数据结构
+                        Match templateMatch = GetTemplateKey().Match(nodeList[i]);
+                        if (key is not null && templateMatch.Success && templateMatch.Groups[2] is Group type && plan.CurrentTreeViewMap.TryGetValue(type.Value[0].ToString().ToLower() + string.Join(' ', type.Value[1..].Split('_').Select(item => item[0].ToString().ToUpper() + item[1..])), out List<JsonTreeViewItem> templateCompoundItem) && templateCompoundItem is not null)
+                        {
+                            CurrentCompoundItem.Children.AddRange(templateCompoundItem);
+                            if (CurrentCompoundItem.DataType is not DataTypes.OptionalCompound)
+                            {
+                                result.ResultString.Append(new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + key + "\": {");
+                            }
+                        }
+                        #endregion
+
+                        #region 设置前后关系
+                        if (Previous is not null && Previous.LayerCount == layerCount)
+                        {
+                            Previous.Next = CurrentCompoundItem;
+                            CurrentCompoundItem.Last = Previous;
+                        }
+                        #endregion
+
+                        #region 处理递归
+                        //获取下一行的*数量
+                        int nextNodeIndex = i + 1;
+                        if (nextNodeIndex < nodeList.Count)
+                        {
+                            Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                            if (nextLineStarMatch.Success && nextLineStarMatch.Groups.Count > 1)
+                            {
+                                string nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
+                                if (nextLineStar.Length > starCount)
+                                {
+                                    #region 一次收集所有子节点，执行递归
+                                    List<string> currentSubChildren = [];
+                                    currentSubChildren.Add(nodeList[nextNodeIndex]);
+                                    while (nextLineStarMatch.Success && nextLineStar.Length > starCount)
+                                    {
+                                        nextNodeIndex++;
+                                        if (nextNodeIndex < nodeList.Count)
+                                        {
+                                            nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                                            if (nextLineStarMatch.Success && nextLineStarMatch.Groups[1].Value.Trim().Length > starCount)
+                                            {
+                                                nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
+                                                if (nodeList[nextNodeIndex].Contains('{'))
+                                                {
+                                                    currentSubChildren.Add(nodeList[nextNodeIndex]);
+                                                }
+                                            }
+                                        }
+                                        else
+                                            break;
+                                        nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
+                                    }
+                                    #endregion
+
+                                    #region 根据递归的情况来向后移动N个迭代单位
+                                    if (currentSubChildren.Count > 0)
+                                    {
+                                        i = nextNodeIndex - 1;
+                                    }
+                                    else
+                                        if (currentSubChildren.Count > 0)
+                                    {
+                                        i++;
+                                    }
+                                    #endregion
+
+                                    #region 是否存储原始信息、处理递归
+                                    if (CurrentCompoundItem.DataType is DataTypes.Compound || CurrentCompoundItem.DataType is DataTypes.Array)
+                                    {
+                                        JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), currentSubChildren, lineNumber, layerCount + 1, CurrentCompoundItem);
+
+                                        if (subResult.ResultString.Length > 0)
+                                        {
+                                            result.ResultString.Append("\r\n" + subResult.ResultString + "\r\n" + new string(' ', layerCount * 2) + "}\r\n");
+                                        }
+                                        else
+                                        {
+                                            CurrentCompoundItem.ChildrenStringList = currentSubChildren;
+                                            result.ResultString.Append('}');
+                                        }
+                                    }
+                                    else
+                                        CurrentCompoundItem.ChildrenStringList = currentSubChildren;
+                                    #endregion
+
+                                    #region 判断后一个节点是否可选
+                                    IsHaveNextNode = i < nodeList.Count - 1;
+                                    if (IsHaveNextNode)
+                                        IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
+                                    #endregion
+
+                                    //赋予Plan属性
+                                    item.Plan ??= plan;
+                                }
+                                else
+                                {
+                                    IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
+                                }
+                            }
+                        }
+                        #endregion
                     }
+
+                    #region 计算可缺省参数的默认值
+                    //真正要使用的时候再设置具体行号
+                    if (item is CompoundJsonTreeViewItem compoundJsonItem && IsCurrentOptionalNode)
+                    {
+                        compoundJsonItem.StartLineNumber = compoundJsonItem.EndLineNumber = 0;
+                    }
+                    else
+                        if (IsCurrentOptionalNode)
+                    {
+                        item.StartLineNumber = 0;
+                    }
+                    #endregion
+
+                    #endregion
                 }
                 #endregion
 
                 #region 处理节点的追加
-                if (i < nodeList.Count - 1 && !result.ResultString.ToString().TrimEnd(['\r','\n']).EndsWith(','))
+                if (i < nodeList.Count - 1 && !result.ResultString.ToString().TrimEnd(['\r', '\n']).EndsWith(',') && !IsNextOptionalNode && IsHaveNextNode)
                 {
-                    result.ResultString.Append(',');
+                    result.ResultString.Append(",\r\n");
                 }
-                result.ResultString.Append("\r\n");
 
                 if (Parent is not null && item.Key.Length > 0)
                 {
