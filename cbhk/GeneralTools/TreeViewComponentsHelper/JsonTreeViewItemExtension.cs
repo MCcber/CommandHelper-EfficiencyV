@@ -12,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
+using static cbhk.Model.Common.Enums;
 
 namespace cbhk.GeneralTools.TreeViewComponentsHelper
 {
@@ -188,7 +188,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         public void AddSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem,UIElement element)
         {
             #region 定义列表和统一方案接口
-            //CompoundJsonTreeViewItem subItem = compoundJsonTreeViewItem.Plan.CurrentTreeViewMap[compoundJsonTreeViewItem.Key];
+            //CompoundJsonTreeViewItem subItem = compoundJsonTreeViewItem.Plan.CurrentDependencyItemList[compoundJsonTreeViewItem.Key];
             bool AddToTop = compoundJsonTreeViewItem.DataType is DataTypes.Array;
             bool AddSubStructure = 
                 compoundJsonTreeViewItem.DataType is DataTypes.Compound ||

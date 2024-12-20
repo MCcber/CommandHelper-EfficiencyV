@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
-using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
+using static cbhk.Model.Common.Enums;
 
 namespace cbhk.CustomControls.JsonTreeViewComponents
 {

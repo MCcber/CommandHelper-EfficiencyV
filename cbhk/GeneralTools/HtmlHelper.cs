@@ -13,7 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
-using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
+using static cbhk.Model.Common.Enums;
 
 namespace cbhk.GeneralTools
 {
@@ -26,7 +26,7 @@ namespace cbhk.GeneralTools
 
         private List<string> EnumKeyList = ["命名空间ID"];
 
-        [GeneratedRegex(@"\[\[\#(?<1>[\u4e00-\u9fff]+)\|[\u4e00-\u9fff]+\]\]")]
+        [GeneratedRegex(@"\[\[\#(?<1>[\u4e00-\u9fff]+)\|(?<2>[\u4e00-\u9fff]+)\]\]")]
         private static partial Regex GetContextKey();
 
         [GeneratedRegex(@"^\s*\s?\:?\s*\s?(\*+)")]
@@ -74,7 +74,7 @@ namespace cbhk.GeneralTools
         [GeneratedRegex(@"\{\{cd\|[a-z:_]+\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetEnumValue();
 
-        [GeneratedRegex(@"==\s*\s?([\u4e00-\u9fffa-z_]+)\s*\s?==", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"\s*\s+?=+\s*\s?([\u4e00-\u9fffa-z_]+)\s*\s?=+\s*\s+?", RegexOptions.IgnoreCase)]
         private static partial Regex GetContextFileMarker();
 
         [GeneratedRegex(@"====\s*\s?(minecraft\:[a-z_]+)\s*\s?====", RegexOptions.IgnoreCase)]
@@ -108,13 +108,29 @@ namespace cbhk.GeneralTools
             {
                 string wikiData = File.ReadAllText(file);
                 string[] wikiLines = File.ReadAllLines(file);
+
+                #region 处理非入口文件
+                bool IsNotMainFile = false;
+                string currentReferenceKey = "";
+                if(Path.GetFileNameWithoutExtension(file) != "main")
+                {
+                    IsNotMainFile = true;
+                    string mainKey = wikiLines[0].Replace("=", "").Trim();
+                    string subKey = "";
+                    if (wikiLines[1].Contains('='))
+                    {
+                        subKey = wikiLines[1].Replace("=", "").Trim();
+                    }
+                    currentReferenceKey = "#" + mainKey + "|" + subKey;
+                    plan.CurrentDependencyItemList.Add(currentReferenceKey, []);
+                }
+                #endregion
+
                 htmlDocument.LoadHtml(wikiData);
                 List<HtmlNode> treeviewDivs = [.. htmlDocument.DocumentNode.SelectNodes("//div[@class='treeview']")];
 
                 if (treeviewDivs is not null)
                 {
-                    #region 由于第一个HtmlNode实例的InnerHtml属性总会包含所有标签的内容，所以这里需要进行特殊处理
-
                     #region 直接覆盖InnerHtml属性会导致内容错误，所以这里直接用链表来提取正确的结构数据
                     List<string> nodeContent = [.. treeviewDivs[0].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
                     #endregion
@@ -136,22 +152,20 @@ namespace cbhk.GeneralTools
 
                     #region 执行解析、分析是否需要被添加为依赖项
                     JsonTreeViewDataStructure resultData = GetTreeViewItemResult(new(), nodeContent, 2, 1);
-                    Match contextFileMarker = GetContextFileMarker().Match(wikiLines[0]);
-                    if (contextFileMarker is not null && contextFileMarker.Groups.Count > 1 && contextFileMarker.Groups[1].Value != "主格式")
+                    if (IsNotMainFile)
                     {
-                        if (resultData.DependencyList.TryGetValue(contextFileMarker.Groups[1].Value, out List<JsonTreeViewItem> list))
+                        Match mainContextFileMarker = GetContextFileMarker().Match(wikiLines[0]);
+                        Match subContextFileMarker = GetContextFileMarker().Match(wikiLines[1]);
+                        if (currentReferenceKey == "#" + mainContextFileMarker.Value + "|" + subContextFileMarker.Value && plan.CurrentDependencyItemList.TryGetValue(currentReferenceKey, out List<JsonTreeViewItem> list))
                         {
                             list.AddRange(resultData.Result);
                         }
-                        else
-                        {
-                            resultData.DependencyList.Add(contextFileMarker.Groups[1].Value, [.. resultData.Result]);
-                        }
                     }
-                    #endregion
-
-                    Result.Result.AddRange(resultData.Result);
-                    Result.ResultString.Append(resultData.ResultString);
+                    else
+                    {
+                        Result.Result.AddRange(resultData.Result);
+                        Result.ResultString.Append(resultData.ResultString);
+                    }
                     #endregion
                 }
             }
@@ -239,15 +253,6 @@ namespace cbhk.GeneralTools
                     StartLineNumber = lineNumber,
                     LayerCount = layerCount
                 };
-                #endregion
-
-                #region 分析是否需要引用依赖项
-                List<JsonTreeViewItem> dependencyList = [];
-                Match contextFileMarker = GetContextFileMarker().Match(nodeList[0]);
-                if (contextFileMarker is not null && contextFileMarker.Groups.Count > 1 && result.DependencyList.TryGetValue(contextFileMarker.Groups[1].Value, out List<JsonTreeViewItem> list))
-                {
-                    dependencyList = list;
-                }
                 #endregion
 
                 #region 处理两大值类型
@@ -572,25 +577,39 @@ namespace cbhk.GeneralTools
                         #region 处理所需上下文数据
                         //匹配上下文关键字
                         Match contextKeyMatch = GetContextKey().Match(nodeList[i]);
-                        if (contextKeyMatch is not null && contextKeyMatch.Groups.Count > 1 &&
-                            plan is not null && plan.CurrentTreeViewMap.Count > 0)
+                        if (contextKeyMatch is not null && contextKeyMatch.Groups.Count > 2 &&
+                            plan is not null && plan.CurrentDependencyItemList.Count > 0)
                         {
-                            IEnumerable<string> keyList = plan.CurrentTreeViewMap.Keys.Where(key => key.Contains(contextKeyMatch.Groups[1].Value));
-                            List<JsonTreeViewItem> contextTreeViewItemList = plan.CurrentTreeViewMap[keyList.FirstOrDefault()];
-                            CurrentCompoundItem.Children.AddRange(contextTreeViewItemList);
-
-                            //判断搜索到的字典链表中的根节点的Key是否包含需要被替代的部分，有则开启当前节点的文本框
-                            if (contextTreeViewItemList[0].Key.Contains('<') &&
-                                contextTreeViewItemList[0].Key.Contains('\''))
+                            string currentKey = "#" + contextKeyMatch.Groups[1].Value + "|" + contextKeyMatch.Groups[2].Value;
+                            if(plan.CurrentDependencyItemList.TryGetValue(currentKey,out List<JsonTreeViewItem> targetDependencyList))
                             {
-                                CurrentCompoundItem.InputBoxVisibility = Visibility.Visible;
+                                foreach (var currentDepedencyItem in targetDependencyList)
+                                {
+                                    JsonTreeViewItem currentSubItem = null;
+                                    if (currentDepedencyItem is CompoundJsonTreeViewItem currentSubCompoundItem)
+                                    {
+                                        currentSubItem = currentSubCompoundItem.Clone() as JsonTreeViewItem;
+                                    }
+                                    else
+                                    {
+                                        currentSubItem = currentDepedencyItem.Clone() as JsonTreeViewItem;
+                                    }
+                                    CurrentCompoundItem.Children.Add(currentSubItem);
+                                }
+
+                                //判断搜索到的字典链表中的根节点的Key是否包含需要被替代的部分，有则开启当前节点的文本框
+                                if (targetDependencyList[0].Key.Contains('<') &&
+                                    targetDependencyList[0].Key.Contains('\''))
+                                {
+                                    CurrentCompoundItem.InputBoxVisibility = Visibility.Visible;
+                                }
                             }
                         }
                         #endregion
 
                         #region 处理顶级数据结构
                         Match templateMatch = GetTemplateKey().Match(nodeList[i]);
-                        if (key is not null && templateMatch.Success && templateMatch.Groups[2] is Group type && plan.CurrentTreeViewMap.TryGetValue(type.Value[0].ToString().ToLower() + string.Join(' ', type.Value[1..].Split('_').Select(item => item[0].ToString().ToUpper() + item[1..])), out List<JsonTreeViewItem> templateCompoundItem) && templateCompoundItem is not null)
+                        if (key is not null && templateMatch.Success && templateMatch.Groups[2] is Group type && plan.CurrentDependencyItemList.TryGetValue(type.Value[0].ToString().ToLower() + string.Join(' ', type.Value[1..].Split('_').Select(item => item[0].ToString().ToUpper() + item[1..])), out List<JsonTreeViewItem> templateCompoundItem) && templateCompoundItem is not null)
                         {
                             CurrentCompoundItem.Children.AddRange(templateCompoundItem);
                             if (CurrentCompoundItem.DataType is not DataTypes.OptionalCompound)
@@ -707,6 +726,7 @@ namespace cbhk.GeneralTools
 
                     #endregion
                 }
+
                 #endregion
 
                 #region 处理节点的追加
@@ -745,30 +765,6 @@ namespace cbhk.GeneralTools
                 result.ResultString.Append('}');
             }
             #endregion
-
-            return result;
-        }
-
-        /// <summary>
-        /// 向下结构搜索器
-        /// </summary>
-        /// <param name="treeNodeList">树节点列表</param>
-        /// <param name="targetList">目标链表</param>
-        /// <param name="currentKey">当前Key</param>
-        /// <param name="currentNode">当前div节点</param>
-        /// <returns></returns>
-        private Dictionary<string, JsonTreeViewItem> DownwardStructureSearcher(List<HtmlNode> treeNodeList, string[] targetList, string currentKey, HtmlNode currentNode)
-        {
-            Dictionary<string, JsonTreeViewItem> result = [];
-
-            for (int i = currentNode.Line + 1; i < targetList.Length; i++)
-            {
-                List<HtmlNode> nodeList = treeNodeList.Where(item => item.Line == i).ToList();
-                if (nodeList.Count > 0)
-                {
-
-                }
-            }
 
             return result;
         }

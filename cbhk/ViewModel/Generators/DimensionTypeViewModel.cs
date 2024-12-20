@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using ICSharpCode.AvalonEdit.Document;
-using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
+using static cbhk.Model.Common.Enums;
 using Prism.Ioc;
 using cbhk.View;
 using System.Text.RegularExpressions;
@@ -48,7 +48,7 @@ namespace cbhk.ViewModel.Generators
         public ObservableCollection<JsonTreeViewItem> _dimensionTypeItemList = [];
 
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
-        public Dictionary<string, List<JsonTreeViewItem>> CurrentTreeViewMap { get; set; } = [];
+        public Dictionary<string, List<JsonTreeViewItem>> CurrentDependencyItemList { get; set; } = [];
         #endregion
 
         public DimensionTypeViewModel(IContainerProvider container, MainView mainView)
@@ -70,7 +70,7 @@ namespace cbhk.ViewModel.Generators
         /// <param name="e"></param>
         public void CommonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            CurrentTreeViewMap.Clear();
+            CurrentDependencyItemList.Clear();
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace cbhk.ViewModel.Generators
             {
                 textEditor = sender as TextEditor;
                 //生成值提供器字典
-                //CurrentTreeViewMap = htmlHelper.AnalyzeHTMLData("");
+                //CurrentDependencyItemList = htmlHelper.AnalyzeHTMLData("");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(configDirectoryPath);

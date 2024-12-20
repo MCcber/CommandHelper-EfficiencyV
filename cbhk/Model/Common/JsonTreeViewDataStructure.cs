@@ -9,7 +9,5 @@ namespace cbhk.Model.Common
     {
         public ObservableCollection<JsonTreeViewItem> Result { get; set; } = [];
         public StringBuilder ResultString { get; set; } = new();
-
-        public Dictionary<string, List<JsonTreeViewItem>> DependencyList { get; set; } = [];
     }
 }

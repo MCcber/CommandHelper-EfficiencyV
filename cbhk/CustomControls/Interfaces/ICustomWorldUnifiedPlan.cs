@@ -2,7 +2,7 @@
 using ICSharpCode.AvalonEdit.Document;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using static cbhk.CustomControls.JsonTreeViewComponents.Enums;
+using static cbhk.Model.Common.Enums;
 
 namespace cbhk.CustomControls.Interfaces
 {
@@ -13,9 +13,9 @@ namespace cbhk.CustomControls.Interfaces
         /// </summary>
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; }
         /// <summary>
-        /// 存储值提供器对应的上下文
+        /// 存储当前Wiki主文档的依赖字典
         /// </summary>
-        public Dictionary<string,List<JsonTreeViewItem>> CurrentTreeViewMap { get; set; }
+        public Dictionary<string,List<JsonTreeViewItem>> CurrentDependencyItemList { get; set; }
         public void UpdateNullValueBySpecifyingInterval(int endOffset, string newValue = "\r\n");
         /// <summary>
         /// 根据区间更新指定值

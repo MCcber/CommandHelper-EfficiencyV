@@ -1,4 +1,4 @@
-﻿namespace cbhk.CustomControls.JsonTreeViewComponents
+﻿namespace cbhk.Model.Common
 {
     public class Enums
     {
@@ -49,41 +49,6 @@
             Array,
             InnerArray,
             List
-        }
-
-        public enum IntProviderStructures
-        {
-            Constant,
-            ConstantPlus,
-            Uniform,
-            BiasedToBottom,
-            Clamped,
-            ClampedNormal,
-            WeightedList
-        }
-
-        public enum FloatProviderStructures
-        {
-            Constant,
-            ConstantPlus,
-            Uniform,
-            ClampedNormal,
-            trapezoid
-        }
-
-        public enum Dimensions
-        {
-            Dimension,
-            DimensionType
-        }
-
-        public enum ModifyTypes
-        {
-            Value,
-            Key,
-            Object,
-            Array,
-            Error
         }
     }
 }
