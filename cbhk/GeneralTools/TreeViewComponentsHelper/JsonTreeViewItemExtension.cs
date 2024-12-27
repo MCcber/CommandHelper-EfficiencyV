@@ -396,7 +396,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             if(AddSubStructure)
             {
                 HtmlHelper htmlHelper = _container.Resolve<HtmlHelper>();
-                JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), [.. compoundJsonTreeViewItem.ChildrenStringList], compoundJsonTreeViewItem.StartLine.LineNumber + 1, compoundJsonTreeViewItem.LayerCount + 1, compoundJsonTreeViewItem);
+                JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), [.. compoundJsonTreeViewItem.ChildrenStringList], compoundJsonTreeViewItem.StartLine.LineNumber + 1, compoundJsonTreeViewItem.LayerCount + 1,true, compoundJsonTreeViewItem);
                 compoundJsonTreeViewItem.Children.AddRange(result.Result);
             }
         }
