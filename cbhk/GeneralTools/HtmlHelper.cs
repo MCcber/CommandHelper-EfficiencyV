@@ -58,7 +58,7 @@ namespace cbhk.GeneralTools
         private static partial Regex GetNodeTypeAndKey();
 
         //^\:?\s?\s*\*+\s?\s*(?<1>\{\{nbt\|[a-z_]+\}\})+(\{\{nbt\|(?<2>[a-z_]+)\|(?<3>[a-z_]+)\}\})
-        [GeneratedRegex(@"(?<=nbt\|)([^|}]+)(?:\|([^|}]+))?", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"\{\{nbt\|[a-z]+\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetMultiTypeAndKeyOfNode();
 
         [GeneratedRegex(@"默认为\{\{cd\|[a-z_]+\}\}", RegexOptions.IgnoreCase)]
@@ -149,7 +149,6 @@ namespace cbhk.GeneralTools
                     nodeContent = TypeSetting(nodeContent);
                     JsonTreeViewDataStructure inheritResultData = GetTreeViewItemResult(new(), nodeContent, 2, 1,false);
                     plan.CurrentDependencyItemList.Add(inheritKey, [.. inheritResultData.Result]);
-                    break;
                 }
             }
             #endregion
@@ -315,60 +314,72 @@ namespace cbhk.GeneralTools
                 if (targetInfoGroupList is not null && targetInfoGroupList.Count > 0)
                 {
                     Match dataMatch = targetInfoGroupList[0];
-
-                    #region 确定当前的节点数据类型
-                    if (dataMatch.Groups.Count < 2)
-                    {
-                        continue;
-                    }
                     string key = dataMatch.Groups[2].Value;
                     bool IsSimpleItem = false;
-                    switch (dataMatch.Groups[1].Value)
-                    {
-                        case "bool":
-                            {
-                                IsSimpleItem = true;
-                                item.DataType = DataTypes.Bool;
-                                break;
-                            }
-                        case "byte":
-                        case "short":
-                        case "int":
-                        case "float":
-                        case "double":
-                        case "long":
-                        case "decimal":
-                        case "string":
-                            {
-                                //确定字符串节点是否为枚举类型
-                                int EnumKeyCount = EnumKeyList.Where(item => nodeList[i].Contains(item)).Count();
-                                if (EnumKeyCount > 0)
-                                {
-                                    item.DataType = DataTypes.Enum;
-                                }
-                                else
-                                {
-                                    IsSimpleItem = true;
-                                    object dataTypes = DataTypes.Input;
-                                    bool parseResult = Enum.TryParse(typeof(DataTypes), dataMatch.Groups[1].Value[0].ToString().ToUpper() + dataMatch.Groups[1].Value[1..], out dataTypes);
-                                    if (parseResult)
-                                    {
-                                        item.DataType = (DataTypes)dataTypes;
-                                    }
-                                }
-                                break;
-                            }
-                    }
 
-                    if (!IsSimpleItem)
+                    if (targetInfoGroupList.Count > 1 || targetInfoGroupList[0].Groups[1].Value == "compound" || targetInfoGroupList[0].Groups[1].Value == "list" || targetInfoGroupList[0].Groups[1].Value == "array")
                     {
                         item = new CompoundJsonTreeViewItem(plan, jsonTool);
+                    }
+
+                    #region 判断是否捕获多组信息
+                    if (multiNodeTypeAndKeyInfoGroupList is not null && multiNodeTypeAndKeyInfoGroupList.Count > 0)
+                    {
                         if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && multiNodeTypeAndKeyInfoGroupList.Count > 0)
                         {
-                            compoundJsonTreeViewItem.ValueTypeList.Add(new TextComboBoxItem()
+                            for (int j = 0; j < multiNodeTypeAndKeyInfoGroupList.Count; j++)
                             {
-                                Text = dataMatch.Groups[1].Value
-                            });
+                                compoundJsonTreeViewItem.ValueTypeList.Add(new TextComboBoxItem()
+                                {
+                                    Text = multiNodeTypeAndKeyInfoGroupList[j].Value
+                                });
+                            }
+                        }
+                    }
+                    else
+                    {
+                        IsSimpleItem = true;
+                    }
+                    #endregion
+
+                    #region 确定当前的节点数据类型
+                    if (IsSimpleItem)
+                    {
+                        switch (dataMatch.Groups[1].Value)
+                        {
+                            case "bool":
+                                {
+                                    IsSimpleItem = true;
+                                    item.DataType = DataTypes.Bool;
+                                    break;
+                                }
+                            case "byte":
+                            case "short":
+                            case "int":
+                            case "float":
+                            case "double":
+                            case "long":
+                            case "decimal":
+                            case "string":
+                                {
+                                    //确定字符串节点是否为枚举类型
+                                    int EnumKeyCount = EnumKeyList.Where(item => nodeList[i].Contains(item)).Count();
+                                    if (EnumKeyCount > 0)
+                                    {
+                                        item.DataType = DataTypes.Enum;
+                                    }
+                                    else
+                                    {
+                                        IsSimpleItem = true;
+                                        object dataTypes = DataTypes.Input;
+                                        bool parseResult = Enum.TryParse(typeof(DataTypes), dataMatch.Groups[1].Value[0].ToString().ToUpper() + dataMatch.Groups[1].Value[1..], out dataTypes);
+                                        if (parseResult)
+                                        {
+                                            item.DataType = (DataTypes)dataTypes;
+                                        }
+                                    }
+                                    break;
+                                }
                         }
                     }
                     #endregion
@@ -733,7 +744,7 @@ namespace cbhk.GeneralTools
                                     #endregion
 
                                     #region 是否存储原始信息、处理递归
-                                    if (CurrentCompoundItem.DataType is DataTypes.Compound || CurrentCompoundItem.DataType is DataTypes.Array)
+                                    if (CurrentCompoundItem.DataType is DataTypes.Compound || CurrentCompoundItem.DataType is DataTypes.Array || CurrentCompoundItem.DataType is DataTypes.List)
                                     {
                                         JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), currentSubChildren, lineNumber, layerCount + 1,true, CurrentCompoundItem);
 
