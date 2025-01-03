@@ -4,7 +4,6 @@ using System.Threading;
 using System.Windows;
 using cbhk.Common;
 using cbhk.GeneralTools;
-using cbhk.GeneralTools.DataService;
 using cbhk.Generators.DataPackGenerator;
 using cbhk.Generators.DataPackGenerator.DatapackInitializationForms;
 using cbhk.Generators.DimensionTypeGenerator;
@@ -87,9 +86,6 @@ namespace cbhk
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             #region Service
-            containerRegistry.RegisterSingleton<BlockService>();
-            containerRegistry.RegisterSingleton<EntityService>();
-            containerRegistry.RegisterSingleton<ItemService>();
             containerRegistry.RegisterSingleton<HtmlHelper>();
             #endregion
 

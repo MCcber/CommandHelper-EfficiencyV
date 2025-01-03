@@ -18,11 +18,9 @@ using ICSharpCode.AvalonEdit.Document;
 using static cbhk.Model.Common.Enums;
 using Prism.Ioc;
 using cbhk.View;
-using System.Text.RegularExpressions;
 using System.Collections.ObjectModel;
 using cbhk.Model.Common;
 using cbhk.GeneralTools;
-using cbhk.GeneralTools.DataService;
 
 namespace cbhk.ViewModel.Generators
 {
@@ -30,9 +28,6 @@ namespace cbhk.ViewModel.Generators
     {
         #region Field
         private HtmlHelper htmlHelper = null;
-        private BlockService blockService = null;
-        private EntityService entityService = null;
-        private ItemService itemService = null;
         private Window home = null;
         private string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rules\1.20.4";
         public TextEditor textEditor = null;
@@ -58,9 +53,6 @@ namespace cbhk.ViewModel.Generators
             htmlHelper = _container.Resolve<HtmlHelper>();
             htmlHelper.plan = this;
             htmlHelper.jsonTool = jsonTool = new JsonTreeViewItemExtension(_container);
-            blockService =  _container.Resolve<BlockService>();
-            entityService = _container.Resolve<EntityService>();
-            itemService = _container.Resolve<ItemService>();
         }
 
         /// <summary>

@@ -1,6 +1,5 @@
 ﻿using cbhk.CustomControls;
 using cbhk.CustomControls.JsonTreeViewComponents;
-using cbhk.GeneralTools.DataService;
 using cbhk.GeneralTools.TreeViewComponentsHelper;
 using cbhk.Model.Common;
 using cbhk.ViewModel.Generators;
@@ -24,8 +23,6 @@ namespace cbhk.GeneralTools
 
         public JsonTreeViewItemExtension jsonTool = null;
 
-        private List<InheritWaitingItem> inheritWaitingItemList = [];
-
         private List<string> EnumKeyList = ["命名空间ID"];
 
         private string InheritDirectory = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Inherit";
@@ -48,19 +45,6 @@ namespace cbhk.GeneralTools
         [GeneratedRegex(@"可以为空", RegexOptions.IgnoreCase)]
         private static partial Regex GetIsCanNullableKey();
 
-        [GeneratedRegex(@"^\:?\s*\s?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetExplanationForHierarchicalNodes();
-
-        [GeneratedRegex(@"^\:?\s*\s?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[\u4e00-\u9fff''><]+)\}\}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetNodeTypeAndCustomKey();
-
-        [GeneratedRegex(@"^\:?\s*\s?\*+\s+?\{\{nbt\|(?<1>[a-z_]+)\|(?<2>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetNodeTypeAndKey();
-
-        //^\:?\s?\s*\*+\s?\s*(?<1>\{\{nbt\|[a-z_]+\}\})+(\{\{nbt\|(?<2>[a-z_]+)\|(?<3>[a-z_]+)\}\})
-        [GeneratedRegex(@"\{\{nbt\|[a-z]+\}\}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetMultiTypeAndKeyOfNode();
-
         [GeneratedRegex(@"默认为\{\{cd\|[a-z_]+\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetDefaultStringValue();
 
@@ -70,14 +54,23 @@ namespace cbhk.GeneralTools
         [GeneratedRegex(@"默认为\{\{cd\|(true|false)\}\}", RegexOptions.IgnoreCase)]
         private static partial Regex GetDefaultBoolValue();
 
+        [GeneratedRegex(@"(?<=默认为<code>)[a-z_]+(?=</code>)", RegexOptions.IgnoreCase)]
+        private static partial Regex GetDefaultEnumValue();
+
+        [GeneratedRegex(@"(?<=<code>)[a-z_]+(?=</code>)")]
+        private static partial Regex GetEnumValueMode1();
+
+        [GeneratedRegex(@"\{\{cd\|[a-z:_]+\}\}", RegexOptions.IgnoreCase)]
+        private static partial Regex GetEnumValueMode2();
+
         [GeneratedRegex(@"\[\[方块标签\]\]", RegexOptions.IgnoreCase)]
         private static partial Regex GetBlcokTagValue();
 
         [GeneratedRegex(@"\[\[实体标签\]\]", RegexOptions.IgnoreCase)]
         private static partial Regex GetEntityTagValue();
 
-        [GeneratedRegex(@"\{\{cd\|[a-z:_]+\}\}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetEnumValue();
+        [GeneratedRegex(@"\[\[物品标签\]\]", RegexOptions.IgnoreCase)]
+        private static partial Regex GetItemTagValue();
 
         [GeneratedRegex(@"\s*\s+?=+\s*\s?([\u4e00-\u9fffa-z_]+)\s*\s?=+\s*\s+?", RegexOptions.IgnoreCase)]
         private static partial Regex GetContextFileMarker();
@@ -86,22 +79,9 @@ namespace cbhk.GeneralTools
         private static partial Regex GetEnumTypeKeywords();
 
         private string AdvancementWikiFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\1.20.4.wiki";
-        /// <summary>
-        /// 包含关键字的行
-        /// </summary>
-        public Dictionary<string, HtmlNode> EnumStructureList = [];
-        /// <summary>
-        /// 当前上下文引用结构
-        /// </summary>
-        public Dictionary<string, HtmlNode> CurrentContextReference = [];
         public List<string> ProgressClassList = ["treeview"];
 
-        private BlockService blockService = null;
-        private EntityService entityService = null;
-        private ItemService itemService = null;
-
         private IContainerProvider _container = container;
-
         #endregion
 
         /// <summary>
@@ -113,7 +93,7 @@ namespace cbhk.GeneralTools
         {
             for (int j = 0; j < target.Count; j++)
             {
-                if (target[j].Replace("*", "").Trim().Length == 0)
+                if (target[j].Replace("*", "").Trim().Length == 0 || (j + 1 < target.Count && !target[j + 1].StartsWith('*')))
                 {
                     int nextStarLine = j + 1;
                     while (nextStarLine < target.Count && !target[nextStarLine].TrimStart().StartsWith('*'))
@@ -131,24 +111,31 @@ namespace cbhk.GeneralTools
             JsonTreeViewDataStructure Result = new();
             HtmlDocument htmlDocument = new();
 
-            #region 优先处理继承文件列表
+            #region 优先解析继承文件列表
             string[] inheritItemArray = Directory.GetFileSystemEntries(InheritDirectory);
             for (int i = 0; i < inheritItemArray.Length; i++)
             {
+                if (Path.GetExtension(inheritItemArray[i]) != ".wiki")
+                {
+                    continue;
+                }
                 if (File.Exists(inheritItemArray[i]))
                 {
                     int position = inheritItemArray[i].LastIndexOf("Inherit");
                     htmlDocument.LoadHtml(File.ReadAllText(inheritItemArray[i]));
-                    if(htmlDocument.DocumentNode.ChildNodes.Count == 0)
+                    if (htmlDocument.DocumentNode.ChildNodes.Count == 0)
                     {
                         continue;
                     }
                     List<HtmlNode> treeviewDivs = [.. htmlDocument.DocumentNode.SelectNodes("//div[@class='treeview']")];
-                    List<string> nodeContent = [.. treeviewDivs[0].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
-                    string inheritKey = inheritItemArray[i][position..].Replace("/", "\\").ToLower();
-                    nodeContent = TypeSetting(nodeContent);
-                    JsonTreeViewDataStructure inheritResultData = GetTreeViewItemResult(new(), nodeContent, 2, 1,false);
-                    plan.CurrentDependencyItemList.Add(inheritKey, [.. inheritResultData.Result]);
+                    for (int j = 0; j < treeviewDivs.Count; j++)
+                    {
+                        List<string> nodeContent = [.. treeviewDivs[j].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
+                        string inheritKey = Path.GetDirectoryName(inheritItemArray[i][position..]).ToLower() + "\\" + Path.GetFileNameWithoutExtension(inheritItemArray[i][position..]);
+                        nodeContent = TypeSetting(nodeContent);
+                        JsonTreeViewDataStructure inheritResultData = GetTreeViewItemResult(new(), nodeContent, 2, 1, false);
+                        plan.CurrentDependencyItemList.Add(inheritKey, [.. inheritResultData.Result]);
+                    }
                 }
             }
             #endregion
@@ -222,25 +209,43 @@ namespace cbhk.GeneralTools
         /// <param name="isProcessingCommonTemplate">是否正在处理模板</param>
         /// <param name="PreviousStarCount">前一个节点星号数量</param>
         /// <returns></returns>
-        public JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int lineNumber, int layerCount,bool NonReferenceSet = true, CompoundJsonTreeViewItem Parent = null, JsonTreeViewItem Previous = null, int PreviousStarCount = 1)
+        public JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int lineNumber, int layerCount, bool NonReferenceSet = true, CompoundJsonTreeViewItem Parent = null, JsonTreeViewItem Previous = null, int PreviousStarCount = 1)
         {
             //遍历找到的 div 标签内容集合
             for (int i = 0; i < nodeList.Count; i++)
             {
                 #region 字段
-                //bool IsPreviousOptionalNode = false;
-                bool IsExplanationNode = GetExplanationForHierarchicalNodes().Match(nodeList[i]).Success;
-                bool IsCurrentOptionalNode = GetOptionalKey().Match(nodeList[i]).Success;
-                bool IsHaveNextNode = i < nodeList.Count - 1 && GetNodeTypeAndKey().Match(nodeList[i + 1]).Success;
+                string currentNodeDataType = "";
+                string currentNodeKey = "";
+                string RemoveIrrelevantString = nodeList[i].Replace("}}{{nbt", "");
+                int nbtFeatureStartIndex = RemoveIrrelevantString.IndexOf("{{");
+                int nbtFeatureEndIndex = RemoveIrrelevantString.IndexOf("}}");
+                List<string> NBTFeatureList = [.. RemoveIrrelevantString[(nbtFeatureStartIndex + 2)..nbtFeatureEndIndex].Split('|')];
+                NBTFeatureList.RemoveAt(0);
+                bool IsSimpleItem = false;
+                bool IsExplanationNode = NBTFeatureList.Count > 1;
+                bool IsCurrentOptionalNode = GetOptionalKey().Match(RemoveIrrelevantString).Success;
+                bool IsHaveNextNode = i < nodeList.Count - 1 && NBTFeatureList.Count > 2;
                 bool IsNextOptionalNode = false;
                 #endregion
 
-                #region 计算当前行星号数量
-                Match starMatch = GetLineStarCount().Match(nodeList[i]);
-                int starCount = starMatch.Value.Trim().Length;
+                #region 去除用于Wiki页面显示的一些UI标记
+                for (int j = NBTFeatureList.Count - 1; j >= 0; j--)
+                {
+                    if (NBTFeatureList[j].Contains('='))
+                    {
+                        NBTFeatureList.RemoveAt(j);
+                        j++;
+                    }
+                }
                 #endregion
 
                 #region 判断是否跳过本次处理
+                if (NBTFeatureList.Count < 2)
+                {
+                    continue;
+                }
+
                 if (nodeList[i].Trim().Length == 0)
                 {
                     continue;
@@ -264,25 +269,9 @@ namespace cbhk.GeneralTools
                 }
                 #endregion
 
-                #region 得到上一个同级节点的索引
-                //if (i > 0 && !IsCurrentOptionalNode)
-                //{
-                //    int PreviousIndex = i;
-                //    bool PreviousIsBrother = GetLineStarCount().Match(nodeList[PreviousIndex]).Value.Trim().Length > starCount;
-                //    do
-                //    {
-                //        PreviousIndex--;
-                //        PreviousIsBrother = GetLineStarCount().Match(nodeList[PreviousIndex]).Value.Trim().Length > starCount;
-                //    }
-                //    while (PreviousIsBrother);
-
-                //    PreviousIsBrother = PreviousIndex > -1;
-
-                //    if (PreviousIsBrother && PreviousIndex > -1)
-                //    {
-                //        IsPreviousOptionalNode = GetOptionalKey().Match(nodeList[PreviousIndex]).Success;
-                //    }
-                //}
+                #region 获取当前行星号数量
+                Match starMatch = GetLineStarCount().Match(nodeList[i]);
+                int starCount = starMatch.Value.Trim().Length;
                 #endregion
 
                 #region 声明当前节点
@@ -295,43 +284,38 @@ namespace cbhk.GeneralTools
 
                 #region 处理两大值类型
 
-                //匹配节点类型和键
-                MatchCollection nodeTypeAndKeyInfoGroupList = GetNodeTypeAndKey().Matches(nodeList[i]);
-                //匹配多重节点类型和键
-                MatchCollection multiNodeTypeAndKeyInfoGroupList = GetMultiTypeAndKeyOfNode().Matches(nodeList[i]);
-                //匹配自定义节点类型和键
-                MatchCollection customNodeTypeAndKeyInfoGroupList = GetNodeTypeAndCustomKey().Matches(nodeList[i]);
-
-                MatchCollection targetInfoGroupList = null;
-                if (nodeTypeAndKeyInfoGroupList.Count > 0)
-                    targetInfoGroupList = nodeTypeAndKeyInfoGroupList;
-                else
-                if (multiNodeTypeAndKeyInfoGroupList.Count > 0)
-                    targetInfoGroupList = multiNodeTypeAndKeyInfoGroupList;
-                if (customNodeTypeAndKeyInfoGroupList.Count > 0)
-                    targetInfoGroupList = customNodeTypeAndKeyInfoGroupList;
-
-                if (targetInfoGroupList is not null && targetInfoGroupList.Count > 0)
+                #region 获取当前节点的数据类型和键
+                currentNodeDataType = NBTFeatureList[^2];
+                if (!NBTFeatureList[^1].Contains('\'') && !NBTFeatureList[^1].Contains('<') && !NBTFeatureList[^1].Contains('>'))
                 {
-                    Match dataMatch = targetInfoGroupList[0];
-                    string key = dataMatch.Groups[2].Value;
-                    bool IsSimpleItem = false;
+                    currentNodeKey = NBTFeatureList[^1];
+                }
+                #endregion
 
-                    if (targetInfoGroupList.Count > 1 || targetInfoGroupList[0].Groups[1].Value == "compound" || targetInfoGroupList[0].Groups[1].Value == "list" || targetInfoGroupList[0].Groups[1].Value == "array")
+                #region 确认是否能够进入解析流程
+                bool IsCanBeAnalyzed = currentNodeDataType.Length > 0 && currentNodeKey.Length > 0;
+                #endregion
+
+                if (IsCanBeAnalyzed)
+                {
+                    #region 判断是否为复合节点
+                    if(currentNodeDataType == "compound" || currentNodeDataType == "list" || currentNodeDataType == "array")
                     {
+                        NonReferenceSet = false;
                         item = new CompoundJsonTreeViewItem(plan, jsonTool);
                     }
+                    #endregion
 
                     #region 判断是否捕获多组信息
-                    if (multiNodeTypeAndKeyInfoGroupList is not null && multiNodeTypeAndKeyInfoGroupList.Count > 0)
+                    if (NBTFeatureList is not null && NBTFeatureList.Count > 2 && currentNodeDataType.Length > 0 && currentNodeKey.Length > 0)
                     {
-                        if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && multiNodeTypeAndKeyInfoGroupList.Count > 0)
+                        if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
                         {
-                            for (int j = 0; j < multiNodeTypeAndKeyInfoGroupList.Count; j++)
+                            for (int j = 0; j < NBTFeatureList.Count - 2; j++)
                             {
                                 compoundJsonTreeViewItem.ValueTypeList.Add(new TextComboBoxItem()
                                 {
-                                    Text = multiNodeTypeAndKeyInfoGroupList[j].Value
+                                    Text = NBTFeatureList[j][0].ToString().ToUpper() + NBTFeatureList[j][1..]
                                 });
                             }
                         }
@@ -342,10 +326,10 @@ namespace cbhk.GeneralTools
                     }
                     #endregion
 
-                    #region 确定当前的节点数据类型
+                    #region 处理值类型
                     if (IsSimpleItem)
                     {
-                        switch (dataMatch.Groups[1].Value)
+                        switch (currentNodeDataType)
                         {
                             case "bool":
                                 {
@@ -372,7 +356,7 @@ namespace cbhk.GeneralTools
                                     {
                                         IsSimpleItem = true;
                                         object dataTypes = DataTypes.Input;
-                                        bool parseResult = Enum.TryParse(typeof(DataTypes), dataMatch.Groups[1].Value[0].ToString().ToUpper() + dataMatch.Groups[1].Value[1..], out dataTypes);
+                                        bool parseResult = Enum.TryParse(typeof(DataTypes), currentNodeDataType[0].ToString().ToUpper() + currentNodeDataType[1..], out dataTypes);
                                         if (parseResult)
                                         {
                                             item.DataType = (DataTypes)dataTypes;
@@ -381,50 +365,42 @@ namespace cbhk.GeneralTools
                                     break;
                                 }
                         }
-                    }
-                    #endregion
 
-                    #region 处理值类型
-                    if (item is JsonTreeViewItem and not CompoundJsonTreeViewItem)
-                    {
                         switch (item.DataType)
                         {
                             case DataTypes.Bool:
                                 {
-                                    if (dataMatch.Groups.Count > 1)
+                                    item.Key = currentNodeKey;
+                                    item.DisplayText = currentNodeKey[0].ToString().ToUpper() + currentNodeKey[1..];
+                                    item.BoolButtonVisibility = Visibility.Visible;
+
+                                    Match boolMatch = GetDefaultBoolValue().Match(nodeList[i]);
+                                    if (boolMatch is not null)
                                     {
-                                        item.Key = key;
-                                        item.DisplayText = key[0].ToString().ToUpper() + key[1..];
-                                        item.BoolButtonVisibility = Visibility.Visible;
-
-                                        Match boolMatch = GetDefaultBoolValue().Match(nodeList[i]);
-                                        if (boolMatch is not null)
+                                        if (!IsCurrentOptionalNode && NonReferenceSet)
                                         {
-                                            if (!IsCurrentOptionalNode && NonReferenceSet)
-                                            {
-                                                result.ResultString.Append(new string(' ', layerCount * 2));
-                                                result.ResultString.Append("\"" + key.ToLower() + "\"");
-                                            }
+                                            result.ResultString.Append(new string(' ', layerCount * 2));
+                                            result.ResultString.Append("\"" + currentNodeKey.ToLower() + "\"");
+                                        }
 
-                                            if (bool.TryParse(boolMatch.Groups[1].Value, out bool defaultValue) && !IsCurrentOptionalNode)
+                                        if (bool.TryParse(boolMatch.Groups[1].Value, out bool defaultValue) && !IsCurrentOptionalNode)
+                                        {
+                                            item.Value = item.DefaultValue = defaultValue;
+                                            if (item.Value)
                                             {
-                                                item.Value = item.DefaultValue = defaultValue;
-                                                if (item.Value)
-                                                {
-                                                    item.IsTrue = true;
-                                                    item.IsFalse = false;
-                                                }
+                                                item.IsTrue = true;
+                                                item.IsFalse = false;
                                             }
-                                            else
-                                            {
-                                                item.IsCanBeDefaulted = true;
-                                                item.IsTrue = item.IsFalse = false;
-                                            }
+                                        }
+                                        else
+                                        {
+                                            item.IsCanBeDefaulted = true;
+                                            item.IsTrue = item.IsFalse = false;
+                                        }
 
-                                            if (!IsCurrentOptionalNode && boolMatch.Groups.Count > 1)
-                                            {
-                                                result.ResultString.Append(": " + boolMatch.Groups[1].Value.ToLower());
-                                            }
+                                        if (!IsCurrentOptionalNode && boolMatch.Groups.Count > 1)
+                                        {
+                                            result.ResultString.Append(": " + boolMatch.Groups[1].Value.ToLower());
                                         }
                                     }
                                     break;
@@ -432,36 +408,109 @@ namespace cbhk.GeneralTools
                             case DataTypes.Input:
                             case DataTypes.String:
                                 {
-                                    if (dataMatch.Groups.Count > 1)
+                                    item.Key = currentNodeKey;
+                                    item.DisplayText = currentNodeKey[0].ToString().ToUpper() + currentNodeKey[1..];
+                                    item.InputBoxVisibility = Visibility.Visible;
+
+                                    Match stringMatch = GetDefaultStringValue().Match(nodeList[i]);
+                                    if (stringMatch is not null)
                                     {
-                                        item.Key = key;
-                                        item.DisplayText = key[0].ToString().ToUpper() + key[1..];
-                                        item.InputBoxVisibility = Visibility.Visible;
-
-                                        Match stringMatch = GetDefaultStringValue().Match(nodeList[i]);
-                                        if (stringMatch is not null)
+                                        if (!IsCurrentOptionalNode && NonReferenceSet)
                                         {
-                                            if (!IsCurrentOptionalNode && NonReferenceSet)
-                                            {
-                                                result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key.ToLower() + "\"");
-                                            }
+                                            result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentNodeKey.ToLower() + "\"");
+                                        }
 
-                                            if (stringMatch.Groups.Count > 1)
-                                            {
-                                                item.Value = item.DefaultValue = "\"" + stringMatch.Groups[1].Value + "\"";
-                                            }
+                                        if (stringMatch.Groups.Count > 1)
+                                        {
+                                            item.Value = item.DefaultValue = "\"" + stringMatch.Groups[1].Value + "\"";
+                                        }
 
-                                            if (!IsCurrentOptionalNode && stringMatch.Groups.Count > 1 && NonReferenceSet)
-                                            {
-                                                result.ResultString.Append(": \"" + stringMatch.Groups[1].Value.ToLower() + "\"");
-                                            }
-                                            else
-                                            if(NonReferenceSet)
-                                            {
-                                                result.ResultString.Append(": \"\"");
-                                            }
+                                        if (!IsCurrentOptionalNode && stringMatch.Groups.Count > 1 && NonReferenceSet)
+                                        {
+                                            result.ResultString.Append(": \"" + stringMatch.Groups[1].Value.ToLower() + "\"");
+                                        }
+                                        else
+                                        if (NonReferenceSet)
+                                        {
+                                            result.ResultString.Append(": \"\"");
                                         }
                                     }
+                                    break;
+                                }
+                            case DataTypes.Enum:
+                                {
+                                    item.Key = currentNodeKey;
+                                    item.DisplayText = currentNodeKey[0].ToString().ToUpper() + currentNodeKey[1..];
+                                    item.EnumBoxVisibility = Visibility.Visible;
+                                    #region 抓取数据
+                                    MatchCollection EnumCollectionMode1 = GetEnumValueMode1().Matches(nodeList[i]);
+                                    MatchCollection EnumCollectionMode2 = GetEnumValueMode2().Matches(nodeList[i]);
+                                    Match DefaultEnumValueMark = GetDefaultEnumValue().Match(nodeList[i]);
+                                    Match BlockTagMark = GetBlcokTagValue().Match(nodeList[i]);
+                                    Match EntityTagMark = GetEntityTagValue().Match(nodeList[i]);
+                                    Match ItemTagMark = GetItemTagValue().Match(nodeList[i]);
+
+                                    if(DefaultEnumValueMark.Success)
+                                    {
+                                        item.DefaultValue = item.Value = "\"" + DefaultEnumValueMark.Value + "\"";
+                                    }
+                                    #endregion
+                                    #region 添加枚举成员
+                                    if ((nodeList[i].Contains("可以是") || nodeList[i].Contains("可以为")) && EnumCollectionMode1.Count > 0)
+                                    {
+                                        foreach (Match enumMatch in EnumCollectionMode1)
+                                        {
+                                            item.EnumItemsSource.Add(new TextComboBoxItem() { Text = enumMatch.Value });
+                                        }
+                                        foreach (Match enumMatch in EnumCollectionMode2)
+                                        {
+                                            item.EnumItemsSource.Add(new TextComboBoxItem() { Text = enumMatch.Value });
+                                        }
+                                    }
+                                    else
+                                    if (BlockTagMark.Index > 0)
+                                    {
+                                        item.EnumItemsSource.Add(new TextComboBoxItem() { Text = "block" });
+                                        //foreach (string blockName in blockService.GetAllBlockName())
+                                        //{
+                                        //    item.EnumItemsSource.Add(new TextComboBoxItem() { Text = blockName });
+                                        //}
+                                    }
+                                    else
+                                    if (EntityTagMark.Index > 0)
+                                    {
+                                        item.EnumItemsSource.Add(new TextComboBoxItem() { Text = "entity" });
+                                        //foreach (string entityName in entityService.GetAllEntityName())
+                                        //{
+                                        //    item.EnumItemsSource.Add(new TextComboBoxItem() { Text = entityName });
+                                        //}
+                                    }
+                                    if(ItemTagMark.Index > 0)
+                                    {
+                                        item.EnumItemsSource.Add(new TextComboBoxItem() { Text = "item" });
+                                        //foreach (string itemName in entityService.GetAllEntityName())
+                                        //{
+                                        //    item.EnumItemsSource.Add(new TextComboBoxItem() { Text = itemName });
+                                        //}
+                                    }
+                                    #endregion
+                                    #region 处理Key与外观
+                                    if (EnumCollectionMode1.Count > 0 || BlockTagMark.Index > 0 || EntityTagMark.Index > 0)
+                                    {
+                                        item.DisplayText = currentNodeKey[0].ToString().ToUpper() + currentNodeKey[1..];
+                                        item.DataType = DataTypes.Enum;
+                                        item.EnumBoxVisibility = Visibility.Visible;
+                                        item.SelectedEnumItem = item.EnumItemsSource[0];
+
+                                        if (NonReferenceSet)
+                                        {
+                                            result.ResultString.Append(new string(' ', layerCount * 2) +
+                                                "\"" + currentNodeKey.ToLower() + "\"" +
+                                                ": \"" + item.EnumItemsSource[0].Text + "\"");
+                                        }
+                                    }
+                                    #endregion
+
                                     break;
                                 }
                             case DataTypes.Byte:
@@ -473,18 +522,17 @@ namespace cbhk.GeneralTools
                             case DataTypes.Long:
                                 {
                                     Match numberMatch = GetDefaultNumberValue().Match(nodeList[i]);
+                                    item.Key = currentNodeKey;
+                                    item.DisplayText = currentNodeKey[0].ToString().ToUpper() + currentNodeKey[1..];
+                                    item.InputBoxVisibility = Visibility.Visible;
+
+                                    if (!IsCurrentOptionalNode && NonReferenceSet)
+                                    {
+                                        result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentNodeKey.ToLower() + "\"");
+                                    }
+
                                     if (numberMatch is not null)
                                     {
-                                        item.Key = key;
-                                        item.DisplayText = key[0].ToString().ToUpper() + key[1..];
-                                        item.InputBoxVisibility = Visibility.Visible;
-
-                                        if (!IsCurrentOptionalNode && NonReferenceSet)
-                                        {
-                                            result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key.ToLower() + "\"");
-                                        }
-
-                                        item.InputBoxVisibility = Visibility.Visible;
                                         if (decimal.TryParse(numberMatch.Groups[1].Value, out decimal defaultDecimalValue))
                                         {
                                             item.Value = item.DefaultValue = defaultDecimalValue;
@@ -513,68 +561,16 @@ namespace cbhk.GeneralTools
                         //设置key
                         if (CurrentCompoundItem.Key.Length == 0)
                         {
-                            CurrentCompoundItem.Key = key;
+                            CurrentCompoundItem.Key = currentNodeKey;
                         }
-
-                        #region 处理枚举型数据
-
-                        #region 抓取数据
-                        MatchCollection EnumCollection = GetEnumValue().Matches(nodeList[i]);
-                        Match BlockTagMark = GetBlcokTagValue().Match(nodeList[i]);
-                        Match EntityTagMark = GetEntityTagValue().Match(nodeList[i]);
-                        #endregion
-
-                        #region 添加枚举成员
-                        if (EnumCollection.Count > 0)
-                        {
-                            foreach (Match enumMatch in EnumCollection)
-                            {
-                                CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = enumMatch.Value });
-                            }
-                        }
-                        else
-                        if (BlockTagMark.Index > 0)
-                        {
-                            foreach (string blockName in blockService.GetAllBlockName())
-                            {
-                                CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = blockName });
-                            }
-                        }
-                        else
-                        if (EntityTagMark.Index > 0)
-                        {
-                            foreach (string entityName in entityService.GetAllEntityName())
-                            {
-                                CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = entityName });
-                            }
-                        }
-                        #endregion
-
-                        #region 处理Key与外观
-                        if (EnumCollection.Count > 0 || BlockTagMark.Index > 0 || EntityTagMark.Index > 0)
-                        {
-                            CurrentCompoundItem.DisplayText = key[0].ToString().ToUpper() + key[1..];
-                            CurrentCompoundItem.DataType = DataTypes.Enum;
-                            CurrentCompoundItem.EnumBoxVisibility = Visibility.Visible;
-                            CurrentCompoundItem.SelectedEnumItem = CurrentCompoundItem.EnumItemsSource[0];
-
-                            if (NonReferenceSet)
-                            {
-                                result.ResultString.Append(new string(' ', layerCount * 2) +
-                                    "\"" + key.ToLower() + "\"" +
-                                    ": \"" + CurrentCompoundItem.EnumItemsSource[0].Text + "\"");
-                            }
-                        }
-                        #endregion
-
-                        #endregion
 
                         #region 处理不同行为的复合型数据
 
                         #region 确定数据类型
-                        if (dataMatch.Groups[1].Value == "compound")
+                        CurrentCompoundItem.AddElementButtonVisibility = Visibility.Visible;
+                        CurrentCompoundItem.ElementButtonTip = "添加";
+                        if (currentNodeDataType == "compound")
                         {
-                            CurrentCompoundItem.AddElementButtonVisibility = Visibility.Visible;
                             CurrentCompoundItem.ElementButtonTip = "展开";
                             if (GetIsCanNullableKey().Match(nodeList[i]).Success)
                             {
@@ -586,27 +582,33 @@ namespace cbhk.GeneralTools
                                 CurrentCompoundItem.DataType = DataTypes.OptionalCompound;
                             }
 
-                            if (customNodeTypeAndKeyInfoGroupList.Count > 0 && customNodeTypeAndKeyInfoGroupList[0].Groups.Count > 1)
+                            if (currentNodeKey.Contains('\''))
                             {
                                 CurrentCompoundItem.DataType = DataTypes.CustomCompound;
                             }
                         }
                         else
-                        if (dataMatch.Groups[1].Value == "list")
+                        if (currentNodeDataType == "list")
                         {
                             CurrentCompoundItem.DataType = DataTypes.List;
                         }
-                        else
-                            if (dataMatch.Groups[1].Value == "array")
+                        else//数组会有数据类型的区分，所以这里用包含而不是等于
+                        if (currentNodeDataType.Contains("array"))
                         {
                             CurrentCompoundItem.DataType = DataTypes.Array;
+                        }
+                        else
+                        if (currentNodeDataType == "any")
+                        {
+                            Parent.EnumBoxVisibility = Visibility.Visible;
+                            CurrentCompoundItem.DataType = DataTypes.Any;
                         }
                         #endregion
 
                         #region 更新非可选复合型节点的文本值与层数
-                        if (key.Length > 0)
+                        if (currentNodeKey.Length > 0)
                         {
-                            CurrentCompoundItem.DisplayText = key[0].ToString().ToUpper() + key[1..];
+                            CurrentCompoundItem.DisplayText = currentNodeKey[0].ToString().ToUpper() + currentNodeKey[1..];
                         }
                         CurrentCompoundItem.StartLineNumber = CurrentCompoundItem.EndLineNumber = lineNumber;
                         CurrentCompoundItem.LayerCount = layerCount;
@@ -614,20 +616,16 @@ namespace cbhk.GeneralTools
                         {
                             CurrentCompoundItem.CurrentValueType ??= CurrentCompoundItem.ValueTypeList[0];
                         }
-                        if (key is not null && key.Length > 0 && !IsCurrentOptionalNode)
+                        if (currentNodeKey is not null && currentNodeKey.Length > 0 && !IsCurrentOptionalNode)
                         {
-                            if (CurrentCompoundItem.DataType is DataTypes.Array || CurrentCompoundItem.DataType is DataTypes.List)
+                            if (CurrentCompoundItem.DataType is DataTypes.Array || CurrentCompoundItem.DataType is DataTypes.List && NonReferenceSet)
                             {
-                                CurrentCompoundItem.AddElementButtonVisibility = Visibility.Visible;
-                                if (NonReferenceSet)
-                                {
-                                    result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key + "\": []");
-                                }
+                                result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentNodeKey + "\": []");
                             }
                             else
                             if (CurrentCompoundItem.DataType is not DataTypes.OptionalCompound && NonReferenceSet)
                             {
-                                result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + key + "\": {");
+                                result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentNodeKey + "\": {");
                             }
                         }
                         #endregion
@@ -635,28 +633,22 @@ namespace cbhk.GeneralTools
                         #endregion
 
                         #region 处理所需上下文数据
-                        //匹配上下文关键字
                         Match contextKeyMatch = GetContextKey().Match(nodeList[i]);
                         if (contextKeyMatch is not null && contextKeyMatch.Groups.Count > 2 &&
                             plan is not null && plan.CurrentDependencyItemList.Count > 0)
                         {
-                            string currentKey = "#" + contextKeyMatch.Groups[1].Value + "|" + contextKeyMatch.Groups[2].Value;
+                            result.HaveReferenceContent = true;
+                            string currentKey = "";
+                            if (contextKeyMatch.Groups[2].Value == "下文")
+                            {
+                                currentKey = "#" + contextKeyMatch.Groups[1].Value;
+                            }
+                            else
+                            {
+                                currentKey = "#" + contextKeyMatch.Groups[1].Value + "|" + contextKeyMatch.Groups[2].Value;
+                            }
                             if (plan.CurrentDependencyItemList.TryGetValue(currentKey, out List<JsonTreeViewItem> targetDependencyList))
                             {
-                                foreach (var currentDepedencyItem in targetDependencyList)
-                                {
-                                    JsonTreeViewItem currentSubItem = null;
-                                    if (currentDepedencyItem is CompoundJsonTreeViewItem currentSubCompoundItem)
-                                    {
-                                        currentSubItem = currentSubCompoundItem.Clone() as JsonTreeViewItem;
-                                    }
-                                    else
-                                    {
-                                        currentSubItem = currentDepedencyItem.Clone() as JsonTreeViewItem;
-                                    }
-                                    CurrentCompoundItem.Children.Add(currentSubItem);
-                                }
-
                                 //判断搜索到的字典链表中的根节点的Key是否包含需要被替代的部分，有则开启当前节点的文本框
                                 if (targetDependencyList[0].Key.Contains('<') &&
                                     targetDependencyList[0].Key.Contains('\''))
@@ -666,25 +658,30 @@ namespace cbhk.GeneralTools
                             }
                         }
                         #endregion
-                        
+
                         #region 处理继承信息
                         Match inheritMatch = GetInheritString().Match(nodeList[i]);
-                        if (key is not null && inheritMatch.Success && inheritMatch.Groups[2] is Group type && plan.CurrentDependencyItemList.TryGetValue(type.Value[0].ToString().ToLower() + string.Join(' ', type.Value[1..].Split('_').Select(item => item[0].ToString().ToUpper() + item[1..])), out List<JsonTreeViewItem> templateCompoundItem) && templateCompoundItem is not null)
+                        string targetInherit = "Inherit\\";
+                        result.HaveReferenceContent |= inheritMatch.Groups.Count > 1;
+
+                        if (inheritMatch.Groups[1].Value.Contains('*'))
                         {
-                            CurrentCompoundItem.Children.AddRange(templateCompoundItem);
-                            if (CurrentCompoundItem.DataType is not DataTypes.OptionalCompound && NonReferenceSet)
-                            {
-                                result.ResultString.Append(new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + key + "\": {");
-                            }
+                            targetInherit += inheritMatch.Groups[1].Value.Split('|')[0].Replace("/","\\");
                         }
                         else
                         {
-                            //没找到继承数据则加入等待列表
-                            inheritWaitingItemList.Add(new InheritWaitingItem()
+                            targetInherit += inheritMatch.Groups[1].Value.Replace("|","\\").Replace("/", "\\");
+                        }
+                        if (currentNodeKey is not null && inheritMatch.Success && plan.CurrentDependencyItemList.TryGetValue(targetInherit, out List<JsonTreeViewItem> templateCompoundItem) && templateCompoundItem is not null)
+                        {
+                            if (templateCompoundItem[0].Key.Contains('\'') && templateCompoundItem[0].Key.Contains('^'))
                             {
-                                InheritKey = inheritMatch.Value.Replace("inherit",""),
-                                WaitingItem = CurrentCompoundItem
-                            });
+                                CurrentCompoundItem.InputBoxVisibility = Visibility.Visible;
+                            }
+                            if (CurrentCompoundItem.DataType is not DataTypes.OptionalCompound && NonReferenceSet)
+                            {
+                                result.ResultString.Append(new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + currentNodeKey + "\": {");
+                            }
                         }
                         #endregion
 
@@ -746,17 +743,22 @@ namespace cbhk.GeneralTools
                                     #region 是否存储原始信息、处理递归
                                     if (CurrentCompoundItem.DataType is DataTypes.Compound || CurrentCompoundItem.DataType is DataTypes.Array || CurrentCompoundItem.DataType is DataTypes.List)
                                     {
-                                        JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), currentSubChildren, lineNumber, layerCount + 1,true, CurrentCompoundItem);
+                                        JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), currentSubChildren, lineNumber, layerCount + 1, true, CurrentCompoundItem);
 
-                                        if (subResult.ResultString.Length > 0 && NonReferenceSet)
+                                        if (subResult.ResultString.Length > 0 && NonReferenceSet && !subResult.HaveReferenceContent)
                                         {
                                             result.ResultString.Append("\r\n" + subResult.ResultString + "\r\n" + new string(' ', layerCount * 2) + "}\r\n");
                                         }
                                         else
-                                        if(NonReferenceSet)
                                         {
-                                            CurrentCompoundItem.ChildrenStringList = currentSubChildren;
-                                            result.ResultString.Append('}');
+                                            if (CurrentCompoundItem.Children.Count == 0)
+                                            {
+                                                CurrentCompoundItem.ChildrenStringList = currentSubChildren;
+                                            }
+                                            if (NonReferenceSet)
+                                            {
+                                                result.ResultString.Append('}');
+                                            }
                                         }
                                     }
                                     else

@@ -48,7 +48,8 @@
             ArrayElement,
             Array,
             InnerArray,
-            List
+            List,
+            Any
         }
     }
 }
