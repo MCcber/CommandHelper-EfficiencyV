@@ -11,26 +11,11 @@ namespace cbhk.Interface.Json
     public interface IJsonItemTool
     {
         /// <summary>
-        /// 通过行号寻找行引用
-        /// </summary>
-        /// <param name="jsonTreeViewItems"></param>
-        void SetDocumentLineByNumber(ObservableCollection<JsonTreeViewItem> jsonTreeViewItems);
-        /// <summary>
         /// 递归删除平铺列表成员
         /// </summary>
         /// <param name="CurrentParent">目前父级节点</param>
         /// <param name="Target">已被删除的子元素</param>
         void RecursiveRemoveFlattenDescendantNodeList(CompoundJsonTreeViewItem CurrentParent,CompoundJsonTreeViewItem Target);
-        /// <summary>
-        /// 切换子结构时递归整合子结构值
-        /// </summary>
-        /// <param name="jsonTreeViewItem">当前节点</param>
-        /// <param name="list">需要被遍历的节点集合</param>
-        /// <param name="CurrentParent">当前父节点</param>
-        /// <param name="result">拼接结果</param>
-        /// <param name="IsNotLast">不为最后一个</param>
-        /// <returns></returns>
-        StringBuilder RecursiveIntegrationOfSubstructureValuesWhenSwitch(JsonTreeViewItem jsonTreeViewItem, ObservableCollection<JsonTreeViewItem> list, JsonTreeViewItem CurrentParent, StringBuilder result = null, bool IsNotLast = false);
         /// <summary>
         /// 递归遍历节点树并执行代理方法
         /// </summary>

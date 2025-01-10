@@ -24,12 +24,12 @@ using cbhk.GeneralTools;
 
 namespace cbhk.ViewModel.Generators
 {
-    public partial class DimensionTypeViewModel : ObservableObject, ICustomWorldUnifiedPlan
+    public partial class AdvancementViewModel : ObservableObject, ICustomWorldUnifiedPlan
     {
         #region Field
-        private HtmlHelper htmlHelper = null;
+        private HtmlHelper _htmlHelper = null;
         private Window home = null;
-        private string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DimensionType\Data\Rule\1.20.4";
+        private string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\1.20.4";
         public TextEditor textEditor = null;
         private FoldingManager foldingManager = null;
         private IContainerProvider _container;
@@ -40,19 +40,21 @@ namespace cbhk.ViewModel.Generators
 
         #region Property
         [ObservableProperty]
-        public ObservableCollection<JsonTreeViewItem> _dimensionTypeItemList = [];
+        public ObservableCollection<JsonTreeViewItem> _advancementItemList = [];
 
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
-        public Dictionary<string, List<JsonTreeViewItem>> CurrentDependencyItemList { get; set; } = [];
+        public Dictionary<string, List<string>> CurrentDependencyItemList { get; set; } = [];
         #endregion
 
-        public DimensionTypeViewModel(IContainerProvider container, MainView mainView)
+        public AdvancementViewModel(IContainerProvider container, MainView mainView)
         {
             _container = container;
             home = mainView;
-            htmlHelper = _container.Resolve<HtmlHelper>();
-            htmlHelper.plan = this;
-            htmlHelper.jsonTool = jsonTool = new JsonTreeViewItemExtension(_container);
+            _htmlHelper = new(_container)
+            {
+                plan = this,
+                jsonTool = jsonTool = new JsonTreeViewItemExtension(_container)
+            };
         }
 
         /// <summary>
@@ -79,16 +81,15 @@ namespace cbhk.ViewModel.Generators
                 //CurrentDependencyItemList = htmlHelper.AnalyzeHTMLData("");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(configDirectoryPath, true);
-                    DimensionTypeItemList = result.Result;
-                    textEditor.Text = "{\r\n" + result.ResultString.ToString() + "\r\n}";
-
+                    JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(configDirectoryPath);
+                    textEditor.Text = "{\r\n" + result.ResultString.ToString().TrimEnd([',', '\r', '\n']) + "\r\n}";
                     foreach (var item in result.Result)
                     {
                         item.JsonItemTool = jsonTool;
                         item.JsonItemTool.SetDocumentLineByLineNumber(item, textEditor);
                         KeyValueContextDictionary.TryAdd(item.Path, item);
                     }
+                    AdvancementItemList = result.Result;
 
                     //为代码编辑器安装大纲管理器
                     foldingManager = FoldingManager.Install(textEditor.TextArea);

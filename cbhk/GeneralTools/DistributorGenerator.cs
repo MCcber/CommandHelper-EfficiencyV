@@ -47,7 +47,31 @@ namespace cbhk.GeneralTools
                 _ => WindowState.Normal
             };
         }
-        
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动进度生成器
+        /// </summary>
+        private void StartAdvancementGenerator()
+        {
+            AdvancementView advancementView = _container.Resolve<AdvancementView>(Name.AdvancementView);
+            SetCBHKState();
+            advancementView.Show();
+            advancementView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动as生成器
+        /// </summary>
+        private void StartArmorStandsGenerator()
+        {
+            ArmorStandView armorStand = _container.Resolve<ArmorStandView>(Name.ArmorStandView);
+            SetCBHKState();
+            armorStand.Show();
+            armorStand.Focus();
+        }
+
         [RelayCommand]
         /// <summary>
         /// 启动ooc生成器
@@ -70,18 +94,6 @@ namespace cbhk.GeneralTools
             SetCBHKState();
             spawner.Show();
             spawner.Focus();
-        }
-
-        [RelayCommand]
-        /// <summary>
-        /// 启动as生成器
-        /// </summary>
-        private void StartArmorStandsGenerator()
-        {
-            ArmorStandView armorStand = _container.Resolve<ArmorStandView>(Name.ArmorStandView);
-            SetCBHKState();
-            armorStand.Show();
-            armorStand.Focus();
         }
 
         [RelayCommand]
@@ -235,6 +247,7 @@ namespace cbhk.GeneralTools
         {
             IRelayCommand result = id switch
             {
+                "Advancement" =>function.StartAdvancementGeneratorCommand,
                 "Ooc" => function.StartOnlyOneCommandGeneratorCommand,
                 "Datapack" => function.StartDatapacksGeneratorCommand,
                 "Armorstand" => function.StartArmorStandsGeneratorCommand,

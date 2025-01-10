@@ -15,7 +15,7 @@ namespace cbhk.CustomControls.Interfaces
         /// <summary>
         /// 存储当前Wiki主文档的依赖字典
         /// </summary>
-        public Dictionary<string,List<JsonTreeViewItem>> CurrentDependencyItemList { get; set; }
+        public Dictionary<string,List<string>> CurrentDependencyItemList { get; set; }
         public void UpdateNullValueBySpecifyingInterval(int endOffset, string newValue = "\r\n");
         /// <summary>
         /// 根据区间更新指定值

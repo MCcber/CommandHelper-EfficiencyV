@@ -5,6 +5,7 @@ public class Name
     public const string MainView = "MainView";
     public const string SignInView = "SignInView";
     public const string DisplayerView = "DisplayerView";
+    public const string AdvancementView = "AdvancementView";
     public const string ArmorStandView = "ArmorStandView";
     public const string OnlyOneCommandView = "OnlyOneCommandView";
     public const string TagView = "TagView";

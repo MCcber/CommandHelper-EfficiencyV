@@ -3,7 +3,6 @@ using cbhk.Interface.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -272,7 +271,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// <summary>
         /// 上一个节点
         /// </summary>
-        public JsonTreeViewItem Last { get; set; } = null;
+        public JsonTreeViewItem Previous { get; set; } = null;
         /// <summary>
         /// 下一个节点
         /// </summary>
@@ -280,7 +279,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         #endregion
 
         #region Field
-        public static List<string> NumberTypes = ["TAG_Byte", "TAG_Short", "TAG_Int", "TAG_Float", "TAG_Double", "TAG_Long", "TAG_Decimal"];
         private SolidColorBrush CorrectBrush = Brushes.Gray;
         private SolidColorBrush ErrorBrush = Brushes.Red;
         public ICustomWorldUnifiedPlan Plan { get; set; } = null;
@@ -301,11 +299,11 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// <param name="e"></param>
         public void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (StartLine.IsDeleted && Last is not null)
+            if (StartLine.IsDeleted && Previous is not null)
             {
-                StartLine = Plan.GetLineByNumber(Last is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine.LineNumber + 1 : Last.StartLine.LineNumber + 1);
+                StartLine = Plan.GetLineByNumber(Previous is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine.LineNumber + 1 : Previous.StartLine.LineNumber + 1);
             }
-            if ((Value is not null && ((string)Value).Trim().Length > 0 && (Last is null || Last.StartLine.LineNumber != StartLine.LineNumber)) || DefaultValue is not null || (DefaultValue is null && SelectedEnumItem is not null))
+            if ((Value is not null && ((string)Value).Trim().Length > 0 && (Previous is null || Previous.StartLine.LineNumber != StartLine.LineNumber)) || DefaultValue is not null || (DefaultValue is null && SelectedEnumItem is not null))
             {
                 if (((string)Value).Trim().Length == 0)
                     Value = DefaultValue;
@@ -314,7 +312,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             else
             if (Value is not null && ((string)Value).Trim().Length > 0 && DefaultValue is null)//有值
             {
-                StartLine = Last is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine : Last.StartLine;
+                StartLine = Previous is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine : Previous.StartLine;
                 Plan.UpdateNullValueBySpecifyingInterval(StartLine.EndOffset, "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\": " + Value + ",");
                 StartLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
             }
@@ -376,7 +374,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 IsFalse = IsFalse,
                 IsTrue = IsTrue,
                 Key = Key,
-                Last = Last,
+                Previous = Previous,
                 Next = Next,
                 LayerCount = LayerCount,
                 Magnification = Magnification,

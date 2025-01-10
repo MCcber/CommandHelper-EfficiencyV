@@ -255,26 +255,28 @@ namespace cbhk.ViewModel.Generators
         /// <param name="e"></param>
         private void CollectionViewSource_Filter(object sender, FilterEventArgs e)
         {
-            #region 执行过滤
-            if(SelectedTypeItem is null)
+            if (SelectedTypeItem is null)
             {
                 return;
             }
             TagItemTemplate currentItem = e.Item as TagItemTemplate;
-            bool needDisplay = e.Accepted = currentItem.DataType.Contains(SelectedTypeItem.Text) || SelectedTypeItem.Text == "All";
-            #endregion
-            #region 执行搜索
-            if (needDisplay)
+
+            if (currentItem is not null)
             {
-                if (SearchText.Trim().Length > 0)
+                bool needDisplay = e.Accepted = currentItem.DataType.Contains(SelectedTypeItem.Text) || SelectedTypeItem.Text == "All";
+                #region 执行搜索
+                if (needDisplay)
                 {
-                    string currentItemIDAndName = currentItem.DisplayId;
-                    e.Accepted = currentItemIDAndName.Contains(SearchText);
+                    if (SearchText.Trim().Length > 0)
+                    {
+                        string currentItemIDAndName = currentItem.DisplayId;
+                        e.Accepted = currentItemIDAndName.Contains(SearchText);
+                    }
+                    else
+                        e.Accepted = true;
                 }
-                else
-                    e.Accepted = true;
+                #endregion
             }
-            #endregion
         }
 
         /// <summary>

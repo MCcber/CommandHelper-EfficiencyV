@@ -82,7 +82,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         RemoveElementButtonVisibility = Visibility.Visible;
                         break;
                     case DataTypes.OptionalCompound:
-                        AddElementButtonVisibility = EnumBoxVisibility = Visibility.Visible;
+                        AddElementButtonVisibility = Visibility.Visible;
                         break;
                     case DataTypes.CustomCompound:
                         AddElementButtonVisibility = InputBoxVisibility = Visibility.Visible;
@@ -315,7 +315,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         private void MoveItem(bool IsDown)
         {
             #region 初始化并更新前后关系
-            if ((IsDown && Next is null) || (!IsDown && Last is null))
+            if ((IsDown && Next is null) || (!IsDown && Previous is null))
             {
                 return;
             }
@@ -323,7 +323,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             string currentLineText = "", nearbyLineText = "";
             CompoundJsonTreeViewItem addToButtomItem = Parent.Children[^1] as CompoundJsonTreeViewItem;
             Parent.Children.Remove(addToButtomItem);
-            CompoundJsonTreeViewItem nearbyItem = (IsDown ? Next : Last) as CompoundJsonTreeViewItem;
+            CompoundJsonTreeViewItem nearbyItem = (IsDown ? Next : Previous) as CompoundJsonTreeViewItem;
             int index = Parent.Children.IndexOf(this);
             int nearbyIndex = Parent.Children.IndexOf(nearbyItem);
 
@@ -331,10 +331,10 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             JsonTreeViewItem nextNextItem = null;
             if (Next is not null)
                 nextNextItem = Next.Next;
-            JsonTreeViewItem lastItem = Last;
+            JsonTreeViewItem lastItem = Previous;
             JsonTreeViewItem lastLastItem = null;
-            if (Last is not null)
-                lastLastItem = Last.Last;
+            if (Previous is not null)
+                lastLastItem = Previous.Previous;
             #endregion
 
             #region 提前保存子结构节点集的旧行号
@@ -474,18 +474,18 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
 
             if (IsDown)
             {
-                nearbyItem.Last = lastItem;
+                nearbyItem.Previous = lastItem;
                 nearbyItem.Next = this;
 
-                Last = nextItem;
+                Previous = nextItem;
                 Next = nextNextItem;
             }
             else
             {
-                nearbyItem.Last = this;
+                nearbyItem.Previous = this;
                 nearbyItem.Next = nextItem;
 
-                Last = lastLastItem;
+                Previous = lastLastItem;
                 Next = nearbyItem;
             }
             Parent.Children.Add(addToButtomItem);

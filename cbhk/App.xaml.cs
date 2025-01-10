@@ -85,10 +85,6 @@ namespace cbhk
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            #region Service
-            containerRegistry.RegisterSingleton<HtmlHelper>();
-            #endregion
-
             #region View
             containerRegistry.RegisterSingleton<MoreView>();
             containerRegistry.RegisterForNavigation<MoreView,MoreViewModel>();
@@ -100,7 +96,6 @@ namespace cbhk
             containerRegistry.RegisterForNavigation<TutorialsView,TutorialsViewModel>();
             containerRegistry.RegisterSingleton<UpdateView>();
             containerRegistry.RegisterForNavigation<UpdateView, UpdateViewModel>();
-
             containerRegistry.RegisterSingleton<DistributorGenerator>();
             containerRegistry.RegisterSingleton<DisplayerView>();
             containerRegistry.RegisterForNavigation<DisplayerView, DisplayerViewModel>(Name.DisplayerView);
@@ -108,6 +103,8 @@ namespace cbhk
             containerRegistry.RegisterSingleton<SignInView>();
             containerRegistry.RegisterForNavigation<MainView, MainViewModel>(Name.MainView);
             containerRegistry.RegisterSingleton<MainView>();
+
+            containerRegistry.RegisterForNavigation<AdvancementView, AdvancementViewModel>(Name.AdvancementView);
             containerRegistry.RegisterForNavigation<ArmorStandView, ArmorStandViewModel>(Name.ArmorStandView);
             containerRegistry.RegisterForNavigation<OnlyOneCommandView, OnlyOneCommandViewModel>(Name.OnlyOneCommandView);
             containerRegistry.RegisterForNavigation<TagView, TagViewModel>(Name.TagView);
