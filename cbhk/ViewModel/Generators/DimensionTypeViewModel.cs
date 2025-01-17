@@ -43,7 +43,7 @@ namespace cbhk.ViewModel.Generators
         public ObservableCollection<JsonTreeViewItem> _dimensionTypeItemList = [];
 
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
-        public Dictionary<string, List<JsonTreeViewItem>> CurrentDependencyItemList { get; set; } = [];
+        public Dictionary<string, List<string>> CurrentDependencyItemList { get; set; } = [];
         #endregion
 
         public DimensionTypeViewModel(IContainerProvider container, MainView mainView)
@@ -79,7 +79,7 @@ namespace cbhk.ViewModel.Generators
                 //CurrentDependencyItemList = htmlHelper.AnalyzeHTMLData("");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(configDirectoryPath, true);
+                    JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(configDirectoryPath);
                     DimensionTypeItemList = result.Result;
                     textEditor.Text = "{\r\n" + result.ResultString.ToString() + "\r\n}";
 

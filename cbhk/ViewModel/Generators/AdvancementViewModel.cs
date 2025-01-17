@@ -81,7 +81,7 @@ namespace cbhk.ViewModel.Generators
                 //CurrentDependencyItemList = htmlHelper.AnalyzeHTMLData("");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(configDirectoryPath);
+                    JsonTreeViewDataStructure result = _htmlHelper.AnalyzeHTMLData(configDirectoryPath);
                     textEditor.Text = "{\r\n" + result.ResultString.ToString().TrimEnd([',', '\r', '\n']) + "\r\n}";
                     foreach (var item in result.Result)
                     {
