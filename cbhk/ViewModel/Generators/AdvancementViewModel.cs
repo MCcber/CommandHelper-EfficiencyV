@@ -35,6 +35,11 @@ namespace cbhk.ViewModel.Generators
         private IContainerProvider _container;
         JsonTreeViewItemExtension jsonTool = null;
 
+        public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; } = [];
+
+        public Dictionary<string, List<string>> EnumIDDictionary { get; set; } = [];
+
+
         public ObservableCollection<JsonTreeViewItem> AdvancementTreeViewItemList = [];
         #endregion
 

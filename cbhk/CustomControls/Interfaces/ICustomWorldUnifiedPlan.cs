@@ -17,6 +17,11 @@ namespace cbhk.CustomControls.Interfaces
         /// </summary>
         public Dictionary<string,List<string>> CurrentDependencyItemList { get; set; }
         public void UpdateNullValueBySpecifyingInterval(int endOffset, string newValue = "\r\n");
+
+        public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; }
+
+        public Dictionary<string, List<string>> EnumIDDictionary { get; set; }
+
         /// <summary>
         /// 根据区间更新指定值
         /// </summary>

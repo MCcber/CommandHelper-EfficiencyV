@@ -4,7 +4,6 @@ using cbhk.Interface.Json;
 using cbhk.Model.Common;
 using DryIoc;
 using ICSharpCode.AvalonEdit;
-using ICSharpCode.AvalonEdit.Document;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;

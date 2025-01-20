@@ -109,43 +109,7 @@ namespace cbhk.GeneralTools
             JsonTreeViewDataStructure Result = new();
             HtmlDocument htmlDocument = new();
 
-            #region 优先解析继承文件列表
-            //string[] inheritItemArray = Directory.GetFileSystemEntries(directoryPath);
-            //for (int i = 0; i < inheritItemArray.Length; i++)
-            //{
-            //    if (Path.GetExtension(inheritItemArray[i]) != ".wiki")
-            //    {
-            //        continue;
-            //    }
-            //    if (File.Exists(inheritItemArray[i]))
-            //    {
-            //        int position = inheritItemArray[i].LastIndexOf("Inherit");
-            //        htmlDocument.LoadHtml(File.ReadAllText(inheritItemArray[i]));
-            //        if (htmlDocument.DocumentNode.ChildNodes.Count == 0)
-            //        {
-            //            continue;
-            //        }
-            //        List<HtmlNode> treeviewDivs = [.. htmlDocument.DocumentNode.SelectNodes("//div[@class='treeview']")];
-            //        for (int j = 0; j < treeviewDivs.Count; j++)
-            //        {
-            //            List<string> nodeContent = [.. treeviewDivs[j].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
-            //            string inheritKey = Path.GetDirectoryName(inheritItemArray[i][position..]).ToLower() + "\\" + Path.GetFileNameWithoutExtension(inheritItemArray[i][position..]);
-
-            //            nodeContent = TypeSetting(nodeContent);
-            //            JsonTreeViewDataStructure inheritResultData = GetTreeViewItemResult(new(), nodeContent, 2, 1, false);
-
-            //            if (treeviewDivs.Count > 1)
-            //            {
-            //                inheritKey += "\\" + inheritResultData.Result[0].Key;
-            //            }
-
-            //            plan.CurrentDependencyItemList.Add(inheritKey, [.. inheritResultData.Result]);
-            //        }
-            //    }
-            //}
-            #endregion
-
-            #region 处理主文件与依赖文件
+            #region 处理依赖文件
             foreach (var file in Directory.GetFiles(directoryPath))
             {
                 string wikiData = File.ReadAllText(file);
@@ -192,15 +156,50 @@ namespace cbhk.GeneralTools
                         //_ = GetTreeViewItemResult(new(), nodeContent, 2, 1, false);
                         plan.CurrentDependencyItemList[contextFileMarker] = nodeContent;
                     }
-                    else
-                    {
-                        JsonTreeViewDataStructure resultData = GetTreeViewItemResult(new(), nodeContent, 2, 1);
-                        Result.Result.AddRange(resultData.Result);
-                        Result.ResultString.Append(resultData.ResultString);
-                    }
                     #endregion
                 }
                 #endregion
+            }
+            #endregion
+            #region 处理主文件
+            string mainFilePath = directoryPath + "main.wiki";
+            if (File.Exists(mainFilePath))
+            {
+                string wikiData = File.ReadAllText(mainFilePath);
+                string[] wikiLines = File.ReadAllLines(mainFilePath);
+
+                string currentReferenceKey = "";
+
+                string mainKey = wikiLines[0].Replace("=", "").Trim();
+                string subKey = "";
+                if (wikiLines[1].TrimStart().StartsWith('='))
+                {
+                    subKey = wikiLines[1].Replace("=", "").Trim();
+                }
+                currentReferenceKey = "#" + mainKey + (subKey.Length > 0 ? "|" + subKey : "");
+                plan.CurrentDependencyItemList.Add(currentReferenceKey, []);
+
+                #region 生成html文档节点集
+                htmlDocument.LoadHtml(wikiData);
+                List<HtmlNode> treeviewDivs = [.. htmlDocument.DocumentNode.SelectNodes("//div[@class='treeview']")];
+                #endregion
+
+                #region 执行树视图节点的生成
+                if (treeviewDivs is not null)
+                {
+                    List<string> nodeContent = [.. treeviewDivs[0].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
+                    nodeContent = TypeSetting(nodeContent);
+
+                    Match mainContextFileMarker = GetContextFileMarker().Match(wikiLines[0]);
+                    Match subContextFileMarker = GetContextFileMarker().Match(wikiLines[1]);
+                    string contextFileMarker = "#" + mainContextFileMarker.Value.Replace("=", "").Trim() + (subContextFileMarker.Success ? "|" + subContextFileMarker.Value.Replace("=", "").Trim() : "");
+
+                    plan.CurrentDependencyItemList[contextFileMarker] = nodeContent;
+                }
+                #endregion
+                JsonTreeViewDataStructure resultData = GetTreeViewItemResult(new(), nodeContent, 2, 1);
+                Result.Result.AddRange(resultData.Result);
+                Result.ResultString.Append(resultData.ResultString);
             }
             #endregion
 
@@ -223,6 +222,7 @@ namespace cbhk.GeneralTools
         {
             List<string> NBTFeatureList = [];
             bool isNeedCloseCurlyBrackets = true;
+
             //遍历找到的 div 标签内容集合
             for (int i = 0; i < nodeList.Count; i++)
             {
@@ -367,6 +367,7 @@ namespace cbhk.GeneralTools
                                     if (EnumKeyCount > 0)
                                     {
                                         item.DataType = DataTypes.Enum;
+                                        item = new CompoundJsonTreeViewItem(plan, jsonTool);
                                     }
                                     else
                                     {
@@ -452,74 +453,51 @@ namespace cbhk.GeneralTools
                                 }
                             case DataTypes.Enum:
                                 {
-                                    item.Key = currentNodeKey;
-                                    item.DisplayText = string.Join(' ', currentNodeKey.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..]));
-                                    item.EnumBoxVisibility = Visibility.Visible;
-                                    #region 抓取数据
-                                    MatchCollection EnumCollectionMode1 = GetEnumValueMode1().Matches(nodeList[i]);
-                                    MatchCollection EnumCollectionMode2 = GetEnumValueMode2().Matches(nodeList[i]);
-                                    Match DefaultEnumValueMark = GetDefaultEnumValue().Match(nodeList[i]);
-                                    Match BlockTagMark = GetBlcokTagValue().Match(nodeList[i]);
-                                    Match EntityTagMark = GetEntityTagValue().Match(nodeList[i]);
-                                    Match ItemTagMark = GetItemTagValue().Match(nodeList[i]);
+                                    if (item is CompoundJsonTreeViewItem enumCompoundItem)
+                                    {
+                                        enumCompoundItem.Key = currentNodeKey;
+                                        enumCompoundItem.DisplayText = string.Join(' ', currentNodeKey.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..]));
+                                        enumCompoundItem.EnumBoxVisibility = Visibility.Visible;
+                                        #region 抓取数据
+                                        MatchCollection EnumCollectionMode1 = GetEnumValueMode1().Matches(nodeList[i]);
+                                        MatchCollection EnumCollectionMode2 = GetEnumValueMode2().Matches(nodeList[i]);
+                                        Match DefaultEnumValueMark = GetDefaultEnumValue().Match(nodeList[i]);
 
-                                    if (DefaultEnumValueMark.Success)
-                                    {
-                                        item.DefaultValue = item.Value = "\"" + DefaultEnumValueMark.Value + "\"";
-                                    }
-                                    #endregion
-                                    #region 添加枚举成员
-                                    if ((nodeList[i].Contains("可以是") || nodeList[i].Contains("可以为")) && EnumCollectionMode1.Count > 0)
-                                    {
-                                        foreach (Match enumMatch in EnumCollectionMode1)
+                                        if (DefaultEnumValueMark.Success)
                                         {
-                                            item.EnumItemsSource.Add(new TextComboBoxItem() { Text = enumMatch.Value });
+                                            enumCompoundItem.DefaultValue = item.Value = "\"" + DefaultEnumValueMark.Value + "\"";
                                         }
-                                        foreach (Match enumMatch in EnumCollectionMode2)
+                                        #endregion
+                                        #region 添加枚举成员
+                                        if ((nodeList[i].Contains("可以是") || nodeList[i].Contains("可以为")) && EnumCollectionMode1.Count > 0)
                                         {
-                                            item.EnumItemsSource.Add(new TextComboBoxItem() { Text = enumMatch.Value });
+                                            foreach (Match enumMatch in EnumCollectionMode1)
+                                            {
+                                                enumCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = enumMatch.Value });
+                                            }
+                                            foreach (Match enumMatch in EnumCollectionMode2)
+                                            {
+                                                enumCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = enumMatch.Value });
+                                            }
                                         }
-                                    }
-                                    else
-                                    if (BlockTagMark.Index > 0)
-                                    {
-                                        item.EnumItemsSource.Add(new TextComboBoxItem() { Text = "block" });
-                                        //foreach (string blockName in blockService.GetAllBlockName())
-                                        //{
-                                        //    item.EnumItemsSource.Add(new TextComboBoxItem() { Text = blockName });
-                                        //}
-                                    }
-                                    else
-                                    if (EntityTagMark.Index > 0)
-                                    {
-                                        item.EnumItemsSource.Add(new TextComboBoxItem() { Text = "entity" });
-                                        //foreach (string entityName in entityService.GetAllEntityName())
-                                        //{
-                                        //    item.EnumItemsSource.Add(new TextComboBoxItem() { Text = entityName });
-                                        //}
-                                    }
-                                    if (ItemTagMark.Index > 0)
-                                    {
-                                        item.EnumItemsSource.Add(new TextComboBoxItem() { Text = "item" });
-                                        //foreach (string itemName in entityService.GetAllEntityName())
-                                        //{
-                                        //    item.EnumItemsSource.Add(new TextComboBoxItem() { Text = itemName });
-                                        //}
-                                    }
-                                    #endregion
-                                    #region 处理Key与外观
-                                    if (EnumCollectionMode1.Count > 0 || BlockTagMark.Index > 0 || EntityTagMark.Index > 0)
-                                    {
-                                        item.DisplayText = string.Join(' ', currentNodeKey.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..]));
-                                        item.DataType = DataTypes.Enum;
-                                        item.SelectedEnumItem = item.EnumItemsSource[0];
+                                        else
+                                        {
 
-                                        result.ResultString.Append(new string(' ', layerCount * 2) +
-                                            "\"" + currentNodeKey.ToLower() + "\"" +
-                                            ": \"" + item.EnumItemsSource[0].Text + "\"");
-                                    }
-                                    #endregion
+                                        }
+                                        #endregion
+                                        #region 处理Key与外观
+                                        if (EnumCollectionMode1.Count > 0)
+                                        {
+                                            item.DisplayText = string.Join(' ', currentNodeKey.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..]));
+                                            item.DataType = DataTypes.Enum;
+                                            item.SelectedEnumItem = item.EnumItemsSource[0];
 
+                                            result.ResultString.Append(new string(' ', layerCount * 2) +
+                                                "\"" + currentNodeKey.ToLower() + "\"" +
+                                                ": \"" + item.EnumItemsSource[0].Text + "\"");
+                                        }
+                                        #endregion
+                                    }
                                     break;
                                 }
                             case DataTypes.Byte:
