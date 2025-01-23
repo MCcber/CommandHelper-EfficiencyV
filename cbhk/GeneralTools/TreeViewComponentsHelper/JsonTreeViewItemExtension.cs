@@ -2,17 +2,14 @@
 using cbhk.CustomControls.JsonTreeViewComponents;
 using cbhk.Interface.Json;
 using cbhk.Model.Common;
-using DryIoc;
 using ICSharpCode.AvalonEdit;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Shapes;
 using static cbhk.Model.Common.Enums;
 
 namespace cbhk.GeneralTools.TreeViewComponentsHelper
@@ -109,7 +106,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound;
             bool IsArrayOrList = currentIsArray || parentIsArray;
             JsonTreeViewDataStructure result = new();
-            ReplaceType replaceType = ReplaceType.Direct;
+            ChangeType changeType = ChangeType.Input;
             CompoundJsonTreeViewItem? targetCompoundItem;
             if (currentIsArray || currentIsCompound)
             {
@@ -122,11 +119,11 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             }
             if (currentIsCompound)
             {
-                replaceType = ReplaceType.Compound;
+                changeType = ChangeType.AddCompoundObject;
             }
             else
             {
-                replaceType = ReplaceType.AddArrayElement;
+                changeType = ChangeType.AddArrayElement;
             }
             #endregion
 
@@ -186,14 +183,14 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                             int endOffset;
                             string currentNewString = result.ResultString.ToString();
 
-                            if (previous is CompoundJsonTreeViewItem previousCompoundItem && compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound && compoundJsonTreeViewItem.EndLine is null)
+                            if (previous is CompoundJsonTreeViewItem previousCompoundItem && compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound)
                             {
                                 endOffset = previousCompoundItem.EndLine is not null ? previousCompoundItem.EndLine.EndOffset : previousCompoundItem.StartLine.EndOffset;
                                 compoundJsonTreeViewItem.Plan.UpdateNullValueBySpecifyingInterval(endOffset, ",\r\n" + currentNewString);
                             }
                             else
                             {
-                                    compoundJsonTreeViewItem.Plan.UpdateValueBySpecifyingInterval(compoundJsonTreeViewItem, replaceType, result.ResultString.ToString());
+                                compoundJsonTreeViewItem.Plan.UpdateValueBySpecifyingInterval(compoundJsonTreeViewItem, changeType, "\r\n" + result.ResultString.ToString());
                             }
                             int newLineCount = GetLineBreakCount().Matches(currentNewString).Count;
                             #region 确定起始行号
@@ -310,12 +307,12 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         public void RemoveSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem, ICustomWorldUnifiedPlan customWorldUnifiedPlan)
         {
             #region 确定删除的数据类型
-            ReplaceType replaceType = ReplaceType.Input;
+            ChangeType replaceType = ChangeType.Input;
             if (compoundJsonTreeViewItem.DataType is DataTypes.ArrayElement)
-                replaceType = ReplaceType.RemoveArrayElement;
+                replaceType = ChangeType.RemoveArrayElement;
             else
                 if (compoundJsonTreeViewItem.DataType is DataTypes.Compound)
-                replaceType = ReplaceType.Compound;
+                replaceType = ChangeType.RemoveCompoundObject;
             #endregion
 
             #region 更新TreeView与JsonView
@@ -327,9 +324,9 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 }
             });
             customWorldUnifiedPlan.UpdateValueBySpecifyingInterval(compoundJsonTreeViewItem, replaceType);
-            if (replaceType is ReplaceType.Compound)
+            if (replaceType is ChangeType.RemoveCompound)
                 compoundJsonTreeViewItem.Children.Clear();
-            if (replaceType is ReplaceType.RemoveArrayElement)
+            if (replaceType is ChangeType.RemoveArrayElement)
             {
                 compoundJsonTreeViewItem.Parent.Children.Remove(compoundJsonTreeViewItem);
                 compoundJsonTreeViewItem.Parent.FlattenDescendantNodeList.Remove(compoundJsonTreeViewItem);

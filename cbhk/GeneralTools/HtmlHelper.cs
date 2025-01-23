@@ -144,7 +144,7 @@ namespace cbhk.GeneralTools
                     {
                         for (int i = 0; i < treeviewDivs.Count; i++)
                         {
-                            int enumKeyIndex = treeviewDivs[i].Line - 3;
+                            int enumKeyIndex = treeviewDivs[i].Line - 1;
                             Match enumMatch = GetEnumTypeKeywords().Match(wikiLines[enumKeyIndex]);
                             while (!enumMatch.Success)
                             {

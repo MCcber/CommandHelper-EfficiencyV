@@ -34,7 +34,7 @@ namespace cbhk.CustomControls.Interfaces
         /// <param name="item">当前节点</param>
         /// <param name="newValue">新值</param>
         /// <param name="isSwitchType">正在更新类型</param>
-        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item,ReplaceType replaceType, string newValue = "",bool markValue = true);
+        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item,ChangeType replaceType, string newValue = "",bool markValue = true);
         /// <summary>
         /// 通过行号获取行引用
         /// </summary>

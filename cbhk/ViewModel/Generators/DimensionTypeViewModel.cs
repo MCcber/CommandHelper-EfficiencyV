@@ -39,12 +39,13 @@ namespace cbhk.ViewModel.Generators
         #endregion
 
         #region Property
+        public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; }
+
         [ObservableProperty]
         public ObservableCollection<JsonTreeViewItem> _dimensionTypeItemList = [];
 
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
         public Dictionary<string, List<string>> CurrentDependencyItemList { get; set; } = [];
-        public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; }
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; }
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; }
         #endregion
@@ -199,7 +200,7 @@ namespace cbhk.ViewModel.Generators
             textEditor.Document.Insert(endOffset, newValue);
         }
 
-        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item, ReplaceType replaceType, string newValue = "", bool markValue = true)
+        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item, ChangeType replaceType, string newValue = "", bool markValue = true)
         {
             #region 初始化
             DocumentLine startDocumentLine = null;
@@ -228,88 +229,7 @@ namespace cbhk.ViewModel.Generators
 
                 switch (replaceType)
                 {
-                    case ReplaceType.Direct:
-                        {
-                            offset = item.StartLine.Offset;
-                            if (item is CompoundJsonTreeViewItem compound)
-                            {
-                                length = compound.EndLine.EndOffset - offset;
-                            }
-                            else
-                            {
-                                length = item.StartLine.EndOffset - offset;
-                            }
-                            break;
-                        }
-                    case ReplaceType.AddElement:
-                        {
-                            break;
-                        }
-                    case ReplaceType.RemoveElement:
-                        {
-                            break;
-                        }
-                    case ReplaceType.AddArrayElement:
-                        {
-                            if (compoundJsonTreeViewItem.DataType is DataTypes.Array)
-                            {
-                                if (compoundJsonTreeViewItem.Children.Count == 0 || markValue)
-                                {
-                                    int openSquareIndex = startLineText.IndexOf('[') + 1;
-                                    offset = startDocumentLine.Offset + openSquareIndex;
-                                    length = 0;
-                                }
-                                else
-                                {
-                                    JsonTreeViewItem firstElement = compoundJsonTreeViewItem.Children[^2];
-                                    if (firstElement is CompoundJsonTreeViewItem firstCompound)
-                                    {
-                                        offset = firstCompound.EndLine.EndOffset;
-                                        length = 0;
-                                    }
-                                }
-                            }
-                            break;
-                        }
-                    case ReplaceType.RemoveArrayElement:
-                        {
-                            CompoundJsonTreeViewItem currentItem = item as CompoundJsonTreeViewItem;
-                            if (currentIndex > 0)
-                                offset = currentItem.StartLine.PreviousLine.EndOffset - (currentItem.Next is null ? 1 : 0);
-                            if (currentIndex == 0)
-                                offset = currentItem.Parent.StartLine.EndOffset;
-                            length = currentItem.Next is null && item.Parent.Children.Count == 2 ? currentItem.EndLine.NextLine.EndOffset - 1 - offset : currentItem.EndLine.EndOffset - offset;
-                            break;
-                        }
-                    case ReplaceType.Compound:
-                        {
-                            int colonIndex = startLineText.IndexOf(':') + 2;
-                            int endOffset = 0;
-                            string endLineText = textEditor.Document.GetText(endDocumentLine);
-                            if (endLineText.TrimEnd().EndsWith(','))
-                                endOffset = endLineText.LastIndexOf(',') + endDocumentLine.Offset;
-                            else
-                                endOffset = endDocumentLine.EndOffset;
-                            offset = startDocumentLine.Offset + colonIndex;
-                            length = endOffset - offset;
-                            break;
-                        }
-                    case ReplaceType.String:
-                    case ReplaceType.Input:
-                        {
-                            offset = item.StartLine.Offset;
-                            newValue = new string(' ', spaceLength) + "\"" + item.Key + "\": " + (replaceType is ReplaceType.String ? "\"" : "") + newValue + (replaceType is ReplaceType.String ? "\"" : "") + (markValue ? "" : ',');
-                            length = startDocumentLine.EndOffset - startDocumentLine.Offset;
-                            break;
-                        }
                 }
-            }
-            else
-            if ((replaceType is ReplaceType.Input || replaceType is ReplaceType.String) && startDocumentLine is not null)
-            {
-                offset = item.StartLine.Offset;
-                newValue = new string(' ', spaceLength) + "\"" + item.Key + "\": " + (replaceType is ReplaceType.String ? "\"" : "") + newValue + (replaceType is ReplaceType.String ? "\"" : "") + (markValue ? "" : ',');
-                length = startDocumentLine.EndOffset - startDocumentLine.Offset;
             }
             #endregion
 

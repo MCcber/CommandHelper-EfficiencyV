@@ -207,7 +207,7 @@ namespace cbhk.ViewModel.Generators
             textEditor.Document.Insert(endOffset, newValue);
         }
 
-        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item, ReplaceType replaceType, string newValue = "", bool markValue = true)
+        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item, ChangeType changeType, string newValue = "", bool haveNextNode = true)
         {
             #region 初始化
             DocumentLine startDocumentLine = null;
@@ -234,90 +234,47 @@ namespace cbhk.ViewModel.Generators
                 if (compoundJsonTreeViewItem.EndLine is not null)
                     endDocumentLine = compoundJsonTreeViewItem.EndLine;
 
-                switch (replaceType)
+                switch (changeType)
                 {
-                    case ReplaceType.Direct:
-                        {
-                            offset = item.StartLine.Offset;
-                            if (item is CompoundJsonTreeViewItem compound)
-                            {
-                                length = compound.EndLine.EndOffset - offset;
-                            }
-                            else
-                            {
-                                length = item.StartLine.EndOffset - offset;
-                            }
-                            break;
-                        }
-                    case ReplaceType.AddElement:
+                    case ChangeType.Input:
                         {
                             break;
                         }
-                    case ReplaceType.RemoveElement:
+                    case ChangeType.AddCompoundObject:
+                        {
+                            int index = startLineText.IndexOf('{') + 1;
+                            offset = startDocumentLine.Offset + index;
+                            break;
+                        }
+                    case ChangeType.AddCompoundObjectToEnd:
                         {
                             break;
                         }
-                    case ReplaceType.AddArrayElement:
+                    case ChangeType.AddArrayElement:
                         {
-                            if (compoundJsonTreeViewItem.DataType is DataTypes.Array)
-                            {
-                                if (compoundJsonTreeViewItem.Children.Count == 0 || markValue)
-                                {
-                                    int openSquareIndex = startLineText.IndexOf('[') + 1;
-                                    offset = startDocumentLine.Offset + openSquareIndex;
-                                    length = 0;
-                                }
-                                else
-                                {
-                                    JsonTreeViewItem firstElement = compoundJsonTreeViewItem.Children[^2];
-                                    if (firstElement is CompoundJsonTreeViewItem firstCompound)
-                                    {
-                                        offset = firstCompound.EndLine.EndOffset;
-                                        length = 0;
-                                    }
-                                }
-                            }
                             break;
                         }
-                    case ReplaceType.RemoveArrayElement:
+                    case ChangeType.AddArrayElementToEnd:
                         {
-                            CompoundJsonTreeViewItem currentItem = item as CompoundJsonTreeViewItem;
-                            if (currentIndex > 0)
-                                offset = currentItem.StartLine.PreviousLine.EndOffset - (currentItem.Next is null ? 1 : 0);
-                            if (currentIndex == 0)
-                                offset = currentItem.Parent.StartLine.EndOffset;
-                            length = currentItem.Next is null && item.Parent.Children.Count == 2 ? currentItem.EndLine.NextLine.EndOffset - 1 - offset : currentItem.EndLine.EndOffset - offset;
                             break;
                         }
-                    case ReplaceType.Compound:
+                    case ChangeType.RemoveCompound:
                         {
-                            int colonIndex = startLineText.IndexOf(':') + 2;
-                            int endOffset = 0;
-                            string endLineText = textEditor.Document.GetText(endDocumentLine);
-                            if (endLineText.TrimEnd().EndsWith(','))
-                                endOffset = endLineText.LastIndexOf(',') + endDocumentLine.Offset;
-                            else
-                                endOffset = endDocumentLine.EndOffset;
-                            offset = startDocumentLine.Offset + colonIndex;
-                            length = endOffset - offset;
                             break;
                         }
-                    case ReplaceType.String:
-                    case ReplaceType.Input:
+                    case ChangeType.RemoveCompoundObject:
                         {
-                            offset = item.StartLine.Offset;
-                            newValue = new string(' ', spaceLength) + "\"" + item.Key + "\": " + (replaceType is ReplaceType.String ? "\"" : "") + newValue + (replaceType is ReplaceType.String ? "\"" : "") + (markValue ? "" : ',');
-                            length = startDocumentLine.EndOffset - startDocumentLine.Offset;
+                            break;
+                        }
+                    case ChangeType.RemoveArray:
+                        {
+                            break;
+                        }
+                    case ChangeType.RemoveArrayElement:
+                        {
                             break;
                         }
                 }
-            }
-            else
-            if ((replaceType is ReplaceType.Input || replaceType is ReplaceType.String) && startDocumentLine is not null)
-            {
-                offset = item.StartLine.Offset;
-                newValue = new string(' ', spaceLength) + "\"" + item.Key + "\": " + (replaceType is ReplaceType.String ? "\"" : "") + newValue + (replaceType is ReplaceType.String ? "\"" : "") + (markValue ? "" : ',');
-                length = startDocumentLine.EndOffset - startDocumentLine.Offset;
             }
             #endregion
 

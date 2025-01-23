@@ -8,16 +8,17 @@
             Get
         }
 
-        public enum ReplaceType
+        public enum ChangeType
         {
-            Direct,
             Input,
-            String,
-            AddElement,
-            RemoveElement,
+            AddCompoundObject,
+            AddCompoundObjectToEnd,
             AddArrayElement,
+            AddArrayElementToEnd,
+            RemoveCompound,
+            RemoveCompoundObject,
+            RemoveArray,
             RemoveArrayElement,
-            Compound
         }
 
         public enum DataTypes

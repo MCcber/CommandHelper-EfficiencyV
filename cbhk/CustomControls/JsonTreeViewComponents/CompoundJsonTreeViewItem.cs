@@ -190,7 +190,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 //    }
                 //    #endregion
 
-                //    Plan.UpdateValueBySpecifyingInterval(this, ReplaceType.Compound, currentValue);
+                //    Plan.UpdateValueBySpecifyingInterval(this, ChangeType.Compound, currentValue);
                 //    JsonItemTool.SetDocumentLineByNumber(Children);
                 //    JsonItemTool.UpdateFlattenDescendantNodeList(this, Children);
                 //    EndLine = Plan.GetLineByNumber(CurrentStartLineNumber + newCount);
@@ -204,13 +204,13 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 //    #region 清除子级，更新显示内容，更新Json视图
                 //    Children.Clear();
                 //    InputBoxVisibility = InfoIconVisibility = EnumBoxVisibility = Visibility.Visible;
-                //    Plan.UpdateValueBySpecifyingInterval(this, ReplaceType.Compound, DefaultValue is null ? "0" : (string)DefaultValue);
+                //    Plan.UpdateValueBySpecifyingInterval(this, ChangeType.Compound, DefaultValue is null ? "0" : (string)DefaultValue);
                 //    #endregion
                 //}
                 //#endregion
             }
             else//没有时直接当作枚举类型执行
-                Plan.UpdateValueBySpecifyingInterval(this, ReplaceType.Input, "\"" + SelectedEnumItem.Text + "\"");
+                Plan.UpdateValueBySpecifyingInterval(this, ChangeType.Input, "\"" + SelectedEnumItem.Text + "\"");
             #endregion
 
             oldSelectedEnumItem = SelectedEnumItem;

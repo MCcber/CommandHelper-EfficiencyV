@@ -299,33 +299,30 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// <param name="e"></param>
         public void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (this is not CompoundJsonTreeViewItem)
+            if (StartLine.IsDeleted && Previous is not null)
             {
-                if (StartLine.IsDeleted && Previous is not null)
-                {
-                    StartLine = Plan.GetLineByNumber(Previous is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine.LineNumber + 1 : Previous.StartLine.LineNumber + 1);
-                }
-                if ((Value is not null && ((string)Value).Trim().Length > 0 && (Previous is null || Previous.StartLine.LineNumber != StartLine.LineNumber)) || DefaultValue is not null || (DefaultValue is null && SelectedEnumItem is not null))
-                {
-                    if (((string)Value).Trim().Length == 0)
-                        Value = DefaultValue;
-                    Plan.UpdateValueBySpecifyingInterval(this, DataType is DataTypes.Input ? ReplaceType.Input : ReplaceType.String, Value + "", Next is null);
-                }
-                else
-                if (Value is not null && ((string)Value).Trim().Length > 0 && DefaultValue is null)//有值
-                {
-                    StartLine = Previous is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine : Previous.StartLine;
-                    Plan.UpdateNullValueBySpecifyingInterval(StartLine.EndOffset, "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\": " + Value + ",");
-                    StartLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
-                }
-                else
-                if (OldValue != Value && Value is not null)//无值时删除本行，回归初始状态
-                {
-                    DocumentLine lastLine = Plan.GetLineByNumber(StartLine.LineNumber - 1);
-                    DocumentLine nextLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
-                    Plan.DeleteAllLinesInTheSpecifiedRange(StartLine.Offset, nextLine.Offset);
-                    StartLine = lastLine;
-                }
+                StartLine = Plan.GetLineByNumber(Previous is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine.LineNumber + 1 : Previous.StartLine.LineNumber + 1);
+            }
+            if ((Value is not null && ((string)Value).Trim().Length > 0 && (Previous is null || Previous.StartLine.LineNumber != StartLine.LineNumber)) || DefaultValue is not null || (DefaultValue is null && SelectedEnumItem is not null))
+            {
+                if (((string)Value).Trim().Length == 0)
+                    Value = DefaultValue;
+                Plan.UpdateValueBySpecifyingInterval(this, ChangeType.Input, Value + "", Next is null);
+            }
+            else
+            if (Value is not null && ((string)Value).Trim().Length > 0 && DefaultValue is null)//有值
+            {
+                StartLine = Previous is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine : Previous.StartLine;
+                Plan.UpdateNullValueBySpecifyingInterval(StartLine.EndOffset, "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\": " + Value + ",");
+                StartLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
+            }
+            else
+            if (OldValue != Value && Value is not null)//无值时删除本行，回归初始状态
+            {
+                DocumentLine lastLine = Plan.GetLineByNumber(StartLine.LineNumber - 1);
+                DocumentLine nextLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
+                Plan.DeleteAllLinesInTheSpecifiedRange(StartLine.Offset, nextLine.Offset);
+                StartLine = lastLine;
             }
         }
 
@@ -352,7 +349,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             if (window.DataContext is ICustomWorldUnifiedPlan customWorldUnifiedPlan)
             {
                 string currentValue = ((bool)Value).ToString().ToLower();
-                customWorldUnifiedPlan.UpdateValueBySpecifyingInterval(this, ReplaceType.Input, currentValue, Next is null);
+                customWorldUnifiedPlan.UpdateValueBySpecifyingInterval(this, ChangeType.Input, currentValue, Next is null);
             }
         }
 
