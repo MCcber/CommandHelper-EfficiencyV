@@ -611,7 +611,7 @@ namespace cbhk.ViewModel.Generators
                 }
                 else
                 {
-                    Clipboard.SetText(result);
+                    Clipboard.SetText(Result);
                     Message.PushMessage("成书生成成功！", MessageBoxImage.Information);
                 }
             }

@@ -19,13 +19,9 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         public DocumentLine EndLine { get; set; }
 
         /// <summary>
-        /// 切换键
+        /// 枚举键
         /// </summary>
-        [ObservableProperty]
-        public string _switchKey = "";
-
-        [ObservableProperty]
-        public string _compoundHead = "";
+        public string EnumKey = "";
 
         private bool isCanSort = false;
 

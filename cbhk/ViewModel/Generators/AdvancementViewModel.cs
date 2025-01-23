@@ -35,6 +35,11 @@ namespace cbhk.ViewModel.Generators
         private IContainerProvider _container;
         JsonTreeViewItemExtension jsonTool = null;
 
+        public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; } = new()
+        {
+            { "enum:trigger.compound:conditions","#准则触发器" }
+        };
+
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; } = [];
 
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; } = [];
@@ -319,16 +324,6 @@ namespace cbhk.ViewModel.Generators
             //计算好偏移量和替换长度后执行替换
             if (offset != 0 || length != 0)
                 textEditor.Document.Replace(offset, length, newValue);
-        }
-
-        public void UpdateCompoundHeadAndSwitchKey(CompoundJsonTreeViewItem templateItem, CompoundJsonTreeViewItem targetItem)
-        {
-            string templateSwitchKey = templateItem.SwitchKey;
-            if (templateSwitchKey.Length > 0)
-                targetItem.SwitchKey = templateSwitchKey;
-            string templateCompoundHead = templateItem.CompoundHead;
-            if (templateCompoundHead.Length > 0)
-                targetItem.CompoundHead = templateCompoundHead;
         }
 
         public JsonTreeViewItem ModifyJsonItemDictionary(JsonTreeViewItem targetItem, ModifyType modifyType)

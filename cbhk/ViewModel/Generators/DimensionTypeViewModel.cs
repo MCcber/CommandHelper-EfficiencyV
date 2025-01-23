@@ -44,6 +44,9 @@ namespace cbhk.ViewModel.Generators
 
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
         public Dictionary<string, List<string>> CurrentDependencyItemList { get; set; } = [];
+        public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; }
+        public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; }
+        public Dictionary<string, List<string>> EnumIDDictionary { get; set; }
         #endregion
 
         public DimensionTypeViewModel(IContainerProvider container, MainView mainView)
@@ -313,16 +316,6 @@ namespace cbhk.ViewModel.Generators
             //计算好偏移量和替换长度后执行替换
             if (offset != 0 || length != 0)
                 textEditor.Document.Replace(offset, length, newValue);
-        }
-
-        public void UpdateCompoundHeadAndSwitchKey(CompoundJsonTreeViewItem templateItem, CompoundJsonTreeViewItem targetItem)
-        {
-            string templateSwitchKey = templateItem.SwitchKey;
-            if (templateSwitchKey.Length > 0)
-                targetItem.SwitchKey = templateSwitchKey;
-            string templateCompoundHead = templateItem.CompoundHead;
-            if (templateCompoundHead.Length > 0)
-                targetItem.CompoundHead = templateCompoundHead;
         }
 
         public JsonTreeViewItem ModifyJsonItemDictionary(JsonTreeViewItem targetItem, ModifyType modifyType)

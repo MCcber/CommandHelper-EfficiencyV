@@ -9,6 +9,10 @@ namespace cbhk.CustomControls.Interfaces
     public interface ICustomWorldUnifiedPlan
     {
         /// <summary>
+        /// 识别特定结构的字典
+        /// </summary>
+        public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; }
+        /// <summary>
         /// 存储节点路径对应的上下文
         /// </summary>
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; }
@@ -51,12 +55,6 @@ namespace cbhk.CustomControls.Interfaces
         /// <param name="length"></param>
         /// <param name="value"></param>
         public void SetRangeText(int startOffset, int length, string value);
-        /// <summary>
-        /// 更新CompoundHead与SwitchKey，前者用于复合子结构的根对象后者用于分支结构的标注
-        /// </summary>
-        /// <param name="templateItem">模板对象</param>
-        /// <param name="targetItem">目标对象</param>
-        public void UpdateCompoundHeadAndSwitchKey(CompoundJsonTreeViewItem templateItem, CompoundJsonTreeViewItem targetItem);
         /// <summary>
         /// 操作上下文存储节点的字典
         /// </summary>
