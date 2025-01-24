@@ -29,12 +29,10 @@ namespace cbhk.CustomControls.Interfaces
         /// <summary>
         /// 根据区间更新指定值
         /// </summary>
-        /// <param name="startLineNumber">目标起始行号</param>
-        /// <param name="endLineNumber">目标末尾行号</param>
-        /// <param name="item">当前节点</param>
+        /// <param name="item">目标节点</param>
+        /// <param name="changeType">更新类型</param>
         /// <param name="newValue">新值</param>
-        /// <param name="isSwitchType">正在更新类型</param>
-        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item,ChangeType replaceType, string newValue = "",bool markValue = true);
+        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item,ChangeType changeType, string newValue = "");
         /// <summary>
         /// 通过行号获取行引用
         /// </summary>

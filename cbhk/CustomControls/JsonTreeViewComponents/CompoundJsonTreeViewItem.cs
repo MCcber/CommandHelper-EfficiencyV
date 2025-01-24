@@ -221,60 +221,14 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void AddSubStructure_Click(object sender, RoutedEventArgs e) => JsonItemTool.AddSubStructure(this, sender as UIElement);
+        public void AddSubStructure_Click(object sender, RoutedEventArgs e) => JsonItemTool.AddSubStructure(this);
 
         /// <summary>
         /// 删除数组元素
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void RemoveSubStructure_Click(object sender, RoutedEventArgs e)
-        {
-            switch (DataType)
-            {
-                case DataTypes.OptionalCompound:
-                case DataTypes.NullableCompound:
-                case DataTypes.OptionalAndNullableCompound:
-                    {
-                        RemoveElementButtonVisibility = Visibility.Collapsed;
-                        AddElementButtonVisibility = Visibility.Visible;
-                        Children.Clear();
-                        int startLineNumber = StartLine.LineNumber;
-                        if (startLineNumber - 1 > 0)
-                        {
-                            DocumentLine lastLine = Plan.GetLineByNumber(startLineNumber - 1);
-                            if (DataType is DataTypes.OptionalCompound)
-                            {
-                                Plan.DeleteAllLinesInTheSpecifiedRange(this);
-                            }
-                            if (DataType is DataTypes.NullableCompound)
-                            {
-                                DocumentLine startLine = Plan.GetLineByNumber(startLineNumber);
-                                string startLineText = Plan.GetRangeText(startLine.Offset, startLine.EndOffset - startLine.Offset);
-                                string endLineText = Plan.GetRangeText(EndLine.Offset, EndLine.EndOffset - EndLine.Offset);
-                                int startIndex = startLineText.IndexOf('{') + 1;
-                                int endIndex = endLineText.LastIndexOf('}');
-                                Plan.DeleteAllLinesInTheSpecifiedRange(startLine.Offset + startIndex, EndLine.Offset + endIndex);
-                            }
-                            StartLineNumber = EndLineNumber = 0;
-                            if (DataType is DataTypes.OptionalCompound)
-                                StartLine = EndLine = lastLine;
-                            else
-                                EndLine = StartLine;
-                        }
-                        break;
-                    }
-                case DataTypes.ArrayElement:
-                    {
-                        JsonItemTool.RemoveSubStructure(this, Plan);
-                        break;
-                    }
-                case DataTypes.InnerArray:
-                    {
-                        break;
-                    }
-            }
-        }
+        public void RemoveSubStructure_Click(object sender, RoutedEventArgs e) => JsonItemTool.RemoveSubStructure(this);
 
         /// <summary>
         /// 向上移动数组元素节点

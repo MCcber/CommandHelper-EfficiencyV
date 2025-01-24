@@ -32,13 +32,13 @@ namespace cbhk.Interface.Json
         /// 添加数组元素
         /// </summary>
         /// <param name="compoundJsonTreeViewItem">数组节点</param>
-        void AddSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem,UIElement element);
+        void AddSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
         /// 删除数组元素
         /// </summary>
         /// <param name="compoundJsonTreeViewItem">当前数组节点</param>
         /// <param name="customWorldUnifiedPlan">当前自定义世界生成器方案实例</param>
-        void RemoveSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem,ICustomWorldUnifiedPlan customWorldUnifiedPlan);
+        void RemoveSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
         /// 更新平铺列表
         /// </summary>

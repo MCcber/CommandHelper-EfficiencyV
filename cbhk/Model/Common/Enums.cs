@@ -12,7 +12,6 @@
         {
             Input,
             AddCompoundObject,
-            AddCompoundObjectToEnd,
             AddArrayElement,
             AddArrayElementToEnd,
             RemoveCompound,

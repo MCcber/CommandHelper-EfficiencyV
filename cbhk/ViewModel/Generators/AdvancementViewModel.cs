@@ -21,6 +21,7 @@ using cbhk.View;
 using System.Collections.ObjectModel;
 using cbhk.Model.Common;
 using cbhk.GeneralTools;
+using System.Net.NetworkInformation;
 
 namespace cbhk.ViewModel.Generators
 {
@@ -207,7 +208,7 @@ namespace cbhk.ViewModel.Generators
             textEditor.Document.Insert(endOffset, newValue);
         }
 
-        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item, ChangeType changeType, string newValue = "", bool haveNextNode = true)
+        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item, ChangeType changeType, string newValue = "")
         {
             #region 初始化
             DocumentLine startDocumentLine = null;
@@ -238,6 +239,20 @@ namespace cbhk.ViewModel.Generators
                 {
                     case ChangeType.Input:
                         {
+                            int index = startLineText.IndexOf(':') + 2;
+                            offset = startDocumentLine.Offset + index;
+                            if (startLineText.TrimEnd().EndsWith(','))
+                            {
+                                length = startLineText.LastIndexOf(',') - index;
+                            }
+                            else
+                            {
+                                length = startDocumentLine.EndOffset - startDocumentLine.Offset - index - 1;
+                            }
+                            if(item.DataType is DataTypes.String || (item is CompoundJsonTreeViewItem compoundItem && compoundItem.DataType is DataTypes.Enum))
+                            {
+                                newValue = "\"" + newValue + "\"";
+                            }
                             break;
                         }
                     case ChangeType.AddCompoundObject:
@@ -246,16 +261,23 @@ namespace cbhk.ViewModel.Generators
                             offset = startDocumentLine.Offset + index;
                             break;
                         }
-                    case ChangeType.AddCompoundObjectToEnd:
-                        {
-                            break;
-                        }
                     case ChangeType.AddArrayElement:
                         {
+                            int index = startLineText.IndexOf('[') + 1;
+                            offset = startDocumentLine.Offset + index;
                             break;
                         }
                     case ChangeType.AddArrayElementToEnd:
                         {
+                            JsonTreeViewItem lastItem = (item as CompoundJsonTreeViewItem).Children[^1];
+                            if (lastItem is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
+                            {
+                                offset = lastCompoundItem.EndLine.EndOffset;
+                            }
+                            else
+                            {
+                                offset = lastItem.StartLine.EndOffset;
+                            }
                             break;
                         }
                     case ChangeType.RemoveCompound:
