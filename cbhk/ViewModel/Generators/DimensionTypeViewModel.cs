@@ -200,7 +200,7 @@ namespace cbhk.ViewModel.Generators
             textEditor.Document.Insert(endOffset, newValue);
         }
 
-        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item, ChangeType replaceType, string newValue = "", bool markValue = true)
+        public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item, ChangeType replaceType, string newValue = "")
         {
             #region 初始化
             DocumentLine startDocumentLine = null;
