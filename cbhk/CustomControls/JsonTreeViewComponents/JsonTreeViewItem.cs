@@ -2,7 +2,6 @@
 using cbhk.Interface.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
-using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,7 +10,7 @@ using static cbhk.Model.Common.Enums;
 
 namespace cbhk.CustomControls.JsonTreeViewComponents
 {
-    public partial class JsonTreeViewItem : ObservableObject, ICloneable
+    public partial class JsonTreeViewItem : ObservableObject
     {
         #region Property
         [ObservableProperty]
@@ -247,11 +246,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         public SolidColorBrush _verifyBrush = Brushes.Gray;
 
         /// <summary>
-        /// 起始行号
-        /// </summary>
-        public int StartLineNumber { get; set; }
-
-        /// <summary>
         /// 起始行
         /// </summary>
         public DocumentLine StartLine { get; set; }
@@ -355,47 +349,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 string currentValue = ((bool)Value).ToString().ToLower();
                 customWorldUnifiedPlan.UpdateValueBySpecifyingInterval(this, ChangeType.Input, currentValue);
             }
-        }
-
-        public object Clone()
-        {
-            #region 处理各类属性
-            JsonTreeViewItem result = new()
-            {
-                StartLineNumber = StartLineNumber,
-                StartLine = StartLine,
-                CurrentValueType = CurrentValueType,
-                DataType = DataType,
-                DisplayText = DisplayText,
-                EnumItemsSource = EnumItemsSource,
-                ErrorTipIcon = ErrorTipIcon,
-                ErrorTiptext = ErrorTiptext,
-                InfoTipIcon = InfoTipIcon,
-                InfoTiptext = InfoTiptext,
-                InputBoxVisibility = InputBoxVisibility,
-                ErrorIconVisibility = ErrorIconVisibility,
-                InfoIconVisibility = InfoIconVisibility,
-                IsFalse = IsFalse,
-                IsTrue = IsTrue,
-                Key = Key,
-                Previous = Previous,
-                Next = Next,
-                LayerCount = LayerCount,
-                Magnification = Magnification,
-                MaxValue = MaxValue,
-                MinValue = MinValue,
-                MultiplierMode = MultiplierMode,
-                Parent = Parent,
-                Path = Path,
-                JsonItemTool = JsonItemTool,
-                Plan = Plan,
-                RangeType = RangeType,
-                SelectedEnumItem = SelectedEnumItem,
-                Value = Value
-            };
-            #endregion
-
-            return result;
         }
         #endregion
     }

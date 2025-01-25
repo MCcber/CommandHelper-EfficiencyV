@@ -196,7 +196,7 @@ namespace cbhk.GeneralTools
                     List<string> nodeContent = [.. treeviewDivs[0].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
                     nodeContent = TypeSetting(nodeContent);
 
-                    JsonTreeViewDataStructure resultData = GetTreeViewItemResult(new(), nodeContent, 2, 1);
+                    JsonTreeViewDataStructure resultData = GetTreeViewItemResult(new(), nodeContent, 1);
                     Result.Result.AddRange(resultData.Result);
                     Result.ResultString.Append(resultData.ResultString);
                 }
@@ -219,7 +219,7 @@ namespace cbhk.GeneralTools
         /// <param name="isProcessingCommonTemplate">是否正在处理模板</param>
         /// <param name="previousStarCount">前一个节点星号数量</param>
         /// <returns></returns>
-        public JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int lineNumber, int layerCount, string currentReferenceKey = "", CompoundJsonTreeViewItem parent = null, JsonTreeViewItem previous = null, int previousStarCount = 1, bool isAddToParent = false)
+        public JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int layerCount, string currentReferenceKey = "", CompoundJsonTreeViewItem parent = null, JsonTreeViewItem previous = null, int previousStarCount = 1, bool isAddToParent = false)
         {
             List<string> NBTFeatureList = [];
             bool isNeedCloseCurlyBrackets = true;
@@ -296,7 +296,6 @@ namespace cbhk.GeneralTools
                 #region 声明当前节点
                 JsonTreeViewItem item = new()
                 {
-                    StartLineNumber = lineNumber,
                     LayerCount = layerCount,
                     IsCanBeDefaulted = IsCurrentOptionalNode
                 };
@@ -318,7 +317,7 @@ namespace cbhk.GeneralTools
                     #region 判断是否为复合节点
                     if (NBTFeatureList[^2] == "compound" || NBTFeatureList[^2] == "list" || NBTFeatureList[^2] == "array")
                     {
-                        item = new CompoundJsonTreeViewItem(plan, jsonTool);
+                        item = new CompoundJsonTreeViewItem(plan, jsonTool,_container);
                         IsSimpleItem = false;
                     }
                     #endregion
@@ -368,7 +367,7 @@ namespace cbhk.GeneralTools
                                     int EnumKeyCount = EnumKeyList.Where(item => nodeList[i].Contains(item)).Count();
                                     if (EnumKeyCount > 0)
                                     {
-                                        item = new CompoundJsonTreeViewItem(plan, jsonTool);
+                                        item = new CompoundJsonTreeViewItem(plan, jsonTool,_container);
                                         (item as CompoundJsonTreeViewItem).DataType = item.DataType = DataTypes.Enum;
                                     }
                                     else
@@ -610,7 +609,6 @@ namespace cbhk.GeneralTools
                         {
                             CurrentCompoundItem.DisplayText = string.Join(' ', currentNodeKey.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..]));
                         }
-                        CurrentCompoundItem.StartLineNumber = CurrentCompoundItem.EndLineNumber = lineNumber;
                         CurrentCompoundItem.LayerCount = layerCount;
                         if (CurrentCompoundItem.ValueTypeList.Count > 0)
                         {
@@ -791,7 +789,7 @@ namespace cbhk.GeneralTools
                                     #endregion
 
                                     #region 根据递归的情况来向后移动N个迭代单位
-                                    if (currentSubChildren.Count > 0 && i > 0)
+                                    if (currentSubChildren.Count > 0 && !isAddToParent)
                                     {
                                         i = nextNodeIndex - 1;
                                     }
@@ -800,7 +798,7 @@ namespace cbhk.GeneralTools
                                     #region 是否存储原始信息、处理递归
                                     if (!IsCurrentOptionalNode && i == 0)
                                     {
-                                        JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), currentSubChildren, lineNumber, layerCount + 1, currentReferenceKey, CurrentCompoundItem, previous, previousStarCount);
+                                        JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), currentSubChildren, layerCount + 1, currentReferenceKey, CurrentCompoundItem, previous, previousStarCount);
                                         string subResultString = subResult.ResultString.ToString().TrimEnd(['\r', '\n', ',']);
                                         subResult.ResultString.Clear();
                                         subResult.ResultString.Append(subResultString);
@@ -809,9 +807,8 @@ namespace cbhk.GeneralTools
                                         if (subResult.ResultString.Length > 0 && (!subResult.HaveReferenceContent || CurrentCompoundItem.DataType is DataTypes.CustomCompound || CurrentCompoundItem.DataType is DataTypes.Compound))
                                         {
                                             result.ResultString.Append("\r\n" + subResult.ResultString + "\r\n" + new string(' ', layerCount * 2) + "}\r\n");
-                                            isNeedCloseCurlyBrackets = false;
                                         }
-                                        else
+                                        else//复合节点收尾
                                         {
                                             if (CurrentCompoundItem.Children.Count == 0)
                                             {
@@ -863,19 +860,6 @@ namespace cbhk.GeneralTools
                         }
                         #endregion
                     }
-
-                    #region 清除可选节点的行号
-                    if (item is CompoundJsonTreeViewItem compoundJsonItem && IsCurrentOptionalNode)
-                    {
-                        compoundJsonItem.StartLineNumber = compoundJsonItem.EndLineNumber = 0;
-                    }
-                    else
-                        if (IsCurrentOptionalNode)
-                    {
-                        item.StartLineNumber = 0;
-                    }
-                    #endregion
-
                     #endregion
                 }
 
@@ -898,19 +882,14 @@ namespace cbhk.GeneralTools
                 previous = item;
                 //保存当前的*号数量
                 previousStarCount = starCount;
-                //行号加1
-                if (!IsCurrentOptionalNode)
-                {
-                    lineNumber++;
-                }
                 #endregion
             }
 
             #region 复合节点收尾
-            if (result.Result.Count > 0 && result.Result[^1] is CompoundJsonTreeViewItem compound && compound.DataType is DataTypes.Compound && isNeedCloseCurlyBrackets)
-            {
-                result.ResultString.Append('}');
-            }
+            //if (result.Result.Count > 0 && result.Result[^1] is CompoundJsonTreeViewItem compound && compound.DataType is DataTypes.Compound && isNeedCloseCurlyBrackets)
+            //{
+            //    result.ResultString.Append('}');
+            //}
             #endregion
 
             return result;

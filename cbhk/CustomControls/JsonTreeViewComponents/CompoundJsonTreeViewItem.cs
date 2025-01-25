@@ -1,10 +1,13 @@
 ﻿using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using cbhk.Interface.Json;
+using cbhk.Model.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
+using Prism.Ioc;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using static cbhk.Model.Common.Enums;
@@ -14,14 +17,13 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
     public partial class CompoundJsonTreeViewItem : JsonTreeViewItem
     {
         #region Property
-        public bool IsCloning { get; set; } = false;
         public int EndLineNumber { get; set; }
         public DocumentLine EndLine { get; set; }
 
         /// <summary>
         /// 枚举键
         /// </summary>
-        public string EnumKey = "";
+        public string EnumKey { get; set; } = "";
 
         private bool isCanSort = false;
 
@@ -118,7 +120,11 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         public ObservableCollection<TextComboBoxItem> ValueTypeList { get; set; } = [];
         #endregion
 
-        #region Events
+        #region Field
+        private IContainerProvider _container;
+        #endregion
+
+        #region Event
         /// <summary>
         /// 节点成员载入
         /// </summary>
@@ -137,80 +143,85 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// <param name="e"></param>
         public void EnumType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            #region 初始化变量
-            int CurrentStartLineNumber = 0;
-            if (!StartLine.IsDeleted)
-                CurrentStartLineNumber = StartLine.LineNumber;
+            #region 替换当前枚举节点的值
+            if (StartLine is null)
+            {
+                #region 定位上一个已有值的节点
+                JsonTreeViewItem previous = Previous;
+                while (previous is not null && previous.StartLine is null)
+                {
+                    if (previous.Previous is null)
+                    {
+                        break;
+                    }
+                    previous = previous.Previous;
+                }
+                #endregion
+
+                if(previous is not null)
+                {
+                    Plan.UpdateNullValueBySpecifyingInterval(previous.StartLine.EndOffset, "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\":\"" + SelectedEnumItem.Text + "\"");
+                }
+                else
+                if(Parent is not null)
+                {
+                    DocumentLine parentStartLine = Plan.GetLineByNumber(Parent.StartLine.LineNumber);
+                    if(Parent.StartLine == Parent.EndLine || Parent.EndLine is null)
+                    {
+                        string parentStartLineText = Plan.GetRangeText(parentStartLine.Offset, parentStartLine.EndOffset - parentStartLine.Offset);
+                        int index = parentStartLineText.IndexOf('{') + 1;
+                        Plan.SetRangeText(index, 0, "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\":\"" + SelectedEnumItem.Text + "\"");
+                    }
+                }
+                else
+                {
+                    Plan.SetRangeText(1, 0, "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\":\"" + SelectedEnumItem.Text + "\"");
+                }
+            }
+            else
+            {
+                string currentLineText = Plan.GetRangeText(StartLine.Offset, StartLine.EndOffset - StartLine.Offset);
+                int colonIndex = currentLineText.IndexOf(':') + 2;
+                int length = 0;
+                if(currentLineText.TrimEnd().EndsWith(','))
+                {
+                    length = currentLineText.TrimEnd().LastIndexOf(',') - colonIndex;
+                }
+                else
+                {
+                    length = currentLineText.Length - colonIndex;
+                }
+
+                bool isNotStringType = false;
+                string quotationMarks = "\"";
+
+                isNotStringType = bool.TryParse(SelectedEnumItem.Text, out bool boolValue) || decimal.TryParse(SelectedEnumItem.Text, out decimal decimalValue);
+                if(isNotStringType)
+                {
+                    quotationMarks = "";
+                }
+
+                if (colonIndex > 0)
+                {
+                    Plan.SetRangeText(StartLine.Offset + colonIndex, length, quotationMarks + SelectedEnumItem.Text + quotationMarks);
+                }
+            }
             #endregion
 
-            #region 处理分支或直接赋值
-            //当有分支子级时
-            if (ChildrenStringList.Count > 0)
+            #region 判断是否需要应用枚举结构
+            if (EnumKey.Length > 0)
             {
-                int index = -1;
-
-                //#region 确认当前选中的枚举类型是否为当前复合节点的默认类型并处理后续
-                //index = JsonItemTool.SetDefaultStructureJsonItem(this, OptionalChildrenString);
-                //if (index > -1)
-                //{
-                //    #region 为SwitchKey与CompoundHead赋值
-                //    CompoundJsonTreeViewItem CurrentBranch = SwitchChildren[index] as CompoundJsonTreeViewItem;
-                //    CompoundHead = SwitchKey = "";
-                //    Plan.UpdateCompoundHeadAndSwitchKey(CurrentBranch, this);
-                //    if (SwitchChildren[index].Value is not null)
-                //        Value = CurrentBranch.Value;
-                //    else
-                //        Value = CurrentBranch.DefaultValue;
-                //    #endregion
-
-                //    #region 克隆模板中的成员为实例成员，然后整理结构数据，清空平铺列表
-                //    FlattenDescendantNodeList.Clear();
-                //    CurrentBranch.JsonItemTool = JsonItemTool;
-                //    CurrentBranch.Plan = Plan;
-                //    Children = ((SwitchChildren[index] as CompoundJsonTreeViewItem).Clone() as CompoundJsonTreeViewItem).Children;
-                //    Children = TreeViewRuleReader.RecursivelyUpdateMemberLayer(this, Plan.KeyValueContextDictionary, Children, StartLine.LineNumber + 1, LayerCount + 1);
-                //    Children = JsonItemTool.SetSwitchChildrenOfSubItem(Children, this, this);
-                //    #endregion
-
-                //    #region 遍历子级节点，寻找值模板类型，填充SwitchChildren
-                //    JsonItemTool.SetEnumData(Children, null, this);
-                //    #endregion
-
-                //    #region 更新右侧Json视图、计算新的行尾对象、更新当前值
-                //    string space = new(' ', LayerCount * 2);
-                //    string currentValue = "{" + JsonItemTool.RecursiveIntegrationOfSubstructureValuesWhenSwitch(this, Children, (DataType is DataTypes.ValueProvider || DataType is DataTypes.EnumCompound) ? this : Parent).ToString() + space + "}";
-                //    int newCount = Regex.Matches(currentValue, @"\r\n").Count;
-                //    if (CurrentStartLineNumber == 0)
-                //        CurrentStartLineNumber = 1;
-
-                //    #region 执行替换前再次复检末尾行是否被删除
-                //    if (EndLine.IsDeleted)
-                //    {
-                //        EndLine = StartLine;
-                //    }
-                //    #endregion
-
-                //    Plan.UpdateValueBySpecifyingInterval(this, ChangeType.Compound, currentValue);
-                //    JsonItemTool.SetDocumentLineByNumber(Children);
-                //    JsonItemTool.UpdateFlattenDescendantNodeList(this, Children);
-                //    EndLine = Plan.GetLineByNumber(CurrentStartLineNumber + newCount);
-                //    Value = currentValue;
-                //    InputBoxVisibility = Visibility.Collapsed;
-                //    #endregion
-
-                //}
-                //else
-                //{
-                //    #region 清除子级，更新显示内容，更新Json视图
-                //    Children.Clear();
-                //    InputBoxVisibility = InfoIconVisibility = EnumBoxVisibility = Visibility.Visible;
-                //    Plan.UpdateValueBySpecifyingInterval(this, ChangeType.Compound, DefaultValue is null ? "0" : (string)DefaultValue);
-                //    #endregion
-                //}
-                //#endregion
+                if (Plan.EnumCompoundDataDictionary.TryGetValue(EnumKey, out Dictionary<string, List<string>> targetDependencyDictionary) && targetDependencyDictionary.TryGetValue(SelectedEnumItem.Text, out List<string> targetRawList))
+                {
+                    HtmlHelper htmlHelper = _container.Resolve<HtmlHelper>();
+                    htmlHelper.plan = Plan;
+                    htmlHelper.jsonTool = JsonItemTool;
+                    JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), targetRawList, LayerCount);
+                    Parent.Children.AddRange(result.Result);
+                    Plan.SetRangeText(StartLine.EndOffset, 0, ",\r\n"+ result.ResultString.ToString());
+                    JsonItemTool.SetLineNumbersForEachItem(result.Result, Parent, true);
+                }
             }
-            else//没有时直接当作枚举类型执行
-                Plan.UpdateValueBySpecifyingInterval(this, ChangeType.Input, "\"" + SelectedEnumItem.Text + "\"");
             #endregion
 
             oldSelectedEnumItem = SelectedEnumItem;
@@ -252,10 +263,11 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         #endregion
 
         #region Methods
-        public CompoundJsonTreeViewItem(ICustomWorldUnifiedPlan plan, IJsonItemTool jsonItemTool)
+        public CompoundJsonTreeViewItem(ICustomWorldUnifiedPlan plan, IJsonItemTool jsonItemTool,IContainerProvider containerProvider)
         {
             Plan = plan;
             JsonItemTool = jsonItemTool;
+            _container = containerProvider;
         }
 
         /// <summary>
@@ -288,22 +300,22 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             #endregion
 
             #region 提前保存子结构节点集的旧行号
-            foreach (var item in FlattenDescendantNodeList)
-            {
-                item.StartLineNumber = item.StartLine.LineNumber;
-                if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
-                {
-                    compoundJsonTreeViewItem.EndLineNumber = compoundJsonTreeViewItem.EndLine.LineNumber;
-                }
-            }
-            foreach (var item in nearbyItem.FlattenDescendantNodeList)
-            {
-                item.StartLineNumber = item.StartLine.LineNumber;
-                if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
-                {
-                    compoundJsonTreeViewItem.EndLineNumber = compoundJsonTreeViewItem.EndLine.LineNumber;
-                }
-            }
+            //foreach (var item in FlattenDescendantNodeList)
+            //{
+            //    item.StartLineNumber = item.StartLine.LineNumber;
+            //    if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
+            //    {
+            //        compoundJsonTreeViewItem.EndLineNumber = compoundJsonTreeViewItem.EndLine.LineNumber;
+            //    }
+            //}
+            //foreach (var item in nearbyItem.FlattenDescendantNodeList)
+            //{
+            //    item.StartLineNumber = item.StartLine.LineNumber;
+            //    if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
+            //    {
+            //        compoundJsonTreeViewItem.EndLineNumber = compoundJsonTreeViewItem.EndLine.LineNumber;
+            //    }
+            //}
             #endregion
 
             #region 计算偏移与标记
@@ -399,8 +411,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             #region 更新子结构中所有节点的行引用并更新当前元素与邻近元素的行引用
             foreach (var item in FlattenDescendantNodeList)
             {
-                item.StartLine = item.Plan.GetLineByNumber(item.StartLineNumber + (IsDown ? span : -span));
-                item.StartLineNumber = 0;
+                item.StartLine = item.Plan.GetLineByNumber(item.StartLine.LineNumber + (IsDown ? span : -span));
                 if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
                 {
                     compoundJsonTreeViewItem.EndLine = item.Plan.GetLineByNumber(compoundJsonTreeViewItem.EndLineNumber + (IsDown ? span : -span));
@@ -409,8 +420,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             }
             foreach (var item in nearbyItem.FlattenDescendantNodeList)
             {
-                item.StartLine = item.Plan.GetLineByNumber(item.StartLineNumber - (IsDown ? nearbySpan : -nearbySpan));
-                item.StartLineNumber = 0;
+                item.StartLine = item.Plan.GetLineByNumber(item.StartLine.LineNumber - (IsDown ? nearbySpan : -nearbySpan));
                 if (item is CompoundJsonTreeViewItem nearbyCompoundJsonTreeViewItem)
                 {
                     nearbyCompoundJsonTreeViewItem.EndLine = item.Plan.GetLineByNumber(nearbyCompoundJsonTreeViewItem.EndLineNumber - (IsDown ? nearbySpan : -nearbySpan));

@@ -48,6 +48,10 @@ namespace cbhk.ViewModel.Generators
         public Dictionary<string, List<string>> CurrentDependencyItemList { get; set; } = [];
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; }
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; }
+
+        public Dictionary<string, List<string>> DefaultListSource { get; set; } = [];
+
+        public Dictionary<string, List<string>> DefaultCompoundSource { get; set; } = [];
         #endregion
 
         public DimensionTypeViewModel(IContainerProvider container, MainView mainView)
@@ -87,12 +91,7 @@ namespace cbhk.ViewModel.Generators
                     DimensionTypeItemList = result.Result;
                     textEditor.Text = "{\r\n" + result.ResultString.ToString() + "\r\n}";
 
-                    foreach (var item in result.Result)
-                    {
-                        item.JsonItemTool = jsonTool;
-                        item.JsonItemTool.SetDocumentLineByLineNumber(item, textEditor);
-                        KeyValueContextDictionary.TryAdd(item.Path, item);
-                    }
+                    jsonTool.SetLineNumbersForEachItem(result.Result, null);
 
                     //为代码编辑器安装大纲管理器
                     foldingManager = FoldingManager.Install(textEditor.TextArea);

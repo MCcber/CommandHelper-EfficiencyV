@@ -23,11 +23,12 @@ namespace cbhk.Interface.Json
         /// <param name="action"></param>
         void RecursiveTraverseAndRunOperate(ObservableCollection<JsonTreeViewItem> jsonItemList,Action<JsonTreeViewItem> action);
         /// <summary>
-        /// 通过行号设置DocumentLine实例
+        /// 设置每个成员的行引用
         /// </summary>
-        /// <param name="jsonTreeViewItem">当前节点</param>
-        /// <param name="textEditor">节点所在的代码编辑器</param>
-        void SetDocumentLineByLineNumber(JsonTreeViewItem jsonTreeViewItem, TextEditor textEditor);
+        /// <param name="list"></param>
+        /// <param name="parent"></param>
+        /// <param name="withType"></param>
+        public void SetLineNumbersForEachItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem parent,bool withType = false);
         /// <summary>
         /// 添加数组元素
         /// </summary>

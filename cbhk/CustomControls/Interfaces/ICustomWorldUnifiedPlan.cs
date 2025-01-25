@@ -9,6 +9,14 @@ namespace cbhk.CustomControls.Interfaces
     public interface ICustomWorldUnifiedPlan
     {
         /// <summary>
+        /// 默认列表资源
+        /// </summary>
+        public Dictionary<string,List<string>> DefaultListSource { get; set; }
+        /// <summary>
+        /// 默认复合资源
+        /// </summary>
+        public Dictionary<string, List<string>> DefaultCompoundSource { get; set; }
+        /// <summary>
         /// 识别特定结构的字典
         /// </summary>
         public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; }

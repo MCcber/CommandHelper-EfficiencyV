@@ -21,7 +21,6 @@ using cbhk.View;
 using System.Collections.ObjectModel;
 using cbhk.Model.Common;
 using cbhk.GeneralTools;
-using System.Net.NetworkInformation;
 
 namespace cbhk.ViewModel.Generators
 {
@@ -35,6 +34,18 @@ namespace cbhk.ViewModel.Generators
         private FoldingManager foldingManager = null;
         private IContainerProvider _container;
         JsonTreeViewItemExtension jsonTool = null;
+        #endregion
+
+        #region Property
+        [ObservableProperty]
+        public ObservableCollection<JsonTreeViewItem> _advancementItemList = [];
+
+        public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
+        public Dictionary<string, List<string>> CurrentDependencyItemList { get; set; } = [];
+
+        public Dictionary<string, List<string>> DefaultListSource { get; set; } = [];
+
+        public Dictionary<string, List<string>> DefaultCompoundSource { get; set; } = [];
 
         public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; } = new()
         {
@@ -44,17 +55,6 @@ namespace cbhk.ViewModel.Generators
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; } = [];
 
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; } = [];
-
-
-        public ObservableCollection<JsonTreeViewItem> AdvancementTreeViewItemList = [];
-        #endregion
-
-        #region Property
-        [ObservableProperty]
-        public ObservableCollection<JsonTreeViewItem> _advancementItemList = [];
-
-        public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
-        public Dictionary<string, List<string>> CurrentDependencyItemList { get; set; } = [];
         #endregion
 
         public AdvancementViewModel(IContainerProvider container, MainView mainView)
@@ -94,12 +94,7 @@ namespace cbhk.ViewModel.Generators
                 {
                     JsonTreeViewDataStructure result = _htmlHelper.AnalyzeHTMLData(configDirectoryPath);
                     textEditor.Text = "{\r\n" + result.ResultString.ToString().TrimEnd([',', '\r', '\n']) + "\r\n}";
-                    foreach (var item in result.Result)
-                    {
-                        item.JsonItemTool = jsonTool;
-                        item.JsonItemTool.SetDocumentLineByLineNumber(item, textEditor);
-                        KeyValueContextDictionary.TryAdd(item.Path, item);
-                    }
+                    jsonTool.SetLineNumbersForEachItem(result.Result, null);
                     AdvancementItemList = result.Result;
 
                     //为代码编辑器安装大纲管理器
@@ -341,7 +336,11 @@ namespace cbhk.ViewModel.Generators
 
         public DocumentLine GetLineByNumber(int lineNumber)
         {
-            return textEditor.Document.GetLineByNumber(lineNumber);
+            if (lineNumber <= textEditor.Document.LineCount)
+            {
+                return textEditor.Document.GetLineByNumber(lineNumber);
+            }
+            return null;
         }
 
         public string GetRangeText(int startOffset, int length)
