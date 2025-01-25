@@ -247,7 +247,7 @@ namespace cbhk.GeneralTools
         {
             IRelayCommand result = id switch
             {
-                "Advancement" =>function.StartAdvancementGeneratorCommand,
+                "Advancements" =>function.StartAdvancementGeneratorCommand,
                 "Ooc" => function.StartOnlyOneCommandGeneratorCommand,
                 "Datapack" => function.StartDatapacksGeneratorCommand,
                 "Armorstand" => function.StartArmorStandsGeneratorCommand,
