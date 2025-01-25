@@ -168,7 +168,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                     connectorSymbol = ",\r\n";
                 }
                 else
-                if(compoundJsonTreeViewItem.DataType is DataTypes.Compound && compoundJsonTreeViewItem.InputBoxVisibility is Visibility.Visible)
+                if(compoundJsonTreeViewItem.DataType is DataTypes.Compound && compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine)
                 {
                     connectorSymbol = "\r\n";
                 }
