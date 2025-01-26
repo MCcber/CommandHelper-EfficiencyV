@@ -3,6 +3,7 @@ using cbhk.CustomControls.Interfaces;
 using cbhk.CustomControls.JsonTreeViewComponents;
 using cbhk.Interface.Json;
 using cbhk.Model.Common;
+using DryIoc;
 using HtmlAgilityPack;
 using Prism.Ioc;
 using System;
@@ -222,7 +223,6 @@ namespace cbhk.GeneralTools
         public JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int layerCount, string currentReferenceKey = "", CompoundJsonTreeViewItem parent = null, JsonTreeViewItem previous = null, int previousStarCount = 1, bool isAddToParent = false)
         {
             List<string> NBTFeatureList = [];
-            bool isNeedCloseCurlyBrackets = true;
 
             //遍历找到的 div 标签内容集合
             for (int i = 0; i < nodeList.Count; i++)
@@ -315,7 +315,7 @@ namespace cbhk.GeneralTools
                 if (IsCanBeAnalyzed)
                 {
                     #region 判断是否为复合节点
-                    if (NBTFeatureList[^2] == "compound" || NBTFeatureList[^2] == "list" || NBTFeatureList[^2] == "array")
+                    if (NBTFeatureList.Contains("compound") || NBTFeatureList.Contains("list") || NBTFeatureList.Contains("array"))
                     {
                         item = new CompoundJsonTreeViewItem(plan, jsonTool,_container);
                         IsSimpleItem = false;
@@ -334,6 +334,52 @@ namespace cbhk.GeneralTools
                                     Text = NBTFeatureList[j][0].ToString().ToUpper() + NBTFeatureList[j][1..]
                                 });
                             }
+                            compoundJsonTreeViewItem.CurrentValueType ??= compoundJsonTreeViewItem.ValueTypeList[0];
+                            item.DataType = compoundJsonTreeViewItem.DataType = DataTypes.MultiType;
+                            result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentNodeKey + "\": ");
+                            switch (NBTFeatureList[0])
+                            {
+                                case "bool":
+                                    {
+                                        result.ResultString.Append("false");
+                                        compoundJsonTreeViewItem.BoolButtonVisibility = Visibility.Visible;
+                                        break;
+                                    }
+                                case "byte":
+                                case "short":
+                                case "int":
+                                case "float":
+                                case "double":
+                                case "long":
+                                case "decimal":
+                                    {
+                                        result.ResultString.Append('0');
+                                        compoundJsonTreeViewItem.InputBoxVisibility = Visibility.Visible;
+                                        break;
+                                    }
+                                case "string":
+                                    {
+                                        result.ResultString.Append("\"\"");
+                                        compoundJsonTreeViewItem.InputBoxVisibility = Visibility.Visible;
+                                        break;
+                                    }
+                                case "compound":
+                                    {
+                                        result.ResultString.Append("{");
+                                        break;
+                                    }
+                                case "list":
+                                    {
+                                        result.ResultString.Append("[]");
+                                        break;
+                                    }
+                            }
+                            if (NBTFeatureList[0].Contains("array"))
+                            {
+                                result.ResultString.Append("[]");
+                            }
+                            compoundJsonTreeViewItem.SwitchBoxVisibility = Visibility.Visible;
+                            compoundJsonTreeViewItem.AddElementButtonVisibility = Visibility.Collapsed;
                         }
                     }
                     else
@@ -557,17 +603,11 @@ namespace cbhk.GeneralTools
                         #region 处理不同行为的复合型数据
 
                         #region 确定数据类型
-                        CurrentCompoundItem.AddElementButtonVisibility = CurrentCompoundItem.DataType is DataTypes.Compound || CurrentCompoundItem.DataType is DataTypes.OptionalCompound || CurrentCompoundItem.DataType is DataTypes.NullableCompound ? Visibility.Visible : Visibility.Collapsed;
+                        CurrentCompoundItem.AddElementButtonVisibility = NBTFeatureList[0] == "compound" || NBTFeatureList[0] == "list" || NBTFeatureList[0].Contains("array") ? Visibility.Visible : Visibility.Collapsed;
                         if (CurrentCompoundItem.AddElementButtonVisibility is Visibility.Visible)
                         {
                             CurrentCompoundItem.ElementButtonTip = "展开";
                         }
-
-                        if(NBTFeatureList.Count > 2)
-                        {
-                            CurrentCompoundItem.DataType = DataTypes.MultiType;
-                        }
-                        else
                         if (currentNodeDataType == "compound")
                         {
                             if (GetIsCanNullableKey().Match(nodeList[i]).Success)
@@ -610,10 +650,6 @@ namespace cbhk.GeneralTools
                             CurrentCompoundItem.DisplayText = string.Join(' ', currentNodeKey.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..]));
                         }
                         CurrentCompoundItem.LayerCount = layerCount;
-                        if (CurrentCompoundItem.ValueTypeList.Count > 0)
-                        {
-                            CurrentCompoundItem.CurrentValueType ??= CurrentCompoundItem.ValueTypeList[0];
-                        }
                         if (currentNodeKey is not null && currentNodeKey.Length > 0 && !IsCurrentOptionalNode)
                         {
                             if (CurrentCompoundItem.DataType is DataTypes.Array || CurrentCompoundItem.DataType is DataTypes.List)
@@ -627,35 +663,6 @@ namespace cbhk.GeneralTools
                                 CurrentCompoundItem.DataType is DataTypes.CustomCompound) && (parent is null || (parent is not null && parent.DataType is not DataTypes.CustomCompound)))
                             {
                                 result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": {");
-                            }
-                            else
-                            if(CurrentCompoundItem.DataType is DataTypes.MultiType)
-                            {
-                                result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentNodeKey + "\": ");
-                                switch (NBTFeatureList[0])
-                                {
-                                    case "bool":
-                                        {
-                                            result.ResultString.Append("true");
-                                            break;
-                                        }
-                                    case "byte":
-                                    case "short":
-                                    case "int":
-                                    case "float":
-                                    case "double":
-                                    case "long":
-                                    case "decimal":
-                                        {
-                                            result.ResultString.Append("0");
-                                            break;
-                                        }
-                                    case "string":
-                                        {
-                                            result.ResultString.Append("\"\"");
-                                            break;
-                                        }
-                                }
                             }
                         }
                         #endregion
@@ -789,24 +796,27 @@ namespace cbhk.GeneralTools
                                     #endregion
 
                                     #region 根据递归的情况来向后移动N个迭代单位
-                                    if (currentSubChildren.Count > 0 && !isAddToParent)
+                                    if (currentSubChildren.Count > 0 /*&& !isAddToParent*/)
                                     {
                                         i = nextNodeIndex - 1;
                                     }
                                     #endregion
 
                                     #region 是否存储原始信息、处理递归
-                                    if (!IsCurrentOptionalNode && i == 0)
+                                    if ((!IsCurrentOptionalNode && currentSubChildren.Count == 0) || isAddToParent)
                                     {
                                         JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), currentSubChildren, layerCount + 1, currentReferenceKey, CurrentCompoundItem, previous, previousStarCount);
-                                        string subResultString = subResult.ResultString.ToString().TrimEnd(['\r', '\n', ',']);
-                                        subResult.ResultString.Clear();
-                                        subResult.ResultString.Append(subResultString);
+                                        if(CurrentCompoundItem.DataType is DataTypes.CustomCompound)
+                                        {
+                                            string subResultString = subResult.ResultString.ToString().TrimEnd(['\r', '\n', ',']);
+                                            subResult.ResultString.Clear();
+                                            subResult.ResultString.Append(subResultString);
+                                        }
                                         CurrentCompoundItem.Children.AddRange(subResult.Result);
 
                                         if (subResult.ResultString.Length > 0 && (!subResult.HaveReferenceContent || CurrentCompoundItem.DataType is DataTypes.CustomCompound || CurrentCompoundItem.DataType is DataTypes.Compound))
                                         {
-                                            result.ResultString.Append("\r\n" + subResult.ResultString + "\r\n" + new string(' ', layerCount * 2) + "}\r\n");
+                                            result.ResultString.Append("\r\n" + subResult.ResultString + "\r\n" + new string(' ', layerCount * 2) + "}");
                                         }
                                         else//复合节点收尾
                                         {
@@ -821,8 +831,9 @@ namespace cbhk.GeneralTools
                                         }
                                     }
                                     else
+                                    if(!IsCurrentOptionalNode)
                                     {
-                                        if ((NBTFeatureList[^2] == "compound" || NBTFeatureList[^2] == "list") && !IsCurrentOptionalNode)
+                                        if (NBTFeatureList[0] == "compound")
                                         {
                                             result.ResultString.Append('}');
                                         }
@@ -831,11 +842,7 @@ namespace cbhk.GeneralTools
                                     #endregion
 
                                     #region 判断后一个节点是否可选
-                                    if(isAddToParent && i == 0 && (NBTFeatureList[^2] == "compound" || NBTFeatureList[^2] == "list"))
-                                    {
-                                        i = nodeList.Count - 1;
-                                    }
-                                    IsHaveNextNode = i < nodeList.Count - 1 && !isAddToParent;
+                                    IsHaveNextNode = i < nodeList.Count - 1 /*&& !isAddToParent*/;
                                     if (IsHaveNextNode)
                                         IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
                                     #endregion
@@ -848,8 +855,10 @@ namespace cbhk.GeneralTools
                                     //没有子信息时，把自己的信息作为子信息，因为引用一定包含在当前行中
                                     if (CurrentCompoundItem.DataType is DataTypes.Compound || 
                                         CurrentCompoundItem.DataType is DataTypes.CustomCompound ||
-                                        CurrentCompoundItem.DataType is DataTypes.NullableCompound ||
+                                        CurrentCompoundItem.DataType is DataTypes.NullableCompound || 
                                         CurrentCompoundItem.DataType is DataTypes.OptionalCompound || 
+                                        CurrentCompoundItem.DataType is DataTypes.Array || 
+                                        CurrentCompoundItem.DataType is DataTypes.List || 
                                         NBTFeatureList.Contains("compound"))
                                     {
                                         CurrentCompoundItem.ChildrenStringList.Add(nodeList[i]);
@@ -857,6 +866,16 @@ namespace cbhk.GeneralTools
                                     IsNextOptionalNode = GetOptionalKey().Match(nodeList[i + 1]).Success;
                                 }
                             }
+                        }
+                        else
+                        if (NBTFeatureList[0] == "compound")
+                        {
+                            result.ResultString.Append("}\r\n");
+                        }
+                        else
+                        if(NBTFeatureList[0] == "list" || NBTFeatureList[0].Contains("array"))
+                        {
+                            result.ResultString.Append("]\r\n");
                         }
                         #endregion
                     }
@@ -884,13 +903,6 @@ namespace cbhk.GeneralTools
                 previousStarCount = starCount;
                 #endregion
             }
-
-            #region 复合节点收尾
-            //if (result.Result.Count > 0 && result.Result[^1] is CompoundJsonTreeViewItem compound && compound.DataType is DataTypes.Compound && isNeedCloseCurlyBrackets)
-            //{
-            //    result.ResultString.Append('}');
-            //}
-            #endregion
 
             return result;
         }

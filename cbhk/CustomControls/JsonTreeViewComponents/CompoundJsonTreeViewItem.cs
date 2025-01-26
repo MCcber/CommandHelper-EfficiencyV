@@ -74,7 +74,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         break;
                     case DataTypes.Bool:
                         BoolButtonVisibility = Visibility.Visible;
-                        InputBoxVisibility = Visibility.Collapsed;
                         break;
                     case DataTypes.NullableCompound:
                         RemoveElementButtonVisibility = Visibility.Visible;
@@ -83,11 +82,10 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         AddElementButtonVisibility = Visibility.Visible;
                         break;
                     case DataTypes.CustomCompound:
-                        AddElementButtonVisibility = InputBoxVisibility = Visibility.Visible;
+                        AddElementButtonVisibility = Visibility.Visible;
                         break;
                     case DataTypes.List:
                         AddElementButtonVisibility = Visibility.Visible;
-                        InputBoxVisibility = Visibility.Collapsed;
                         break;
                 }
             }
