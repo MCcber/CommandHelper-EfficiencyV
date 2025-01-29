@@ -52,6 +52,7 @@ namespace cbhk.ViewModel.Generators
         public Dictionary<string, List<string>> DefaultListSource { get; set; } = [];
 
         public Dictionary<string, List<string>> DefaultCompoundSource { get; set; } = [];
+        public Dictionary<string, string> TranslateDictionary { get; set; } = new() { };
         #endregion
 
         public DimensionTypeViewModel(IContainerProvider container, MainView mainView)

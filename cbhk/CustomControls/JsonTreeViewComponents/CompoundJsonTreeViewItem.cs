@@ -7,7 +7,6 @@ using ICSharpCode.AvalonEdit.Document;
 using Prism.Ioc;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using static cbhk.Model.Common.Enums;

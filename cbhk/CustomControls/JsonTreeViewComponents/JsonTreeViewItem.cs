@@ -137,9 +137,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             set => SetProperty(ref defaultValue, value);
         }
 
-        [ObservableProperty]
-        public DataTypes _defaultType = DataTypes.Input;
-
         /// <summary>
         /// 可缺省
         /// </summary>
@@ -256,7 +253,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         public int LayerCount { get; set; } = 1;
 
         [ObservableProperty]
-        public DataTypes _dataType = DataTypes.Input;
+        public DataTypes _dataType = DataTypes.None;
 
         /// <summary>
         /// 父节点

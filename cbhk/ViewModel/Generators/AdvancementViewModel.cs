@@ -43,10 +43,6 @@ namespace cbhk.ViewModel.Generators
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
         public Dictionary<string, List<string>> CurrentDependencyItemList { get; set; } = [];
 
-        public Dictionary<string, List<string>> DefaultListSource { get; set; } = [];
-
-        public Dictionary<string, List<string>> DefaultCompoundSource { get; set; } = [];
-
         public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; } = new()
         {
             { "enum:trigger.compound:conditions","#准则触发器" }
@@ -55,6 +51,12 @@ namespace cbhk.ViewModel.Generators
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; } = [];
 
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; } = [];
+
+        public Dictionary<string, string> TranslateDictionary { get; set; } = new()
+        {
+            { "#准则|上文", "#谓词" },
+            { "#准则|下文", "#准则" }
+        };
         #endregion
 
         public AdvancementViewModel(IContainerProvider container, MainView mainView)

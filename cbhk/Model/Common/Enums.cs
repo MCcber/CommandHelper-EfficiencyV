@@ -22,6 +22,7 @@
 
         public enum DataTypes
         {
+            None,
             Input,
             Bool,
             String,
