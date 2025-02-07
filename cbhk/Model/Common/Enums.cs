@@ -10,7 +10,8 @@
 
         public enum ChangeType
         {
-            Input,
+            NumberAndBool,
+            String,
             AddCompoundObject,
             AddArrayElement,
             AddArrayElementToEnd,
@@ -20,10 +21,10 @@
             RemoveArrayElement,
         }
 
-        public enum DataTypes
+        public enum DataType
         {
             None,
-            Input,
+            Number,
             Bool,
             String,
             BlockID,

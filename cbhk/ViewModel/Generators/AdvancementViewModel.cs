@@ -208,6 +208,7 @@ namespace cbhk.ViewModel.Generators
         public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item, ChangeType changeType, string newValue = "")
         {
             #region 初始化
+            bool IsCurrentNull = false;
             DocumentLine startDocumentLine = null;
             DocumentLine endDocumentLine = null;
             int offset = 0, length = 0;
@@ -215,91 +216,252 @@ namespace cbhk.ViewModel.Generators
             if (item.StartLine is not null)
                 startDocumentLine = item.StartLine;
 
-            string startLineText = textEditor.Document.GetText(startDocumentLine);
-            int originLength = startLineText.Length;
-            int noSpaceLength = startLineText.TrimStart().Length;
-            int spaceLength = originLength - noSpaceLength;
-            int currentIndex = -1;
-            if (item.Parent is not null)
+            string startLineText = "";
+            if (startDocumentLine is not null)
             {
-                currentIndex = item.Parent.Children.IndexOf(item);
+                startLineText = textEditor.Document.GetText(startDocumentLine);
+            }
+            #endregion
+
+            #region 定位相邻的已有值的两个节点
+            JsonTreeViewItem previous = item.Previous;
+            CompoundJsonTreeViewItem parent = item.Parent;
+            JsonTreeViewItem next = item.Next;
+            CompoundJsonTreeViewItem previousCompound = null;
+            CompoundJsonTreeViewItem nextCompound = null;
+            while (previous is not null && previous.StartLine is null)
+            {
+                if (previous.Previous is null)
+                {
+                    break;
+                }
+                previous = previous.Previous;
+            }
+
+            if (previous.StartLine is null)
+            {
+                while (parent is not null && parent.StartLine is null)
+                {
+                    if(parent.Parent is null)
+                    {
+                        break;
+                    }
+                    parent = parent.Parent;
+                }
+            }
+
+            while (next is not null && next.StartLine is null)
+            {
+                if(next.Next is null)
+                {
+                    break;
+                }
+                next = next.Next;
+            }
+
+            if (previous is CompoundJsonTreeViewItem)
+            {
+                previousCompound = previous as CompoundJsonTreeViewItem;
+            }
+            if(next is CompoundJsonTreeViewItem)
+            {
+                nextCompound = next as CompoundJsonTreeViewItem;
             }
             #endregion
 
             #region 处理复合型跟值类型的起始索引与长度
-            if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
+            if(startDocumentLine is null && previous is not null && previous.StartLine is not null)
             {
-                if (compoundJsonTreeViewItem.EndLine is not null)
-                    endDocumentLine = compoundJsonTreeViewItem.EndLine;
+                IsCurrentNull = true;
+                startDocumentLine = previous.StartLine;
+            }
+            else
+            if(startDocumentLine is null && parent is not null && parent.StartLine is not null)
+            {
+                IsCurrentNull = true;
+                startDocumentLine = parent.StartLine;
+            }
+            else
+            if(startDocumentLine is null)
+            {
+                IsCurrentNull = true;
+                startDocumentLine = item.Plan.GetLineByNumber(2);
+            }
 
-                switch (changeType)
+            startLineText = textEditor.Document.GetText(startDocumentLine);
+
+            if (!IsCurrentNull)
+            {
+                if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
                 {
-                    case ChangeType.Input:
-                        {
-                            int index = startLineText.IndexOf(':') + 2;
-                            offset = startDocumentLine.Offset + index;
-                            if (startLineText.TrimEnd().EndsWith(','))
+                    if (compoundJsonTreeViewItem.EndLine is not null)
+                        endDocumentLine = compoundJsonTreeViewItem.EndLine;
+
+                    switch (changeType)
+                    {
+                        case ChangeType.AddCompoundObject:
                             {
-                                length = startLineText.LastIndexOf(',') - index;
+                                int index = startLineText.IndexOf('{') + 1;
+                                offset = startDocumentLine.Offset + index;
+                                break;
                             }
-                            else
+                        case ChangeType.AddArrayElement:
                             {
-                                length = startDocumentLine.EndOffset - startDocumentLine.Offset - index - 1;
+                                int index = startLineText.IndexOf('[') + 1;
+                                offset = startDocumentLine.Offset + index;
+                                break;
                             }
-                            if(item.DataType is DataTypes.String || (item is CompoundJsonTreeViewItem compoundItem && compoundItem.DataType is DataTypes.Enum))
+                        case ChangeType.AddArrayElementToEnd:
                             {
-                                newValue = "\"" + newValue + "\"";
+                                JsonTreeViewItem lastItem = (item as CompoundJsonTreeViewItem).Children[^1];
+                                if (lastItem is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
+                                {
+                                    offset = lastCompoundItem.EndLine.EndOffset;
+                                }
+                                else
+                                {
+                                    offset = lastItem.StartLine.EndOffset;
+                                }
+                                break;
                             }
-                            break;
-                        }
-                    case ChangeType.AddCompoundObject:
-                        {
-                            int index = startLineText.IndexOf('{') + 1;
-                            offset = startDocumentLine.Offset + index;
-                            break;
-                        }
-                    case ChangeType.AddArrayElement:
-                        {
-                            int index = startLineText.IndexOf('[') + 1;
-                            offset = startDocumentLine.Offset + index;
-                            break;
-                        }
-                    case ChangeType.AddArrayElementToEnd:
-                        {
-                            JsonTreeViewItem lastItem = (item as CompoundJsonTreeViewItem).Children[^1];
-                            if (lastItem is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
+                        case ChangeType.RemoveCompound:
                             {
-                                offset = lastCompoundItem.EndLine.EndOffset;
+                                break;
                             }
-                            else
+                        case ChangeType.RemoveCompoundObject:
                             {
-                                offset = lastItem.StartLine.EndOffset;
+                                break;
                             }
-                            break;
-                        }
-                    case ChangeType.RemoveCompound:
-                        {
-                            break;
-                        }
-                    case ChangeType.RemoveCompoundObject:
-                        {
-                            break;
-                        }
-                    case ChangeType.RemoveArray:
-                        {
-                            break;
-                        }
-                    case ChangeType.RemoveArrayElement:
-                        {
-                            break;
-                        }
+                        case ChangeType.RemoveArray:
+                            {
+                                break;
+                            }
+                        case ChangeType.RemoveArrayElement:
+                            {
+                                break;
+                            }
+                    }
                 }
+                else
+                if (changeType is ChangeType.NumberAndBool || changeType is ChangeType.String)
+                {
+                    //满足一系列条件后父节点大括号内部清空
+                    if (string.IsNullOrEmpty(newValue.Replace("\"","").Trim()))
+                    {
+                        char locateStartChar = ' ';
+                        char locateEndChar = ' ';
+                        if ((previous is not null && previous.StartLine is null && next is not null && next.StartLine is null) || (previous is null && next is null) && item.IsCanBeDefaulted)
+                        {
+                            if (item.Parent.DataType is not DataType.Array && item.Parent.DataType is not DataType.InnerArray)
+                            {
+                                locateStartChar = '{';
+                                locateEndChar = '}';
+                            }
+                            else
+                            {
+                                locateStartChar = '[';
+                                locateEndChar = ']';
+                            }
+                        }
+                        else
+                        {
+                            locateStartChar = ',';
+                        }
+                        DocumentLine parentStartLine = GetLineByNumber(startDocumentLine.LineNumber - 1);
+                        DocumentLine parentEndLine = GetLineByNumber(startDocumentLine.LineNumber + 1);
+                        string parentEndLineText = "";
+
+                        if (item.Parent is not null)
+                        {
+                            string parentStartLineText = GetRangeText(parentStartLine.Offset, parentStartLine.Length);
+                            parentEndLineText = GetRangeText(parentEndLine.Offset, parentEndLine.Length);
+
+                            offset = parentStartLine.Offset + parentStartLineText.IndexOf(locateStartChar) + 1;
+                        }
+                        int closeBracketOffset = 0;
+                        if (locateEndChar == ' ')
+                        {
+                            closeBracketOffset = item.StartLine.EndOffset;
+                        }
+                        else
+                        {
+                            closeBracketOffset = parentEndLine.Offset + parentEndLineText.IndexOf(locateEndChar);
+                        }
+
+                        length = closeBracketOffset - offset;
+                        newValue = "";
+                    }
+                    else
+                    {
+                        int colonOffset = startLineText.IndexOf(':') + 2;
+                        offset = startDocumentLine.Offset + colonOffset;
+                        if (startLineText.TrimEnd().EndsWith(','))
+                        {
+                            length = startLineText.LastIndexOf(',') - colonOffset;
+                        }
+                        else
+                        {
+                            length = startDocumentLine.EndOffset - startDocumentLine.Offset - colonOffset;
+                        }
+                        if (changeType is ChangeType.String)
+                        {
+                            newValue = "\"" + newValue + "\"";
+                        }
+                    }
+                }
+            }
+            else
+            {
+                int lastOffset = 0;
+                if (previous is not null && previous.StartLine is not null)
+                {
+                    lastOffset = startLineText.LastIndexOf(',') + 1;
+                }
+                else
+                if(parent is not null && parent.StartLine is not null)
+                {
+                    lastOffset = GetRangeText(parent.StartLine.Offset, parent.StartLine.EndOffset - parent.StartLine.Offset).IndexOf('{') + 1;
+                    if(lastOffset == 0)
+                    {
+                        lastOffset = GetRangeText(parent.StartLine.Offset, parent.StartLine.EndOffset - parent.StartLine.Offset).IndexOf('[') + 1;
+                    }
+                }
+                if(lastOffset == 0)
+                {
+                    offset = startDocumentLine.EndOffset;
+                }
+                else
+                {
+                    offset = startDocumentLine.Offset + lastOffset;
+                }
+
+                newValue = (previous is not null && previous.StartLine is not null ? "," : "") + "\r\n" + new string(' ', item.LayerCount * 2) + "\"" + item.Key + "\": " + newValue + (next is not null && next.StartLine is not null ? "," : "") + (parent is not null ? "\r\n" + new string(' ', parent.LayerCount * 2) : "");
             }
             #endregion
 
             //计算好偏移量和替换长度后执行替换
             if (offset != 0 || length != 0)
                 textEditor.Document.Replace(offset, length, newValue);
+
+            #region 设置可选节点的行引用
+            if (string.IsNullOrEmpty(newValue))
+            {
+                item.StartLine = null;
+            }
+            else
+            {
+                if (item.StartLine is null && previousCompound is not null && previousCompound.EndLine is not null)
+                {
+                    item.StartLine = GetLineByNumber(previousCompound.EndLine.LineNumber + 1);
+                }
+                else
+                if (item.StartLine is null && parent is not null && parent.EndLine is not null)
+                {
+                    item.StartLine = GetLineByNumber(parent.EndLine.LineNumber + 1);
+                }
+                item.StartLine ??= GetLineByNumber(2);
+            }
+            #endregion
         }
 
         public JsonTreeViewItem ModifyJsonItemDictionary(JsonTreeViewItem targetItem, ModifyType modifyType)

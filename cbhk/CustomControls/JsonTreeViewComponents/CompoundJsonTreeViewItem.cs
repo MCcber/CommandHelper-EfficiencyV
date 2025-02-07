@@ -4,9 +4,13 @@ using cbhk.Interface.Json;
 using cbhk.Model.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
+using Newtonsoft.Json.Linq;
 using Prism.Ioc;
+using SharpNBT;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using static cbhk.Model.Common.Enums;
@@ -43,8 +47,8 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             }
         }
 
-        private DataTypes dataType = DataTypes.Compound;
-        public new DataTypes DataType
+        private DataType dataType = DataType.Compound;
+        public new DataType DataType
         {
             get => dataType;
             set
@@ -53,37 +57,36 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 SortButtonVisibility = RemoveElementButtonVisibility = BoolButtonVisibility = EnumBoxVisibility = ErrorIconVisibility = InfoIconVisibility = InputBoxVisibility = EnumBoxVisibility = Visibility.Collapsed;
                 switch (dataType)
                 {
-                    case DataTypes.Input:
-                    case DataTypes.String:
-                    case DataTypes.Byte:
-                    case DataTypes.Short:
-                    case DataTypes.Int:
-                    case DataTypes.Float:
-                    case DataTypes.Double:
-                    case DataTypes.Long:
+                    case DataType.String:
+                    case DataType.Byte:
+                    case DataType.Short:
+                    case DataType.Int:
+                    case DataType.Float:
+                    case DataType.Double:
+                    case DataType.Long:
                         InputBoxVisibility = Visibility.Visible;
                         break;
-                    case DataTypes.BlockTag:
-                    case DataTypes.ItemTag:
-                    case DataTypes.EntityID:
-                    case DataTypes.BlockID:
-                    case DataTypes.ItemID:
-                    case DataTypes.Enum:
+                    case DataType.BlockTag:
+                    case DataType.ItemTag:
+                    case DataType.EntityID:
+                    case DataType.BlockID:
+                    case DataType.ItemID:
+                    case DataType.Enum:
                         EnumBoxVisibility = Visibility.Visible;
                         break;
-                    case DataTypes.Bool:
+                    case DataType.Bool:
                         BoolButtonVisibility = Visibility.Visible;
                         break;
-                    case DataTypes.NullableCompound:
+                    case DataType.NullableCompound:
                         RemoveElementButtonVisibility = Visibility.Visible;
                         break;
-                    case DataTypes.OptionalCompound:
+                    case DataType.OptionalCompound:
                         AddElementButtonVisibility = Visibility.Visible;
                         break;
-                    case DataTypes.CustomCompound:
+                    case DataType.CustomCompound:
                         AddElementButtonVisibility = Visibility.Visible;
                         break;
-                    case DataTypes.List:
+                    case DataType.List:
                         AddElementButtonVisibility = Visibility.Visible;
                         break;
                 }
@@ -119,6 +122,8 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
 
         #region Field
         private IContainerProvider _container;
+        [GeneratedRegex(@"((?<=如果)\w+(?=为))|((?<=若)\w+(?=为|是))")]
+        private static partial Regex GetEnumRawKey();
         #endregion
 
         #region Event
@@ -213,7 +218,31 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     HtmlHelper htmlHelper = _container.Resolve<HtmlHelper>();
                     htmlHelper.plan = Plan;
                     htmlHelper.jsonTool = JsonItemTool;
-                    JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), targetRawList, LayerCount);
+
+                    #region 检查文档是否存在枚举分支或节点互斥
+                    List<string> FilteredRawList = [];
+                    FilteredRawList.AddRange(targetRawList);
+
+                    bool haveCurrentEnum = false;
+                    int startIndex = 0,endIndex = 0;
+                    for (int i = 0; i < targetRawList.Count; i++)
+                    {
+                        if (GetEnumRawKey().Match(targetRawList[i]).Success && targetRawList[i].Contains(SelectedEnumItem.Text))
+                        {
+                            haveCurrentEnum = true;
+                            startIndex = i + 1;
+                        }
+
+                        if (haveCurrentEnum && GetEnumRawKey().Match(targetRawList[i]).Success)
+                        {
+                            endIndex = i - 1;
+                            break;
+                        }
+                    }
+                    FilteredRawList = [..FilteredRawList.Skip(startIndex).Take(endIndex - startIndex)];
+                    #endregion
+
+                    JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), FilteredRawList, LayerCount);
                     Parent.Children.AddRange(result.Result);
                     Plan.SetRangeText(StartLine.EndOffset, 0, ",\r\n"+ result.ResultString.ToString());
                     JsonItemTool.SetLineNumbersForEachItem(result.Result, Parent, true);

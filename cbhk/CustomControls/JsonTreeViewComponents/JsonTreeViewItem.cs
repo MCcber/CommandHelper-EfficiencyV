@@ -14,6 +14,9 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
     {
         #region Property
         [ObservableProperty]
+        private JsonTreeViewItem _mutexNode;
+
+        [ObservableProperty]
         public string _path = "";
 
         /// <summary>
@@ -253,7 +256,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         public int LayerCount { get; set; } = 1;
 
         [ObservableProperty]
-        public DataTypes _dataType = DataTypes.None;
+        public DataType _dataType = Model.Common.Enums.DataType.None;
 
         /// <summary>
         /// 父节点
@@ -290,46 +293,48 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// <param name="e"></param>
         public void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            if(this is CompoundJsonTreeViewItem compound && compound.DataType is DataTypes.Compound)
+            if(this is CompoundJsonTreeViewItem)
             {
                 return;
             }
-            if (StartLine.IsDeleted && Previous is not null)
-            {
-                StartLine = Plan.GetLineByNumber(Previous is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine.LineNumber + 1 : Previous.StartLine.LineNumber + 1);
-            }
-            if ((Value is not null && ((string)Value).Trim().Length > 0 && (Previous is null || Previous.StartLine.LineNumber != StartLine.LineNumber)) || DefaultValue is not null || (DefaultValue is null && SelectedEnumItem is not null))
-            {
-                if (((string)Value).Trim().Length == 0)
-                    Value = DefaultValue;
-                Plan.UpdateValueBySpecifyingInterval(this, ChangeType.Input, Value + "");
-            }
-            else
-            if (Value is not null && ((string)Value).Trim().Length > 0 && DefaultValue is null)//有值
-            {
-                StartLine = Previous is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null ? compoundJsonTreeViewItem.EndLine : Previous.StartLine;
-                Plan.UpdateNullValueBySpecifyingInterval(StartLine.EndOffset, "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\": " + Value + ",");
-                StartLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
-            }
-            else
-            if (OldValue != Value && Value is not null)//无值时删除本行，回归初始状态
-            {
-                DocumentLine lastLine = Plan.GetLineByNumber(StartLine.LineNumber - 1);
-                DocumentLine nextLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
-                Plan.DeleteAllLinesInTheSpecifiedRange(StartLine.Offset, nextLine.Offset);
-                StartLine = lastLine;
-            }
-        }
 
-        /// <summary>
-        /// 获得焦点时设置旧的枚举值
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ComboBox_GotFocus(object sender, RoutedEventArgs e)
-        {
-            oldSelectedEnumItem = SelectedEnumItem;
-            OldValue = Value;
+            string currentValue = "\"" + Value.ToString() + "\"";
+            if (string.IsNullOrEmpty(currentValue))
+            {
+                int offset = 1, length = StartLine.Length;
+
+                #region 定位上一个已有值的节点
+                JsonTreeViewItem previous = Previous;
+                while (previous is not null && previous.StartLine is null)
+                {
+                    if (previous.Previous is null)
+                    {
+                        break;
+                    }
+                    previous = previous.Previous;
+                }
+                #endregion
+
+                if (previous is not null)
+                {
+                    if (previous is CompoundJsonTreeViewItem PreviousCompoundItem && PreviousCompoundItem.EndLine is not null)
+                    {
+                        offset = PreviousCompoundItem.EndLine.EndOffset - 1;
+                    }
+                    else
+                    {
+                        offset = previous.StartLine.EndOffset;
+                    }
+                    length = StartLine.EndOffset - offset;
+                }
+
+                Plan.SetRangeText(offset, length, "");
+                StartLine = null;
+            }
+            else
+            {
+                Plan.UpdateValueBySpecifyingInterval(this, ChangeType.String, currentValue);
+            }
         }
 
         /// <summary>
@@ -344,7 +349,42 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             if (window.DataContext is ICustomWorldUnifiedPlan customWorldUnifiedPlan)
             {
                 string currentValue = ((bool)Value).ToString().ToLower();
-                customWorldUnifiedPlan.UpdateValueBySpecifyingInterval(this, ChangeType.Input, currentValue);
+                if (!IsFalse && !IsTrue)
+                {
+                    int offset = 1, length = StartLine.Length;
+
+                    #region 定位上一个已有值的节点
+                    JsonTreeViewItem previous = Previous;
+                    while (previous is not null && previous.StartLine is null)
+                    {
+                        if (previous.Previous is null)
+                        {
+                            break;
+                        }
+                        previous = previous.Previous;
+                    }
+                    #endregion
+
+                    if (previous is not null)
+                    {
+                        if(previous is CompoundJsonTreeViewItem PreviousCompoundItem && PreviousCompoundItem.EndLine is not null)
+                        {
+                            offset = PreviousCompoundItem.EndLine.EndOffset - 1;
+                        }
+                        else
+                        {
+                            offset = previous.StartLine.EndOffset;
+                        }
+                        length = StartLine.EndOffset - offset;
+                    }
+                    
+                    customWorldUnifiedPlan.SetRangeText(offset, length, "");
+                    StartLine = null;
+                }
+                else
+                {
+                    customWorldUnifiedPlan.UpdateValueBySpecifyingInterval(this, ChangeType.NumberAndBool, currentValue);
+                }
             }
         }
         #endregion

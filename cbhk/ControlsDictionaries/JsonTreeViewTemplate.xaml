@@ -88,23 +88,6 @@
                         FontSize="18"
                         Foreground="White"
                         Text="{Binding DisplayText}" />
-                    <ComboBox
-                        Uid="EnumItemsSource"
-                        Width="235"
-                        BorderThickness="0"
-                        ItemsSource="{Binding EnumItemsSource}"
-                        SelectedItem="{Binding SelectedEnumItem}"
-                        Style="{DynamicResource TextComboBoxStyle}"
-                        Visibility="{Binding EnumBoxVisibility}">
-                        <behaviors:Interaction.Triggers>
-                            <behaviors:EventTrigger EventName="GotFocus">
-                                <behaviors:CallMethodAction MethodName="ComboBox_GotFocus" TargetObject="{Binding}" />
-                            </behaviors:EventTrigger>
-                            <behaviors:EventTrigger EventName="SelectionChanged">
-                                <behaviors:CallMethodAction MethodName="EnumType_SelectionChanged" TargetObject="{Binding}" />
-                            </behaviors:EventTrigger>
-                        </behaviors:Interaction.Triggers>
-                    </ComboBox>
                     <TextBox
                         Width="235"
                         Padding="3,0,0,0"
@@ -287,9 +270,6 @@
                         Style="{DynamicResource TextComboBoxStyle}"
                         Visibility="{Binding EnumBoxVisibility}">
                         <behaviors:Interaction.Triggers>
-                            <behaviors:EventTrigger EventName="GotFocus">
-                                <behaviors:CallMethodAction MethodName="ComboBox_GotFocus" TargetObject="{Binding}" />
-                            </behaviors:EventTrigger>
                             <behaviors:EventTrigger EventName="SelectionChanged">
                                 <behaviors:CallMethodAction MethodName="EnumType_SelectionChanged" TargetObject="{Binding}" />
                             </behaviors:EventTrigger>

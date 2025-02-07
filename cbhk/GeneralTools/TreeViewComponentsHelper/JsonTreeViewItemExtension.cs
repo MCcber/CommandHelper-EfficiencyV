@@ -54,6 +54,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
 
             for (int i = 0; i < list.Count; i++)
             {
+                list[i].Parent = parent;
                 if (list[i].IsCanBeDefaulted)
                 {
                     continue;
@@ -62,10 +63,9 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 if (parent is not null)
                 {
                     list[i].StartLine = parent.Plan.GetLineByNumber(index + 1 + parent.StartLine.LineNumber);
-                    list[i].Parent = parent;
                 }
                 else
-                if (list[i] is CompoundJsonTreeViewItem subCompoundItem1 && ((subCompoundItem1.DataType is not DataTypes.OptionalCompound) || (subCompoundItem1.DataType is DataTypes.OptionalCompound && subCompoundItem1.Children.Count > 0)))
+                if (list[i] is CompoundJsonTreeViewItem subCompoundItem1 && ((subCompoundItem1.DataType is not DataType.OptionalCompound) || (subCompoundItem1.DataType is DataType.OptionalCompound && subCompoundItem1.Children.Count > 0)))
                 {
                     list[i].StartLine = list[i].Plan.GetLineByNumber(index + 1);
                 }
@@ -96,23 +96,24 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         public void AddSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem)
         {
             #region 字段
-            bool currentIsArray = compoundJsonTreeViewItem.DataType is DataTypes.List ||
-                compoundJsonTreeViewItem.DataType is DataTypes.Array ||
-                compoundJsonTreeViewItem.DataType is DataTypes.InnerArray;
+            bool currentIsArray = compoundJsonTreeViewItem.DataType is DataType.List ||
+                compoundJsonTreeViewItem.DataType is DataType.Array ||
+                compoundJsonTreeViewItem.DataType is DataType.InnerArray;
             bool parentIsArray = compoundJsonTreeViewItem.Parent is not null && (
-                compoundJsonTreeViewItem.Parent.DataType is DataTypes.List || 
-                compoundJsonTreeViewItem.Parent.DataType is DataTypes.Array || 
-                compoundJsonTreeViewItem.Parent.DataType is DataTypes.InnerArray ||
-                compoundJsonTreeViewItem.Parent.DataType is DataTypes.List);
+                compoundJsonTreeViewItem.Parent.DataType is DataType.List || 
+                compoundJsonTreeViewItem.Parent.DataType is DataType.Array || 
+                compoundJsonTreeViewItem.Parent.DataType is DataType.InnerArray ||
+                compoundJsonTreeViewItem.Parent.DataType is DataType.List);
 
-            bool currentIsCompound = compoundJsonTreeViewItem.DataType is DataTypes.Compound ||
-                compoundJsonTreeViewItem.DataType is DataTypes.CustomCompound ||
-                compoundJsonTreeViewItem.DataType is DataTypes.NullableCompound ||
-                compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound;
+            bool currentIsCompound = compoundJsonTreeViewItem.DataType is DataType.Compound ||
+                compoundJsonTreeViewItem.DataType is DataType.CustomCompound ||
+                compoundJsonTreeViewItem.DataType is DataType.NullableCompound ||
+                compoundJsonTreeViewItem.DataType is DataType.OptionalCompound;
             bool IsArrayOrList = currentIsArray || parentIsArray;
             JsonTreeViewDataStructure result = new();
             List<string> CurrentDependencyItemList = [];
-            ChangeType changeType = ChangeType.Input;
+            List<string> NBTFeatureList = [];
+            ChangeType changeType = ChangeType.String;
             CompoundJsonTreeViewItem? targetCompoundItem;
             if (currentIsArray || currentIsCompound)
             {
@@ -139,10 +140,12 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             };
             #endregion
 
-            #region 定位上一个已有值的节点
+            #region 定位相邻的已有值的两个节点
             JsonTreeViewItem previous = compoundJsonTreeViewItem.Previous;
+            CompoundJsonTreeViewItem parent = compoundJsonTreeViewItem.Parent;
+            JsonTreeViewItem next = compoundJsonTreeViewItem.Next;
             CompoundJsonTreeViewItem previousCompound = null;
-            JsonTreeViewItem parentPrevious = compoundJsonTreeViewItem.Parent?.Previous;
+            CompoundJsonTreeViewItem nextCompound = null;
             while (previous is not null && previous.StartLine is null)
             {
                 if (previous.Previous is null)
@@ -151,18 +154,35 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 }
                 previous = previous.Previous;
             }
-            while (parentPrevious is not null && parentPrevious.StartLine is null)
+
+            if (previous.StartLine is null)
             {
-                if(parentPrevious.Previous is null)
+                while (parent is not null && parent.StartLine is null)
+                {
+                    if (parent.Parent is null)
+                    {
+                        break;
+                    }
+                    parent = parent.Parent;
+                }
+            }
+
+            while (next is not null && next.StartLine is null)
+            {
+                if (next.Next is null)
                 {
                     break;
                 }
-                parentPrevious = parentPrevious.Previous;
+                next = next.Next;
             }
 
             if (previous is CompoundJsonTreeViewItem)
             {
                 previousCompound = previous as CompoundJsonTreeViewItem;
+            }
+            if (next is CompoundJsonTreeViewItem)
+            {
+                nextCompound = next as CompoundJsonTreeViewItem;
             }
             #endregion
 
@@ -171,12 +191,12 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             {
                 #region 定义前置衔接符
                 string connectorSymbol = "";
-                if(previous is not null)
+                if(previous is not null && previous.StartLine is not null && (next is null || (next is not null && next.StartLine is null)))
                 {
                     connectorSymbol = ",\r\n";
                 }
                 else
-                if(compoundJsonTreeViewItem.DataType is DataTypes.Compound && compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine)
+                if(compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine)
                 {
                     connectorSymbol = "\r\n";
                 }
@@ -215,10 +235,25 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 }
                 #endregion
 
-                #region 执行分析
-                result = htmlHelper.GetTreeViewItemResult(new(), CurrentDependencyItemList, compoundJsonTreeViewItem.LayerCount + (compoundJsonTreeViewItem.DataType is not DataTypes.OptionalCompound ? 1 : 0), (string)compoundJsonTreeViewItem.Value, compoundJsonTreeViewItem, null, 1, true);
+                #region 提取NBT类型与Key并去除用于Wiki页面显示的一些UI标记
+                NBTFeatureList = htmlHelper.GetHeadTypeAndKeyList(CurrentDependencyItemList[0]);
+                if (NBTFeatureList is not null && NBTFeatureList.Count > 0)
+                {
+                    for (int j = NBTFeatureList.Count - 1; j > 0; j--)
+                    {
+                        if (NBTFeatureList[j].Contains('='))
+                        {
+                            NBTFeatureList.RemoveAt(j);
+                        }
+                    }
+                }
+                string currentNodeKey = NBTFeatureList[^1];
+                #endregion
 
-                if (result.Result.Count == 1 && result.Result[0] is CompoundJsonTreeViewItem firstCompoundItem1 && firstCompoundItem1.DataType is DataTypes.CustomCompound)
+                #region 执行分析
+                result = htmlHelper.GetTreeViewItemResult(new(), CurrentDependencyItemList, compoundJsonTreeViewItem.LayerCount + (CurrentDependencyItemList.Count == 1 && currentNodeKey == compoundJsonTreeViewItem.Key ? 0 : 1), (string)compoundJsonTreeViewItem.Value, compoundJsonTreeViewItem, null, 1, true);
+
+                if (result.Result.Count == 1 && result.Result[0] is CompoundJsonTreeViewItem firstCompoundItem1 && firstCompoundItem1.DataType is DataType.CustomCompound)
                 {
                     firstCompoundItem1.AddElementButtonVisibility = Visibility.Collapsed;
                     firstCompoundItem1.RemoveElementButtonVisibility = Visibility.Visible;
@@ -228,7 +263,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 #region 添加当前节点的子节点集
                 if (result.Result.Count == 1 && result.Result[0] is CompoundJsonTreeViewItem CurrentSubDependencyItem && CurrentSubDependencyItem.Children.Count > 0)
                 {
-                    if (CurrentSubDependencyItem.DataType is not DataTypes.CustomCompound)
+                    if (CurrentSubDependencyItem.DataType is not DataType.CustomCompound)
                     {
                         compoundJsonTreeViewItem.Children.AddRange(CurrentSubDependencyItem.Children);
                     }
@@ -274,7 +309,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                     bool endWithComma = result.ResultString.ToString().TrimEnd(' ').EndsWith("\r\n");
                     if (startLineNumber != endlineNumber)
                     {
-                        if (result.Result[0] is CompoundJsonTreeViewItem addedChildItem && addedChildItem.DataType is DataTypes.CustomCompound)
+                        if (result.Result[0] is CompoundJsonTreeViewItem addedChildItem && addedChildItem.DataType is DataType.CustomCompound)
                         {
                             currentNewString = "\r\n" + result.ResultString.ToString() + ",";
                         }
@@ -285,12 +320,12 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                     }
                     else
                     {
-                        currentNewString = connectorSymbol + result.ResultString.ToString() + (compoundJsonTreeViewItem.DataType is not DataTypes.OptionalCompound && !endWithComma ? "\r\n" : "") + new string(' ', compoundJsonTreeViewItem.LayerCount * 2);
+                        currentNewString = connectorSymbol + result.ResultString.ToString() + (compoundJsonTreeViewItem.DataType is not DataType.OptionalCompound && !endWithComma ? "\r\n" : "") + new string(' ', compoundJsonTreeViewItem.LayerCount * 2);
                     }
                     #endregion
 
                     #region 执行替换
-                    if (previous is CompoundJsonTreeViewItem previousCompoundItem && compoundJsonTreeViewItem.DataType is DataTypes.OptionalCompound)
+                    if (previous is CompoundJsonTreeViewItem previousCompoundItem && compoundJsonTreeViewItem.DataType is DataType.OptionalCompound)
                     {
                         endOffset = previousCompoundItem.EndLine is not null ? previousCompoundItem.EndLine.EndOffset : previousCompoundItem.StartLine.EndOffset;
                         compoundJsonTreeViewItem.StartLine = null;
@@ -306,7 +341,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                     int newLineCount = 0;
                     if (compoundJsonTreeViewItem.Children.Count == 1)
                     {
-                        newLineCount = GetLineBreakCount().Matches(currentNewString).Count + (!string.IsNullOrEmpty(connectorSymbol) ? -1 : 0) + (result.Result[^1] is CompoundJsonTreeViewItem lastCompoundChildItem && (lastCompoundChildItem.DataType is not DataTypes.OptionalCompound ||
+                        newLineCount = GetLineBreakCount().Matches(currentNewString).Count + (!string.IsNullOrEmpty(connectorSymbol) ? -1 : 0) + (result.Result[^1] is CompoundJsonTreeViewItem lastCompoundChildItem && (lastCompoundChildItem.DataType is not DataType.OptionalCompound ||
                             lastCompoundChildItem.ValueTypeList.Select(item => item.Text.Contains("compound")).Count() > 0) && result.Result[^1].Key != compoundJsonTreeViewItem.Key ? 1 : 0);
                     }
                     if (compoundJsonTreeViewItem.StartLine is null)
@@ -354,7 +389,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
 
                 #region 将子结构行号与代码编辑器对齐
                 ObservableCollection<JsonTreeViewItem> subDependencyItemList = [];
-                if (result.Result[0] is CompoundJsonTreeViewItem firstCompoundItem2 && firstCompoundItem2.DataType is not DataTypes.CustomCompound)
+                if (result.Result[0] is CompoundJsonTreeViewItem firstCompoundItem2 && firstCompoundItem2.DataType is not DataType.CustomCompound)
                 {
                     subDependencyItemList = firstCompoundItem2.Children;
                 }
@@ -384,7 +419,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 #endregion
 
                 #region 根据当前节点类型判断是否切换功能按钮
-                if ((compoundJsonTreeViewItem.Children[0] is CompoundJsonTreeViewItem childItem && childItem.DataType is not DataTypes.CustomCompound) || compoundJsonTreeViewItem.Children[0] is not CompoundJsonTreeViewItem)
+                if ((compoundJsonTreeViewItem.Children[0] is CompoundJsonTreeViewItem childItem && childItem.DataType is not DataType.CustomCompound) || compoundJsonTreeViewItem.Children[0] is not CompoundJsonTreeViewItem)
                 {
                     compoundJsonTreeViewItem.AddElementButtonVisibility = Visibility.Collapsed;
                     compoundJsonTreeViewItem.RemoveElementButtonVisibility = Visibility.Visible;
@@ -398,7 +433,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
             if ((currentIsArray && compoundJsonTreeViewItem.ChildrenStringList.Count > 0) || 
                 (parentIsArray && compoundJsonTreeViewItem.Parent is not null && compoundJsonTreeViewItem.Parent.ChildrenStringList.Count > 0))
             {
-                string connectorSymbol = (currentIsArray && previous is not null) || (parentIsArray && parentPrevious is not null) ? ",\r\n" : "";
+                string connectorSymbol = (currentIsArray && previous is not null) || (parentIsArray && parent is not null) ? ",\r\n" : "";
                 result = htmlHelper.GetTreeViewItemResult(new(), compoundJsonTreeViewItem.ChildrenStringList, compoundJsonTreeViewItem.LayerCount + 1, "", compoundJsonTreeViewItem, null, 1, true);
                 string currentNewString = result.ResultString.ToString();
                 CompoundJsonTreeViewItem entry = new(compoundJsonTreeViewItem.Plan, compoundJsonTreeViewItem.JsonItemTool,_container)
@@ -406,12 +441,12 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                     Path = currentIsArray ? compoundJsonTreeViewItem.Path + "[" + 0 + "]" : compoundJsonTreeViewItem.Parent.Path + "[" + (compoundJsonTreeViewItem.Parent.Children.Count - 1) + "]",
                     Parent = currentIsCompound ? compoundJsonTreeViewItem : compoundJsonTreeViewItem.Parent,
                     DisplayText = "Entry",
-                    DataType = DataTypes.ArrayElement,
+                    DataType = DataType.ArrayElement,
                     LayerCount = compoundJsonTreeViewItem.LayerCount + 1,
                     RemoveElementButtonVisibility = Visibility.Visible
                 };
                 entry.Children.AddRange(result.Result);
-                if(compoundJsonTreeViewItem.DataType is DataTypes.Array || compoundJsonTreeViewItem.DataType is DataTypes.InnerArray)
+                if(compoundJsonTreeViewItem.DataType is DataType.Array || compoundJsonTreeViewItem.DataType is DataType.InnerArray)
                 {
                     compoundJsonTreeViewItem.Children.Insert(0, entry);
                 }
@@ -459,11 +494,11 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         public void RemoveSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem)
         {
             #region 确定删除的数据类型
-            ChangeType changeType = ChangeType.Input;
-            if (compoundJsonTreeViewItem.DataType is DataTypes.ArrayElement)
+            ChangeType changeType = ChangeType.String;
+            if (compoundJsonTreeViewItem.DataType is DataType.ArrayElement)
                 changeType = ChangeType.RemoveArrayElement;
             else
-                if (compoundJsonTreeViewItem.DataType is DataTypes.Compound || compoundJsonTreeViewItem.DataType is DataTypes.CustomCompound)
+                if (compoundJsonTreeViewItem.DataType is DataType.Compound || compoundJsonTreeViewItem.DataType is DataType.CustomCompound)
                 changeType = ChangeType.RemoveCompound;
             #endregion
 
