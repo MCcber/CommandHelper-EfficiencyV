@@ -4,12 +4,9 @@ using cbhk.Interface.Json;
 using cbhk.Model.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
-using Newtonsoft.Json.Linq;
 using Prism.Ioc;
-using SharpNBT;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -239,7 +236,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                             break;
                         }
                     }
-                    FilteredRawList = [..FilteredRawList.Skip(startIndex).Take(endIndex - startIndex)];
+                    //FilteredRawList = [..FilteredRawList.Skip(startIndex).Take(endIndex - startIndex)];
                     #endregion
 
                     JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), FilteredRawList, LayerCount);

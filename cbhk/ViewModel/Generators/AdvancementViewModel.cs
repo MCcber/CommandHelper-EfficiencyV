@@ -21,6 +21,7 @@ using cbhk.View;
 using System.Collections.ObjectModel;
 using cbhk.Model.Common;
 using cbhk.GeneralTools;
+using System.Windows.Media.Imaging;
 
 namespace cbhk.ViewModel.Generators
 {
@@ -207,7 +208,7 @@ namespace cbhk.ViewModel.Generators
 
         public void UpdateValueBySpecifyingInterval(JsonTreeViewItem item, ChangeType changeType, string newValue = "")
         {
-            #region 初始化
+            #region Field
             bool IsCurrentNull = false;
             DocumentLine startDocumentLine = null;
             DocumentLine endDocumentLine = null;
@@ -238,7 +239,7 @@ namespace cbhk.ViewModel.Generators
                 previous = previous.Previous;
             }
 
-            if (previous.StartLine is null)
+            if (previous is not null && previous.StartLine is null)
             {
                 while (parent is not null && parent.StartLine is null)
                 {
@@ -270,10 +271,16 @@ namespace cbhk.ViewModel.Generators
             #endregion
 
             #region 处理复合型跟值类型的起始索引与长度
+            if(startDocumentLine is null && previous is CompoundJsonTreeViewItem previousItem1 && previousItem1.EndLine is not null)
+            {
+                IsCurrentNull = true;
+                startDocumentLine = previousItem1.EndLine;
+            }
+            else
             if(startDocumentLine is null && previous is not null && previous.StartLine is not null)
             {
                 IsCurrentNull = true;
-                startDocumentLine = previous.StartLine;
+                startDocumentLine = previous.StartLine; 
             }
             else
             if(startDocumentLine is null && parent is not null && parent.StartLine is not null)
@@ -413,6 +420,15 @@ namespace cbhk.ViewModel.Generators
             else
             {
                 int lastOffset = 0;
+                if(previous is CompoundJsonTreeViewItem previousItem2 && previousItem2.EndLine is not null)
+                {
+                    lastOffset = startLineText.LastIndexOf('}') + 1;
+                    if(lastOffset == 0)
+                    {
+                        lastOffset = startLineText.LastIndexOf(']') + 1;
+                    }
+                }
+                else
                 if (previous is not null && previous.StartLine is not null)
                 {
                     lastOffset = startLineText.LastIndexOf(',') + 1;
@@ -435,13 +451,14 @@ namespace cbhk.ViewModel.Generators
                     offset = startDocumentLine.Offset + lastOffset;
                 }
 
-                newValue = (previous is not null && previous.StartLine is not null ? "," : "") + "\r\n" + new string(' ', item.LayerCount * 2) + "\"" + item.Key + "\": " + newValue + (next is not null && next.StartLine is not null ? "," : "") + (parent is not null ? "\r\n" + new string(' ', parent.LayerCount * 2) : "");
+                newValue = (previous is not null && previous.StartLine is not null && next is not null && next.StartLine is not null ? "," : "") + "\r\n" + new string(' ', item.LayerCount * 2) + "\"" + item.Key + "\": " + newValue + (next is not null && next.StartLine is not null ? "," : "") + (parent is not null && parent.StartLine == parent.EndLine ? "\r\n" + new string(' ', parent.LayerCount * 2) : "");
             }
             #endregion
 
-            //计算好偏移量和替换长度后执行替换
+            #region 计算好偏移量和替换长度后执行替换
             if (offset != 0 || length != 0)
                 textEditor.Document.Replace(offset, length, newValue);
+            #endregion
 
             #region 设置可选节点的行引用
             if (string.IsNullOrEmpty(newValue))
@@ -453,6 +470,11 @@ namespace cbhk.ViewModel.Generators
                 if (item.StartLine is null && previousCompound is not null && previousCompound.EndLine is not null)
                 {
                     item.StartLine = GetLineByNumber(previousCompound.EndLine.LineNumber + 1);
+                }
+                else
+                if(item.StartLine is null && previous is not null && previous.StartLine is not null)
+                {
+                    item.StartLine = GetLineByNumber(previous.StartLine.LineNumber + 1);
                 }
                 else
                 if (item.StartLine is null && parent is not null && parent.EndLine is not null)

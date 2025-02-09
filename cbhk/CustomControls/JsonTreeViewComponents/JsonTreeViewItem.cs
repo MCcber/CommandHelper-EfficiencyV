@@ -279,6 +279,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         #endregion
 
         #region Event
+
         /// <summary>
         /// 获取焦点时设置旧值
         /// </summary>
@@ -298,22 +299,33 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 return;
             }
 
-            string currentValue = "\"" + Value.ToString() + "\"";
+            #region 定位相邻的已有值的两个节点
+            JsonTreeViewItem previous = Previous;
+            JsonTreeViewItem next = Next;
+            while (previous is not null && previous.StartLine is null)
+            {
+                if (previous.Previous is null)
+                {
+                    break;
+                }
+                previous = previous.Previous;
+            }
+            while (next is not null && next.StartLine is null)
+            {
+                if (next.Next is null)
+                {
+                    break;
+                }
+                next = next.Next;
+            }
+            #endregion
+
+            ChangeType changeType = DataType is DataType.String ? ChangeType.String : ChangeType.NumberAndBool;
+            string doubleQuotationMarks = changeType is ChangeType.String ? "\"" : "";
+            string currentValue = Value.ToString();
             if (string.IsNullOrEmpty(currentValue))
             {
                 int offset = 1, length = StartLine.Length;
-
-                #region 定位上一个已有值的节点
-                JsonTreeViewItem previous = Previous;
-                while (previous is not null && previous.StartLine is null)
-                {
-                    if (previous.Previous is null)
-                    {
-                        break;
-                    }
-                    previous = previous.Previous;
-                }
-                #endregion
 
                 if (previous is not null)
                 {
@@ -323,7 +335,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     }
                     else
                     {
-                        offset = previous.StartLine.EndOffset;
+                        offset = previous.StartLine.EndOffset - 1;
                     }
                     length = StartLine.EndOffset - offset;
                 }
@@ -333,7 +345,13 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             }
             else
             {
-                Plan.UpdateValueBySpecifyingInterval(this, ChangeType.String, currentValue);
+                Plan.UpdateValueBySpecifyingInterval(this, changeType, doubleQuotationMarks + currentValue + doubleQuotationMarks);
+                #region 更新父节点的末行引用
+                if (Parent is not null && StartLine is not null && ((previous is null && next is null) || ((previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null))))
+                {
+                    Parent.EndLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
+                }
+                #endregion
             }
         }
 

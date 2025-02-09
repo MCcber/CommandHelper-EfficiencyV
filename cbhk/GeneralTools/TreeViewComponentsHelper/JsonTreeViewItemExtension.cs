@@ -155,7 +155,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 previous = previous.Previous;
             }
 
-            if (previous.StartLine is null)
+            if (previous is not null && previous.StartLine is null)
             {
                 while (parent is not null && parent.StartLine is null)
                 {
@@ -251,7 +251,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 #endregion
 
                 #region 执行分析
-                result = htmlHelper.GetTreeViewItemResult(new(), CurrentDependencyItemList, compoundJsonTreeViewItem.LayerCount + (CurrentDependencyItemList.Count == 1 && currentNodeKey == compoundJsonTreeViewItem.Key ? 0 : 1), (string)compoundJsonTreeViewItem.Value, compoundJsonTreeViewItem, null, 1, true);
+                result = htmlHelper.GetTreeViewItemResult(new(), CurrentDependencyItemList, compoundJsonTreeViewItem.LayerCount + (compoundJsonTreeViewItem.ChildrenStringList.Count == 1 && currentNodeKey == compoundJsonTreeViewItem.Key ? 0 : 1), (string)compoundJsonTreeViewItem.Value, compoundJsonTreeViewItem, null, 1, true);
 
                 if (result.Result.Count == 1 && result.Result[0] is CompoundJsonTreeViewItem firstCompoundItem1 && firstCompoundItem1.DataType is DataType.CustomCompound)
                 {
@@ -309,18 +309,18 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                     bool endWithComma = result.ResultString.ToString().TrimEnd(' ').EndsWith("\r\n");
                     if (startLineNumber != endlineNumber)
                     {
-                        if (result.Result[0] is CompoundJsonTreeViewItem addedChildItem && addedChildItem.DataType is DataType.CustomCompound)
-                        {
-                            currentNewString = "\r\n" + result.ResultString.ToString() + ",";
-                        }
-                        else
-                        {
-                            currentNewString = connectorSymbol + result.ResultString.ToString().TrimEnd(['\r', '\n', ',']);
-                        }
+                        //if (result.Result[0] is CompoundJsonTreeViewItem addedChildItem && addedChildItem.DataType is DataType.CustomCompound)
+                        //{
+                        //    currentNewString = "\r\n" + result.ResultString.ToString() + ",";
+                        //}
+                        //else
+                        //{
+                            currentNewString = connectorSymbol + result.ResultString.ToString() + (next is not null && next.StartLine is not null ? ',' : "");
+                        //}
                     }
                     else
                     {
-                        currentNewString = connectorSymbol + result.ResultString.ToString() + (compoundJsonTreeViewItem.DataType is not DataType.OptionalCompound && !endWithComma ? "\r\n" : "") + new string(' ', compoundJsonTreeViewItem.LayerCount * 2);
+                        currentNewString = connectorSymbol + result.ResultString.ToString() + (compoundJsonTreeViewItem.DataType is not DataType.OptionalCompound && !endWithComma ? "\r\n" : "") + new string(' ', compoundJsonTreeViewItem.LayerCount * 2) + (next is not null && next.StartLine is not null ? ',' : "");
                     }
                     #endregion
 
@@ -483,6 +483,13 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 }
                 SetLineNumbersForEachItem(entry.Children, entry);
                 #endregion
+            }
+            #endregion
+
+            #region 更新父节点的末行引用
+            if (compoundJsonTreeViewItem.Parent is not null && compoundJsonTreeViewItem.Parent.Children.Count == 1)
+            {
+                compoundJsonTreeViewItem.Parent.EndLine = compoundJsonTreeViewItem.Plan.GetLineByNumber(compoundJsonTreeViewItem.EndLine.LineNumber + 1);
             }
             #endregion
         }
