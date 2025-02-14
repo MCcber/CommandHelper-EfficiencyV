@@ -24,17 +24,18 @@ namespace cbhk.ViewModel
         private TabControl ResultTabControl = null;
         #endregion
 
-        public void ResultTabControl_Loaded(object sender, RoutedEventArgs e) => ResultTabControl = sender as TabControl;
-
+        #region Method
         /// <summary>
         /// 单例模式,用于显示生成结果
         /// </summary>
         public DisplayerViewModel()
         {
-            #region 初始化字段
             fontFamily = new FontFamily(new Uri(fontFilePath, UriKind.Absolute), "Source Code Pro Medium");
-            #endregion
         }
+        #endregion
+
+        #region Event
+        public void ResultTabControl_Loaded(object sender, RoutedEventArgs e) => ResultTabControl = sender as TabControl;
 
         /// <summary>
         /// 生成结果
@@ -182,5 +183,6 @@ namespace cbhk.ViewModel
             e.Cancel = true;
             (sender as Window).Hide();
         }
+        #endregion
     }
 }

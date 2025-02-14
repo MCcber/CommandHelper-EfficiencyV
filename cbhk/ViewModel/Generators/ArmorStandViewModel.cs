@@ -138,7 +138,6 @@ namespace cbhk.ViewModel.Generators
         #region as名称
         [ObservableProperty]
         private string _customName = "";
-        private string CustomNameString = "";
         #endregion
 
         #region as名称可见性
@@ -177,8 +176,6 @@ namespace cbhk.ViewModel.Generators
             }
             set => SetProperty(ref tags, value);
         }
-
-        private string TagString = "";
         #endregion
 
         #region BoolNBTs
@@ -1173,8 +1170,6 @@ namespace cbhk.ViewModel.Generators
         private double deltaMoveY;
 
         private readonly IContainerProvider _container;
-
-        public event Action<IDialogResult> RequestClose;
         #endregion
 
         #endregion
@@ -1685,8 +1680,10 @@ namespace cbhk.ViewModel.Generators
             {
                 DisplayerView displayerView = _container.Resolve<DisplayerView>();
                 if (displayerView is not null && displayerView.DataContext is DisplayerViewModel displayerViewModel)
+                {
+                    displayerView.Show();
                     displayerViewModel.GeneratorResult(result, "盔甲架", iconPath);
-                displayerView.Show();
+                }
             }
             else
             {

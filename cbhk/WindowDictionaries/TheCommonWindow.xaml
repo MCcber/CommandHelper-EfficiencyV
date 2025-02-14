@@ -2,7 +2,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
-    xmlns:local_window="clr-namespace:cbhk.WindowDictionaries">
+    xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries">
 
     <ImageBrush x:Key="Minimize" ImageSource="/cbhk;component/Resource/Common/Image/Minimize.png" />
     <ImageBrush x:Key="MinimizeHover" ImageSource="/cbhk;component/Resource/Common/Image/MinimizeHover.png" />
@@ -151,7 +151,7 @@
         </Setter>
     </Style>
 
-    <Style x:Key="CommonWindow" TargetType="{x:Type local_window:CommonWindow}">
+    <Style x:Key="CommonWindow" TargetType="{x:Type localWindow:CommonWindow}">
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}" />
         <Setter Property="Background" Value="#242424" />
         <Setter Property="MaxHeight" Value="{x:Static SystemParameters.MaximizedPrimaryScreenHeight}" />
@@ -447,7 +447,7 @@
         </Setter>
     </Style>
 
-    <Style TargetType="local_window:TransitioningContentControl">
+    <Style TargetType="localWindow:TransitioningContentControl">
         <Setter Property="IsTabStop" Value="False" />
         <Setter Property="Background" Value="#242424" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />

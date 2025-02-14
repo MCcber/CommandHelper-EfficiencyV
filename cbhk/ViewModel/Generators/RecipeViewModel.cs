@@ -1,8 +1,8 @@
 ﻿using cbhk.CustomControls;
 using cbhk.GeneralTools;
-using cbhk.GeneralTools.Displayer;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.RecipeGenerator.Components;
+using cbhk.Model.Common;
 using cbhk.View;
 using cbhk.ViewModel.Components.Recipe;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -60,13 +60,10 @@ namespace cbhk.ViewModel.Generators
         private Window home = null;
 
         //被抓取的物品
-        public static Image GrabedImage = new Image();
+        public static Image GrabedImage = new();
 
         //是否选择物品
         public static bool IsGrabingItem = false;
-
-        //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconRecipes.png";
         //原版物品库视图引用
         public ListView originalItemViewer = null;
         //自定义物品库视图引用
@@ -169,7 +166,14 @@ namespace cbhk.ViewModel.Generators
                 {
                     urlPath = uriDirectoryPath + row["id"].ToString() + ".png";
                     if (File.Exists(urlPath))
-                        OriginalItemSource.Add(new ItemStructure(new Uri(urlPath, UriKind.Absolute), row["id"].ToString() + ":" + row["name"].ToString(), "{id:\"minecraft:" + row["id"].ToString() + "\",Count:1b}"));
+                    {
+                        BitmapImage bitmapImage = new(new Uri(urlPath, UriKind.Absolute))
+                        {
+                            CacheOption = BitmapCacheOption.None
+                        };
+                        OriginalItemSource.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, row["id"].ToString() + ":" + row["name"].ToString(), "{id:\"minecraft:" + row["id"].ToString() + "\",Count:1b}"));
+                        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                    }
                 }
                 #endregion
                 #region 异步载入自定义物品序列
@@ -185,11 +189,14 @@ namespace cbhk.ViewModel.Generators
                         {
                             JObject data = JObject.Parse(nbt);
                             JToken id = data.SelectToken("id");
-                            if (id is null) continue;
+                            if (id is null)
+                            {
+                                continue;
+                            }
                             string itemID = id.ToString().Replace("\"", "").Replace("minecraft:", "");
-                            string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
+                            urlPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
                             string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                            CustomItemSource.Add(new ItemStructure(new Uri(iconPath, UriKind.Absolute), itemID + ":" + itemName, nbt));
+                            CustomItemSource.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, itemID + ":" + itemName, nbt));
                         }
                     }
                 }
@@ -604,7 +611,7 @@ namespace cbhk.ViewModel.Generators
         {
             if (e.OriginalSource is not Image)
                 SelectedItem = null;
-            if (SelectedItem != null)
+            if (SelectedItem is not null)
             {
                 IsGrabingItem = true;
                 DependencyObject obj = (DependencyObject)e.OriginalSource;
@@ -617,7 +624,7 @@ namespace cbhk.ViewModel.Generators
 
                 drag_source = new Image
                 {
-                    Source = new BitmapImage(SelectedItem.ImagePath),
+                    Source = SelectedItem.ImagePath,
                     Tag = itemStructure
                 };
                 GrabedImage = drag_source;

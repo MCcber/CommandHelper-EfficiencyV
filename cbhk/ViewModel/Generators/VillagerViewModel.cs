@@ -14,7 +14,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Threading.Tasks;
-using cbhk.GeneralTools.Displayer;
 using cbhk.CustomControls;
 using Newtonsoft.Json.Linq;
 using cbhk.GeneralTools;
@@ -23,6 +22,7 @@ using cbhk.GeneralTools.MessageTip;
 using cbhk.View;
 using Prism.Ioc;
 using cbhk.ViewModel.Components.Villager;
+using cbhk.Model.Common;
 
 namespace cbhk.ViewModel.Generators
 {
@@ -743,12 +743,12 @@ namespace cbhk.ViewModel.Generators
                 {
                     urlPath = uriDirectoryPath + row["id"].ToString() + ".png";
                     if (File.Exists(urlPath))
-                        OriginalItemList.Add(new ItemStructure(new Uri(urlPath, UriKind.Absolute), row["id"].ToString() + ":" + row["name"].ToString(), "{id:\"minecraft:" + row["id"].ToString() + "\",Count:1b}"));
+                        OriginalItemList.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, row["id"].ToString() + ":" + row["name"].ToString(), "{id:\"minecraft:" + row["id"].ToString() + "\",Count:1b}"));
                 }
                 #endregion
                 #region 异步载入自定义物品序列
                 //加载物品集合
-                uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\saves\Item\";
+                uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Item\";
                 string[] itemFileList = Directory.GetFiles(uriDirectoryPath);
                 foreach (var item in itemFileList)
                 {
@@ -759,12 +759,15 @@ namespace cbhk.ViewModel.Generators
                         {
                             JObject data = JObject.Parse(nbt);
                             JToken id = data.SelectToken("id");
-                            if (id is null) continue;
+                            if (id is null)
+                            {
+                                continue;
+                            }
                             string itemID = id.ToString().Replace("\"", "").Replace("minecraft:", "");
-                            string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
+                            urlPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
                             string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                            if (File.Exists(iconPath))
-                                CustomItemList.Add(new ItemStructure(new Uri(iconPath, UriKind.Absolute), itemID + ":" + itemName, nbt));
+                            if (File.Exists(urlPath))
+                                CustomItemList.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, itemID + ":" + itemName, nbt));
                         }
                     }
                 }
@@ -1157,7 +1160,7 @@ namespace cbhk.ViewModel.Generators
 
                 drag_source = new Image
                 {
-                    Source = new BitmapImage(SelectedItem.ImagePath),
+                    Source = SelectedItem.ImagePath,
                     Tag = itemStructure
                 };
                 GrabedImage = drag_source;

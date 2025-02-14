@@ -1,5 +1,5 @@
-﻿using cbhk.GeneralTools.Displayer;
-using cbhk.GeneralTools.MessageTip;
+﻿using cbhk.GeneralTools.MessageTip;
+using cbhk.Model.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -119,7 +119,7 @@ namespace cbhk.ViewModel.Components.Recipe
         public void Run()
         {
             #region 合成最终数据
-            Result = ResultItem.Tag != null && ((ResultItem.Tag as ItemStructure).ImagePath != emptyImage.UriSource) ? "{\r\n  \"type\": \"minecraft:smithing_transform\"," : "{\r\n  \"type\": \"minecraft:smithing_trim\",";
+            Result = ResultItem.Tag != null && ((ResultItem.Tag as ItemStructure).ImagePath != new BitmapImage(emptyImage.UriSource)) ? "{\r\n  \"type\": \"minecraft:smithing_transform\"," : "{\r\n  \"type\": \"minecraft:smithing_trim\",";
             #region 合并模板数据
             string templateItemID;
             string templateData = "";
@@ -203,7 +203,7 @@ namespace cbhk.ViewModel.Components.Recipe
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png");
                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                         TemplateItem.Source = new BitmapImage(iconUri);
-                        TemplateItem.Tag = new ItemStructure(iconUri, itemID + ":" + itemName);
+                        TemplateItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
                         if (itemTagObj != null)
                             TemplateTag = itemTagObj.ToString();
                     }
@@ -232,7 +232,7 @@ namespace cbhk.ViewModel.Components.Recipe
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                         BaseItem.Source = new BitmapImage(iconUri);
-                        BaseItem.Tag = new ItemStructure(iconUri, itemID + ":" + itemName);
+                        BaseItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
                         if (itemTagObj != null)
                             BaseTag = itemTagObj.ToString();
                     }
@@ -261,7 +261,7 @@ namespace cbhk.ViewModel.Components.Recipe
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                         AdditionItem.Source = new BitmapImage(iconUri);
-                        AdditionItem.Tag = new ItemStructure(iconUri, itemID + ":" + itemName);
+                        AdditionItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
                         if (itemTagObj != null)
                             AdditionTag = itemTagObj.ToString();
                     }
@@ -289,7 +289,7 @@ namespace cbhk.ViewModel.Components.Recipe
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                         ResultItem.Source = new BitmapImage(iconUri);
-                        TemplateItem.Tag = new ItemStructure(iconUri, itemID + ":" + itemName);
+                        TemplateItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
                         if (itemCountObj != null)
                             Count = int.Parse(itemCountObj.ToString());
                     }

@@ -178,6 +178,7 @@ namespace cbhk.Generators.SpawnerGenerator.Components
                 DisplayerView displayer = _container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
+                    displayer.Show();
                     displayerViewModel.GeneratorResult(Result.Trim(','), "刷怪笼", icon_path);
                 }
             }

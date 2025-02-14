@@ -3,7 +3,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
-    xmlns:ImageConverter="clr-namespace:cbhk.GeneralTools"
     xmlns:VirtualizingWrapPanel="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -21,7 +20,6 @@
 
     <UserControl.Resources>
         <CollectionViewSource x:Key="MultiModeItemViewSource" Source="{Binding MaterialList, IsAsync=True}" />
-        <ImageConverter:UriToBitmapConverter x:Key="UriToBitmapImage" />
         <ImageBrush x:Key="blastFurnaceBackground" ImageSource="/cbhk;component/Resource/Common/Image/Recipe/BlastFurnace.png" />
         <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowLeft.png" />
         <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowRight.png" />
@@ -189,7 +187,7 @@
                                 RenderOptions.BitmapScalingMode="HighQuality"
                                 RenderOptions.ClearTypeHint="Enabled"
                                 SnapsToDevicePixels="True"
-                                Source="{Binding Path=ImagePath, IsAsync=True, Converter={StaticResource UriToBitmapImage}, Mode=OneWay}"
+                                Source="{Binding Path=ImagePath, IsAsync=True, Mode=OneWay}"
                                 ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.InitialShowDelay="0"
                                 UseLayoutRounding="True">
@@ -486,7 +484,7 @@
                                 RenderOptions.BitmapScalingMode="HighQuality"
                                 RenderOptions.ClearTypeHint="Enabled"
                                 SnapsToDevicePixels="True"
-                                Source="{Binding Path=ImagePath, IsAsync=True, Converter={StaticResource UriToBitmapImage}, Mode=OneWay}"
+                                Source="{Binding Path=ImagePath, IsAsync=True, Mode=OneWay}"
                                 ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.InitialShowDelay="0"
                                 UseLayoutRounding="True">

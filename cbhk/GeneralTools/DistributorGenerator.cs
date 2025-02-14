@@ -55,9 +55,9 @@ namespace cbhk.GeneralTools
         private void StartAdvancementGenerator()
         {
             AdvancementView advancementView = _container.Resolve<AdvancementView>(Name.AdvancementView);
-            SetCBHKState();
             advancementView.Show();
             advancementView.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -67,9 +67,9 @@ namespace cbhk.GeneralTools
         private void StartArmorStandsGenerator()
         {
             ArmorStandView armorStand = _container.Resolve<ArmorStandView>(Name.ArmorStandView);
-            SetCBHKState();
             armorStand.Show();
             armorStand.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -78,10 +78,10 @@ namespace cbhk.GeneralTools
         /// </summary>
         public void StartOnlyOneCommandGenerator()
         {
-            SetCBHKState();
             OnlyOneCommandView onlyOneCommandView = _container.Resolve<OnlyOneCommandView>();
             onlyOneCommandView.Show();
             onlyOneCommandView.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -91,9 +91,9 @@ namespace cbhk.GeneralTools
         private void StartSpawnerGenerator()
         {
             SpawnerView spawner = _container.Resolve<SpawnerView>();
-            SetCBHKState();
             spawner.Show();
             spawner.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -103,9 +103,9 @@ namespace cbhk.GeneralTools
         private void StartTagsGenerator()
         {
             TagView tag = _container.Resolve<TagView>();
-            SetCBHKState();
             tag.Show();
             tag.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -115,9 +115,9 @@ namespace cbhk.GeneralTools
         private void StartItemsGenerator()
         {
             ItemView item = _container.Resolve<ItemView>();
-            SetCBHKState();
             item.Show();
             item.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -127,9 +127,9 @@ namespace cbhk.GeneralTools
         private void StartEntitiesGenerator()
         {
             EntityView entity = _container.Resolve<EntityView>();
-            SetCBHKState();
             entity.Show();
             entity.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -139,9 +139,9 @@ namespace cbhk.GeneralTools
         private void StartFireworksGenerator()
         {
             FireworkRocketView fireworkRocket = _container.Resolve<FireworkRocketView>();
-            SetCBHKState();
             fireworkRocket.Show();
             fireworkRocket.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -151,9 +151,9 @@ namespace cbhk.GeneralTools
         private void StartRecipesGenerator()
         {
             RecipeView recipe = _container.Resolve<RecipeView>();
-            SetCBHKState();
             recipe.Show();
             recipe.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -163,9 +163,9 @@ namespace cbhk.GeneralTools
         private void StartVillagersGenerator()
         {
             VillagerView villager = _container.Resolve<VillagerView>();
-            SetCBHKState();
             villager.Show();
             villager.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -175,9 +175,9 @@ namespace cbhk.GeneralTools
         private void StartWrittenBooksGenerator()
         {
             WrittenBookView writtenBook = _container.Resolve<WrittenBookView>();
-            SetCBHKState();
             writtenBook.Show();
             writtenBook.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -187,9 +187,9 @@ namespace cbhk.GeneralTools
         private void StartDatapacksGenerator()
         {
             DatapackView dataPack = _container.Resolve<DatapackView>();
-            SetCBHKState();
             dataPack.Show();
             dataPack.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -199,9 +199,9 @@ namespace cbhk.GeneralTools
         private void StartSign()
         {
             SignView sign = _container.Resolve<SignView>();
-            SetCBHKState();
             sign.Show();
             sign.Focus();
+            SetCBHKState();
         }
 
         [RelayCommand]
@@ -228,9 +228,9 @@ namespace cbhk.GeneralTools
         private void StartDimensionTypeGenerator()
         {
             DimensionTypeView dimensionType = _container.Resolve<DimensionTypeView>();
-            SetCBHKState();
             dimensionType.Show();
             dimensionType.Focus();
+            SetCBHKState();
         }
         #endregion
     }

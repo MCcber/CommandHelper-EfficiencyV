@@ -1,12 +1,10 @@
 ﻿using cbhk.CustomControls;
-using cbhk.GeneralTools.Displayer;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.FireworkRocketGenerator.Components;
 using cbhk.Generators.ItemGenerator.Components;
-using cbhk.Generators.RecipeGenerator;
 using cbhk.Generators.RecipeGenerator.Components;
 using cbhk.Generators.SpawnerGenerator.Components;
-using cbhk.Generators.VillagerGenerator;
+using cbhk.Model.Common;
 using cbhk.Model.Generator.Tag;
 using cbhk.View.Compoments.Spawner;
 using cbhk.ViewModel.Components.Recipe;
@@ -182,8 +180,6 @@ namespace cbhk.GeneralTools
         #region 处理导入外部刷怪笼
         public static void ImportSpawnerDataHandler(string filePathOrData, ref ObservableCollection<RichTabItems> itemPageList, bool IsPath = true)
         {
-
-            
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
             #region 提取可用NBT数据
@@ -474,7 +470,7 @@ namespace cbhk.GeneralTools
                             transactionItemsViewModel.BuyCountDisplayText = "x" + int.Parse(buyCountObj.ToString());
                         }
                         Uri iconUri = new(iconPath, UriKind.Absolute);
-                        ItemStructure imageTag = new(iconUri, buyID, recipe.SelectToken("buy.tag") is JObject buyTagObj ? buyTagObj.ToString() : "");
+                        ItemStructure imageTag = new(new BitmapImage(iconUri), buyID, recipe.SelectToken("buy.tag") is JObject buyTagObj ? buyTagObj.ToString() : "");
                         transactionItemsViewModel.Buy.Source = new BitmapImage(iconUri);
                         transactionItemsViewModel.Buy.Tag = imageTag;
                     }
@@ -496,7 +492,7 @@ namespace cbhk.GeneralTools
                                 transactionItemsViewModel.BuyBCountDisplayText = "x" + int.Parse(buyCountObj.ToString());
                             }
                             Uri iconUri = new(iconPath, UriKind.Absolute);
-                            ItemStructure imageTag = new(iconUri, buyBID, recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : "");
+                            ItemStructure imageTag = new(new BitmapImage(iconUri), buyBID, recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : "");
                             transactionItemsViewModel.BuyB.Source = new BitmapImage(iconUri);
                             transactionItemsViewModel.BuyB.Tag = imageTag;
                         }
@@ -519,7 +515,7 @@ namespace cbhk.GeneralTools
                                 transactionItemsViewModel.SellCountDisplayText = "x" + int.Parse(sellCountObj.ToString());
                             }
                             Uri iconUri = new(iconPath, UriKind.Absolute);
-                            ItemStructure imageTag = new(iconUri, sellID, recipe.SelectToken("sell.tag") is JObject sellTagObj ? sellTagObj.ToString() : "");
+                            ItemStructure imageTag = new(new BitmapImage(iconUri), sellID, recipe.SelectToken("sell.tag") is JObject sellTagObj ? sellTagObj.ToString() : "");
                             transactionItemsViewModel.Sell.Source = new BitmapImage(iconUri);
                             transactionItemsViewModel.Sell.Tag = imageTag;
                         }

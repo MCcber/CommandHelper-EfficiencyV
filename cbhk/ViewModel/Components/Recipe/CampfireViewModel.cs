@@ -13,13 +13,13 @@ using System.Threading.Tasks;
 using System.Data;
 using cbhk.GeneralTools.MessageTip;
 using CommunityToolkit.Mvvm.ComponentModel;
-using cbhk.GeneralTools.Displayer;
 using System;
 using cbhk.GeneralTools;
 using CommunityToolkit.Mvvm.Input;
 using cbhk.Generators.RecipeGenerator.Components;
 using cbhk.Generators.RecipeGenerator;
 using cbhk.ViewModel.Generators;
+using cbhk.Model.Common;
 
 namespace cbhk.ViewModel.Components.Recipe
 {
@@ -102,7 +102,7 @@ namespace cbhk.ViewModel.Components.Recipe
                 OnPropertyChanged();
                 if (MaterialList.Count > 0 && !MultiSelect)
                 {
-                    MaterialItem.Source = new BitmapImage(MaterialList[0].ImagePath);
+                    MaterialItem.Source = MaterialList[0].ImagePath;
                     ToolTip toolTip = new()
                     {
                         Foreground = whiteBrush,
@@ -284,7 +284,7 @@ namespace cbhk.ViewModel.Components.Recipe
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                        MaterialList.Add(new ItemStructure(iconUri, itemID + ":" + itemName));
+                        MaterialList.Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                         if (itemTagObj != null)
                             MaterialTag.Add(itemTagObj.ToString());
                     }
@@ -301,7 +301,7 @@ namespace cbhk.ViewModel.Components.Recipe
                             string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                             Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
                             string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                            MaterialList.Add(new ItemStructure(iconUri, itemID + ":" + itemName));
+                            MaterialList.Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                             if (itemTagObj != null)
                                 MaterialTag.Add(itemTagObj.ToString());
                         }
@@ -337,7 +337,7 @@ namespace cbhk.ViewModel.Components.Recipe
                 Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                 string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                 ResultItem.Source = new BitmapImage(iconUri);
-                ResultItem.Tag = new ItemStructure(iconUri, itemID + ":" + itemName);
+                ResultItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
             }
         }
 
@@ -479,7 +479,7 @@ namespace cbhk.ViewModel.Components.Recipe
             GenerateBubbleChart.Generator(ref MaterialItem, MaterialList);
             if (MaterialList.Count == 1)
             {
-                MaterialItem.Source = new BitmapImage(MaterialList[0].ImagePath);
+                MaterialItem.Source = MaterialList[0].ImagePath;
                 ToolTip toolTip = new()
                 {
                     Foreground = whiteBrush,

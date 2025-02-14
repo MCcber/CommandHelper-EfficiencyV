@@ -182,17 +182,14 @@ namespace cbhk.ViewModel.Generators
         private void Run()
         {
             Result = new();
-            //await Task.Run(() =>
-            //{
-                foreach (RichTabItems item in SpawnerPages)
-                {
-                    SpawnerPageView spawnerPage = item.Content as SpawnerPageView;
-                    SpawnerPageViewModel context = spawnerPage.DataContext as SpawnerPageViewModel;
-                    context.ShowResult = false;
-                    context.Run();
-                    Result.Append(context.Result + "\r\n");
-                }
-            //});
+            foreach (RichTabItems item in SpawnerPages)
+            {
+                SpawnerPageView spawnerPage = item.Content as SpawnerPageView;
+                SpawnerPageViewModel context = spawnerPage.DataContext as SpawnerPageViewModel;
+                context.ShowResult = false;
+                context.Run();
+                Result.Append(context.Result + "\r\n");
+            }
 
             #region 显示生成结果
             if (ShowResult)

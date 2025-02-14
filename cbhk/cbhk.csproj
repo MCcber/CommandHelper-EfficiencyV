@@ -152,7 +152,7 @@
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf">
       <Version>2.0.1</Version>
     </PackageReference>
-    <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.25.0" />
+    <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.26.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
       <Version>1.1.135</Version>
@@ -168,8 +168,8 @@
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="SharpNBT" Version="1.3.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
-    <PackageReference Include="System.Management" Version="9.0.0" />
-    <PackageReference Include="VirtualizingWrapPanel" Version="2.1.0" />
+    <PackageReference Include="System.Management" Version="9.0.1" />
+    <PackageReference Include="VirtualizingWrapPanel" Version="2.1.1" />
     <PackageReference Include="WriteableBitmapEx" Version="1.6.8" />
   </ItemGroup>
   <ItemGroup>
@@ -417,6 +417,7 @@
     <Resource Include="Resource\Common\Image\Datapack\editedIcon.png" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="GeneralTools\ScrollViewerHelper\ScrollToControlAction.cs" />
     <Compile Remove="GeneralTools\TreeViewComponentsHelper\HeaderToJson.cs" />
     <Compile Remove="GeneralTools\TreeViewComponentsHelper\ReturnTargetComponents.cs" />
     <Compile Remove="GeneralTools\TreeViewComponentsHelper\TagToHeader.cs" />
@@ -515,6 +516,8 @@
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="GeneralTools\Displayer\" />
+    <Folder Include="GeneralTools\ScrollViewerHelper\" />
     <Folder Include="Interface\Data\" />
   </ItemGroup>
 </Project>

@@ -7,6 +7,7 @@ using ICSharpCode.AvalonEdit.Document;
 using Prism.Ioc;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -207,6 +208,41 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             }
             #endregion
 
+            #region 判断是否正在切换CustomCompound的类型
+            if(Parent.DataType is DataType.CustomCompound && Parent.Children.Count > 1 && Parent.Children[0] == this)
+            {
+                int lastChildOffset = 0;
+                int currentOffset = StartLine.EndOffset;
+                string currentString = Plan.GetRangeText(StartLine.Offset,StartLine.EndOffset - StartLine.Offset);
+                if(currentString.TrimEnd().EndsWith(','))
+                {
+                    currentOffset--;
+                }
+
+                if (Parent.Children[^1] is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
+                {
+                    if (compoundJsonTreeViewItem.EndLine is not null)
+                    {
+                        lastChildOffset = compoundJsonTreeViewItem.EndLine.EndOffset;
+                    }
+                }
+                if (lastChildOffset == 0 && Parent.Children[^1].StartLine is not null)
+                {
+                    lastChildOffset = Parent.Children[^1].StartLine.EndOffset;
+                }
+                else
+                if(lastChildOffset == 0)
+                {
+                    lastChildOffset = currentOffset;
+                }
+                Plan.SetRangeText(currentOffset, lastChildOffset - currentOffset, "");
+                while (Parent.Children.Count > 1)
+                {
+                    Parent.Children.RemoveAt(1);
+                }
+            }
+            #endregion
+
             #region 判断是否需要应用枚举结构
             if (EnumKey.Length > 0)
             {
@@ -241,7 +277,13 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
 
                     JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), FilteredRawList, LayerCount);
                     Parent.Children.AddRange(result.Result);
-                    Plan.SetRangeText(StartLine.EndOffset, 0, ",\r\n"+ result.ResultString.ToString());
+
+                    if(result.Result.Count == 1)
+                    {
+                        result.Result[0].Previous = this;
+                    }
+
+                    Plan.SetRangeText(StartLine.EndOffset, 0, result.ResultString.Length > 0 ? ",\r\n" + result.ResultString.ToString() : "");
                     JsonItemTool.SetLineNumbersForEachItem(result.Result, Parent, true);
                 }
             }

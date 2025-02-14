@@ -48,24 +48,31 @@ namespace cbhk.GeneralTools
 				return false;
             //验证服务器证书回调自动验证
             ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(CheckValidationResult);
-            HttpWebRequest Myrq = WebRequest.Create(target_url) as HttpWebRequest;
-            Myrq.KeepAlive = false;//持续连接
-            Myrq.Timeout = 30 * 1000;//30秒，*1000是因为基础单位为毫秒
-            Myrq.Method = "GET";//请求方法
-            Myrq.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";//network里面找
-            Myrq.UserAgent = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36";
+
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+
+            var request = new HttpRequestMessage(HttpMethod.Get, target_url);
+            // 设置Accept头
+            request.Headers.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3");
+            // 设置UserAgent
+            request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36");
+            // 关闭KeepAlive（设置Connection: Close）
+            request.Headers.ConnectionClose = true; // 或者使用下一行代码
+                                                    // request.Headers.TryAddWithoutValidation("Connection", "Close");
 
             //接受返回
             try
             {
-                HttpWebResponse Myrp = await Myrq.GetResponseAsync() as HttpWebResponse;
+                using HttpResponseMessage response = await httpClient.SendAsync(request);
 
-                if (Myrp.StatusCode != HttpStatusCode.OK)
-                { return false; }
+                if (response.StatusCode is not HttpStatusCode.OK)
+                {
+					return false;
+				}
 
                 FileStream fs = new(target_file_path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);//展开一个流
-                Myrp.GetResponseStream().CopyTo(fs);//复制到当前文件夹
-                Myrp.Close();
+                response.Content.ReadAsStreamAsync().Result.CopyTo(fs);//复制到当前文件夹
                 fs.Close();
             }
             catch { }

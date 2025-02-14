@@ -9,6 +9,22 @@ namespace cbhk.CustomControls.Interfaces
     public interface ICustomWorldUnifiedPlan
     {
         /// <summary>
+        /// 当前选中的版本
+        /// </summary>
+        public TextComboBoxItem CurrentVersion { get; set; }
+        /// <summary>
+        /// 配置根目录
+        /// </summary>
+        public string RootDirectory { get; set; }
+        /// <summary>
+        /// 存储需要被读取并解析的文件列表
+        /// </summary>
+        public List<string> DependencyFileList { get; set; }
+        /// <summary>
+        /// 存储需要被读取并解析的文件目录
+        /// </summary>
+        public List<string> DependencyDirectoryList { get; set; }
+        /// <summary>
         /// 将上下文中的引用转换为正确的路径
         /// </summary>
         public Dictionary<string,string> TranslateDictionary { get; set; }
@@ -23,7 +39,7 @@ namespace cbhk.CustomControls.Interfaces
         /// <summary>
         /// 存储当前Wiki主文档的依赖字典
         /// </summary>
-        public Dictionary<string,List<string>> CurrentDependencyItemList { get; set; }
+        public Dictionary<string,List<string>> DependencyItemList { get; set; }
         public void UpdateNullValueBySpecifyingInterval(int endOffset, string newValue = "\r\n");
 
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; }

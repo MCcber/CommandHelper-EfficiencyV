@@ -21,7 +21,7 @@ using cbhk.View;
 using System.Collections.ObjectModel;
 using cbhk.Model.Common;
 using cbhk.GeneralTools;
-using System.Windows.Media.Imaging;
+using cbhk.CustomControls;
 
 namespace cbhk.ViewModel.Generators
 {
@@ -30,7 +30,7 @@ namespace cbhk.ViewModel.Generators
         #region Field
         private HtmlHelper _htmlHelper = null;
         private Window home = null;
-        private string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\1.20.4";
+        private string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\";
         public TextEditor textEditor = null;
         private FoldingManager foldingManager = null;
         private IContainerProvider _container;
@@ -38,15 +38,32 @@ namespace cbhk.ViewModel.Generators
         #endregion
 
         #region Property
+        public string RootDirectory { get; set; } = @"Advancement\Data\Rule\";
+
+        private TextComboBoxItem _currentVersion = new();
+        public TextComboBoxItem CurrentVersion
+        {
+            get => _currentVersion;
+            set => SetProperty(ref _currentVersion, value);
+        }
+
+        public ObservableCollection<TextComboBoxItem> VersionList { get; set; } =
+            [
+                new TextComboBoxItem()
+                {
+                    Text = "1.20.3-1.20.4"
+                }
+            ];
+
         [ObservableProperty]
         public ObservableCollection<JsonTreeViewItem> _advancementItemList = [];
 
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
-        public Dictionary<string, List<string>> CurrentDependencyItemList { get; set; } = [];
+        public Dictionary<string, List<string>> DependencyItemList { get; set; } = [];
 
         public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; } = new()
         {
-            { "enum:trigger.compound:conditions","#准则触发器" }
+            { "enum:trigger.optionalcompound:conditions","#准则触发器" }
         };
 
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; } = [];
@@ -58,6 +75,8 @@ namespace cbhk.ViewModel.Generators
             { "#准则|上文", "#谓词" },
             { "#准则|下文", "#准则" }
         };
+        public List<string> DependencyFileList { get; set; }
+        public List<string> DependencyDirectoryList { get; set; }
         #endregion
 
         public AdvancementViewModel(IContainerProvider container, MainView mainView)
@@ -78,7 +97,7 @@ namespace cbhk.ViewModel.Generators
         /// <param name="e"></param>
         public void CommonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            CurrentDependencyItemList.Clear();
+            DependencyItemList.Clear();
         }
 
         /// <summary>
@@ -92,10 +111,10 @@ namespace cbhk.ViewModel.Generators
             {
                 textEditor = sender as TextEditor;
                 //生成值提供器字典
-                //CurrentDependencyItemList = htmlHelper.AnalyzeHTMLData("");
+                //DependencyItemList = htmlHelper.AnalyzeHTMLData("");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    JsonTreeViewDataStructure result = _htmlHelper.AnalyzeHTMLData(configDirectoryPath);
+                    JsonTreeViewDataStructure result = _htmlHelper.AnalyzeHTMLData(configDirectoryPath + CurrentVersion.Text);
                     textEditor.Text = "{\r\n" + result.ResultString.ToString().TrimEnd([',', '\r', '\n']) + "\r\n}";
                     jsonTool.SetLineNumbersForEachItem(result.Result, null);
                     AdvancementItemList = result.Result;
@@ -271,7 +290,9 @@ namespace cbhk.ViewModel.Generators
             #endregion
 
             #region 处理复合型跟值类型的起始索引与长度
-            if(startDocumentLine is null && previous is CompoundJsonTreeViewItem previousItem1 && previousItem1.EndLine is not null)
+
+            #region 判定起始行位置
+            if (startDocumentLine is null && previous is CompoundJsonTreeViewItem previousItem1 && previousItem1.EndLine is not null)
             {
                 IsCurrentNull = true;
                 startDocumentLine = previousItem1.EndLine;
@@ -294,6 +315,7 @@ namespace cbhk.ViewModel.Generators
                 IsCurrentNull = true;
                 startDocumentLine = item.Plan.GetLineByNumber(2);
             }
+            #endregion
 
             startLineText = textEditor.Document.GetText(startDocumentLine);
 
@@ -306,6 +328,17 @@ namespace cbhk.ViewModel.Generators
 
                     switch (changeType)
                     {
+                        case ChangeType.NumberAndBool:
+                        case ChangeType.String:
+                            {
+                                int index = startLineText.IndexOf(':') + 2;
+                                if(index > 2)
+                                {
+                                    offset = startDocumentLine.Offset + index;
+                                    length = startDocumentLine.EndOffset - offset - (next is not null && next.StartLine is not null ? 1 : 0);
+                                }
+                                break;
+                            }
                         case ChangeType.AddCompoundObject:
                             {
                                 int index = startLineText.IndexOf('{') + 1;
@@ -408,11 +441,7 @@ namespace cbhk.ViewModel.Generators
                         }
                         else
                         {
-                            length = startDocumentLine.EndOffset - startDocumentLine.Offset - colonOffset;
-                        }
-                        if (changeType is ChangeType.String)
-                        {
-                            newValue = "\"" + newValue + "\"";
+                            length = startDocumentLine.Length - colonOffset;
                         }
                     }
                 }
@@ -420,15 +449,6 @@ namespace cbhk.ViewModel.Generators
             else
             {
                 int lastOffset = 0;
-                if(previous is CompoundJsonTreeViewItem previousItem2 && previousItem2.EndLine is not null)
-                {
-                    lastOffset = startLineText.LastIndexOf('}') + 1;
-                    if(lastOffset == 0)
-                    {
-                        lastOffset = startLineText.LastIndexOf(']') + 1;
-                    }
-                }
-                else
                 if (previous is not null && previous.StartLine is not null)
                 {
                     lastOffset = startLineText.LastIndexOf(',') + 1;
@@ -451,7 +471,7 @@ namespace cbhk.ViewModel.Generators
                     offset = startDocumentLine.Offset + lastOffset;
                 }
 
-                newValue = (previous is not null && previous.StartLine is not null && next is not null && next.StartLine is not null ? "," : "") + "\r\n" + new string(' ', item.LayerCount * 2) + "\"" + item.Key + "\": " + newValue + (next is not null && next.StartLine is not null ? "," : "") + (parent is not null && parent.StartLine == parent.EndLine ? "\r\n" + new string(' ', parent.LayerCount * 2) : "");
+                newValue = (previous is not null && previous.StartLine is not null && ((next is not null && next.StartLine is null) || next is null) ? "," : "") + "\r\n" + new string(' ', item.LayerCount * 2) + "\"" + item.Key + "\": " + newValue + (next is not null && next.StartLine is not null ? "," : "") + (parent is not null && parent.StartLine == parent.EndLine ? "\r\n" + new string(' ', parent.LayerCount * 2) : "");
             }
             #endregion
 
@@ -477,9 +497,9 @@ namespace cbhk.ViewModel.Generators
                     item.StartLine = GetLineByNumber(previous.StartLine.LineNumber + 1);
                 }
                 else
-                if (item.StartLine is null && parent is not null && parent.EndLine is not null)
+                if(item.StartLine is null && parent is not null && parent.StartLine is not null)
                 {
-                    item.StartLine = GetLineByNumber(parent.EndLine.LineNumber + 1);
+                    item.StartLine = GetLineByNumber(parent.StartLine.LineNumber + 1);
                 }
                 item.StartLine ??= GetLineByNumber(2);
             }

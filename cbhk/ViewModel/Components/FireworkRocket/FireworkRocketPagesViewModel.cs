@@ -1032,6 +1032,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
                 DisplayerView displayer = _container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
+                    displayer.Show();
                     displayerViewModel.GeneratorResult(Result, "烟花火箭", icon_path);
                 }
             }

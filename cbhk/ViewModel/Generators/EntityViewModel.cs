@@ -306,6 +306,7 @@ namespace cbhk.ViewModel.Generators
                 DisplayerView displayer = _container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
+                    displayer.Show();
                     displayerViewModel.GeneratorResult(Result.ToString(), "实体", icon_path);
                 }
             }

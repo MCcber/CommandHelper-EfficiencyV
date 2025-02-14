@@ -162,9 +162,9 @@ namespace cbhk.ViewModel
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ThreadTimerCallback(object sender, EventArgs e)
+        private async void ThreadTimerCallback(object sender, EventArgs e)
         {
-            SignIn();
+            await SignIn();
             SignInTimer.IsEnabled = false;
         }
 

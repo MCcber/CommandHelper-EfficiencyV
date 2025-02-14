@@ -2,6 +2,7 @@
 using cbhk.Interface.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
+using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -294,14 +295,12 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// <param name="e"></param>
         public void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            if(this is CompoundJsonTreeViewItem)
-            {
-                return;
-            }
-
-            #region 定位相邻的已有值的两个节点
+            #region Field
+            ChangeType changeType = ChangeType.None;
             JsonTreeViewItem previous = Previous;
             JsonTreeViewItem next = Next;
+            #endregion
+            #region 定位相邻的已有值的两个节点
             while (previous is not null && previous.StartLine is null)
             {
                 if (previous.Previous is null)
@@ -320,38 +319,78 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             }
             #endregion
 
-            ChangeType changeType = DataType is DataType.String ? ChangeType.String : ChangeType.NumberAndBool;
-            string doubleQuotationMarks = changeType is ChangeType.String ? "\"" : "";
-            string currentValue = Value.ToString();
-            if (string.IsNullOrEmpty(currentValue))
+            if (this is CompoundJsonTreeViewItem thisCompoundJsonTreeViewItem && thisCompoundJsonTreeViewItem.DataType is DataType.MultiType)
             {
-                int offset = 1, length = StartLine.Length;
-
-                if (previous is not null)
+                changeType = (ChangeType)Enum.Parse(typeof(ChangeType), thisCompoundJsonTreeViewItem.SelectedEnumItem.Text, true);
+                if(changeType is ChangeType.String)
                 {
-                    if (previous is CompoundJsonTreeViewItem PreviousCompoundItem && PreviousCompoundItem.EndLine is not null)
-                    {
-                        offset = PreviousCompoundItem.EndLine.EndOffset - 1;
-                    }
-                    else
-                    {
-                        offset = previous.StartLine.EndOffset - 1;
-                    }
-                    length = StartLine.EndOffset - offset;
-                }
 
-                Plan.SetRangeText(offset, length, "");
-                StartLine = null;
+                }
+                else
+                if(changeType is ChangeType.NumberAndBool)
+                {
+
+                }
             }
             else
             {
-                Plan.UpdateValueBySpecifyingInterval(this, changeType, doubleQuotationMarks + currentValue + doubleQuotationMarks);
-                #region 更新父节点的末行引用
-                if (Parent is not null && StartLine is not null && ((previous is null && next is null) || ((previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null))))
+                changeType = DataType is DataType.String ? ChangeType.String : ChangeType.NumberAndBool;
+                string doubleQuotationMarks = changeType is ChangeType.String && Value is string stringValue && !stringValue.StartsWith('"') && !stringValue.EndsWith('"') ? "\"" : "";
+                string currentValue = Value.ToString();
+                if (string.IsNullOrEmpty(currentValue))
                 {
-                    Parent.EndLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
+                    int offset = StartLine.Offset, length = StartLine.Length;
+
+                    if (previous is not null && previous.StartLine is not null)
+                    {
+                        if (previous is CompoundJsonTreeViewItem PreviousCompoundItem && PreviousCompoundItem.EndLine is not null)
+                        {
+                            offset = PreviousCompoundItem.EndLine.EndOffset - 1;
+                        }
+                        else
+                        {
+                            offset = previous.StartLine.EndOffset - 1;
+                        }
+                        length = StartLine.EndOffset - offset;
+                    }
+                    else
+                    if (Parent is not null)
+                    {
+                        offset = Parent.StartLine.EndOffset;
+                        if ((previous is null && next is null) || ((previous is not null && previous.StartLine is not null) || (next is not null && next.StartLine is not null)))
+                        {
+                            length = StartLine.EndOffset - offset;
+                        }
+                        else
+                        {
+                            char lastChar = Parent.DataType is not DataType.Array && Parent.DataType is not DataType.InnerArray ? '}' : ']';
+                            string parentEndlineText = Plan.GetRangeText(Parent.EndLine.Offset, Parent.EndLine.Length);
+                            int lastOffset = parentEndlineText.LastIndexOf(',') + 1;
+                            if (lastOffset == 0)
+                            {
+                                lastOffset = parentEndlineText.LastIndexOf(lastChar);
+                            }
+                            length = Parent.EndLine.Offset + lastOffset - offset;
+                        }
+                    }
+
+                    Plan.SetRangeText(offset, length, "");
+                    if ((previous is null && next is null) || ((previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null)))
+                    {
+                        Parent.EndLine = Parent.StartLine;
+                    }
+                    StartLine = null;
                 }
-                #endregion
+                else
+                {
+                    Plan.UpdateValueBySpecifyingInterval(this, changeType, doubleQuotationMarks + currentValue + doubleQuotationMarks);
+                    #region 更新父节点的末行引用
+                    if (Parent is not null && StartLine is not null && ((previous is null && next is null) || ((previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null))))
+                    {
+                        Parent.EndLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
+                    }
+                    #endregion
+                }
             }
         }
 
@@ -369,10 +408,11 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 string currentValue = ((bool)Value).ToString().ToLower();
                 if (!IsFalse && !IsTrue)
                 {
-                    int offset = 1, length = StartLine.Length;
+                    int offset = StartLine.Offset, length = StartLine.Length;
 
-                    #region 定位上一个已有值的节点
+                    #region 定位相邻的已有值的两个节点
                     JsonTreeViewItem previous = Previous;
+                    JsonTreeViewItem next = Next;
                     while (previous is not null && previous.StartLine is null)
                     {
                         if (previous.Previous is null)
@@ -381,22 +421,61 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         }
                         previous = previous.Previous;
                     }
+                    while (next is not null && next.StartLine is null)
+                    {
+                        if (next.Next is null)
+                        {
+                            break;
+                        }
+                        next = next.Next;
+                    }
                     #endregion
 
                     if (previous is not null)
                     {
                         if(previous is CompoundJsonTreeViewItem PreviousCompoundItem && PreviousCompoundItem.EndLine is not null)
                         {
-                            offset = PreviousCompoundItem.EndLine.EndOffset - 1;
+                            offset = PreviousCompoundItem.EndLine.EndOffset;
                         }
                         else
                         {
                             offset = previous.StartLine.EndOffset;
                         }
+
+                        if(next is null || (next is not null && next.StartLine is null))
+                        {
+                            offset--;
+                        }
                         length = StartLine.EndOffset - offset;
+                    }
+                    else
+                    if(Parent is not null)
+                    {
+                        offset = Parent.StartLine.EndOffset;
+                        if (Parent.Children.Count > 1)
+                        {
+                            length = StartLine.EndOffset - offset;
+                        }
+                        else
+                        {
+                            char lastChar = Parent.DataType is not DataType.Array && Parent.DataType is not DataType.InnerArray ? '}' : ']';
+                            string parentEndlineText = Plan.GetRangeText(Parent.EndLine.Offset, Parent.EndLine.Length);
+                            int lastOffset = parentEndlineText.LastIndexOf(',') + 1;
+                            if (lastOffset == 0)
+                            {
+                                lastOffset = parentEndlineText.LastIndexOf(lastChar);
+                            }
+                            length = lastOffset - offset;
+                        }
                     }
                     
                     customWorldUnifiedPlan.SetRangeText(offset, length, "");
+
+                    if ((previous is null && next is null) || ((previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null)))
+                    {
+                        Parent.EndLine = Parent.StartLine;
+                    }
+
                     StartLine = null;
                 }
                 else

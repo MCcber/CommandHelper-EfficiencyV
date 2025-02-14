@@ -8,6 +8,6 @@ namespace cbhk.Model.Common
     {
         public ObservableCollection<JsonTreeViewItem> Result { get; set; } = [];
         public StringBuilder ResultString { get; set; } = new();
-        public bool HaveReferenceContent { get; set; } = false;
+        //public bool HaveReferenceContent { get; set; } = false;
     }
 }

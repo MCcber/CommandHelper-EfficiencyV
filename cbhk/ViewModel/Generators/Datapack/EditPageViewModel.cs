@@ -557,7 +557,7 @@ namespace cbhk.ViewModel.Generators.Datapack
                         syntaxTreeItem.Description = format.ToString();
                     #endregion
                     #region 添加子级作为父级的补全数据并加入语法字典
-                    if (SyntaxItemDicionary.TryGetValue(initRadical, out Dictionary<string, List<SyntaxTreeItem>>? parameterDictionaries))
+                    if (SyntaxItemDicionary.TryGetValue(initRadical, out Dictionary<string, List<SyntaxTreeItem>> parameterDictionaries))
                     {
                         if (!parameterDictionaries.ContainsKey(currentKey.ToString()))
                             parameterDictionaries.Add(currentKey.ToString(), [syntaxTreeItem]);

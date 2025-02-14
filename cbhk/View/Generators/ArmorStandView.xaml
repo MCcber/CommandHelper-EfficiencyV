@@ -1,4 +1,4 @@
-﻿<local_window:CommonWindow
+﻿<localWindow:CommonWindow
     x:Class="cbhk.View.Generators.ArmorStandView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -10,7 +10,7 @@
     xmlns:control_datacontexts="clr-namespace:cbhk.ControlsDataContexts"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hx="http://helix-toolkit.org/wpf"
-    xmlns:local_window="clr-namespace:cbhk.WindowDictionaries"
+    xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="盔甲架生成器"
@@ -3021,4 +3021,4 @@
             </AnimationComponents:AnimationContainer.RightLegPose>
         </AnimationComponents:AnimationContainer>
     </Grid>
-</local_window:CommonWindow>
+</localWindow:CommonWindow>

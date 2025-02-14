@@ -10,6 +10,7 @@
 
         public enum ChangeType
         {
+            None,
             NumberAndBool,
             String,
             AddCompoundObject,

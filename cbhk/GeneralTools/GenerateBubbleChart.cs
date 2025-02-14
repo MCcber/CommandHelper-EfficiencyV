@@ -1,9 +1,9 @@
 ﻿using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Collections.ObjectModel;
-using cbhk.GeneralTools.Displayer;
 using System.Windows;
 using System.Windows.Controls;
+using cbhk.Model.Common;
 
 namespace cbhk.GeneralTools
 {
@@ -27,7 +27,7 @@ namespace cbhk.GeneralTools
             {
                 if (i >= CurrentMaterialCollection.Count) break;
                 // 获取当前图像
-                BitmapImage bi = new(CurrentMaterialCollection[i].ImagePath);
+                BitmapImage bi = CurrentMaterialCollection[i].ImagePath as BitmapImage;
                 WriteableBitmap wbImage = new(bi);
 
                 // 将当前图像绘制到指定位置

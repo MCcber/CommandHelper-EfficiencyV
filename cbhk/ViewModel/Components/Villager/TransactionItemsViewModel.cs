@@ -1,7 +1,7 @@
 ﻿using cbhk.GeneralTools;
-using cbhk.GeneralTools.Displayer;
 using cbhk.Generators.VillagerGenerator;
 using cbhk.Generators.VillagerGenerator.Components;
+using cbhk.Model.Common;
 using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -170,24 +170,26 @@ namespace cbhk.ViewModel.Components.Villager
         /// <summary>
         /// 更新物品显示图像以及文本提示
         /// </summary>
-        /// <param name="old_image"></param>
-        /// <param name="new_image"></param>
-        private void UpdateItem(Image old_image, Image new_image)
+        /// <param name="oldImage"></param>
+        /// <param name="newImage"></param>
+        private void UpdateItem(Image oldImage, Image newImage)
         {
-            int startIndex = new_image.Source.ToString().LastIndexOf('/') + 1;
-            int endIndex = new_image.Source.ToString().LastIndexOf('.');
-            string itemID = new_image.Source.ToString()[startIndex..endIndex];
-            string toolTip = itemID + ":" + ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-            old_image.Source = new_image.Source;
+            string toolTip = string.Empty;
+            if (newImage.Tag is ItemStructure newItemStructure)
+            {
+                toolTip = newItemStructure.IDAndName;
+            }
+
+            oldImage.Source = newImage.Source;
             ToolTip tooltipObj = new()
             {
                 Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#484848")),
                 Content = toolTip
             };
-            old_image.ToolTip = tooltipObj;
-            ToolTipService.SetBetweenShowDelay(old_image, 0);
-            ToolTipService.SetInitialShowDelay(old_image, 0);
+            oldImage.ToolTip = tooltipObj;
+            ToolTipService.SetBetweenShowDelay(oldImage, 0);
+            ToolTipService.SetInitialShowDelay(oldImage, 0);
         }
 
         #region 处理拖拽后的数据更新
@@ -198,10 +200,10 @@ namespace cbhk.ViewModel.Components.Villager
         /// <param name="e"></param>
         public void UpdateBuyItem(object sender, DragEventArgs e)
         {
-            Image image = e.Data.GetData(typeof(Image).ToString()) as Image;
-            Image current_image = sender as Image;
-            current_image.Tag = image.Tag;
-            UpdateItem(current_image, image);
+            Image image = e.Data.GetData(typeof(Image)) as Image;
+            Image currentImage = sender as Image;
+            currentImage.Tag = image.Tag;
+            UpdateItem(currentImage, image);
         }
 
         /// <summary>
@@ -211,10 +213,10 @@ namespace cbhk.ViewModel.Components.Villager
         /// <param name="e"></param>
         public void UpdateBuybItem(object sender, DragEventArgs e)
         {
-            Image image = e.Data.GetData(typeof(Image).ToString()) as Image;
-            Image current_image = sender as Image;
-            current_image.Tag = image.Tag;
-            UpdateItem(current_image, image);
+            Image image = e.Data.GetData(typeof(Image)) as Image;
+            Image currentImage = sender as Image;
+            currentImage.Tag = image.Tag;
+            UpdateItem(currentImage, image);
         }
 
         /// <summary>
@@ -224,10 +226,10 @@ namespace cbhk.ViewModel.Components.Villager
         /// <param name="e"></param>
         public void UpdateSellItem(object sender, DragEventArgs e)
         {
-            Image image = e.Data.GetData(typeof(Image).ToString()) as Image;
-            Image current_image = sender as Image;
-            current_image.Tag = image.Tag;
-            UpdateItem(current_image, image);
+            Image image = e.Data.GetData(typeof(Image)) as Image;
+            Image currentImage = sender as Image;
+            currentImage.Tag = image.Tag;
+            UpdateItem(currentImage, image);
         }
         #endregion
 

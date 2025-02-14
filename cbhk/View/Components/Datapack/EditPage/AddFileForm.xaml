@@ -20,7 +20,6 @@
 
     <Window.Resources>
         <local:NewItemGridWidthConverter x:Key="NewItemGridWidthConverter" />
-        <GeneralTools:UriToBitmapConverter x:Key="UriToBitmapImage" />
         <CollectionViewSource x:Key="NewItemSourceCollection" Source="{Binding NewItemStyles, IsAsync=True}" />
         <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk;component/Resource/Common/Image/ButtonNormal.png" />
         <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk;component/Resource/Common/Image/ButtonPressed.png" />

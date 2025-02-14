@@ -21,6 +21,7 @@ using cbhk.View;
 using System.Collections.ObjectModel;
 using cbhk.Model.Common;
 using cbhk.GeneralTools;
+using cbhk.CustomControls;
 
 namespace cbhk.ViewModel.Generators
 {
@@ -45,7 +46,7 @@ namespace cbhk.ViewModel.Generators
         public ObservableCollection<JsonTreeViewItem> _dimensionTypeItemList = [];
 
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
-        public Dictionary<string, List<string>> CurrentDependencyItemList { get; set; } = [];
+        public Dictionary<string, List<string>> DependencyItemList { get; set; } = [];
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; }
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; }
 
@@ -53,6 +54,16 @@ namespace cbhk.ViewModel.Generators
 
         public Dictionary<string, List<string>> DefaultCompoundSource { get; set; } = [];
         public Dictionary<string, string> TranslateDictionary { get; set; } = new() { };
+        public string RootDirectory { get; set; }
+        public List<string> DependencyFileList { get; set; }
+        public List<string> DependencyDirectoryList { get; set; }
+
+        private TextComboBoxItem _currentVersion = new();
+        public TextComboBoxItem CurrentVersion
+        {
+            get => _currentVersion;
+            set => SetProperty(ref _currentVersion, value);
+        }
         #endregion
 
         public DimensionTypeViewModel(IContainerProvider container, MainView mainView)
@@ -71,7 +82,7 @@ namespace cbhk.ViewModel.Generators
         /// <param name="e"></param>
         public void CommonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            CurrentDependencyItemList.Clear();
+            DependencyItemList.Clear();
         }
 
         /// <summary>
@@ -85,7 +96,7 @@ namespace cbhk.ViewModel.Generators
             {
                 textEditor = sender as TextEditor;
                 //生成值提供器字典
-                //CurrentDependencyItemList = htmlHelper.AnalyzeHTMLData("");
+                //DependencyItemList = htmlHelper.AnalyzeHTMLData("");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(configDirectoryPath);
@@ -226,10 +237,6 @@ namespace cbhk.ViewModel.Generators
             {
                 if (compoundJsonTreeViewItem.EndLine is not null)
                     endDocumentLine = compoundJsonTreeViewItem.EndLine;
-
-                switch (replaceType)
-                {
-                }
             }
             #endregion
 

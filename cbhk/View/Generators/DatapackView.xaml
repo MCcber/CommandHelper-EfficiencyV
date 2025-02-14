@@ -1,4 +1,4 @@
-﻿<local_window:CommonWindow
+﻿<localWindow:CommonWindow
     x:Class="cbhk.Generators.DataPackGenerator.DatapackView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,7 +6,7 @@
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:cbhk.Generators.DataPackGenerator"
-    xmlns:local_window="clr-namespace:cbhk.WindowDictionaries"
+    xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="数据包生成器"
@@ -32,4 +32,4 @@
             <Frame Content="{Binding homePage}" NavigationUIVisibility="Hidden" />
         </ContentControl>
     </Grid>
-</local_window:CommonWindow>
+</localWindow:CommonWindow>

@@ -1,7 +1,7 @@
 ﻿using cbhk.GeneralTools;
-using cbhk.GeneralTools.Displayer;
 using cbhk.GeneralTools.MessageTip;
 using cbhk.Generators.RecipeGenerator.Components;
+using cbhk.Model.Common;
 using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -48,7 +48,7 @@ namespace cbhk.ViewModel.Components.Recipe
                         if (MaterialMap[i].Count > 0)
                         {
                             Image currentImage = MaterialGrid.Children[i] as Image;
-                            currentImage.Source = new BitmapImage(MaterialMap[i][0].ImagePath);
+                            currentImage.Source = MaterialMap[i][0].ImagePath;
                             ToolTip toolTip = new()
                             {
                                 Foreground = whiteBrush,
@@ -312,7 +312,7 @@ namespace cbhk.ViewModel.Components.Recipe
                                         string itemID = item.ToString().Replace("minecraft:", "");
                                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                                        MaterialMap[i].Add(new ItemStructure(iconUri, itemID + ":" + itemName));
+                                        MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                                         (MaterialGrid.Children[i] as Image).Source = new BitmapImage(iconUri);
                                     }
                                     if (keyMean["tag"] is JToken tag)
@@ -331,7 +331,7 @@ namespace cbhk.ViewModel.Components.Recipe
                                             string itemID = item.ToString().Replace("minecraft:", "");
                                             Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                                             string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                                            MaterialMap[i].Add(new ItemStructure(iconUri, itemID + ":" + itemName));
+                                            MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                                         }
                                         if (itemObj["tag"] is JToken tag)
                                         {
@@ -365,7 +365,7 @@ namespace cbhk.ViewModel.Components.Recipe
                                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
                                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                                        MaterialMap[i].Add(new ItemStructure(iconUri, itemID + ":" + itemName));
+                                        MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                                         if (itemTagObj != null)
                                             MaterialTag[i].Add(itemTagObj.ToString());
                                     }
@@ -384,7 +384,7 @@ namespace cbhk.ViewModel.Components.Recipe
                                     string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                                     Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
                                     string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                                    MaterialMap[i].Add(new ItemStructure(iconUri, itemID + ":" + itemName));
+                                    MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                                     (MaterialGrid.Children[i] as Image).Source = new BitmapImage(iconUri);
                                     if (itemTagObj != null)
                                         MaterialTag[i].Add(itemTagObj.ToString());
@@ -427,7 +427,7 @@ namespace cbhk.ViewModel.Components.Recipe
                     iconUri = new(iconPath);
                 string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                 ResultItem.Source = new BitmapImage(iconUri);
-                ResultItem.Tag = new ItemStructure(iconUri, itemID + ":" + itemName);
+                ResultItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
                 if (itemCountObj != null)
                     Count = int.Parse(itemCountObj.ToString());
                 ExternalData.Remove("result");
@@ -589,7 +589,7 @@ namespace cbhk.ViewModel.Components.Recipe
         /// <param name="e"></param>
         public void GetDropData(object sender, DragEventArgs e)
         {
-            Image image = e.Data.GetData(typeof(Image).ToString()) as Image;
+            Image image = e.Data.GetData(typeof(Image)) as Image;
             Image currentImage = sender as Image;
             ItemStructure itemStructure = image.Tag as ItemStructure;
 
@@ -734,7 +734,7 @@ namespace cbhk.ViewModel.Components.Recipe
             GenerateBubbleChart.Generator(ref currentImage, CurrentMaterialCollection);
             if (MaterialMap[CurrentSelectedSlotIndex].Count == 1)
             {
-                currentImage.Source = new BitmapImage(MaterialMap[CurrentSelectedSlotIndex][0].ImagePath);
+                currentImage.Source = MaterialMap[CurrentSelectedSlotIndex][0].ImagePath;
                 ToolTip toolTip = new()
                 {
                     Foreground = whiteBrush,
