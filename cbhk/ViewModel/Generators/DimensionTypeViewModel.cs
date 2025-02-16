@@ -64,6 +64,7 @@ namespace cbhk.ViewModel.Generators
             get => _currentVersion;
             set => SetProperty(ref _currentVersion, value);
         }
+        public Dictionary<string, string> CustomItemTranslateDictionay { get; set; } = [];
         #endregion
 
         public DimensionTypeViewModel(IContainerProvider container, MainView mainView)

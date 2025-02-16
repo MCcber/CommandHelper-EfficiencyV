@@ -147,6 +147,9 @@ namespace cbhk.ViewModel.Generators
         {
             _container = container;
             home = mainView;
+
+            BindingOperations.EnableCollectionSynchronization(OriginalItemSource, new object());
+            BindingOperations.EnableCollectionSynchronization(CustomItemSource, new object());
             Task.Run(async () =>{
                 #region 初始化数据表
                 DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();

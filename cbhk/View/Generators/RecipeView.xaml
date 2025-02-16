@@ -459,7 +459,7 @@
                     <ListView
                         HorizontalAlignment="Stretch"
                         BorderBrush="Black"
-                        ItemsSource="{Binding Source={StaticResource OriginalItemView}}"
+                        ItemsSource="{Binding Source={StaticResource OriginalItemView}, IsAsync=True}"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -530,7 +530,7 @@
                     <ListView
                         HorizontalAlignment="Stretch"
                         BorderBrush="Black"
-                        ItemsSource="{Binding Source={StaticResource CustomItemView}}"
+                        ItemsSource="{Binding Source={StaticResource CustomItemView}, IsAsync=True}"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"

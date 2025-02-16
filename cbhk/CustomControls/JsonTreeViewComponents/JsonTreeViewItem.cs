@@ -319,9 +319,9 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             }
             #endregion
 
-            if (this is CompoundJsonTreeViewItem thisCompoundJsonTreeViewItem && thisCompoundJsonTreeViewItem.DataType is DataType.MultiType)
+            if (this is CompoundJsonTreeViewItem thisCompoundJsonTreeViewItem1 && thisCompoundJsonTreeViewItem1.DataType is DataType.MultiType)
             {
-                changeType = (ChangeType)Enum.Parse(typeof(ChangeType), thisCompoundJsonTreeViewItem.SelectedEnumItem.Text, true);
+                changeType = (ChangeType)Enum.Parse(typeof(ChangeType), thisCompoundJsonTreeViewItem1.SelectedEnumItem.Text, true);
                 if(changeType is ChangeType.String)
                 {
 
@@ -333,6 +333,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 }
             }
             else
+            if(this is CompoundJsonTreeViewItem thisCompoundJsonTreeViewItem2 && thisCompoundJsonTreeViewItem2.DataType is not DataType.CustomCompound)
             {
                 changeType = DataType is DataType.String ? ChangeType.String : ChangeType.NumberAndBool;
                 string doubleQuotationMarks = changeType is ChangeType.String && Value is string stringValue && !stringValue.StartsWith('"') && !stringValue.EndsWith('"') ? "\"" : "";

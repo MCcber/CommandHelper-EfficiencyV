@@ -729,11 +729,14 @@ namespace cbhk.ViewModel.Generators
             }
             #endregion
 
-            #region 初始化数据表
+            #region 初始化物品库
+            BindingOperations.EnableCollectionSynchronization(OriginalItemList, new object());
+            BindingOperations.EnableCollectionSynchronization(CustomItemList, new object());
             Task.Run(async () =>
             {
                 DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
                 ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
+
 
                 #region 异步载入原版物品序列
                 //加载物品集合

@@ -1138,7 +1138,7 @@
                             VerticalAlignment="Top"
                             BorderThickness="0"
                             IsSynchronizedWithCurrentItem="True"
-                            ItemsSource="{Binding Source={StaticResource CustomItemView}}"
+                            ItemsSource="{Binding Source={StaticResource CustomItemView}, IsAsync=True}"
                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                             SelectedItem="{Binding SelectedItem, Mode=TwoWay}"

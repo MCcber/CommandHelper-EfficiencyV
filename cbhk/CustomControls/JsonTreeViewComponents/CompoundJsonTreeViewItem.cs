@@ -7,7 +7,6 @@ using ICSharpCode.AvalonEdit.Document;
 using Prism.Ioc;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
