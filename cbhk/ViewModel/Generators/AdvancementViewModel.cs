@@ -110,6 +110,7 @@ namespace cbhk.ViewModel.Generators
             await Task.Run(async () =>
             {
                 textEditor = sender as TextEditor;
+                EnumIDDictionary.Add("物品ID", []);
                 //生成值提供器字典
                 //DependencyItemList = htmlHelper.AnalyzeHTMLData("");
                 await Application.Current.Dispatcher.InvokeAsync(() =>

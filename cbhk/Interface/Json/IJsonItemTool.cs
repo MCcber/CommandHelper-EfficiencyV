@@ -17,6 +17,13 @@ namespace cbhk.Interface.Json
         /// <param name="Target">已被删除的子元素</param>
         void RecursiveRemoveFlattenDescendantNodeList(CompoundJsonTreeViewItem CurrentParent,CompoundJsonTreeViewItem Target);
         /// <summary>
+        /// 定位相邻两个已有值的节点
+        /// </summary>
+        /// <param name="previous"></param>
+        /// <param name="next"></param>
+        /// <returns></returns>
+        public Tuple<JsonTreeViewItem, JsonTreeViewItem> LocateTheNodesOfTwoAdjacentExistingValues(JsonTreeViewItem previous, JsonTreeViewItem next);
+        /// <summary>
         /// 递归遍历节点树并执行代理方法
         /// </summary>
         /// <param name="jsonItemList"></param>
