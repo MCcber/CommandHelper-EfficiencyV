@@ -1,10 +1,6 @@
-﻿using cbhk.CustomControls.Interfaces;
-using cbhk.CustomControls.JsonTreeViewComponents;
-using ICSharpCode.AvalonEdit;
+﻿using cbhk.CustomControls.JsonTreeViewComponents;
 using System;
 using System.Collections.ObjectModel;
-using System.Text;
-using System.Windows;
 
 namespace cbhk.Interface.Json
 {
@@ -42,11 +38,15 @@ namespace cbhk.Interface.Json
         /// <param name="compoundJsonTreeViewItem">数组节点</param>
         void AddSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
-        /// 删除数组元素
+        /// 折叠或展开当前复合节点
         /// </summary>
-        /// <param name="compoundJsonTreeViewItem">当前数组节点</param>
-        /// <param name="customWorldUnifiedPlan">当前自定义世界生成器方案实例</param>
-        void RemoveSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
+        /// <param name="compoundJsonTreeViewItem"></param>
+        void CollapseCurrentItem(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
+        /// <summary>
+        /// 删除当前元素
+        /// </summary>
+        /// <param name="compoundJsonTreeViewItem">当前节点</param>
+        void RemoveCurrentItem(JsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
         /// 更新平铺列表
         /// </summary>

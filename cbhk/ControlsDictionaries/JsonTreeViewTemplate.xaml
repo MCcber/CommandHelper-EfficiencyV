@@ -192,7 +192,7 @@
                         Visibility="{Binding RemoveElementButtonVisibility}">
                         <behaviors:Interaction.Triggers>
                             <behaviors:EventTrigger EventName="Click">
-                                <behaviors:CallMethodAction MethodName="RemoveSubStructure_Click" TargetObject="{Binding}" />
+                                <behaviors:CallMethodAction MethodName="RemoveCurrentItem_Click" TargetObject="{Binding}" />
                             </behaviors:EventTrigger>
                         </behaviors:Interaction.Triggers>
                     </CustomControls:IconButtons>
@@ -329,23 +329,23 @@
                         MouseOverBackground="#3E7409"
                     -->
                     <CustomControls:IconButtons
-                        Background="#487C13"
+                        Background="{Binding SwitchButtonColor}"
                         BorderThickness="0"
                         Cursor="Hand"
                         IconColor="White"
-                        IconData="M512 92.7c231.9 0 420.5 188.6 420.5 420.5S743.9 933.7 512 933.7 91.5 745 91.5 513.2 280.1 92.7 512 92.7m0-87C231.7 5.7 4.5 232.9 4.5 513.2s227.2 507.5 507.5 507.5 507.5-227.2 507.5-507.5S792.3 5.7 512 5.7z M700.5 469.7h-145v-145c0-24-19.5-43.5-43.5-43.5s-43.5 19.5-43.5 43.5v145h-145c-24 0-43.5 19.5-43.5 43.5s19.5 43.5 43.5 43.5h145v145c0 24 19.5 43.5 43.5 43.5s43.5-19.5 43.5-43.5v-145h145c24 0 43.5-19.5 43.5-43.5 0-24.1-19.5-43.5-43.5-43.5z"
+                        IconData="{Binding SwitchButtonIcon}"
                         IconHeight="15"
                         IconMargin="5"
                         IconWidth="15"
-                        PressedBackground="#3E7409"
+                        PressedBackground="{Binding PressedSwitchButtonColor}"
                         Style="{DynamicResource IconButtons}"
                         ToolTip="{Binding ElementButtonTip}"
                         ToolTipService.BetweenShowDelay="0"
                         ToolTipService.InitialShowDelay="0"
-                        Visibility="{Binding AddElementButtonVisibility}">
+                        Visibility="{Binding AddOrSwitchElementButtonVisibility}">
                         <behaviors:Interaction.Triggers>
                             <behaviors:EventTrigger EventName="Click">
-                                <behaviors:CallMethodAction MethodName="AddSubStructure_Click" TargetObject="{Binding}" />
+                                <behaviors:CallMethodAction MethodName="SwitchCompoundState_Click" TargetObject="{Binding}" />
                             </behaviors:EventTrigger>
                         </behaviors:Interaction.Triggers>
                     </CustomControls:IconButtons>

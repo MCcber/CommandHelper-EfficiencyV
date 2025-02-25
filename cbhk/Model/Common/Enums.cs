@@ -14,12 +14,11 @@
             NumberAndBool,
             String,
             AddCompoundObject,
-            AddArrayElement,
-            AddArrayElementToEnd,
+            AddListElement,
+            AddListElementToEnd,
             RemoveCompound,
-            RemoveCompoundObject,
-            RemoveArray,
-            RemoveArrayElement,
+            RemoveList,
+            RemoveListElement,
         }
 
         public enum DataType
@@ -28,12 +27,7 @@
             Number,
             Bool,
             String,
-            BlockID,
-            ItemID,
-            BlockTag,
-            ItemTag,
             Enum,
-            EntityID,
             Byte,
             Decimal,
             Short,
@@ -44,15 +38,11 @@
             Compound,
             CustomCompound,
             OptionalCompound,
-            NullableCompound,
-            OptionalAndNullableCompound,
             EnumCompound,
             MultiType,
             ArrayElement,
             Array,
-            InnerArray,
-            List,
-            Any
+            List
         }
     }
 }

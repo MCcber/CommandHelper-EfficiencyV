@@ -3,7 +3,6 @@ using cbhk.Interface.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
 using System;
-using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -282,7 +281,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             #endregion
 
             #region 判断是否需要直接返回
-            if(string.IsNullOrEmpty(Value.ToString()) && StartLine is null)
+            if(string.IsNullOrEmpty(Value) && StartLine is null)
             {
                 return;
             }
@@ -356,7 +355,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         }
                         else
                         {
-                            char lastChar = Parent.DataType is not DataType.Array && Parent.DataType is not DataType.InnerArray ? '}' : ']';
+                            char lastChar = Parent.DataType is not DataType.Array ? '}' : ']';
                             string parentEndlineText = Plan.GetRangeText(Parent.EndLine.Offset, Parent.EndLine.Length);
                             int lastOffset = parentEndlineText.LastIndexOf(lastChar) + Parent.EndLine.Offset;
                             length = lastOffset - offset;
@@ -377,7 +376,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     #region 更新父节点的末行引用
                     if (Parent is not null && (Parent.EndLine is null || Parent.StartLine == Parent.EndLine) && StartLine is not null && ((previous is null && next is null) || ((previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null))))
                     {
-                        Parent.EndLine = Plan.GetLineByNumber(StartLine.LineNumber + 1);
+                        Parent.EndLine = StartLine.NextLine;
                     }
                     #endregion
                 }
@@ -448,7 +447,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         }
                         else
                         {
-                            char lastChar = Parent.DataType is not DataType.Array && Parent.DataType is not DataType.InnerArray ? '}' : ']';
+                            char lastChar = Parent.DataType is not DataType.Array ? '}' : ']';
                             string parentEndlineText = Plan.GetRangeText(Parent.EndLine.Offset, Parent.EndLine.Length);
                             int lastOffset = parentEndlineText.LastIndexOf(',') + 1;
                             if (lastOffset == 0)

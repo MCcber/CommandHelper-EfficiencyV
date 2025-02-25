@@ -1,4 +1,5 @@
-﻿using cbhk.CustomControls.Interfaces;
+﻿using ABI.System.Collections.Generic;
+using cbhk.CustomControls.Interfaces;
 using cbhk.GeneralTools;
 using cbhk.Interface.Json;
 using cbhk.Model.Common;
@@ -11,6 +12,7 @@ using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using static cbhk.Model.Common.Enums;
 
 namespace cbhk.CustomControls.JsonTreeViewComponents
@@ -18,8 +20,27 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
     public partial class CompoundJsonTreeViewItem : JsonTreeViewItem
     {
         #region Property
+        public bool IsExpanded { get; set; } = false;
+        public Geometry PlusIcon { get; } = Application.Current.Resources["TreeNodePlusGeometry"] as Geometry;
+        public Geometry MinusIcon { get; } = Application.Current.Resources["TreeNodeMinusGeometry"] as Geometry;
+        [ObservableProperty]
+        public Geometry _switchButtonIcon;
+        [ObservableProperty]
+        public Brush _switchButtonColor = new SolidColorBrush();
+        public SolidColorBrush PlusColor { get; } = new((Color)ColorConverter.ConvertFromString("#2AA515"));
+        public SolidColorBrush MinusColor { get; } = new((Color)ColorConverter.ConvertFromString("#D81E06"));
+        public SolidColorBrush PressedPlusColor { get; } = new((Color)ColorConverter.ConvertFromString("#2AA515"));
+        public SolidColorBrush PressedMinusColor { get; } = new((Color)ColorConverter.ConvertFromString("#2AA515"));
+        [ObservableProperty]
+        public Brush _pressedSwitchButtonColor = new SolidColorBrush();
         public int EndLineNumber { get; set; }
         public DocumentLine EndLine { get; set; }
+
+        enum MoveDirection
+        {
+            Up,
+            Down
+        }
 
         /// <summary>
         /// 枚举键
@@ -73,46 +94,46 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             {
                 SetProperty(ref dataType, value);
                 SortButtonVisibility = RemoveElementButtonVisibility = BoolButtonVisibility = EnumBoxVisibility = ErrorIconVisibility = InfoIconVisibility = InputBoxVisibility = EnumBoxVisibility = Visibility.Collapsed;
-                switch (dataType)
-                {
-                    case DataType.String:
-                    case DataType.Byte:
-                    case DataType.Short:
-                    case DataType.Int:
-                    case DataType.Float:
-                    case DataType.Double:
-                    case DataType.Long:
-                        InputBoxVisibility = Visibility.Visible;
-                        break;
-                    case DataType.BlockTag:
-                    case DataType.ItemTag:
-                    case DataType.EntityID:
-                    case DataType.BlockID:
-                    case DataType.ItemID:
-                    case DataType.Enum:
-                        EnumBoxVisibility = Visibility.Visible;
-                        break;
-                    case DataType.Bool:
-                        BoolButtonVisibility = Visibility.Visible;
-                        break;
-                    case DataType.NullableCompound:
-                        RemoveElementButtonVisibility = Visibility.Visible;
-                        break;
-                    case DataType.OptionalCompound:
-                        AddElementButtonVisibility = Visibility.Visible;
-                        break;
-                    case DataType.CustomCompound:
-                        AddElementButtonVisibility = Visibility.Visible;
-                        break;
-                    case DataType.List:
-                        AddElementButtonVisibility = Visibility.Visible;
-                        break;
-                }
+                //switch (dataType)
+                //{
+                //    case DataType.String:
+                //    case DataType.Byte:
+                //    case DataType.Short:
+                //    case DataType.Int:
+                //    case DataType.Float:
+                //    case DataType.Double:
+                //    case DataType.Long:
+                //        InputBoxVisibility = Visibility.Visible;
+                //        break;
+                //    case DataType.BlockTag:
+                //    case DataType.ItemTag:
+                //    case DataType.EntityID:
+                //    case DataType.BlockID:
+                //    case DataType.ItemID:
+                //    case DataType.Enum:
+                //        EnumBoxVisibility = Visibility.Visible;
+                //        break;
+                //    case DataType.Bool:
+                //        BoolButtonVisibility = Visibility.Visible;
+                //        break;
+                //    case DataType.NullableCompound:
+                //        RemoveElementButtonVisibility = Visibility.Visible;
+                //        break;
+                //    case DataType.OptionalCompound:
+                //        AddOrSwitchElementButtonVisibility = Visibility.Visible;
+                //        break;
+                //    case DataType.CustomCompound:
+                //        AddOrSwitchElementButtonVisibility = Visibility.Visible;
+                //        break;
+                //    case DataType.List:
+                //        AddOrSwitchElementButtonVisibility = Visibility.Visible;
+                //        break;
+                //}
             }
         }
 
         [ObservableProperty]
-        public Visibility _addElementButtonVisibility = Visibility.Collapsed;
+        public Visibility _addOrSwitchElementButtonVisibility = Visibility.Collapsed;
 
         [ObservableProperty]
         public Visibility _switchBoxVisibility = Visibility.Collapsed;
@@ -142,6 +163,8 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         private IContainerProvider _container;
         [GeneratedRegex(@"(?<=\s*\s?\*+;?\s*\s?(如果|若)).+(?=为|是).+")]
         private static partial Regex GetEnumRawKey();
+
+        private TreeViewItem currentItemReference = null;
         #endregion
 
         #region Event
@@ -152,8 +175,16 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// <param name="e"></param>
         public void TreeItem_Loaded(object sender, RoutedEventArgs e)
         {
-            TreeViewItem treeViewItem = (sender as FrameworkElement).FindParent<TreeViewItem>();
-            treeViewItem.IsExpanded = true;
+            currentItemReference ??= (sender as FrameworkElement).FindParent<TreeViewItem>();
+            if (!IsCanBeDefaulted || Children.Count > 0)
+            {
+                currentItemReference.IsExpanded = IsExpanded = true;
+                PressedSwitchButtonColor = PressedMinusColor;
+            }
+            else
+            {
+                PressedSwitchButtonColor = PressedPlusColor;
+            }
         }
 
         /// <summary>
@@ -183,7 +214,17 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         }
 
         /// <summary>
-        /// 处理枚举值和数据类型的变更
+        /// 处理数据类型的变更
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ValueType_SelectionChanged(object sender,SelectedCellsChangedEventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// 处理枚举值的变更
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -240,12 +281,12 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 }
                 if (previous is not null && previous.StartLine is not null)
                 {
-                    StartLine = Plan.GetLineByNumber(previous.StartLine.LineNumber + 1);
+                    StartLine = previous.StartLine.NextLine;
                 }
                 else
                 if (Parent is not null && Parent.StartLine is not null)
                 {
-                    StartLine = Plan.GetLineByNumber(Parent.StartLine.LineNumber + 1);
+                    StartLine = Parent.StartLine.NextLine;
                 }
                 else
                 {
@@ -402,38 +443,68 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         }
 
         /// <summary>
-        /// 添加数组元素
+        /// 切换子元素
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void AddSubStructure_Click(object sender, RoutedEventArgs e) => JsonItemTool.AddSubStructure(this);
+        public void SwitchCompoundState_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataType is not DataType.CustomCompound && DataType is not DataType.Array && DataType is not DataType.List)
+            {
+                IsExpanded = !IsExpanded;
+            }
 
+            if (IsExpanded || DataType is DataType.CustomCompound || DataType is DataType.Array || DataType is DataType.List)
+            {
+                if (currentItemReference is not null)
+                {
+                    currentItemReference.IsExpanded = true;
+                    IsExpanded = true;
+                }
+                JsonItemTool.AddSubStructure(this);
+
+                if (DataType is not DataType.CustomCompound && DataType is not DataType.List && DataType is not DataType.List)
+                {
+                    ElementButtonTip = "折叠";
+                    PressedSwitchButtonColor = PressedMinusColor;
+                    SwitchButtonIcon = MinusIcon;
+                    SwitchButtonColor = MinusColor;
+                }
+            }
+            else
+            {
+                JsonItemTool.CollapseCurrentItem(this);
+                if (currentItemReference is not null)
+                {
+                    currentItemReference.IsExpanded = false;
+                }
+                ElementButtonTip = "展开";
+                PressedSwitchButtonColor = PressedPlusColor;
+                SwitchButtonIcon = PlusIcon;
+                SwitchButtonColor = PlusColor;
+            }
+        }
+        
         /// <summary>
-        /// 删除数组元素
+        /// 移除当前元素
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void RemoveSubStructure_Click(object sender, RoutedEventArgs e) => JsonItemTool.RemoveSubStructure(this);
+        public void RemoveCurrentItem_Click(object sender, RoutedEventArgs e) => JsonItemTool.RemoveCurrentItem(this);
 
         /// <summary>
         /// 向上移动数组元素节点
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void MoveItemUp_Click(object sender, RoutedEventArgs e)
-        {
-            MoveItem(false);
-        }
+        public void MoveItemUp_Click(object sender, RoutedEventArgs e) => MoveItem(MoveDirection.Up);
 
         /// <summary>
         /// 向下移动数组元素节点
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void MoveItemDown_Click(object sender, RoutedEventArgs e)
-        {
-            MoveItem(true);
-        }
+        public void MoveItemDown_Click(object sender, RoutedEventArgs e) => MoveItem(MoveDirection.Down);
         #endregion
 
         #region Methods
@@ -448,162 +519,111 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// 移动数组元素节点
         /// </summary>
         /// <param name="IsDown"></param>
-        private void MoveItem(bool IsDown)
+        private void MoveItem(MoveDirection direction)
         {
-            #region 初始化并更新前后关系
-            if ((IsDown && Next is null) || (!IsDown && Previous is null))
-            {
-                return;
-            }
-            int nearbyOffset = 0, nearbyLength = 0, offset = 0, length = 0, span = 0, nearbySpan = 0, startlineNumber = 0, endlineNumber = 0, nearbyStartLineNumber = 0, nearbyEndLineNumber = 0;
-            string currentLineText = "", nearbyLineText = "";
-            CompoundJsonTreeViewItem addToButtomItem = Parent.Children[^1] as CompoundJsonTreeViewItem;
-            Parent.Children.Remove(addToButtomItem);
-            CompoundJsonTreeViewItem nearbyItem = (IsDown ? Next : Previous) as CompoundJsonTreeViewItem;
-            int index = Parent.Children.IndexOf(this);
-            int nearbyIndex = Parent.Children.IndexOf(nearbyItem);
-
-            JsonTreeViewItem nextItem = Next;
-            JsonTreeViewItem nextNextItem = null;
-            if (Next is not null)
-                nextNextItem = Next.Next;
-            JsonTreeViewItem lastItem = Previous;
-            JsonTreeViewItem lastLastItem = null;
-            if (Previous is not null)
-                lastLastItem = Previous.Previous;
+            #region Field
+            int currentIndex = Parent.Children.IndexOf(this);
+            Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNextItem = JsonItemTool.LocateTheNodesOfTwoAdjacentExistingValues(Previous, Next);
             #endregion
 
-            #region 计算偏移与标记
-            bool CurrentNeedComma = false, NearbyNeedComma = false;
-
-            NearbyNeedComma = IsDown;
-            CurrentNeedComma = IsDown && Next is not null && Next.Next is not null;
-
-            if (!NearbyNeedComma)
-                NearbyNeedComma = !IsDown && Next is not null;
-            if (!CurrentNeedComma)
-                CurrentNeedComma = !IsDown;
-
-            startlineNumber = StartLine.LineNumber;
-            endlineNumber = EndLine.LineNumber;
-
-            nearbyStartLineNumber = nearbyItem.StartLine.LineNumber;
-            nearbyEndLineNumber = nearbyItem.EndLine.LineNumber;
-
-            nearbyOffset = StartLine.Offset;
-            nearbyLength = EndLine.EndOffset - nearbyOffset;
-
-            offset = nearbyItem.StartLine.Offset;
-            length = nearbyItem.EndLine.EndOffset - offset;
-
-            //当前节点向上移动时需要让邻近节点的所属文本加上替换后的偏移量
-            if (!IsDown)
-            {
-                nearbyOffset += nearbyLength - length + (Next is null ? 1 : 0);
-            }
-
-            span = nearbyItem.EndLine.LineNumber - nearbyItem.StartLine.LineNumber + 1;
-            nearbySpan = EndLine.LineNumber - StartLine.LineNumber + 1;
+            #region 把当前节点从当前位置移除
+            int currentOffset = StartLine.Offset, currentLength = (EndLine is not null ? EndLine.EndOffset : StartLine.EndOffset) - StartLine.Offset;
+            string currentString = Plan.GetRangeText(currentOffset, currentLength);
+            Plan.SetRangeText(currentOffset, currentLength, "");
+            DocumentLine targetItemLine = null;
             #endregion
 
-            #region 计算当前节点和附近节点范围内的所有文本
-            currentLineText = Plan.GetRangeText(StartLine.Offset, EndLine.EndOffset - StartLine.Offset);
-            nearbyLineText = Plan.GetRangeText(nearbyItem.StartLine.Offset, nearbyItem.EndLine.EndOffset - nearbyItem.StartLine.Offset);
-            #endregion
-
-            #region 互换位置
-            Parent.Children.Remove(this);
-            Parent.Children.Remove(nearbyItem);
-            int lastIndex = Parent.Children.Count - 1;
-            //处理边界替换情况
-            if (Parent.Children.Count > 1 || (index > lastIndex && !IsDown))
+            #region 处理移动
+            if (direction is MoveDirection.Down && previousAndNextItem.Item2 is not null && previousAndNextItem.Item2.StartLine is not null)
             {
-                if (index < nearbyIndex)
+                #region 找到后一个或前一个的末尾行
+                if (Parent.Children.Count == 2)
                 {
-                    Parent.Children.Add(nearbyItem);
-                    Parent.Children.Add(this);
+                    if (previousAndNextItem.Item2 is CompoundJsonTreeViewItem nextCompoundItem && nextCompoundItem.EndLine is not null)
+                    {
+                        targetItemLine = nextCompoundItem.EndLine;
+                    }
+                    else
+                    {
+                        targetItemLine = previousAndNextItem.Item2.StartLine;
+                    }
+                    Plan.SetRangeText(targetItemLine.EndOffset, 0, ",\r\n");
                 }
                 else
                 {
-                    Parent.Children.Add(this);
-                    Parent.Children.Add(nearbyItem);
+                    Plan.SetRangeText(targetItemLine.EndOffset, 0, "\r\n");
                 }
-            }
-            else//处理中间替换情况
-            {
-                Parent.Children.Insert(index, nearbyItem);
-                Parent.Children.Insert(nearbyIndex, this);
-            }
-
-            int lastCommaIndex = 0;
-            if (CurrentNeedComma && !currentLineText.TrimEnd().EndsWith(','))
-            {
-                currentLineText += ',';
-            }
-            else
-            if (!CurrentNeedComma)
-            {
-                lastCommaIndex = currentLineText.LastIndexOf(',');
-                if (lastCommaIndex > -1 && currentLineText.TrimEnd().EndsWith(','))
-                    currentLineText = currentLineText.Remove(lastCommaIndex);
-            }
-            if (NearbyNeedComma && !nearbyLineText.TrimEnd().EndsWith(','))
-            {
-                nearbyLineText += ',';
+                #endregion
+                #region 把当前节点的文本内容插入到下一个节点之后并设置新的行号
+                Plan.SetRangeText(targetItemLine.NextLine.Offset, 0, currentString);
+                bool withType = false;
+                for (int i = 0; i < Children.Count; i++)
+                {
+                    if (Children[i].DataType is DataType.CustomCompound)
+                    {
+                        withType = true;
+                        break;
+                    }
+                }
+                Parent.StartLine = targetItemLine.NextLine;
+                JsonItemTool.SetLineNumbersForEachItem(Children, Parent, withType);
+                #endregion
             }
             else
-            if (!NearbyNeedComma)
+            if(direction is MoveDirection.Up && currentIndex > 0)
             {
-                lastCommaIndex = nearbyLineText.LastIndexOf(',');
-                if (lastCommaIndex > -1 && nearbyLineText.TrimEnd().EndsWith(','))
-                    nearbyLineText = nearbyLineText.Remove(lastCommaIndex);
-            }
+                #region 找到后一个或前一个的末尾行
+                if (Parent.Children.Count == 2)
+                {
+                    if (previousAndNextItem.Item1 is CompoundJsonTreeViewItem previousCompoundItem && previousCompoundItem.EndLine is not null)
+                    {
+                        targetItemLine = previousCompoundItem.EndLine;
+                    }
+                    else
+                    {
+                        targetItemLine = previousAndNextItem.Item1.StartLine;
+                    }
+                    Plan.SetRangeText(targetItemLine.EndOffset, 0, ",\r\n");
+                }
+                else
+                {
+                    Plan.SetRangeText(targetItemLine.EndOffset, 0, "\r\n");
+                }
+                #endregion
 
-            Plan.SetRangeText(offset, length, currentLineText);
-            Plan.SetRangeText(nearbyOffset, nearbyLength, nearbyLineText);
+                #region 把当前节点的文本内容插入到下一个节点之后并设置新的行号
+                Plan.SetRangeText(targetItemLine.NextLine.Offset, 0, currentString);
+                bool withType = false;
+                for (int i = 0; i < Children.Count; i++)
+                {
+                    if (Children[i].DataType is DataType.CustomCompound)
+                    {
+                        withType = true;
+                        break;
+                    }
+                }
+                if(previousAndNextItem.Item1 is not null && previousAndNextItem.Item1 is CompoundJsonTreeViewItem previousItem && previousItem.EndLine is not null)
+                {
+                    Parent.StartLine = previousItem.EndLine.NextLine;
+                }
+                else
+                {
+                    Parent.StartLine = previousAndNextItem.Item1.StartLine.NextLine;
+                }
+                JsonItemTool.SetLineNumbersForEachItem(Children, Parent, withType);
+                #endregion
+            }
             #endregion
 
-            #region 更新子结构中所有节点的行引用并更新当前元素与邻近元素的行引用
-            foreach (var item in FlattenDescendantNodeList)
+            #region 设置当前节点的末行引用
+            if (Children[^1] is CompoundJsonTreeViewItem lastChildCompoundItem && lastChildCompoundItem.EndLine is not null)
             {
-                item.StartLine = item.Plan.GetLineByNumber(item.StartLine.LineNumber + (IsDown ? span : -span));
-                if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
-                {
-                    compoundJsonTreeViewItem.EndLine = item.Plan.GetLineByNumber(compoundJsonTreeViewItem.EndLineNumber + (IsDown ? span : -span));
-                    compoundJsonTreeViewItem.EndLineNumber = 0;
-                }
-            }
-            foreach (var item in nearbyItem.FlattenDescendantNodeList)
-            {
-                item.StartLine = item.Plan.GetLineByNumber(item.StartLine.LineNumber - (IsDown ? nearbySpan : -nearbySpan));
-                if (item is CompoundJsonTreeViewItem nearbyCompoundJsonTreeViewItem)
-                {
-                    nearbyCompoundJsonTreeViewItem.EndLine = item.Plan.GetLineByNumber(nearbyCompoundJsonTreeViewItem.EndLineNumber - (IsDown ? nearbySpan : -nearbySpan));
-                    nearbyCompoundJsonTreeViewItem.EndLineNumber = 0;
-                }
-            }
-            StartLine = Plan.GetLineByNumber(startlineNumber + (IsDown ? span : -span));
-            EndLine = Plan.GetLineByNumber(endlineNumber + (IsDown ? span : -span));
-            nearbyItem.StartLine = nearbyItem.Plan.GetLineByNumber(nearbyStartLineNumber - (IsDown ? nearbySpan : -nearbySpan));
-            nearbyItem.EndLine = nearbyItem.Plan.GetLineByNumber(nearbyEndLineNumber - (IsDown ? nearbySpan : -nearbySpan));
-
-            if (IsDown)
-            {
-                nearbyItem.Previous = lastItem;
-                nearbyItem.Next = this;
-
-                Previous = nextItem;
-                Next = nextNextItem;
+                Parent.EndLine = lastChildCompoundItem.EndLine.NextLine;
             }
             else
             {
-                nearbyItem.Previous = this;
-                nearbyItem.Next = nextItem;
-
-                Previous = lastLastItem;
-                Next = nearbyItem;
+                Parent.EndLine = Children[^1].StartLine.NextLine;
             }
-            Parent.Children.Add(addToButtomItem);
             #endregion
         }
         #endregion

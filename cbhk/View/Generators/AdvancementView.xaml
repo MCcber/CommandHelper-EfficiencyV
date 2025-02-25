@@ -61,7 +61,7 @@
             Background="Transparent"
             BorderThickness="0"
             ItemTemplateSelector="{StaticResource JsonTreeViewTemplateSelector}"
-            ItemsSource="{Binding AdvancementItemList}"
+            ItemsSource="{Binding TreeViewItemList}"
             Style="{DynamicResource TreeViewWithScrollBar}" />
         <GridSplitter
             Grid.Row="1"

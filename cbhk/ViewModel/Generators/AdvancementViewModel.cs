@@ -56,7 +56,7 @@ namespace cbhk.ViewModel.Generators
             ];
 
         [ObservableProperty]
-        public ObservableCollection<JsonTreeViewItem> _advancementItemList = [];
+        public ObservableCollection<JsonTreeViewItem> _treeViewItemList = [];
 
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
         public Dictionary<string, List<string>> DependencyItemList { get; set; } = [];
@@ -107,18 +107,16 @@ namespace cbhk.ViewModel.Generators
         /// <param name="e"></param>
         public async void TextEditor_Loaded(object sender, RoutedEventArgs e)
         {
+            EnumIDDictionary.Add("物品ID", []);
             await Task.Run(async () =>
             {
                 textEditor = sender as TextEditor;
-                EnumIDDictionary.Add("物品ID", []);
-                //生成值提供器字典
-                //DependencyItemList = htmlHelper.AnalyzeHTMLData("");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     JsonTreeViewDataStructure result = _htmlHelper.AnalyzeHTMLData(configDirectoryPath + CurrentVersion.Text);
                     textEditor.Text = "{\r\n" + result.ResultString.ToString().TrimEnd([',', '\r', '\n']) + "\r\n}";
                     jsonTool.SetLineNumbersForEachItem(result.Result, null);
-                    AdvancementItemList = result.Result;
+                    TreeViewItemList = result.Result;
 
                     //为代码编辑器安装大纲管理器
                     foldingManager = FoldingManager.Install(textEditor.TextArea);
@@ -346,13 +344,13 @@ namespace cbhk.ViewModel.Generators
                                 offset = startDocumentLine.Offset + index;
                                 break;
                             }
-                        case ChangeType.AddArrayElement:
+                        case ChangeType.AddListElement:
                             {
                                 int index = startLineText.IndexOf('[') + 1;
                                 offset = startDocumentLine.Offset + index;
                                 break;
                             }
-                        case ChangeType.AddArrayElementToEnd:
+                        case ChangeType.AddListElementToEnd:
                             {
                                 JsonTreeViewItem lastItem = (item as CompoundJsonTreeViewItem).Children[^1];
                                 if (lastItem is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
@@ -367,17 +365,45 @@ namespace cbhk.ViewModel.Generators
                             }
                         case ChangeType.RemoveCompound:
                             {
+                                if(compoundJsonTreeViewItem.IsCanBeDefaulted)
+                                {
+                                    bool isNeedComma = previous is not null && previous.StartLine is not null && (next is null || (next is not null && next.StartLine is null));
+                                    if (previousCompound is not null && previousCompound.EndLine is not null)
+                                    {
+                                        offset = previousCompound.EndLine.EndOffset;
+                                    }
+                                    else
+                                    if (previous is not null && previous.StartLine is not null)
+                                    {
+                                        offset = previous.StartLine.EndOffset;
+                                    }
+                                    else
+                                    if (parent is not null)
+                                    {
+                                        offset = parent.EndLine.EndOffset;
+                                    }
+                                    else
+                                    {
+                                        offset = compoundJsonTreeViewItem.Plan.GetLineByNumber(compoundJsonTreeViewItem.StartLine.LineNumber - 1).EndOffset;
+                                    }
+                                    offset -= isNeedComma ? 1 : 0;
+                                    length = compoundJsonTreeViewItem.EndLine.EndOffset - offset;
+                                    compoundJsonTreeViewItem.Children.Clear();
+                                    compoundJsonTreeViewItem.EndLine = null;
+                                }
+                                else
+                                {
+                                    offset = compoundJsonTreeViewItem.StartLine.EndOffset;
+                                    length = compoundJsonTreeViewItem.EndLine.Offset + (compoundJsonTreeViewItem.LayerCount * 2) - offset;
+                                    compoundJsonTreeViewItem.Children.Clear();
+                                }
                                 break;
                             }
-                        case ChangeType.RemoveCompoundObject:
+                        case ChangeType.RemoveList:
                             {
                                 break;
                             }
-                        case ChangeType.RemoveArray:
-                            {
-                                break;
-                            }
-                        case ChangeType.RemoveArrayElement:
+                        case ChangeType.RemoveListElement:
                             {
                                 break;
                             }
@@ -393,7 +419,7 @@ namespace cbhk.ViewModel.Generators
                         char locateEndChar = ' ';
                         if ((previous is not null && previous.StartLine is null && next is not null && next.StartLine is null) || (previous is null && next is null) && item.IsCanBeDefaulted)
                         {
-                            if (item.Parent.DataType is not DataType.Array && item.Parent.DataType is not DataType.InnerArray)
+                            if (item.Parent.DataType is not DataType.Array)
                             {
                                 locateStartChar = '{';
                                 locateEndChar = '}';
@@ -408,8 +434,8 @@ namespace cbhk.ViewModel.Generators
                         {
                             locateStartChar = ',';
                         }
-                        DocumentLine parentStartLine = GetLineByNumber(startDocumentLine.LineNumber - 1);
-                        DocumentLine parentEndLine = GetLineByNumber(startDocumentLine.LineNumber + 1);
+                        DocumentLine parentStartLine = startDocumentLine.PreviousLine;
+                        DocumentLine parentEndLine = startDocumentLine.NextLine;
                         string parentEndLineText = "";
 
                         if (item.Parent is not null)
@@ -490,17 +516,17 @@ namespace cbhk.ViewModel.Generators
             {
                 if (item.StartLine is null && previousCompound is not null && previousCompound.EndLine is not null)
                 {
-                    item.StartLine = GetLineByNumber(previousCompound.EndLine.LineNumber + 1);
+                    item.StartLine = previousCompound.EndLine.NextLine;
                 }
                 else
                 if(item.StartLine is null && previous is not null && previous.StartLine is not null)
                 {
-                    item.StartLine = GetLineByNumber(previous.StartLine.LineNumber + 1);
+                    item.StartLine = previous.StartLine.NextLine;
                 }
                 else
                 if(item.StartLine is null && parent is not null && parent.StartLine is not null)
                 {
-                    item.StartLine = GetLineByNumber(parent.StartLine.LineNumber + 1);
+                    item.StartLine = parent.StartLine.NextLine;
                 }
                 item.StartLine ??= GetLineByNumber(2);
             }
