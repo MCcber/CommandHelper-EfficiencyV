@@ -478,7 +478,7 @@ namespace cbhk.GeneralTools
                 bool isSimpleDataType = true;
                 if (NBTFeatureList.Count > 0)
                 {
-                    isSimpleDataType = ((NBTFeatureList[0] != "array" && NBTFeatureList[0] != "list" && NBTFeatureList[0] != "compound") || isBoolKey) && EnumCollectionMode1.Count < 2 && EnumCollectionMode2.Count < 2;
+                    isSimpleDataType = ((NBTFeatureList[0] != "array" && NBTFeatureList[0] != "list" && NBTFeatureList[0] != "compound" && NBTFeatureList.Count < 3) || isBoolKey) && EnumCollectionMode1.Count < 2 && EnumCollectionMode2.Count < 2;
                 }
                 Match contextMatch = GetContextKey().Match(nodeList[i]);
                 Match EnumMatch = GetEnumKey().Match(nodeList[i]);
@@ -698,6 +698,10 @@ namespace cbhk.GeneralTools
                                     {
                                         result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentNodeKey.ToLower() + "\": ");
                                     }
+                                    else
+                                    {
+                                        item.IsFalse = item.IsTrue = false;
+                                    }
 
                                     if (DefaultBoolValueMatch.Success && !IsCurrentOptionalNode && currentNodeKey.Length > 0)
                                     {
@@ -722,7 +726,7 @@ namespace cbhk.GeneralTools
                                         }
                                     }
                                     else
-                                    if(!IsCurrentOptionalNode)
+                                    if (!IsCurrentOptionalNode)
                                     {
                                         item.Value = DefaultBoolValueMatch.Success && bool.Parse(DefaultBoolValueMatch.Groups[1].Value);
                                         result.ResultString.Append(DefaultBoolValueMatch.Success ? DefaultBoolValueMatch.Groups[1].Value.ToString().ToLower() : "false");
@@ -753,7 +757,7 @@ namespace cbhk.GeneralTools
                                             result.ResultString.Append("\"" + DefaultStringValueMatch.Groups[1].Value.ToLower() + "\"");
                                     }
                                     else
-                                    if(!IsCurrentOptionalNode)
+                                    if(currentNodeKey.Length == 0)
                                     {
                                         item.Value = "";
                                         result.ResultString.Append("\"\"");
@@ -899,6 +903,7 @@ namespace cbhk.GeneralTools
                         else
                         if(CurrentCompoundItem.Key.Length == 0 && NBTFeatureList[0].Contains("list"))
                         {
+                            CurrentCompoundItem.IsCanBeDefaulted = false;
                             result.ResultString.Append(new string(' ', CurrentCompoundItem.LayerCount * 2) + "[]");
                         }
                         #endregion
