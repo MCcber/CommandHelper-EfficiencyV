@@ -229,11 +229,12 @@ namespace cbhk.ViewModel.Generators
             #region Field
             bool IsCurrentNull = false;
             DocumentLine startDocumentLine = null;
-            DocumentLine endDocumentLine = null;
             int offset = 0, length = 0;
 
             if (item.StartLine is not null)
+            {
                 startDocumentLine = item.StartLine;
+            }
 
             string startLineText = "";
             if (startDocumentLine is not null)
@@ -243,19 +244,12 @@ namespace cbhk.ViewModel.Generators
             #endregion
 
             #region 定位相邻的已有值的两个节点
-            JsonTreeViewItem previous = item.Previous;
             CompoundJsonTreeViewItem parent = item.Parent;
-            JsonTreeViewItem next = item.Next;
             CompoundJsonTreeViewItem previousCompound = null;
             CompoundJsonTreeViewItem nextCompound = null;
-            while (previous is not null && previous.StartLine is null)
-            {
-                if (previous.Previous is null)
-                {
-                    break;
-                }
-                previous = previous.Previous;
-            }
+            Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNextItem = item.JsonItemTool.LocateTheNodesOfTwoAdjacentExistingValues(item.Previous, item.Next);
+            JsonTreeViewItem previous = previousAndNextItem.Item1;
+            JsonTreeViewItem next = previousAndNextItem.Item2;
 
             if (previous is not null && previous.StartLine is null)
             {
@@ -267,15 +261,6 @@ namespace cbhk.ViewModel.Generators
                     }
                     parent = parent.Parent;
                 }
-            }
-
-            while (next is not null && next.StartLine is null)
-            {
-                if(next.Next is null)
-                {
-                    break;
-                }
-                next = next.Next;
             }
 
             if (previous is CompoundJsonTreeViewItem)
@@ -322,9 +307,6 @@ namespace cbhk.ViewModel.Generators
             {
                 if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
                 {
-                    if (compoundJsonTreeViewItem.EndLine is not null)
-                        endDocumentLine = compoundJsonTreeViewItem.EndLine;
-
                     switch (changeType)
                     {
                         case ChangeType.NumberAndBool:
@@ -460,15 +442,23 @@ namespace cbhk.ViewModel.Generators
                     }
                     else
                     {
-                        int colonOffset = startLineText.IndexOf(':') + 2;
-                        offset = startDocumentLine.Offset + colonOffset;
-                        if (startLineText.TrimEnd().EndsWith(','))
+                        int targetOffset = 0;
+                        if (startLineText.Contains(':'))
                         {
-                            length = startLineText.LastIndexOf(',') - colonOffset;
+                            targetOffset = startLineText.IndexOf(':') + 2;
                         }
                         else
                         {
-                            length = startDocumentLine.Length - colonOffset;
+                            targetOffset = startLineText.IndexOf('"');
+                        }
+                        offset = startDocumentLine.Offset + targetOffset;
+                        if (startLineText.TrimEnd().EndsWith(','))
+                        {
+                            length = startLineText.LastIndexOf(',') - targetOffset;
+                        }
+                        else
+                        {
+                            length = startDocumentLine.Length - targetOffset;
                         }
                     }
                 }
@@ -503,7 +493,7 @@ namespace cbhk.ViewModel.Generators
             #endregion
 
             #region 计算好偏移量和替换长度后执行替换
-            if (offset != 0 || length != 0)
+            if (offset >= 0 || length > -1)
                 textEditor.Document.Replace(offset, length, newValue);
             #endregion
 

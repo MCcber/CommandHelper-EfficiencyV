@@ -288,24 +288,14 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             #endregion
 
             #region 定位相邻的已有值的两个节点
-            while (previous is not null && previous.StartLine is null)
-            {
-                if (previous.Previous is null)
-                {
-                    break;
-                }
-                previous = previous.Previous;
-            }
-            while (next is not null && next.StartLine is null)
-            {
-                if (next.Next is null)
-                {
-                    break;
-                }
-                next = next.Next;
-            }
+            Tuple<JsonTreeViewItem,JsonTreeViewItem> previousAndNextItem = JsonItemTool.LocateTheNodesOfTwoAdjacentExistingValues(Previous,Next);
+            previous = previousAndNextItem.Item1;
+            next = previousAndNextItem.Item2;
+            CompoundJsonTreeViewItem previousCompoundItem = previous as CompoundJsonTreeViewItem;
+            CompoundJsonTreeViewItem nextCompoundItem = next as CompoundJsonTreeViewItem;
             #endregion
 
+            #region 处理复合节点与简单节点
             if (this is CompoundJsonTreeViewItem thisCompoundJsonTreeViewItem1 && thisCompoundJsonTreeViewItem1.DataType is DataType.MultiType)
             {
                 changeType = (ChangeType)Enum.Parse(typeof(ChangeType), thisCompoundJsonTreeViewItem1.SelectedEnumItem.Text, true);
@@ -328,59 +318,73 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 if (string.IsNullOrEmpty(currentValue))
                 {
                     int offset = StartLine.Offset, length = StartLine.Length;
+                    bool isNeedDoubleQuotationMarks = false;
+                    DocumentLine topLine = null;
 
-                    if (previous is not null && previous.StartLine is not null)
+                    if (Key.Length > 0 && IsCanBeDefaulted)
                     {
-                        if (previous is CompoundJsonTreeViewItem PreviousCompoundItem && PreviousCompoundItem.EndLine is not null)
+                        if (previousCompoundItem is not null && previousCompoundItem.EndLine is not null)
                         {
-                            offset = PreviousCompoundItem.EndLine.EndOffset;
+                            topLine = previousCompoundItem.EndLine;
                         }
                         else
                         {
-                            offset = previous.StartLine.EndOffset;
+                            topLine = previous.StartLine;
                         }
-                        if(next is null || (next is not null && next.StartLine is null))
+                        if (topLine is null && Parent is not null)
                         {
-                            offset--;
+                            topLine = Parent.StartLine;
                         }
+                        else
+                        topLine ??= Plan.GetLineByNumber(2);
+                    }
+
+                    if(topLine is null)
+                    {
+                        string currentLineText = Plan.GetRangeText(StartLine.Offset,StartLine.Length);
+                        offset = StartLine.Offset + currentLineText.IndexOf('"');
                         length = StartLine.EndOffset - offset;
                     }
                     else
-                    if (Parent is not null)
                     {
-                        offset = Parent.StartLine.EndOffset;
-                        if ((previous is null && next is null) || ((previous is not null && previous.StartLine is not null) || (next is not null && next.StartLine is not null)))
+                        offset = topLine.EndOffset;
+                        if(next is not null && next.StartLine is not null)
                         {
                             length = StartLine.EndOffset - offset;
                         }
                         else
+                        if((previousCompoundItem is not null && previousCompoundItem.EndLine is not null) || (previous is not null && previous.StartLine is not null))
                         {
-                            char lastChar = Parent.DataType is not DataType.Array ? '}' : ']';
-                            string parentEndlineText = Plan.GetRangeText(Parent.EndLine.Offset, Parent.EndLine.Length);
-                            int lastOffset = parentEndlineText.LastIndexOf(lastChar) + Parent.EndLine.Offset;
-                            length = lastOffset - offset;
+                            offset--;
+                            string parentEndLineText = Plan.GetRangeText(Parent.EndLine.Offset,Parent.EndLine.Length);
+                            char locateChar = Parent.DataType is DataType.Array || Parent.DataType is DataType.List?']':'}';
+                            length = Parent.EndLine.Offset + parentEndLineText.IndexOf(locateChar) - offset;
                         }
                     }
 
-                    Plan.SetRangeText(offset, length, "");
+                    Plan.SetRangeText(offset, length, isNeedDoubleQuotationMarks ? "\"\"" : "");
                     bool unNormalState = Parent.EndLine is null || Parent.StartLine == Parent.EndLine || (Parent.EndLine is not null && Parent.EndLine.IsDeleted);
                     if (unNormalState && ((previous is null && next is null) || ((previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null))))
                     {
                         Parent.EndLine = Parent.StartLine;
                     }
-                    StartLine = null;
+                    if (!isNeedDoubleQuotationMarks)
+                    {
+                        StartLine = null;
+                    }
                 }
                 else
                 {
                     Plan.UpdateValueBySpecifyingInterval(this, changeType, doubleQuotationMarks + currentValue + doubleQuotationMarks);
                     #region 更新父节点的末行引用
-                    if (Parent is not null && (Parent.EndLine is null || Parent.StartLine == Parent.EndLine) && StartLine is not null && ((previous is null && next is null) || ((previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null))))
+                    if (Parent is not null && (Parent.Children.Count == 1 || (Parent.DataType is DataType.List && Parent.Children.Count == 2)))
                     {
                         Parent.EndLine = StartLine.NextLine;
                     }
                     #endregion
                 }
             }
+            #endregion
         }
 
         /// <summary>

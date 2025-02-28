@@ -1,6 +1,7 @@
 ﻿using cbhk.CustomControls.JsonTreeViewComponents;
 using System;
 using System.Collections.ObjectModel;
+using System.Xml.Linq;
 
 namespace cbhk.Interface.Json
 {
@@ -19,6 +20,12 @@ namespace cbhk.Interface.Json
         /// <param name="next"></param>
         /// <returns></returns>
         public Tuple<JsonTreeViewItem, JsonTreeViewItem> LocateTheNodesOfTwoAdjacentExistingValues(JsonTreeViewItem previous, JsonTreeViewItem next);
+        /// <summary>
+        /// 搜索最后一个有行引用的子节点
+        /// </summary>
+        /// <param name="compoundJsonTreeViewItem"></param>
+        /// <returns></returns>
+        JsonTreeViewItem SearchForTheLastItemWithRowReference(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
         /// 递归遍历节点树并执行代理方法
         /// </summary>

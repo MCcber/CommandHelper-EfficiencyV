@@ -726,11 +726,15 @@ namespace cbhk.GeneralTools
                                         }
                                     }
                                     else
-                                    if (!IsCurrentOptionalNode)
+                                    if(!IsCurrentOptionalNode || isAddToParent)
                                     {
+                                        item.RemoveElementButtonVisibility = Visibility.Visible;
                                         item.Value = DefaultBoolValueMatch.Success && bool.Parse(DefaultBoolValueMatch.Groups[1].Value);
-                                        result.ResultString.Append(DefaultBoolValueMatch.Success ? DefaultBoolValueMatch.Groups[1].Value.ToString().ToLower() : "false");
+                                        item.IsCanBeDefaulted = false;
+                                        result.ResultString.Append(new string(' ', item.LayerCount * 2) + (DefaultBoolValueMatch.Success ? DefaultBoolValueMatch.Groups[1].Value.ToString().ToLower() : "false"));
                                     }
+                                    item.Plan = plan;
+                                    item.JsonItemTool = jsonTool;
                                     break;
                                 }
                             case DataType.String:
@@ -759,8 +763,12 @@ namespace cbhk.GeneralTools
                                     else
                                     if(currentNodeKey.Length == 0)
                                     {
+                                        item.Plan = plan;
+                                        item.RemoveElementButtonVisibility = Visibility.Visible;
+                                        item.JsonItemTool = jsonTool;
                                         item.Value = "";
-                                        result.ResultString.Append("\"\"");
+                                        item.IsCanBeDefaulted = false;
+                                        result.ResultString.Append(new string(' ',item.LayerCount * 2) + "\"\"");
                                     }
                                     break;
                                 }
@@ -801,10 +809,13 @@ namespace cbhk.GeneralTools
                                         }
                                     }
                                     else
-                                    if(!IsCurrentOptionalNode)
                                     {
+                                        item.Plan = plan;
+                                        item.RemoveElementButtonVisibility = Visibility.Visible;
+                                        item.JsonItemTool = jsonTool;
                                         item.Value = DefaultNumberValueMatch.Success ? decimal.Parse(DefaultNumberValueMatch.Groups[1].Value) : 0;
-                                        result.ResultString.Append(DefaultNumberValueMatch.Success ? decimal.Parse(DefaultNumberValueMatch.Groups[1].Value) : '0');
+                                        item.IsCanBeDefaulted = false;
+                                        result.ResultString.Append(new string(' ', item.LayerCount * 2) + (DefaultNumberValueMatch.Success ? decimal.Parse(DefaultNumberValueMatch.Groups[1].Value) : '0'));
                                     }
                                     break;
                                 }
@@ -1048,7 +1059,7 @@ namespace cbhk.GeneralTools
                                         #endregion
 
                                         #region 是否存储原始信息、处理递归
-                                        if ((NBTFeatureList.Contains("compound") || NBTFeatureList.Contains("array")) && currentSubChildren.Count > 0 && !IsCurrentOptionalNode)
+                                        if ((NBTFeatureList[0] == "compound" || NBTFeatureList[0].Contains("array")) && currentSubChildren.Count > 0 && !IsCurrentOptionalNode)
                                         {
                                             #region 如果子信息只有一条并引用指定文件，则将其文档内容取出并直接解析
                                             Match subInheritMatch = GetInheritString().Match(currentSubChildren[0]);

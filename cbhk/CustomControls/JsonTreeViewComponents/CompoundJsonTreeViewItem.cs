@@ -449,12 +449,12 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// <param name="e"></param>
         public void SwitchCompoundState_Click(object sender, RoutedEventArgs e)
         {
-            if (DataType is not DataType.CustomCompound && DataType is not DataType.Array && DataType is not DataType.List)
+            if (DataType is not DataType.None && DataType is not DataType.CustomCompound && DataType is not DataType.Array && DataType is not DataType.List)
             {
                 IsExpanded = !IsExpanded;
             }
 
-            if (IsExpanded || DataType is DataType.CustomCompound || DataType is DataType.Array || DataType is DataType.List)
+            if (IsExpanded || DataType is DataType.CustomCompound || DataType is DataType.Array || DataType is DataType.List || (Parent is not null && Parent.DataType is DataType.List))
             {
                 if (currentItemReference is not null)
                 {
@@ -463,7 +463,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 }
                 JsonItemTool.AddSubStructure(this);
 
-                if (DataType is not DataType.CustomCompound && DataType is not DataType.List && DataType is not DataType.List)
+                if (DataType is not DataType.CustomCompound && DataType is not DataType.None && DataType is not DataType.List)
                 {
                     ElementButtonTip = "折叠";
                     PressedSwitchButtonColor = PressedMinusColor;
