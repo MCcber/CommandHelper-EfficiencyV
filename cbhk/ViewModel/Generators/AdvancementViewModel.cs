@@ -108,6 +108,7 @@ namespace cbhk.ViewModel.Generators
         public async void TextEditor_Loaded(object sender, RoutedEventArgs e)
         {
             EnumIDDictionary.Add("物品ID", []);
+            EnumIDDictionary.Add("战利品表", ["minecraft:a", "minecraft:b", "minecraft:c"]);
             await Task.Run(async () =>
             {
                 textEditor = sender as TextEditor;

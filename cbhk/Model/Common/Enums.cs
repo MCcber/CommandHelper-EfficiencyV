@@ -8,6 +8,12 @@
             Get
         }
 
+        public enum MoveDirection
+        {
+            Up,
+            Down
+        }
+
         public enum ChangeType
         {
             None,
@@ -42,7 +48,8 @@
             MultiType,
             ArrayElement,
             Array,
-            List
+            List,
+            ListElement
         }
     }
 }

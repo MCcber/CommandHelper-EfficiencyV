@@ -42,17 +42,13 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <DockPanel Grid.Row="0">
-            <TextBlock
-                VerticalAlignment="Center"
-                Foreground="White"
-                Text="版本" />
-            <CustomControls:TextComboBoxs
-                ItemsSource="{Binding VersionList}"
-                SelectedIndex="0"
-                SelectedItem="{Binding CurrentVersion}"
-                Style="{StaticResource TextComboBoxStyle}" />
-        </DockPanel>
+        <CustomControls:TextComboBoxs
+            Grid.Row="0"
+            Height="30"
+            ItemsSource="{Binding VersionList}"
+            SelectedIndex="0"
+            SelectedItem="{Binding CurrentVersion}"
+            Style="{StaticResource TextComboBoxStyle}" />
         <TreeView
             Grid.Row="1"
             Grid.Column="0"
@@ -80,6 +76,7 @@
             FontFamily="JetBrains Mono"
             Foreground="White"
             HorizontalScrollBarVisibility="Auto"
+            IsReadOnly="False"
             LineNumbersForeground="White"
             ShowLineNumbers="True"
             VerticalScrollBarVisibility="Auto"

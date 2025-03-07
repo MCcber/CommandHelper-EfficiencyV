@@ -40,7 +40,7 @@ namespace cbhk.Interface.Json
         /// <param name="withType"></param>
         public void SetLineNumbersForEachItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem parent,bool withType = false);
         /// <summary>
-        /// 添加数组元素
+        /// 添加子结构
         /// </summary>
         /// <param name="compoundJsonTreeViewItem">数组节点</param>
         void AddSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
