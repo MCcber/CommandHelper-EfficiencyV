@@ -2,7 +2,7 @@
 using System.Text;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.DataPackGenerator
+namespace cbhk.View.Components.Datapack.EditPage
 {
     /// <summary>
     /// EditPageView.xaml 的交互逻辑

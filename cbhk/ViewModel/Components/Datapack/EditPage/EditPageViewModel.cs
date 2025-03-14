@@ -26,7 +26,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace cbhk.ViewModel.Generators.Datapack
+namespace cbhk.ViewModel.Generators.Datapack.EditPage
 {
     public partial class EditPageViewModel : ObservableObject
     {

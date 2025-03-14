@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System;
 using System.Windows;
 using cbhk.View;
-using cbhk.Generators.DataPackGenerator;
 using cbhk.ViewModel.Components.Datapack.HomePage;
+using cbhk.View.Components.Datapack.EditPage;
 
-namespace cbhk.ViewModel.Generators.Datapack
+namespace cbhk.ViewModel.Generators
 {
     public class DatapackViewModel : ObservableObject
     {

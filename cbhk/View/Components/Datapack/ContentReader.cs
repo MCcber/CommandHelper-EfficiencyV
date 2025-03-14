@@ -2,7 +2,9 @@
 using cbhk.GeneralTools;
 using cbhk.Generators.DataPackGenerator;
 using cbhk.View.Components.Datapack.EditPage;
+using cbhk.ViewModel.Generators;
 using cbhk.ViewModel.Generators.Datapack;
+using cbhk.ViewModel.Generators.Datapack.EditPage;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;

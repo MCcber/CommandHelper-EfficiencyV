@@ -2,7 +2,7 @@
 using cbhk.GeneralTools;
 using cbhk.Generators.DataPackGenerator;
 using cbhk.Generators.DataPackGenerator.Components.TemplateSelectPage;
-using cbhk.ViewModel.Generators.Datapack;
+using cbhk.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;

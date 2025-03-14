@@ -73,7 +73,8 @@ namespace cbhk.ViewModel.Generators
         public Dictionary<string, string> TranslateDictionary { get; set; } = new()
         {
             { "#准则|上文", "#谓词" },
-            { "#准则|下文", "#准则" }
+            { "#准则|下文", "#准则" },
+            { "#战利品表谓词","#谓词" }
         };
         public List<string> DependencyFileList { get; set; }
         public List<string> DependencyDirectoryList { get; set; }
@@ -107,8 +108,10 @@ namespace cbhk.ViewModel.Generators
         /// <param name="e"></param>
         public async void TextEditor_Loaded(object sender, RoutedEventArgs e)
         {
-            EnumIDDictionary.Add("物品ID", []);
+            #region 添加数据上下文所需的枚举集合与转换字典数据
+            EnumIDDictionary.Add("物品ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);
             EnumIDDictionary.Add("战利品表", ["minecraft:a", "minecraft:b", "minecraft:c"]);
+            #endregion
             await Task.Run(async () =>
             {
                 textEditor = sender as TextEditor;

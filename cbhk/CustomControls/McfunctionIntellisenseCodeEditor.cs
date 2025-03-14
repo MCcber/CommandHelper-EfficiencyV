@@ -1,5 +1,8 @@
 ﻿using cbhk.Generators.DataPackGenerator;
+using cbhk.View.Components.Datapack.EditPage;
+using cbhk.ViewModel.Generators;
 using cbhk.ViewModel.Generators.Datapack;
+using cbhk.ViewModel.Generators.Datapack.EditPage;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Document;

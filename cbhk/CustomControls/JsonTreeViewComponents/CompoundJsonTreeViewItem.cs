@@ -5,7 +5,6 @@ using cbhk.Model.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
 using Prism.Ioc;
-using SharpNBT;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,7 +12,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using static cbhk.Model.Common.Enums;
 
@@ -133,6 +131,21 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         [GeneratedRegex(@"\[\[(?<1>[a-zA-Z_\u4e00-\u9fff]+)\]\]")]
         private static partial Regex GetEnumKey();
 
+        [GeneratedRegex(@"(?<=<code>)(?<1>[a-z_]+)(?=</code>)")]
+        private static partial Regex GetEnumValueMode1();
+
+        [GeneratedRegex(@"\{\{cd\|(?<1>[a-z:_]+)\}\}", RegexOptions.IgnoreCase)]
+        private static partial Regex GetEnumValueMode2();
+
+        [GeneratedRegex(@"默认为\{\{cd\|(?<1>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
+        private static partial Regex GetDefaultStringValue();
+
+        [GeneratedRegex(@"默认为(?<1>\d)+", RegexOptions.IgnoreCase)]
+        private static partial Regex GetDefaultNumberValue();
+
+        [GeneratedRegex(@"默认为\{\{cd\|(?<1>true|false)\}\}", RegexOptions.IgnoreCase)]
+        private static partial Regex GetDefaultBoolValue();
+
         private TreeViewItem currentItemReference = null;
         #endregion
 
@@ -170,20 +183,28 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// </summary>
         private void ClearCurrentSubItem(CompoundJsonTreeViewItem parent)
         {
+            JsonTreeViewItem lastItem = JsonItemTool.SearchForTheLastItemWithRowReference(parent);
+            if (parent.Children[0] == lastItem)
+            {
+                return;
+            }
             if (parent is not null && parent.Children.Count > 1)
             {
-                int length = 0;
-                string firstChildItemText = parent.Plan.GetRangeText(parent.Children[0].StartLine.Offset, parent.Children[0].StartLine.Length);
-                int minusOffset = firstChildItemText.TrimEnd().EndsWith(',') ? 1 : 0;
-                if (parent.Children[^1] is CompoundJsonTreeViewItem lastChildItem && lastChildItem.EndLine is not null)
+                if (lastItem != parent.Children[0])
                 {
-                    length = lastChildItem.EndLine.EndOffset - (parent.Children[0].StartLine.EndOffset - minusOffset);
+                    int length = 0;
+                    string firstChildItemText = parent.Plan.GetRangeText(parent.Children[0].StartLine.Offset, parent.Children[0].StartLine.Length);
+                    int minusOffset = firstChildItemText.TrimEnd().EndsWith(',') ? 1 : 0;
+                    if (lastItem is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
+                    {
+                        length = lastCompoundItem.EndLine.EndOffset - (parent.Children[0].StartLine.EndOffset - minusOffset);
+                    }
+                    else
+                    {
+                        length = lastItem.StartLine.EndOffset - (parent.Children[0].StartLine.EndOffset - minusOffset);
+                    }
+                    Plan.SetRangeText(parent.Children[0].StartLine.EndOffset - minusOffset, length, "");
                 }
-                else
-                {
-                    length = parent.Children[^1].StartLine.EndOffset - (parent.Children[0].StartLine.EndOffset - minusOffset);
-                }
-                Plan.SetRangeText(parent.Children[0].StartLine.EndOffset - minusOffset, length, "");
                 while (parent.Children.Count > 1)
                 {
                     parent.Children.RemoveAt(1);
@@ -199,18 +220,61 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         public void ValueType_SelectionChanged(object sender,SelectedCellsChangedEventArgs e)
         {
             string currentValueTypeString = CurrentValueType.Text.ToLower();
-            bool isRealString = EnumItemsSource.Where(item => item.Text == "compound" || item.Text == "list").Count() == 0;
             if(currentValueTypeString.Length > 0)
             {
                 DataType = DataType.None;
                 DataType = DataType.MultiType;
+                EnumItemsSource.Clear();
+                int offset = 0, length = 0;
+                string startLineText = Plan.GetRangeText(StartLine.Offset, StartLine.Length);
                 bool isCompoundType = currentValueTypeString == "compound" || currentValueTypeString == "list" || currentValueTypeString.Contains("array");
+                HtmlHelper htmlHelper = new(_container)
+                {
+                    plan = Plan,
+                    jsonTool = JsonItemTool
+                };
+
+                #region 将当前文本值清除，处理子节点
+                if (isCompoundType && EndLine is not null && StartLine != EndLine && !EndLine.IsDeleted)
+                {
+                    Children.Clear();
+                    string endlLineText = Plan.GetRangeText(EndLine.Offset,EndLine.Length);
+                    int startBracketOffset = startLineText.IndexOf('{') + 1;
+                    int endBracketOffset = endlLineText.IndexOf('}');
+                    if(startBracketOffset == 0)
+                    {
+                        startBracketOffset = startLineText.IndexOf('[') + 1;
+                    }
+                    if(endBracketOffset == -1)
+                    {
+                        endBracketOffset = endlLineText.IndexOf(']');
+                    }
+                    offset = StartLine.Offset + startBracketOffset;
+                    length = EndLine.Offset + endBracketOffset - offset;
+                    Plan.SetRangeText(offset, length, "");
+                }
+                if(offset == 0)
+                {
+                    offset = StartLine.Offset + startLineText.IndexOf(':') + 2;
+                }
+                #endregion
+
                 switch (currentValueTypeString)
                 {
                     case "bool":
                     case "boolean":
                         {
                             BoolButtonVisibility = Visibility.Visible;
+                            Match defaultBoolMatch = GetDefaultBoolValue().Match(InfoTiptext);
+                            if(defaultBoolMatch.Success)
+                            {
+                                Value = bool.Parse(defaultBoolMatch.Groups[1].Value);
+                                Plan.SetRangeText(offset, 0, Value + "");
+                            }
+                            else
+                            {
+                                Plan.SetRangeText(offset, 0, "false");
+                            }
                             break;
                         }
                     case "byte":
@@ -222,16 +286,80 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     case "string":
                         {
                             InputBoxVisibility = Visibility.Visible;
-                            if (currentValueTypeString == "string" && !isRealString)
+                            string currentValue = "";
+
+                            if (currentValueTypeString == "string")
                             {
-                                new HtmlHelper(_container).HandlingTheTypingAppearanceOfCompositeItemList([this]);
+                                htmlHelper.HandlingTheTypingAppearanceOfCompositeItemList([this]);
+                                MatchCollection enumModeMatch1 = GetEnumValueMode1().Matches(InfoTiptext);
+                                MatchCollection enumModeMatch2 = GetEnumValueMode2().Matches(InfoTiptext);
+                                if (enumModeMatch1.Count > 0)
+                                {
+                                    EnumItemsSource.AddRange(enumModeMatch1.Select(item => new TextComboBoxItem() { Text = item.Groups[1].Value }));
+                                }
+                                else
+                                if (enumModeMatch2.Count > 0)
+                                {
+                                    EnumItemsSource.AddRange(enumModeMatch2.Select(item => new TextComboBoxItem() { Text = item.Groups[1].Value }));
+                                }
+                                if (enumModeMatch1.Count > 0 || enumModeMatch2.Count > 0)
+                                {
+                                    EnumBoxVisibility = Visibility.Visible;
+                                    Value = EnumItemsSource[0].Text;
+                                    currentValue = "\"" + EnumItemsSource[0].Text + "\"";
+                                }
                             }
+                            else
+                            {
+                                Match defaultNumberMatch = GetDefaultNumberValue().Match(InfoTiptext);
+                                if(defaultNumberMatch.Success)
+                                {
+                                    Value = decimal.Parse(defaultNumberMatch.Groups[1].Value);
+                                    currentValue = Value + "";
+                                }
+                                else
+                                {
+                                    Value = 0;
+                                    currentValue = "0";
+                                }
+                            }
+                            Plan.SetRangeText(offset, 0, currentValue);
                             break;
                         }
                 }
                 if(isCompoundType)
                 {
-
+                    List<string> targetRawStringList = [];
+                    AddOrSwitchElementButtonVisibility = Visibility.Visible;
+                    bool isNeedAnalyze = false;
+                    if (ChildrenStringList.Count > 0)
+                    {
+                        targetRawStringList = ChildrenStringList;
+                        isNeedAnalyze = true;
+                    }
+                    else
+                    {
+                        Match enumKeyMatch = GetEnumKey().Match(InfoTiptext);
+                        if (Plan.DependencyItemList.TryGetValue(enumKeyMatch.Value,out targetRawStringList))
+                        {
+                            isNeedAnalyze = true;
+                        }
+                        else
+                        if(Plan.TranslateDictionary.TryGetValue(enumKeyMatch.Value,out string targetKey) && Plan.EnumCompoundDataDictionary.TryGetValue(targetKey,out Dictionary<string,List<string>> targetDictionary) && targetDictionary.Keys.Count > 0)
+                        {
+                            EnumItemsSource.AddRange(targetDictionary.Keys.Select(item=>
+                            {
+                                return new TextComboBoxItem() { Text = item };
+                            }));
+                        }
+                    }
+                    if (isNeedAnalyze)
+                    {
+                        JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), targetRawStringList, LayerCount + 1, "", this, null, 1, true);
+                        htmlHelper.HandlingTheTypingAppearanceOfCompositeItemList(result.Result);
+                        Children.AddRange(result.Result);
+                        Plan.SetRangeText(offset, 0, result.ResultString.ToString());
+                    }
                 }
             }
         }
@@ -255,7 +383,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             int offset = 0;
             if (StartLine is not null)
             {
-                char locateChar = ' ';
+                char locateChar;
                 if(Key.Length > 0)
                 {
                     locateChar = ':';
@@ -393,7 +521,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         offset = Parent.StartLine.Offset + parentBracketIndex;
                     }
                     offset -= previousLineString.TrimEnd().EndsWith(',') && (next is null || (next is not null && next.StartLine is null)) ? 1 : 0;
-                    if (next is not null && next.StartLine is not null)
+                    if ((next is not null && next.StartLine is not null) || (previous is not null && previous.StartLine is not null))
                     {
                         length = StartLine.EndOffset - offset;
                     }
@@ -414,17 +542,19 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 if(Parent is not null)
                 {
                     string parentStartLineText = Plan.GetRangeText(Parent.StartLine.Offset, Parent.StartLine.Length);
-                    colonOffset = parentStartLineText.IndexOf(':');
+                    colonOffset = parentStartLineText.IndexOf(':') + 3;
                     string parentEndLineText = "";
-                    
-                    if(next is null || (next is not null && next.StartLine is not null))
-                    parentEndLineText = Plan.GetRangeText(Parent.EndLine.Offset, Parent.EndLine.Length);
+
+                    if (next is null || (next is not null && next.StartLine is null))
+                    {
+                        parentEndLineText = Plan.GetRangeText(Parent.EndLine.Offset, Parent.EndLine.Length);
+                    }
                     int endBracketOffset = parentEndLineText.IndexOf('}');
                     if(endBracketOffset == -1)
                     {
                         endBracketOffset = parentEndLineText.IndexOf(']');
                     }
-                    offset = Parent.StartLine.Offset + colonOffset + 3;
+                    offset = Parent.StartLine.Offset + colonOffset;
                     if (next is null || (next is not null && next.StartLine is null))
                     {
                         length = Parent.EndLine.Offset + endBracketOffset - offset;
@@ -440,12 +570,17 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             }
             #endregion
 
-            #region 判断是否需要应用多分支枚举结构
+            #region 判断是否需要应用枚举结构
             if (EnumKey.Length > 0 && !skipCode)
             {
                 if (Plan.EnumCompoundDataDictionary.TryGetValue(EnumKey, out Dictionary<string, List<string>> targetDependencyDictionary) && targetDependencyDictionary.TryGetValue(SelectedEnumItem.Text, out List<string> targetRawList))
                 {
                     ClearCurrentSubItem(Parent);
+                    Match firstKeyWordMatch = GetEnumValueMode1().Match(targetRawList[0]);
+                    if(firstKeyWordMatch.Success && firstKeyWordMatch.Groups[1].Value == SelectedEnumItem.Text)
+                    {
+                        targetRawList.RemoveAt(0);
+                    }
                     JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), targetRawList, LayerCount);
                     Parent.Children.AddRange(result.Result);
 
@@ -455,7 +590,22 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     }
 
                     Plan.SetRangeText(StartLine.EndOffset, 0, result.ResultString.Length > 0 ? ",\r\n" + result.ResultString.ToString() : "");
-                    JsonItemTool.SetLineNumbersForEachItem(result.Result, Parent, true);
+                    if (result.ResultString.Length > 0)
+                    {
+                        JsonItemTool.SetLineNumbersForEachItem(result.Result, Parent, true);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < result.Result.Count; i++)
+                        {
+                            result.Result[i].Parent = this;
+                            if(i > 0)
+                            {
+                                result.Result[i].Previous = result.Result[i - 1];
+                                result.Result[i - 1].Next = result.Result[i];
+                            }
+                        }
+                    }
                     skipCode = true;
                 }
             }
@@ -523,7 +673,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             #endregion
 
             #region 处理父节点的尾行引用
-            if(Parent is not null && (Parent.StartLine == Parent.EndLine || Parent.EndLine is null) && StartLine is not null)
+            if(Parent is not null && (Parent.StartLine == Parent.EndLine || (Parent.EndLine is null || (Parent.EndLine is not null && Parent.EndLine.IsDeleted))) && StartLine is not null)
             {
                 Parent.EndLine = StartLine.NextLine;
             }
