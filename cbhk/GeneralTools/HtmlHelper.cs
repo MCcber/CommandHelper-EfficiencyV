@@ -26,7 +26,7 @@ namespace cbhk.GeneralTools
 
         public IJsonItemTool jsonTool = null;
 
-        private List<string> EnumKeyList = ["命名空间ID"];
+        private List<string> EnumKeyList = ["命名空间ID","内容类型ID"];
 
         [GeneratedRegex(@"\s?\s*\*+\s?\s*{{[nN]bt\sinherit(?<1>[a-z_/|=*\s]+)}}\s?\s*", RegexOptions.IgnoreCase)]
         private static partial Regex GetInheritString();
@@ -39,6 +39,9 @@ namespace cbhk.GeneralTools
 
         [GeneratedRegex(@"\[\[\#?((?<1>[\u4e00-\u9fff]+)\|(?<2>[\u4e00-\u9fff]+)|(?<1>[\u4e00-\u9fff]+))\]\]")]
         private static partial Regex GetContextKey();
+
+        [GeneratedRegex(@"(?<=\s*\s?\*+;?\s*\s?(取决于)).+(?=的额外内容).+")]
+        private static partial Regex GetExtraKey();
 
         [GeneratedRegex(@"\[\[(?<1>[a-zA-Z_\u4e00-\u9fff]+)\]\]")]
         private static partial Regex GetEnumKey();
@@ -129,6 +132,10 @@ namespace cbhk.GeneralTools
             return NBTFeatureList;
         }
 
+        /// <summary>
+        /// 处理依赖文件
+        /// </summary>
+        /// <param name="target"></param>
         private void HandlingDependencyFile(string[] target)
         {
             HtmlDocument htmlDocument = new();
@@ -154,7 +161,7 @@ namespace cbhk.GeneralTools
                         string titleAndSubTitle = "#" + mainTitleMatch.Value.Replace("=", "").Trim() + (subTitleMatch.Success ? "|" + subTitleMatch.Value.Replace("=", "").Trim() : "");
                         if(titleAndSubTitle == "#")
                         {
-                            titleAndSubTitle = '#' + target[i].Replace(RootDirectory,"").Replace(".wiki","") + "";
+                            titleAndSubTitle = '#' + target[i].Replace(RootDirectory,"").Replace(".wiki","").Replace("\\","/") + "";
                         }
 
                         if (treeviewDivs.Count == 1)
@@ -289,6 +296,8 @@ namespace cbhk.GeneralTools
                             if (plan.TranslateDictionary.TryGetValue(key, out string targetKey2) && plan.EnumCompoundDataDictionary.TryGetValue(targetKey2, out Dictionary<string, List<string>> dictionary))
                             {
                                 subCompoundItem.DataType = DataType.Enum;
+                                subCompoundItem.LayerCount = compoundJsonTreeViewItem.LayerCount + 1;
+                                subCompoundItem.AddOrSwitchElementButtonVisibility = Visibility.Collapsed;
                                 subCompoundItem.EnumBoxVisibility = Visibility.Visible;
                                 subCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
                                 subCompoundItem.EnumItemsSource.AddRange(dictionary.Keys.Select(item =>
@@ -308,7 +317,8 @@ namespace cbhk.GeneralTools
                                     string firstItemRawString = dictionary[subCompoundItem.EnumItemsSource[1].Text][0];
                                     List<string> NBTFeatureList = GetHeadTypeAndKeyList(firstItemRawString);
                                     NBTFeatureList = RemoveUIMarker(NBTFeatureList);
-                                    subCompoundItem.Key = subCompoundItem.DisplayText = NBTFeatureList[^1];
+                                    subCompoundItem.Key = NBTFeatureList[^1];
+                                    subCompoundItem.DisplayText = subCompoundItem.Key[0].ToString().ToUpper() + subCompoundItem.Key[1..];
                                 }
                             }
                         }
@@ -449,7 +459,7 @@ namespace cbhk.GeneralTools
                 string[] fileList = Directory.GetFiles(RootDirectory + entry.Value<string>());
                 HandlingDependencyFile(fileList);
             }
-            string[] directFileList = [.. fileArray.Select(item => RootDirectory + item.Value<string>().Replace("/", "\\"))];
+            string[] directFileList = [.. fileArray.Select(item => RootDirectory + item.Value<string>())];
             HandlingDependencyFile(directFileList);
             #endregion
 
@@ -495,6 +505,7 @@ namespace cbhk.GeneralTools
         /// <returns></returns>
         public JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int layerCount, string currentReferenceKey = "", CompoundJsonTreeViewItem parent = null, JsonTreeViewItem previous = null, int previousStarCount = 1, bool isAddToParent = false)
         {
+            bool isNeedGetInheritOrContext = true;
             //遍历找到的div标签内容集合
             for (int i = 0; i < nodeList.Count; i++)
             {
@@ -505,35 +516,54 @@ namespace cbhk.GeneralTools
                 string currentDescription = "";
                 bool IsSimpleItem = true;
                 currentReferenceKey ??= "";
-
-                //提取引用节点所代指的文档并将其内容插入到当前节点列表中
                 Match inheritMatch = GetInheritString().Match(nodeList[i]);
-                if (inheritMatch.Success && plan.DependencyItemList.TryGetValue("#Inherit" + inheritMatch.Groups[1].Value.Replace("/", "\\"), out List<string> targetInheritList))
-                {
-                    nodeList.InsertRange(i, targetInheritList);
-                }
+                Match contextMatch = GetContextKey().Match(nodeList[i]);
 
-                Match itemComponentMatch = GetItemComponentKey().Match(nodeList[i]);
-                List<string> NBTFeatureList = GetHeadTypeAndKeyList(nodeList[i]);
-
-                #region 去除用于Wiki页面显示的一些UI标记
-                if (NBTFeatureList is not null && NBTFeatureList.Count > 0)
+                #region 提取引用节点所代指的文档并将其内容插入到当前节点列表中
+                if (parent is not null && isAddToParent && isNeedGetInheritOrContext)
                 {
-                    for (int j = NBTFeatureList.Count - 1; j > 0; j--)
+                    if (inheritMatch.Success && plan.DependencyItemList.TryGetValue("#Inherit" + inheritMatch.Groups[1].Value.Replace("|","/"), out List<string> targetInheritList))
                     {
-                        if (NBTFeatureList[j].Contains('='))
+                        nodeList.RemoveAt(i);
+                        nodeList.InsertRange(i, targetInheritList);
+                        isNeedGetInheritOrContext = false;
+                    }
+
+                    if (contextMatch.Success)
+                    {
+                        isNeedGetInheritOrContext = false;
+                        string contextKey = ("#" + contextMatch.Groups[1].Value);
+                        if (plan.DependencyItemList.TryGetValue(contextKey, out List<string> targetList1))
                         {
-                            NBTFeatureList.RemoveAt(j);
+                            targetList1.RemoveAt(0);
+                            nodeList.RemoveAt(i);
+                            nodeList.InsertRange(i, targetList1);
+                        }
+                        else
+                        if (plan.TranslateDictionary.TryGetValue(contextKey, out string targetKey))
+                        {
+                            if (plan.DependencyItemList.TryGetValue(targetKey, out List<string> targetList2))
+                            {
+                                targetList2.RemoveAt(0);
+                                nodeList.RemoveAt(i);
+                                nodeList.InsertRange(i, targetList2);
+                            }
                         }
                     }
                 }
                 #endregion
+
+                Match itemComponentMatch = GetItemComponentKey().Match(nodeList[i]);
+                List<string> NBTFeatureList = GetHeadTypeAndKeyList(nodeList[i]);
+
+                NBTFeatureList = RemoveUIMarker(NBTFeatureList);
 
                 bool IsExplanationNode = NBTFeatureList.Count > 1;
                 bool IsCurrentOptionalNode = !GetRequiredKey().Match(nodeList[i]).Success;
                 bool IsHaveNextNode = i < nodeList.Count - 1;
                 bool IsNextOptionalNode = false;
 
+                bool isHaveExtraField = nodeList[i].Contains("根据内容而指定的额外字段") || GetExtraKey().Match(nodeList[i]).Success;
                 bool isHaveNameSpaceKey = EnumKeyList.Where(enumItem => { return nodeList[i].Contains(enumItem); }).Any();
                 MatchCollection EnumCollectionMode1 = GetEnumValueMode1().Matches(nodeList[i]);
                 MatchCollection EnumCollectionMode2 = GetEnumValueMode2().Matches(nodeList[i]);
@@ -543,7 +573,6 @@ namespace cbhk.GeneralTools
                 {
                     isSimpleDataType = ((NBTFeatureList[0] != "array" && NBTFeatureList[0] != "list" && NBTFeatureList[0] != "compound" && NBTFeatureList.Count < 3) || isBoolKey) && EnumCollectionMode1.Count < 2 && EnumCollectionMode2.Count < 2;
                 }
-                Match contextMatch = GetContextKey().Match(nodeList[i]);
                 Match EnumMatch = GetEnumKey().Match(nodeList[i]);
                 bool isEnumIDList = false;
                 if (EnumMatch.Success)
@@ -569,8 +598,9 @@ namespace cbhk.GeneralTools
                 }
 
                 int lastCurlyBracesIndex = nodeList[i].LastIndexOf('}');
+                string rootString = nodeList[i][(lastCurlyBracesIndex + 1)..].Trim();
 
-                if (lastCurlyBracesIndex > -1 && nodeList[i][(lastCurlyBracesIndex + 1)..].Trim() == "根标签")
+                if (lastCurlyBracesIndex > -1 && !string.IsNullOrEmpty(rootString) && (rootString == "根节点" || rootString == "根标签"))
                 {
                     continue;
                 }
@@ -616,7 +646,7 @@ namespace cbhk.GeneralTools
                 if (IsCanBeAnalyzed)
                 {   
                     #region 判断是否为复合节点
-                    if (isEnumIDList || isHaveNameSpaceKey || !isSimpleDataType)
+                    if (isHaveExtraField || isEnumIDList || isHaveNameSpaceKey || !isSimpleDataType)
                     {
                         item = new CompoundJsonTreeViewItem(plan, jsonTool, _container)
                         {
@@ -633,12 +663,12 @@ namespace cbhk.GeneralTools
                         {
                             for (int j = 0; j < NBTFeatureList.Count - 1; j++)
                             {
-                                compoundJsonTreeViewItem.ValueTypeList.Add(new TextComboBoxItem()
+                                compoundJsonTreeViewItem.ValueTypeSource.Add(new TextComboBoxItem()
                                 {
                                     Text = NBTFeatureList[j][0].ToString().ToUpper() + NBTFeatureList[j][1..]
                                 });
                             }
-                            compoundJsonTreeViewItem.CurrentValueType ??= compoundJsonTreeViewItem.ValueTypeList[0];
+                            compoundJsonTreeViewItem.SelectedValueType ??= compoundJsonTreeViewItem.ValueTypeSource[0];
                             item.DataType = compoundJsonTreeViewItem.DataType = DataType.MultiType;
                             if (!IsCurrentOptionalNode)
                             {
@@ -676,7 +706,7 @@ namespace cbhk.GeneralTools
                                             {
                                                 defaultValue = int.Parse(DefaultNumberValueMatch.Groups[1].Value);
                                             }
-                                            result.ResultString.Append(defaultValue.ToString());
+                                            result.ResultString.Append(defaultValue);
                                             compoundJsonTreeViewItem.Value = defaultValue;
                                         }
                                         compoundJsonTreeViewItem.InputBoxVisibility = Visibility.Visible;
@@ -718,7 +748,7 @@ namespace cbhk.GeneralTools
                             {
                                 result.ResultString.Append('[');
                             }
-                            compoundJsonTreeViewItem.SwitchBoxVisibility = Visibility.Visible;
+                            compoundJsonTreeViewItem.ValueTypeBoxVisibility = Visibility.Visible;
                             compoundJsonTreeViewItem.SwitchButtonColor = compoundJsonTreeViewItem.PlusColor;
                             compoundJsonTreeViewItem.SwitchButtonIcon = compoundJsonTreeViewItem.PlusIcon;
                         }
@@ -912,7 +942,7 @@ namespace cbhk.GeneralTools
                     if (item is CompoundJsonTreeViewItem CurrentCompoundItem)
                     {
                         #region 判断是否需要重新分析上下文关键字
-                        if (NBTFeatureList.Count == 1 && contextMatch.Success && parent is not null && isAddToParent)
+                        if (NBTFeatureList.Count < 3 && contextMatch.Success && parent is not null && isAddToParent)
                         {
                             string contextString = contextMatch.Groups[1].Value;
                             //优先处理另类枚举
@@ -933,7 +963,7 @@ namespace cbhk.GeneralTools
                                 item = CurrentCompoundItem = subCompoundItem;
                                 if(CurrentCompoundItem.EnumKey.Length > 0)
                                 {
-                                    result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + CurrentCompoundItem.Key + "\":\"\"");
+                                    result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"");
                                 }
                             }
                         }
@@ -951,7 +981,7 @@ namespace cbhk.GeneralTools
                         #region 确定数据类型
                         if (NBTFeatureList.Count > 0)
                         {
-                            CurrentCompoundItem.AddOrSwitchElementButtonVisibility = NBTFeatureList[0] == "compound" || NBTFeatureList[0] == "list" || NBTFeatureList[0].Contains("array") ? Visibility.Visible : Visibility.Collapsed;
+                            CurrentCompoundItem.AddOrSwitchElementButtonVisibility = CurrentCompoundItem.EnumBoxVisibility is Visibility.Collapsed && (NBTFeatureList[0] == "compound" || NBTFeatureList[0] == "list" || NBTFeatureList[0].Contains("array")) ? Visibility.Visible : Visibility.Collapsed;
                             if (CurrentCompoundItem.AddOrSwitchElementButtonVisibility is Visibility.Visible)
                             {
                                 if (NBTFeatureList[0] == "compound")
@@ -1193,7 +1223,7 @@ namespace cbhk.GeneralTools
                                         {
                                             #region 如果子信息只有一条并引用指定文件，则将其文档内容取出并直接解析
                                             Match subInheritMatch = GetInheritString().Match(currentSubChildren[0]);
-                                            if (currentSubChildren.Count == 1 && subInheritMatch.Success && plan.DependencyItemList.TryGetValue("#Inherit" + subInheritMatch.Groups[1].Value.Replace("/","\\"),out List<string> subTargetInheritList))
+                                            if (currentSubChildren.Count == 1 && subInheritMatch.Success && plan.DependencyItemList.TryGetValue("#Inherit" + subInheritMatch.Groups[1].Value,out List<string> subTargetInheritList))
                                             {
                                                 currentSubChildren = subTargetInheritList;
                                             }
@@ -1260,7 +1290,7 @@ namespace cbhk.GeneralTools
                                     else
                                     {
                                         //没有子信息时，提取当前行的上下文信息作为子信息，因为引用一定包含在当前行中
-                                        if (contextMatch.Success)
+                                        if (contextMatch.Success && NBTFeatureList.Count < 3)
                                         {
                                             CurrentCompoundItem.ChildrenStringList.Add("[[#" + contextMatch.Groups[1].Value + "]]");
                                         }

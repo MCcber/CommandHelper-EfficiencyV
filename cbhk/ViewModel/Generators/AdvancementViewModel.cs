@@ -63,7 +63,8 @@ namespace cbhk.ViewModel.Generators
 
         public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; } = new()
         {
-            { "enum:trigger.optionalcompound:conditions","#准则触发器" }
+            { "enum:trigger.optionalcompound:conditions","#准则触发器" },
+            { "string:type.any:contentType","#文本组件" }
         };
 
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; } = [];
@@ -74,7 +75,12 @@ namespace cbhk.ViewModel.Generators
         {
             { "#准则|上文", "#谓词" },
             { "#准则|下文", "#准则" },
-            { "#战利品表谓词","#谓词" }
+            { "#战利品表谓词","#谓词" },
+            { "#图例|上文","#谓词" }
+        };
+        public Dictionary<string, string> TranslateDefaultEnumItemDictionary { get; set; } = new()
+        {
+            { "#谓词","entity_properties" }
         };
         public List<string> DependencyFileList { get; set; }
         public List<string> DependencyDirectoryList { get; set; }
@@ -477,7 +483,7 @@ namespace cbhk.ViewModel.Generators
                 else
                 if(parent is not null && parent.StartLine is not null)
                 {
-                    lastOffset = GetRangeText(parent.StartLine.Offset, parent.StartLine.EndOffset - parent.StartLine.Offset).IndexOf('{') + 1;
+                    lastOffset = GetRangeText(parent.StartLine.Offset, parent.StartLine.Length).IndexOf(':') + 3;
                     if(lastOffset == 0)
                     {
                         lastOffset = GetRangeText(parent.StartLine.Offset, parent.StartLine.EndOffset - parent.StartLine.Offset).IndexOf('[') + 1;
@@ -492,7 +498,29 @@ namespace cbhk.ViewModel.Generators
                     offset = startDocumentLine.Offset + lastOffset;
                 }
 
-                newValue = (previous is not null && previous.StartLine is not null && ((next is not null && next.StartLine is null) || next is null) ? "," : "") + "\r\n" + new string(' ', item.LayerCount * 2) + "\"" + item.Key + "\": " + newValue + (next is not null && next.StartLine is not null ? "," : "") + (parent is not null && parent.StartLine == parent.EndLine ? "\r\n" + new string(' ', parent.LayerCount * 2) : "");
+                if (item.DisplayText != "Entry")
+                {
+                    newValue = (previous is not null && previous.StartLine is not null && ((next is not null && next.StartLine is null) || next is null) ? "," : "") + "\r\n" + new string(' ', item.LayerCount * 2) + "\"" + item.Key + "\": " + newValue + (next is not null && next.StartLine is not null ? "," : "") + (parent is not null && parent.StartLine == parent.EndLine ? "\r\n" + new string(' ', parent.LayerCount * 2) : "");
+                }
+                else
+                {
+                    if(previousCompound is not null && previousCompound.EndLine is not null)
+                    {
+                        startDocumentLine = previousCompound.EndLine.NextLine;
+                    }
+                    else
+                    if(previous is not null && previous.StartLine is not null)
+                    {
+                        startDocumentLine = previous.StartLine.NextLine;
+                    }
+                    else
+                    {
+                        startDocumentLine = parent.StartLine.NextLine;
+                    }
+                    startLineText = GetRangeText(startDocumentLine.Offset,startDocumentLine.Length);
+                    offset = startDocumentLine.Offset + startLineText.IndexOf('"');
+                    length = startDocumentLine.Offset + startLineText.LastIndexOf('"') + 1 - offset;
+                }
             }
             #endregion
 

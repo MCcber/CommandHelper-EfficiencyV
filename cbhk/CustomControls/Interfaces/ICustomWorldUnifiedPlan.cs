@@ -29,6 +29,10 @@ namespace cbhk.CustomControls.Interfaces
         /// </summary>
         public Dictionary<string,string> TranslateDictionary { get; set; }
         /// <summary>
+        /// 用于指定当节点为复合而不是列表时需使用的默认分支结构
+        /// </summary>
+        public Dictionary<string, string> TranslateDefaultEnumItemDictionary { get; set; }
+        /// <summary>
         /// 识别特定结构的字典
         /// </summary>
         public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; }

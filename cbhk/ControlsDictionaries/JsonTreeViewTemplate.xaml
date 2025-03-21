@@ -251,10 +251,10 @@
                         Uid="ValueTypeList"
                         Width="235"
                         BorderThickness="0"
-                        ItemsSource="{Binding ValueTypeList}"
-                        SelectedItem="{Binding CurrentValueType}"
+                        ItemsSource="{Binding ValueTypeSource}"
+                        SelectedItem="{Binding SelectedValueType}"
                         Style="{DynamicResource TextComboBoxStyle}"
-                        Visibility="{Binding SwitchBoxVisibility}">
+                        Visibility="{Binding ValueTypeBoxVisibility}">
                         <behaviors:Interaction.Triggers>
                             <behaviors:EventTrigger EventName="SelectionChanged">
                                 <behaviors:CallMethodAction MethodName="ValueType_SelectionChanged" TargetObject="{Binding}" />

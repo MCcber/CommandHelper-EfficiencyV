@@ -40,6 +40,18 @@ namespace cbhk.Interface.Json
         /// <param name="withType"></param>
         public void SetLineNumbersForEachItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem parent,bool withType = false);
         /// <summary>
+        /// 设置每一个成员的层数
+        /// </summary>
+        /// <param name="list">节点集合</param>
+        /// <param name="startCount">起始层数</param>
+        public void SetLayerCountForEachItem(ObservableCollection<JsonTreeViewItem> list, int startCount);
+        /// <summary>
+        /// 设置每一个成员的父节点
+        /// </summary>
+        /// <param name="list">节点集合</param>
+        /// <param name="startParent">起始父级</param>
+        public void SetParentForEachItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem startParent);
+        /// <summary>
         /// 添加子结构
         /// </summary>
         /// <param name="compoundJsonTreeViewItem">数组节点</param>

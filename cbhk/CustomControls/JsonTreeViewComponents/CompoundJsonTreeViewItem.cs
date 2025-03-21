@@ -69,6 +69,12 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         public TextComboBoxItem oldSelectedEnumItem;
 
         /// <summary>
+        /// 已选中的数据类型
+        /// </summary>
+        [ObservableProperty]
+        public TextComboBoxItem _selectedValueType = null;
+
+        /// <summary>
         /// 已选中的枚举成员
         /// </summary>
         [ObservableProperty]
@@ -87,7 +93,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             set
             {
                 SetProperty(ref dataType, value);
-                SortButtonVisibility = RemoveElementButtonVisibility = BoolButtonVisibility = EnumBoxVisibility = ErrorIconVisibility = InfoIconVisibility = InputBoxVisibility = EnumBoxVisibility = Visibility.Collapsed;
+                BoolButtonVisibility = EnumBoxVisibility = InputBoxVisibility = Visibility.Collapsed;
             }
         }
 
@@ -96,6 +102,9 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
 
         [ObservableProperty]
         public Visibility _switchBoxVisibility = Visibility.Collapsed;
+
+        [ObservableProperty]
+        public Visibility _valueTypeBoxVisibility = Visibility.Collapsed;
 
         /// <summary>
         /// 可切换的子节点集合
@@ -121,7 +130,8 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         [ObservableProperty]
         public ObservableCollection<JsonTreeViewItem> _flattenDescendantNodeList = [];
 
-        public ObservableCollection<TextComboBoxItem> ValueTypeList { get; set; } = [];
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _valueTypeSource = [];
         #endregion
 
         #region Field
@@ -217,9 +227,9 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ValueType_SelectionChanged(object sender,SelectedCellsChangedEventArgs e)
+        public void ValueType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string currentValueTypeString = CurrentValueType.Text.ToLower();
+            string currentValueTypeString = SelectedValueType.Text.ToLower();
             if(currentValueTypeString.Length > 0)
             {
                 DataType = DataType.None;
@@ -253,12 +263,36 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     length = EndLine.Offset + endBracketOffset - offset;
                     Plan.SetRangeText(offset, length, "");
                 }
-                if(offset == 0)
+
+                if (offset == 0)
                 {
                     offset = StartLine.Offset + startLineText.IndexOf(':') + 2;
                 }
+                if(EndLine is null)
+                {
+                    if(startLineText.TrimEnd().EndsWith(','))
+                    {
+                        length = StartLine.Offset + startLineText.LastIndexOf(',') - offset;
+                    }
+                    else
+                    {
+                        length = StartLine.EndOffset - offset;
+                    }
+                }
+                else
+                {
+                    if(startLineText.EndsWith(','))
+                    {
+                        length = EndLine.Offset + startLineText.LastIndexOf(',') - offset;
+                    }
+                    else
+                    {
+                        length = EndLine.Length - (startLineText.IndexOf(':') + 2);
+                    }
+                }
                 #endregion
 
+                #region 处理不同的数据类型所需的值和交互控件
                 switch (currentValueTypeString)
                 {
                     case "bool":
@@ -266,14 +300,14 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         {
                             BoolButtonVisibility = Visibility.Visible;
                             Match defaultBoolMatch = GetDefaultBoolValue().Match(InfoTiptext);
-                            if(defaultBoolMatch.Success)
+                            if (defaultBoolMatch.Success)
                             {
                                 Value = bool.Parse(defaultBoolMatch.Groups[1].Value);
-                                Plan.SetRangeText(offset, 0, Value + "");
+                                Plan.SetRangeText(offset, length, Value + "");
                             }
                             else
                             {
-                                Plan.SetRangeText(offset, 0, "false");
+                                Plan.SetRangeText(offset, length, "false");
                             }
                             break;
                         }
@@ -286,7 +320,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     case "string":
                         {
                             InputBoxVisibility = Visibility.Visible;
-                            string currentValue = "";
+                            string currentValue = "\"\"";
 
                             if (currentValueTypeString == "string")
                             {
@@ -308,11 +342,15 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                                     Value = EnumItemsSource[0].Text;
                                     currentValue = "\"" + EnumItemsSource[0].Text + "\"";
                                 }
+                                else
+                                {
+                                    Value = "";
+                                }
                             }
                             else
                             {
                                 Match defaultNumberMatch = GetDefaultNumberValue().Match(InfoTiptext);
-                                if(defaultNumberMatch.Success)
+                                if (defaultNumberMatch.Success)
                                 {
                                     Value = decimal.Parse(defaultNumberMatch.Groups[1].Value);
                                     currentValue = Value + "";
@@ -323,14 +361,17 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                                     currentValue = "0";
                                 }
                             }
-                            Plan.SetRangeText(offset, 0, currentValue);
+                            Plan.SetRangeText(offset, length, currentValue);
                             break;
                         }
                 }
-                if(isCompoundType)
+                if (isCompoundType)
                 {
                     List<string> targetRawStringList = [];
-                    AddOrSwitchElementButtonVisibility = Visibility.Visible;
+                    if (IsCanBeDefaulted)
+                    {
+                        AddOrSwitchElementButtonVisibility = Visibility.Visible;
+                    }
                     bool isNeedAnalyze = false;
                     if (ChildrenStringList.Count > 0)
                     {
@@ -340,7 +381,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     else
                     {
                         Match enumKeyMatch = GetEnumKey().Match(InfoTiptext);
-                        if (Plan.DependencyItemList.TryGetValue(enumKeyMatch.Value,out targetRawStringList))
+                        if (Plan.DependencyItemList.TryGetValue('#' + enumKeyMatch.Groups[1].Value,out targetRawStringList))
                         {
                             isNeedAnalyze = true;
                         }
@@ -361,6 +402,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         Plan.SetRangeText(offset, 0, result.ResultString.ToString());
                     }
                 }
+                #endregion
             }
         }
 
@@ -577,16 +619,18 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 {
                     ClearCurrentSubItem(Parent);
                     Match firstKeyWordMatch = GetEnumValueMode1().Match(targetRawList[0]);
+                    List<string> targetRawListTemp = [.. targetRawList];
                     if(firstKeyWordMatch.Success && firstKeyWordMatch.Groups[1].Value == SelectedEnumItem.Text)
                     {
-                        targetRawList.RemoveAt(0);
+                        targetRawListTemp.RemoveAt(0);
                     }
-                    JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), targetRawList, LayerCount);
+                    JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), targetRawListTemp, LayerCount);
                     Parent.Children.AddRange(result.Result);
 
-                    if (result.Result.Count == 1)
+                    if (result.Result.Count > 0)
                     {
                         result.Result[0].Previous = this;
+                        Next = result.Result[0];
                     }
 
                     Plan.SetRangeText(StartLine.EndOffset, 0, result.ResultString.Length > 0 ? ",\r\n" + result.ResultString.ToString() : "");
@@ -598,7 +642,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     {
                         for (int i = 0; i < result.Result.Count; i++)
                         {
-                            result.Result[i].Parent = this;
+                            result.Result[i].Parent = Parent;
                             if(i > 0)
                             {
                                 result.Result[i].Previous = result.Result[i - 1];
@@ -702,6 +746,11 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     IsCurrentExpanded = true;
                 }
                 JsonItemTool.AddSubStructure(this);
+
+                if(DataType is DataType.CustomCompound && InputBoxVisibility is Visibility.Visible)
+                {
+                    Value = "";
+                }
 
                 if (DataType is not DataType.CustomCompound && DataType is not DataType.None && DataType is not DataType.List)
                 {

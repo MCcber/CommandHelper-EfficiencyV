@@ -149,9 +149,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         [ObservableProperty]
         public Visibility _inputBoxVisibility = Visibility.Collapsed;
 
-        [ObservableProperty]
-        public TextComboBoxItem _currentValueType = null;
-
         private dynamic oldValue = null;
         /// <summary>
         /// 旧值
@@ -483,7 +480,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 if (targetLineText.TrimEnd().EndsWith(',') && (Next is null || (Next is not null && Next.StartLine is null)))
                 {
                     Plan.SetRangeText(targetLine.Offset, targetLine.Length, targetLineText.TrimEnd([' ', ',']));
-                    string test =Plan.GetRangeText(targetLine.Offset, targetLine.Length);
                 }
                 #endregion
 
@@ -570,6 +566,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
         {
             #region Field
             ChangeType changeType = ChangeType.None;
+            DataType originDataType = DataType.None;
             JsonTreeViewItem previous = Previous;
             JsonTreeViewItem next = Next;
             changeType = DataType is DataType.String ? ChangeType.String : ChangeType.NumberAndBool;
@@ -602,8 +599,12 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             #region 处理复合节点与简单节点
             if (this is CompoundJsonTreeViewItem thisCompoundJsonTreeViewItem1 && thisCompoundJsonTreeViewItem1.DataType is DataType.MultiType)
             {
-                DataType originDataType = (DataType)Enum.Parse(typeof(DataType), thisCompoundJsonTreeViewItem1.CurrentValueType.Text, true);
+                originDataType = (DataType)Enum.Parse(typeof(DataType), thisCompoundJsonTreeViewItem1.SelectedValueType.Text, true);
                 changeType = originDataType is DataType.String ? ChangeType.String : ChangeType.NumberAndBool;
+                if(changeType is ChangeType.String)
+                {
+                    doubleQuotationMarks = "\"";
+                }
             }
 
             if (string.IsNullOrEmpty(currentValue))
@@ -634,8 +635,8 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                 if (topLine is null)
                 {
                     string currentLineText = Plan.GetRangeText(StartLine.Offset, StartLine.Length);
-                    offset = StartLine.Offset + currentLineText.IndexOf('"');
-                    length = StartLine.EndOffset - (IsCanBeDefaulted ? 1 : 0) - offset;
+                    offset = StartLine.Offset + currentLineText.IndexOf(':') + 2;
+                    length = StartLine.EndOffset - (IsCanBeDefaulted || currentLineText.TrimEnd().EndsWith(',') ? 1 : 0) - offset;
                 }
                 else
                 {
@@ -655,14 +656,30 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                         length = Parent.EndLine.Offset + parentEndLineText.IndexOf(locateChar) - offset;
                     }
                 }
-
-                Plan.SetRangeText(offset, length, "");
+                string newValue = "";
+                if (originDataType is DataType.String || (Parent is not null && Parent.DisplayText == "Entry"))
+                {
+                    newValue = "\"\"";
+                }
+                else
+                if (originDataType is DataType.Number)
+                {
+                    newValue = "0";
+                }
+                Plan.SetRangeText(offset, length, newValue);
                 bool unNormalState = Parent.EndLine is null || Parent.StartLine == Parent.EndLine || (Parent.EndLine is not null && Parent.EndLine.IsDeleted);
                 if (unNormalState && ((previous is null && next is null) || (previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null)))
                 {
                     Parent.EndLine = Parent.StartLine;
                 }
-                StartLine = null;
+                if (IsCanBeDefaulted)
+                {
+                    StartLine = null;
+                }
+                if(this is CompoundJsonTreeViewItem thisCompoundJsonTreeViewItem2)
+                {
+                    thisCompoundJsonTreeViewItem2.EndLine = null;
+                }
             }
             else
             {

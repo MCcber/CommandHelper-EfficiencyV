@@ -54,6 +54,7 @@ namespace cbhk.ViewModel.Generators
 
         public Dictionary<string, List<string>> DefaultCompoundSource { get; set; } = [];
         public Dictionary<string, string> TranslateDictionary { get; set; } = new() { };
+        public Dictionary<string, string> TranslateDefaultEnumItemDictionary { get; set; } = new();
         public string RootDirectory { get; set; }
         public List<string> DependencyFileList { get; set; }
         public List<string> DependencyDirectoryList { get; set; }
@@ -96,8 +97,6 @@ namespace cbhk.ViewModel.Generators
             await Task.Run(async () =>
             {
                 textEditor = sender as TextEditor;
-                //生成值提供器字典
-                //DependencyItemList = htmlHelper.AnalyzeHTMLData("");
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(configDirectoryPath);
