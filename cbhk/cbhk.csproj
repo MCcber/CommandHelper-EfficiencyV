@@ -50,12 +50,16 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="GeneralTools\Displayer\**" />
     <Compile Remove="Model\CustomControls\**" />
     <Compile Remove="纹理\**" />
+    <EmbeddedResource Remove="GeneralTools\Displayer\**" />
     <EmbeddedResource Remove="Model\CustomControls\**" />
     <EmbeddedResource Remove="纹理\**" />
+    <None Remove="GeneralTools\Displayer\**" />
     <None Remove="Model\CustomControls\**" />
     <None Remove="纹理\**" />
+    <Page Remove="GeneralTools\Displayer\**" />
     <Page Remove="Model\CustomControls\**" />
     <Page Remove="纹理\**" />
   </ItemGroup>
@@ -516,7 +520,6 @@
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="GeneralTools\Displayer\" />
     <Folder Include="GeneralTools\ScrollViewerHelper\" />
     <Folder Include="Interface\Data\" />
   </ItemGroup>

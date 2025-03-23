@@ -529,7 +529,7 @@ namespace cbhk.GeneralTools
                         isNeedGetInheritOrContext = false;
                     }
 
-                    if (contextMatch.Success)
+                    if (contextMatch.Success && parent is not null)
                     {
                         isNeedGetInheritOrContext = false;
                         string contextKey = ("#" + contextMatch.Groups[1].Value);
@@ -942,7 +942,7 @@ namespace cbhk.GeneralTools
                     if (item is CompoundJsonTreeViewItem CurrentCompoundItem)
                     {
                         #region 判断是否需要重新分析上下文关键字
-                        if (NBTFeatureList.Count < 3 && contextMatch.Success && parent is not null && isAddToParent)
+                        if (NBTFeatureList.Count < 3 && contextMatch.Success && parent is not null && parent.ChildrenStringList.Count == 1 && isAddToParent)
                         {
                             string contextString = contextMatch.Groups[1].Value;
                             //优先处理另类枚举

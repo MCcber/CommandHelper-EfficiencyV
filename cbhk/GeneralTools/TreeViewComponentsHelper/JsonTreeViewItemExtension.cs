@@ -2,7 +2,6 @@
 using cbhk.CustomControls.JsonTreeViewComponents;
 using cbhk.Interface.Json;
 using cbhk.Model.Common;
-using ICSharpCode.AvalonEdit.Document;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
@@ -25,6 +24,7 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
         private static partial Regex GetInheritString();
         #endregion
 
+        #region Method
         public void RecursiveRemoveFlattenDescendantNodeList(CompoundJsonTreeViewItem CurrentParent, CompoundJsonTreeViewItem Target)
         {
             foreach (var item in Target.Children)
@@ -918,5 +918,6 @@ namespace cbhk.GeneralTools.TreeViewComponentsHelper
                 UpdateFlattenDescendantNodeList(target.Parent, list);
             }
         }
+        #endregion
     }
 }
