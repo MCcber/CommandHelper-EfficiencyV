@@ -1,12 +1,12 @@
-﻿using cbhk.CustomControls;
-using cbhk.WindowDictionaries;
+﻿using CBHK.CustomControls;
+using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Collections.ObjectModel;
-using cbhk.GeneralTools.MessageTip;
+using CBHK.GeneralTools.MessageTip;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Text;
@@ -17,17 +17,17 @@ using SharpNBT;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using cbhk.ViewModel;
+using CBHK.ViewModel;
 using Prism.Ioc;
-using cbhk.View;
-using cbhk.View.Generators;
+using CBHK.View;
+using CBHK.View.Generators;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class OnlyOneCommandViewModel : ObservableObject
     {
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconCommandBlock.png";
+        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconCommandBlock.png";
 
         SolidColorBrush tranparentBrush = Brushes.Transparent;
         SolidColorBrush textBrush = Brushes.White;

@@ -2,7 +2,7 @@
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     public class TextToggleButtons:ToggleButton
     {

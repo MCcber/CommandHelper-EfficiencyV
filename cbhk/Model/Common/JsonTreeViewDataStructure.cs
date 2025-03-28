@@ -1,8 +1,8 @@
-﻿using cbhk.CustomControls.JsonTreeViewComponents;
+﻿using CBHK.CustomControls.JsonTreeViewComponents;
 using System.Collections.ObjectModel;
 using System.Text;
 
-namespace cbhk.Model.Common
+namespace CBHK.Model.Common
 {
     public class JsonTreeViewDataStructure
     {

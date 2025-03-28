@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
+namespace CBHK.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// UUIDOrPosGroup.xaml 的交互逻辑

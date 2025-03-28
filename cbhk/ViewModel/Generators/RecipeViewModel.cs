@@ -1,10 +1,10 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.RecipeGenerator.Components;
-using cbhk.Model.Common;
-using cbhk.View;
-using cbhk.ViewModel.Components.Recipe;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.RecipeGenerator.Components;
+using CBHK.Model.Common;
+using CBHK.View;
+using CBHK.ViewModel.Components.Recipe;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -23,7 +23,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class RecipeViewModel : ObservableObject
     {

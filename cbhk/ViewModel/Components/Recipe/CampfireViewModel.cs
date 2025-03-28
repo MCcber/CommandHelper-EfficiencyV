@@ -11,17 +11,17 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Data;
-using cbhk.GeneralTools.MessageTip;
+using CBHK.GeneralTools.MessageTip;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using cbhk.GeneralTools;
+using CBHK.GeneralTools;
 using CommunityToolkit.Mvvm.Input;
-using cbhk.Generators.RecipeGenerator.Components;
-using cbhk.Generators.RecipeGenerator;
-using cbhk.ViewModel.Generators;
-using cbhk.Model.Common;
+using CBHK.Generators.RecipeGenerator.Components;
+using CBHK.Generators.RecipeGenerator;
+using CBHK.ViewModel.Generators;
+using CBHK.Model.Common;
 
-namespace cbhk.ViewModel.Components.Recipe
+namespace CBHK.ViewModel.Components.Recipe
 {
     public partial class CampfireViewModel : ObservableObject
     {

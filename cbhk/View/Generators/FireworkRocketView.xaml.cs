@@ -1,4 +1,4 @@
-﻿namespace cbhk.Generators.FireworkRocketGenerator
+﻿namespace CBHK.Generators.FireworkRocketGenerator
 {
     /// <summary>
     /// FireworkRocket.xaml 的交互逻辑

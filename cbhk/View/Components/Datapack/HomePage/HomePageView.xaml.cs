@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
+namespace CBHK.Generators.DataPackGenerator.DatapackInitializationForms
 {
     /// <summary>
     /// HomePageView.xaml 的交互逻辑

@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.Generators.SignGenerator.Components
+namespace CBHK.Generators.SignGenerator.Components
 {
     /// <summary>
     /// SignPageView.xaml 的交互逻辑

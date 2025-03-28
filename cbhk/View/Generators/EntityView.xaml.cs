@@ -1,4 +1,4 @@
-﻿namespace cbhk.Generators.EntityGenerator
+﻿namespace CBHK.Generators.EntityGenerator
 {
     /// <summary>
     /// EntityView.xaml 的交互逻辑

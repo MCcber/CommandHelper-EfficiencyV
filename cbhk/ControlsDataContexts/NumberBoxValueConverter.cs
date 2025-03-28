@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
 
-namespace cbhk.ControlsDataContexts
+namespace CBHK.ControlsDataContexts
 {
     public class NumberBoxValueConverter : MarkupExtension, IValueConverter
     {

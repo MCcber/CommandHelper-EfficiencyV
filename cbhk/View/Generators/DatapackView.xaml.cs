@@ -1,4 +1,4 @@
-﻿namespace cbhk.Generators.DataPackGenerator
+﻿namespace CBHK.Generators.DataPackGenerator
 {
     /// <summary>
     /// DatapackView.xaml 的交互逻辑

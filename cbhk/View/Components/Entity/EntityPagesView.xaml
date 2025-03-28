@@ -1,13 +1,13 @@
 ﻿<UserControl
-    x:Class="cbhk.Generators.EntityGenerator.Components.EntityPagesView"
+    x:Class="CBHK.Generators.EntityGenerator.Components.EntityPagesView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
-    xmlns:GeneralTools="clr-namespace:cbhk.GeneralTools"
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
+    xmlns:GeneralTools="clr-namespace:CBHK.GeneralTools"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk.Generators.EntityGenerator.Components"
-    xmlns:localContext="clr-namespace:cbhk.Generators.EntityGenerator.Components"
+    xmlns:local="clr-namespace:CBHK.Generators.EntityGenerator.Components"
+    xmlns:localContext="clr-namespace:CBHK.Generators.EntityGenerator.Components"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
@@ -35,15 +35,15 @@
         <Geometry x:Key="DeleteIcon">
             M10 104 c0 -4 10 -15 22 -25 l21 -19 -23 -20 c-13 -11 -20 -23 -17 -27 4 -3 16 4 27 17 l20 23 20 -23 c11 -13 23 -20 27 -17 3 4 -4 16 -17 27 l-23 20 23 20 c13 11 20 23 17 27 -4 3 -16 -4 -27 -17 l-20 -23 -19 21 c-18 22 -31 28 -31 16z
         </Geometry>
-        <ImageBrush x:Key="Save" ImageSource="/cbhk;component/Resource/Common/Image/Save.png" />
-        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk;component/Resource/Common/Image/ButtonNormal.png" />
-        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk;component/Resource/Common/Image/ButtonPressed.png" />
-        <ImageBrush x:Key="IssueIcon" ImageSource="/cbhk;component/Resource/Common/Image/Issue.png" />
-        <ImageBrush x:Key="TextBoxBackground" ImageSource="/cbhk;component/Resource/Common/Image/TextEditBox.png" />
-        <ImageBrush x:Key="DataButtonBackground" ImageSource="/cbhk;component/Resource/Common/Image/TextToggleButtonNormal.png" />
-        <ImageBrush x:Key="DataButtonPressedBackground" ImageSource="/cbhk;component/Resource/Common/Image/TextToggleButtonPressed.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowRight.png" />
+        <ImageBrush x:Key="Save" ImageSource="/CBHK;component/Resource/Common/Image/Save.png" />
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
+        <ImageBrush x:Key="IssueIcon" ImageSource="/CBHK;component/Resource/Common/Image/Issue.png" />
+        <ImageBrush x:Key="TextBoxBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
+        <ImageBrush x:Key="DataButtonBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextToggleButtonNormal.png" />
+        <ImageBrush x:Key="DataButtonPressedBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextToggleButtonPressed.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
     </UserControl.Resources>
 
     <Grid>

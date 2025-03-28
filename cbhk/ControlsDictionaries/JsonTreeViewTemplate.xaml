@@ -1,9 +1,9 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:compoundItem="clr-namespace:cbhk.CustomControls.JsonTreeViewComponents">
+    xmlns:compoundItem="clr-namespace:CBHK.CustomControls.JsonTreeViewComponents">
     <HierarchicalDataTemplate x:Key="JsonTreeViewItem" DataType="TreeViewItem">
         <DockPanel LastChildFill="False">
             <Border
@@ -33,7 +33,7 @@
                         Visibility="{Binding RemoveElementButtonVisibility}">
                         <behaviors:Interaction.Triggers>
                             <behaviors:EventTrigger EventName="Click">
-                                <behaviors:CallMethodAction MethodName="RemoveElement_Click" TargetObject="{Binding}" />
+                                <behaviors:CallMethodAction MethodName="RemoveCurrentItem_Click" TargetObject="{Binding}" />
                             </behaviors:EventTrigger>
                         </behaviors:Interaction.Triggers>
                     </CustomControls:IconButtons>

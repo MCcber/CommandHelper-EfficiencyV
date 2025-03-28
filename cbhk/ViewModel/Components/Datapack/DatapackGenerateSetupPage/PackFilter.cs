@@ -1,4 +1,4 @@
-﻿namespace cbhk.ViewModel.Components.Datapack.DatapackGenerateSetupPage
+﻿namespace CBHK.ViewModel.Components.Datapack.DatapackGenerateSetupPage
 {
     /// <summary>
     /// 包过滤器数据结构

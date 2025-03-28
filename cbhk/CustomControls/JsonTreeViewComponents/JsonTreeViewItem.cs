@@ -1,14 +1,14 @@
-﻿using cbhk.CustomControls.Interfaces;
-using cbhk.Interface.Json;
+﻿using CBHK.CustomControls.Interfaces;
+using CBHK.Interface.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
 using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using static cbhk.Model.Common.Enums;
+using static CBHK.Model.Common.Enums;
 
-namespace cbhk.CustomControls.JsonTreeViewComponents
+namespace CBHK.CustomControls.JsonTreeViewComponents
 {
     public partial class JsonTreeViewItem : ObservableObject
     {
@@ -70,9 +70,6 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     ErrorIconVisibility = Visibility.Visible;
             }
         }
-
-        [ObservableProperty]
-        public string _elementButtonTip = "添加在顶部";
 
         /// <summary>
         /// bool切换按钮可见性
@@ -582,7 +579,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
             #endregion
 
             #region 判断是否需要直接返回
-            if ((string.IsNullOrEmpty(Value.ToString()) && StartLine is null) || DataType is DataType.None)
+            if ((string.IsNullOrEmpty(Value.ToString()) && StartLine is null) || DataType is DataType.None && this is CompoundJsonTreeViewItem compoundJsonTreeViewItem && (compoundJsonTreeViewItem.DataType is DataType.None || (compoundJsonTreeViewItem.DataType is DataType.MultiType && compoundJsonTreeViewItem.SelectedValueType.Text == "- unset -")))
             {
                 return;
             }
@@ -711,26 +708,12 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     int offset = StartLine.Offset, length = StartLine.Length;
 
                     #region 定位相邻的已有值的两个节点
-                    JsonTreeViewItem previous = Previous;
-                    JsonTreeViewItem next = Next;
-                    while (previous is not null && previous.StartLine is null)
-                    {
-                        if (previous.Previous is null)
-                        {
-                            break;
-                        }
-                        previous = previous.Previous;
-                    }
-                    while (next is not null && next.StartLine is null)
-                    {
-                        if (next.Next is null)
-                        {
-                            break;
-                        }
-                        next = next.Next;
-                    }
+                    Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNextItem = JsonItemTool.LocateTheNodesOfTwoAdjacentExistingValues(Previous, Next);
+                    JsonTreeViewItem previous = previousAndNextItem.Item1;
+                    JsonTreeViewItem next = previousAndNextItem.Item2;
                     #endregion
 
+                    #region 处理偏移量和替换长度
                     if (previous is not null)
                     {
                         if (previous is CompoundJsonTreeViewItem PreviousCompoundItem && PreviousCompoundItem.EndLine is not null)
@@ -752,7 +735,7 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     if (Parent is not null)
                     {
                         offset = Parent.StartLine.EndOffset;
-                        if (Parent.Children.Count > 1)
+                        if (next is not null && next.StartLine is not null)
                         {
                             length = StartLine.EndOffset - offset;
                         }
@@ -765,10 +748,12 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                             {
                                 lastOffset = parentEndlineText.LastIndexOf(lastChar);
                             }
-                            length = lastOffset - offset;
+                            length = Parent.EndLine.Offset + lastOffset - offset;
                         }
                     }
+                    #endregion
 
+                    #region 更新编辑器、设置父节点行引用
                     customWorldUnifiedPlan.SetRangeText(offset, length, "");
 
                     if ((previous is null && next is null) || ((previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null)))
@@ -777,13 +762,32 @@ namespace cbhk.CustomControls.JsonTreeViewComponents
                     }
 
                     StartLine = null;
+                    #endregion
                 }
                 else
                 {
                     customWorldUnifiedPlan.UpdateValueBySpecifyingInterval(this, ChangeType.NumberAndBool, currentValue);
+                    if(Parent is not null && Parent.StartLine == Parent.EndLine || Parent.EndLine is null || (Parent.EndLine is not null && Parent.EndLine.IsDeleted))
+                    {
+                        if(this is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null)
+                        {
+                            Parent.EndLine = compoundJsonTreeViewItem.EndLine.NextLine;
+                        }
+                        else
+                        {
+                            Parent.EndLine = StartLine.NextLine;
+                        }
+                    }
                 }
             }
         }
+
+        /// <summary>
+        /// 移除当前元素
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void RemoveCurrentItem_Click(object sender, RoutedEventArgs e) => JsonItemTool.RemoveCurrentItem(this);
         #endregion
     }
 }

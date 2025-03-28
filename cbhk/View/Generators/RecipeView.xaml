@@ -1,14 +1,14 @@
 ﻿<localWindow:CommonWindow
-    x:Class="cbhk.Generators.RecipeGenerator.RecipeView"
+    x:Class="CBHK.Generators.RecipeGenerator.RecipeView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
     xmlns:VirtualizingWrapPanel="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk.Generators.RecipeGenerator"
-    xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries"
-    xmlns:local_datacontext="clr-namespace:cbhk.Generators.RecipeGenerator"
+    xmlns:local="clr-namespace:CBHK.Generators.RecipeGenerator"
+    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
+    xmlns:local_datacontext="clr-namespace:CBHK.Generators.RecipeGenerator"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="配方生成器"
@@ -18,16 +18,16 @@
     MinHeight="550"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
-    Icon="/cbhk;component/Resource/Common/Image/SpawnerIcon/IconRecipes.png"
+    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconRecipes.png"
     ResizeMode="CanResizeWithGrip"
     mc:Ignorable="d">
 
     <Window.Resources>
         <CollectionViewSource x:Key="OriginalItemView" Source="{Binding OriginalItemSource, IsAsync=True}" />
         <CollectionViewSource x:Key="CustomItemView" Source="{Binding CustomItemSource, IsAsync=True}" />
-        <ImageBrush x:Key="EditBox" ImageSource="/cbhk;component/Resource/Common/Image/TextEditBox.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowRight.png" />
+        <ImageBrush x:Key="EditBox" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
     </Window.Resources>
 
     <Window.InputBindings>

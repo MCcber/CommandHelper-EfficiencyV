@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// Memories.xaml 的交互逻辑

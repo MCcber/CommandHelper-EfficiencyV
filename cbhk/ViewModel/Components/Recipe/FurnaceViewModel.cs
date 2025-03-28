@@ -1,8 +1,8 @@
-﻿using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.RecipeGenerator.Components;
-using cbhk.Model.Common;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.RecipeGenerator.Components;
+using CBHK.Model.Common;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -20,7 +20,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.ViewModel.Components.Recipe
+namespace CBHK.ViewModel.Components.Recipe
 {
     public partial class FurnaceViewModel : ObservableObject
     {

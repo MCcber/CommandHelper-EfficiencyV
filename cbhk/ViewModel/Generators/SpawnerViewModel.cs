@@ -1,10 +1,10 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.SpawnerGenerator.Components;
-using cbhk.View;
-using cbhk.View.Compoments.Spawner;
-using cbhk.WindowDictionaries;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.SpawnerGenerator.Components;
+using CBHK.View;
+using CBHK.View.Compoments.Spawner;
+using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class SpawnerViewModel: ObservableObject
     {
@@ -64,7 +64,7 @@ namespace cbhk.ViewModel.Generators
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,} ];
 
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
+        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
 
         #region 已选中的刷怪笼
         private RichTabItems selectedItem = null;

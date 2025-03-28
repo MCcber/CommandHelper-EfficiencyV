@@ -1,16 +1,16 @@
 ﻿<localWindow:CommonWindow
-    x:Class="cbhk.View.Generators.ArmorStandView"
+    x:Class="CBHK.View.Generators.ArmorStandView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:AnimationComponents="clr-namespace:cbhk.CustomControls.AnimationComponents"
-    xmlns:ColorPickers="clr-namespace:cbhk.CustomControls.ColorPickerComponents"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
-    xmlns:GeneralTools="clr-namespace:cbhk.GeneralTools"
+    xmlns:AnimationComponents="clr-namespace:CBHK.CustomControls.AnimationComponents"
+    xmlns:ColorPickers="clr-namespace:CBHK.CustomControls.ColorPickerComponents"
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
+    xmlns:GeneralTools="clr-namespace:CBHK.GeneralTools"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:control_datacontexts="clr-namespace:cbhk.ControlsDataContexts"
+    xmlns:control_datacontexts="clr-namespace:CBHK.ControlsDataContexts"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hx="http://helix-toolkit.org/wpf"
-    xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries"
+    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="盔甲架生成器"
@@ -20,7 +20,7 @@
     MinHeight="840"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#37383B"
-    Icon="/cbhk;component/Resource/Common/Image/SpawnerIcon/IconArmorStand.png"
+    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconArmorStand.png"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
@@ -34,18 +34,18 @@
     </Window.InputBindings>
 
     <Window.Resources>
-        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk;component/Resource/Common/Image/ButtonNormal.png" />
-        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk;component/Resource/Common/Image/ButtonPressed.png" />
-        <ImageBrush x:Key="IssueIcon" ImageSource="/cbhk;component/Resource/Common/Image/issue.png" />
-        <ImageBrush x:Key="TextBoxBackground" ImageSource="/cbhk;component/Resource/Common/Image/TextEditBox.png" />
-        <ImageBrush x:Key="DataButtonBackground" ImageSource="/cbhk;component/Resource/Common/Image/TextToggleButtonNormal.png" />
-        <ImageBrush x:Key="DataButtonPressedBackground" ImageSource="/cbhk;component/Resource/Common/Image/TextToggleButtonPressed.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowRight.png" />
-        <BitmapImage x:Key="Slot" UriSource="/cbhk;component/Resource/Common/Image/Slot.png" />
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
+        <ImageBrush x:Key="IssueIcon" ImageSource="/CBHK;component/Resource/Common/Image/issue.png" />
+        <ImageBrush x:Key="TextBoxBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
+        <ImageBrush x:Key="DataButtonBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextToggleButtonNormal.png" />
+        <ImageBrush x:Key="DataButtonPressedBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextToggleButtonPressed.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
+        <BitmapImage x:Key="Slot" UriSource="/CBHK;component/Resource/Common/Image/Slot.png" />
 
-        <BitmapImage x:Key="SmithingTemplate" UriSource="/cbhk;component/Resource/Common/Image/SmithingTemplate.png" />
-        <BitmapImage x:Key="TrimMaterial" UriSource="/cbhk;component/Resource/Common/Image/TrimMaterial.png" />
+        <BitmapImage x:Key="SmithingTemplate" UriSource="/CBHK;component/Resource/Common/Image/SmithingTemplate.png" />
+        <BitmapImage x:Key="TrimMaterial" UriSource="/CBHK;component/Resource/Common/Image/TrimMaterial.png" />
 
         <control_datacontexts:DoubleToFloat x:Key="DoubleToFloatConverter" />
 
@@ -2227,7 +2227,7 @@
                             Visibility="{Binding PreviewMenuVisibility}">
                             <Border Margin="5,0,0,5">
                                 <Border.Background>
-                                    <ImageBrush ImageSource="/cbhk;component/Resource/Common/Image/Slot.png" />
+                                    <ImageBrush ImageSource="/CBHK;component/Resource/Common/Image/Slot.png" />
                                 </Border.Background>
                                 <Image
                                     Width="40"
@@ -2238,7 +2238,7 @@
                             </Border>
                             <Border Margin="5,0,0,5">
                                 <Border.Background>
-                                    <ImageBrush ImageSource="/cbhk;component/Resource/Common/Image/Slot.png" />
+                                    <ImageBrush ImageSource="/CBHK;component/Resource/Common/Image/Slot.png" />
                                 </Border.Background>
                                 <Image
                                     Width="40"

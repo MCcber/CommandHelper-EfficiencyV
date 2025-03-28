@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace cbhk.Model.Common
+namespace CBHK.Model.Common
 {
     /// <summary>
     /// 物品数据结构(用于快速查找中英文以提升搜索效率)

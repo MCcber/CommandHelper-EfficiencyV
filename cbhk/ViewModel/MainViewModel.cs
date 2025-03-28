@@ -1,5 +1,5 @@
-﻿using cbhk.GeneralTools;
-using cbhk.Model;
+﻿using CBHK.GeneralTools;
+using CBHK.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,19 +7,18 @@ using System.Threading.Tasks;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
 using System.Windows.Controls;
-using cbhk.CustomControls;
+using CBHK.CustomControls;
 using System.IO;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
-using cbhk.View.Common;
-using cbhk.ViewModel.Common;
-using cbhk.View;
-using cbhk.Model.Common;
+using CBHK.View.Common;
+using CBHK.ViewModel.Common;
+using CBHK.View;
 
-namespace cbhk.ViewModel
+namespace CBHK.ViewModel
 {
     public partial class MainViewModel(IContainerProvider container) : ObservableObject
     {
@@ -96,7 +95,7 @@ namespace cbhk.ViewModel
                     currentId = currentId[0].ToString().ToUpper() + currentId[1..];
                     string currentName = row["zh"].ToString();
                     string imagePath = baseImagePath + currentId + ".png";
-                    BitmapImage bitmapImage = new(new Uri("pack://application:,,,/cbhk;component/Resource/CBHK/Image/GeneratorButtonBackground.png", UriKind.RelativeOrAbsolute));
+                    BitmapImage bitmapImage = new(new Uri("pack://application:,,,/CBHK;component/Resource/CBHK/Image/GeneratorButtonBackground.png", UriKind.RelativeOrAbsolute));
                     if (bitmapImage is not null)
                         button.Background = new ImageBrush(bitmapImage);
                     if (File.Exists(imagePath))

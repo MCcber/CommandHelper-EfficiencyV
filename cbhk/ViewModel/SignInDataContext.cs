@@ -10,15 +10,15 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
-using cbhk.GeneralTools.MessageTip;
+using CBHK.GeneralTools.MessageTip;
 using System.Data;
-using cbhk.GeneralTools;
+using CBHK.GeneralTools;
 using System.Data.SQLite;
 using Prism.Ioc;
-using cbhk.View;
+using CBHK.View;
 using System.Threading.Tasks;
 
-namespace cbhk.ViewModel
+namespace CBHK.ViewModel
 {
     public partial class SignInViewModel: ObservableObject
     {

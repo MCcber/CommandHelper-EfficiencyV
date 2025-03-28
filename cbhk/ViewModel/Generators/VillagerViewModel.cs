@@ -5,8 +5,8 @@ using System.Windows.Input;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using cbhk.Generators.VillagerGenerator.Components;
-using cbhk.WindowDictionaries;
+using CBHK.Generators.VillagerGenerator.Components;
+using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.Input;
 using System.IO;
 using System.Collections.ObjectModel;
@@ -14,17 +14,17 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Threading.Tasks;
-using cbhk.CustomControls;
+using CBHK.CustomControls;
 using Newtonsoft.Json.Linq;
-using cbhk.GeneralTools;
+using CBHK.GeneralTools;
 using System.Data;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.View;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.View;
 using Prism.Ioc;
-using cbhk.ViewModel.Components.Villager;
-using cbhk.Model.Common;
+using CBHK.ViewModel.Components.Villager;
+using CBHK.Model.Common;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class VillagerViewModel:ObservableObject
     {
@@ -72,8 +72,8 @@ namespace cbhk.ViewModel.Generators
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string iconPath = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconVillagers.png";
-        string emptyIcon = "pack://application:,,,/cbhk;component/Resource/CBHK/Image/empty.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconVillagers.png";
+        string emptyIcon = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/empty.png";
         string GossipTypesFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\GossipTypes.ini";
         private SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));

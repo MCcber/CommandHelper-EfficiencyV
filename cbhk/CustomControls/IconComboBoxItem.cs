@@ -1,7 +1,7 @@
 ﻿using System.Windows.Media.Imaging;
 using System.Windows.Media;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     public class IconComboBoxItem
     {

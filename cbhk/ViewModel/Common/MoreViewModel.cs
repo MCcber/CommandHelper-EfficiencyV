@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace cbhk.ViewModel.Common
+namespace CBHK.ViewModel.Common
 {
     public partial class MoreViewModel:ObservableObject
     {

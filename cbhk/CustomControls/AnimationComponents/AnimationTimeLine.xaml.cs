@@ -1,10 +1,10 @@
-﻿using cbhk.GeneralTools;
+﻿using CBHK.GeneralTools;
 using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Media3D;
 
-namespace cbhk.CustomControls.AnimationComponents
+namespace CBHK.CustomControls.AnimationComponents
 {
     /// <summary>
     /// AnimationTimeLine.xaml 的交互逻辑

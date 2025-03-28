@@ -1,4 +1,4 @@
-﻿namespace cbhk.View
+﻿namespace CBHK.View
 {
     /// <summary>
     /// MainView.xaml 的交互逻辑

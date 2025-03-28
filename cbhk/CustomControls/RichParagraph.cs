@@ -1,6 +1,6 @@
 ﻿using System.Windows.Documents;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     public class RichParagraph:Paragraph
     {

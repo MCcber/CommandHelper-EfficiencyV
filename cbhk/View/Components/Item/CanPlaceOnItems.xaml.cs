@@ -1,10 +1,10 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.ItemGenerator.Components
+namespace CBHK.Generators.ItemGenerator.Components
 {
     /// <summary>
     /// CanPlaceOnItems.xaml 的交互逻辑

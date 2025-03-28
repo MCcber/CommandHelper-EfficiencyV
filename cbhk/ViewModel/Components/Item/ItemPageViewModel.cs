@@ -1,13 +1,13 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.Interfaces;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.ItemGenerator.Components.SpecialNBT;
-using cbhk.Model.Generator.Item;
-using cbhk.View;
-using cbhk.ViewModel;
-using cbhk.ViewModel.Components.Item;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls;
+using CBHK.CustomControls.Interfaces;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.ItemGenerator.Components.SpecialNBT;
+using CBHK.Model.Generator.Item;
+using CBHK.View;
+using CBHK.ViewModel;
+using CBHK.ViewModel.Components.Item;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -28,7 +28,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.ItemGenerator.Components
+namespace CBHK.Generators.ItemGenerator.Components
 {
     public partial class ItemPageViewModel : ObservableObject
     {
@@ -171,8 +171,8 @@ namespace cbhk.Generators.ItemGenerator.Components
         //存储外部读取进来的实体数据
         public JObject ExternallyReadEntityData { get; set; } = null;
 
-        string buttonNormalImage = "pack://application:,,,/cbhk;component/Resource/Common/Image/ButtonNormal.png";
-        string buttonPressedImage = "pack://application:,,,/cbhk;component/Resource/Common/Image/ButtonPressed.png";
+        string buttonNormalImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonNormal.png";
+        string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonPressed.png";
         ImageBrush buttonNormalBrush;
         ImageBrush buttonPressedBrush;
 
@@ -180,7 +180,7 @@ namespace cbhk.Generators.ItemGenerator.Components
         public string Result { get; set; }
 
         //本生成器的图标路径
-        string iconPath = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconItems.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItems.png";
         //Data页
         public Data data = null;
         //Function页

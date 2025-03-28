@@ -1,6 +1,6 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.ControlsDataContexts;
+using CBHK.CustomControls;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
 using System;
@@ -16,7 +16,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// BlockState.xaml 的交互逻辑
@@ -34,8 +34,8 @@ namespace cbhk.Generators.EntityGenerator.Components
         #endregion
 
         #region 字段
-        private ImageBrush buttonNormal = new(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/Resource/Common/Image/ButtonNormal.png", UriKind.RelativeOrAbsolute)));
-        private ImageBrush buttonPressed = new(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/Resource/Common/Image/ButtonPressed.png", UriKind.RelativeOrAbsolute)));
+        private ImageBrush buttonNormal = new(new BitmapImage(new Uri("pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonNormal.png", UriKind.RelativeOrAbsolute)));
+        private ImageBrush buttonPressed = new(new BitmapImage(new Uri("pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonPressed.png", UriKind.RelativeOrAbsolute)));
         DataTable BlockTable = null;
         DataTable BlockStateTable = null;
         #endregion

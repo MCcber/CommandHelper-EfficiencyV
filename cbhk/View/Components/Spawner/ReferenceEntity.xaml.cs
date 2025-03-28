@@ -1,9 +1,9 @@
-﻿using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.EntityGenerator;
-using cbhk.Generators.EntityGenerator.Components;
-using cbhk.View.Generators;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.EntityGenerator;
+using CBHK.Generators.EntityGenerator.Components;
+using CBHK.View.Generators;
+using CBHK.ViewModel.Generators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -12,7 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.SpawnerGenerator.Components
+namespace CBHK.Generators.SpawnerGenerator.Components
 {
     /// <summary>
     /// ReferenceEntity.xaml 的交互逻辑

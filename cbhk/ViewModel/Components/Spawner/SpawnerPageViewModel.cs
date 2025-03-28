@@ -1,11 +1,11 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.View;
-using cbhk.View.Compoments.Spawner;
-using cbhk.View.Generators;
-using cbhk.ViewModel;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.View;
+using CBHK.View.Compoments.Spawner;
+using CBHK.View.Generators;
+using CBHK.ViewModel;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -18,7 +18,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.SpawnerGenerator.Components
+namespace CBHK.Generators.SpawnerGenerator.Components
 {
     public partial class SpawnerPageViewModel:ObservableObject
     {
@@ -76,7 +76,7 @@ namespace cbhk.Generators.SpawnerGenerator.Components
         public bool ImportMode { get; set; } = false;
 
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
+        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
         private IContainerProvider _container;
         #endregion
 

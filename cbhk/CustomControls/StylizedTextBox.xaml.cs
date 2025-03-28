@@ -5,14 +5,14 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using cbhk.GeneralTools;
+using CBHK.GeneralTools;
 using System.Windows.Input;
-using cbhk.CustomControls.Interfaces;
+using CBHK.CustomControls.Interfaces;
 using System.Threading.Tasks;
 using System.Text;
 using System.Threading;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     /// <summary>
     /// StylizedTextBox.xaml 的交互逻辑

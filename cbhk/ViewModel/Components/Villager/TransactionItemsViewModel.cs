@@ -1,8 +1,8 @@
-﻿using cbhk.GeneralTools;
-using cbhk.Generators.VillagerGenerator;
-using cbhk.Generators.VillagerGenerator.Components;
-using cbhk.Model.Common;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.GeneralTools;
+using CBHK.Generators.VillagerGenerator;
+using CBHK.Generators.VillagerGenerator.Components;
+using CBHK.Model.Common;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -15,7 +15,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.ViewModel.Components.Villager
+namespace CBHK.ViewModel.Components.Villager
 {
     public partial class TransactionItemsViewModel:ObservableObject
     {
@@ -27,7 +27,7 @@ namespace cbhk.ViewModel.Components.Villager
         /// <summary>
         /// 空图像路径
         /// </summary>
-        string emptyIcon = "pack://application:,,,/cbhk;component/Resource/CBHK/Image/empty.png";
+        string emptyIcon = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/empty.png";
 
         DataTable ItemTable = null;
         #endregion

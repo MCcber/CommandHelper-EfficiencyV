@@ -1,9 +1,9 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Model.Generator.Tag;
-using cbhk.View;
-using cbhk.WindowDictionaries;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Model.Generator.Tag;
+using CBHK.View;
+using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -21,7 +21,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class TagViewModel(IContainerProvider container, MainView mainView) : ObservableObject
     {

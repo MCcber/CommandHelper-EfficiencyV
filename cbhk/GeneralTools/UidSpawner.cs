@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace cbhk.GeneralTools
+namespace CBHK.GeneralTools
 {
     public static class UidSpawner
     {

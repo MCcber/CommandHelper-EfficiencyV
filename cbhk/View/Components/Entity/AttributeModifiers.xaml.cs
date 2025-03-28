@@ -1,11 +1,11 @@
-﻿using cbhk.CustomControls.Interfaces;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls.Interfaces;
+using CBHK.ViewModel.Generators;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// AttributeModifiers.xaml 的交互逻辑

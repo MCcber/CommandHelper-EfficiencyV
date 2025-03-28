@@ -1,11 +1,9 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.DataPackGenerator;
-using cbhk.View.Components.Datapack;
-using cbhk.View.Components.Datapack.EditPage;
-using cbhk.ViewModel.Generators;
-using cbhk.ViewModel.Generators.Datapack;
-using cbhk.ViewModel.Generators.Datapack.EditPage;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.DataPackGenerator;
+using CBHK.View.Components.Datapack.EditPage;
+using CBHK.ViewModel.Components.Datapack.EditPage;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -20,7 +18,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 
-namespace cbhk.ViewModel.Components.Datapack.DatapackInitializationForms
+namespace CBHK.ViewModel.Components.Datapack.DatapackInitializationForms
 {
     /// <summary>
     /// 属性设置窗体逻辑处理

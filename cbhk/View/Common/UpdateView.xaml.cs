@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace cbhk.View.Common
+namespace CBHK.View.Common
 {
     /// <summary>
     /// UpdateView.xaml 的交互逻辑

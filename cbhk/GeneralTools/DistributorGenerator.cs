@@ -1,27 +1,27 @@
-﻿using cbhk.Common;
-using cbhk.Generators.DataPackGenerator;
-using cbhk.Generators.DimensionTypeGenerator;
-using cbhk.Generators.EntityGenerator;
-using cbhk.Generators.FireworkRocketGenerator;
-using cbhk.Generators.ItemGenerator;
-using cbhk.Generators.RecipeGenerator;
-using cbhk.Generators.SignGenerator;
-using cbhk.Generators.VillagerGenerator;
-using cbhk.Model;
-using cbhk.View;
-using cbhk.View.Generators;
-using cbhk.ViewModel;
+﻿using CBHK.Common;
+using CBHK.Generators.DataPackGenerator;
+using CBHK.Generators.DimensionTypeGenerator;
+using CBHK.Generators.EntityGenerator;
+using CBHK.Generators.FireworkRocketGenerator;
+using CBHK.Generators.ItemGenerator;
+using CBHK.Generators.RecipeGenerator;
+using CBHK.Generators.SignGenerator;
+using CBHK.Generators.VillagerGenerator;
+using CBHK.Model;
+using CBHK.View;
+using CBHK.View.Generators;
+using CBHK.ViewModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using System.Windows;
 
-namespace cbhk.GeneralTools
+namespace CBHK.GeneralTools
 {
     public partial class DistributorGenerator : ObservableObject
     {
         #region Field
-        private MainViewModel cbhk;
+        private MainViewModel CBHK;
         private readonly IContainerProvider _container;
         #endregion
 
@@ -31,7 +31,7 @@ namespace cbhk.GeneralTools
             _container = container;
             MainView mainWindow = _container.Resolve<MainView>();
             if (mainWindow is not null && mainWindow.DataContext is MainViewModel viewModel)
-                cbhk = viewModel;
+                CBHK = viewModel;
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace cbhk.GeneralTools
         /// </summary>
         private void SetCBHKState()
         {
-            cbhk.WindowState = cbhk.MainViewVisibility switch
+            CBHK.WindowState = CBHK.MainViewVisibility switch
             {
                 MainWindowProperties.Visibility.MinState => WindowState.Minimized,
                 MainWindowProperties.Visibility.KeepState => WindowState.Normal,

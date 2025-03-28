@@ -1,9 +1,9 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.FireworkRocketGenerator;
-using cbhk.Generators.FireworkRocketGenerator.Components;
-using cbhk.View;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.FireworkRocketGenerator;
+using CBHK.Generators.FireworkRocketGenerator.Components;
+using CBHK.View;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -21,7 +21,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class FireworkRocketViewModel : ObservableObject
     {
@@ -37,7 +37,7 @@ namespace cbhk.ViewModel.Generators
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string iconPath = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconFireworks.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconFireworks.png";
 
         /// <summary>
         /// 主页引用

@@ -1,5 +1,5 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
+namespace CBHK.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// BannerPatterns.xaml 的交互逻辑

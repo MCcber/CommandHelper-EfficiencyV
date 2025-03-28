@@ -1,4 +1,4 @@
-﻿namespace cbhk.Model
+﻿namespace CBHK.Model
 {
     public class MainWindowProperties
     {

@@ -1,7 +1,7 @@
 ﻿
-using cbhk.GeneralTools;
+using CBHK.GeneralTools;
 
-namespace cbhk.View.Generators
+namespace CBHK.View.Generators
 {
     /// <summary>
     /// ArmorStandView.xaml 的交互逻辑

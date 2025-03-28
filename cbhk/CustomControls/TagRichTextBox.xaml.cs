@@ -11,7 +11,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     /// <summary>
     /// TagRichTextBox.xaml 的交互逻辑

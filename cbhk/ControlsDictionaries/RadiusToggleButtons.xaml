@@ -1,12 +1,12 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls">
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls">
 
-    <ImageBrush x:Key="RadiusToggleButtonOff" ImageSource="/cbhk;component/Resource/Common/Image/RadiusToggleButtonOff.png" />
-    <ImageBrush x:Key="RadiusToggleButtonOn" ImageSource="/cbhk;component/Resource/Common/Image/RadiusToggleButtonOn.png" />
-    <ImageBrush x:Key="RadiusToggleButtonOffLocked" ImageSource="/cbhk;component/Resource/Common/Image/RadiusToggleButtonOffLocked.png" />
-    <ImageBrush x:Key="RadiusToggleButtonOnLocked" ImageSource="/cbhk;component/Resource/Common/Image/RadiusToggleButtonOnLocked.png" />
+    <ImageBrush x:Key="RadiusToggleButtonOff" ImageSource="/CBHK;component/Resource/Common/Image/RadiusToggleButtonOff.png" />
+    <ImageBrush x:Key="RadiusToggleButtonOn" ImageSource="/CBHK;component/Resource/Common/Image/RadiusToggleButtonOn.png" />
+    <ImageBrush x:Key="RadiusToggleButtonOffLocked" ImageSource="/CBHK;component/Resource/Common/Image/RadiusToggleButtonOffLocked.png" />
+    <ImageBrush x:Key="RadiusToggleButtonOnLocked" ImageSource="/CBHK;component/Resource/Common/Image/RadiusToggleButtonOnLocked.png" />
     <SolidColorBrush x:Key="Button.Static.Background" Color="Black" />
     <SolidColorBrush x:Key="Text.Checked.Foreground" Color="White" />
     <SolidColorBrush x:Key="Text.UnChecked.Foreground" Color="Gray" />

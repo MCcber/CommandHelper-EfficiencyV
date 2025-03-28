@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// HandDropChances.xaml 的交互逻辑

@@ -1,7 +1,7 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.Interfaces;
-using cbhk.GeneralTools;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls;
+using CBHK.CustomControls.Interfaces;
+using CBHK.GeneralTools;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Data;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// Attributes.xaml 的交互逻辑

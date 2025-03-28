@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace cbhk.View.Components.Datapack
+namespace CBHK.ViewModel.Components.Datapack
 {
     public class ContentSaver
     {

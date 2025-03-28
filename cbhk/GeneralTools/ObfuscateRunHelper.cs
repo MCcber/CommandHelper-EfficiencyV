@@ -1,10 +1,10 @@
-﻿using cbhk.CustomControls;
+﻿using CBHK.CustomControls;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Documents;
 
-namespace cbhk.GeneralTools
+namespace CBHK.GeneralTools
 {
     public class ObfuscateRunHelper
     {

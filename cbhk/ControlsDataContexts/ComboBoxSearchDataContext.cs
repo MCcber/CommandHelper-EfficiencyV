@@ -9,9 +9,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System;
 using System.Text.RegularExpressions;
-using cbhk.CustomControls;
+using CBHK.CustomControls;
 
-namespace cbhk.ControlsDataContexts
+namespace CBHK.ControlsDataContexts
 {
     public class ComboBoxSearchDataContext
     {
@@ -90,7 +90,7 @@ namespace cbhk.ControlsDataContexts
 
             ListBox listbox = new()
             {
-                Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/cbhk;component/Resource/Common/Image/Frame.png"))),
+                Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/CBHK;component/Resource/Common/Image/Frame.png"))),
                 Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 MinWidth = 200,
                 MaxHeight = 250,

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
-namespace cbhk.WindowDictionaries
+namespace CBHK.WindowDictionaries
 {
     public static class VisualStates
     {

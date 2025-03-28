@@ -1,8 +1,8 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.Generators.ItemGenerator;
-using cbhk.Generators.ItemGenerator.Components;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.Generators.ItemGenerator;
+using CBHK.Generators.ItemGenerator.Components;
+using CBHK.ViewModel.Generators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
@@ -10,7 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// HandItems.xaml 的交互逻辑

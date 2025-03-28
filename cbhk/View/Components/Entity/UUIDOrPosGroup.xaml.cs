@@ -1,11 +1,11 @@
-﻿using cbhk.CustomControls.Interfaces;
+﻿using CBHK.CustomControls.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// UUIDOrPosGroup.xaml 的交互逻辑

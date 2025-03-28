@@ -1,13 +1,13 @@
-﻿using cbhk.Generators.DataPackGenerator.DatapackInitializationForms;
+﻿using CBHK.Generators.DataPackGenerator.DatapackInitializationForms;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Diagnostics;
 using System;
 using System.Windows;
-using cbhk.View;
-using cbhk.ViewModel.Components.Datapack.HomePage;
-using cbhk.View.Components.Datapack.EditPage;
+using CBHK.View;
+using CBHK.ViewModel.Components.Datapack.HomePage;
+using CBHK.View.Components.Datapack.EditPage;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public class DatapackViewModel : ObservableObject
     {

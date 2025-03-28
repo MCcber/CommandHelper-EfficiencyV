@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.Generators.RecipeGenerator.Components
+namespace CBHK.Generators.RecipeGenerator.Components
 {
     /// <summary>
     /// CraftingTableView.xaml 的交互逻辑

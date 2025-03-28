@@ -1,9 +1,9 @@
-﻿using cbhk.CustomControls.JsonTreeViewComponents;
+﻿using CBHK.CustomControls.JsonTreeViewComponents;
 using System;
 using System.Collections.ObjectModel;
 using System.Xml.Linq;
 
-namespace cbhk.Interface.Json
+namespace CBHK.Interface.Json
 {
     public interface IJsonItemTool
     {

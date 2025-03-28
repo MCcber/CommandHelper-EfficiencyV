@@ -1,11 +1,11 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
-using cbhk.CustomControls.Interfaces;
-using cbhk.GeneralTools;
-using cbhk.Generators.ItemGenerator;
-using cbhk.Generators.ItemGenerator.Components;
-using cbhk.Generators.ItemGenerator.Components.SpecialNBT;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.ControlsDataContexts;
+using CBHK.CustomControls;
+using CBHK.CustomControls.Interfaces;
+using CBHK.GeneralTools;
+using CBHK.Generators.ItemGenerator;
+using CBHK.Generators.ItemGenerator.Components;
+using CBHK.Generators.ItemGenerator.Components.SpecialNBT;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 
-namespace cbhk.ViewModel.Components.Item
+namespace CBHK.ViewModel.Components.Item
 {
     public class ComponentEvents
     {

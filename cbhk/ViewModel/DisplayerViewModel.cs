@@ -6,11 +6,11 @@ using System.Windows.Documents;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using cbhk.CustomControls;
+using CBHK.CustomControls;
 using System.Windows.Media.Imaging;
 using System.IO;
 
-namespace cbhk.ViewModel
+namespace CBHK.ViewModel
 {
     public class DisplayerViewModel:ObservableObject
     {

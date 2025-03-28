@@ -1,8 +1,8 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.ItemGenerator.Components;
-using cbhk.Generators.ItemGenerator;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.ItemGenerator.Components;
+using CBHK.Generators.ItemGenerator;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -10,9 +10,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
-using cbhk.ViewModel.Generators;
+using CBHK.ViewModel.Generators;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// EntityBag.xaml 的交互逻辑

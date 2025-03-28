@@ -1,15 +1,12 @@
-﻿using cbhk.Generators.DataPackGenerator;
-using cbhk.View.Components.Datapack.EditPage;
-using cbhk.ViewModel.Generators;
-using cbhk.ViewModel.Generators.Datapack;
-using cbhk.ViewModel.Generators.Datapack.EditPage;
+﻿using CBHK.View.Components.Datapack.EditPage;
+using CBHK.ViewModel.Components.Datapack.EditPage;
+using CBHK.ViewModel.Generators;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -28,7 +25,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Xml;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     public partial class McfunctionIntellisenseCodeEditor:TextEditor
     {
@@ -184,7 +181,7 @@ namespace cbhk.CustomControls
             //为代码编辑器安装大纲管理器
             foldingManager = FoldingManager.Install(TextArea);
             XshdSyntaxDefinition xshdSyntaxDefinition = new();
-            xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + "mcfunction.xshd"));
+            xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\" + "mcfunction.xshd"));
             IHighlightingDefinition mcfunctionHighlighting = HighlightingLoader.Load(xshdSyntaxDefinition, HighlightingManager.Instance);
             SyntaxHighlighting = mcfunctionHighlighting;
             #region 初始化补全框

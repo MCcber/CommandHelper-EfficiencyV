@@ -1,9 +1,9 @@
 ﻿using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows;
-using cbhk.GeneralTools;
+using CBHK.GeneralTools;
 
-namespace cbhk.ControlsDataContexts
+namespace CBHK.ControlsDataContexts
 {
     public class ScrollViewerRollingPass
     {

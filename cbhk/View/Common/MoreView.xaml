@@ -1,11 +1,11 @@
 ﻿<UserControl
-    x:Class="cbhk.View.Common.MoreView"
+    x:Class="CBHK.View.Common.MoreView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk.CustomControls"
+    xmlns:local="clr-namespace:CBHK.CustomControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     d:DesignHeight="450"
@@ -40,75 +40,75 @@
         </Style>
         <ImageBrush
             x:Key="1.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/1.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/1.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="1Hover.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/1Hover.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/1Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="2.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/2.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/2.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="2Hover.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/2Hover.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/2Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="3.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/3.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/3.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="3Hover.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/3Hover.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/3Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="4.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/4.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/4.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="4Hover.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/4Hover.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/4Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="5.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/5.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/5.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="5Hover.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/5Hover.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/5Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="6.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/6.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/6.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="6Hover.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/6Hover.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/6Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="7.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/7.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/7.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="7Hover.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/7Hover.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/7Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="8.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/8.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/8.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="8Hover.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/8Hover.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/8Hover.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="9.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/9.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/9.png"
             Stretch="Uniform" />
         <ImageBrush
             x:Key="9Hover.png"
-            ImageSource="/cbhk;component/Resource/CBHK/Image/More/Thanks/9Hover.png"
+            ImageSource="/CBHK;component/Resource/CBHK/Image/More/Thanks/9Hover.png"
             Stretch="Uniform" />
     </UserControl.Resources>
 
@@ -142,7 +142,7 @@
                             <Image
                                 Width="300"
                                 VerticalAlignment="Top"
-                                Source="/cbhk;component/Resource/CBHK/Image/More/Thanks/Title.png" />
+                                Source="/CBHK;component/Resource/CBHK/Image/More/Thanks/Title.png" />
                             <DockPanel
                                 Margin="0,10,0,0"
                                 HorizontalAlignment="Center"
@@ -278,7 +278,7 @@
             TopBorderTexture="{StaticResource TabItemTop}">
             <Image
                 RenderOptions.BitmapScalingMode="HighQuality"
-                Source="/cbhk;component/Resource/CBHK/Image/More/conversation_group.png"
+                Source="/CBHK;component/Resource/CBHK/Image/More/conversation_group.png"
                 Stretch="Uniform">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="MouseLeftButtonUp">
@@ -356,7 +356,7 @@
                     Width="100"
                     Height="100"
                     Margin="0,10,0,0"
-                    Source="/cbhk;component/Resource/CBHK/Image/More/github.png"
+                    Source="/CBHK;component/Resource/CBHK/Image/More/github.png"
                     Stretch="Uniform" />
                 <TextBlock
                     Margin="0,10,0,0"

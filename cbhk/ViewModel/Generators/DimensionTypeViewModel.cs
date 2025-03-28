@@ -1,5 +1,5 @@
-﻿using cbhk.CustomControls.JsonTreeViewComponents;
-using cbhk.GeneralTools.TreeViewComponentsHelper;
+﻿using CBHK.CustomControls.JsonTreeViewComponents;
+using CBHK.GeneralTools.TreeViewComponentsHelper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Folding;
@@ -9,21 +9,21 @@ using System;
 using System.Windows;
 using System.Xml;
 using System.Threading.Tasks;
-using cbhk.CustomControls.Interfaces;
+using CBHK.CustomControls.Interfaces;
 using System.Threading;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using ICSharpCode.AvalonEdit.Document;
-using static cbhk.Model.Common.Enums;
+using static CBHK.Model.Common.Enums;
 using Prism.Ioc;
-using cbhk.View;
+using CBHK.View;
 using System.Collections.ObjectModel;
-using cbhk.Model.Common;
-using cbhk.GeneralTools;
-using cbhk.CustomControls;
+using CBHK.Model.Common;
+using CBHK.GeneralTools;
+using CBHK.CustomControls;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class DimensionTypeViewModel : ObservableObject, ICustomWorldUnifiedPlan
     {
@@ -54,7 +54,7 @@ namespace cbhk.ViewModel.Generators
 
         public Dictionary<string, List<string>> DefaultCompoundSource { get; set; } = [];
         public Dictionary<string, string> TranslateDictionary { get; set; } = new() { };
-        public Dictionary<string, string> TranslateDefaultEnumItemDictionary { get; set; } = new();
+        public Dictionary<string, string> TranslateDefaultDictionary { get; set; } = new();
         public string RootDirectory { get; set; }
         public List<string> DependencyFileList { get; set; }
         public List<string> DependencyDirectoryList { get; set; }

@@ -1,10 +1,10 @@
-﻿using cbhk.GeneralTools;
-using cbhk.View.Components.Entity;
+﻿using CBHK.GeneralTools;
+using CBHK.View.Components.Entity;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     /// <summary>
     /// TagBlock.xaml 的交互逻辑

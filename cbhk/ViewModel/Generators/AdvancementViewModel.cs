@@ -1,5 +1,5 @@
-﻿using cbhk.CustomControls.JsonTreeViewComponents;
-using cbhk.GeneralTools.TreeViewComponentsHelper;
+﻿using CBHK.CustomControls.JsonTreeViewComponents;
+using CBHK.GeneralTools.TreeViewComponentsHelper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Folding;
@@ -9,21 +9,21 @@ using System;
 using System.Windows;
 using System.Xml;
 using System.Threading.Tasks;
-using cbhk.CustomControls.Interfaces;
+using CBHK.CustomControls.Interfaces;
 using System.Threading;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using ICSharpCode.AvalonEdit.Document;
-using static cbhk.Model.Common.Enums;
+using static CBHK.Model.Common.Enums;
 using Prism.Ioc;
-using cbhk.View;
+using CBHK.View;
 using System.Collections.ObjectModel;
-using cbhk.Model.Common;
-using cbhk.GeneralTools;
-using cbhk.CustomControls;
+using CBHK.Model.Common;
+using CBHK.GeneralTools;
+using CBHK.CustomControls;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class AdvancementViewModel : ObservableObject, ICustomWorldUnifiedPlan
     {
@@ -73,14 +73,14 @@ namespace cbhk.ViewModel.Generators
 
         public Dictionary<string, string> TranslateDictionary { get; set; } = new()
         {
-            { "#准则|上文", "#谓词" },
+            { "#准则|上文", "#Inherit/predicate" },
             { "#准则|下文", "#准则" },
-            { "#战利品表谓词","#谓词" },
-            { "#图例|上文","#谓词" }
+            { "#战利品表谓词","#Inherit/predicate" },
+            { "#图例|上文","#Inherit/predicate" }
         };
-        public Dictionary<string, string> TranslateDefaultEnumItemDictionary { get; set; } = new()
+        public Dictionary<string, string> TranslateDefaultDictionary { get; set; } = new()
         {
-            { "#谓词","entity_properties" }
+            { "#Inherit/predicate","#Inherit/conditions/entity" }
         };
         public List<string> DependencyFileList { get; set; }
         public List<string> DependencyDirectoryList { get; set; }
@@ -125,6 +125,14 @@ namespace cbhk.ViewModel.Generators
                 {
                     JsonTreeViewDataStructure result = _htmlHelper.AnalyzeHTMLData(configDirectoryPath + CurrentVersion.Text);
                     textEditor.Text = "{\r\n" + result.ResultString.ToString().TrimEnd([',', '\r', '\n']) + "\r\n}";
+                    foreach (var item in result.Result)
+                    {
+                        if(item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.Children.Count > 0)
+                        {
+                            jsonTool.SetParentForEachItem(compoundJsonTreeViewItem.Children, compoundJsonTreeViewItem);
+                        }
+                    }
+                    jsonTool.SetLayerCountForEachItem(result.Result,1);
                     jsonTool.SetLineNumbersForEachItem(result.Result, null);
                     TreeViewItemList = result.Result;
 

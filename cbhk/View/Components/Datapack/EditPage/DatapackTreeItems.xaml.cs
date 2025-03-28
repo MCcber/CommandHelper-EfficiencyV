@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace cbhk.View.Components.Datapack.EditPage
+namespace CBHK.View.Components.Datapack.EditPage
 {
     /// <summary>
     /// DatapackTreeItems.xaml 的交互逻辑

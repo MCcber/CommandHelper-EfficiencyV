@@ -1,8 +1,8 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.Time;
-using cbhk.Generators.DataPackGenerator.DatapackInitializationForms;
-using cbhk.ViewModel.Components.Datapack.HomePage;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.Time;
+using CBHK.Generators.DataPackGenerator.DatapackInitializationForms;
+using CBHK.ViewModel.Components.Datapack.HomePage;
 using System;
 using System.IO;
 using System.Windows;
@@ -10,7 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace cbhk.Generators.DataPackGenerator.Components.HomePage
+namespace CBHK.Generators.DataPackGenerator.Components.HomePage
 {
     /// <summary>
     /// RecentTreeItem.xaml 的交互逻辑

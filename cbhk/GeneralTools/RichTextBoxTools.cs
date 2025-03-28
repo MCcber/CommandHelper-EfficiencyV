@@ -1,7 +1,7 @@
-﻿using cbhk.CustomControls;
+﻿using CBHK.CustomControls;
 using System.Windows.Documents;
 
-namespace cbhk.GeneralTools
+namespace CBHK.GeneralTools
 {
     public static class RichTextBoxTools
     {

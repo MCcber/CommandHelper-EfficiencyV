@@ -1,17 +1,17 @@
-﻿using cbhk.CustomControls;
+﻿using CBHK.CustomControls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing.Text;
 using System;
 using System.Windows.Media;
-using cbhk.Model;
+using CBHK.Model;
 using System.IO;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows;
 
-namespace cbhk.ViewModel.Common
+namespace CBHK.ViewModel.Common
 {
     public partial class SettingsViewModel: ObservableObject
     {

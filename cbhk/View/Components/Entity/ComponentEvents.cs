@@ -1,7 +1,7 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.Interfaces;
-using cbhk.GeneralTools;
-using cbhk.Generators.EntityGenerator.Components;
+﻿using CBHK.CustomControls;
+using CBHK.CustomControls.Interfaces;
+using CBHK.GeneralTools;
+using CBHK.Generators.EntityGenerator.Components;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 
-namespace cbhk.View.Components.Entity
+namespace CBHK.View.Components.Entity
 {
     public partial class ComponentEvents
     {

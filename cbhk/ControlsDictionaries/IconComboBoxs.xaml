@@ -1,13 +1,13 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:ControlDataContexts="clr-namespace:cbhk.ControlsDataContexts"
+    xmlns:ControlDataContexts="clr-namespace:CBHK.ControlsDataContexts"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2">
 
     <SolidColorBrush x:Key="TextBox.Static.Background" Color="#FFFFFFFF" />
-    <ImageBrush x:Key="TextEditBox" ImageSource="/cbhk;component/Resource/Common/Image/TextEditBox.png" />
-    <ImageBrush x:Key="Frame" ImageSource="/cbhk;component/Resource/Common/Image/Frame.png" />
+    <ImageBrush x:Key="TextEditBox" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
+    <ImageBrush x:Key="Frame" ImageSource="/CBHK;component/Resource/Common/Image/Frame.png" />
 
     <ControlDataContexts:ConvertIconComboBoxItemImage x:Key="IconComboBoxImageConverter" />
     <ControlDataContexts:ConvertIconComboBoxItemText x:Key="IconComboBoxTextConverter" />

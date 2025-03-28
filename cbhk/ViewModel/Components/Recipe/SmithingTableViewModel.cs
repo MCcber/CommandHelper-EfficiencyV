@@ -1,5 +1,5 @@
-﻿using cbhk.GeneralTools.MessageTip;
-using cbhk.Model.Common;
+﻿using CBHK.GeneralTools.MessageTip;
+using CBHK.Model.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -13,7 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.ViewModel.Components.Recipe
+namespace CBHK.ViewModel.Components.Recipe
 {
     public partial class SmithingTableViewModel : ObservableObject
     {

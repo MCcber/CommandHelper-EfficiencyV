@@ -1,5 +1,5 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.Interfaces;
+﻿using CBHK.CustomControls;
+using CBHK.CustomControls.Interfaces;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 using System.Data;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Documents;
 
-namespace cbhk.Generators.ItemGenerator.Components
+namespace CBHK.Generators.ItemGenerator.Components
 {
     /// <summary>
     /// Common.xaml 的交互逻辑

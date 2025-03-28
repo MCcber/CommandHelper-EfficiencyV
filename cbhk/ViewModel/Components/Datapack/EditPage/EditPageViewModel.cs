@@ -1,8 +1,9 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.Generators.DataPackGenerator;
-using cbhk.View;
-using cbhk.View.Components.Datapack.EditPage;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.Generators.DataPackGenerator;
+using CBHK.View;
+using CBHK.View.Components.Datapack.EditPage;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ICSharpCode.AvalonEdit;
@@ -26,7 +27,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace cbhk.ViewModel.Generators.Datapack.EditPage
+namespace CBHK.ViewModel.Components.Datapack.EditPage
 {
     public partial class EditPageViewModel : ObservableObject
     {
@@ -242,7 +243,7 @@ namespace cbhk.ViewModel.Generators.Datapack.EditPage
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void InitDataLoaded(object sender, RoutedEventArgs e)
+        public void InitData_Loaded(object sender, RoutedEventArgs e)
         {
             datapack = Window.GetWindow(sender as Page) as DatapackView;
 

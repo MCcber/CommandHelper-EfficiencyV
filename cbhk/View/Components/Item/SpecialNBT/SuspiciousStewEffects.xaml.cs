@@ -1,8 +1,8 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
-using cbhk.CustomControls.Interfaces;
-using cbhk.GeneralTools;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.ControlsDataContexts;
+using CBHK.CustomControls;
+using CBHK.CustomControls.Interfaces;
+using CBHK.GeneralTools;
+using CBHK.ViewModel.Generators;
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
@@ -12,7 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
+namespace CBHK.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// SuspiciousStewEffects.xaml 的交互逻辑

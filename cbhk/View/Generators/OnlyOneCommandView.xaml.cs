@@ -1,4 +1,4 @@
-﻿namespace cbhk.View.Generators
+﻿namespace CBHK.View.Generators
 {
     /// <summary>
     /// OnlyOneCommandView.xaml 的交互逻辑

@@ -7,10 +7,10 @@ using System.IO;
 using System.Windows.Data;
 using System;
 using System.Globalization;
-using cbhk.GeneralTools;
+using CBHK.GeneralTools;
 using System.Collections.ObjectModel;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     public class RichTabItems:TabItem
     {

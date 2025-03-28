@@ -1,4 +1,4 @@
-﻿namespace cbhk.Generators.RecipeGenerator
+﻿namespace CBHK.Generators.RecipeGenerator
 {
     /// <summary>
     /// RecipeView.xaml 的交互逻辑

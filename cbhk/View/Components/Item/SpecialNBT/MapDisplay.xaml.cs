@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
+namespace CBHK.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// MapDisplay.xaml 的交互逻辑

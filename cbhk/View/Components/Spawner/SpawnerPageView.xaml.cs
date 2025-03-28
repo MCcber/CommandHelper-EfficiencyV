@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.View.Compoments.Spawner
+namespace CBHK.View.Compoments.Spawner
 {
     /// <summary>
     /// SpawnerPageView.xaml 的交互逻辑

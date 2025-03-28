@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace cbhk.ViewModel.Common
+namespace CBHK.ViewModel.Common
 {
     public class UpdateViewModel: ObservableObject
     {

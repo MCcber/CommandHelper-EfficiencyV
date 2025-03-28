@@ -1,6 +1,6 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.ViewModel.Generators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// PassengerItems.xaml 的交互逻辑

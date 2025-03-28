@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace cbhk.CustomControls.Interfaces
+namespace CBHK.CustomControls.Interfaces
 {
     /// <summary>
     /// 版本更新协议

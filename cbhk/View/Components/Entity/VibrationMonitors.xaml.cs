@@ -1,10 +1,10 @@
-﻿using cbhk.CustomControls;
+﻿using CBHK.CustomControls;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// VibrationMonitors.xaml 的交互逻辑

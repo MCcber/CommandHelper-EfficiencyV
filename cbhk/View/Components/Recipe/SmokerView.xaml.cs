@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.Generators.RecipeGenerator.Components
+namespace CBHK.Generators.RecipeGenerator.Components
 {
     /// <summary>
     /// SmokerView.xaml 的交互逻辑

@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Media3D;
 
-namespace cbhk.CustomControls.AnimationComponents
+namespace CBHK.CustomControls.AnimationComponents
 {
     /// <summary>
     /// AnimationContainer.xaml 的交互逻辑

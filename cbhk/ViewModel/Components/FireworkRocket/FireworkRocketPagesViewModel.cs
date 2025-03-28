@@ -1,9 +1,9 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.ColorPickerComponents;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.View;
-using cbhk.ViewModel;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls;
+using CBHK.CustomControls.ColorPickerComponents;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.View;
+using CBHK.ViewModel;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -23,7 +23,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
-namespace cbhk.Generators.FireworkRocketGenerator.Components
+namespace CBHK.Generators.FireworkRocketGenerator.Components
 {
     public partial class FireworkRocketPagesViewModel : ObservableObject
     {
@@ -466,7 +466,7 @@ namespace cbhk.Generators.FireworkRocketGenerator.Components
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string icon_path = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconFireworks.png";
+        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconFireworks.png";
         /// <summary>
         /// 原版颜色库路径
         /// </summary>

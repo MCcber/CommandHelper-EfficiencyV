@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace cbhk.ViewModel.Components.Datapack.HomePage
+namespace CBHK.ViewModel.Components.Datapack.HomePage
 {
     public class HomePageHeightConverter : IValueConverter
     {

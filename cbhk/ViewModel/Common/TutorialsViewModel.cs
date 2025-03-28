@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Windows.Input;
 
-namespace cbhk.ViewModel.Common
+namespace CBHK.ViewModel.Common
 {
     public class TutorialsViewModel: ObservableObject
     {

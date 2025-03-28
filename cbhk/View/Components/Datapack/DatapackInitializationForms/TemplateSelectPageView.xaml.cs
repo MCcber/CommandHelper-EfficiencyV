@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.Generators.DataPackGenerator.DatapackInitializationForms
+namespace CBHK.Generators.DataPackGenerator.DatapackInitializationForms
 {
     /// <summary>
     /// TemplateSelectPageView.xaml 的交互逻辑

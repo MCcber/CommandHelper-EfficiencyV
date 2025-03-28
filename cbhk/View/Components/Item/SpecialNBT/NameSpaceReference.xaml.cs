@@ -1,12 +1,12 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
 using Microsoft.Win32;
 using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
+namespace CBHK.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// NameSpaceReference.xaml 的交互逻辑

@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     /// <summary>
     /// TextEvent.xaml 的交互逻辑

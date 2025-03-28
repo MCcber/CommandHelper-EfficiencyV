@@ -1,11 +1,11 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.Interfaces;
+﻿using CBHK.CustomControls;
+using CBHK.CustomControls.Interfaces;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     /// <summary>
     /// LeashData.xaml 的交互逻辑

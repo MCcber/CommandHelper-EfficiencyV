@@ -1,10 +1,10 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.ColorPickerComponents;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.View;
-using cbhk.View.Compoments.WrittenBook;
-using cbhk.WindowDictionaries;
+﻿using CBHK.CustomControls;
+using CBHK.CustomControls.ColorPickerComponents;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.View;
+using CBHK.View.Compoments.WrittenBook;
+using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
@@ -23,10 +23,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using EditPage = cbhk.View.Compoments.WrittenBook.EditPage;
+using EditPage = CBHK.View.Compoments.WrittenBook.EditPage;
 using Image = System.Windows.Controls.Image;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class WrittenBookViewModel(IContainerProvider container,MainView mainView) : ObservableObject
     {
@@ -76,7 +76,7 @@ namespace cbhk.ViewModel.Generators
         /// </summary>
         TextEvent EventComponent = new();
         //本生成器的图标路径
-        string iconPath = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png";
 
         //当前光标选中的文本对象链表
         List<RichRun> CurrentSelectedRichRunList = [];

@@ -1,4 +1,4 @@
-﻿using cbhk.GeneralTools;
+﻿using CBHK.GeneralTools;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,9 +10,9 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using cbhk.CustomControls.ColorPickerComponents;
+using CBHK.CustomControls.ColorPickerComponents;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     public class RichRun : Run
     {

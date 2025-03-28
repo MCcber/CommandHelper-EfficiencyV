@@ -1,9 +1,9 @@
-﻿using cbhk.GeneralTools;
+﻿using CBHK.GeneralTools;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.CustomControls.AnimationComponents
+namespace CBHK.CustomControls.AnimationComponents
 {
     /// <summary>
     /// AnimationTimeScale.xaml 的交互逻辑

@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     public class Accordion:Expander
     {

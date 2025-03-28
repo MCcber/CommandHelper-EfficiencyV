@@ -1,4 +1,4 @@
-﻿namespace cbhk.GeneralTools
+﻿namespace CBHK.GeneralTools
 {
 	public enum ArmorStandCameraMovementType
     {

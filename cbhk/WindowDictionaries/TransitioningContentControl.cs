@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 
-namespace cbhk.WindowDictionaries
+namespace CBHK.WindowDictionaries
 {
     /// <summary>
     /// Represents a control with a single piece of content and when that content 

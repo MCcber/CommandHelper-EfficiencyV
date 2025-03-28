@@ -1,4 +1,4 @@
-﻿namespace cbhk.Common;
+﻿namespace CBHK.Common;
 
 public class Name
 {

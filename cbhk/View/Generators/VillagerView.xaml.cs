@@ -1,4 +1,4 @@
-﻿namespace cbhk.Generators.VillagerGenerator
+﻿namespace CBHK.Generators.VillagerGenerator
 {
     /// <summary>
     /// Villager.xaml 的交互逻辑

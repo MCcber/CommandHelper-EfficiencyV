@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace cbhk.CustomControls.Interfaces
+namespace CBHK.CustomControls.Interfaces
 {
     /// <summary>
     /// 容器版本更新协议

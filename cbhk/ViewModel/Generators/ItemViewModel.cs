@@ -1,9 +1,9 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.ItemGenerator.Components;
-using cbhk.View;
-using cbhk.WindowDictionaries;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.ItemGenerator.Components;
+using CBHK.View;
+using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -21,7 +21,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class ItemViewModel:ObservableObject
     {
@@ -122,7 +122,7 @@ namespace cbhk.ViewModel.Generators
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string icon_path = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconItems.png";
+        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItems.png";
         private IContainerProvider _container;
         #endregion
 

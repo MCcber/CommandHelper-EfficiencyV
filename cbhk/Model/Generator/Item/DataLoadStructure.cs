@@ -1,4 +1,4 @@
-﻿namespace cbhk.Model.Generator.Item
+﻿namespace CBHK.Model.Generator.Item
 {
     public class DataLoadStructure(int index, object item, object version)
     {

@@ -1,10 +1,10 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.View.Compoments.Spawner;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.View.Compoments.Spawner;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.Generators.SpawnerGenerator.Components
+namespace CBHK.Generators.SpawnerGenerator.Components
 {
     /// <summary>
     /// SpawnPotential.xaml 的交互逻辑

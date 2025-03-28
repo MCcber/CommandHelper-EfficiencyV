@@ -1,10 +1,8 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.Generators.DataPackGenerator;
-using cbhk.View.Components.Datapack.EditPage;
-using cbhk.ViewModel.Generators;
-using cbhk.ViewModel.Generators.Datapack;
-using cbhk.ViewModel.Generators.Datapack.EditPage;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.View.Components.Datapack.EditPage;
+using CBHK.ViewModel.Components.Datapack.EditPage;
+using CBHK.ViewModel.Generators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -15,7 +13,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace cbhk.View.Components.Datapack
+namespace CBHK.ViewModel.Components.Datapack
 {
     public class ContentReader
     {

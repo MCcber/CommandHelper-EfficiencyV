@@ -1,8 +1,8 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.Generators.DataPackGenerator;
-using cbhk.Generators.DataPackGenerator.Components.TemplateSelectPage;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.Generators.DataPackGenerator;
+using CBHK.Generators.DataPackGenerator.Components.TemplateSelectPage;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -22,7 +22,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 
-namespace cbhk.ViewModel.Components.Datapack.DatapackInitializationForms
+namespace CBHK.ViewModel.Components.Datapack.DatapackInitializationForms
 {
     public partial class TemplateSelectViewModel: ObservableObject
     {

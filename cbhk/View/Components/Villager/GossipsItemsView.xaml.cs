@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.Generators.VillagerGenerator.Components
+namespace CBHK.Generators.VillagerGenerator.Components
 {
     /// <summary>
     /// GossipsItemsView.xaml 的交互逻辑

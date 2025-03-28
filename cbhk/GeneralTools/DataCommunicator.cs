@@ -4,7 +4,7 @@ using System.Data.Common;
 using System.Data.SQLite;
 using System.Threading.Tasks;
 
-namespace cbhk.GeneralTools
+namespace CBHK.GeneralTools
 {
     public class DataCommunicator
     {

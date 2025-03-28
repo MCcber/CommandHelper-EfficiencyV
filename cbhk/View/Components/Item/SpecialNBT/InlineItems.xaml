@@ -1,19 +1,19 @@
 ﻿<UserControl
-    x:Class="cbhk.Generators.ItemGenerator.Components.SpecialNBT.InlineItems"
+    x:Class="CBHK.Generators.ItemGenerator.Components.SpecialNBT.InlineItems"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk.Generators.ItemGenerator.Components.SpecialNBT"
+    xmlns:local="clr-namespace:CBHK.Generators.ItemGenerator.Components.SpecialNBT"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <ImageBrush x:Key="ButtonNormal" ImageSource="/cbhk;component/Resource/Common/Image/ButtonNormal.png" />
-        <ImageBrush x:Key="ButtonPressed" ImageSource="/cbhk;component/Resource/Common/Image/ButtonPressed.png" />
-        <ImageBrush x:Key="CloseWhite" ImageSource="/cbhk;component/Resource/Common/Image/CloseWhite.png" />
-        <ImageBrush x:Key="CloseWhiteHover" ImageSource="/cbhk;component/Resource/Common/Image/CloseWhiteHover.png" />
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
+        <ImageBrush x:Key="CloseWhite" ImageSource="/CBHK;component/Resource/Common/Image/CloseWhite.png" />
+        <ImageBrush x:Key="CloseWhiteHover" ImageSource="/CBHK;component/Resource/Common/Image/CloseWhiteHover.png" />
     </UserControl.Resources>
 
     <DockPanel Margin="0,2,0,0" LastChildFill="False">

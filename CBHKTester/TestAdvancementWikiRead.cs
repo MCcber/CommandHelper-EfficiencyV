@@ -1,10 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
-using cbhk.CustomControls.JsonTreeViewComponents;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.TreeViewComponentsHelper;
-using cbhk.Model.Common;
-using cbhk.ViewModel.Generators;
+using CBHK.CustomControls.JsonTreeViewComponents;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.TreeViewComponentsHelper;
+using CBHK.Model.Common;
+using CBHK.ViewModel.Generators;
 
 namespace CBHKTester
 {

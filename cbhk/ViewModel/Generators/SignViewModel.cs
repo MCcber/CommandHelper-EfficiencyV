@@ -1,8 +1,8 @@
-﻿using cbhk.CustomControls;
-using cbhk.Generators.SignGenerator.Components;
-using cbhk.View;
-using cbhk.ViewModel;
-using cbhk.WindowDictionaries;
+﻿using CBHK.CustomControls;
+using CBHK.Generators.SignGenerator.Components;
+using CBHK.View;
+using CBHK.ViewModel;
+using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
@@ -16,7 +16,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class SignViewModel : ObservableObject
     {

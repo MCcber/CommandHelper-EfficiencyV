@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.View.Common
+namespace CBHK.View.Common
 {
     /// <summary>
     /// TutorialsView.xaml 的交互逻辑

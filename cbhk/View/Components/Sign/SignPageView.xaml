@@ -1,13 +1,13 @@
 ﻿<UserControl
-    x:Class="cbhk.Generators.SignGenerator.Components.SignPageView"
+    x:Class="CBHK.Generators.SignGenerator.Components.SignPageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:ColorPicker="clr-namespace:cbhk.CustomControls.ColorPickerComponents"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:ColorPicker="clr-namespace:CBHK.CustomControls.ColorPickerComponents"
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk.Generators.SignGenerator.Components"
-    xmlns:localContext="clr-namespace:cbhk.Generators.SignGenerator.Components"
+    xmlns:local="clr-namespace:CBHK.Generators.SignGenerator.Components"
+    xmlns:localContext="clr-namespace:CBHK.Generators.SignGenerator.Components"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     d:DesignHeight="450"
@@ -16,9 +16,9 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowRight.png" />
-        <ImageBrush x:Key="Save" ImageSource="/cbhk;component/Resource/Common/Image/Save.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
+        <ImageBrush x:Key="Save" ImageSource="/CBHK;component/Resource/Common/Image/Save.png" />
     </UserControl.Resources>
 
     <behaviors:Interaction.Triggers>

@@ -1,4 +1,4 @@
-﻿namespace cbhk.Model.Common
+﻿namespace CBHK.Model.Common
 {
     public class Enums
     {

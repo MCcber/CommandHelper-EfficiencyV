@@ -1,9 +1,9 @@
-﻿using cbhk.GeneralTools;
+﻿using CBHK.GeneralTools;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace cbhk.CustomControls.AnimationComponents
+namespace CBHK.CustomControls.AnimationComponents
 {
     /// <summary>
     /// AnimationUnitTimePoint.xaml 的交互逻辑

@@ -1,4 +1,4 @@
-﻿using cbhk.CustomControls;
+﻿using CBHK.CustomControls;
 using System;
 using System.Globalization;
 using System.Windows;
@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Shapes;
 
-namespace cbhk.ControlsDataContexts
+namespace CBHK.ControlsDataContexts
 {
     public class TreeViewLineConverter:IMultiValueConverter
     {

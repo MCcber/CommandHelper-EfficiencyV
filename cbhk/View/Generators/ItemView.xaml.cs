@@ -1,4 +1,4 @@
-﻿namespace cbhk.Generators.ItemGenerator
+﻿namespace CBHK.Generators.ItemGenerator
 {
     /// <summary>
     /// ItemView.xaml 的交互逻辑

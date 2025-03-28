@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 
-namespace cbhk.WindowDictionaries
+namespace CBHK.WindowDictionaries
 {
     public class CommonWindow : Window
     {

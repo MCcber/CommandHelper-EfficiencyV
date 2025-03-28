@@ -1,4 +1,4 @@
-﻿namespace cbhk.Generators.SignGenerator
+﻿namespace CBHK.Generators.SignGenerator
 {
     /// <summary>
     /// SignView.xaml 的交互逻辑

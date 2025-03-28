@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     /// <summary>
     /// 自动补全数据上下文

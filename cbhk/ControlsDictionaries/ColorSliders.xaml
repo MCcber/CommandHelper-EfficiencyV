@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls">
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls">
 
     <Style x:Key="RepeatButtonTransparent" TargetType="{x:Type RepeatButton}">
         <Setter Property="OverridesDefaultStyle" Value="true" />
@@ -19,8 +19,8 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <ImageBrush x:Key="SliderBackground" ImageSource="/cbhk;component/Resource/Common/Image/SliderBar.png" />
-    <ImageBrush x:Key="SliderButton" ImageSource="/cbhk;component/Resource/Common/Image/SliderButton.png" />
+    <ImageBrush x:Key="SliderBackground" ImageSource="/CBHK;component/Resource/Common/Image/SliderBar.png" />
+    <ImageBrush x:Key="SliderButton" ImageSource="/CBHK;component/Resource/Common/Image/SliderButton.png" />
     <SolidColorBrush x:Key="SliderThumb.Static.Background" Color="Black" />
     <SolidColorBrush x:Key="SliderThumb.Static.Border" Color="#FFACACAC" />
     <SolidColorBrush x:Key="SliderThumb.Static.Foreground" Color="#FFE5E5E5" />

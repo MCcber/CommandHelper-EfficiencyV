@@ -1,0 +1,6 @@
+﻿namespace CBHKShared
+{
+    class DataManager
+    {
+    }
+}

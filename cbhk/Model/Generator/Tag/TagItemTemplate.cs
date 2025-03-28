@@ -2,7 +2,7 @@
 using System;
 using System.Windows.Media;
 
-namespace cbhk.Model.Generator.Tag
+namespace CBHK.Model.Generator.Tag
 {
     /// <summary>
     /// 载入成员的属性模板

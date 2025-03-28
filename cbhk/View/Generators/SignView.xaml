@@ -1,13 +1,13 @@
 ﻿<localWindow:CommonWindow
-    x:Class="cbhk.Generators.SignGenerator.SignView"
+    x:Class="CBHK.Generators.SignGenerator.SignView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:cbhk.Generators.SignGenerator"
-    xmlns:localContext="clr-namespace:cbhk.Generators.SignGenerator"
-    xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries"
+    xmlns:local="clr-namespace:CBHK.Generators.SignGenerator"
+    xmlns:localContext="clr-namespace:CBHK.Generators.SignGenerator"
+    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="告示牌生成器"
@@ -21,9 +21,9 @@
     mc:Ignorable="d">
 
     <Window.Resources>
-        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowRight.png" />
-        <ImageBrush x:Key="SaveAll" ImageSource="/cbhk;component/Resource/Common/Image/Save.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
+        <ImageBrush x:Key="SaveAll" ImageSource="/CBHK;component/Resource/Common/Image/Save.png" />
     </Window.Resources>
 
     <Grid>

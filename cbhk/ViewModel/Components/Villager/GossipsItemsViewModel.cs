@@ -1,7 +1,7 @@
-﻿using cbhk.CustomControls;
-using cbhk.Generators.VillagerGenerator;
-using cbhk.Generators.VillagerGenerator.Components;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls;
+using CBHK.Generators.VillagerGenerator;
+using CBHK.Generators.VillagerGenerator.Components;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace cbhk.ViewModel.Components.Villager
+namespace CBHK.ViewModel.Components.Villager
 {
     public partial class GossipsItemsViewModel:ObservableObject
     {

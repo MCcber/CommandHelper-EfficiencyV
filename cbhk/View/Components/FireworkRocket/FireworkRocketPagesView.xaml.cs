@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace cbhk.Generators.FireworkRocketGenerator.Components
+namespace CBHK.Generators.FireworkRocketGenerator.Components
 {
     /// <summary>
     /// FireworkRocketPages.xaml 的交互逻辑

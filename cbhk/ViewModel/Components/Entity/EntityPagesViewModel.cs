@@ -1,11 +1,11 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.Interfaces;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.View;
-using cbhk.View.Components.Entity;
-using cbhk.ViewModel;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls;
+using CBHK.CustomControls.Interfaces;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.View;
+using CBHK.View.Components.Entity;
+using CBHK.ViewModel;
+using CBHK.ViewModel.Generators;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -28,7 +28,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.EntityGenerator.Components
+namespace CBHK.Generators.EntityGenerator.Components
 {
     public partial class EntityPagesViewModel : ObservableObject
     {
@@ -303,9 +303,9 @@ namespace cbhk.Generators.EntityGenerator.Components
         #endregion
 
         #region 路径
-        string icon_path = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
-        string buttonNormalImage = "pack://application:,,,/cbhk;component/Resource/Common/Image/ButtonNormal.png";
-        string buttonPressedImage = "pack://application:,,,/cbhk;component/Resource/Common/Image/ButtonPressed.png";
+        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
+        string buttonNormalImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonNormal.png";
+        string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonPressed.png";
         ImageBrush buttonNormalBrush;
         ImageBrush buttonPressedBrush;
         string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\";

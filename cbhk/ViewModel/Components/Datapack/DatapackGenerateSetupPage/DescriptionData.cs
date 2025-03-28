@@ -1,4 +1,4 @@
-﻿namespace cbhk.ViewModel.Components.Datapack.DatapackGenerateSetupPage
+﻿namespace CBHK.ViewModel.Components.Datapack.DatapackGenerateSetupPage
 {
     public class DescriptionData
     {

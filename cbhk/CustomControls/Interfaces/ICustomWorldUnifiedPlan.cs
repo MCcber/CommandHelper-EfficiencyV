@@ -1,10 +1,10 @@
-﻿using cbhk.CustomControls.JsonTreeViewComponents;
+﻿using CBHK.CustomControls.JsonTreeViewComponents;
 using ICSharpCode.AvalonEdit.Document;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using static cbhk.Model.Common.Enums;
+using static CBHK.Model.Common.Enums;
 
-namespace cbhk.CustomControls.Interfaces
+namespace CBHK.CustomControls.Interfaces
 {
     public interface ICustomWorldUnifiedPlan
     {
@@ -31,7 +31,7 @@ namespace cbhk.CustomControls.Interfaces
         /// <summary>
         /// 用于指定当节点为复合而不是列表时需使用的默认分支结构
         /// </summary>
-        public Dictionary<string, string> TranslateDefaultEnumItemDictionary { get; set; }
+        public Dictionary<string, string> TranslateDefaultDictionary { get; set; }
         /// <summary>
         /// 识别特定结构的字典
         /// </summary>

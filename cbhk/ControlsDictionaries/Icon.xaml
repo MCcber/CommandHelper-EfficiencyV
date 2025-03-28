@@ -28,7 +28,7 @@
     <DrawingImage x:Key="CheckedIn">
         <DrawingImage.Drawing>
             <DrawingGroup>
-                <ImageDrawing ImageSource="/cbhk;component/Resource/Common/Image/Datapack/lockIcon.png" Rect="0 0 10 10" />
+                <ImageDrawing ImageSource="/CBHK;component/Resource/Common/Image/Datapack/lockIcon.png" Rect="0 0 10 10" />
                 <!--<GeometryDrawing Brush="#52A2F2" Geometry="M144 144v48H304V144c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192V144C80 64.5 144.5 0 224 0s144 64.5 144 144v48h16c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64H80z" />-->
             </DrawingGroup>
         </DrawingImage.Drawing>
@@ -36,7 +36,7 @@
     <DrawingImage x:Key=".mcfunction">
         <DrawingImage.Drawing>
             <DrawingGroup>
-                <ImageDrawing ImageSource="/cbhk;component/Resource/Common/Image/Datapack/mcfIcon.png" Rect="0 0 10 10" />
+                <ImageDrawing ImageSource="/CBHK;component/Resource/Common/Image/Datapack/mcfIcon.png" Rect="0 0 10 10" />
                 <!--<GeometryDrawing Brush="White" Geometry="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM153 289l-31 31 31 31c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0L71 337c-9.4-9.4-9.4-24.6 0-33.9l48-48c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9zM265 255l48 48c9.4 9.4 9.4 24.6 0 33.9l-48 48c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l31-31-31-31c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0z" />-->
             </DrawingGroup>
         </DrawingImage.Drawing>
@@ -44,7 +44,7 @@
     <DrawingImage x:Key=".json">
         <DrawingImage.Drawing>
             <DrawingGroup>
-                <!--<ImageDrawing ImageSource="/cbhk;component/Resource/Common/Image/Datapack/mcfIcon.png" Rect="0 0 10 10" />-->
+                <!--<ImageDrawing ImageSource="/CBHK;component/Resource/Common/Image/Datapack/mcfIcon.png" Rect="0 0 10 10" />-->
                 <GeometryDrawing Brush="White" Geometry="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM112 256H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16z" />
             </DrawingGroup>
         </DrawingImage.Drawing>
@@ -52,14 +52,14 @@
     <DrawingImage x:Key="Saved">
         <DrawingImage.Drawing>
             <DrawingGroup>
-                <ImageDrawing ImageSource="/cbhk;component/Resource/Common/Image/Datapack/editedIcon.png" Rect="0 0 10 10" />
+                <ImageDrawing ImageSource="/CBHK;component/Resource/Common/Image/Datapack/editedIcon.png" Rect="0 0 10 10" />
             </DrawingGroup>
         </DrawingImage.Drawing>
     </DrawingImage>
     <DrawingImage x:Key="Plus">
         <DrawingImage.Drawing>
             <DrawingGroup>
-                <ImageDrawing ImageSource="/cbhk;component/Resource/Common/Image/Datapack/plusIcon.png" Rect="0 0 10 10" />
+                <ImageDrawing ImageSource="/CBHK;component/Resource/Common/Image/Datapack/plusIcon.png" Rect="0 0 10 10" />
             </DrawingGroup>
         </DrawingImage.Drawing>
     </DrawingImage>
@@ -101,7 +101,7 @@
     <DrawingImage x:Key="Delete">
         <DrawingImage.Drawing>
             <DrawingGroup>
-                <ImageDrawing ImageSource="/cbhk;component/Resource/Common/Image/Remove.png" Rect="0 0 16 16" />
+                <ImageDrawing ImageSource="/CBHK;component/Resource/Common/Image/Remove.png" Rect="0 0 16 16" />
             </DrawingGroup>
         </DrawingImage.Drawing>
     </DrawingImage>
@@ -143,7 +143,7 @@
     <DrawingImage x:Key="FolderClosed">
         <DrawingImage.Drawing>
             <DrawingGroup>
-                <ImageDrawing ImageSource="/cbhk;component/Resource/Common/Image/Datapack/folderIcon.png" Rect="0 0 10 10" />
+                <ImageDrawing ImageSource="/CBHK;component/Resource/Common/Image/Datapack/folderIcon.png" Rect="0 0 10 10" />
                 <!--<GeometryDrawing Brush="#FFE39E" Geometry="M448 480H64c-35.3 0-64-28.7-64-64V192H512V416c0 35.3-28.7 64-64 64zm64-320H0V96C0 60.7 28.7 32 64 32H181.5c17 0 33.3 6.7 45.3 18.7l26.5 26.5c12 12 28.3 18.7 45.3 18.7H448c35.3 0 64 28.7 64 64z" />-->
             </DrawingGroup>
         </DrawingImage.Drawing>
@@ -158,7 +158,7 @@
     <DrawingImage x:Key="Datapack">
         <DrawingImage.Drawing>
             <DrawingGroup>
-                <ImageDrawing ImageSource="/cbhk;component/Resource/Common/Image/Datapack/dataPackIcon.png" Rect="0 0 10 10" />
+                <ImageDrawing ImageSource="/CBHK;component/Resource/Common/Image/Datapack/dataPackIcon.png" Rect="0 0 10 10" />
                 <!--<GeometryDrawing Brush="#7ECA7E" Geometry="M58.9 42.1c3-6.1 9.6-9.6 16.3-8.7L320 64 564.8 33.4c6.7-.8 13.3 2.7 16.3 8.7l41.7 83.4c9 17.9-.6 39.6-19.8 45.1L439.6 217.3c-13.9 4-28.8-1.9-36.2-14.3L320 64 236.6 203c-7.4 12.4-22.3 18.3-36.2 14.3L37.1 170.6c-19.3-5.5-28.8-27.2-19.8-45.1L58.9 42.1zM321.1 128l54.9 91.4c14.9 24.8 44.6 36.6 72.5 28.6L576 211.6v167c0 22-15 41.2-36.4 46.6l-204.1 51c-10.2 2.6-20.9 2.6-31 0l-204.1-51C79 419.7 64 400.5 64 378.5v-167L191.6 248c27.8 8 57.6-3.8 72.5-28.6L318.9 128h2.2z" />-->
             </DrawingGroup>
         </DrawingImage.Drawing>
@@ -168,7 +168,7 @@
         <DrawingImage.Drawing>
             <ImageDrawing Rect="0 0 25 25">
                 <ImageDrawing.ImageSource>
-                    <BitmapImage UriSource="/cbhk;component/Resource/Common/Image/IconFree.png" />
+                    <BitmapImage UriSource="/CBHK;component/Resource/Common/Image/IconFree.png" />
                 </ImageDrawing.ImageSource>
             </ImageDrawing>
         </DrawingImage.Drawing>
@@ -177,7 +177,7 @@
         <DrawingImage.Drawing>
             <ImageDrawing Rect="0 0 25 25">
                 <ImageDrawing.ImageSource>
-                    <BitmapImage UriSource="/cbhk;component/Resource/Common/Image/IconFresh.png" />
+                    <BitmapImage UriSource="/CBHK;component/Resource/Common/Image/IconFresh.png" />
                 </ImageDrawing.ImageSource>
             </ImageDrawing>
         </DrawingImage.Drawing>
@@ -186,7 +186,7 @@
         <DrawingImage.Drawing>
             <ImageDrawing Rect="0 0 25 25">
                 <ImageDrawing.ImageSource>
-                    <BitmapImage UriSource="/cbhk;component/Resource/Common/Image/IconGaze.png" />
+                    <BitmapImage UriSource="/CBHK;component/Resource/Common/Image/IconGaze.png" />
                 </ImageDrawing.ImageSource>
             </ImageDrawing>
         </DrawingImage.Drawing>
@@ -195,7 +195,7 @@
         <DrawingImage.Drawing>
             <ImageDrawing Rect="0 0 25 25">
                 <ImageDrawing.ImageSource>
-                    <BitmapImage UriSource="/cbhk;component/Resource/Common/Image/IconInvisible.png" />
+                    <BitmapImage UriSource="/CBHK;component/Resource/Common/Image/IconInvisible.png" />
                 </ImageDrawing.ImageSource>
             </ImageDrawing>
         </DrawingImage.Drawing>
@@ -204,7 +204,7 @@
         <DrawingImage.Drawing>
             <ImageDrawing Rect="0 0 25 25">
                 <ImageDrawing.ImageSource>
-                    <BitmapImage UriSource="/cbhk;component/Resource/Common/Image/IconPlay.png" />
+                    <BitmapImage UriSource="/CBHK;component/Resource/Common/Image/IconPlay.png" />
                 </ImageDrawing.ImageSource>
             </ImageDrawing>
         </DrawingImage.Drawing>
@@ -213,7 +213,7 @@
         <DrawingImage.Drawing>
             <ImageDrawing Rect="0 0 25 25">
                 <ImageDrawing.ImageSource>
-                    <BitmapImage UriSource="/cbhk;component/Resource/Common/Image/IconReset.png" />
+                    <BitmapImage UriSource="/CBHK;component/Resource/Common/Image/IconReset.png" />
                 </ImageDrawing.ImageSource>
             </ImageDrawing>
         </DrawingImage.Drawing>
@@ -222,7 +222,7 @@
         <DrawingImage.Drawing>
             <ImageDrawing Rect="0 0 25 25">
                 <ImageDrawing.ImageSource>
-                    <BitmapImage UriSource="/cbhk;component/Resource/Common/Image/IconShouder.png" />
+                    <BitmapImage UriSource="/CBHK;component/Resource/Common/Image/IconShouder.png" />
                 </ImageDrawing.ImageSource>
             </ImageDrawing>
         </DrawingImage.Drawing>
@@ -231,7 +231,7 @@
         <DrawingImage.Drawing>
             <ImageDrawing Rect="0 0 25 25">
                 <ImageDrawing.ImageSource>
-                    <BitmapImage UriSource="/cbhk;component/Resource/Common/Image/IconThirdPerson.png" />
+                    <BitmapImage UriSource="/CBHK;component/Resource/Common/Image/IconThirdPerson.png" />
                 </ImageDrawing.ImageSource>
             </ImageDrawing>
         </DrawingImage.Drawing>
@@ -240,7 +240,7 @@
         <DrawingImage.Drawing>
             <ImageDrawing Rect="0 0 25 25">
                 <ImageDrawing.ImageSource>
-                    <BitmapImage UriSource="/cbhk;component/Resource/Common/Image/IconVisible.png" />
+                    <BitmapImage UriSource="/CBHK;component/Resource/Common/Image/IconVisible.png" />
                 </ImageDrawing.ImageSource>
             </ImageDrawing>
         </DrawingImage.Drawing>
@@ -300,18 +300,18 @@
         </DrawingImage.Drawing>
     </DrawingImage>
 
-    <BitmapImage x:Key="AddIcon" UriSource="/cbhk;component/Resource/Common/Image/Add.png" />
-    <BitmapImage x:Key="AttributeIcon" UriSource="/cbhk;component/Resource/Common/Image/Attribute.png" />
-    <BitmapImage x:Key="CopyIcon" UriSource="/cbhk;component/Resource/Common/Image/Copy.png" />
-    <BitmapImage x:Key="CopyAllIcon" UriSource="/cbhk;component/Resource/Common/Image/CopyAll.png" />
-    <BitmapImage x:Key="CutIcon" UriSource="/cbhk;component/Resource/Common/Image/Cut.png" />
-    <BitmapImage x:Key="DeleteIcon" UriSource="/cbhk;component/Resource/Common/Image/Delete.png" />
-    <BitmapImage x:Key="FoldIcon" UriSource="/cbhk;component/Resource/Common/Image/Fold.png" />
-    <BitmapImage x:Key="HistoryIcon" UriSource="/cbhk;component/Resource/Common/Image/History.png" />
-    <BitmapImage x:Key="OpenIcon" UriSource="/cbhk;component/Resource/Common/Image/Open.png" />
-    <BitmapImage x:Key="Open2Icon" UriSource="/cbhk;component/Resource/Common/Image/Open2.png" />
-    <BitmapImage x:Key="OpenTerminalIcon" UriSource="/cbhk;component/Resource/Common/Image/OpenTerminal.png" />
-    <BitmapImage x:Key="PasteIcon" UriSource="/cbhk;component/Resource/Common/Image/Paste.png" />
-    <BitmapImage x:Key="RevokeIcon" UriSource="/cbhk;component/Resource/Common/Image/Revoke.png" />
-    <BitmapImage x:Key="SubmitIcon" UriSource="/cbhk;component/Resource/Common/Image/Submit.png" />
+    <BitmapImage x:Key="AddIcon" UriSource="/CBHK;component/Resource/Common/Image/Add.png" />
+    <BitmapImage x:Key="AttributeIcon" UriSource="/CBHK;component/Resource/Common/Image/Attribute.png" />
+    <BitmapImage x:Key="CopyIcon" UriSource="/CBHK;component/Resource/Common/Image/Copy.png" />
+    <BitmapImage x:Key="CopyAllIcon" UriSource="/CBHK;component/Resource/Common/Image/CopyAll.png" />
+    <BitmapImage x:Key="CutIcon" UriSource="/CBHK;component/Resource/Common/Image/Cut.png" />
+    <BitmapImage x:Key="DeleteIcon" UriSource="/CBHK;component/Resource/Common/Image/Delete.png" />
+    <BitmapImage x:Key="FoldIcon" UriSource="/CBHK;component/Resource/Common/Image/Fold.png" />
+    <BitmapImage x:Key="HistoryIcon" UriSource="/CBHK;component/Resource/Common/Image/History.png" />
+    <BitmapImage x:Key="OpenIcon" UriSource="/CBHK;component/Resource/Common/Image/Open.png" />
+    <BitmapImage x:Key="Open2Icon" UriSource="/CBHK;component/Resource/Common/Image/Open2.png" />
+    <BitmapImage x:Key="OpenTerminalIcon" UriSource="/CBHK;component/Resource/Common/Image/OpenTerminal.png" />
+    <BitmapImage x:Key="PasteIcon" UriSource="/CBHK;component/Resource/Common/Image/Paste.png" />
+    <BitmapImage x:Key="RevokeIcon" UriSource="/CBHK;component/Resource/Common/Image/Revoke.png" />
+    <BitmapImage x:Key="SubmitIcon" UriSource="/CBHK;component/Resource/Common/Image/Submit.png" />
 </ResourceDictionary>

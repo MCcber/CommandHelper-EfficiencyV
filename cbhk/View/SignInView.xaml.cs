@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace cbhk.View
+namespace CBHK.View
 {
     /// <summary>
     /// SignInView.xaml 的交互逻辑

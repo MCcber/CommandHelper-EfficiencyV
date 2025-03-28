@@ -1,9 +1,9 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.EntityGenerator.Components;
-using cbhk.View;
-using cbhk.WindowDictionaries;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.EntityGenerator.Components;
+using CBHK.View;
+using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -22,7 +22,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class EntityViewModel : ObservableObject
     {
@@ -41,7 +41,7 @@ namespace cbhk.ViewModel.Generators
         /// </summary>
         private MainView home = null;
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
+        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
         private string ModifierOperationTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\AttributeModifierOperationType.ini";
         string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
         public ObservableCollection<string> ModifierOperationTypeSource = [];

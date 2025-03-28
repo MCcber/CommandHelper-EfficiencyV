@@ -1,10 +1,10 @@
-﻿using cbhk.CustomControls;
-using cbhk.CustomControls.AnimationComponents;
-using cbhk.GeneralTools;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.ItemGenerator;
-using cbhk.Generators.ItemGenerator.Components;
-using cbhk.View;
+﻿using CBHK.CustomControls;
+using CBHK.CustomControls.AnimationComponents;
+using CBHK.GeneralTools;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.ItemGenerator;
+using CBHK.Generators.ItemGenerator.Components;
+using CBHK.View;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DryIoc;
@@ -30,7 +30,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
-namespace cbhk.ViewModel.Generators
+namespace CBHK.ViewModel.Generators
 {
     public partial class ArmorStandViewModel : ObservableObject
     {
@@ -839,7 +839,7 @@ namespace cbhk.ViewModel.Generators
             set => SetProperty(ref rightHandItemImage, value);
         }
 
-        private ImageSource headItemImage = new BitmapImage(new Uri("/cbhk;component/Resource/Common/Image/Helmet.png", UriKind.RelativeOrAbsolute));
+        private ImageSource headItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Helmet.png", UriKind.RelativeOrAbsolute));
 
         public ImageSource HeadItemImage
         {
@@ -847,7 +847,7 @@ namespace cbhk.ViewModel.Generators
             set => SetProperty(ref headItemImage, value);
         }
 
-        private ImageSource chestItemImage = new BitmapImage(new Uri("/cbhk;component/Resource/Common/Image/Chestplate.png", UriKind.RelativeOrAbsolute));
+        private ImageSource chestItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Chestplate.png", UriKind.RelativeOrAbsolute));
 
         public ImageSource ChestItemImage
         {
@@ -855,7 +855,7 @@ namespace cbhk.ViewModel.Generators
             set => SetProperty(ref chestItemImage, value);
         }
 
-        private ImageSource legItemImage = new BitmapImage(new Uri("/cbhk;component/Resource/Common/Image/Leggings.png", UriKind.RelativeOrAbsolute));
+        private ImageSource legItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Leggings.png", UriKind.RelativeOrAbsolute));
 
         public ImageSource LegItemImage
         {
@@ -863,7 +863,7 @@ namespace cbhk.ViewModel.Generators
             set => SetProperty(ref legItemImage, value);
         }
 
-        private ImageSource feetItemImage = new BitmapImage(new Uri("/cbhk;component/Resource/Common/Image/Boots.png", UriKind.RelativeOrAbsolute));
+        private ImageSource feetItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Boots.png", UriKind.RelativeOrAbsolute));
 
         public ImageSource FeetItemImage
         {
@@ -1134,7 +1134,7 @@ namespace cbhk.ViewModel.Generators
         #endregion
 
         //本生成器的图标路径
-        string iconPath = "pack://application:,,,/cbhk;component/Resource/Common/Image/SpawnerIcon/IconArmorStand.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconArmorStand.png";
         #endregion
 
         #region 引用

@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.Generators.ItemGenerator.Components
+namespace CBHK.Generators.ItemGenerator.Components
 {
     /// <summary>
     /// ItemPagesView.xaml 的交互逻辑

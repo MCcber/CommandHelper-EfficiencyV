@@ -1,7 +1,7 @@
-﻿using cbhk.ControlsDataContexts;
-using cbhk.CustomControls;
-using cbhk.GeneralTools;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.ControlsDataContexts;
+using CBHK.CustomControls;
+using CBHK.GeneralTools;
+using CBHK.ViewModel.Generators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.ObjectModel;
@@ -13,7 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.Generators.ItemGenerator.Components.SpecialNBT
+namespace CBHK.Generators.ItemGenerator.Components.SpecialNBT
 {
     /// <summary>
     /// DebugProperties.xaml 的交互逻辑

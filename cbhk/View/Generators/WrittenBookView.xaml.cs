@@ -1,4 +1,4 @@
-﻿namespace cbhk.View.Generators
+﻿namespace CBHK.View.Generators
 {
     /// <summary>
     /// WrittenBookView.xaml 的交互逻辑

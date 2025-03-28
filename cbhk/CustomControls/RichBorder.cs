@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Diagnostics;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     public class RichBorder : Border
     {

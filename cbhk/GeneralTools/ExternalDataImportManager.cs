@@ -1,15 +1,15 @@
-﻿using cbhk.CustomControls;
-using cbhk.GeneralTools.MessageTip;
-using cbhk.Generators.FireworkRocketGenerator.Components;
-using cbhk.Generators.ItemGenerator.Components;
-using cbhk.Generators.RecipeGenerator.Components;
-using cbhk.Generators.SpawnerGenerator.Components;
-using cbhk.Model.Common;
-using cbhk.Model.Generator.Tag;
-using cbhk.View.Compoments.Spawner;
-using cbhk.ViewModel.Components.Recipe;
-using cbhk.ViewModel.Components.Villager;
-using cbhk.ViewModel.Generators;
+﻿using CBHK.CustomControls;
+using CBHK.GeneralTools.MessageTip;
+using CBHK.Generators.FireworkRocketGenerator.Components;
+using CBHK.Generators.ItemGenerator.Components;
+using CBHK.Generators.RecipeGenerator.Components;
+using CBHK.Generators.SpawnerGenerator.Components;
+using CBHK.Model.Common;
+using CBHK.Model.Generator.Tag;
+using CBHK.View.Compoments.Spawner;
+using CBHK.ViewModel.Components.Recipe;
+using CBHK.ViewModel.Components.Villager;
+using CBHK.ViewModel.Generators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -25,7 +25,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace cbhk.GeneralTools
+namespace CBHK.GeneralTools
 {
     public static class ExternalDataImportManager
     {

@@ -1,9 +1,9 @@
-﻿using cbhk.CustomControls;
+﻿using CBHK.CustomControls;
 using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace cbhk.ControlsDataContexts
+namespace CBHK.ControlsDataContexts
 {
     public class ConvertIconComboBoxItemText : IValueConverter
     {

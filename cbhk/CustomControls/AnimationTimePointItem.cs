@@ -1,10 +1,10 @@
-﻿using cbhk.CustomControls.AnimationComponents;
+﻿using CBHK.CustomControls.AnimationComponents;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
-namespace cbhk.CustomControls
+namespace CBHK.CustomControls
 {
     public class AnimationTimePointItem:ToggleButton
     {

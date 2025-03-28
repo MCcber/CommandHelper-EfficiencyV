@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace cbhk.Generators.DataPackGenerator.Components.TemplateSelectPage
+namespace CBHK.Generators.DataPackGenerator.Components.TemplateSelectPage
 {
     /// <summary>
     /// SolutionTemplateItems.xaml 的交互逻辑

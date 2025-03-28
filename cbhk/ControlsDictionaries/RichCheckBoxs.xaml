@@ -1,10 +1,10 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls">
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls">
 
-    <ImageBrush x:Key="UnChecked" ImageSource="/cbhk;component/Resource/Common/Image/CheckboxEmpty.png" />
-    <ImageBrush x:Key="Checked" ImageSource="/cbhk;component/Resource/Common/Image/CheckboxChecked.png" />
+    <ImageBrush x:Key="UnChecked" ImageSource="/CBHK;component/Resource/Common/Image/CheckboxEmpty.png" />
+    <ImageBrush x:Key="Checked" ImageSource="/CBHK;component/Resource/Common/Image/CheckboxChecked.png" />
     <SolidColorBrush x:Key="OptionMark.Static.Background" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="OptionMark.Static.Border" Color="#FF707070" />
     <SolidColorBrush x:Key="OptionMark.Static.Glyph" Color="#FF212121" />

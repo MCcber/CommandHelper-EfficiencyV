@@ -1,4 +1,4 @@
-﻿namespace cbhk.Generators.DimensionTypeGenerator
+﻿namespace CBHK.Generators.DimensionTypeGenerator
 {
     /// <summary>
     /// DimensionTypeView.xaml 的交互逻辑

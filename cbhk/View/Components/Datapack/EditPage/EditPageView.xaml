@@ -1,11 +1,11 @@
 ﻿<Page
-    x:Class="cbhk.View.Components.Datapack.EditPage.EditPageView"
+    x:Class="CBHK.View.Components.Datapack.EditPage.EditPageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:cbhk.CustomControls"
+    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:localWindow="clr-namespace:cbhk.WindowDictionaries"
+    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="EditPage"
@@ -17,15 +17,15 @@
 
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
-            <behavior:CallMethodAction MethodName="InitDataLoaded" TargetObject="{Binding}" />
+            <behavior:CallMethodAction MethodName="InitData_Loaded" TargetObject="{Binding}" />
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
 
     <Page.Resources>
-        <ImageBrush x:Key="BackToHomePage" ImageSource="/cbhk;component/Resource/CBHK/Image/IconHome.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/cbhk;component/Resource/Common/Image/IconArrowRight.png" />
-        <ImageBrush x:Key="EditBox" ImageSource="/cbhk;component/Resource/Common/Image/TextEditBox.png" />
+        <ImageBrush x:Key="BackToHomePage" ImageSource="/CBHK;component/Resource/CBHK/Image/IconHome.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
+        <ImageBrush x:Key="EditBox" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
         <ContextMenu
             x:Key="DatapackManagerMenu"
             Background="#424242"

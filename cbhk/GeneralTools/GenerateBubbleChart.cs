@@ -3,9 +3,9 @@ using System.Windows.Media;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
-using cbhk.Model.Common;
+using CBHK.Model.Common;
 
-namespace cbhk.GeneralTools
+namespace CBHK.GeneralTools
 {
     public class GenerateBubbleChart
     {
