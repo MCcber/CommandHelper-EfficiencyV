@@ -94,7 +94,7 @@ namespace CBHK.ViewModel.Components.Datapack.EditPage
         /// <summary>
         /// 符号结构文件
         /// </summary>
-        private string symbolStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + "SymbolStructure.json";
+        private string symbolStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"\Resource\Configs\Common\SymbolStructure.json";
         private string databaseFilePath = AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db";
         /// <summary>
         /// 语法字典

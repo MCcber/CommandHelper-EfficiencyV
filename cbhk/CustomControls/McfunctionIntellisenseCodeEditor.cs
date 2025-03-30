@@ -181,7 +181,7 @@ namespace CBHK.CustomControls
             //为代码编辑器安装大纲管理器
             foldingManager = FoldingManager.Install(TextArea);
             XshdSyntaxDefinition xshdSyntaxDefinition = new();
-            xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\" + "mcfunction.xshd"));
+            xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\" + "Mcfunction.xshd"));
             IHighlightingDefinition mcfunctionHighlighting = HighlightingLoader.Load(xshdSyntaxDefinition, HighlightingManager.Instance);
             SyntaxHighlighting = mcfunctionHighlighting;
             #region 初始化补全框
