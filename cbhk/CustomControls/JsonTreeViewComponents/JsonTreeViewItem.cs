@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControls.Interfaces;
-using CBHK.Interface.Json;
+using CBHK.Service.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
 using System;
@@ -579,7 +579,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
             #endregion
 
             #region 判断是否需要直接返回
-            if ((string.IsNullOrEmpty(Value.ToString()) && StartLine is null) || DataType is DataType.None && this is CompoundJsonTreeViewItem compoundJsonTreeViewItem && (compoundJsonTreeViewItem.DataType is DataType.None || (compoundJsonTreeViewItem.DataType is DataType.MultiType && compoundJsonTreeViewItem.SelectedValueType.Text == "- unset -")))
+            if ((string.IsNullOrEmpty(Value.ToString()) && StartLine is null) || DataType is DataType.None && this is CompoundJsonTreeViewItem compoundJsonTreeViewItem && (compoundJsonTreeViewItem.DataType is DataType.CustomCompound || compoundJsonTreeViewItem.DataType is DataType.None || (compoundJsonTreeViewItem.DataType is DataType.MultiType && compoundJsonTreeViewItem.SelectedValueType.Text == "- unset -")))
             {
                 return;
             }
@@ -654,7 +654,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     }
                 }
                 string newValue = "";
-                if (originDataType is DataType.String || (Parent is not null && Parent.DisplayText == "Entry"))
+                if (changeType is ChangeType.String || originDataType is DataType.String || (Parent is not null && Parent.DisplayText == "Entry"))
                 {
                     newValue = "\"\"";
                 }
@@ -767,7 +767,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                 else
                 {
                     customWorldUnifiedPlan.UpdateValueBySpecifyingInterval(this, ChangeType.NumberAndBool, currentValue);
-                    if(Parent is not null && Parent.StartLine == Parent.EndLine || Parent.EndLine is null || (Parent.EndLine is not null && Parent.EndLine.IsDeleted))
+                    if(Parent is not null && (Parent.StartLine == Parent.EndLine || Parent.EndLine is null || (Parent.EndLine is not null && Parent.EndLine.IsDeleted)))
                     {
                         if(this is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null)
                         {

@@ -5,9 +5,9 @@ VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CBHK", "cbhk\CBHK.csproj", "{A235137C-4DF1-4A25-8C24-629B5383AB24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBHKTester", "CBHKTester\CBHKTester.csproj", "{3369BA5E-E8FF-4675-A15B-AB7881A3211F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBHK.Tester", "CBHKTester\CBHK.Tester.csproj", "{3369BA5E-E8FF-4675-A15B-AB7881A3211F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBHKShared", "cbhkShared\CBHKShared.csproj", "{B2BA9649-030E-422F-AD74-8B1B66815818}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBHK.Domain", "cbhkShared\CBHK.Domain.csproj", "{B2BA9649-030E-422F-AD74-8B1B66815818}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

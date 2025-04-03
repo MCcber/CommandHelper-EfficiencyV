@@ -36,7 +36,7 @@ namespace CBHK.ViewModel.Generators
         private IContainerProvider _container;
         JsonTreeViewItemExtension jsonTool = null;
 
-        public ObservableCollection<JsonTreeViewItem> AdvancementTreeViewItemList = [];
+        public ObservableCollection<JsonTreeViewItem> DimensionTypeTreeViewItemList = [];
         #endregion
 
         #region Property
@@ -66,6 +66,7 @@ namespace CBHK.ViewModel.Generators
             set => SetProperty(ref _currentVersion, value);
         }
         public Dictionary<string, string> CustomItemTranslateDictionay { get; set; } = [];
+        public Dictionary<string, string> TranslateCustomKeyWordDictionary { get; set; } = [];
         #endregion
 
         public DimensionTypeViewModel(IContainerProvider container, MainView mainView)

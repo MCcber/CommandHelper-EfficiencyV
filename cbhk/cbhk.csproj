@@ -521,6 +521,5 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="GeneralTools\ScrollViewerHelper\" />
-    <Folder Include="Interface\Data\" />
   </ItemGroup>
 </Project>

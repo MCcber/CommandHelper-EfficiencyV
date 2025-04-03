@@ -70,13 +70,20 @@ namespace CBHK.ViewModel.Generators
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; } = [];
 
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; } = [];
-
+        public Dictionary<string, string> TranslateCustomKeyWordDictionary { get; set; } = new()
+        {
+            { "<''物品堆叠组件''>" , "#Inherit/itemnoslot" },
+            { "<''准则名称''>","#Inherit/" }
+        };
         public Dictionary<string, string> TranslateDictionary { get; set; } = new()
         {
             { "#准则|上文", "#Inherit/predicate" },
             { "#准则|下文", "#准则" },
             { "#战利品表谓词","#Inherit/predicate" },
-            { "#图例|上文","#Inherit/predicate" }
+            { "#图例|上文","#Inherit/predicate" },
+            { "#文本组件","#Inherit/text component/main" },
+            { "#文本组件内容","#Inherit/text component/content" },
+            { "#准则触发器|触发器","#准则触发器" }
         };
         public Dictionary<string, string> TranslateDefaultDictionary { get; set; } = new()
         {

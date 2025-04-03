@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControls.Interfaces;
 using CBHK.CustomControls.JsonTreeViewComponents;
-using CBHK.Interface.Json;
+using CBHK.Service.Json;
 using CBHK.Model.Common;
 using Prism.Ioc;
 using System;
@@ -369,15 +369,15 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
             #region 实例化复合节点子链表信息
             if ((parentIsList || currentIsList || currentIsCompound) && CurrentChildrenStringList.Count > 0)
             {
-                #region 提取需要分析的成员
+                #region 提取需要分析的成员(仅提取子信息而不进行源码分析)
                 if (parent is not null && parentDataType is DataType.Compound && parent.DisplayText == "Entry" && previous is not null && previous is CompoundJsonTreeViewItem previousCompoundItem && previousCompoundItem.EnumKey.Length > 0 && CurrentChildrenStringList.Count == 0)
                 {
-                    CurrentDependencyItemList = parent.Parent.ChildrenStringList;
+                    CurrentDependencyItemList = [..parent.Parent.ChildrenStringList];
                 }
 
                 if (CurrentDependencyItemList.Count == 0)
                 {
-                    CurrentDependencyItemList = CurrentChildrenStringList;
+                    CurrentDependencyItemList = [..CurrentChildrenStringList];
                 }
                 #endregion
 
@@ -411,7 +411,7 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                     }
 
                     List<string> NBTFeatureList = htmlHelper.GetHeadTypeAndKeyList(CurrentChildrenStringList[0]);
-                    NBTFeatureList = htmlHelper.RemoveUIMarker(NBTFeatureList);
+                    NBTFeatureList = HtmlHelper.RemoveUIMarker(NBTFeatureList);
 
                     if ((currentIsList || parentIsList) && NBTFeatureList.Count == 1 && NBTFeatureList[0] == "compound")
                     {
@@ -936,6 +936,16 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
             if (jsonTreeViewItem.Parent.DataType is DataType.List && jsonTreeViewItem.Parent.Children.Count == 1)
             {
                 jsonTreeViewItem.Parent.Children.Clear();
+            }
+            else
+            {
+                foreach (var item in jsonTreeViewItem.Parent.Children)
+                {
+                    if(item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.DataType is DataType.CustomCompound)
+                    {
+                        compoundJsonTreeViewItem.StartLine = jsonTreeViewItem.Parent.StartLine;
+                    }
+                }
             }
             #endregion
         }
