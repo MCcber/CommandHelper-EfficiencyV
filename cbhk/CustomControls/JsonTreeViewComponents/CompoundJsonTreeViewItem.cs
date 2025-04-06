@@ -526,7 +526,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                             else
                             {
                                 isNeedAnalyze = true;
-                                ChildrenStringList = ["{{nbt|string}}：[[" + contextMatch.Groups[1].Value + "]]"];
+                                //ChildrenStringList = ["{{nbt|string}}：[[" + contextMatch.Groups[1].Value + "]]"];
                                 targetRawStringList = [..ChildrenStringList];
                             }
                         }
@@ -534,9 +534,8 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                         if (currentValueTypeString == "list")
                         {
                             isNeedAnalyze = true;
-                            ChildrenStringList = targetRawStringList = [];
                             bracketPairString = "[]";
-                            ChildrenStringList = ["**{{nbt|compound}}：" + "[[" + contextMatch.Groups[1].Value + "]]"];
+                            //ChildrenStringList = ["**{{nbt|compound}}：" + "[[" + contextMatch.Groups[1].Value + "]]"];
                             AddOrSwitchElementButtonVisibility = Visibility.Visible;
                         }
                         else
@@ -576,9 +575,13 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     if (isNeedAnalyze)
                     {
                         #region 执行分析，获取结果
-                        JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), targetRawStringList, LayerCount + 1, "", this, null, 1, true);
-                        htmlHelper.HandlingTheTypingAppearanceOfCompositeItemList(result.Result,this);
-                        Children.AddRange(result.Result);
+                        JsonTreeViewDataStructure result = new();
+                        if (currentValueTypeString != "list")
+                        {
+                            result = htmlHelper.GetTreeViewItemResult(new(), targetRawStringList, LayerCount + 1, "", this, null, 1, true);
+                            htmlHelper.HandlingTheTypingAppearanceOfCompositeItemList(result.Result, this);
+                            Children.AddRange(result.Result);
+                        }
                         currentItemReference.IsExpanded = true;
                         #endregion
 
@@ -588,7 +591,15 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                             ResultString = result.ResultString.ToString();
                             ResultString = ResultString.TrimEnd(['\r', '\n', ',']);
                         }
-                        ResultString = (previous is not null && previous.StartLine is not null ? ',' : "") + "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\": " + bracketPairString[0] + (ResultString.Length > 0 ? "\r\n" : "") + ResultString + (ResultString.Length > 0 ? "\r\n" + new string(' ', LayerCount * 2) : "") + bracketPairString[1] + (next is not null && next.StartLine is not null ? ',' : "") + ((next is null && Parent is not null && (Parent.EndLine is null || Parent.EndLine.IsDeleted || Parent.StartLine == Parent.EndLine)) ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "");
+
+                        if (currentValueTypeString != "list")
+                        {
+                            ResultString = (previous is not null && previous.StartLine is not null ? ',' : "") + "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\": " + bracketPairString[0] + (ResultString.Length > 0 ? "\r\n" : "") + ResultString + (ResultString.Length > 0 ? "\r\n" + new string(' ', LayerCount * 2) : "") + bracketPairString[1] + (next is not null && next.StartLine is not null ? ',' : "") + ((next is null && Parent is not null && (Parent.EndLine is null || Parent.EndLine.IsDeleted || Parent.StartLine == Parent.EndLine)) ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "");
+                        }
+                        else
+                        {
+                            ResultString = (previous is not null && previous.StartLine is not null ? ',' : "") + "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\": " + bracketPairString + (next is not null && next.StartLine is not null ? ',' : "") + ((next is null && Parent is not null && (Parent.EndLine is null || Parent.EndLine.IsDeleted || Parent.StartLine == Parent.EndLine)) ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "");
+                        }
                         if (offset > 0 && ResultString.Length > 0)
                         {
                             Plan.SetRangeText(offset, 0, ResultString);

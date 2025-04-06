@@ -607,7 +607,7 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                     {
                         if (previous is not null)
                         {
-                            if (previousCompound.EndLine is not null)
+                            if (previousCompound is not null && previousCompound.EndLine is not null)
                             {
                                 compoundJsonTreeViewItem.StartLine = previousCompound.EndLine.NextLine;
                             }

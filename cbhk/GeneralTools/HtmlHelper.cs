@@ -13,7 +13,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Input;
 using static CBHK.Model.Common.Enums;
 
 namespace CBHK.GeneralTools
@@ -1026,9 +1025,12 @@ namespace CBHK.GeneralTools
                             {
                                 CurrentCompoundItem.ChildrenStringList.Add(nodeList[i]);
                                 HandlingTheTypingAppearanceOfCompositeItemList([CurrentCompoundItem],null);
-                                CompoundJsonTreeViewItem subCompoundItem = CurrentCompoundItem.Children[0] as CompoundJsonTreeViewItem;
-                                CurrentCompoundItem.Children.Clear();
-                                item = CurrentCompoundItem = subCompoundItem;
+                                if (CurrentCompoundItem.Children.Count > 0)
+                                {
+                                    CompoundJsonTreeViewItem subCompoundItem = CurrentCompoundItem.Children[0] as CompoundJsonTreeViewItem;
+                                    CurrentCompoundItem.Children.Clear();
+                                    item = CurrentCompoundItem = subCompoundItem;
+                                }
                                 if(CurrentCompoundItem.EnumKey.Length > 0)
                                 {
                                     result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"");
