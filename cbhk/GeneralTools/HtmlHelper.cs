@@ -568,10 +568,13 @@ namespace CBHK.GeneralTools
                     {
                         nodeList.RemoveAt(i);
                         nodeList.InsertRange(i, [..targetInheritList]);
-                        currentContextNextIndex = i + targetInheritList.Count;
-                        nodeList.RemoveAt(0);
+                        if (targetInheritList.FirstOrDefault().Contains(parent.Key))
+                        {
+                            nodeList.RemoveAt(0);
+                        }
                         NBTFeatureList = GetHeadTypeAndKeyList(nodeList[i]);
                         NBTFeatureList = RemoveUIMarker(NBTFeatureList);
+                        currentContextNextIndex = i + targetInheritList.Count;
                     }
 
                     if (contextMatch.Success && parent is not null && i >= currentContextNextIndex)
@@ -1178,6 +1181,10 @@ namespace CBHK.GeneralTools
                                 }
 
                                 string setString = CurrentCompoundItem.SelectedEnumItem.Text.Trim() != "- unset -" ? CurrentCompoundItem.SelectedEnumItem.Text :"";
+                                if(currentContextNextIndex > i && setString.Length == 0)
+                                {
+                                    setString = CurrentCompoundItem.EnumItemsSource[1].Text;
+                                }
                                 if (!CurrentCompoundItem.IsCanBeDefaulted)
                                 {
                                     result.ResultString.Append(new string(' ', layerCount * 2) +
@@ -1206,7 +1213,7 @@ namespace CBHK.GeneralTools
                             CurrentCompoundItem.Key = currentReferenceKey;
                         }
                         //检测到需要处理的枚举符合类型的固定内容
-                        if (contextMatch.Success && i >= currentContextNextIndex)
+                        if (contextMatch.Success && i >= currentContextNextIndex && currentContextNextIndex > 0)
                         {
                             currentContextNextIndex = 0;
                             string currentContextMatchString = '#' + contextMatch.Groups[1].Value;
@@ -1414,6 +1421,24 @@ namespace CBHK.GeneralTools
                 previousStarCount = starCount;
                 #endregion
             }
+
+            #region 如果父节点类型为列表，则将当前计算结果放入对象节点中
+            if (parent is not null && (parent.DataType is DataType.List || (parent.DataType is DataType.MultiType && parent.SelectedValueType is not null && parent.SelectedValueType.Text == "List")))
+            {
+                CompoundJsonTreeViewItem entry = new(plan, jsonTool, _container)
+                {
+                    DataType = DataType.Compound,
+                    RemoveElementButtonVisibility = Visibility.Visible,
+                    DisplayText = "Entry",
+                    LayerCount = parent.LayerCount + 1,
+                    Parent = parent
+                };
+                entry.Children.AddRange([.. result.Result]);
+                result.ResultString.Insert(0, new string(' ', parent.LayerCount + 1) + "{\r\n").Append("\r\n" + new string(' ', parent.LayerCount + 1) + '}');
+                result.Result.Clear();
+                result.Result.Add(entry);
+            }
+            #endregion
 
             return result;
         }

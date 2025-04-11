@@ -571,6 +571,10 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
             Value ??= "";
             string currentValue = Value.ToString();
             int offset = 0, length = 0;
+            if(StartLine is not null && StartLine.IsDeleted)
+            {
+                StartLine = null;
+            }
             if (StartLine is not null)
             {
                 offset = StartLine.Offset;
@@ -632,7 +636,14 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                 if (topLine is null)
                 {
                     string currentLineText = Plan.GetRangeText(StartLine.Offset, StartLine.Length);
-                    offset = StartLine.Offset + currentLineText.IndexOf(':') + 2;
+                    if (currentLineText.Contains(':'))
+                    {
+                        offset = StartLine.Offset + currentLineText.IndexOf(':') + 2;
+                    }
+                    else
+                    {
+                        offset = StartLine.Offset + currentLineText.Length - currentLineText.TrimStart().Length;
+                    }
                     length = StartLine.EndOffset - (IsCanBeDefaulted || currentLineText.TrimEnd().EndsWith(',') ? 1 : 0) - offset;
                 }
                 else
@@ -654,7 +665,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     }
                 }
                 string newValue = "";
-                if (changeType is ChangeType.String || originDataType is DataType.String || (Parent is not null && Parent.DisplayText == "Entry"))
+                if ((changeType is ChangeType.String && !IsCanBeDefaulted) || originDataType is DataType.String || (Parent is not null && Parent.DisplayText == "Entry"))
                 {
                     newValue = "\"\"";
                 }
@@ -703,6 +714,10 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
             if (window.DataContext is ICustomWorldUnifiedPlan customWorldUnifiedPlan)
             {
                 string currentValue = ((bool)Value).ToString().ToLower();
+                if(StartLine is not null && StartLine.IsDeleted)
+                {
+                    StartLine = null;
+                }
                 if (!IsFalse && !IsTrue)
                 {
                     int offset = StartLine.Offset, length = StartLine.Length;
@@ -756,7 +771,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     #region 更新编辑器、设置父节点行引用
                     customWorldUnifiedPlan.SetRangeText(offset, length, "");
 
-                    if ((previous is null && next is null) || ((previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null)))
+                    if ((previous is null && next is null) || (previous is not null && previous.StartLine is null && next is not null && next.StartLine is null))
                     {
                         Parent.EndLine = Parent.StartLine;
                     }

@@ -197,15 +197,23 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
         /// </summary>
         private void ClearCurrentSubItem(CompoundJsonTreeViewItem parent)
         {
-            JsonTreeViewItem lastItem = JsonItemTool.SearchForTheLastItemWithRowReference(parent);
-
             #region 移除切换前的节点
+            JsonTreeViewItem lastItem = null;
+            int count = EnumItemCount > -1 ? EnumItemCount : 0;
+            for (int i = EnumItemCount; i >= 0; i--)
+            {
+                if(parent.Children[i].StartLine is not null)
+                {
+                    lastItem = parent.Children[i];
+                    break;
+                }
+            }
             int index = parent.Children.IndexOf(this) + 1;
             if (EnumItemCount > 0)
             {
-                for (int i = index; i < EnumItemCount; i++)
+                for (int i = index; i <= EnumItemCount; i++)
                 {
-                    parent.Children.RemoveAt(i);
+                    parent.Children.RemoveAt(1);
                 }
             }
             else
@@ -222,16 +230,17 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
             {
                 int length = 0;
                 string firstChildItemText = parent.Plan.GetRangeText(parent.Children[0].StartLine.Offset, parent.Children[0].StartLine.Length);
-                int minusOffset = firstChildItemText.TrimEnd().EndsWith(',') ? 1 : 0;
+                int minusOffset = firstChildItemText.TrimEnd().EndsWith(',') && (lastItem.Next is null || (lastItem.Next is not null && lastItem.Next.StartLine is null)) ? 1 : 0;
+                int offset = parent.Children[0].StartLine.EndOffset - minusOffset;
                 if (lastItem is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
                 {
-                    length = lastCompoundItem.EndLine.EndOffset - (parent.Children[0].StartLine.EndOffset - minusOffset);
+                    length = lastCompoundItem.EndLine.EndOffset - offset;
                 }
                 else
                 {
-                    length = lastItem.StartLine.EndOffset - (parent.Children[0].StartLine.EndOffset - minusOffset);
+                    length = lastItem.StartLine.EndOffset - offset;
                 }
-                Plan.SetRangeText(parent.Children[0].StartLine.EndOffset - minusOffset, length, "");
+                Plan.SetRangeText(offset, length, "");
             }
             #endregion
         }
@@ -266,18 +275,18 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
 
                 #region 将当前文本值清除，处理子节点
                 Children.Clear();
-                if (isCompoundType && StartLine != EndLine && EndLine is not null)
+                if (isCompoundType && StartLine != EndLine && EndLine is not null && !EndLine.IsDeleted)
                 {
                     string endlLineText = Plan.GetRangeText(EndLine.Offset,EndLine.Length);
-                    int startBracketOffset = startLineText.IndexOf('{') + 1;
-                    int endBracketOffset = endlLineText.IndexOf('}');
+                    int startBracketOffset = startLineText.IndexOf('{');
+                    int endBracketOffset = endlLineText.IndexOf('}') + 1;
                     if(startBracketOffset == 0)
                     {
                         startBracketOffset = startLineText.IndexOf('[') + 1;
                     }
-                    if(endBracketOffset == -1)
+                    if(endBracketOffset == 0)
                     {
-                        endBracketOffset = endlLineText.IndexOf(']');
+                        endBracketOffset = endlLineText.IndexOf(']') + 1;
                     }
                     offset = StartLine.Offset + startBracketOffset;
                     length = EndLine.Offset + endBracketOffset - offset;
@@ -347,7 +356,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                 {
                     offset = StartLine.Offset + startLineText.IndexOf(':') + 2;
                 }
-                if(EndLine is null && StartLine is not null && !StartLine.IsDeleted)
+                if((EndLine is null || (EndLine is not null && EndLine.IsDeleted)) && StartLine is not null && !StartLine.IsDeleted)
                 {
                     if(startLineText.TrimEnd().EndsWith(','))
                     {
@@ -887,14 +896,27 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     {
                         targetRawListTemp.RemoveAt(0);
                     }
-                    JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), targetRawListTemp, LayerCount, "", this);
+                    JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), targetRawListTemp, LayerCount, "", this, null, 1, true);
+                    int index = 1;
                     EnumItemCount = result.Result.Count;
-                    Parent.Children.AddRange(result.Result);
+                    for (int i = 0; i < result.Result.Count; i++)
+                    {
+                        Parent.Children.Insert(index, result.Result[i]);
+                        index++;
+                    }
 
                     if (result.Result.Count > 0)
                     {
                         result.Result[0].Previous = this;
                         Next = result.Result[0];
+                    }
+
+                    while (result.ResultString[^1] == '\r' ||
+                        result.ResultString[^1] == '\n' ||
+                        result.ResultString[^1] == ',' ||
+                        result.ResultString[^1] == ' ')
+                    {
+                        result.ResultString.Length--;
                     }
 
                     Plan.SetRangeText(StartLine.EndOffset, 0, result.ResultString.Length > 0 ? ",\r\n" + result.ResultString.ToString() : "");
@@ -963,7 +985,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     if (FilteredRawList.Count > 0)
                     {
 
-                        JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), FilteredRawList, LayerCount);
+                        JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), FilteredRawList, LayerCount, "", this, null, 1, true);
                         Parent.Children.AddRange(result.Result);
 
                         if (result.Result.Count > 0)
@@ -1008,12 +1030,12 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
         /// <param name="e"></param>
         public void SwitchCompoundState_Click(object sender, RoutedEventArgs e)
         {
-            if (DataType is not DataType.None && DataType is not DataType.CustomCompound && DataType is not DataType.List)
+            if (DataType is not DataType.None && DataType is not DataType.CustomCompound && DataType is not DataType.List && (DataType is not DataType.MultiType || (DataType is DataType.MultiType && SelectedValueType is not null && SelectedValueType.Text != "List")))
             {
                 IsCurrentExpanded = !IsCurrentExpanded;
             }
 
-            if (IsCurrentExpanded || DataType is DataType.CustomCompound || DataType is DataType.Array || DataType is DataType.List || (Parent is not null && Parent.DataType is DataType.List))
+            if (IsCurrentExpanded || DataType is DataType.CustomCompound || DataType is DataType.Array || DataType is DataType.List || (Parent is not null && Parent.DataType is DataType.List) || (DataType is DataType.MultiType && SelectedValueType is not null && SelectedValueType.Text == "List"))
             {
                 if (currentItemReference is not null)
                 {
@@ -1026,8 +1048,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                 {
                     Value = "";
                 }
-
-                if (DataType is not DataType.CustomCompound && DataType is not DataType.None && DataType is not DataType.List)
+                if (DataType is not DataType.CustomCompound && DataType is not DataType.None && DataType is not DataType.List && (DataType is not DataType.MultiType || (DataType is DataType.MultiType && SelectedValueType is not null && SelectedValueType.Text != "List")))
                 {
                     ElementButtonTip = "折叠";
                     PressedSwitchButtonColor = PressedMinusColor;

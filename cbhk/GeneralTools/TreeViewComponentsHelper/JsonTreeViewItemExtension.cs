@@ -349,16 +349,21 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                     else
                     if(plan.TranslateDictionary.TryGetValue(currentKey,out string targetKey))
                     {
-                        if (plan.EnumIDDictionary.TryGetValue(targetKey, out List<string> targetList2))
+                        if(plan.DependencyItemList.TryGetValue(targetKey,out List<string> targetList2))
                         {
                             CurrentChildrenStringList = targetList2;
                         }
                         else
-                        if(plan.EnumCompoundDataDictionary.TryGetValue(targetKey,out Dictionary<string,List<string>> targetDictionary))
+                        if (plan.EnumIDDictionary.TryGetValue(targetKey, out List<string> targetList3))
                         {
-                            if(((compoundJsonTreeViewItem.SelectedValueType is not null && compoundJsonTreeViewItem.SelectedValueType.Text == "Compound") || (compoundJsonTreeViewItem.SelectedEnumItem is not null && compoundJsonTreeViewItem.SelectedEnumItem.Text == "Compound")) && plan.TranslateDefaultDictionary.TryGetValue(targetKey,out string targetEnumKey) && targetDictionary.TryGetValue(targetEnumKey,out List<string> targetList3))
+                            CurrentChildrenStringList = targetList3;
+                        }
+                        else
+                        if (plan.EnumCompoundDataDictionary.TryGetValue(targetKey, out Dictionary<string, List<string>> targetDictionary))
+                        {
+                            if (((compoundJsonTreeViewItem.SelectedValueType is not null && compoundJsonTreeViewItem.SelectedValueType.Text == "Compound") || (compoundJsonTreeViewItem.SelectedEnumItem is not null && compoundJsonTreeViewItem.SelectedEnumItem.Text == "Compound")) && plan.TranslateDefaultDictionary.TryGetValue(targetKey, out string targetEnumKey) && targetDictionary.TryGetValue(targetEnumKey, out List<string> targetList4))
                             {
-                                CurrentChildrenStringList = targetList3[1..];
+                                CurrentChildrenStringList = targetList4[1..];
                             }
                         }
                     }
@@ -382,7 +387,19 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                 #endregion
 
                 #region 执行解析
-                result = htmlHelper.GetTreeViewItemResult(new(), CurrentDependencyItemList, compoundJsonTreeViewItem.LayerCount + 1, (string)compoundJsonTreeViewItem.Value, currentDataType is not DataType.None ? compoundJsonTreeViewItem : parent, null, 1, true);
+                string currentReferenceString = compoundJsonTreeViewItem.DataType is DataType.CustomCompound ? compoundJsonTreeViewItem.Value + "" : "";
+                List<string> NBTFeatureList = htmlHelper.GetHeadTypeAndKeyList(CurrentDependencyItemList[0]);
+                int extraLayerCount = (compoundJsonTreeViewItem.DataType is DataType.List || (compoundJsonTreeViewItem.DataType is DataType.MultiType && compoundJsonTreeViewItem.SelectedValueType is not null && compoundJsonTreeViewItem.SelectedValueType.Text == "List")) && NBTFeatureList.Contains("compound") ? 2 : 1;
+                result = htmlHelper.GetTreeViewItemResult(new(), CurrentDependencyItemList, compoundJsonTreeViewItem.LayerCount + extraLayerCount, currentReferenceString, currentDataType is not DataType.None ? compoundJsonTreeViewItem : parent, null, 1, true);
+
+                while (result.ResultString.Length > 0 &&
+                    (result.ResultString[^1] == ',' ||
+                     result.ResultString[^1] == ' ' ||
+                     result.ResultString[^1] == '\r' ||
+                     result.ResultString[^1] == '\n'))
+                {
+                    result.ResultString.Length--;
+                }
                 #endregion
 
                 #region 添加当前节点的子节点集
@@ -410,10 +427,10 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                         });
                     }
 
-                    List<string> NBTFeatureList = htmlHelper.GetHeadTypeAndKeyList(CurrentChildrenStringList[0]);
+                    NBTFeatureList = htmlHelper.GetHeadTypeAndKeyList(CurrentChildrenStringList[0]);
                     NBTFeatureList = HtmlHelper.RemoveUIMarker(NBTFeatureList);
 
-                    if ((currentIsList || parentIsList) && NBTFeatureList.Count == 1 && NBTFeatureList[0] == "compound")
+                    if ((currentIsList || parentIsList) && ((compoundJsonTreeViewItem.DataType is DataType.MultiType && compoundJsonTreeViewItem.SelectedValueType is not null && compoundJsonTreeViewItem.SelectedValueType.Text == "List") || (NBTFeatureList.Count == 1 && NBTFeatureList[0] == "compound")))
                     {
                         CompoundJsonTreeViewItem entry = new(compoundJsonTreeViewItem.Plan, compoundJsonTreeViewItem.JsonItemTool, _container)
                         {
@@ -433,13 +450,13 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                         {
                             parent.Children.Insert(parent.Children.Count - 1, entry);
                         }
-                        entry.Children.Add(result.Result[0]);
+                        entry.Children.AddRange(result.Result);
                         SetLayerCountForEachItem(entry.Children, entry.LayerCount + 1);
                         SetParentForEachItem(entry.Children, entry);
 
-                        if ((currentDataType is not DataType.None && compoundJsonTreeViewItem.StartLine is not null && compoundJsonTreeViewItem.EndLine is not null && !compoundJsonTreeViewItem.EndLine.IsDeleted) || (addParentListStructure && parent.StartLine is not null && parent.EndLine is not null && !parent.EndLine.IsDeleted))
+                        if ((addListStructure && compoundJsonTreeViewItem.StartLine is not null && compoundJsonTreeViewItem.EndLine is not null && !compoundJsonTreeViewItem.EndLine.IsDeleted) || (addParentListStructure && parent.StartLine is not null && parent.EndLine is not null && !parent.EndLine.IsDeleted))
                         {
-                            result.ResultString.Insert(0, new string(' ', (compoundJsonTreeViewItem.LayerCount + 1) * 2) + entryStartBracket + "\r\n  ").Append("\r\n" + new string(' ', (compoundJsonTreeViewItem.LayerCount + 1) * 2) + entryEndBracket);
+                            result.ResultString.Insert(0, new string(' ', (compoundJsonTreeViewItem.LayerCount + 1) * 2) + entryStartBracket + "\r\n").Append("\r\n" + new string(' ', (compoundJsonTreeViewItem.LayerCount + 1) * 2) + entryEndBracket);
                         }
                     }
                     else
@@ -463,7 +480,7 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                 #region 显示换位按钮
                 if (currentIsList && compoundJsonTreeViewItem.Children.Count > 2)
                 {
-                    result.Result[0].SortButtonVisibility = Visibility.Visible;
+                     compoundJsonTreeViewItem.Children[0].SortButtonVisibility = Visibility.Visible;
                     if (compoundJsonTreeViewItem.Children.Count == 3)
                     {
                         compoundJsonTreeViewItem.Children[^2].SortButtonVisibility = Visibility.Visible;
@@ -772,6 +789,15 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                     if (subItem is not null)
                     {
                         result.Result[0].Parent.EndLine = subItem.StartLine.NextLine;
+                    }
+                }
+                else
+                if(compoundJsonTreeViewItem.DataType is DataType.List || (compoundJsonTreeViewItem.DataType is DataType.MultiType && compoundJsonTreeViewItem.SelectedValueType is not null && compoundJsonTreeViewItem.SelectedValueType.Text == "List"))
+                {
+                    JsonTreeViewItem subItem = SearchForTheLastItemWithRowReference(compoundJsonTreeViewItem);
+                    if (subItem is CompoundJsonTreeViewItem lastChildItem && lastChildItem.EndLine is not null)
+                    {
+                        
                     }
                 }
                 #endregion
