@@ -73,7 +73,7 @@ namespace CBHK.ViewModel.Generators
         public Dictionary<string, string> TranslateCustomKeyWordDictionary { get; set; } = new()
         {
             { "<''物品堆叠组件''>" , "#Inherit/itemnoslot" },
-            { "<''准则名称''>","#Inherit/" }
+            { "<''准则名称''>","#准则触发器|触发器" }
         };
         public Dictionary<string, string> TranslateDictionary { get; set; } = new()
         {

@@ -666,16 +666,6 @@ namespace CBHK.GeneralTools
                 {
                     continue;
                 }
-
-                //if (!nodeList[i].Contains('{'))
-                //{
-                //    if (result.ResultString.ToString().TrimEnd(['\r', '\n']).EndsWith(','))
-                //    {
-                //        int index = result.ResultString.ToString().LastIndexOf(',');
-                //        result.ResultString.Remove(result.ResultString.Length - 5, 1);
-                //    }
-                //    continue;
-                //}
                 #endregion
 
                 #region 获取当前行星号数量
@@ -1066,25 +1056,9 @@ namespace CBHK.GeneralTools
                                 CurrentCompoundItem.PressedSwitchButtonColor = CurrentCompoundItem.PressedPlusColor;
                             }
                         }
-                        if (currentNodeDataType == "compound" && NBTFeatureList.Count > 1)
+                        if (currentNodeDataType == "compound" && NBTFeatureList.Count > 1 && IsCurrentOptionalNode)
                         {
-                            if (IsCurrentOptionalNode)
-                            {
-                                CurrentCompoundItem.DataType = DataType.OptionalCompound;
-                            }
-
-                            if (currentNodeKey.Contains('\''))
-                            {
-                                IsCurrentOptionalNode = false;
-                                CurrentCompoundItem.DataType = DataType.Compound;
-                                CurrentCompoundItem.IsCanBeDefaulted = false;
-                                CurrentCompoundItem.Key = CurrentCompoundItem.DisplayText = currentReferenceKey;
-                                if(CurrentCompoundItem.Key.Length == 0 && parent.DataType is DataType.CustomCompound)
-                                {
-                                    CurrentCompoundItem.Key = "\"\"";
-                                }
-                                CurrentCompoundItem.RemoveElementButtonVisibility = Visibility.Visible;
-                            }
+                            CurrentCompoundItem.DataType = DataType.OptionalCompound;
                         }
                         else
                         if (currentNodeDataType == "list")
@@ -1210,14 +1184,15 @@ namespace CBHK.GeneralTools
                         #region 处理CustomCompound
                         if (plan.TranslateCustomKeyWordDictionary.TryGetValue(currentNodeKey, out string targetKey) && isHaveExtraField && currentReferenceKey.Length > 0)
                         {
-                            CurrentCompoundItem.Key = currentReferenceKey;
+                            CurrentCompoundItem.DataType = DataType.CustomCompound;
+                            CurrentCompoundItem.AddOrSwitchElementButtonVisibility = Visibility.Collapsed;
+                            CurrentCompoundItem.IsCanBeDefaulted = false;
                         }
                         //检测到需要处理的枚举符合类型的固定内容
-                        if (contextMatch.Success && i >= currentContextNextIndex && currentContextNextIndex > 0)
+                        if (targetKey is not null && targetKey.Length > 0 && i >= currentContextNextIndex)
                         {
                             currentContextNextIndex = 0;
-                            string currentContextMatchString = '#' + contextMatch.Groups[1].Value;
-                            if (plan.TranslateDictionary.TryGetValue(currentContextMatchString, out targetKey))
+                            if (plan.TranslateDictionary.TryGetValue(targetKey, out targetKey))
                             {
                                 if (plan.DependencyItemList.TryGetValue(targetKey, out List<string> targetList))
                                 {
@@ -1225,20 +1200,38 @@ namespace CBHK.GeneralTools
                                     nodeList.InsertRange(i, list);
                                 }
                                 else
-                                if (plan.EnumCompoundDataDictionary.TryGetValue(targetKey, out Dictionary<string, List<string>> targetEnumList) && isHaveExtraField)
+                                if (plan.EnumCompoundDataDictionary.TryGetValue(targetKey, out Dictionary<string, List<string>> targetEnumDictionary) && isHaveExtraField)
                                 {
-                                    CurrentCompoundItem.IsCanBeDefaulted = false;
-                                    result.ResultString.Append(new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"");
-                                    result.Result.Add(CurrentCompoundItem);
+                                    CompoundJsonTreeViewItem referenceKeyItem = new(plan, jsonTool, _container)
+                                    {
+                                        RemoveElementButtonVisibility = Visibility.Visible,
+                                        Key = currentReferenceKey,
+                                        DisplayText = currentReferenceKey,
+                                        LayerCount = layerCount,
+                                        DataType = DataType.Compound,
+                                        EnumItemsSource = []
+                                    };
+                                    List<string> subFeatureList = GetHeadTypeAndKeyList(nodeList[i + 1]);
+                                    subFeatureList = RemoveUIMarker(subFeatureList);
+                                    CurrentCompoundItem.Key = subFeatureList[^1];
+                                    CurrentCompoundItem.DisplayText = string.Join(' ', CurrentCompoundItem.Key.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..]));
+                                    CurrentCompoundItem.LayerCount = layerCount + 1;
                                     CurrentCompoundItem.EnumKey = targetKey;
                                     CurrentCompoundItem.EnumBoxVisibility = Visibility.Visible;
-                                    CurrentCompoundItem.EnumItemsSource.AddRange(targetEnumList.Keys.Select(item =>
+                                    CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                    CurrentCompoundItem.EnumItemsSource.AddRange(targetEnumDictionary.Keys.Select(item =>
                                     {
                                         return new TextComboBoxItem()
                                         {
                                             Text = item
                                         };
                                     }));
+                                    result.ResultString.Clear();
+                                    result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentReferenceKey + "\":{\r\n" + new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"\r\n" + new string(' ', layerCount * 2) + "}");
+                                    CurrentCompoundItem.Parent = referenceKeyItem;
+                                    referenceKeyItem.Children.Add(CurrentCompoundItem);
+                                    result.Result.Add(referenceKeyItem);
+                                    CurrentCompoundItem.SelectedEnumItem = CurrentCompoundItem.EnumItemsSource.FirstOrDefault();
                                     return result;
                                 }
                             }

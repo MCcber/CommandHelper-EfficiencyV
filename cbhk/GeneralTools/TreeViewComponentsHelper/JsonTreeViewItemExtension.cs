@@ -125,7 +125,7 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                 }
                 if (list[i] is CompoundJsonTreeViewItem subCompoundItem2)
                 {
-                    if (subCompoundItem2.Children.Count > 0 && (subCompoundItem2.Children[^1] is CompoundJsonTreeViewItem subsubCompoundItem && subsubCompoundItem.DataType is not DataType.CustomCompound || subCompoundItem2.Children[^1] is not CompoundJsonTreeViewItem))
+                    if (subCompoundItem2.Children.Count > 0/* && (subCompoundItem2.Children[^1] is CompoundJsonTreeViewItem subsubCompoundItem && subsubCompoundItem.DataType is not DataType.CustomCompound || subCompoundItem2.Children[^1] is not CompoundJsonTreeViewItem)*/)
                     {
                         SetLineNumbersForEachItem(subCompoundItem2.Children, subCompoundItem2);
                         JsonTreeViewItem subItem = SearchForTheLastItemWithRowReference(subCompoundItem2);
