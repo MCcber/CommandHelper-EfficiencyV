@@ -25,10 +25,6 @@ namespace CBHK.CustomControls.Interfaces
         /// </summary>
         public List<string> DependencyDirectoryList { get; set; }
         /// <summary>
-        /// 将特定关键字转换为目标上下文关键字
-        /// </summary>
-        public Dictionary<string,string> TranslateCustomKeyWordDictionary { get; set; }
-        /// <summary>
         /// 将上下文中的引用转换为正确的路径
         /// </summary>
         public Dictionary<string,string> TranslateDictionary { get; set; }

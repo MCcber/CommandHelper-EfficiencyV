@@ -70,11 +70,6 @@ namespace CBHK.ViewModel.Generators
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; } = [];
 
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; } = [];
-        public Dictionary<string, string> TranslateCustomKeyWordDictionary { get; set; } = new()
-        {
-            { "<''物品堆叠组件''>" , "#Inherit/itemnoslot" },
-            { "<''准则名称''>","#准则触发器|触发器" }
-        };
         public Dictionary<string, string> TranslateDictionary { get; set; } = new()
         {
             { "#准则|上文", "#Inherit/predicate" },
@@ -83,7 +78,9 @@ namespace CBHK.ViewModel.Generators
             { "#图例|上文","#Inherit/predicate" },
             { "#文本组件","#Inherit/text component/main" },
             { "#文本组件内容","#Inherit/text component/content" },
-            { "#准则触发器|触发器","#准则触发器" }
+            { "#准则触发器|触发器","#准则触发器" },
+            { "<''物品堆叠组件''>" , "#Inherit/itemnoslot" },
+            { "<''准则名称''>","#准则触发器|触发器" }
         };
         public Dictionary<string, string> TranslateDefaultDictionary { get; set; } = new()
         {
@@ -324,6 +321,12 @@ namespace CBHK.ViewModel.Generators
                 IsCurrentNull = true;
                 startDocumentLine = item.Plan.GetLineByNumber(2);
             }
+            //else
+            //    if(item is CompoundJsonTreeViewItem compoundJsonTreeViewItem1 && compoundJsonTreeViewItem1.StartLine == compoundJsonTreeViewItem1.EndLine)
+            //{
+            //    IsCurrentNull = true;
+            //    startDocumentLine = item.Plan.GetLineByNumber(item.StartLine.LineNumber);
+            //}
             #endregion
 
             startLineText = textEditor.Document.GetText(startDocumentLine);
@@ -491,20 +494,25 @@ namespace CBHK.ViewModel.Generators
             else
             {
                 int lastOffset = 0;
-                if (previous is not null && previous.StartLine is not null)
+
+                if (item.StartLine is null)
                 {
-                    lastOffset = startLineText.LastIndexOf(',') + 1;
-                }
-                else
-                if(parent is not null && parent.StartLine is not null)
-                {
-                    lastOffset = GetRangeText(parent.StartLine.Offset, parent.StartLine.Length).IndexOf(':') + 3;
-                    if(lastOffset == 0)
+                    if (previous is not null && previous.StartLine is not null)
                     {
-                        lastOffset = GetRangeText(parent.StartLine.Offset, parent.StartLine.EndOffset - parent.StartLine.Offset).IndexOf('[') + 1;
+                        lastOffset = startLineText.LastIndexOf(',') + 1;
+                    }
+                    else
+                    if (parent is not null && parent.StartLine is not null)
+                    {
+                        lastOffset = GetRangeText(parent.StartLine.Offset, parent.StartLine.Length).IndexOf(':') + 3;
                     }
                 }
-                if(lastOffset == 0)
+                else
+                {
+                    lastOffset = startLineText.IndexOf('"');
+                }
+
+                if (lastOffset == 0)
                 {
                     offset = startDocumentLine.EndOffset;
                 }
@@ -512,36 +520,14 @@ namespace CBHK.ViewModel.Generators
                 {
                     offset = startDocumentLine.Offset + lastOffset;
                 }
-
-                if (item.DisplayText != "Entry")
-                {
-                    newValue = (previous is not null && previous.StartLine is not null && ((next is not null && next.StartLine is null) || next is null) ? "," : "") + "\r\n" + new string(' ', item.LayerCount * 2) + "\"" + item.Key + "\": " + newValue + (next is not null && next.StartLine is not null ? "," : "") + (parent is not null && parent.StartLine == parent.EndLine ? "\r\n" + new string(' ', parent.LayerCount * 2) : "");
-                }
-                else
-                {
-                    if(previousCompound is not null && previousCompound.EndLine is not null)
-                    {
-                        startDocumentLine = previousCompound.EndLine.NextLine;
-                    }
-                    else
-                    if(previous is not null && previous.StartLine is not null)
-                    {
-                        startDocumentLine = previous.StartLine.NextLine;
-                    }
-                    else
-                    {
-                        startDocumentLine = parent.StartLine.NextLine;
-                    }
-                    startLineText = GetRangeText(startDocumentLine.Offset,startDocumentLine.Length);
-                    offset = startDocumentLine.Offset + startLineText.IndexOf('"');
-                    length = startDocumentLine.Offset + startLineText.LastIndexOf('"') + 1 - offset;
-                }
             }
             #endregion
 
             #region 计算好偏移量和替换长度后执行替换
             if (offset >= 0 || length > -1)
-                textEditor.Document.Replace(offset, length, newValue);
+            {
+                SetRangeText(offset, length, newValue);
+            }
             #endregion
 
             #region 设置可选节点的行引用
