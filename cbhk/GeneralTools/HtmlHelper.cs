@@ -1037,7 +1037,11 @@ namespace CBHK.GeneralTools
                                     CurrentCompoundItem.Children.Clear();
                                     item = CurrentCompoundItem = subCompoundItem;
                                 }
-                                if(CurrentCompoundItem.EnumKey.Length > 0)
+                                else
+                                {
+                                    CurrentCompoundItem.ChildrenStringList.Clear();
+                                }
+                                if (CurrentCompoundItem.EnumKey.Length > 0)
                                 {
                                     result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"");
                                 }
@@ -1183,6 +1187,7 @@ namespace CBHK.GeneralTools
                         if(IsPreIdentifiedAsEnumCompoundType)
                         {
                             IsPreIdentifiedAsEnumCompoundType = false;
+                            CurrentCompoundItem.RemoveElementButtonVisibility = Visibility.Collapsed;
                             CurrentCompoundItem.EnumItemsSource.Clear();
                             CurrentCompoundItem.EnumItemCount = EnumItemCount;
                             EnumItemCount = 0;
@@ -1429,9 +1434,9 @@ namespace CBHK.GeneralTools
             }
 
             #region 如果父节点类型为列表，则将当前计算结果放入对象节点中
-            List<string> FirstFeatureList = GetHeadTypeAndKeyList(nodeList.FirstOrDefault());
-            FirstFeatureList = RemoveUIMarker(FirstFeatureList);
-            if (parent is not null && (parent.DataType is DataType.List || (parent.DataType is DataType.MultiType && parent.SelectedValueType is not null && parent.SelectedValueType.Text == "List")) && FirstFeatureList.Contains("compound"))
+            //List<string> FirstFeatureList = GetHeadTypeAndKeyList(nodeList.FirstOrDefault());
+            //FirstFeatureList = RemoveUIMarker(FirstFeatureList);
+            if (parent is not null && (parent.DataType is DataType.List || (parent.DataType is DataType.MultiType && parent.SelectedValueType is not null && parent.SelectedValueType.Text == "List"))/* && FirstFeatureList.Contains("compound")*/)
             {
                 CompoundJsonTreeViewItem entry = new(plan, jsonTool, _container)
                 {

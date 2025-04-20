@@ -9,7 +9,6 @@ using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Windows;
 using static CBHK.Model.Common.Enums;
-using System.Linq;
 
 namespace CBHK.GeneralTools.TreeViewComponentsHelper
 {
