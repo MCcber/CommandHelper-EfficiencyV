@@ -213,7 +213,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
             int index = parent.Children.IndexOf(this) + 1;
             if (EnumItemCount > 0)
             {
-                for (int i = index; i <= EnumItemCount; i++)
+                for (int i = index; i < EnumItemCount && i < parent.Children.Count; i++)
                 {
                     parent.Children.RemoveAt(1);
                 }
