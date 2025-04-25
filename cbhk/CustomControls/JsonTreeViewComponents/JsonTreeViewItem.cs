@@ -6,6 +6,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.TextFormatting;
 using static CBHK.Model.Common.Enums;
 
 namespace CBHK.CustomControls.JsonTreeViewComponents
@@ -36,7 +37,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
         /// <summary>
         /// 键作用提示
         /// </summary>
-        public string InfoTiptext
+        public string InfoTipText
         {
             get => infoTiptext;
             set
@@ -746,6 +747,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                         offset = PreviousCompoundItem.EndLine.EndOffset;
                     }
                     else
+                    if(previous.StartLine is not null)
                     {
                         offset = previous.StartLine.EndOffset;
                     }
@@ -766,12 +768,11 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     }
                     else
                     {
-                        char lastChar = Parent.DataType is not DataType.Array ? '}' : ']';
                         string parentEndlineText = Plan.GetRangeText(Parent.EndLine.Offset, Parent.EndLine.Length);
-                        int lastOffset = parentEndlineText.LastIndexOf(',') + 1;
+                        int lastOffset = parentEndlineText.LastIndexOf('}');
                         if (lastOffset == 0)
                         {
-                            lastOffset = parentEndlineText.LastIndexOf(lastChar);
+                            lastOffset = parentEndlineText.LastIndexOf(']');
                         }
                         length = Parent.EndLine.Offset + lastOffset - offset;
                     }
@@ -781,12 +782,16 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                 #region 更新编辑器、设置父节点行引用
                 Plan.SetRangeText(offset, length, "");
 
-                if ((previous is null && next is null) || (previous is not null && previous.StartLine is null && next is not null && next.StartLine is null))
+                if((previous is null || (previous is not null && previous.StartLine is null)) && (next is null || (next is not null && next.StartLine is null)))
                 {
                     Parent.EndLine = Parent.StartLine;
                 }
 
                 StartLine = null;
+                if(this is CompoundJsonTreeViewItem compoundBoolItem)
+                {
+                    compoundBoolItem.EndLine = null;
+                }
                 #endregion
             }
             else

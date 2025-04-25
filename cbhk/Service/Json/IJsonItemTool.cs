@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControls.JsonTreeViewComponents;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Xml.Linq;
 
 namespace CBHK.Service.Json
 {
@@ -25,7 +25,13 @@ namespace CBHK.Service.Json
         /// </summary>
         /// <param name="compoundJsonTreeViewItem"></param>
         /// <returns></returns>
-        JsonTreeViewItem SearchForTheLastItemWithRowReference(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
+        public JsonTreeViewItem SearchForTheLastItemWithRowReference(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
+        /// <summary>
+        /// 从提示源码中提取当前多类型节点所需的子信息
+        /// </summary>
+        /// <param name="compoundJsonTreeViewItem"></param>
+        /// <returns></returns>
+        public List<string> ExtractSubInformationFromPromptSourceCode(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
         /// 递归遍历节点树并执行代理方法
         /// </summary>

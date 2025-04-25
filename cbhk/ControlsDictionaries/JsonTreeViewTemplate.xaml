@@ -153,7 +153,7 @@
                 Height="30"
                 Margin="2.5,0"
                 Source="{Binding InfoTipIcon}"
-                ToolTip="{Binding InfoTiptext}"
+                ToolTip="{Binding InfoTipText}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0"
                 Visibility="{Binding InfoIconVisibility}" />
@@ -365,7 +365,7 @@
                 Height="30"
                 Margin="2.5,0"
                 Source="{Binding InfoTipIcon}"
-                ToolTip="{Binding InfoTiptext}"
+                ToolTip="{Binding InfoTipText}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0"
                 Visibility="{Binding InfoIconVisibility}" />

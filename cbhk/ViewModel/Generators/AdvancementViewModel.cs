@@ -121,6 +121,7 @@ namespace CBHK.ViewModel.Generators
             #region 添加数据上下文所需的枚举集合与转换字典数据
             EnumIDDictionary.Add("物品ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);
             EnumIDDictionary.Add("战利品表", ["minecraft:a", "minecraft:b", "minecraft:c"]);
+            EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b"]);
             #endregion
             await Task.Run(async () =>
             {
@@ -253,13 +254,13 @@ namespace CBHK.ViewModel.Generators
             DocumentLine startDocumentLine = null;
             int offset = 0, length = 0;
 
-            if (item.StartLine is not null)
+            if (item.StartLine is not null && !item.StartLine.IsDeleted)
             {
                 startDocumentLine = item.StartLine;
             }
 
             string startLineText = "";
-            if (startDocumentLine is not null)
+            if (startDocumentLine is not null && !startDocumentLine.IsDeleted)
             {
                 startLineText = textEditor.Document.GetText(startDocumentLine);
             }
@@ -381,23 +382,31 @@ namespace CBHK.ViewModel.Generators
                                     if (previousCompound is not null && previousCompound.EndLine is not null)
                                     {
                                         offset = previousCompound.EndLine.EndOffset;
+                                        length = compoundJsonTreeViewItem.EndLine.EndOffset - offset;
                                     }
                                     else
                                     if (previous is not null && previous.StartLine is not null)
                                     {
                                         offset = previous.StartLine.EndOffset;
+                                        length = compoundJsonTreeViewItem.EndLine.EndOffset - offset;
                                     }
                                     else
                                     if (parent is not null)
                                     {
-                                        offset = parent.EndLine.EndOffset;
+                                        offset = parent.StartLine.EndOffset;
+                                        string parentStartlineText = GetRangeText(compoundJsonTreeViewItem.Parent.EndLine.Offset, compoundJsonTreeViewItem.Parent.EndLine.Length);
+                                        int lastCharIndex = parentStartlineText.LastIndexOf('}');
+                                        if(lastCharIndex == -1)
+                                        {
+                                            lastCharIndex = parentStartlineText.LastIndexOf(']');
+                                        }
+                                        length = parent.EndLine.Offset + lastCharIndex - offset;
                                     }
                                     else
                                     {
                                         offset = compoundJsonTreeViewItem.Plan.GetLineByNumber(compoundJsonTreeViewItem.StartLine.LineNumber - 1).EndOffset;
                                     }
                                     offset -= isNeedComma ? 1 : 0;
-                                    length = compoundJsonTreeViewItem.EndLine.EndOffset - offset;
                                     compoundJsonTreeViewItem.Children.Clear();
                                     compoundJsonTreeViewItem.EndLine = null;
                                 }
