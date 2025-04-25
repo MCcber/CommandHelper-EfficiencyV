@@ -707,7 +707,7 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                     string currentNewString = connectorSymbol + result.ResultString.ToString() + endConnectorSymbol + newLine;
                     if (currentDataType is not DataType.None)
                     {
-                        if (previousCompound is not null && compoundJsonTreeViewItem.IsCanBeDefaulted && (compoundJsonTreeViewItem.StartLine is null || (compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine)))
+                        if (previousCompound is not null && previousCompound.EndLine is not null && compoundJsonTreeViewItem.IsCanBeDefaulted && (compoundJsonTreeViewItem.StartLine is null || (compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine)))
                         {
                             endOffset = previousCompound.EndLine is not null ? previousCompound.EndLine.EndOffset : previousCompound.StartLine.EndOffset;
                             compoundJsonTreeViewItem.Plan.UpdateNullValueBySpecifyingInterval(endOffset, currentNewString);

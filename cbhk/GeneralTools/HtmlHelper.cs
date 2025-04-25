@@ -570,17 +570,40 @@ namespace CBHK.GeneralTools
                     string currentSourceCode = inheritMatch.Groups[1].Value;
                     List<string> sourceCodeContentList = RemoveUIMarker([.. currentSourceCode.Replace("|", "/").Split('/')]);
                     currentSourceCode = string.Join("/", sourceCodeContentList);
-                    if (inheritMatch.Success && plan.DependencyItemList.TryGetValue("#Inherit" + currentSourceCode, out List<string> targetInheritList))
+                    if (inheritMatch.Success)
                     {
-                        nodeList.RemoveAt(i);
-                        nodeList.InsertRange(i, [..targetInheritList]);
-                        if (targetInheritList.FirstOrDefault().Contains(parent.Key))
+                        if (plan.DependencyItemList.TryGetValue("#Inherit" + currentSourceCode, out List<string> targetInheritList))
                         {
-                            nodeList.RemoveAt(0);
+                            nodeList.RemoveAt(i);
+                            nodeList.InsertRange(i, [.. targetInheritList]);
+                            if (targetInheritList.FirstOrDefault().Contains(parent.Key))
+                            {
+                                nodeList.RemoveAt(0);
+                            }
+                            NBTFeatureList = GetHeadTypeAndKeyList(nodeList[i]);
+                            NBTFeatureList = RemoveUIMarker(NBTFeatureList);
+                            currentContextNextIndex = i + targetInheritList.Count;
                         }
-                        NBTFeatureList = GetHeadTypeAndKeyList(nodeList[i]);
-                        NBTFeatureList = RemoveUIMarker(NBTFeatureList);
-                        currentContextNextIndex = i + targetInheritList.Count;
+                        else
+                            if (plan.EnumCompoundDataDictionary.TryGetValue("#Inherit" + currentSourceCode, out Dictionary<string, List<string>> targetDictionary))
+                        {
+                            IsPreIdentifiedAsEnumCompoundType = true;
+                            CurrentEnumKey = "#Inherit" + currentSourceCode;
+                            isSimpleDataType = false;
+                            KeyList.AddRange(targetDictionary.Keys);
+                            List<string> inlineSourceCode = targetDictionary[KeyList.FirstOrDefault()];
+                            if ((!NBTFeatureList.Contains("compound") &&
+                                !NBTFeatureList.Where(item => item.Contains("array")).Any() &&
+                                !NBTFeatureList.Contains("list")) || i >= currentContextNextIndex)
+                            {
+                                nodeList.RemoveAt(i);
+                                nodeList.InsertRange(i, inlineSourceCode);
+                                EnumItemCount = inlineSourceCode.Count - 1;
+                                currentContextNextIndex = i + inlineSourceCode.Count;
+                                i--;
+                                continue;
+                            }
+                        }
                     }
 
                     if (contextMatch.Success && parent is not null && i >= currentContextNextIndex && (NBTFeatureList.Contains("required=1") || NBTFeatureList.Count == 1))
