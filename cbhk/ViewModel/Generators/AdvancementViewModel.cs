@@ -79,6 +79,7 @@ namespace CBHK.ViewModel.Generators
             { "#文本组件","#Inherit/text component/main" },
             { "#文本组件内容","#Inherit/text component/content" },
             { "#准则触发器|触发器","#准则触发器" },
+            { "#记分板|记分项","#Inherit/common/scoreboardObject" },
             { "<''物品堆叠组件''>" , "#Inherit/itemnoslot" },
             { "<''准则名称''>","#准则触发器|触发器" }
         };

@@ -71,7 +71,8 @@ namespace CBHK.Service.Json
         /// 删除当前元素
         /// </summary>
         /// <param name="compoundJsonTreeViewItem">当前节点</param>
-        void RemoveCurrentItem(JsonTreeViewItem compoundJsonTreeViewItem);
+        /// <param name="isNeedRemoveItem">是否需要删除节点</param>
+        void RemoveCurrentItem(JsonTreeViewItem compoundJsonTreeViewItem,bool isNeedRemoveItem = true);
         /// <summary>
         /// 更新平铺列表
         /// </summary>

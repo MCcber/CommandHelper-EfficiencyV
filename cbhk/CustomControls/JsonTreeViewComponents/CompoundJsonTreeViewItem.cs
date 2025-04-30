@@ -213,7 +213,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
             int index = parent.Children.IndexOf(this) + 1;
             if (EnumItemCount > 0)
             {
-                for (int i = index; i <= EnumItemCount && i < parent.Children.Count; i++)
+                for (int i = index; i <= EnumItemCount && parent.Children.Count > 1; i++)
                 {
                     parent.Children.RemoveAt(1);
                 }
@@ -289,7 +289,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
 
                 #region 将当前文本值清除，处理子节点
                 Children.Clear();
-                if(StartLine is not null)
+                if(StartLine is not null && !StartLine.IsDeleted)
                 {
                     offset = StartLine.Offset + startLineText.IndexOf('"');
                 }
@@ -316,7 +316,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     length = EndLine.EndOffset - (endLineText.TrimEnd().EndsWith(',') ? 1 : 0) - offset;
                 }
                 else
-                if (StartLine is not null)
+                if (StartLine is not null && !StartLine.IsDeleted)
                 {
                     length = StartLine.EndOffset - (startLineText.TrimEnd().EndsWith(',') ? 1 : 0) - offset;
                 }
@@ -548,7 +548,9 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     else
                     if (Parent is not null && Parent.StartLine != Parent.EndLine)
                     {
-                        ResultString = (previous is not null && previous.StartLine is not null && StartLine is null ? ",\r\n" + new string(' ', LayerCount * 2) : "") + "\"" + Key + "\": " + bracketPairString + ((next is not null && next.StartLine is not null) ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "");
+                        bool needStartNewLine = previous is not null && previous.StartLine is not null && StartLine is null;
+                        bool needEndNewLine = next is not null && next.StartLine is null;
+                        ResultString = (needStartNewLine ? ",\r\n" + new string(' ', LayerCount * 2) : "") + "\"" + Key + "\": " + bracketPairString + (needEndNewLine ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "");
                     }
                     if (Parent.StartLine == Parent.EndLine)
                     {
@@ -861,6 +863,9 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                         targetRawListTemp.RemoveAt(0);
                     }
                     JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), targetRawListTemp, LayerCount, "", this, null, 1, true);
+
+                    htmlHelper.HandlingTheTypingAppearanceOfCompositeItemList(result.Result,Parent);
+
                     int index = 1;
                     EnumItemCount = result.Result.Count;
                     for (int i = 0; i < result.Result.Count; i++)
@@ -886,9 +891,6 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     if (result.ResultString.Length > 0)
                     {
                         Plan.SetRangeText(StartLine.EndOffset, 0, result.ResultString.Length > 0 ? ",\r\n" + result.ResultString.ToString() : "");
-                    }
-                    if (result.ResultString.Length > 0)
-                    {
                         JsonItemTool.SetLineNumbersForEachItem(result.Result, Parent, true);
                     }
                     else

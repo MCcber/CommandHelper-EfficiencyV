@@ -219,7 +219,7 @@ namespace CBHK.GeneralTools
                     foreach (var childString in compoundJsonTreeViewItem.ChildrenStringList)
                     {
                         Match contentMatch = GetContextKey().Match(childString);
-                        if (contentMatch.Success)
+                        if (contentMatch.Success && (element.DataType is not DataType.None || (element is CompoundJsonTreeViewItem compoundElementItem && ((compoundElementItem.DataType is not DataType.List && compoundElementItem.DataType is not DataType.OptionalCompound) || (compoundElementItem.DataType is DataType.MultiType && compoundElementItem.SelectedValueType.Text != "List")))))
                         {
                             string key = '#' + contentMatch.Groups[1].Value;
                             string targetKey = "";
@@ -291,7 +291,7 @@ namespace CBHK.GeneralTools
                                     for (int i = 0; i < subChildrenList.Count; i++)
                                     {
                                         List<string> subNBTFeatureList = GetHeadTypeAndKeyList(subChildrenList[i]);
-                                        if (subNBTFeatureList[^1].Contains('\'') && subNBTFeatureList[^1].Contains('<'))
+                                        if (subNBTFeatureList.Count > 0 && subNBTFeatureList[^1].Contains('\'') && subNBTFeatureList[^1].Contains('<'))
                                         {
                                             subCompoundItem.InputBoxVisibility = Visibility.Visible;
                                             subCompoundItem.SwitchButtonIcon = compoundJsonTreeViewItem.PlusIcon;
@@ -547,6 +547,7 @@ namespace CBHK.GeneralTools
             string CurrentEnumKey = "";
             bool isSimpleDataType = true;
             #endregion
+
             //遍历找到的div标签内容集合
             for (int i = 0; i < nodeList.Count; i++)
             {
@@ -728,6 +729,10 @@ namespace CBHK.GeneralTools
                     currentNodeKey = NBTFeatureList[^1];
                 }
                 currentDescription = GetDescription(nodeList[i]);
+                if(currentNodeKey.Contains('\''))
+                {
+                    IsCurrentOptionalNode = false;
+                }
                 #endregion
 
                 #region 确认是否能够进入解析流程
@@ -768,7 +773,7 @@ namespace CBHK.GeneralTools
                             compoundJsonTreeViewItem.DataType = DataType.MultiType;
                             if (!IsCurrentOptionalNode)
                             {
-                                result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentNodeKey + "\": ");
+                                result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + (currentReferenceKey.Length > 0 ? currentReferenceKey : currentNodeKey) + "\": ");
                             }
                             switch (NBTFeatureList[0])
                             {
@@ -1202,14 +1207,13 @@ namespace CBHK.GeneralTools
                                 if (!CurrentCompoundItem.IsCanBeDefaulted)
                                 {
                                     result.ResultString.Append(new string(' ', layerCount * 2) +
-                                        (currentNodeKey.Length > 0? "\"" + currentNodeKey.ToLower() + "\" : " : "") + (IsCurrentOptionalNode ? "\"\"" : "\"" + setString + "\""));
+                                        (currentNodeKey.Length > 0? "\"" + currentNodeKey.ToLower() + "\": " : "") + (IsCurrentOptionalNode ? "\"\"" : "\"" + setString + "\""));
                                 }
                             }
                             #endregion
                         }
                         if(IsPreIdentifiedAsEnumCompoundType)
                         {
-                            IsPreIdentifiedAsEnumCompoundType = false;
                             CurrentCompoundItem.RemoveElementButtonVisibility = Visibility.Collapsed;
                             CurrentCompoundItem.EnumItemsSource.Clear();
                             CurrentCompoundItem.EnumItemCount = EnumItemCount;
@@ -1277,6 +1281,13 @@ namespace CBHK.GeneralTools
                                     return result;
                                 }
                             }
+                        }
+                        else
+                        if(currentReferenceKey.Length > 0 && currentNodeKey.Contains('\''))
+                        {
+                            CurrentCompoundItem.Key = CurrentCompoundItem.DisplayText = currentReferenceKey;
+                            CurrentCompoundItem.RemoveElementButtonVisibility = Visibility.Visible;
+                            IsCurrentOptionalNode = CurrentCompoundItem.IsCanBeDefaulted = false;
                         }
                         #endregion
 
@@ -1435,6 +1446,7 @@ namespace CBHK.GeneralTools
 
                         //设置描述
                         CurrentCompoundItem.InfoTipText = currentDescription;
+                        IsPreIdentifiedAsEnumCompoundType = false;
                     }
                     #endregion
                 }
