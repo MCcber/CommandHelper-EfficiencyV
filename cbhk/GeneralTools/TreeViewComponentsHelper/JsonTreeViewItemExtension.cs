@@ -280,6 +280,7 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                             subCompoundItem2.EndLine = subItem.StartLine.NextLine;
                         }
                         else
+                        if(subItem is not null)
                         {
                             subCompoundItem2.EndLine = subCompoundItem2.Plan.GetLineByNumber(subCompoundItem2.StartLine.LineNumber + subCompoundItem2.Children.Count);
                         }
@@ -368,7 +369,7 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
             if (currentIsCompound)
             {
                 changeType = ChangeType.AddCompoundObject;
-                if(compoundJsonTreeViewItem.DataType is DataType.CustomCompound && (compoundJsonTreeViewItem.Value is null || (compoundJsonTreeViewItem.Value is not null && (compoundJsonTreeViewItem.Value + "").Length == 0)))
+                if(compoundJsonTreeViewItem.DataType is DataType.CustomCompound && compoundJsonTreeViewItem.SelectedEnumItem is null && (compoundJsonTreeViewItem.Value is null || (compoundJsonTreeViewItem.Value is not null && (compoundJsonTreeViewItem.Value + "").Length == 0)))
                 {
                     return;
                 }
@@ -553,6 +554,10 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
 
                 #region 执行解析
                 string currentReferenceString = compoundJsonTreeViewItem.DataType is DataType.CustomCompound ? compoundJsonTreeViewItem.Value + "" : "";
+                if(currentReferenceString.Length == 0 && compoundJsonTreeViewItem.SelectedEnumItem is not null && compoundJsonTreeViewItem.SelectedEnumItem.Text != "- unset -")
+                {
+                    currentReferenceString = compoundJsonTreeViewItem.SelectedEnumItem.Text;
+                }
                 List<string> NBTFeatureList = htmlHelper.GetHeadTypeAndKeyList(CurrentDependencyItemList[0]);
 
                 int extraLayerCount = (compoundJsonTreeViewItem.DataType is DataType.List || (compoundJsonTreeViewItem.DataType is DataType.MultiType && compoundJsonTreeViewItem.SelectedValueType is not null && compoundJsonTreeViewItem.SelectedValueType.Text == "List") || 
@@ -689,7 +694,7 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
                     if (compoundJsonTreeViewItem.IsCanBeDefaulted && compoundJsonTreeViewItem.StartLine is null && compoundJsonTreeViewItem.EndLine is null)
                     {
                         isNotNeedNewLine = true;
-                        result.ResultString.Insert(0, new string(' ', compoundJsonTreeViewItem.LayerCount * 2) + "\"" + compoundJsonTreeViewItem.Key + "\": " + compoundStartConnectorChar + (entryStartBracket != ' ' ? "\r\n" + new string(' ', (compoundJsonTreeViewItem.LayerCount + 1) * 2) + entryStartBracket : "") + "\r\n" + (entryStartBracket != ' ' ? new string(' ', 2) : "")).Append((entryEndBracket != ' ' ? "\r\n" + new string(' ', (compoundJsonTreeViewItem.LayerCount + 1) * 2) + entryEndBracket : "") + "\r\n" + new string(' ', compoundJsonTreeViewItem.LayerCount * 2) + compoundEndConnectorChar);
+                        result.ResultString.Insert(0, new string(' ', compoundJsonTreeViewItem.LayerCount * 2) + "\"" + compoundJsonTreeViewItem.Key + "\": " + compoundStartConnectorChar + (entryStartBracket != ' ' ? "\r\n" + new string(' ', (compoundJsonTreeViewItem.LayerCount + 1) * 2) + entryStartBracket : "") + "\r\n" + (entryStartBracket != ' ' ? new string(' ', 2) : "")).Append((entryEndBracket != ' ' ? "\r\n" + new string(' ', (compoundJsonTreeViewItem.LayerCount + 1) * 2) + entryEndBracket : "") + "\r\n" + new string(' ', compoundJsonTreeViewItem.LayerCount * 2) + compoundEndConnectorChar + (parent is not null && (parent.StartLine == parent.EndLine || parent.StartLine is null) ? "\r\n" + new string(' ', parent.LayerCount * 2) : ""));
                     }
 
                     if (compoundJsonTreeViewItem.StartLine is null && currentDataType is DataType.CustomCompound && parent is not null)
@@ -700,7 +705,7 @@ namespace CBHK.GeneralTools.TreeViewComponentsHelper
 
                     #region 计算是否需要新行
                     string newLine = "";
-                    if (!isNotNeedNewLine && (compoundJsonTreeViewItem.StartLine is null || compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine || (parent is not null && parent.StartLine == parent.EndLine)))
+                    if (!isNotNeedNewLine && (compoundJsonTreeViewItem.DataType is not DataType.None &&  (compoundJsonTreeViewItem.StartLine is null || compoundJsonTreeViewItem.EndLine is null || compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine || (parent is not null && parent.StartLine == parent.EndLine))))
                     {
                         if (currentDataType is DataType.CustomCompound)
                         {

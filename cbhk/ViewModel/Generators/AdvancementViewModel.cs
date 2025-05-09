@@ -81,7 +81,8 @@ namespace CBHK.ViewModel.Generators
             { "#准则触发器|触发器","#准则触发器" },
             { "#记分板|记分项","#Inherit/common/scoreboardObject" },
             { "<''物品堆叠组件''>" , "#Inherit/itemnoslot" },
-            { "<''准则名称''>","#准则触发器|触发器" }
+            { "<''准则名称''>","#准则触发器|触发器" },
+            { "<''状态效果ID''>","药水#物品数据值|酿造药水的ID" }
         };
         public Dictionary<string, string> TranslateDefaultDictionary { get; set; } = new()
         {
@@ -124,6 +125,7 @@ namespace CBHK.ViewModel.Generators
             EnumIDDictionary.Add("战利品表", ["minecraft:a", "minecraft:b", "minecraft:c"]);
             EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b"]);
             #endregion
+
             await Task.Run(async () =>
             {
                 textEditor = sender as TextEditor;
@@ -138,6 +140,7 @@ namespace CBHK.ViewModel.Generators
                             jsonTool.SetParentForEachItem(compoundJsonTreeViewItem.Children, compoundJsonTreeViewItem);
                         }
                     }
+
                     jsonTool.SetLayerCountForEachItem(result.Result,1);
                     jsonTool.SetLineNumbersForEachItem(result.Result, null);
                     TreeViewItemList = result.Result;
@@ -348,6 +351,13 @@ namespace CBHK.ViewModel.Generators
                                     offset = startDocumentLine.Offset + index;
                                     length = startDocumentLine.EndOffset - offset - (next is not null && next.StartLine is not null ? 1 : 0);
                                 }
+                                else
+                                {
+                                    index = startLineText.IndexOf('"');
+                                    int lastCharIndex = startLineText.LastIndexOf('"') + 1;
+                                    offset = startDocumentLine.Offset + index;
+                                    length = startDocumentLine.Offset + lastCharIndex - offset;
+                                }
                                 break;
                             }
                         case ChangeType.AddCompoundObject:
@@ -514,7 +524,7 @@ namespace CBHK.ViewModel.Generators
                     else
                     if (parent is not null && parent.StartLine is not null)
                     {
-                        lastOffset = GetRangeText(parent.StartLine.Offset, parent.StartLine.Length).IndexOf(':') + 3;
+                        lastOffset = GetRangeText(parent.StartLine.Offset, parent.StartLine.Length).LastIndexOf(':') + 3;
                     }
                 }
                 else
