@@ -78,10 +78,9 @@ namespace CBHK.ViewModel.Generators
             { "#图例|上文","#Inherit/predicate" },
             { "#文本组件","#Inherit/text component/main" },
             { "#文本组件内容","#Inherit/text component/content" },
-            { "#准则触发器|触发器","#准则触发器" },
             { "#记分板|记分项","#Inherit/common/scoreboardObject" },
-            { "<''物品堆叠组件''>" , "#Inherit/itemnoslot" },
-            { "<''准则名称''>","#准则触发器|触发器" },
+            { "<''物品堆叠组件''>" , "#Inherit/common/itemStackComponent" },
+            { "<''准则名称''>","#准则触发器" },
             { "<''状态效果ID''>","药水#物品数据值|酿造药水的ID" }
         };
         public Dictionary<string, string> TranslateDefaultDictionary { get; set; } = new()

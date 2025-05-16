@@ -322,13 +322,12 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
 
                 if (EndLine is not null && !EndLine.IsDeleted)
                 {
-                    string endLineText = Plan.GetRangeText(EndLine.Offset, EndLine.Length);
-                    length = EndLine.EndOffset - (endLineText.TrimEnd().EndsWith(',') ? 1 : 0) - offset;
+                    length = EndLine.EndOffset - offset;
                 }
                 else
                 if (StartLine is not null && !StartLine.IsDeleted)
                 {
-                    length = StartLine.EndOffset - (startLineText.TrimEnd().EndsWith(',') ? 1 : 0) - offset;
+                    length = StartLine.EndOffset - offset;
                 }
                 Plan.SetRangeText(offset, length, "");
                 length = 0;
@@ -425,11 +424,11 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                             {
                                 Value = bool.Parse(defaultBoolMatch.Groups[1].Value);
                                 ResultString += Value;
-                                Plan.SetRangeText(offset, length, Value + (endConnectorSymbol.Length > 0 ? "," + endConnectorSymbol : ""));
+                                Plan.SetRangeText(offset, length, Value + endConnectorSymbol);
                             }
                             else
                             {
-                                Plan.SetRangeText(offset, length, ResultString + "false" + (endConnectorSymbol.Length > 0 ? "," + endConnectorSymbol : ""));
+                                Plan.SetRangeText(offset, length, ResultString + "false" + endConnectorSymbol);
                             }
                             break;
                         }
@@ -659,6 +658,13 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
         /// <param name="e"></param>
         public void EnumType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            #region 判断是否无需处理
+            if (DataType is DataType.CustomCompound)
+            {
+                return;
+            }
+            #endregion
+
             #region Field
             bool skipCode = false;
             HtmlHelper htmlHelper = new(_container)
@@ -692,13 +698,6 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
             Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNextItem = JsonItemTool.LocateTheNodesOfTwoAdjacentExistingValues(Previous, Next);
             previous = previousAndNextItem.Item1;
             next = previousAndNextItem.Item2;
-            #endregion
-
-            #region 判断是否为枚举类复合结构
-            if(DataType is DataType.CustomCompound)
-            {
-                return;
-            }
             #endregion
 
             #region 替换当前枚举节点的值
