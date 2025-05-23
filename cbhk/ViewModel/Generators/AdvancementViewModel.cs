@@ -123,6 +123,7 @@ namespace CBHK.ViewModel.Generators
             EnumIDDictionary.Add("物品ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);
             EnumIDDictionary.Add("战利品表", ["minecraft:a", "minecraft:b", "minecraft:c"]);
             EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b"]);
+            EnumIDDictionary.Add("染料颜色", ["red","green","blue"]);
             #endregion
 
             await Task.Run(async () =>
@@ -495,8 +496,13 @@ namespace CBHK.ViewModel.Generators
                             targetOffset = startLineText.IndexOf(':') + 2;
                         }
                         else
+                        if (startLineText.Contains('"'))
                         {
                             targetOffset = startLineText.IndexOf('"');
+                        }
+                        else
+                        {
+                            targetOffset = startLineText.Length - startLineText.TrimStart().Length;
                         }
                         offset = startDocumentLine.Offset + targetOffset;
                         if (startLineText.TrimEnd().EndsWith(','))
