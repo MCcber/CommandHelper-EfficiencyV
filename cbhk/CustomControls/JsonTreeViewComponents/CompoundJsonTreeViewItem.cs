@@ -472,6 +472,7 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                 if (!isCompoundType)
                 {
                     ResultString = connectorSymbol + "\"" + Key + "\": ";
+                    AddOrSwitchElementButtonVisibility = Visibility.Collapsed;
                 }
                 switch (currentValueTypeString)
                 {
@@ -804,16 +805,16 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
             #region 替换当前枚举节点的值
             if (StartLine is null)
             {
-                string connectorString = previous is not null && previous.StartLine is not null && (next is null || (next is not null && next.StartLine is null)) ? "," : "";
+                string connectorString = (previous is not null && previous.StartLine is not null && (next is null || (next is not null && next.StartLine is null)) ? "," : "") + "\r\n" + new string(' ', LayerCount * 2);
                 string endConnectorString = next is not null && next.StartLine is not null ? "," : "";
                 if (previous is CompoundJsonTreeViewItem previousCompoundItem1 && previousCompoundItem1.EndLine is not null)
                 {
-                    Plan.UpdateNullValueBySpecifyingInterval(previousCompoundItem1.EndLine.EndOffset, connectorString + "\r\n" + new string(' ', LayerCount * 2) + (Key.Length > 0 ? "\"" + Key + "\": " : "") + "\"" + SelectedEnumItem.Text + "\"" + endConnectorString);
+                    Plan.UpdateNullValueBySpecifyingInterval(previousCompoundItem1.EndLine.EndOffset, connectorString + (Key.Length > 0 ? "\"" + Key + "\": " : "") + "\"" + SelectedEnumItem.Text + "\"" + endConnectorString);
                 }
                 else
                 if (previous is not null && previous.StartLine is not null)
                 {
-                    Plan.UpdateNullValueBySpecifyingInterval(previous.StartLine.EndOffset, connectorString + "\r\n" + new string(' ', LayerCount * 2) + (Key.Length > 0 ? "\"" + Key + "\": " : "") + "\"" + SelectedEnumItem.Text + "\"" + endConnectorString);
+                    Plan.UpdateNullValueBySpecifyingInterval(previous.StartLine.EndOffset, connectorString + (Key.Length > 0 ? "\"" + Key + "\": " : "") + "\"" + SelectedEnumItem.Text + "\"" + endConnectorString);
                 }
                 else
                 if (Parent is not null)
@@ -824,12 +825,12 @@ namespace CBHK.CustomControls.JsonTreeViewComponents
                     }
                     DocumentLine parentStartLine = Plan.GetLineByNumber(Parent.StartLine.LineNumber);
                     string parentStartLineText = Plan.GetRangeText(parentStartLine.Offset, parentStartLine.EndOffset - parentStartLine.Offset);
-                    offset = Parent.StartLine.Offset + (Key.Contains(':') ? parentStartLineText.LastIndexOf(':') : parentStartLineText.IndexOf(':')) + 3;
-                    Plan.SetRangeText(offset, 0, "\r\n" + new string(' ', LayerCount * 2) + (Key.Length > 0 ? "\"" + Key + "\": " : "") + "\"" + SelectedEnumItem.Text + "\"" + endConnectorString);
+                    offset = Parent.StartLine.Offset + (Key.Contains(':') && StartLine is not null ? parentStartLineText.LastIndexOf(':') : parentStartLineText.IndexOf(':')) + 3;
+                    Plan.SetRangeText(offset, 0, connectorString + (Key.Length > 0 ? "\"" + Key + "\": " : "") + "\"" + SelectedEnumItem.Text + "\"" + endConnectorString);
                 }
                 else
                 {
-                    Plan.SetRangeText(1, 0, "\r\n" + new string(' ', LayerCount * 2) + "\"" + Key + "\": \"" + SelectedEnumItem.Text + "\"" + endConnectorString);
+                    Plan.SetRangeText(1, 0, connectorString + "\"" + Key + "\": \"" + SelectedEnumItem.Text + "\"" + endConnectorString);
                 }
 
                 if(previous is CompoundJsonTreeViewItem previousCompoundItem2 && previousCompoundItem2 is not null && previousCompoundItem2.EndLine is not null)

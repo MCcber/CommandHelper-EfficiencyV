@@ -22,6 +22,8 @@ using System.Collections.ObjectModel;
 using CBHK.Model.Common;
 using CBHK.GeneralTools;
 using CBHK.CustomControls;
+using Newtonsoft.Json.Linq;
+using System.Linq;
 
 namespace CBHK.ViewModel.Generators
 {
@@ -31,6 +33,7 @@ namespace CBHK.ViewModel.Generators
         private HtmlHelper _htmlHelper = null;
         private Window home = null;
         private string configDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\";
+        private string commonCompoundDataDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
         public TextEditor textEditor = null;
         private FoldingManager foldingManager = null;
         private IContainerProvider _container;
@@ -79,9 +82,11 @@ namespace CBHK.ViewModel.Generators
             { "#文本组件","#Inherit/text component/main" },
             { "#文本组件内容","#Inherit/text component/content" },
             { "#记分板|记分项","#Inherit/common/scoreboardObject" },
+            { "#流体状态|流体状态","#Inherit/common/fluidStructure"},
             { "<''物品堆叠组件''>" , "#Inherit/common/itemStackComponent" },
             { "<''准则名称''>","#准则触发器" },
-            { "<''状态效果ID''>","药水#物品数据值|酿造药水的ID" }
+            { "<''状态效果ID''>","药水#物品数据值|酿造药水的ID" },
+            { "<''流体属性''>","#Inherit/common/fluidStructure"}
         };
         public Dictionary<string, string> TranslateDefaultDictionary { get; set; } = new()
         {
@@ -120,10 +125,43 @@ namespace CBHK.ViewModel.Generators
         public async void TextEditor_Loaded(object sender, RoutedEventArgs e)
         {
             #region 添加数据上下文所需的枚举集合与转换字典数据
+            EnumIDDictionary.Add("流体ID", ["minecraft:water","minecraft:lava"]);
+            EnumIDDictionary.Add("方块ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);
             EnumIDDictionary.Add("物品ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);
             EnumIDDictionary.Add("战利品表", ["minecraft:a", "minecraft:b", "minecraft:c"]);
             EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b"]);
             EnumIDDictionary.Add("染料颜色", ["red","green","blue"]);
+            #endregion
+            #region 添加复合类数据
+            string[] commonDirectoryFileArray = Directory.GetFiles(commonCompoundDataDirectoryPath);
+            foreach (var item in commonDirectoryFileArray)
+            {
+                string fileName = Path.GetFileNameWithoutExtension(item);
+                string data = File.ReadAllText(item);
+                switch (fileName)
+                {
+                    case "BlockStateProperty":
+                        {
+                            JObject blockStatePropertyObject = JObject.Parse(data);
+                            List<JProperty> blockIDList = [..blockStatePropertyObject.Properties()];
+                            Dictionary<string, List<string>> blockStateCompound = [];
+                            foreach (var blockID in blockIDList)
+                            {
+                                blockStateCompound.TryAdd(blockID.Name, []);
+                                if (blockStatePropertyObject[blockID.Name][0] is JObject propertObject)
+                                {
+                                    blockStateCompound[blockID.Name].AddRange(propertObject.Properties().Select(item => '{' + item.ToString() + '}'));
+                                }
+                            }
+                            EnumCompoundDataDictionary.Add(fileName, blockStateCompound);
+                            break;
+                        }
+                    default:
+                        {
+                            break;
+                        }
+                }
+            }
             #endregion
 
             await Task.Run(async () =>
