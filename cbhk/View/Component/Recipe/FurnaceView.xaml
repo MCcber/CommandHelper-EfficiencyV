@@ -1,0 +1,505 @@
+﻿<UserControl
+    x:Class="CBHK.View.Component.Recipe.FurnaceView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VirtualizingWrapPanel="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CBHK.View.Component.Recipe"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    mc:Ignorable="d">
+
+    <UserControl.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding Run}" />
+    </UserControl.InputBindings>
+
+    <UserControl.Resources>
+        <CollectionViewSource x:Key="MultiModeItemViewSource" Source="{Binding MaterialList, IsAsync=True}" />
+        <ImageBrush x:Key="FurnaceBackground" ImageSource="/CBHK;component/Resource/Common/Image/Recipe/Furnace.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
+        <ImageBrush x:Key="Frame" ImageSource="/CBHK;component/Resource/Common/Image/Frame.png" />
+        <ImageBrush x:Key="CloseWhite" ImageSource="/CBHK;component/Resource/Common/Image/CloseWhite.png" />
+        <ImageBrush x:Key="CloseWhiteHover" ImageSource="/CBHK;component/Resource/Common/Image/CloseWhiteHover.png" />
+    </UserControl.Resources>
+
+    <Grid
+        Width="450"
+        Height="320"
+        Background="{StaticResource FurnaceBackground}">
+        <Image
+            Uid="material"
+            Grid.Row="0"
+            Grid.Column="0"
+            Width="80"
+            Height="80"
+            Margin="10,55,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            AllowDrop="True"
+            RenderOptions.BitmapScalingMode="HighQuality"
+            SnapsToDevicePixels="True"
+            UseLayoutRounding="True">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="Loaded">
+                    <behaviors:CallMethodAction MethodName="Material_Loaded" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+                <behaviors:EventTrigger EventName="MouseLeftButtonDown">
+                    <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+                <behaviors:EventTrigger EventName="Drop">
+                    <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
+        </Image>
+        <Grid
+            Width="220"
+            Height="270"
+            Margin="2,45,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Background="{StaticResource Frame}"
+            RenderOptions.BitmapScalingMode="NearestNeighbor"
+            Visibility="Collapsed">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="Loaded">
+                    <behaviors:CallMethodAction MethodName="MultiMaterialGrid_Loaded" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="25" />
+            </Grid.ColumnDefinitions>
+            <DockPanel
+                Grid.Row="0"
+                Grid.Column="0"
+                Grid.ColumnSpan="2">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="Tag"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
+                    <TextBlock.ToolTip>
+                        <ToolTip
+                            Background="#484848"
+                            Content="该材料的键。"
+                            Foreground="White" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <TextBox
+                    Margin="5,0,0,0"
+                    VerticalContentAlignment="Center"
+                    BorderBrush="Black"
+                    FontSize="15"
+                    Foreground="White"
+                    Text="{Binding CurrentTag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+            <TextBlock
+                Grid.Row="1"
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="搜索" />
+            <TextBox
+                Grid.Row="1"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                Height="25"
+                Margin="2,2"
+                BorderBrush="Black"
+                FontSize="20"
+                Foreground="White"
+                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
+            <CustomControl:IconTextButtons
+                Grid.Row="0"
+                Grid.Column="2"
+                Width="25"
+                Height="25"
+                Background="{StaticResource CloseWhite}"
+                PressedBackground="{StaticResource CloseWhiteHover}"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="Click">
+                        <behaviors:CallMethodAction MethodName="UpdateAndCloseSlotGrid_Click" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+                <CustomControl:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="关闭并更新多选数据"
+                        Foreground="White" />
+                </CustomControl:IconTextButtons.ToolTip>
+            </CustomControl:IconTextButtons>
+            <ScrollViewer
+                Grid.Row="2"
+                Grid.ColumnSpan="3"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <ListView
+                    BorderThickness="0"
+                    ItemsSource="{Binding Source={StaticResource MultiModeItemViewSource}}"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <behaviors:Interaction.Triggers>
+                        <behaviors:EventTrigger EventName="Loaded">
+                            <behaviors:CallMethodAction MethodName="MultiMaterialViewer_Loaded" TargetObject="{Binding}" />
+                        </behaviors:EventTrigger>
+                        <behaviors:EventTrigger EventName="PreviewMouseRightButtonUp">
+                            <behaviors:CallMethodAction MethodName="DeleteAppointItem_MouseRightButtonUp" TargetObject="{Binding}" />
+                        </behaviors:EventTrigger>
+                        <behaviors:EventTrigger EventName="PreviewMouseLeftButtonDown">
+                            <behaviors:CallMethodAction MethodName="SelectItemToSetTag_MouseLeftButtonDown" TargetObject="{Binding}" />
+                        </behaviors:EventTrigger>
+                    </behaviors:Interaction.Triggers>
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingWrapPanel:VirtualizingWrapPanel
+                                Background="#555956"
+                                ScrollViewer.CanContentScroll="True"
+                                VirtualizingPanel.CacheLength="200 200"
+                                VirtualizingPanel.CacheLengthUnit="Pixel"
+                                VirtualizingPanel.IsVirtualizing="True" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Image
+                                Width="50"
+                                Height="50"
+                                RenderOptions.BitmapScalingMode="HighQuality"
+                                RenderOptions.ClearTypeHint="Enabled"
+                                SnapsToDevicePixels="True"
+                                Source="{Binding Path=ImagePath, IsAsync=True, Mode=OneWay}"
+                                ToolTipService.BetweenShowDelay="0"
+                                ToolTipService.InitialShowDelay="0"
+                                UseLayoutRounding="True">
+                                <Image.ToolTip>
+                                    <ToolTip
+                                        Background="#484848"
+                                        Content="{Binding IsAsync=True, Path=IDAndName, Mode=OneWay}"
+                                        Foreground="White" />
+                                </Image.ToolTip>
+                            </Image>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </ScrollViewer>
+        </Grid>
+        <CustomControl:RadiusToggleButtons
+            Margin="5,20,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            IsChecked="{Binding MultiSelect, Mode=TwoWay}"
+            SelectedToggleText="多选"
+            Style="{DynamicResource RadiusToggleButton}"
+            ToggleHeight="26"
+            ToggleWidth="46"
+            ToolTipService.BetweenShowDelay="0"
+            ToolTipService.InitialShowDelay="0"
+            UnSelectedToggleText="单选">
+            <CustomControl:RadiusToggleButtons.ToolTip>
+                <ToolTip
+                    Background="#484848"
+                    Content="开启多选后，同一个槽中只需满足一个成员即可匹配"
+                    Foreground="White" />
+            </CustomControl:RadiusToggleButtons.ToolTip>
+        </CustomControl:RadiusToggleButtons>
+        <Grid HorizontalAlignment="Right" VerticalAlignment="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="180" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="Black"
+                Text="组标识符">
+                <TextBlock.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="组标识符"
+                        Foreground="White" />
+                </TextBlock.ToolTip>
+            </TextBlock>
+            <TextBox
+                Grid.Row="0"
+                Grid.Column="1"
+                Height="25"
+                HorizontalAlignment="Stretch"
+                VerticalContentAlignment="Center"
+                BorderBrush="Black"
+                BorderThickness="1"
+                Foreground="White"
+                Text="{Binding GroupName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="Black"
+                Text="经验" />
+            <Slider
+                Grid.Row="2"
+                Grid.Column="1"
+                VerticalContentAlignment="Center"
+                BorderBrush="Black"
+                BorderThickness="1"
+                Foreground="White"
+                Maximum="2147483647"
+                Minimum="1"
+                Style="{DynamicResource NumberBoxStyle}"
+                Value="{Binding Experience, Mode=TwoWay}" />
+            <TextBlock
+                Grid.Row="1"
+                Grid.Column="0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="Black"
+                Text="文件名" />
+            <TextBox
+                Grid.Row="1"
+                Grid.Column="1"
+                Height="25"
+                VerticalContentAlignment="Center"
+                BorderBrush="Black"
+                BorderThickness="1"
+                Foreground="White"
+                Text="{Binding FileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock
+                Grid.Row="3"
+                Grid.Column="0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="Black"
+                Text="烧制时间" />
+            <Slider
+                Grid.Row="3"
+                Grid.Column="1"
+                VerticalContentAlignment="Center"
+                BorderBrush="Black"
+                BorderThickness="1"
+                Foreground="White"
+                Maximum="2147483647"
+                Minimum="1"
+                Style="{DynamicResource NumberBoxStyle}"
+                Value="{Binding Cookingtime, Mode=TwoWay}" />
+        </Grid>
+        <CustomControl:IconTextButtons
+            Width="25"
+            Height="25"
+            Margin="75,15,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Background="{DynamicResource RightArrow}"
+            Command="{Binding RunCommand}"
+            Style="{DynamicResource IconTextButton}"
+            ToolTipService.BetweenShowDelay="0"
+            ToolTipService.InitialShowDelay="0">
+            <CustomControl:IconTextButtons.ToolTip>
+                <ToolTip
+                    Background="#484848"
+                    Content="F5:运行"
+                    Foreground="White" />
+            </CustomControl:IconTextButtons.ToolTip>
+        </CustomControl:IconTextButtons>
+        <Image
+            Width="120"
+            Height="115"
+            Margin="0,45,22,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            AllowDrop="True"
+            RenderOptions.BitmapScalingMode="HighQuality"
+            RenderOptions.EdgeMode="Aliased"
+            SnapsToDevicePixels="True"
+            UseLayoutRounding="True">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="Loaded">
+                    <behaviors:CallMethodAction MethodName="ResultItem_Loaded" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+                <behaviors:EventTrigger EventName="Drop">
+                    <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
+        </Image>
+        <Grid
+            Width="215"
+            Height="275"
+            Margin="-60,45,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Background="{StaticResource Frame}"
+            RenderOptions.BitmapScalingMode="NearestNeighbor"
+            Visibility="Collapsed">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="Loaded">
+                    <behaviors:CallMethodAction MethodName="MultiMaterialGrid_Loaded" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="25" />
+            </Grid.ColumnDefinitions>
+            <Grid
+                Grid.Row="0"
+                Grid.Column="0"
+                Grid.ColumnSpan="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="Tag"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
+                    <TextBlock.ToolTip>
+                        <ToolTip
+                            Background="#484848"
+                            Content="该材料的键。"
+                            Foreground="White" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <TextBox
+                    Grid.Column="1"
+                    Margin="3,0,0,0"
+                    VerticalContentAlignment="Center"
+                    BorderBrush="Black"
+                    FontSize="15"
+                    Foreground="White"
+                    Text="{Binding CurrentTag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            </Grid>
+            <TextBlock
+                Grid.Row="1"
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="搜索" />
+            <TextBox
+                Grid.Row="1"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                Height="25"
+                Margin="0,2"
+                BorderBrush="Black"
+                FontSize="20"
+                Foreground="White"
+                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
+            <CustomControl:IconTextButtons
+                Grid.Row="0"
+                Grid.Column="2"
+                Width="25"
+                Height="25"
+                Background="{StaticResource CloseWhite}"
+                PressedBackground="{StaticResource CloseWhiteHover}"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="Click">
+                        <behaviors:CallMethodAction MethodName="UpdateAndCloseSlotGrid_Click" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+                <CustomControl:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="关闭并更新多选数据"
+                        Foreground="White" />
+                </CustomControl:IconTextButtons.ToolTip>
+            </CustomControl:IconTextButtons>
+            <ScrollViewer
+                Grid.Row="2"
+                Grid.ColumnSpan="3"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <ListView
+                    BorderThickness="0"
+                    ItemsSource="{Binding Source={StaticResource MultiModeItemViewSource}}"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <behaviors:Interaction.Triggers>
+                        <behaviors:EventTrigger EventName="Loaded">
+                            <behaviors:CallMethodAction MethodName="MultiMaterialViewer_Loaded" TargetObject="{Binding}" />
+                        </behaviors:EventTrigger>
+                        <behaviors:EventTrigger EventName="PreviewMouseRightButtonUp">
+                            <behaviors:CallMethodAction MethodName="DeleteAppointItem_MouseRightButtonUp" TargetObject="{Binding}" />
+                        </behaviors:EventTrigger>
+                        <behaviors:EventTrigger EventName="PreviewMouseLeftButtonDown">
+                            <behaviors:CallMethodAction MethodName="SelectItemToSetTag_MouseLeftButtonDown" TargetObject="{Binding}" />
+                        </behaviors:EventTrigger>
+                    </behaviors:Interaction.Triggers>
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingWrapPanel:VirtualizingWrapPanel
+                                Background="#555956"
+                                ScrollViewer.CanContentScroll="True"
+                                VirtualizingPanel.CacheLength="200 200"
+                                VirtualizingPanel.CacheLengthUnit="Pixel"
+                                VirtualizingPanel.IsVirtualizing="True" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Image
+                                Width="50"
+                                Height="50"
+                                RenderOptions.BitmapScalingMode="HighQuality"
+                                RenderOptions.ClearTypeHint="Enabled"
+                                SnapsToDevicePixels="True"
+                                Source="{Binding Path=ImagePath, IsAsync=True, Mode=OneWay}"
+                                ToolTipService.BetweenShowDelay="0"
+                                ToolTipService.InitialShowDelay="0"
+                                UseLayoutRounding="True">
+                                <Image.ToolTip>
+                                    <ToolTip
+                                        Background="#484848"
+                                        Content="{Binding IsAsync=True, Path=IDAndName, Mode=OneWay}"
+                                        Foreground="White" />
+                                </Image.ToolTip>
+                            </Image>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+
+</UserControl>

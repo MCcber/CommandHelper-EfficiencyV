@@ -50,17 +50,17 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="GeneralTools\Displayer\**" />
-    <Compile Remove="Model\CustomControls\**" />
+    <Compile Remove="GeneralTool\Displayer\**" />
+    <Compile Remove="Model\CustomControl\**" />
     <Compile Remove="纹理\**" />
-    <EmbeddedResource Remove="GeneralTools\Displayer\**" />
-    <EmbeddedResource Remove="Model\CustomControls\**" />
+    <EmbeddedResource Remove="GeneralTool\Displayer\**" />
+    <EmbeddedResource Remove="Model\CustomControl\**" />
     <EmbeddedResource Remove="纹理\**" />
-    <None Remove="GeneralTools\Displayer\**" />
-    <None Remove="Model\CustomControls\**" />
+    <None Remove="GeneralTool\Displayer\**" />
+    <None Remove="Model\CustomControl\**" />
     <None Remove="纹理\**" />
-    <Page Remove="GeneralTools\Displayer\**" />
-    <Page Remove="Model\CustomControls\**" />
+    <Page Remove="GeneralTool\Displayer\**" />
+    <Page Remove="Model\CustomControl\**" />
     <Page Remove="纹理\**" />
   </ItemGroup>
   <ItemGroup>
@@ -421,11 +421,11 @@
     <Resource Include="Resource\Common\Image\Datapack\editedIcon.png" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="GeneralTools\ScrollViewerHelper\ScrollToControlAction.cs" />
-    <Compile Remove="GeneralTools\TreeViewComponentsHelper\HeaderToJson.cs" />
-    <Compile Remove="GeneralTools\TreeViewComponentsHelper\ReturnTargetComponents.cs" />
-    <Compile Remove="GeneralTools\TreeViewComponentsHelper\TagToHeader.cs" />
-    <Compile Remove="GeneralTools\TreeViewComponentsHelper\TreeViewConveter.cs" />
+    <Compile Remove="GeneralTool\ScrollViewerHelper\ScrollToControlAction.cs" />
+    <Compile Remove="GeneralTool\TreeViewComponentsHelper\HeaderToJson.cs" />
+    <Compile Remove="GeneralTool\TreeViewComponentsHelper\ReturnTargetComponents.cs" />
+    <Compile Remove="GeneralTool\TreeViewComponentsHelper\TagToHeader.cs" />
+    <Compile Remove="GeneralTool\TreeViewComponentsHelper\TreeViewConveter.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell2.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell3.cs" />
@@ -436,7 +436,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="cb.ico" />
-    <None Remove="GeneralTools\jsonReader - v1.3.js" />
+    <None Remove="GeneralTool\jsonReader - v1.3.js" />
     <None Remove="Resource\CBHK\Image\Error.png" />
     <None Remove="Resource\CBHK\Image\eyeHide.png" />
     <None Remove="Resource\CBHK\Image\eyeShow.png" />
@@ -520,6 +520,7 @@
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="GeneralTools\ScrollViewerHelper\" />
+    <Folder Include="Common\" />
+    <Folder Include="GeneralTool\ScrollViewerHelper\" />
   </ItemGroup>
 </Project>

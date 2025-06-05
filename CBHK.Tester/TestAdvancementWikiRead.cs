@@ -4,7 +4,7 @@ using CBHK.CustomControls.JsonTreeViewComponents;
 using CBHK.GeneralTools;
 using CBHK.GeneralTools.TreeViewComponentsHelper;
 using CBHK.Model.Common;
-using CBHK.ViewModel.Generators;
+using CBHK.ViewModels.Generators;
 
 namespace CBHKTester
 {

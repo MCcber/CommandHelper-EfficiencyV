@@ -3,8 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Common="clr-namespace:CBHK.View.Common"
-    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
-    xmlns:SkeletonScreen="clr-namespace:CBHK.CustomControls.SkeletonScreen"
+    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:SkeletonScreen="clr-namespace:CBHK.CustomControl.SkeletonScreen"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
@@ -98,7 +98,7 @@
             SelectedIndex="0"
             Style="{DynamicResource TabControlWithScrollBar}"
             TabStripPlacement="Left">
-            <CustomControls:IconTabItems
+            <CustomControl:IconTabItems
                 Width="45"
                 Height="45"
                 Background="#2F2F2F"
@@ -742,8 +742,8 @@
                             HorizontalAlignment="Left" />
                     </Grid>
                 </Grid>
-            </CustomControls:IconTabItems>
-            <CustomControls:IconTabItems
+            </CustomControl:IconTabItems>
+            <CustomControl:IconTabItems
                 Width="45"
                 Height="45"
                 Background="#2F2F2F"
@@ -759,8 +759,8 @@
                     </ItemContainerTemplate>
                 </TabItem.HeaderTemplate>
                 <Common:TutorialsView />
-            </CustomControls:IconTabItems>
-            <CustomControls:IconTabItems
+            </CustomControl:IconTabItems>
+            <CustomControl:IconTabItems
                 Width="45"
                 Height="45"
                 Background="#2F2F2F"
@@ -776,8 +776,8 @@
                     </ItemContainerTemplate>
                 </TabItem.HeaderTemplate>
                 <Common:MoreView />
-            </CustomControls:IconTabItems>
-            <CustomControls:IconTabItems
+            </CustomControl:IconTabItems>
+            <CustomControl:IconTabItems
                 Width="45"
                 Height="45"
                 Background="#2F2F2F"
@@ -793,8 +793,8 @@
                     </ItemContainerTemplate>
                 </TabItem.HeaderTemplate>
                 <Common:SettingsView />
-            </CustomControls:IconTabItems>
-            <CustomControls:IconTabItems
+            </CustomControl:IconTabItems>
+            <CustomControl:IconTabItems
                 Width="45"
                 Height="45"
                 Background="#2F2F2F"
@@ -882,7 +882,7 @@
                         Text="{Binding UserDescription}"
                         TextTrimming="CharacterEllipsis" />
                 </Grid>
-            </CustomControls:IconTabItems>
+            </CustomControl:IconTabItems>
         </TabControl>
     </Grid>
 </localWindow:CommonWindow>

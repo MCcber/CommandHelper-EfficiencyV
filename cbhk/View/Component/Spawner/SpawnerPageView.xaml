@@ -1,0 +1,434 @@
+﻿<UserControl
+    x:Class="CBHK.View.Compoments.Spawner.SpawnerPageView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CBHK.View.Component.Spawner"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
+        <ImageBrush x:Key="IssueIcon" ImageSource="/CBHK;component/Resource/Common/Image/Issue.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
+        <ImageBrush x:Key="Save" ImageSource="/CBHK;component/Resource/Common/Image/Save.png" />
+    </UserControl.Resources>
+
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:CallMethodAction MethodName="SpawnerPage_Loaded" TargetObject="{Binding}" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" LastChildFill="False">
+            <CustomControl:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource RightArrow}"
+                BorderThickness="0"
+                Command="{Binding RunCommand}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControl:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="F5:运行"
+                        Foreground="White" />
+                </CustomControl:IconTextButtons.ToolTip>
+            </CustomControl:IconTextButtons>
+            <CustomControl:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource Save}"
+                BorderThickness="0"
+                Command="{Binding SaveCommand}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControl:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="保存"
+                        Foreground="White" />
+                </CustomControl:IconTextButtons.ToolTip>
+            </CustomControl:IconTextButtons>
+            <TextBlock
+                Margin="5,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="版本" />
+            <ComboBox
+                Width="80"
+                IsReadOnly="True"
+                ItemsSource="{Binding VersionSource}"
+                SelectedIndex="0"
+                SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+                Style="{DynamicResource TextComboBoxStyle}" />
+            <CustomControl:RadiusToggleButtons
+                Foreground="White"
+                IsChecked="{Binding ShowResult, Mode=TwoWay}"
+                SelectedToggleText="显示结果"
+                Style="{DynamicResource RadiusToggleButton}"
+                ToggleHeight="25"
+                ToggleWidth="45"
+                UnSelectedToggleText="隐藏结果" />
+        </DockPanel>
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Loaded">
+                        <behavior:CallMethodAction MethodName="ComponentsGrid_Loaded" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="Delay"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
+                    <TextBlock.ToolTip>
+                        <ToolTip
+                            Background="#484848"
+                            Content="距离下次生成还需要的刻数。该值若为0，刷怪笼会在玩家进入它的响应范围时立刻生成；若为-1（这不会出现于一般的刷怪笼中，只能通过NBT标签编辑来达成），则当玩家进入它的响应范围时，刷怪笼会重置此值和SpawnData，如同其刚结束一次成功的生成。比起使用预先设置的值，当玩家想要游戏自身来随机决定刷怪笼的Delay和SpawnData时，将此值设置为-1更好。"
+                            Foreground="White" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <Slider
+                    Uid="Delay"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Foreground="White"
+                    Maximum="32767"
+                    Minimum="-32768"
+                    Style="{DynamicResource NumberBoxStyle}" />
+                <CustomControl:RadiusToggleButtons
+                    Uid="Delay"
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Margin="0,0,5,0"
+                    Foreground="White"
+                    IsChecked="True"
+                    SelectedToggleText="使用默认值"
+                    Style="{DynamicResource RadiusToggleButton}"
+                    ToggleHeight="25"
+                    ToggleWidth="45"
+                    UnSelectedToggleText="使用指定值" />
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="MaxNearbyEntities"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
+                    <TextBlock.ToolTip>
+                        <ToolTip
+                            Background="#484848"
+                            Content="覆盖附近（一个以刷怪笼自身为中心的(SpawnRange*2+1)×(SpawnRange*2+1)×8的区域）和此刷怪笼生成的实体ID有相同ID的实体的最大存在数量。需要注意的是这与生物的碰撞箱有关，而不是生物的实际位置。同时，所有和上述区域有重叠的子区块（16×16×16的区域）内所有的实体都会被检测其ID和碰撞箱，而不仅仅是上述区域内的实体；这意味着大量在上述区域外（和内）的实体会造成严重的卡顿。"
+                            Foreground="White" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <Slider
+                    Uid="MaxNearbyEntities"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Foreground="White"
+                    Maximum="32767"
+                    Minimum="-32768"
+                    Style="{DynamicResource NumberBoxStyle}" />
+                <CustomControl:RadiusToggleButtons
+                    Uid="MaxNearbyEntities"
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Margin="0,0,5,0"
+                    Foreground="White"
+                    IsChecked="True"
+                    SelectedToggleText="使用默认值"
+                    Style="{DynamicResource RadiusToggleButton}"
+                    ToggleHeight="25"
+                    ToggleWidth="45"
+                    UnSelectedToggleText="使用指定值" />
+                <TextBlock
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="MaxSpawnDelay"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
+                    <TextBlock.ToolTip>
+                        <ToolTip
+                            Background="#484848"
+                            Content="生成延迟的随机范围的上限。要求同时设置MinSpawnDelay和SpawnCount属性。"
+                            Foreground="White" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <Slider
+                    Uid="MaxSpawnDelay"
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Foreground="White"
+                    Maximum="32767"
+                    Minimum="-32768"
+                    Style="{DynamicResource NumberBoxStyle}" />
+                <CustomControl:RadiusToggleButtons
+                    Uid="MaxSpawnDelay"
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Margin="0,0,5,0"
+                    Foreground="White"
+                    IsChecked="True"
+                    SelectedToggleText="使用默认值"
+                    Style="{DynamicResource RadiusToggleButton}"
+                    ToggleHeight="25"
+                    ToggleWidth="45"
+                    UnSelectedToggleText="使用指定值" />
+                <TextBlock
+                    Grid.Row="3"
+                    Grid.Column="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="MinSpawnDelay"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
+                    <TextBlock.ToolTip>
+                        <ToolTip
+                            Background="#484848"
+                            Content="生成延迟的随机范围的下限。可能等于MaxSpawnDelay。要求同时设置SpawnCount属性，否则默认为0。"
+                            Foreground="White" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <Slider
+                    Uid="MinSpawnDelay"
+                    Grid.Row="3"
+                    Grid.Column="1"
+                    Foreground="White"
+                    Maximum="32767"
+                    Minimum="-32768"
+                    Style="{DynamicResource NumberBoxStyle}" />
+                <CustomControl:RadiusToggleButtons
+                    Uid="MinSpawnDelay"
+                    Grid.Row="3"
+                    Grid.Column="2"
+                    Margin="0,0,5,0"
+                    Foreground="White"
+                    IsChecked="True"
+                    SelectedToggleText="使用默认值"
+                    Style="{DynamicResource RadiusToggleButton}"
+                    ToggleHeight="25"
+                    ToggleWidth="45"
+                    UnSelectedToggleText="使用指定值" />
+                <TextBlock
+                    Grid.Row="4"
+                    Grid.Column="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="RequiredPlayerRange"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
+                    <TextBlock.ToolTip>
+                        <ToolTip
+                            Background="#484848"
+                            Content="玩家激活刷怪笼时与其之间的距离。每游戏刻刷怪笼都会检查当前世界的所有玩家，确定是否有玩家进入该范围。要求同时设置MaxNearbyEntities属性。"
+                            Foreground="White" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <Slider
+                    Uid="RequiredPlayerRange"
+                    Grid.Row="4"
+                    Grid.Column="1"
+                    Foreground="White"
+                    Maximum="32767"
+                    Minimum="-32768"
+                    Style="{DynamicResource NumberBoxStyle}" />
+                <CustomControl:RadiusToggleButtons
+                    Uid="RequiredPlayerRange"
+                    Grid.Row="4"
+                    Grid.Column="2"
+                    Margin="0,0,5,0"
+                    Foreground="White"
+                    IsChecked="True"
+                    SelectedToggleText="使用默认值"
+                    Style="{DynamicResource RadiusToggleButton}"
+                    ToggleHeight="25"
+                    ToggleWidth="45"
+                    UnSelectedToggleText="使用指定值" />
+                <TextBlock
+                    Grid.Row="5"
+                    Grid.Column="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="SpawnCount"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
+                    <TextBlock.ToolTip>
+                        <ToolTip
+                            Background="#484848"
+                            Content="每次尝试生成生物的数量。要求同时设置MinSpawnDelay属性。"
+                            Foreground="White" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <Slider
+                    Uid="SpawnCount"
+                    Grid.Row="5"
+                    Grid.Column="1"
+                    Foreground="White"
+                    Maximum="32767"
+                    Minimum="-32768"
+                    Style="{DynamicResource NumberBoxStyle}" />
+                <CustomControl:RadiusToggleButtons
+                    Uid="SpawnCount"
+                    Grid.Row="5"
+                    Grid.Column="2"
+                    Margin="0,0,5,0"
+                    Foreground="White"
+                    IsChecked="True"
+                    SelectedToggleText="使用默认值"
+                    Style="{DynamicResource RadiusToggleButton}"
+                    ToggleHeight="25"
+                    ToggleWidth="45"
+                    UnSelectedToggleText="使用指定值" />
+                <TextBlock
+                    Grid.Row="6"
+                    Grid.Column="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="SpawnRange"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
+                    <TextBlock.ToolTip>
+                        <ToolTip
+                            Background="#484848"
+                            Content="刷怪笼可以随机生成实体的半径。生成区域为方形的，包含刷怪笼所在的方块，并以刷怪笼的X、Z坐标为中心（而不是以刷怪笼本身为中心），以刷怪笼底部的Y坐标为中心的两格高的区域。这允许实体可以有足够的空间在这块区域的顶部和底部再向下一格的区域内生成。这块区域中生成实体的顶点的Y坐标均为整数，同时水平的X、Z坐标是与刷怪笼自身相似的浮点值。默认值是4。"
+                            Foreground="White" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <Slider
+                    Uid="SpawnRange"
+                    Grid.Row="6"
+                    Grid.Column="1"
+                    Foreground="White"
+                    Maximum="32767"
+                    Minimum="-32768"
+                    Style="{DynamicResource NumberBoxStyle}" />
+                <CustomControl:RadiusToggleButtons
+                    Uid="SpawnRange"
+                    Grid.Row="6"
+                    Grid.Column="2"
+                    Margin="0,0,5,0"
+                    Foreground="White"
+                    IsChecked="True"
+                    SelectedToggleText="使用默认值"
+                    Style="{DynamicResource RadiusToggleButton}"
+                    ToggleHeight="25"
+                    ToggleWidth="45"
+                    UnSelectedToggleText="使用指定值" />
+                <TextBlock
+                    Grid.Row="7"
+                    Grid.Column="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="SpawnData"
+                    ToolTipService.BetweenShowDelay="0"
+                    ToolTipService.InitialShowDelay="0">
+                    <TextBlock.ToolTip>
+                        <ToolTip
+                            Background="#484848"
+                            Content="包含了此次生成后在下次生成实体时复制到实体的标签。任何实体或生物标签都可以使用。如果刷怪笼指定了这些标签，那么几乎所有的可变数据，如生物装备、村民职业、羊毛颜色等将不会被自动生成，必须手动指定（这不适用于位置数据，它们将会正常地随机生成，除非被Pos标签指定。类似地，除非史莱姆和岩浆怪的大小和生命被明确指定，否则它们也会随机生成）。此标签也决定了在刷怪笼里旋转的小型实体的外貌。警告：如果存在SpawnPotentials标签，该标签将会在下一次尝试生成后被覆盖；详见上文以获取更多信息。"
+                            Foreground="White" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <local:ReferenceEntity
+                    Uid="SpawnData"
+                    Grid.Row="7"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2" />
+            </Grid>
+            <CustomControl:Accordion
+                Title="SpawnPotentials"
+                Grid.Row="1"
+                VerticalAlignment="Top"
+                Background="#FFE5B663"
+                Fresh="{Binding ClearSpawnPotentialCommand}"
+                FreshForeground="Black"
+                FreshName="清除"
+                IsExpanded="True"
+                Modify="{Binding AddSpawnPotentialCommand}"
+                ModifyForeground="Black"
+                ModifyName="添加"
+                Style="{DynamicResource AccordionStyle}"
+                TitleForeground="Black"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControl:Accordion.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="可选。一个包含可能生成的实体的列表。如该标签不存在，但存在SpawnData标签，游戏会在刷怪笼下次尝试生成实体时生成此列表。生成的列表仅有一个从SpawnData标签得到的项目。"
+                        Foreground="White" />
+                </CustomControl:Accordion.ToolTip>
+                <ScrollViewer
+                    Background="#2F2F2F"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding SpawnPotentials}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+            </CustomControl:Accordion>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
+    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries">
 
     <ImageBrush x:Key="Minimize" ImageSource="/CBHK;component/Resource/Common/Image/Minimize.png" />
@@ -254,7 +254,7 @@
                                     Orientation="Horizontal"
                                     WindowChrome.IsHitTestVisibleInChrome="True">
                                     <!--  ContentTemplate="{StaticResource Minimize}"  -->
-                                    <CustomControls:TextButtons
+                                    <CustomControl:TextButtons
                                         x:Name="Minimize"
                                         Width="22"
                                         Height="22"
@@ -274,7 +274,7 @@
                                         HorizontalAlignment="Left"
                                         Panel.ZIndex="1"
                                         Background="Transparent">
-                                        <CustomControls:TextButtons
+                                        <CustomControl:TextButtons
                                             x:Name="Restore"
                                             Width="20"
                                             Height="20"
@@ -299,8 +299,8 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Button.Style>-->
-                                        </CustomControls:TextButtons>
-                                        <CustomControls:TextButtons
+                                        </CustomControl:TextButtons>
+                                        <CustomControl:TextButtons
                                             x:Name="Maximize"
                                             Width="20"
                                             Height="20"
@@ -324,9 +324,9 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Button.Style>-->
-                                        </CustomControls:TextButtons>
+                                        </CustomControl:TextButtons>
                                     </Grid>
-                                    <CustomControls:TextButtons
+                                    <CustomControl:TextButtons
                                         x:Name="Close"
                                         Width="20"
                                         Height="20"
@@ -353,7 +353,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Button.Style>-->
-                                    </CustomControls:TextButtons>
+                                    </CustomControl:TextButtons>
                                 </StackPanel>
                             </Grid>
                             <Grid
@@ -511,7 +511,7 @@
                                     Background="Transparent"
                                     Orientation="Horizontal"
                                     WindowChrome.IsHitTestVisibleInChrome="True">
-                                    <CustomControls:TextButtons
+                                    <CustomControl:TextButtons
                                         x:Name="Minimize"
                                         Width="15"
                                         Height="15"
@@ -538,14 +538,14 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Button.Style>-->
-                                    </CustomControls:TextButtons>
+                                    </CustomControl:TextButtons>
                                     <Grid
                                         Margin="0,3,44.7,0"
                                         HorizontalAlignment="Left"
                                         Panel.ZIndex="1"
                                         Background="Transparent"
                                         IsEnabled="False">
-                                        <CustomControls:TextButtons
+                                        <CustomControl:TextButtons
                                             x:Name="Restore"
                                             Background="{StaticResource Window}"
                                             BorderThickness="0"
@@ -568,8 +568,8 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Button.Style>-->
-                                        </CustomControls:TextButtons>
-                                        <CustomControls:TextButtons
+                                        </CustomControl:TextButtons>
+                                        <CustomControl:TextButtons
                                             x:Name="Maximize"
                                             Width="15"
                                             Height="15"
@@ -593,9 +593,9 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Button.Style>-->
-                                        </CustomControls:TextButtons>
+                                        </CustomControl:TextButtons>
                                     </Grid>
-                                    <CustomControls:TextButtons
+                                    <CustomControl:TextButtons
                                         x:Name="Close"
                                         Width="15"
                                         Height="15"
@@ -622,7 +622,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Button.Style>-->
-                                    </CustomControls:TextButtons>
+                                    </CustomControl:TextButtons>
                                 </StackPanel>
                             </Grid>
                             <Grid

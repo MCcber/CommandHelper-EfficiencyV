@@ -1,0 +1,317 @@
+﻿<LocalWindow:CommonWindow
+    x:Class="CBHK.View.Generator.TagView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:LocalWindow="clr-namespace:CBHK.WindowDictionaries"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Title="标签生成器"
+    Width="835"
+    Height="530"
+    MinWidth="835"
+    MinHeight="530"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="#2F2F2F"
+    Foreground="White"
+    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconTags.png"
+    ResizeMode="CanResizeWithGrip"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+
+    <Window.Resources>
+        <CollectionViewSource x:Key="TagItemSource" Source="{Binding TagItems, IsAsync=True}" />
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
+        <ImageBrush x:Key="EditBox" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
+        <ImageBrush x:Key="Issue" ImageSource="/CBHK;component/Resource/Common/Image/Issue.png" />
+        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
+        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding RunCommand}" />
+        <KeyBinding
+            Key="Esc"
+            Command="{Binding ReturnCommand}"
+            CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=LocalWindow:CommonWindow}}" />
+    </Window.InputBindings>
+
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:CallMethodAction MethodName="TagView_Loaded" TargetObject="{Binding}" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+
+    <Grid VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <DockPanel
+            Grid.Row="0"
+            Height="25"
+            Margin="0,2,0,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Top">
+            <CustomControl:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource LeftArrow}"
+                BorderThickness="0"
+                Command="{Binding ReturnCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=LocalWindow:CommonWindow}}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControl:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="ESC:返回主页"
+                        Foreground="White" />
+                </CustomControl:IconTextButtons.ToolTip>
+            </CustomControl:IconTextButtons>
+            <CustomControl:IconTextButtons
+                Width="25"
+                Height="25"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Background="{StaticResource RightArrow}"
+                BorderThickness="0"
+                Command="{Binding RunCommand}"
+                FontSize="15"
+                Style="{DynamicResource IconTextButton}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <CustomControl:IconTextButtons.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="F5:运行"
+                        Foreground="White" />
+                </CustomControl:IconTextButtons.ToolTip>
+            </CustomControl:IconTextButtons>
+            <CustomControl:TextCheckBoxs
+                Width="60"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                VerticalContentAlignment="Center"
+                Content="替换"
+                FontSize="15"
+                Foreground="White"
+                HeaderHeight="20"
+                HeaderWidth="20"
+                IsChecked="{Binding Replace, Mode=TwoWay}"
+                Style="{DynamicResource TextCheckBox}"
+                ToolTip="Replace"
+                ToolTipService.InitialShowDelay="0"
+                ToolTipService.ShowDuration="3000" />
+            <CustomControl:TextCheckBoxs
+                Width="60"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                VerticalContentAlignment="Center"
+                Content="全选"
+                FontSize="15"
+                Foreground="White"
+                HeaderHeight="20"
+                HeaderWidth="20"
+                IsChecked="{Binding SelectedAll, Mode=OneWayToSource}"
+                Style="{DynamicResource TextCheckBox}" />
+            <CustomControl:TextCheckBoxs
+                Width="60"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                VerticalContentAlignment="Center"
+                Content="反选"
+                FontSize="15"
+                Foreground="White"
+                HeaderHeight="20"
+                HeaderWidth="20"
+                IsChecked="{Binding ReverseAll, Mode=OneWayToSource}"
+                Style="{DynamicResource TextCheckBox}" />
+            <TextBlock
+                Margin="10,0,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                FontSize="15"
+                Text="类型过滤" />
+            <ComboBox
+                Width="80"
+                Margin="10,0"
+                VerticalAlignment="Center"
+                BorderBrush="Black"
+                FontSize="15"
+                Foreground="White"
+                IsReadOnly="True"
+                ItemsSource="{Binding TypeItemSource}"
+                SelectedItem="{Binding SelectedTypeItem, Mode=TwoWay}"
+                Style="{DynamicResource TextComboBoxStyle}" />
+            <CustomControl:IconTextButtons
+                Padding="5"
+                Background="{StaticResource ButtonNormal}"
+                Command="{Binding ImportFromClipboardCommand}"
+                Content="从剪切板导入"
+                PressedBackground="{StaticResource ButtonPressed}"
+                Style="{DynamicResource IconTextButton}" />
+            <CustomControl:IconTextButtons
+                Padding="5"
+                Background="{StaticResource ButtonNormal}"
+                Command="{Binding ImportFromFileCommand}"
+                Content="从文件导入"
+                PressedBackground="{StaticResource ButtonPressed}"
+                Style="{DynamicResource IconTextButton}" />
+            <TextBox
+                Margin="5,0"
+                HorizontalAlignment="Stretch"
+                VerticalContentAlignment="Center"
+                BorderBrush="#424242"
+                CaretBrush="White"
+                FontSize="15"
+                Foreground="White"
+                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
+                TextAlignment="Left">
+                <TextBox.Resources>
+                    <VisualBrush
+                        x:Key="BackgroundBrush"
+                        AlignmentX="Left"
+                        AlignmentY="Center"
+                        Stretch="UniformToFill">
+                        <VisualBrush.Visual>
+                            <Grid
+                                Width="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualWidth}"
+                                Height="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualHeight}"
+                                Background="#383838">
+                                <TextBlock
+                                    Margin="15,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Background="Transparent"
+                                    FontSize="12"
+                                    Foreground="#D6D6D6"
+                                    Text="搜索成员"
+                                    TextAlignment="Center" />
+                            </Grid>
+                        </VisualBrush.Visual>
+                    </VisualBrush>
+                </TextBox.Resources>
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Setter Property="Background" Value="{StaticResource EditBox}" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TextBox">
+                                    <Border
+                                        x:Name="border"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        SnapsToDevicePixels="True">
+                                        <ScrollViewer
+                                            x:Name="PART_ContentHost"
+                                            Focusable="False"
+                                            HorizontalScrollBarVisibility="Hidden"
+                                            VerticalScrollBarVisibility="Hidden" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="border" Property="BorderBrush" Value="#424242" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#424242" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
+        </DockPanel>
+        <ListView
+            Grid.Row="2"
+            Background="#555956"
+            BorderBrush="Black"
+            ItemsSource="{Binding Source={StaticResource TagItemSource}, IsAsync=True}"
+            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+            ScrollViewer.VerticalScrollBarVisibility="Auto"
+            SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+            VirtualizingPanel.IsVirtualizing="True"
+            VirtualizingPanel.ScrollUnit="Pixel"
+            VirtualizingPanel.VirtualizationMode="Recycling">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Background="{Binding Background, Mode=OneWay}" IsHitTestVisible="False">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ToggleButton
+                            x:Name="checkButton"
+                            IsChecked="{Binding BeChecked, Mode=TwoWay}"
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed" />
+                        <Image
+                            Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Grid.Column="0"
+                            Width="65"
+                            Height="65"
+                            VerticalAlignment="Center"
+                            IsHitTestVisible="False"
+                            RenderOptions.BitmapScalingMode="NearestNeighbor"
+                            Source="{Binding Icon, IsAsync=True, Mode=OneTime}" />
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            FontSize="25"
+                            FontStyle="Italic"
+                            IsHitTestVisible="False"
+                            Text="{Binding DisplayId, IsAsync=True, Mode=OneTime}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            FontSize="25"
+                            IsHitTestVisible="False"
+                            Text="{Binding DisplayName, IsAsync=True, Mode=OneTime}"
+                            TextAlignment="Left" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel
+                        Background="#555956"
+                        VirtualizingPanel.CacheLength="200 200"
+                        VirtualizingPanel.CacheLengthUnit="Pixel"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.ScrollUnit="Pixel" />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <behavior:Interaction.Triggers>
+                <behavior:EventTrigger EventName="Loaded">
+                    <behavior:CallMethodAction MethodName="ListViewLoaded" TargetObject="{Binding}" />
+                </behavior:EventTrigger>
+                <behavior:EventTrigger EventName="PreviewMouseLeftButtonUp">
+                    <behavior:CallMethodAction MethodName="ListBoxClick" TargetObject="{Binding}" />
+                </behavior:EventTrigger>
+            </behavior:Interaction.Triggers>
+        </ListView>
+    </Grid>
+</LocalWindow:CommonWindow>

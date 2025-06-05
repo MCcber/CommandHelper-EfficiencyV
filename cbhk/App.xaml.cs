@@ -1,39 +1,13 @@
-﻿using System;
+﻿using CBHK.GeneralTool;
+using CBHK.View;
+using Prism.DryIoc;
+using Prism.Ioc;
+using Prism.Mvvm;
+using Serilog;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
-using CBHK.Common;
-using CBHK.GeneralTools;
-using CBHK.Generators.DataPackGenerator;
-using CBHK.Generators.DataPackGenerator.DatapackInitializationForms;
-using CBHK.Generators.DimensionTypeGenerator;
-using CBHK.Generators.EntityGenerator;
-using CBHK.Generators.EntityGenerator.Components;
-using CBHK.Generators.FireworkRocketGenerator;
-using CBHK.Generators.ItemGenerator;
-using CBHK.Generators.ItemGenerator.Components;
-using CBHK.Generators.RecipeGenerator;
-using CBHK.Generators.RecipeGenerator.Components;
-using CBHK.Generators.SignGenerator;
-using CBHK.Generators.SpawnerGenerator.Components;
-using CBHK.Generators.VillagerGenerator;
-using CBHK.Generators.VillagerGenerator.Components;
-using CBHK.View;
-using CBHK.View.Common;
-using CBHK.View.Compoments.Spawner;
-using CBHK.View.Components.Datapack.EditPage;
-using CBHK.View.Generators;
-using CBHK.ViewModel;
-using CBHK.ViewModel.Common;
-using CBHK.ViewModel.Components.Datapack.DatapackInitializationForms;
-using CBHK.ViewModel.Components.Datapack.EditPage;
-using CBHK.ViewModel.Components.Datapack.HomePage;
-using CBHK.ViewModel.Components.Recipe;
-using CBHK.ViewModel.Components.Villager;
-using CBHK.ViewModel.Generators;
-using Prism.DryIoc;
-using Prism.Ioc;
-using Serilog;
 
 namespace CBHK
 {
@@ -86,56 +60,21 @@ namespace CBHK
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            #region View
-            containerRegistry.RegisterSingleton<MoreView>();
-            containerRegistry.RegisterForNavigation<MoreView,MoreViewModel>();
-            containerRegistry.RegisterSingleton<NoticeToUsersView>();
-            containerRegistry.RegisterForNavigation<NoticeToUsersView,NoticeToUsersViewModel>();
-            containerRegistry.RegisterSingleton<SettingsView>();
-            containerRegistry.RegisterForNavigation<SettingsView,SettingsViewModel>();
-            containerRegistry.RegisterSingleton<TutorialsView>();
-            containerRegistry.RegisterForNavigation<TutorialsView,TutorialsViewModel>();
-            containerRegistry.RegisterSingleton<UpdateView>();
-            containerRegistry.RegisterForNavigation<UpdateView, UpdateViewModel>();
-            containerRegistry.RegisterSingleton<DistributorGenerator>();
-            containerRegistry.RegisterSingleton<DisplayerView>();
-            containerRegistry.RegisterForNavigation<DisplayerView, DisplayerViewModel>(Name.DisplayerView);
-            containerRegistry.RegisterForNavigation<SignInView, SignInViewModel>(Name.SignInView);
-            containerRegistry.RegisterSingleton<SignInView>();
-            containerRegistry.RegisterForNavigation<MainView, MainViewModel>(Name.MainView);
-            containerRegistry.RegisterSingleton<MainView>();
+        }
 
-            containerRegistry.RegisterForNavigation<AdvancementView, AdvancementViewModel>(Name.AdvancementView);
-            containerRegistry.RegisterForNavigation<ArmorStandView, ArmorStandViewModel>(Name.ArmorStandView);
-            containerRegistry.RegisterForNavigation<OnlyOneCommandView, OnlyOneCommandViewModel>(Name.OnlyOneCommandView);
-            containerRegistry.RegisterForNavigation<TagView, TagViewModel>(Name.TagView);
-            containerRegistry.RegisterForNavigation<WrittenBookView, WrittenBookViewModel>(Name.WrittenBookView);
-            containerRegistry.RegisterForNavigation<SpawnerView,SpawnerViewModel>(Name.SpawnerView);
-            containerRegistry.RegisterForNavigation<SpawnerPageView,SpawnerPageViewModel>(Name.SpawnerPageView);
-            containerRegistry.RegisterForNavigation<DatapackView,DatapackViewModel>(Name.DatapackView);
-            containerRegistry.RegisterForNavigation<EditPageView, EditPageViewModel>(Name.DatapackEditPageView);
-            containerRegistry.RegisterForNavigation<DimensionTypeView,DimensionTypeViewModel>(Name.DimensionTypeView);
-            containerRegistry.RegisterForNavigation<EntityView,EntityViewModel>(Name.EntityView);
-            containerRegistry.RegisterForNavigation<EntityPagesView, EntityPagesViewModel>();
-            containerRegistry.RegisterForNavigation<FireworkRocketView, FireworkRocketViewModel>(Name.FireworkRocketView);
-            containerRegistry.RegisterForNavigation<ItemView,ItemViewModel>(Name.ItemView);
-            containerRegistry.RegisterForNavigation<ItemPagesView, ItemPageViewModel>(Name.ItemView);
-            containerRegistry.RegisterForNavigation<RecipeView,RecipeViewModel>(Name.RecipeView);
-            containerRegistry.RegisterForNavigation<BlastFurnaceView,BlastFurnaceViewModel>(Name.BlastFurnaceView);
-            containerRegistry.RegisterForNavigation<CampfireView,CampfireViewModel>(Name.CampfireView);
-            containerRegistry.RegisterForNavigation<CraftingTableView,CraftingTableViewModel>(Name.CraftingTableView);
-            containerRegistry.RegisterForNavigation<FurnaceView,FurnaceViewModel>(Name.FurnaceView);
-            containerRegistry.RegisterForNavigation<SmithingTableView,SmithingTableViewModel>(Name.SmithingTableView);
-            containerRegistry.RegisterForNavigation<SmokerView,SmokerViewModel>(Name.SmokerView);
-            containerRegistry.RegisterForNavigation<StonecutterView, StonecutterViewModel>(Name.StonecutterView);
-            containerRegistry.RegisterForNavigation<SignView,SignViewModel>(Name.SignInView);
-            containerRegistry.RegisterForNavigation<VillagerView,VillagerViewModel>(Name.VillagerView);
-            containerRegistry.RegisterForNavigation<TransactionItemsView,TransactionItemsViewModel>(Name.TransactionItemsView);
-            containerRegistry.RegisterForNavigation<GossipsItemsView, GossipsItemsViewModel>(Name.GossipsItemsView);
-            containerRegistry.RegisterForNavigation<DatapackGenerateSetupView,DatapackGenerateSetupViewModel>(Name.DatapackGenerateSetupView);
-            containerRegistry.RegisterForNavigation<HomePageView,HomePageViewModel>(Name.HomePageView);
-            containerRegistry.RegisterForNavigation<TemplateSelectPageView, TemplateSelectViewModel>(Name.TemplateSelectPageView);
-            #endregion
+        protected override void ConfigureViewModelLocator()
+        {
+            base.ConfigureViewModelLocator();
+
+            // 自定义命名约定
+            ViewModelLocationProvider.SetDefaultViewTypeToViewModelTypeResolver(viewType =>
+            {
+                var viewName = viewType.FullName;
+
+                var viewModelName = viewName.Replace("CBHK.View", "CBHK.ViewModel") + "Model";
+
+                return Type.GetType(viewModelName);
+            });
         }
 
         /// <summary>

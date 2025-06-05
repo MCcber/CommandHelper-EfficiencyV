@@ -10,9 +10,9 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
-using CBHK.GeneralTools.MessageTip;
+using CBHK.GeneralTool.MessageTip;
 using System.Data;
-using CBHK.GeneralTools;
+using CBHK.GeneralTool;
 using System.Data.SQLite;
 using Prism.Ioc;
 using CBHK.View;
@@ -234,7 +234,7 @@ namespace CBHK.ViewModel
             {
                 string account = Regex.Match(uriencode(Regex.Match(UserAccount, "(.*)").ToString()),@"(.*)").ToString();
                 string pwd = Regex.Match(uriencode(Regex.Match(UserPassword, "(.*)").ToString()), @"(.*)").ToString();
-                string signResult = await GeneralTools.SignIn.GetDataByPost(account, pwd);
+                string signResult = await GeneralTool.SignIn.GetDataByPost(account, pwd);
                 result = JsonConvert.DeserializeObject(signResult) as JObject;
             }
             catch(Exception e)
@@ -270,7 +270,7 @@ namespace CBHK.ViewModel
 
                     if (result.SelectToken("data.avatar") is JToken avatar && result.SelectToken("data.avatar").ToString().Contains('?'))
                     {
-                        bool haveHead = await GeneralTools.SignIn.DownLoadUserImage(avatar.ToString(), AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png");
+                        bool haveHead = await GeneralTool.SignIn.DownLoadUserImage(avatar.ToString(), AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png");
                         if (!haveHead && File.Exists(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\command_block.png"))
                             File.Copy(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\command_block.png", AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png");
                     }
@@ -280,7 +280,7 @@ namespace CBHK.ViewModel
                     MainViewModel mainViewModel = mainView.DataContext as MainViewModel;
 
                     if (result.SelectToken("data.bg_bar") is JToken background)
-                        await GeneralTools.SignIn.DownLoadUserImage(background.ToString(), AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png");
+                        await GeneralTool.SignIn.DownLoadUserImage(background.ToString(), AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png");
                     FrontWindow.Close();
 
                     #region 显示管家主窗体

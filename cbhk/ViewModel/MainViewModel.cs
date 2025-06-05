@@ -1,4 +1,4 @@
-﻿using CBHK.GeneralTools;
+﻿using CBHK.GeneralTool;
 using CBHK.Model;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
 using System.Windows.Controls;
-using CBHK.CustomControls;
+using CBHK.CustomControl;
 using System.IO;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -136,7 +136,7 @@ namespace CBHK.ViewModel
                 #region 载入生成器按钮
                 if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
                 {
-                    DataTable generatorTable = await dataCommunicator.GetData("SELECT * FROM Generators");
+                    DataTable generatorTable = await dataCommunicator.GetData("SELECT * FROM Generator");
                     SetGeneratorButtonHandler.Report(generatorTable);
                 }
                 #endregion

@@ -2,10 +2,10 @@
     x:Class="CBHK.View.Common.MoreView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControls="clr-namespace:CBHK.CustomControls"
+    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:CBHK.CustomControls"
+    xmlns:local="clr-namespace:CBHK.CustomControl"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     d:DesignHeight="450"
@@ -117,7 +117,7 @@
         BorderThickness="0"
         SelectedIndex="0"
         Style="{DynamicResource TabControlWithScrollBar}">
-        <CustomControls:TextTabItems
+        <CustomControl:TextTabItems
             Background="#48382C"
             BorderThickness="4,4,4,0"
             Foreground="White"
@@ -148,7 +148,7 @@
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Top"
                                 LastChildFill="False">
-                                <CustomControls:IconTextButtons
+                                <CustomControl:IconTextButtons
                                     Width="200"
                                     Height="136"
                                     HorizontalAlignment="Center"
@@ -159,7 +159,7 @@
                                     NeedMouseOverStyle="True"
                                     PressedBackground="{StaticResource 1Hover.png}"
                                     Style="{DynamicResource IconTextButton}" />
-                                <CustomControls:IconTextButtons
+                                <CustomControl:IconTextButtons
                                     Width="200"
                                     Height="136"
                                     HorizontalAlignment="Center"
@@ -170,7 +170,7 @@
                                     NeedMouseOverStyle="True"
                                     PressedBackground="{StaticResource 9Hover.png}"
                                     Style="{DynamicResource IconTextButton}" />
-                                <CustomControls:IconTextButtons
+                                <CustomControl:IconTextButtons
                                     Width="200"
                                     Height="136"
                                     HorizontalAlignment="Center"
@@ -186,7 +186,7 @@
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Top"
                                 LastChildFill="False">
-                                <CustomControls:IconTextButtons
+                                <CustomControl:IconTextButtons
                                     Width="200"
                                     Height="136"
                                     HorizontalAlignment="Center"
@@ -197,7 +197,7 @@
                                     NeedMouseOverStyle="True"
                                     PressedBackground="{StaticResource 4Hover.png}"
                                     Style="{DynamicResource IconTextButton}" />
-                                <CustomControls:IconTextButtons
+                                <CustomControl:IconTextButtons
                                     Width="200"
                                     Height="136"
                                     HorizontalAlignment="Center"
@@ -208,7 +208,7 @@
                                     NeedMouseOverStyle="True"
                                     PressedBackground="{StaticResource 5Hover.png}"
                                     Style="{DynamicResource IconTextButton}" />
-                                <CustomControls:IconTextButtons
+                                <CustomControl:IconTextButtons
                                     Width="200"
                                     Height="136"
                                     HorizontalAlignment="Center"
@@ -224,7 +224,7 @@
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Top"
                                 LastChildFill="False">
-                                <CustomControls:IconTextButtons
+                                <CustomControl:IconTextButtons
                                     Width="200"
                                     Height="136"
                                     HorizontalAlignment="Center"
@@ -235,7 +235,7 @@
                                     NeedMouseOverStyle="True"
                                     PressedBackground="{StaticResource 3Hover.png}"
                                     Style="{DynamicResource IconTextButton}" />
-                                <CustomControls:IconTextButtons
+                                <CustomControl:IconTextButtons
                                     Width="200"
                                     Height="136"
                                     HorizontalAlignment="Center"
@@ -246,7 +246,7 @@
                                     NeedMouseOverStyle="True"
                                     PressedBackground="{StaticResource 8Hover.png}"
                                     Style="{DynamicResource IconTextButton}" />
-                                <CustomControls:IconTextButtons
+                                <CustomControl:IconTextButtons
                                     Width="200"
                                     Height="136"
                                     HorizontalAlignment="Center"
@@ -262,8 +262,8 @@
                     </Viewbox>
                 </ScrollViewer>
             </Grid>
-        </CustomControls:TextTabItems>
-        <CustomControls:TextTabItems
+        </CustomControl:TextTabItems>
+        <CustomControl:TextTabItems
             Background="#48382C"
             BorderThickness="4,4,4,0"
             Foreground="White"
@@ -286,8 +286,8 @@
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
-        </CustomControls:TextTabItems>
-        <!--<CustomControls:TextTabItems
+        </CustomControl:TextTabItems>
+        <!--<CustomControl:TextTabItems
             Background="#48382C"
             BorderThickness="4,4,4,0"
             Foreground="White"
@@ -337,8 +337,8 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-        </CustomControls:TextTabItems>-->
-        <CustomControls:TextTabItems
+        </CustomControl:TextTabItems>-->
+        <CustomControl:TextTabItems
             Background="#48382C"
             BorderThickness="4,4,4,0"
             Foreground="White"
@@ -378,8 +378,8 @@
                     </behaviors:Interaction.Triggers>
                 </TextBlock>
             </StackPanel>
-        </CustomControls:TextTabItems>
-        <CustomControls:TextTabItems
+        </CustomControl:TextTabItems>
+        <CustomControl:TextTabItems
             Background="#48382C"
             BorderThickness="4,4,4,0"
             Foreground="White"
@@ -433,6 +433,6 @@
                     </Paragraph>
                 </FlowDocument>
             </RichTextBox>
-        </CustomControls:TextTabItems>
+        </CustomControl:TextTabItems>
     </TabControl>
 </UserControl>

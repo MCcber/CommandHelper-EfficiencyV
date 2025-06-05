@@ -6,7 +6,7 @@ using System.Windows.Documents;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using CBHK.CustomControls;
+using CBHK.CustomControl;
 using System.Windows.Media.Imaging;
 using System.IO;
 

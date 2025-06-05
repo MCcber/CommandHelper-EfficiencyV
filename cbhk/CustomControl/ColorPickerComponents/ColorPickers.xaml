@@ -1,0 +1,331 @@
+﻿<UserControl
+    x:Class="CBHK.CustomControl.ColorPickerComponents.ColorPickers"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CBHK.CustomControl.ColorPickerComponents"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style x:Key="ThumbStyle1" TargetType="{x:Type local:ThumbPro}">
+            <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
+            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type local:ThumbPro}">
+                        <Canvas
+                            Width="{TemplateBinding Width}"
+                            Height="{TemplateBinding Height}"
+                            Background="Transparent">
+                            <Path
+                                Canvas.Left="{TemplateBinding Left}"
+                                Canvas.Top="{TemplateBinding Top}"
+                                Width="{TemplateBinding ActualWidth}"
+                                Height="10"
+                                Fill="Gray"
+                                Stretch="Fill">
+                                <Path.Data>
+                                    <PathGeometry>
+                                        <PathGeometry.Figures>
+
+                                            <PathFigure StartPoint="0,0">
+                                                <PolyLineSegment Points="0,20 15,10 0,0 " />
+                                            </PathFigure>
+                                            <PathFigure StartPoint="60,00">
+                                                <PolyLineSegment Points="60,20 45,10 60,0 " />
+                                            </PathFigure>
+                                        </PathGeometry.Figures>
+
+                                    </PathGeometry>
+                                </Path.Data>
+                            </Path>
+
+                        </Canvas>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ThumbStyle2" TargetType="{x:Type local:ThumbPro}">
+            <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
+            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type local:ThumbPro}">
+                        <Canvas
+                            Width="{TemplateBinding Width}"
+                            Height="{TemplateBinding Height}"
+                            Background="Transparent">
+                            <Ellipse
+                                Canvas.Left="{TemplateBinding Left}"
+                                Canvas.Top="{TemplateBinding Top}"
+                                Width="20"
+                                Height="20"
+                                Stroke="Black"
+                                StrokeThickness="1" />
+                        </Canvas>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="FocusVisual2">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle
+                            Margin="2"
+                            SnapsToDevicePixels="true"
+                            Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                            StrokeDashArray="1 2"
+                            StrokeThickness="1" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ButtonStyle1" TargetType="{x:Type Button}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <!--
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                        -->
+                        <Grid
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            SnapsToDevicePixels="true">
+                            <TextBlock Background="{TemplateBinding Background}" />
+                            <ContentPresenter
+                                x:Name="contentPresenter"
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Focusable="False"
+                                RecognizesAccessKey="True"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </UserControl.Resources>
+    <Grid>
+        <Image
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Panel.ZIndex="1"
+            IsHitTestVisible="False"
+            RenderOptions.BitmapScalingMode="NearestNeighbor"
+            Source="/CBHK;component/Resource/Common/Image/ColorPicker.png" />
+        <Button
+            x:Name="btn"
+            Panel.ZIndex="0"
+            Background="{Binding SelectColor}"
+            BorderBrush="White"
+            BorderThickness="2"
+            Click="btn_Click"
+            Style="{DynamicResource ButtonStyle1}" />
+        <Popup
+            Name="pop"
+            AllowsTransparency="True"
+            Placement="Bottom"
+            PlacementTarget="{Binding ElementName=btn}"
+            StaysOpen="False"
+            VerticalOffset="10">
+            <Border Padding="0,10,0,0">
+                <Border
+                    Width="367"
+                    Height="201"
+                    Padding="5"
+                    Background="#2F2F2F"
+                    CornerRadius="5">
+                    <Grid>
+                        <Polygon
+                            x:Name="SelectPoint"
+                            Fill="Transparent"
+                            Points="20,0 40,0 30,-10"
+                            StrokeThickness="5" />
+                        <Grid x:Name="CustomColorGrid">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="3*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="30" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid x:Name="rectColorGrid">
+                                    <Rectangle
+                                        x:Name="viewSelectColor"
+                                        Fill="Red"
+                                        RadiusX="2"
+                                        RadiusY="2" />
+                                    <Rectangle
+                                        x:Name="viewSelectColor1"
+                                        RadiusX="2"
+                                        RadiusY="2">
+                                        <Rectangle.Fill>
+                                            <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                                <GradientStop Offset="0" Color="#FFFFFFFF" />
+                                                <GradientStop Offset="1" Color="#00FFFFFF" />
+                                            </LinearGradientBrush>
+                                        </Rectangle.Fill>
+                                    </Rectangle>
+                                    <Rectangle
+                                        x:Name="viewSelectColor2"
+                                        RadiusX="2"
+                                        RadiusY="2">
+                                        <Rectangle.Fill>
+                                            <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                                <GradientStop Offset="0" Color="#00000000" />
+                                                <GradientStop Offset="1" Color="#FF000000" />
+                                            </LinearGradientBrush>
+                                        </Rectangle.Fill>
+                                    </Rectangle>
+                                    <local:ThumbPro
+                                        x:Name="thumbSB"
+                                        Style="{StaticResource ThumbStyle2}"
+                                        ValueChanged="ThumbPro_ValueChanged_1"
+                                        Xoffset="10"
+                                        Yoffset="10" />
+
+                                </Grid>
+                                <Grid Grid.Column="1" Margin="5,0,0,0">
+                                    <Rectangle
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"
+                                        RadiusX="2"
+                                        RadiusY="2">
+                                        <Rectangle.Fill>
+                                            <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                                <GradientStop x:Name="viewLine1" Offset="0" Color="Red" />
+                                                <GradientStop x:Name="viewLine2" Offset="0.1667" Color="Yellow" />
+                                                <GradientStop x:Name="viewLine3" Offset="0.3334" Color="Lime" />
+                                                <GradientStop x:Name="viewLine4" Offset="0.5001" Color="Cyan" />
+                                                <GradientStop x:Name="viewLine5" Offset="0.6668" Color="Blue" />
+                                                <GradientStop x:Name="viewLine6" Offset="0.8335" Color="Magenta" />
+                                                <GradientStop x:Name="viewLine7" Offset="1" Color="Red" />
+                                            </LinearGradientBrush>
+                                        </Rectangle.Fill>
+                                    </Rectangle>
+                                    <local:ThumbPro
+                                        x:Name="thumbH"
+                                        Style="{StaticResource ThumbStyle1}"
+                                        ValueChanged="ThumbPro_ValueChanged"
+                                        VerticalOnly="True"
+                                        Xoffset="30"
+                                        Yoffset="5" />
+
+                                </Grid>
+                                <StackPanel Grid.Column="2">
+                                    <StackPanel
+                                        Margin="10,5,10,5"
+                                        HorizontalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <Label Width="30" Foreground="White">R</Label>
+                                        <TextBox
+                                            x:Name="TextR"
+                                            Width="70"
+                                            VerticalAlignment="Center"
+                                            Background="Transparent"
+                                            BorderBrush="Black"
+                                            Foreground="White"
+                                            LostFocus="TextBox_LostFocus">
+                                            255
+                                        </TextBox>
+                                    </StackPanel>
+                                    <StackPanel
+                                        Margin="10,5,10,5"
+                                        HorizontalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <Label Width="30" Foreground="White">G</Label>
+                                        <TextBox
+                                            x:Name="TextG"
+                                            Width="70"
+                                            VerticalAlignment="Center"
+                                            Background="Transparent"
+                                            BorderBrush="Black"
+                                            Foreground="White"
+                                            LostFocus="TextBox_LostFocus">
+                                            255
+                                        </TextBox>
+                                    </StackPanel>
+                                    <StackPanel
+                                        Margin="10,5,10,5"
+                                        HorizontalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <Label Width="30" Foreground="White">B</Label>
+                                        <TextBox
+                                            x:Name="TextB"
+                                            Width="70"
+                                            VerticalAlignment="Center"
+                                            Background="Transparent"
+                                            BorderBrush="Black"
+                                            Foreground="White"
+                                            LostFocus="TextBox_LostFocus">
+                                            255
+                                        </TextBox>
+                                    </StackPanel>
+                                    <StackPanel
+                                        Margin="10,5,10,5"
+                                        HorizontalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <Label Width="30" Foreground="White">A</Label>
+                                        <TextBox
+                                            x:Name="TextA"
+                                            Width="70"
+                                            VerticalAlignment="Center"
+                                            Background="Transparent"
+                                            BorderBrush="Black"
+                                            Foreground="White"
+                                            LostFocus="TextBox_LostFocus">
+                                            255
+                                        </TextBox>
+                                    </StackPanel>
+                                    <StackPanel
+                                        Margin="10,5,10,5"
+                                        HorizontalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <Label
+                                            Width="35"
+                                            Content="Hex"
+                                            Foreground="White" />
+                                        <TextBox
+                                            x:Name="TextHex"
+                                            Width="70"
+                                            Background="Transparent"
+                                            BorderBrush="Black"
+                                            Foreground="White"
+                                            LostFocus="HexTextLostFocus"
+                                            Text="#FFFFFF" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                        <Grid x:Name="PresetColorGrid" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>
