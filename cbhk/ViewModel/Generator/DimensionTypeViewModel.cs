@@ -181,6 +181,11 @@ namespace CBHK.ViewModel.Generator
             });
         }
 
+        public int GetDocumentLineCount()
+        {
+            return textEditor.Document.LineCount;
+        }
+
         public async Task<JsonTreeViewItem> FindNodeBySpecifyingPath(string path)
         {
             JsonTreeViewItem result = null;

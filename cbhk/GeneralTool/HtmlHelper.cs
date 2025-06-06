@@ -2003,6 +2003,7 @@ namespace CBHK.GeneralTool
                 };
                 foreach (var item in result.Result)
                 {
+                    item.LayerCount = entry.LayerCount + 1;
                     item.RemoveElementButtonVisibility = Visibility.Collapsed;
                 }
                 entry.Children.AddRange([.. result.Result]);

@@ -1,7 +1,13 @@
 ﻿using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.GeneralTool;
+using CBHK.GeneralTool.TreeViewComponentsHelper;
+using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Folding;
+using Prism.Ioc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows;
 using static CBHK.Model.Common.Enums;
 
 namespace CBHK.CustomControl.Interfaces
@@ -33,10 +39,6 @@ namespace CBHK.CustomControl.Interfaces
         /// </summary>
         public Dictionary<string, string> TranslateDefaultDictionary { get; set; }
         /// <summary>
-        /// 识别特定结构的字典
-        /// </summary>
-        public Dictionary<string, string> PresetCustomCompoundKeyDictionary { get; set; }
-        /// <summary>
         /// 存储节点路径对应的上下文
         /// </summary>
         public Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; }
@@ -49,6 +51,8 @@ namespace CBHK.CustomControl.Interfaces
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; }
 
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; }
+
+        public int GetDocumentLineCount();
 
         /// <summary>
         /// 根据区间更新指定值
@@ -78,32 +82,10 @@ namespace CBHK.CustomControl.Interfaces
         /// <param name="value"></param>
         public void SetRangeText(int startOffset, int length, string value);
         /// <summary>
-        /// 操作上下文存储节点的字典
-        /// </summary>
-        /// <param name="targetItem"></param>
-        public JsonTreeViewItem ModifyJsonItemDictionary(JsonTreeViewItem targetItem,ModifyType modifyType);
-        /// <summary>
         /// 通过路径寻找节点
         /// </summary>
         /// <param name="interval"></param>
         /// <returns></returns>
         public Task<JsonTreeViewItem> FindNodeBySpecifyingPath(string path);
-        /// <summary>
-        /// 逐层验证正确性
-        /// </summary>
-        /// <param name="currentItem"></param>
-        /// <returns></returns>
-        public bool VerifyCorrectnessLayerByLayer(JsonTreeViewItem currentItem);
-        /// <summary>
-        /// 删除指定范围内的所有行
-        /// </summary>
-        /// <param name="compoundJsonTreeViewItem"></param>
-        public void DeleteAllLinesInTheSpecifiedRange(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
-        /// <summary>
-        /// 删除指定范围内的所有行
-        /// </summary>
-        /// <param name="startOffset"></param>
-        /// <param name="endOffset"></param>
-        public void DeleteAllLinesInTheSpecifiedRange(int startOffset,int endOffset);
     }
 }

@@ -487,6 +487,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                             else
                             {
                                 Plan.SetRangeText(offset, length, ResultString + "false" + endConnectorSymbol);
+                                Value = false;
                             }
                             break;
                         }

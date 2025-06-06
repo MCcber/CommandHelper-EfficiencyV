@@ -1,8 +1,6 @@
-﻿using CBHK.Common;
-using CBHK.View.Generator;
+﻿using CBHK.View.Generator;
 using CBHK.Model;
 using CBHK.View;
-using CBHK.View.Generator;
 using CBHK.ViewModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -47,7 +45,7 @@ namespace CBHK.GeneralTool
         /// </summary>
         private void StartAdvancementGenerator()
         {
-            AdvancementView advancementView = _container.Resolve<AdvancementView>(Name.AdvancementView);
+            AdvancementView advancementView = _container.Resolve<AdvancementView>();
             advancementView.Show();
             advancementView.Focus();
             SetCBHKState();
@@ -59,9 +57,21 @@ namespace CBHK.GeneralTool
         /// </summary>
         private void StartArmorStandsGenerator()
         {
-            ArmorStandView armorStand = _container.Resolve<ArmorStandView>(Name.ArmorStandView);
+            ArmorStandView armorStand = _container.Resolve<ArmorStandView>();
             armorStand.Show();
             armorStand.Focus();
+            SetCBHKState();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动聊天类型编辑器
+        /// </summary>
+        private void StartChatTpyeGenerator()
+        {
+            ChatTypeView chatTypeView = _container.Resolve<ChatTypeView>();
+            chatTypeView.Show();
+            chatTypeView.Focus();
             SetCBHKState();
         }
 
@@ -240,9 +250,10 @@ namespace CBHK.GeneralTool
         {
             IRelayCommand result = id switch
             {
-                "Advancement" =>function.StartAdvancementGeneratorCommand,
+                "Advancement" => function.StartAdvancementGeneratorCommand,
                 "Ooc" => function.StartOnlyOneCommandGeneratorCommand,
                 "Datapack" => function.StartDatapacksGeneratorCommand,
+                "ChatType" => function.StartChatTpyeGeneratorCommand,
                 "Armorstand" => function.StartArmorStandsGeneratorCommand,
                 "WrittenBook" => function.StartWrittenBooksGeneratorCommand,
                 "Spawners" => function.StartSpawnerGeneratorCommand,

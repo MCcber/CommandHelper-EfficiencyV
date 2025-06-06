@@ -11,8 +11,6 @@ using System.Windows;
 using static CBHK.Model.Common.Enums;
 using ICSharpCode.AvalonEdit.Document;
 using System.Linq;
-using Windows.Devices.Perception;
-using DryIoc;
 
 namespace CBHK.GeneralTool.TreeViewComponentsHelper
 {
@@ -169,8 +167,28 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                     length = jsonTreeViewItem.Parent.EndLine.Offset + index - offset;
                 }
             }
+            else
+            {
+                offset = 2;
+                if(jsonTreeViewItem is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null)
+                {
+                    length = compoundJsonTreeViewItem.EndLine.EndOffset - 2;
+                }
+                else
+                {
+                    length = jsonTreeViewItem.StartLine.EndOffset - 2;
+                }
+            }
 
             plan.SetRangeText(offset, length, "");
+            int lineCount = plan.GetDocumentLineCount();
+            DocumentLine documentEndLine = plan.GetLineByNumber(lineCount);
+            string documentString = plan.GetRangeText(0, documentEndLine.EndOffset);
+            documentString = documentString.Replace("\r", "").Replace("\n","").Replace(" ", "").Trim();
+            if (documentString == "{}" || documentString == "[]")
+            {
+                plan.SetRangeText(0, documentEndLine.EndOffset, documentString);
+            }
             jsonTreeViewItem.StartLine = null;
             if(jsonTreeViewItem is CompoundJsonTreeViewItem compound)
             {
@@ -727,9 +745,12 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                         compoundEndConnectorChar = ']';
                     }
 
-                    if ((compoundJsonTreeViewItem.IsCanBeDefaulted && compoundJsonTreeViewItem.StartLine is null && compoundJsonTreeViewItem.EndLine is null)/* || (!compoundJsonTreeViewItem.IsCanBeDefaulted && (compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine || (compoundJsonTreeViewItem.EndLine is null || (compoundJsonTreeViewItem.EndLine is not null && compoundJsonTreeViewItem.EndLine.IsDeleted))))*/)
+                    if ((compoundJsonTreeViewItem.IsCanBeDefaulted && compoundJsonTreeViewItem.StartLine is null && compoundJsonTreeViewItem.EndLine is null) /* || (!compoundJsonTreeViewItem.IsCanBeDefaulted && (compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine || (compoundJsonTreeViewItem.EndLine is null || (compoundJsonTreeViewItem.EndLine is not null && compoundJsonTreeViewItem.EndLine.IsDeleted))))*/)
                     {
-                        isNotNeedNewLine = true;
+                        if (compoundJsonTreeViewItem.Plan.GetDocumentLineCount() > 1)
+                        {
+                            isNotNeedNewLine = true;
+                        }
                         result.ResultString.Insert(0, new string(' ', compoundJsonTreeViewItem.LayerCount * 2) + "\"" + compoundJsonTreeViewItem.Key + "\": " + compoundStartConnectorChar + "\r\n").Append("\r\n" + new string(' ', compoundJsonTreeViewItem.LayerCount * 2) + compoundEndConnectorChar + (parent is not null && (parent.StartLine == parent.EndLine || parent.StartLine is null) ? "\r\n" + new string(' ', parent.LayerCount * 2) : ""));
                     }
 
@@ -758,8 +779,14 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                             newLine = parent.Children.Count == 1 ? "\r\n" + new string(' ', compoundJsonTreeViewItem.LayerCount * 2) : "";
                         }
                         else
+                        if (parent is null && compoundJsonTreeViewItem.DataType is DataType.OptionalCompound)
                         {
-                            newLine = compoundJsonTreeViewItem.Children.Count == 2 ? "\r\n" + new string(' ', compoundJsonTreeViewItem.LayerCount * 2) : "";
+                            newLine = "\r\n";
+                        }
+                        else
+                        if (compoundJsonTreeViewItem.Children.Count == 2)
+                        {
+                            newLine = "\r\n" + new string(' ', compoundJsonTreeViewItem.LayerCount * 2);
                         }
                     }
                     #endregion
@@ -788,7 +815,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                             }
                             else
                             {
-                                endOffset = 3;
+                                endOffset = 1;
                             }
                             compoundJsonTreeViewItem.StartLine = null;
                             compoundJsonTreeViewItem.Plan.UpdateNullValueBySpecifyingInterval(endOffset, currentNewString);
@@ -934,7 +961,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                     {
                         targetItem.StartLine = subItem is CompoundJsonTreeViewItem subCompoundItem && subCompoundItem.EndLine is not null ? subCompoundItem.EndLine.NextLine : subItem.StartLine.NextLine;
                     }
-                    if (targetItem is CompoundJsonTreeViewItem firstCompoundItem && firstCompoundItem.Children.Count > 0)
+                    if (targetItem is CompoundJsonTreeViewItem firstCompoundItem)
                     {
                         SetLineNumbersForEachItem(firstCompoundItem.Children, firstCompoundItem);
                     }
@@ -977,7 +1004,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                 #endregion
 
                 #region 确认已有子级时的末尾行号
-                if (compoundJsonTreeViewItem.Children.Count > 1 && (compoundJsonTreeViewItem.EndLine is null || compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine))
+                if ((compoundJsonTreeViewItem.DataType is DataType.OptionalCompound || compoundJsonTreeViewItem.Children.Count > 1) && (compoundJsonTreeViewItem.EndLine is null || compoundJsonTreeViewItem.StartLine == compoundJsonTreeViewItem.EndLine))
                 {
                     JsonTreeViewItem subItem = SearchForTheLastItemWithRowReference(compoundJsonTreeViewItem);
                     if (subItem is CompoundJsonTreeViewItem lastChildItem1 && lastChildItem1.EndLine is not null)
@@ -1004,6 +1031,20 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                     if (subItem is not null)
                     {
                         result.Result[0].Parent.EndLine = subItem.StartLine.NextLine;
+                    }
+                }
+                else
+                if(result.Result.Count > 0 && result.Result[0] is CompoundJsonTreeViewItem firstCompoundItem && firstCompoundItem.DisplayText == "Entry" && compoundJsonTreeViewItem.DataType is DataType.None)
+                {
+                    JsonTreeViewItem subItem = SearchForTheLastItemWithRowReference(firstCompoundItem);
+                    if (subItem is CompoundJsonTreeViewItem lastChildItem && lastChildItem.EndLine is not null)
+                    {
+                        firstCompoundItem.EndLine = lastChildItem.EndLine.NextLine;
+                    }
+                    else
+                    if (subItem is not null)
+                    {
+                        firstCompoundItem.EndLine = subItem.StartLine.NextLine;
                     }
                 }
                 else
