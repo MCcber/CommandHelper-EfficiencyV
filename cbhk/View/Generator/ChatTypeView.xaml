@@ -26,12 +26,6 @@
             JsonTreeViewItemTemplate="{StaticResource JsonTreeViewItem}" />
     </Window.Resources>
 
-    <behaviors:Interaction.Triggers>
-        <behaviors:EventTrigger EventName="Closing">
-            <behaviors:CallMethodAction MethodName="CommonWindow_Closing" TargetObject="{Binding}" />
-        </behaviors:EventTrigger>
-    </behaviors:Interaction.Triggers>
-
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />

@@ -149,6 +149,9 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         [GeneratedRegex(@"\[\[\#?((?<1>[\u4e00-\u9fff]+)\|(?<2>[\u4e00-\u9fff]+)|(?<1>[\u4e00-\u9fff]+))\]\]")]
         private static partial Regex GetContextKey();
 
+        [GeneratedRegex(@"^\s*\s?\:?\s*\s?(\*+)")]
+        private static partial Regex GetLineStarCount();
+
         [GeneratedRegex(@"(?<=<code>)(?<1>[a-z_]+)(?=</code>)")]
         private static partial Regex GetEnumValueMode1();
 
@@ -896,7 +899,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     }
                 }
                 else//未选择成员且当前为可选节点
-                if(previous is not null)
+                if(previous is not null && previous.StartLine is not null)
                 {
                     string previousLineString = "";
                     string parentStartLineText = "";
@@ -969,6 +972,24 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     }
                     Plan.SetRangeText(offset, length, "");
                     StartLine = null;
+                }
+                else
+                {
+                    offset = 1;
+                    if(EndLine is not null && !EndLine.IsDeleted)
+                    {
+                        length = EndLine.EndOffset - offset;
+                    }
+                    else
+                    {
+                        length = StartLine.EndOffset - offset;
+                    }
+                    Plan.SetRangeText(offset, length, "");
+                    EndLine = null;
+                    if(IsCanBeDefaulted)
+                    {
+                        StartLine = null;
+                    }
                 }
             }
             #endregion
@@ -1058,34 +1079,39 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 {
                     bool haveCurrentEnum = false;
                     int startIndex = 0, endIndex = 0;
+                    int currentStarCount = 0,startStarCount = 0;
 
                     for (int i = 0; i < ChildrenStringList.Count; i++)
                     {
                         Match targetmatch = GetEnumRawKey().Match(ChildrenStringList[i]);
+                        Match starMatch = GetLineStarCount().Match(ChildrenStringList[i]);
+                        startStarCount = starMatch.Value.Trim().Length;
                         if (targetmatch.Success && ChildrenStringList[i].Contains(SelectedEnumItem.Text) && !haveCurrentEnum)
                         {
                             haveCurrentEnum = true;
                             startIndex = i + 1;
+                            currentStarCount = startStarCount;
                             continue;
                         }
 
-                        if (haveCurrentEnum && GetEnumRawKey().Match(ChildrenStringList[i]).Success)
+                        if (haveCurrentEnum && GetEnumRawKey().Match(ChildrenStringList[i]).Success && startStarCount == currentStarCount)
                         {
                             endIndex = i;
                             break;
                         }
+                        else
+                        if(i == ChildrenStringList.Count - 1)
+                        {
+                            endIndex = i + 1;
+                        }
                     }
 
+                    ClearCurrentSubItem(Parent);
                     if (haveCurrentEnum)
                     {
-                        ClearCurrentSubItem(Parent);
                         if (endIndex > startIndex)
                         {
                             FilteredRawList = ChildrenStringList[startIndex..endIndex];
-                        }
-                        else
-                        {
-                            FilteredRawList = ChildrenStringList[startIndex..];
                         }
                     }
 
@@ -1094,6 +1120,11 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
 
                         JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), FilteredRawList, LayerCount, "", this, null, 1, true);
                         Parent.Children.AddRange(result.Result);
+
+                        while (result.ResultString[^1] == ' ' || result.ResultString[^1] == '\r' || result.ResultString[^1] == '\n' || result.ResultString[^1] == ',')
+                        {
+                            result.ResultString.Length--;
+                        }
 
                         if (result.Result.Count > 0)
                         {

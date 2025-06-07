@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace CBHK.View.Compoments.WrittenBook
+namespace CBHK.View.Compoment.WrittenBook
 {
     /// <summary>
     /// EditPageView.xaml 的交互逻辑

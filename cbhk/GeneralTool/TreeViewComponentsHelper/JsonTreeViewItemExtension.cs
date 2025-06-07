@@ -302,15 +302,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                     continue;
                 }
 
-                if (parent is not null && (list[i] is not CompoundJsonTreeViewItem || (list[i] is CompoundJsonTreeViewItem compoundItem && compoundItem.DataType is not DataType.CustomCompound)))
-                {
-                    list[i].StartLine = parent.Plan.GetLineByNumber(index);
-                }
-                else
-                if (list[i] is CompoundJsonTreeViewItem subCompoundItem1 && ((subCompoundItem1.DataType is not DataType.OptionalCompound && subCompoundItem1.DataType is not DataType.CustomCompound) || (subCompoundItem1.DataType is DataType.OptionalCompound && subCompoundItem1.Children.Count > 0)))
-                {
-                    list[i].StartLine = list[i].Plan.GetLineByNumber(index);
-                }
+                list[i].StartLine = list[0].Plan.GetLineByNumber(index);
 
                 if (!list[i].IsCanBeDefaulted && list[i].DataType is not DataType.None || (list[i] is CompoundJsonTreeViewItem compoundElementItem2 && compoundElementItem2.DataType is not DataType.None && compoundElementItem2.DataType is not DataType.CustomCompound && compoundElementItem2.DataType is not DataType.OptionalCompound))
                 {

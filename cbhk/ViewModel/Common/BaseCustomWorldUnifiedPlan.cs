@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Prism.Ioc;
 using System;
@@ -16,7 +15,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -27,18 +25,18 @@ namespace CBHK.ViewModel.Common
     public abstract class BaseCustomWorldUnifiedPlan: ObservableObject,ICustomWorldUnifiedPlan
     {
         #region Property
-        protected HtmlHelper htmlHelper { get; set; }
-        protected Window Home { get; set; }
-        protected string ConfigDirectoryPath { get; set; }
-        protected string CommonCompoundDataDirectoryPath { get; set; }
-        protected TextEditor TextEditor { get; set; }
-        protected FoldingManager FoldingManager { get; set; }
-        protected IContainerProvider Container { get; set; }
-        protected JsonTreeViewItemExtension JsonTool { get; set; }
-
-        public virtual string RootDirectory { get; set; }
+        protected virtual HtmlHelper htmlHelper { get; set; }
+        protected virtual Window Home { get; set; }
+        public virtual string ConfigDirectoryPath { get; set; }
+        public virtual string CommonCompoundDataDirectoryPath { get; set; }
+        protected virtual TextEditor TextEditor { get; set; }
+        protected virtual FoldingManager FoldingManager { get; set; }
+        protected virtual IContainerProvider Container { get; set; }
+        protected virtual JsonTreeViewItemExtension JsonTool { get; set; }
 
         public virtual TextComboBoxItem CurrentVersion { get; set; }
+
+        public virtual ObservableCollection<TextComboBoxItem> VersionList { get; set; } = [];
 
         public virtual ObservableCollection<JsonTreeViewItem> TreeViewItemList { get; set; } = [];
 
@@ -62,11 +60,37 @@ namespace CBHK.ViewModel.Common
                 plan = this,
                 jsonTool = JsonTool = new JsonTreeViewItemExtension(Container)
             };
+
+            CurrentVersion = VersionList[0];
+            LoadDictionaryFromFile();
         }
 
         public int GetDocumentLineCount()
         {
             return TextEditor.Document.LineCount;
+        }
+
+        public virtual void LoadDictionaryFromFile()
+        {
+            string rawString = "";
+            if(File.Exists(ConfigDirectoryPath + CurrentVersion.Text + "\\translateDictionary.json"))
+            {
+                rawString = File.ReadAllText(ConfigDirectoryPath + CurrentVersion.Text + "\\translateDictionary.json");
+                JObject data = JObject.Parse(rawString);
+                foreach (var item in data.Properties().Cast<JProperty>())
+                {
+                    TranslateDictionary.TryAdd(item.Name, data[item.Name].ToString());
+                }
+            }
+            if (File.Exists(ConfigDirectoryPath + CurrentVersion.Text + "\\translateDefaultDictionary.json"))
+            {
+                rawString = File.ReadAllText(ConfigDirectoryPath + CurrentVersion.Text + "\\translateDefaultDictionary.json");
+                JObject data = JObject.Parse(rawString);
+                foreach (var item in data.Properties().Cast<JProperty>())
+                {
+                    TranslateDefaultDictionary.TryAdd(item.Name, data[item.Name].ToString());
+                }
+            }
         }
 
         public async Task<JsonTreeViewItem> FindNodeBySpecifyingPath(string path)

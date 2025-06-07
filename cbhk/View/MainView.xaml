@@ -22,6 +22,7 @@
     RenderOptions.BitmapScalingMode="NearestNeighbor"
     RenderOptions.CachingHint="Cache"
     ResizeMode="CanResizeWithGrip"
+    ShowInTaskbar="{Binding ShowInTaskBar}"
     WindowStartupLocation="CenterScreen"
     WindowState="{Binding WindowState}"
     mc:Ignorable="d">
@@ -40,13 +41,6 @@
             x:Key="SysTrayMenu"
             BorderBrush="#424242"
             BorderThickness="1">
-            <MenuItem
-                Background="#2F2F2F"
-                BorderBrush="Transparent"
-                BorderThickness="1"
-                Command="{Binding ShowWindowCommand}"
-                Foreground="White"
-                Header="打开管家" />
             <MenuItem
                 Background="#2F2F2F"
                 BorderBrush="Transparent"
@@ -80,8 +74,9 @@
     <Grid>
         <tb:TaskbarIcon
             ContextMenu="{StaticResource SysTrayMenu}"
+            DoubleClickCommand="{Binding ShowMainWindowCommand}"
+            DoubleClickCommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
             IconSource="pack://application:,,,/CBHK;component/cb.ico"
-            LeftClickCommand="{Binding ShowMainViewCommand}"
             ToolTipText="命令管家"
             Visibility="Collapsed">
             <behaviors:Interaction.Triggers>

@@ -47,6 +47,8 @@ namespace CBHK.ViewModel
         public TaskbarIcon _taskBarIcon = null;
         [ObservableProperty]
         public WindowState _windowState = WindowState.Normal;
+        [ObservableProperty]
+        private bool _showInTaskBar = true;
 
         [ObservableProperty]
         public BitmapImage _userHead = null;
@@ -186,28 +188,29 @@ namespace CBHK.ViewModel
             e.Cancel = MainWindowProperties.CloseToTray;
             if (e.Cancel)
             {
-                //ShowInTaskbar = false;
                 WindowState = WindowState.Minimized;
+                ShowInTaskBar = false;
             }
             else
             {
                 WindowState = WindowState.Minimized;
-                //SystemCommands.CloseWindow(this);
                 Environment.Exit(0);
             }
         }
 
+        [RelayCommand]
         /// <summary>
         /// 显示管家
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ShowWindow(object sender, RoutedEventArgs e)
+        private void ShowMainWindow(object sender)
         {
-            //ShowInTaskbar = true;
-            //WindowState = WindowState.Normal;
-            //Show();
-            //Focus();
+            Window window = sender as Window;
+            window.ShowInTaskbar = true;
+            window.WindowState = WindowState.Normal;
+            window.Show();
+            window.Focus();
         }
 
         /// <summary>
@@ -220,17 +223,6 @@ namespace CBHK.ViewModel
         {
             TaskBarIcon.Visibility = Visibility.Collapsed;
             Environment.Exit(0);
-        }
-
-        [RelayCommand]
-        public void ShowMainView()
-        {
-
-        }
-
-        public void TaskbarIcon_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            ShowWindow(null, null);
         }
         #endregion
 

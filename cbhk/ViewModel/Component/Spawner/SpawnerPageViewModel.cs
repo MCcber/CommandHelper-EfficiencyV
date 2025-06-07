@@ -2,9 +2,7 @@
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.View;
-using CBHK.View.Compoments.Spawner;
 using CBHK.View.Component.Spawner;
-using CBHK.ViewModel;
 using CBHK.ViewModel.Generator;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,7 +16,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace CBHK.View.Component.Spawner
+namespace CBHK.ViewModel.Component.Spawner
 {
     public partial class SpawnerPageViewModel:ObservableObject
     {

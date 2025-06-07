@@ -25,7 +25,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
-namespace CBHK.Generator.FireworkRocketGenerator.Component
+namespace CBHK.ViewModel.Component.FireworkRocket
 {
     public partial class FireworkRocketPageViewModel : ObservableObject
     {

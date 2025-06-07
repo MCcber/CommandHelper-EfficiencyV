@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace CBHK.View.Compoments.WrittenBook
+namespace CBHK.View.Compoment.WrittenBook
 {
     /// <summary>
     /// SignaturePage.xaml 的交互逻辑

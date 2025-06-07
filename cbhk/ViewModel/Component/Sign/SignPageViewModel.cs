@@ -26,7 +26,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace CBHK.Generator.SignGenerator.Component
+namespace CBHK.ViewModel.Component.Sign
 {
     public partial class SignPageViewModel : ObservableObject
     {
@@ -335,7 +335,7 @@ namespace CBHK.Generator.SignGenerator.Component
         public void SignID_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             FrameworkElement frameworkElement = sender as FrameworkElement;
-            RichTabItems richTabItems = frameworkElement.FindParent<SignPageView>().Parent as RichTabItems;
+            RichTabItems richTabItems = frameworkElement.FindParent<RichTabItems>();
             richTabItems.Header = SelectedSignType.Text;
         }
 

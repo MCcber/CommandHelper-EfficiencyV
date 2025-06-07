@@ -3,7 +3,7 @@ using CBHK.CustomControl.ColorPickerComponents;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.View;
-using CBHK.View.Compoments.WrittenBook;
+using CBHK.View.Compoment.WrittenBook;
 using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -23,7 +23,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using EditPage = CBHK.View.Compoments.WrittenBook.EditPage;
+using EditPage = CBHK.View.Compoment.WrittenBook.EditPage;
 using Image = System.Windows.Controls.Image;
 
 namespace CBHK.ViewModel.Generator

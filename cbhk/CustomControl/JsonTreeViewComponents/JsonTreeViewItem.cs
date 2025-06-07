@@ -1,10 +1,8 @@
 ﻿using CBHK.CustomControl.Interfaces;
-using CBHK.GeneralTool;
 using CBHK.Service.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
 using System;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -607,7 +605,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 Plan.UpdateValueBySpecifyingInterval(this, changeType, currentValue);
                 #endregion
                 #region 更新父节点的末行引用
-                if (Parent is not null && (Parent.EndLine is null || Parent.StartLine == Parent.EndLine || (Parent.EndLine is not null && Parent.EndLine.IsDeleted)) && ((Parent.DataType is DataType.List || (Parent.DataType is DataType.MultiType && Parent.SelectedValueType is not null && Parent.SelectedValueType.Text == "List")) && Parent.Children.Count == 2 || (((Parent.DataType is DataType.Compound || (Parent.DataType is DataType.MultiType && Parent.SelectedValueType is not null && Parent.SelectedValueType.Text == "Compound")) || Parent.DataType is DataType.OptionalCompound) && (previous is null || next is null || (previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null)))))
+                if (Parent is not null && (Parent.EndLine is null || Parent.StartLine == Parent.EndLine || (Parent.EndLine is not null && Parent.EndLine.IsDeleted)) && ((Parent.DataType is DataType.List || (Parent.DataType is DataType.MultiType && Parent.SelectedValueType is not null && Parent.SelectedValueType.Text == "List") && (Parent.Children.Count == 2 || IsCanBeDefaulted)) || ((Parent.DataType is DataType.Compound || (Parent.DataType is DataType.MultiType && Parent.SelectedValueType is not null && Parent.SelectedValueType.Text == "Compound") || Parent.DataType is DataType.OptionalCompound) && (previous is null || next is null || (previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null)))))
                 {
                     Parent.EndLine = StartLine.NextLine;
                 }

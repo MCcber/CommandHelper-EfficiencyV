@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="CBHK.View.Compoments.WrittenBook.EditPage"
+    x:Class="CBHK.View.Compoment.WrittenBook.EditPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"

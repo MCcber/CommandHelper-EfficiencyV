@@ -1,13 +1,8 @@
 ﻿using CBHK.CustomControl.JsonTreeViewComponents;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.TreeViewComponentsHelper;
-using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
-using ICSharpCode.AvalonEdit.Folding;
-using Prism.Ioc;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using System.Windows;
 using static CBHK.Model.Common.Enums;
 
 namespace CBHK.CustomControl.Interfaces
@@ -18,10 +13,8 @@ namespace CBHK.CustomControl.Interfaces
         /// 当前选中的版本
         /// </summary>
         public TextComboBoxItem CurrentVersion { get; set; }
-        /// <summary>
-        /// 配置根目录
-        /// </summary>
-        public string RootDirectory { get; set; }
+
+        public ObservableCollection<TextComboBoxItem> VersionList { get; set; }
         /// <summary>
         /// 存储需要被读取并解析的文件列表
         /// </summary>
@@ -53,6 +46,8 @@ namespace CBHK.CustomControl.Interfaces
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; }
 
         public int GetDocumentLineCount();
+
+        public void LoadDictionaryFromFile();
 
         /// <summary>
         /// 根据区间更新指定值

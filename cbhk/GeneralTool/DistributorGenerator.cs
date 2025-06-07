@@ -1,6 +1,6 @@
-﻿using CBHK.View.Generator;
-using CBHK.Model;
+﻿using CBHK.Model;
 using CBHK.View;
+using CBHK.View.Generator;
 using CBHK.ViewModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,7 +22,9 @@ namespace CBHK.GeneralTool
             _container = container;
             MainView mainWindow = _container.Resolve<MainView>();
             if (mainWindow is not null && mainWindow.DataContext is MainViewModel viewModel)
+            {
                 CBHK = viewModel;
+            }
         }
 
         /// <summary>
@@ -46,9 +48,9 @@ namespace CBHK.GeneralTool
         private void StartAdvancementGenerator()
         {
             AdvancementView advancementView = _container.Resolve<AdvancementView>();
+            SetCBHKState();
             advancementView.Show();
             advancementView.Focus();
-            SetCBHKState();
         }
 
         [RelayCommand]
@@ -61,6 +63,24 @@ namespace CBHK.GeneralTool
             armorStand.Show();
             armorStand.Focus();
             SetCBHKState();
+        }
+
+        [RelayCommand]
+        private void StartDamageTypeGenerator()
+        {
+            DamageTypeView damageTypeView = _container.Resolve<DamageTypeView>();
+            SetCBHKState();
+            damageTypeView.Show();
+            damageTypeView.Focus();
+        }
+
+        [RelayCommand]
+        private void StartDimensionGenerator()
+        {
+            DimensionView dimensionView = _container.Resolve<DimensionView>();
+            SetCBHKState();
+            dimensionView.Show();
+            dimensionView.Focus();
         }
 
         [RelayCommand]
@@ -218,14 +238,6 @@ namespace CBHK.GeneralTool
 
         [RelayCommand]
         /// <summary>
-        /// 启动维度生成器
-        /// </summary>
-        private void StartDimensionGenerator()
-        {
-        }
-
-        [RelayCommand]
-        /// <summary>
         /// 启动维度类型生成器
         /// </summary>
         private void StartDimensionTypeGenerator()
@@ -252,6 +264,7 @@ namespace CBHK.GeneralTool
             {
                 "Advancement" => function.StartAdvancementGeneratorCommand,
                 "Ooc" => function.StartOnlyOneCommandGeneratorCommand,
+                "DamageType" => function.StartDamageTypeGeneratorCommand,
                 "Datapack" => function.StartDatapacksGeneratorCommand,
                 "ChatType" => function.StartChatTpyeGeneratorCommand,
                 "Armorstand" => function.StartArmorStandsGeneratorCommand,
@@ -263,9 +276,9 @@ namespace CBHK.GeneralTool
                 "Items" => function.StartItemsGeneratorCommand,
                 "Fireworks" => function.StartFireworksGeneratorCommand,
                 "Entities" => function.StartEntitiesGeneratorCommand,
-                "Signs" => function.StartSignCommand,
+                "Sign" => function.StartSignCommand,
                 "CustomWorld" => function.StartCustomWorldGeneratorCommand,
-                "Dimensions" => function.StartDimensionGeneratorCommand,
+                "Dimension" => function.StartDimensionGeneratorCommand,
                 "DimensionType" => function.StartDimensionTypeGeneratorCommand,
                 _ => null
             };

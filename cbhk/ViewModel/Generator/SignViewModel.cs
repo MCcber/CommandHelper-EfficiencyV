@@ -1,8 +1,7 @@
 ﻿using CBHK.CustomControl;
-using CBHK.Generator.SignGenerator.Component;
 using CBHK.View;
 using CBHK.View.Component.Sign;
-using CBHK.ViewModel;
+using CBHK.ViewModel.Component.Sign;
 using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -21,7 +20,7 @@ namespace CBHK.ViewModel.Generator
 {
     public partial class SignViewModel : ObservableObject
     {
-        #region 字段
+        #region Field
         /// <summary>
         /// 主页
         /// </summary>
@@ -76,8 +75,6 @@ namespace CBHK.ViewModel.Generator
             new TextComboBoxItem() { Text = "1.14.0" },
             new TextComboBoxItem() { Text = "1.13.0" }
         ];
-
-
         #endregion
 
         public SignViewModel(IContainerProvider container,MainView mainView)
@@ -86,7 +83,10 @@ namespace CBHK.ViewModel.Generator
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    Signs[0].Content = new SignPageView() { FontWeight = FontWeights.Normal };
+                    SignPageView signPageView = _container.Resolve<SignPageView>();
+                    Signs[0].Content = signPageView;
+                    signPageView.DataContext = _container.Resolve<SignPageViewModel>();
+                    Signs[0].FontWeight = FontWeights.Normal;
                 });
             });
             if (File.Exists(iconPath))
@@ -149,7 +149,7 @@ namespace CBHK.ViewModel.Generator
         private void AddSign()
         {
             string signPanelPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\acaciaSignPanel.png";
-            SignPageView signPage = new() { FontWeight = FontWeights.Normal };
+            SignPageView signPage = _container.Resolve<SignPageView>();
             SignPageViewModel pageContext = signPage.DataContext as SignPageViewModel;
             pageContext.SignPanelSource = new BitmapImage(new Uri(signPanelPath, UriKind.Absolute));
             RichTabItems richTabItems = new()

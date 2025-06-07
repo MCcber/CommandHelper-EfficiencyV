@@ -3,7 +3,9 @@ using CBHK.CustomControl.Interfaces;
 using CBHK.CustomControl.JsonTreeViewComponents;
 using CBHK.Model.Common;
 using CBHK.Service.Json;
+using CBHK.ViewModel.Common;
 using HtmlAgilityPack;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Prism.Ioc;
 using System;
@@ -511,18 +513,26 @@ namespace CBHK.GeneralTool
             #endregion
 
             #region 处理依赖文件和目录
-            string dependencyDirectoryListPath = Path.Combine(RootDirectory + plan.RootDirectory + plan.CurrentVersion.Text, "dependencyDirectoryList.json");
-            string dependencyFileListPath = Path.Combine(RootDirectory + plan.RootDirectory + plan.CurrentVersion.Text, "dependencyFileList.json");
-
-            JArray directoryArray = JArray.Parse(File.ReadAllText(dependencyDirectoryListPath));
-            JArray fileArray = JArray.Parse(File.ReadAllText(dependencyFileListPath));
-            foreach (var entry in directoryArray)
+            if (plan is BaseCustomWorldUnifiedPlan baseCustomWorldUnifiedPlan)
             {
-                string[] fileList = Directory.GetFiles(RootDirectory + entry.Value<string>());
-                HandlingDependencyFile(fileList);
+                string dependencyDirectoryListPath = Path.Combine(baseCustomWorldUnifiedPlan.ConfigDirectoryPath + plan.CurrentVersion.Text, "dependencyDirectoryList.json");
+                string dependencyFileListPath = Path.Combine(baseCustomWorldUnifiedPlan.ConfigDirectoryPath + plan.CurrentVersion.Text, "dependencyFileList.json");
+                if (File.Exists(dependencyDirectoryListPath))
+                {
+                    JArray directoryArray = JArray.Parse(File.ReadAllText(dependencyDirectoryListPath));
+                    foreach (var entry in directoryArray)
+                    {
+                        string[] fileList = Directory.GetFiles(RootDirectory + entry.Value<string>());
+                        HandlingDependencyFile(fileList);
+                    }
+                }
+                if (File.Exists(dependencyFileListPath))
+                {
+                    JArray fileArray = JArray.Parse(File.ReadAllText(dependencyFileListPath));
+                    string[] directFileList = [.. fileArray.Select(item => RootDirectory + item.Value<string>())];
+                    HandlingDependencyFile(directFileList);
+                }
             }
-            string[] directFileList = [.. fileArray.Select(item => RootDirectory + item.Value<string>())];
-            HandlingDependencyFile(directFileList);
             #endregion
 
             #region 处理主文件
@@ -725,7 +735,7 @@ namespace CBHK.GeneralTool
                 MatchCollection EnumCollectionMode1 = GetEnumValueMode1().Matches(nodeList[i]);
                 MatchCollection EnumCollectionMode2 = GetEnumValueMode2().Matches(nodeList[i]);
                 Match EnumMatch = GetEnumKey().Match(nodeList[i]);
-                bool isEnumKey = plan.TranslateDictionary.ContainsKey('#' + EnumMatch.Groups[1].Value) || plan.EnumIDDictionary.ContainsKey('#' + EnumMatch.Groups[1].Value);
+                bool isEnumKey = plan.TranslateDictionary.Count > 0 && (plan.TranslateDictionary.ContainsKey('#' + EnumMatch.Groups[1].Value) || plan.EnumIDDictionary.ContainsKey('#' + EnumMatch.Groups[1].Value));
                 bool isBoolKey = (EnumCollectionMode1.Count > 0 && (EnumCollectionMode1[0].Groups[1].Value == "false" || EnumCollectionMode1[0].Groups[1].Value == "true")) || (EnumCollectionMode2.Count > 0 && (EnumCollectionMode2[0].Groups[1].Value == "false" || EnumCollectionMode2[0].Groups[1].Value == "true"));
                 if (NBTFeatureList.Count > 0 && !IsPreIdentifiedAsEnumCompoundType)
                 {
@@ -738,7 +748,7 @@ namespace CBHK.GeneralTool
                 bool isEnumIDList = false;
                 if (EnumMatch.Success)
                 {
-                    isEnumIDList = plan.EnumIDDictionary.ContainsKey(EnumMatch.Groups[1].Value);
+                    isEnumIDList = plan.EnumIDDictionary.Count > 0 && plan.EnumIDDictionary.ContainsKey(EnumMatch.Groups[1].Value);
                 }
                 Match DefaultEnumValueMatch = GetDefaultEnumValue().Match(nodeList[i]);
                 Match DefaultNumberValueMatch = GetDefaultNumberValue().Match(nodeList[i]);
@@ -1118,7 +1128,7 @@ namespace CBHK.GeneralTool
 
                                     if (!IsCurrentOptionalNode && currentNodeKey.Length > 0)
                                     {
-                                        result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentNodeKey.ToLower() + "\": ");
+                                        result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentNodeKey.ToLower() + "\": false");
                                     }
                                     else
                                     {
@@ -1191,6 +1201,11 @@ namespace CBHK.GeneralTool
                                         item.Value = "";
                                         item.IsCanBeDefaulted = false;
                                         result.ResultString.Append(new string(' ', item.LayerCount * 2) + "\"\"");
+                                    }
+                                    
+                                    if(currentNodeKey.Length == 0 && (parent.DataType is DataType.List || (parent.DataType is DataType.MultiType && parent.SelectedValueType.Text == "List")))
+                                    {
+                                        item.RemoveElementButtonVisibility = Visibility.Visible;
                                     }
                                     item.Plan = plan;
                                     item.JsonItemTool = jsonTool;
@@ -1767,7 +1782,10 @@ namespace CBHK.GeneralTool
                             Match nextEnumLineMatch = GetEnumRawKey().Match(nodeList[i + 1]);
                             if (nextEnumLineMatch.Success)
                             {
-                                result.ResultString.Append(new string(' ',CurrentCompoundItem.LayerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"");
+                                if (isAddedStringInMulipleCode || CurrentCompoundItem.IsCanBeDefaulted)
+                                {
+                                    result.ResultString.Append(new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"");
+                                }
                                 CurrentCompoundItem.IsEnumBranch = true;
                                 CurrentCompoundItem.ChildrenStringList.AddRange(nodeList.Skip(i + 1));
                                 CurrentCompoundItem.IsCanBeDefaulted = false;
@@ -1832,9 +1850,9 @@ namespace CBHK.GeneralTool
 
                                             if (subResult.ResultString.Length > 0 && (!IsCurrentOptionalNode || isAddToParent))
                                             {
-                                                if(subResult.ResultString.ToString().TrimEnd().EndsWith(','))
+                                                while (subResult.ResultString[^1] == ' ' || subResult.ResultString[^1] == ',' || subResult.ResultString[^1] == '\r' || subResult.ResultString[^1] == '\n')
                                                 {
-                                                    subResult.ResultString.Remove(subResult.ResultString.Length - 3, 3);
+                                                    subResult.ResultString.Length--;
                                                 }
                                                 result.ResultString.Append("\r\n" + subResult.ResultString + "\r\n" + new string(' ', layerCount * 2) + "}");
                                             }
@@ -2027,8 +2045,55 @@ namespace CBHK.GeneralTool
         /// </summary>
         /// <param name="result"></param>
         /// <returns></returns>
-        public JsonTreeViewDataStructure ReceiveJsonContentAndGenerateTreeViewItemList(JsonTreeViewDataStructure result)
+        public JsonTreeViewDataStructure ReceiveJsonContentAndGenerateTreeViewItemList(string data)
         {
+            JsonTreeViewDataStructure result = new();
+
+            JsonTextReader jsonTextReader = new(new StringReader(data));
+            while (jsonTextReader.Read())
+            {
+                string path = jsonTextReader.Path;
+                switch (jsonTextReader.TokenType)
+                {
+                    case JsonToken.None:
+                        break;
+                    case JsonToken.StartObject:
+                        break;
+                    case JsonToken.StartArray:
+                        break;
+                    case JsonToken.StartConstructor:
+                        break;
+                    case JsonToken.PropertyName:
+                        break;
+                    case JsonToken.Raw:
+                        break;
+                    case JsonToken.Integer:
+                        break;
+                    case JsonToken.Float:
+                        break;
+                    case JsonToken.String:
+                        break;
+                    case JsonToken.Boolean:
+                        break;
+                    case JsonToken.Null:
+                        break;
+                    case JsonToken.Undefined:
+                        break;
+                    case JsonToken.EndObject:
+                        break;
+                    case JsonToken.EndArray:
+                        break;
+                    case JsonToken.EndConstructor:
+                        break;
+                    case JsonToken.Date:
+                        break;
+                    case JsonToken.Bytes:
+                        break;
+                    default:
+                        break;
+                }
+            }
+
             return result;
         }
     }

@@ -1,11 +1,10 @@
 ﻿using CBHK.CustomControl;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
-using CBHK.Generator.FireworkRocketGenerator;
-using CBHK.Generator.FireworkRocketGenerator.Component;
 using CBHK.View;
 using CBHK.View.Component.FireworkRocket;
 using CBHK.View.Generator;
+using CBHK.ViewModel.Component.FireworkRocket;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -119,15 +118,17 @@ namespace CBHK.ViewModel.Generator
             }
             #endregion
             #region 初始化成员
-            FireworkRocketPageView fireworkRocketPages = new() { FontWeight = FontWeights.Normal };
+            _container = container;
+            home = mainView;
+            FireworkRocketPageView fireworkRocketPages = _container.Resolve<FireworkRocketPageView>();
             FireworkRocketPageList[0].Content = fireworkRocketPages;
+            fireworkRocketPages.DataContext = _container.Resolve<FireworkRocketPageViewModel>();
+            FireworkRocketPageList[0].FontWeight = FontWeights.Normal;
             GrassBlockSide = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Image\grass_block_side.png", UriKind.Absolute));
             GrassBlockTop = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Image\grass_block_top.png", UriKind.Absolute));
             GrassBlockBottom = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Image\grass_block_bottom.png", UriKind.Absolute));
             FireworkImage = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Image\firework_rocket.png", UriKind.Absolute));
             #endregion
-            _container = container;
-            home = mainView;
         }
 
         public void FireworkRocket_Loaded(object sender,RoutedEventArgs e)

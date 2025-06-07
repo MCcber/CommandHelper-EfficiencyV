@@ -2,8 +2,8 @@
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.View;
-using CBHK.View.Compoments.Spawner;
 using CBHK.View.Component.Spawner;
+using CBHK.ViewModel.Component.Spawner;
 using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -100,7 +100,7 @@ namespace CBHK.ViewModel.Generator
             RichTabItems richTabItems = new()
             {
                 Header = "刷怪笼",
-                Content = new SpawnerPageView() { FontWeight = FontWeights.Normal },
+                Content = _container.Resolve<SpawnerPageView>(),
                 IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
