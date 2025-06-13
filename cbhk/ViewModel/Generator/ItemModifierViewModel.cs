@@ -8,20 +8,23 @@ using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using Newtonsoft.Json.Linq;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class DimensionViewModel:BaseCustomWorldUnifiedPlan
+    public class ItemModifierViewModel : BaseCustomWorldUnifiedPlan
     {
         #region Property
-        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Dimension\Data\Rule\";
+        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ItemModifier\Data\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
         private TextComboBoxItem _currentVersion = new();
@@ -52,14 +55,17 @@ namespace CBHK.ViewModel.Generator
         public override Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; } = [];
 
         public override Dictionary<string, List<string>> EnumIDDictionary { get; set; } = [];
-        public override Dictionary<string, string> TranslateDictionary { get; set; } = [];
+        public override Dictionary<string, string> TranslateDictionary { get; set; } = new Dictionary<string, string>
+        {
+            { "#物品修饰器类型","#Inherit/common/itemModifierType" }
+        };
         public override Dictionary<string, string> TranslateDefaultDictionary { get; set; } = [];
         public override List<string> DependencyFileList { get; set; }
         public override List<string> DependencyDirectoryList { get; set; }
         #endregion
 
         #region Method
-        public DimensionViewModel(IContainerProvider container, MainView mainView) : base(container, mainView)
+        public ItemModifierViewModel(IContainerProvider container, MainView mainView) : base(container, mainView)
         {
             Container = container;
             Home = mainView;
@@ -76,6 +82,37 @@ namespace CBHK.ViewModel.Generator
             EnumIDDictionary.Add("战利品表", ["minecraft:a", "minecraft:b", "minecraft:c"]);
             EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b"]);
             EnumIDDictionary.Add("染料颜色", ["red", "green", "blue"]);
+            #endregion
+            #region 添加复合类数据、调用上下文初始化方法
+            string[] commonDirectoryFileArray = Directory.GetFiles(CommonCompoundDataDirectoryPath);
+            foreach (var item in commonDirectoryFileArray)
+            {
+                string fileName = Path.GetFileNameWithoutExtension(item);
+                string data = File.ReadAllText(item);
+                switch (fileName)
+                {
+                    case "BlockStateProperty":
+                        {
+                            JObject blockStatePropertyObject = JObject.Parse(data);
+                            List<JProperty> blockIDList = [.. blockStatePropertyObject.Properties()];
+                            Dictionary<string, List<string>> blockStateCompound = [];
+                            foreach (var blockID in blockIDList)
+                            {
+                                blockStateCompound.TryAdd(blockID.Name, []);
+                                if (blockStatePropertyObject[blockID.Name][0] is JObject propertObject)
+                                {
+                                    blockStateCompound[blockID.Name].AddRange(propertObject.Properties().Select(item => '{' + item.ToString() + '}'));
+                                }
+                            }
+                            EnumCompoundDataDictionary.Add(fileName, blockStateCompound);
+                            break;
+                        }
+                    default:
+                        {
+                            break;
+                        }
+                }
+            }
             #endregion
         }
         #endregion
@@ -94,8 +131,7 @@ namespace CBHK.ViewModel.Generator
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(ConfigDirectoryPath + CurrentVersion.Text);
-                    string resultString = result.ResultString.ToString().TrimEnd([',', '\r', '\n']);
-                    TextEditor.Text = "{" + (resultString.Length > 0 ? "\r\n" + resultString + "\r\n" : "") + "}";
+                    TextEditor.Text = result.ResultString.ToString();
                     foreach (var item in result.Result)
                     {
                         if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.Children.Count > 0)
@@ -103,9 +139,7 @@ namespace CBHK.ViewModel.Generator
                             JsonTool.SetParentForEachItem(compoundJsonTreeViewItem.Children, compoundJsonTreeViewItem);
                         }
                     }
-
-                    JsonTool.SetLayerCountForEachItem(result.Result, 1);
-                    JsonTool.SetLineNumbersForEachSubItem(result.Result, null);
+                    JsonTool.SetLineNumbersForEachSubItem(result.Result, null, !result.IsHaveRootItem ? 2 : 1);
                     TreeViewItemList = result.Result;
 
                     //为代码编辑器安装大纲管理器

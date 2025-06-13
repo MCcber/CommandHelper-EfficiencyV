@@ -28,7 +28,7 @@ namespace CBHK.GeneralTool
 
         public IJsonItemTool jsonTool = null;
 
-        private List<string> EnumKeyList = ["命名空间ID","内容类型ID"];
+        private List<string> EnumKeyList = ["[[命名空间ID]]","[[内容类型ID]]"];
 
         private List<string> dataStringType = ["string", "bool", "int", "short", "float", "double", "long", "decimal", "compound", "list"];
 
@@ -89,6 +89,7 @@ namespace CBHK.GeneralTool
         public List<string> ProgressClassList = ["treeview"];
 
         private IContainerProvider _container = container;
+        private bool HadPreIdentifiedAsEnumCompoundType { get; set; }
         #endregion
 
         /// <summary>
@@ -309,7 +310,7 @@ namespace CBHK.GeneralTool
                                     }
                                 }
                                 else
-                                if (plan.EnumCompoundDataDictionary.TryGetValue(targetKey, out Dictionary<string, List<string>> dictionary))
+                                if (plan.EnumCompoundDataDictionary.TryGetValue(targetKey, out Dictionary<string, List<string>> dictionary) && (compoundJsonTreeViewItem.EnumItemsSource.Count == 0 || (compoundJsonTreeViewItem.EnumItemsSource.Count > 1 && !dictionary.ContainsKey(compoundJsonTreeViewItem.EnumItemsSource[1].Text))))
                                 {
                                     CompoundJsonTreeViewItem targetItem = null;
                                     if (compoundJsonTreeViewItem.Key.Length > 0)
@@ -331,7 +332,10 @@ namespace CBHK.GeneralTool
                                         targetItem.EnumKey = targetKey;
                                         targetItem.AddOrSwitchElementButtonVisibility = Visibility.Collapsed;
                                         targetItem.EnumBoxVisibility = Visibility.Visible;
-                                        targetItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                        if (targetItem.IsCanBeDefaulted)
+                                        {
+                                            targetItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                        }
                                         targetItem.EnumItemsSource.AddRange(dictionary.Keys.Select(item =>
                                         {
                                             return new TextComboBoxItem()
@@ -553,9 +557,7 @@ namespace CBHK.GeneralTool
                     List<string> nodeContent = [.. treeviewDivs[0].InnerHtml.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
                     nodeContent = TypeSetting(nodeContent);
 
-                    JsonTreeViewDataStructure resultData = GetTreeViewItemResult(new(), nodeContent, 1);
-                    Result.Result.AddRange(resultData.Result);
-                    Result.ResultString.Append(resultData.ResultString);
+                    Result = GetTreeViewItemResult(new(), nodeContent, 1);
                     HandlingTheTypingAppearanceOfCompositeItemList(Result.Result,null);
                 }
                 #endregion
@@ -578,6 +580,7 @@ namespace CBHK.GeneralTool
         public JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int layerCount, string currentReferenceKey = "", CompoundJsonTreeViewItem parent = null, JsonTreeViewItem previous = null, int previousStarCount = 1, bool isAddToParent = false)
         {
             #region Field
+            bool isCompoundRoot = false, isListRoot = false;
             bool isHaveExtraField = nodeList.Count > 0 && (nodeList[^1].Contains("根据内容而指定的额外字段") || GetExtraKey().Match(nodeList[^1]).Success);
             bool IsPreIdentifiedAsEnumCompoundType = false;
             bool IsNoKeyOrMultiDataTypeItem = false;
@@ -613,7 +616,7 @@ namespace CBHK.GeneralTool
                 #endregion
 
                 #region 提取引用节点所代指的文档并将其内容插入到当前节点列表中
-                if (parent is not null && isAddToParent)
+                if (parent is not null && isAddToParent && parent.DisplayText != "Root")
                 {
                     #region 处理父级类型与当前节点类型都为有key列表
                     if((parent.DataType is DataType.List || (parent.DataType is DataType.MultiType && parent.SelectedValueType is not null && parent.SelectedValueType.Text == "List")) && i > currentContextNextIndex && parent.Key.Length > 0 && NBTFeatureList.Except(dataStringType).Any() && NBTFeatureList.Count > 0 && NBTFeatureList[0] == "list")
@@ -655,6 +658,7 @@ namespace CBHK.GeneralTool
                             if (plan.EnumCompoundDataDictionary.TryGetValue(currentSourceCode, out Dictionary<string, List<string>> targetDictionary))
                         {
                             IsPreIdentifiedAsEnumCompoundType = true;
+                            HadPreIdentifiedAsEnumCompoundType = true;
                             CurrentEnumKey = currentSourceCode;
                             isSimpleDataType = false;
                             KeyList.AddRange(targetDictionary.Keys);
@@ -675,7 +679,7 @@ namespace CBHK.GeneralTool
                     #endregion
 
                     #region 处理上下文关键字
-                    if (contextMatch.Success && parent is not null && i >= currentContextNextIndex && (NBTFeatureList.Contains("required=1") || NBTFeatureList.Count == 1))
+                    if (contextMatch.Success && parent is not null && i >= currentContextNextIndex && (NBTFeatureList.Contains("required=1") || !IsCurrentOptionalNode || NBTFeatureList.Count == 1))
                     {
                         string contextKey = ("#" + contextMatch.Groups[1].Value);
                         if (plan.DependencyItemList.TryGetValue(contextKey, out List<string> targetList1))
@@ -704,6 +708,7 @@ namespace CBHK.GeneralTool
                             if(plan.EnumCompoundDataDictionary.TryGetValue(targetKey,out Dictionary<string,List<string>> targetDictionary))
                             {
                                 IsPreIdentifiedAsEnumCompoundType = true;
+                                HadPreIdentifiedAsEnumCompoundType = true;
                                 CurrentEnumKey = targetKey;
                                 isSimpleDataType = false;
                                 KeyList.AddRange(targetDictionary.Keys);
@@ -739,7 +744,7 @@ namespace CBHK.GeneralTool
                 bool isBoolKey = (EnumCollectionMode1.Count > 0 && (EnumCollectionMode1[0].Groups[1].Value == "false" || EnumCollectionMode1[0].Groups[1].Value == "true")) || (EnumCollectionMode2.Count > 0 && (EnumCollectionMode2[0].Groups[1].Value == "false" || EnumCollectionMode2[0].Groups[1].Value == "true"));
                 if (NBTFeatureList.Count > 0 && !IsPreIdentifiedAsEnumCompoundType)
                 {
-                    isSimpleDataType = !(parent is not null && parent.DataType is DataType.CustomCompound && currentReferenceKey.Length > 0) && ((!NBTFeatureList[0].Contains("array") && NBTFeatureList[0] != "list" && NBTFeatureList[0] != "compound" && NBTFeatureList.Count < 3) || isBoolKey) && (isBoolKey || (EnumCollectionMode1.Count < 2 && EnumCollectionMode2.Count < 2) || isEnumKey) && !NBTFeatureList[^1].Contains('\'');
+                    isSimpleDataType = !(parent is not null && parent.DataType is DataType.CustomCompound && currentReferenceKey.Length > 0) && ((!NBTFeatureList[0].Contains("array") && NBTFeatureList[0] != "list" && NBTFeatureList[0] != "compound" && NBTFeatureList.Count < 3) || isBoolKey) && ((isBoolKey || (EnumCollectionMode1.Count < 2 && EnumCollectionMode2.Count < 2)) && !isEnumKey) && !NBTFeatureList[^1].Contains('\'');
                 }
 
                 bool IsExplanationNode = NBTFeatureList.Count > 1;
@@ -770,18 +775,10 @@ namespace CBHK.GeneralTool
                 int lastCurlyBracesIndex = nodeList[i].LastIndexOf('}');
                 string rootString = nodeList[i][(lastCurlyBracesIndex + 1)..].Trim();
 
-                if (lastCurlyBracesIndex > -1 && !string.IsNullOrEmpty(rootString) && (rootString == "根节点" || rootString == "根标签"))
+                if (lastCurlyBracesIndex > -1 && !string.IsNullOrEmpty(rootString) && (rootString == "根节点" || rootString == "根标签" && NBTFeatureList[0] != "list") && NBTFeatureList.Count < 3)
                 {
                     continue;
                 }
-                #endregion
-
-                #region 声明当前节点
-                JsonTreeViewItem item = new()
-                {
-                    LayerCount = layerCount,
-                    IsCanBeDefaulted = IsCurrentOptionalNode
-                };
                 #endregion
 
                 #region 获取当前节点的数据类型和键、获取描述数据
@@ -795,6 +792,23 @@ namespace CBHK.GeneralTool
                 {
                     IsCurrentOptionalNode = false;
                 }
+                #endregion
+
+                #region 声明当前节点
+                if (currentDescription == "根标签" || currentDescription == "根节点")
+                {
+                    layerCount = 0;
+                }
+
+                if (NBTFeatureList[0] == "list" && currentDescription == "根标签" || currentDescription == "根节点")
+                {
+                    isListRoot = true;
+                }
+                JsonTreeViewItem item = new()
+                {
+                    LayerCount = layerCount,
+                    IsCanBeDefaulted = IsCurrentOptionalNode
+                };
                 #endregion
 
                 #region 确认是否能够进入解析流程
@@ -841,10 +855,13 @@ namespace CBHK.GeneralTool
                             }
                             compoundJsonTreeViewItem.SelectedValueType ??= compoundJsonTreeViewItem.ValueTypeSource[0];
                             compoundJsonTreeViewItem.DataType = DataType.MultiType;
-                            if (!IsCurrentOptionalNode)
+                            if (!IsCurrentOptionalNode && !(currentDescription == "根标签" || currentDescription == "根节点"))
                             {
                                 result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + (currentReferenceKey.Length > 0 ? currentReferenceKey : currentNodeKey) + "\": ");
                             }
+
+                            isCompoundRoot = NBTFeatureList[0] == "compound";
+                            isListRoot = NBTFeatureList[0] == "list";
                             switch (NBTFeatureList[0])
                             {
                                 case "bool":
@@ -1309,7 +1326,7 @@ namespace CBHK.GeneralTool
                         #endregion
 
                         #region 设置key
-                        if (CurrentCompoundItem.Key.Length == 0 && currentNodeKey.Length > 0)
+                        if (CurrentCompoundItem.Key.Length == 0 && currentNodeKey.Length > 0 && !(currentDescription == "根标签" || currentDescription == "根节点"))
                         {
                             CurrentCompoundItem.Key = currentNodeKey;
                         }
@@ -1361,6 +1378,10 @@ namespace CBHK.GeneralTool
                         if (CurrentCompoundItem.Key.Replace("\"", "").Length > 0 && CurrentCompoundItem.DisplayText.Length == 0)
                         {
                             CurrentCompoundItem.DisplayText = string.Join(' ', CurrentCompoundItem.Key.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..]));
+                        }
+                        if(currentDescription == "根标签" || currentDescription == "根节点")
+                        {
+                            CurrentCompoundItem.DisplayText = "Root";
                         }
                         CurrentCompoundItem.LayerCount = layerCount;
                         if (CurrentCompoundItem.Key.Length > 0 && !IsCurrentOptionalNode && NBTFeatureList.Count < 3)
@@ -1422,7 +1443,10 @@ namespace CBHK.GeneralTool
                                                 oldPropertyItem.Next = newPropertyItem;
                                                 newPropertyItem.Previous = oldPropertyItem;
                                             }
-                                            newPropertyItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                            if (newPropertyItem.IsCanBeDefaulted && newPropertyItem.EnumItemsSource.Count == 0)
+                                            {
+                                                newPropertyItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                            }
                                             newPropertyItem.SelectedEnumItem = newPropertyItem.EnumItemsSource[0];
                                             foreach (var element in jarray)
                                             {
@@ -1533,11 +1557,22 @@ namespace CBHK.GeneralTool
                                     CurrentCompoundItem.RemoveElementButtonVisibility = Visibility.Visible;
                                 }
                                 List<string> enumSource = [];
-                                enumSource.Add("- unset -");
+                                string targetEnumKey = '#' + EnumMatch.Groups[1].Value;
 
-                                if (plan.EnumIDDictionary.TryGetValue(EnumMatch.Groups[1].Value, out List<string> targetEnumIDList) && targetEnumIDList is not null && targetEnumIDList.Count > 0)
+                                if (plan.TranslateDictionary.TryGetValue(targetEnumKey, out targetEnumKey))
+                                {
+
+                                }
+
+                                if (targetEnumKey is not null && plan.EnumIDDictionary.TryGetValue(targetEnumKey, out List<string> targetEnumIDList) && targetEnumIDList is not null && targetEnumIDList.Count > 0)
                                 {
                                     enumSource.AddRange(targetEnumIDList);
+                                }
+                                else
+                                if(targetEnumKey is not null && plan.EnumCompoundDataDictionary.TryGetValue(targetEnumKey,out Dictionary<string,List<string>> targetDictionary))
+                                {
+                                    enumSource.AddRange(targetDictionary.Keys);
+                                    CurrentCompoundItem.EnumKey = targetEnumKey;
                                 }
                                 else
                                 if (parent is not null)
@@ -1548,10 +1583,16 @@ namespace CBHK.GeneralTool
                                         enumSource.AddRange(parentEnumIDList);
                                     }
                                 }
+
                                 enumSource.AddRange([.. EnumCollectionMode1.Select(enum1 => { return enum1.Groups[1].Value; })]);
                                 enumSource.AddRange([.. EnumCollectionMode2.Select(enum1 => { return enum1.Groups[1].Value; })]);
                                 enumSource = [.. enumSource.Distinct()];
                                 enumSource.Sort();
+
+                                if (CurrentCompoundItem.EnumItemsSource.Count == 0)
+                                {
+                                    CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                }
                                 CurrentCompoundItem.EnumItemsSource.AddRange(enumSource.Select(enum1 =>
                                 {
                                     return new TextComboBoxItem() { Text = enum1 };
@@ -1564,7 +1605,7 @@ namespace CBHK.GeneralTool
                                 if (!CurrentCompoundItem.IsCanBeDefaulted && !isAddedStringInMulipleCode)
                                 {
                                     result.ResultString.Append(new string(' ', layerCount * 2) +
-                                        (currentNodeKey.Length > 0 ? "\"" + currentNodeKey.ToLower() + "\": " : "") + (IsCurrentOptionalNode ? "\"\"" : "\"\""));
+                                        (currentNodeKey.Length > 0 ? "\"" + currentNodeKey.ToLower() + "\": " : "") + (!IsCurrentOptionalNode && CurrentCompoundItem.EnumItemsSource.Count > 0 ? "\"\"" : "\"\""));
                                 }
                                 if (currentNodeKey.Length == 0)
                                 {
@@ -1585,23 +1626,27 @@ namespace CBHK.GeneralTool
                             CurrentCompoundItem.SelectedEnumItem = CurrentCompoundItem.EnumItemsSource.FirstOrDefault();
                             KeyList.Clear();
                             CurrentCompoundItem.EnumKey = CurrentEnumKey;
+                            //这行范围删除源码的操作，可能会导致错误
+                            nodeList.RemoveRange(i + 1, nodeList.Count - i - 1);
                         }
                         #endregion
 
                         #region 处理复合枚举
-                        string targetKey = "";
-                        if (plan.TranslateDictionary.TryGetValue(currentNodeKey.Trim('!'), out targetKey) && isHaveExtraField)
+                        if (plan.TranslateDictionary.TryGetValue(currentNodeKey.Trim('!'), out string targetKey) && isHaveExtraField)
                         {
                             CurrentCompoundItem.DataType = DataType.Enum;
                             CurrentCompoundItem.AddOrSwitchElementButtonVisibility = Visibility.Collapsed;
                             CurrentCompoundItem.IsCanBeDefaulted = false;
                         }
-
                         bool isParentEnumCompound = false;
                         if(targetKey is null && parent is not null && parent.EnumKey.Length > 0 && plan.EnumCompoundDataDictionary.TryGetValue(parent.EnumKey,out Dictionary<string,List<string>> enumCompoundDataDictionary) && enumCompoundDataDictionary.TryGetValue(currentNodeKey.Replace("minecraft:","").Trim('!'),out List<string> enumCompoundList))
                         {
                             targetKey = parent.EnumKey;
                             isParentEnumCompound = true;
+                        }
+                        else
+                        if(parent is null && contextMatch.Success && plan.TranslateDictionary.TryGetValue('#' + contextMatch.Groups[1].Value,out targetKey))
+                        {
                         }
 
                         #region 处理自定义Key节点的逻辑运算符
@@ -1625,7 +1670,7 @@ namespace CBHK.GeneralTool
                             else
                             if (plan.EnumCompoundDataDictionary.TryGetValue(targetKey, out Dictionary<string, List<string>> targetEnumDictionary))
                             {
-                                if (isHaveExtraField || NBTFeatureList[^1].Contains('\''))
+                                if (isHaveExtraField || NBTFeatureList[^1].Contains('\'') || contextMatch.Success)
                                 {
                                     Match nextLineStarMatch = (i + 1) < nodeList.Count ? GetLineStarCount().Match(nodeList[i + 1]) : GetLineStarCount().Match("");
                                     List<string> subFeatureList = (i + 1) < nodeList.Count ? GetHeadTypeAndKeyList(nodeList[i + 1]) : [];
@@ -1634,16 +1679,22 @@ namespace CBHK.GeneralTool
                                     {
                                         CurrentCompoundItem.Key = (isInvertMode ? '!' : "") + subFeatureList[^1];
                                     }
-                                    CurrentCompoundItem.LayerCount = layerCount + 1;
-                                    CurrentCompoundItem.ElementButtonTip = "添加到顶部";
-                                    CurrentCompoundItem.SwitchButtonIcon = CurrentCompoundItem.PlusIcon;
-                                    CurrentCompoundItem.SwitchButtonColor = CurrentCompoundItem.PlusColor;
-                                    CurrentCompoundItem.PressedSwitchButtonColor = CurrentCompoundItem.PressedPlusColor;
+                                    if (parent is not null)
+                                    {
+                                        CurrentCompoundItem.LayerCount = layerCount + 1;
+                                        CurrentCompoundItem.ElementButtonTip = "添加到顶部";
+                                        CurrentCompoundItem.SwitchButtonIcon = CurrentCompoundItem.PlusIcon;
+                                        CurrentCompoundItem.SwitchButtonColor = CurrentCompoundItem.PlusColor;
+                                        CurrentCompoundItem.PressedSwitchButtonColor = CurrentCompoundItem.PressedPlusColor;
+                                    }
                                     CurrentCompoundItem.DisplayText = (isInvertMode ? '!' : "") + (CurrentCompoundItem.Key.Length > 0 ? string.Join(' ', CurrentCompoundItem.Key.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..])) : "");
                                     CurrentCompoundItem.EnumKey = targetKey;
                                     CurrentCompoundItem.EnumBoxVisibility = Visibility.Visible;
-                                    CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
                                     string logicOperator = isInvertMode ? "!" : "";
+                                    if (CurrentCompoundItem.EnumItemsSource.Count == 0)
+                                    {
+                                        CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                    }
                                     CurrentCompoundItem.EnumItemsSource.AddRange(targetEnumDictionary.Keys.Select(item =>
                                     {
                                         return new TextComboBoxItem()
@@ -1652,7 +1703,15 @@ namespace CBHK.GeneralTool
                                         };
                                     }));
                                     result.ResultString.Clear();
-                                    result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentReferenceKey + "\": {" + (!isInvertMode ? "\r\n" + new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"\r\n" + new string(' ', layerCount * 2) : "") + "}");
+                                    //处理自定义key值的节点
+                                    if (parent is not null)
+                                    {
+                                        result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + currentReferenceKey + "\": {" + (!isInvertMode ? "\r\n" + new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"\r\n" + new string(' ', layerCount * 2) : "") + "}");
+                                    }
+                                    else
+                                    {
+                                        result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"");
+                                    }
 
                                     if (isHaveExtraField)
                                     {
@@ -1673,6 +1732,7 @@ namespace CBHK.GeneralTool
                                         result.Result.Add(referenceKeyItem);
                                     }
                                     else
+                                    if(parent is not null)
                                     {
                                         CurrentCompoundItem.Key = CurrentCompoundItem.DisplayText = "";
                                         CurrentCompoundItem.DataType = DataType.CustomCompound;
@@ -1735,7 +1795,10 @@ namespace CBHK.GeneralTool
                             CurrentCompoundItem.AddOrSwitchElementButtonVisibility = Visibility.Visible;
                             CurrentCompoundItem.DataType = DataType.CustomCompound;
                             CurrentCompoundItem.EnumBoxVisibility = Visibility.Visible;
-                            CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                            if (CurrentCompoundItem.IsCanBeDefaulted)
+                            {
+                                CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                            }
                             CurrentCompoundItem.EnumItemsSource.AddRange(targetIDList.Select(item => new TextComboBoxItem() { Text = item }));
                             CurrentCompoundItem.SelectedEnumItem = CurrentCompoundItem.EnumItemsSource[0];
                             result.ResultString.Clear();
@@ -1850,11 +1913,11 @@ namespace CBHK.GeneralTool
 
                                             if (subResult.ResultString.Length > 0 && (!IsCurrentOptionalNode || isAddToParent))
                                             {
-                                                while (subResult.ResultString[^1] == ' ' || subResult.ResultString[^1] == ',' || subResult.ResultString[^1] == '\r' || subResult.ResultString[^1] == '\n')
+                                                result.ResultString.Append("\r\n" + subResult.ResultString + "\r\n");
+                                                if(!isCompoundRoot && !isListRoot)
                                                 {
-                                                    subResult.ResultString.Length--;
+                                                    result.ResultString.Append(new string(' ', layerCount * 2) + "}");
                                                 }
-                                                result.ResultString.Append("\r\n" + subResult.ResultString + "\r\n" + new string(' ', layerCount * 2) + "}");
                                             }
                                             else//复合节点收尾
                                             if (!IsCurrentOptionalNode)
@@ -1885,7 +1948,7 @@ namespace CBHK.GeneralTool
                                             }
                                         }
 
-                                        if (CurrentCompoundItem.Children.Count == 0)
+                                        if (CurrentCompoundItem.Children.Count == 0 || (CurrentCompoundItem.DisplayText == "Root" && CurrentCompoundItem.Parent is null))
                                         {
                                             CurrentCompoundItem.ChildrenStringList.AddRange(currentSubChildrenTuple.Item1);
                                         }
@@ -2009,7 +2072,7 @@ namespace CBHK.GeneralTool
             }
 
             #region 如果父节点类型为列表，则将当前计算结果放入对象节点中
-            if (parent is not null && (parent.DataType is DataType.List || (parent.DataType is DataType.MultiType && parent.SelectedValueType is not null && parent.SelectedValueType.Text == "List")) && nodeList.Count > 1 && !IsNoKeyOrMultiDataTypeItem)
+            if (parent is not null && (parent.DataType is DataType.List || (parent.DataType is DataType.MultiType && parent.SelectedValueType is not null && parent.SelectedValueType.Text == "List")) && (HadPreIdentifiedAsEnumCompoundType || nodeList.Count > 1) && !IsNoKeyOrMultiDataTypeItem)
             {
                 CompoundJsonTreeViewItem entry = new(plan, jsonTool, _container)
                 {
@@ -2037,6 +2100,28 @@ namespace CBHK.GeneralTool
             }
             #endregion
 
+            #region 处理多重类型根节点
+            if (isCompoundRoot || isListRoot)
+            {
+                result.IsHaveRootItem = true;
+                while (result.ResultString[^1] == ' ' || result.ResultString[^1] == ',' ||
+                    result.ResultString[^1] == '\r' || result.ResultString[^1] == '\n')
+                {
+                    result.ResultString.Length--;
+                }
+                result.ResultString.Append("\r\n");
+                if (isCompoundRoot)
+                {
+                    result.ResultString.Append('}');
+                }
+                else
+                if(isListRoot)
+                {
+                    result.ResultString.Append(']');
+                }
+            }
+            #endregion
+
             return result;
         }
 
@@ -2045,7 +2130,7 @@ namespace CBHK.GeneralTool
         /// </summary>
         /// <param name="result"></param>
         /// <returns></returns>
-        public JsonTreeViewDataStructure ReceiveJsonContentAndGenerateTreeViewItemList(string data)
+        public JsonTreeViewDataStructure GenerateTreeViewItemListFromJson(string data)
         {
             JsonTreeViewDataStructure result = new();
 

@@ -96,7 +96,7 @@ namespace CBHK.ViewModel.Generator
                     string resultString = result.ResultString.ToString().TrimEnd([',', '\r', '\n']);
                     TextEditor.Text = "{" + (resultString.Length > 0 ? "\r\n" + resultString + "\r\n" : "") + "}";
 
-                    JsonTool.SetLineNumbersForEachItem(result.Result, null);
+                    JsonTool.SetLineNumbersForEachSubItem(result.Result, null);
 
                     //为代码编辑器安装大纲管理器
                     FoldingManager = FoldingManager.Install(TextEditor.TextArea);
@@ -118,7 +118,7 @@ namespace CBHK.ViewModel.Generator
             string currentText = TextEditor.Text;
             Task.Run(() =>
             {
-                _ = htmlHelper.ReceiveJsonContentAndGenerateTreeViewItemList(currentText);
+                _ = htmlHelper.GenerateTreeViewItemListFromJson(currentText);
             });
         }
     }

@@ -8,12 +8,10 @@ using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using Newtonsoft.Json;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
@@ -102,7 +100,7 @@ namespace CBHK.ViewModel.Generator
                     }
 
                     JsonTool.SetLayerCountForEachItem(result.Result, 1);
-                    JsonTool.SetLineNumbersForEachItem(result.Result, null);
+                    JsonTool.SetLineNumbersForEachSubItem(result.Result, null);
                     TreeViewItemList = result.Result;
 
                     //为代码编辑器安装大纲管理器
@@ -125,7 +123,7 @@ namespace CBHK.ViewModel.Generator
             string currentText = TextEditor.Text;
             Task.Run(() =>
             {
-                _ = htmlHelper.ReceiveJsonContentAndGenerateTreeViewItemList(currentText);
+                _ = htmlHelper.GenerateTreeViewItemListFromJson(currentText);
             });
         }
         #endregion

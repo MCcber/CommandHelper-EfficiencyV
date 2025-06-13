@@ -8,5 +8,6 @@ namespace CBHK.Model.Common
     {
         public ObservableCollection<JsonTreeViewItem> Result { get; set; } = [];
         public StringBuilder ResultString { get; set; } = new();
+        public bool IsHaveRootItem { get; set; }
     }
 }

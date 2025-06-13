@@ -1,6 +1,7 @@
 ﻿using CBHK.CustomControl.Interfaces;
 using CBHK.Service.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DryIoc.FastExpressionCompiler.LightExpression;
 using ICSharpCode.AvalonEdit.Document;
 using System;
 using System.Windows;
@@ -349,7 +350,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             StartLine = targetLine.NextLine;
             if (this is CompoundJsonTreeViewItem thisCompoundItem1)
             {
-                JsonItemTool.SetLineNumbersForEachItem(thisCompoundItem1.Children, thisCompoundItem1, thisCompoundItem1.EnumKey.Length > 0 || thisCompoundItem1.IsEnumBranch);
+                JsonItemTool.SetLineNumbersForEachSubItem(thisCompoundItem1.Children, thisCompoundItem1, thisCompoundItem1.EnumKey.Length > 0 || thisCompoundItem1.IsEnumBranch);
                 JsonTreeViewItem resultItem = JsonItemTool.SearchForTheLastItemWithRowReference(thisCompoundItem1);
                 if(resultItem is CompoundJsonTreeViewItem resultCompoundItem && resultCompoundItem.EndLine is not null)
                 {
@@ -495,7 +496,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNextItem = JsonItemTool.LocateTheNodesOfTwoAdjacentExistingValues(Previous, Next);
             previous = previousAndNextItem.Item1;
             next = previousAndNextItem.Item2;
-            CompoundJsonTreeViewItem previousCompoundItem = previous as CompoundJsonTreeViewItem;
+            CompoundJsonTreeViewItem previousCompoundItem1 = previous as CompoundJsonTreeViewItem;
             CompoundJsonTreeViewItem nextCompoundItem = next as CompoundJsonTreeViewItem;
             #endregion
 
@@ -516,9 +517,9 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
 
                 if (Key.Length > 0 && IsCanBeDefaulted)
                 {
-                    if (previousCompoundItem is not null && previousCompoundItem.EndLine is not null)
+                    if (previousCompoundItem1 is not null && previousCompoundItem1.EndLine is not null)
                     {
-                        topLine = previousCompoundItem.EndLine;
+                        topLine = previousCompoundItem1.EndLine;
                     }
                     else
                     if (previous is not null)
@@ -600,9 +601,55 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 }
                 else
                 {
-                    currentValue = (previous is not null && previous.StartLine is not null && ((next is not null && next.StartLine is null) || next is null) ? ',' : "") + "\r\n" + new string(' ', LayerCount * 2) + (Key.Length > 0 ? "\"" + Key + "\": " : "") + doubleQuotationMarks + currentValue + doubleQuotationMarks + (Parent.EndLine == Parent.StartLine || Parent.EndLine is null ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "") + (next is not null && next.StartLine is not null ? ',' : "");
+                    currentValue = (previous is not null && previous.StartLine is not null && ((next is not null && next.StartLine is null) || next is null) ? ',' : "") + "\r\n" + new string(' ', LayerCount * 2) + (Key.Length > 0 ? "\"" + Key + "\": " : "") + doubleQuotationMarks + currentValue + doubleQuotationMarks + (Parent is not null && (Parent.EndLine == Parent.StartLine || Parent.EndLine is null) ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "") + (next is not null && next.StartLine is not null ? ',' : "");
                 }
-                Plan.UpdateValueBySpecifyingInterval(this, changeType, currentValue);
+                if (Parent is not null || StartLine is not null)
+                {
+                    Plan.UpdateValueBySpecifyingInterval(this, changeType, currentValue);
+                }
+                else
+                {
+                    int lineNumber = 0;
+                    if(previous is CompoundJsonTreeViewItem previousCompoundItem2 && previousCompoundItem2.EndLine is not null)
+                    {
+                        offset = previousCompoundItem2.EndLine.EndOffset;
+                        lineNumber = previousCompoundItem2.EndLine.LineNumber + 1;
+                    }
+                    else
+                    if(previous is not null && previous.StartLine is not null)
+                    {
+                        offset = previous.StartLine.EndOffset;
+                        lineNumber = previous.StartLine.LineNumber + 1;
+                    }
+                    else
+                    if(Parent is not null)
+                    {
+                        lineNumber = Parent.StartLine.NextLine.LineNumber;
+                        string parentStartLineString = Plan.GetRangeText(Parent.StartLine.Offset, Parent.StartLine.Length);
+                        if (Parent.Key.Length > 0)
+                        {
+                            offset = Parent.StartLine.Offset + parentStartLineString.IndexOf(':') + 3;
+                        }
+                        else
+                        {
+                            if (offset == -1)
+                            {
+                                offset = Parent.StartLine.Offset + parentStartLineString.IndexOf('{');
+                            }
+                            if (offset == -1)
+                            {
+                                offset = Parent.StartLine.Offset + parentStartLineString.IndexOf('[');
+                            }
+                        }
+                    }
+                    else
+                    {
+                        offset = 1;
+                    }
+                    Plan.SetRangeText(offset, length, currentValue);
+
+                    StartLine = Plan.GetLineByNumber(lineNumber);
+                }
                 #endregion
                 #region 更新父节点的末行引用
                 if (Parent is not null && (Parent.EndLine is null || Parent.StartLine == Parent.EndLine || (Parent.EndLine is not null && Parent.EndLine.IsDeleted)) && ((Parent.DataType is DataType.List || (Parent.DataType is DataType.MultiType && Parent.SelectedValueType is not null && Parent.SelectedValueType.Text == "List") && (Parent.Children.Count == 2 || IsCanBeDefaulted)) || ((Parent.DataType is DataType.Compound || (Parent.DataType is DataType.MultiType && Parent.SelectedValueType is not null && Parent.SelectedValueType.Text == "Compound") || Parent.DataType is DataType.OptionalCompound) && (previous is null || next is null || (previous is not null && previous.StartLine is null) || (next is not null && next.StartLine is null)))))

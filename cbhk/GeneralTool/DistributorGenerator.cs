@@ -65,6 +65,9 @@ namespace CBHK.GeneralTool
             SetCBHKState();
         }
 
+        /// <summary>
+        /// 启动伤害类型生成器
+        /// </summary>
         [RelayCommand]
         private void StartDamageTypeGenerator()
         {
@@ -74,6 +77,9 @@ namespace CBHK.GeneralTool
             damageTypeView.Focus();
         }
 
+        /// <summary>
+        /// 启动维度生成器
+        /// </summary>
         [RelayCommand]
         private void StartDimensionGenerator()
         {
@@ -140,6 +146,30 @@ namespace CBHK.GeneralTool
             ItemView item = _container.Resolve<ItemView>();
             item.Show();
             item.Focus();
+            SetCBHKState();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动物品修饰器编辑器
+        /// </summary>
+        private void StartItemModifierGenerator()
+        {
+            ItemModifierView itemModifierView = _container.Resolve<ItemModifierView>();
+            itemModifierView.Show();
+            itemModifierView.Focus();
+            SetCBHKState();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动战利品表生成器
+        /// </summary>
+        private void StartLootTableGenerator()
+        {
+            LootTableView lootTableView = _container.Resolve<LootTableView>();
+            lootTableView.Show();
+            lootTableView.Focus();
             SetCBHKState();
         }
 
@@ -274,6 +304,8 @@ namespace CBHK.GeneralTool
                 "Villagers" => function.StartVillagersGeneratorCommand,
                 "Tags" => function.StartTagsGeneratorCommand,
                 "Items" => function.StartItemsGeneratorCommand,
+                "LootTable" => function.StartLootTableGeneratorCommand,
+                "ItemModifier" => function.StartItemModifierGeneratorCommand,
                 "Fireworks" => function.StartFireworksGeneratorCommand,
                 "Entities" => function.StartEntitiesGeneratorCommand,
                 "Sign" => function.StartSignCommand,

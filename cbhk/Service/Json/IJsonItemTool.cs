@@ -44,7 +44,15 @@ namespace CBHK.Service.Json
         /// <param name="list"></param>
         /// <param name="parent"></param>
         /// <param name="withType"></param>
-        public void SetLineNumbersForEachItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem parent,bool withType = false);
+        public void SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem parent,bool withType = false);
+        /// <summary>
+        /// 从指定的索引设置每个成员的行引用
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="parent"></param>
+        /// <param name="startIndex"></param>
+        /// <param name="withType"></param>
+        public void SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem parent, int lineNumber, bool withType = false);
         /// <summary>
         /// 设置每一个成员的层数
         /// </summary>

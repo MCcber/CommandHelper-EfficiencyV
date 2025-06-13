@@ -1,7 +1,8 @@
 ﻿using CBHK.CustomControl.Interfaces;
 using CBHK.GeneralTool;
-using CBHK.Service.Json;
 using CBHK.Model.Common;
+using CBHK.Service.Json;
+using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
 using Prism.Ioc;
@@ -74,7 +75,8 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         [ObservableProperty]
         public ObservableCollection<TextComboBoxItem> _enumItemsSource = [];
 
-        public TextComboBoxItem oldSelectedEnumItem;
+        private TextComboBoxItem oldSelectedEnumItem;
+        private TextComboBoxItem oldSelectedValueTypeItem;
 
         /// <summary>
         /// 已选中的数据类型
@@ -203,61 +205,61 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         /// <summary>
         /// 清空当前的分支节点
         /// </summary>
-        private void ClearCurrentSubItem(CompoundJsonTreeViewItem parent)
+        private void ClearSubItem()
         {
-            #region 移除切换前的节点
+            #region 移除当前枚举组的成员节点
             JsonTreeViewItem lastItem = null;
-            if(EnumItemCount > 0 && EnumItemCount < parent.Children.Count)
+            if (EnumItemCount > 0 && EnumItemCount < Parent.Children.Count)
             {
-                lastItem = parent.Children[EnumItemCount];
-                if(lastItem.StartLine is null)
+                lastItem = Parent.Children[EnumItemCount];
+                if (lastItem.StartLine is null)
                 {
                     for (int i = EnumItemCount; i >= 0; i--)
                     {
-                        if (parent.Children[i].StartLine is not null)
+                        if (Parent.Children[i].StartLine is not null)
                         {
-                            lastItem = parent.Children[i];
+                            lastItem = Parent.Children[i];
                             break;
                         }
                     }
                 }
-                lastItem ??= parent.Children.FirstOrDefault();
+                lastItem ??= Parent.Children.FirstOrDefault();
             }
             else
             {
-                for (int i = parent.Children.Count - 1; i >= 0; i--)
+                for (int i = Parent.Children.Count - 1; i >= 0; i--)
                 {
-                    if (parent.Children[i].StartLine is not null)
+                    if (Parent.Children[i].StartLine is not null)
                     {
-                        lastItem = parent.Children[i];
+                        lastItem = Parent.Children[i];
                         break;
                     }
                 }
-                lastItem ??= parent.Children.FirstOrDefault();
+                lastItem ??= Parent.Children.FirstOrDefault();
             }
-            int index = parent.Children.IndexOf(this) + 1;
+            int index = Parent.Children.IndexOf(this) + 1;
             if (EnumItemCount > 0)
             {
-                for (int i = index; i <= EnumItemCount && parent.Children.Count > 1; i++)
+                for (int i = index; i <= EnumItemCount && Parent.Children.Count > 1; i++)
                 {
-                    parent.Children.RemoveAt(1);
+                    Parent.Children.RemoveAt(1);
                 }
             }
             else
             {
-                while (parent.Children.Count > 1 && index < parent.Children.Count)
+                while (Parent.Children.Count > 1 && index < Parent.Children.Count)
                 {
-                    parent.Children.RemoveAt(index);
+                    Parent.Children.RemoveAt(index);
                 }
             }
             #endregion
 
             #region 清空子结构的代码
             int length = 0;
-            string lastChildItemText = parent.Plan.GetRangeText(parent.Children[0].StartLine.Offset, parent.Children[0].StartLine.Length);
+            string lastChildItemText = Parent.Plan.GetRangeText(Parent.Children[0].StartLine.Offset, Parent.Children[0].StartLine.Length);
             int minusOffset = lastChildItemText.TrimEnd().EndsWith(',') ? 1 : 0;
-            int offset = parent.Children[0].StartLine.EndOffset - minusOffset;
-            if (lastItem != parent.Children[0])
+            int offset = Parent.Children[0].StartLine.EndOffset - minusOffset;
+            if (lastItem != Parent.Children[0])
             {
                 if (lastItem is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
                 {
@@ -269,11 +271,92 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 }
             }
             else
-            if(parent.EndLine is not null)
+            if (Parent.EndLine is not null)
             {
-                length = parent.EndLine.PreviousLine.EndOffset - offset;
+                length = Parent.EndLine.PreviousLine.EndOffset - offset;
             }
             Plan.SetRangeText(offset, length, "");
+            #endregion
+        }
+
+        private void ClearCurrentItemList()
+        {
+            #region 计算所需移除的节点数量
+            ObservableCollection<JsonTreeViewItem> treeViewItemList = [];
+            JsonTreeViewItem lastItem = null;
+            int index = 0;
+            if (Plan is BaseCustomWorldUnifiedPlan basePlan)
+            {
+                treeViewItemList = basePlan.TreeViewItemList;
+                if (treeViewItemList.Count == 1 && treeViewItemList[0].DisplayText == "Root")
+                {
+                    CompoundJsonTreeViewItem rootItem = treeViewItemList[0] as CompoundJsonTreeViewItem;
+                    treeViewItemList = rootItem.Children;
+                }
+                index = treeViewItemList.IndexOf(this) + 1;
+
+                if (index + EnumItemCount < treeViewItemList.Count)
+                {
+                    lastItem = treeViewItemList[index + EnumItemCount];
+                }
+                else
+                {
+                    lastItem = treeViewItemList[^1];
+                }
+                int lastIndex = index + EnumItemCount;
+                while (lastIndex > 0 && lastItem.StartLine is null)
+                {
+                    lastIndex--;
+                    lastItem = treeViewItemList[lastIndex];
+                }
+                if(lastItem.StartLine is null)
+                {
+                    lastItem = null;
+                }
+            }
+            #endregion
+
+            #region 清空当前枚举组成员节点的Json文本
+            int length = 0,offset = 0;
+            if(EnumItemCount > 0)
+            {
+                DocumentLine targetLine = null;
+                if(EndLine is not null)
+                {
+                    targetLine = EndLine;
+                    offset = EndLine.EndOffset;
+                }
+                else
+                {
+                    targetLine = StartLine;
+                    offset = StartLine.EndOffset;
+                }
+
+                string targetLineString = Plan.GetRangeText(targetLine.Offset,targetLine.Length);
+                if (targetLineString.TrimEnd().EndsWith(','))
+                {
+                    offset--;
+                }
+
+                if (lastItem is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null)
+                {
+                    length = compoundJsonTreeViewItem.EndLine.EndOffset - offset;
+                }
+                else
+                if(lastItem is not null)
+                {
+                    length = lastItem.StartLine.EndOffset - offset;
+                }
+            }
+            Plan.SetRangeText(offset, length, "");
+            #endregion
+
+            #region 移除节点
+            while (EnumItemCount > 0 && index < treeViewItemList.Count)
+            {
+                treeViewItemList.Remove(treeViewItemList[index]);
+                EnumItemCount--;
+            }
             #endregion
         }
 
@@ -294,9 +377,10 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 IsNotValueTypeChanging = false;
                 EnumItemsSource.Clear();
                 IsNotValueTypeChanging = true;
-                int offset = 0, length = 0;
+                int offset = 0, length = 0, oldOffset = 0, oldLength = 0;
                 string startLineText = "";
                 string ResultString = "";
+                string oldResultString = "";
                 if (StartLine is not null && !StartLine.IsDeleted)
                 {
                     startLineText = Plan.GetRangeText(StartLine.Offset, StartLine.Length);
@@ -316,7 +400,30 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 #endregion
 
                 #region 将当前文本值清除，处理子节点
+                List<JsonTreeViewItem> cacheItemList = [];
+                string cacheString = "";
+                if(Children.Count > 0)
+                {
+                    cacheItemList = [..Children];
+                }
                 Children.Clear();
+
+                if (cacheItemList[0].DisplayText == "Entry")
+                {
+                    CompoundJsonTreeViewItem entryItem = cacheItemList[0] as CompoundJsonTreeViewItem;
+                    oldOffset = entryItem.StartLine.Offset;
+                    if (entryItem.EndLine is not null)
+                    {
+                        oldLength = entryItem.EndLine.EndOffset - oldOffset;
+                    }
+                    else
+                    {
+                        oldLength = entryItem.StartLine.EndOffset - oldOffset;
+                    }
+                    oldResultString = Plan.GetRangeText(oldOffset, oldLength);
+                    string spaceString = (LayerCount > 0 ? new string(' ', LayerCount * 2) : "  ");
+                    oldResultString = spaceString + oldResultString.Replace("\r\n  ", "\r\n").TrimStart(['{', '\r', '\n', ' ']).TrimEnd(['}', '\r', '\n', ' ']) + spaceString;
+                }
 
                 int minusOffset = currentValueTypeString == "- unset -" && (next is null || (next is not null && next.StartLine is null)) ? 1 : 0;
 
@@ -382,6 +489,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 }
                 if (StartLine is not null)
                 {
+                    cacheString = Plan.GetRangeText(offset, length);
                     Plan.SetRangeText(offset, length, "");
                 }
                 if (currentValueTypeString == "- unset -")
@@ -592,6 +700,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     AddOrSwitchElementButtonVisibility = Visibility.Collapsed;
                     #endregion
 
+                    #region 管理枚举、外层括号、控件显示
                     if (ChildrenStringList.Count > 0 && currentValueTypeString != "list")
                     {
                         targetRawStringList = [..ChildrenStringList];
@@ -630,24 +739,81 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                         }
                         #endregion
                     }
+                    #endregion
 
                     #region 执行分析，获取结果
                     JsonTreeViewDataStructure result = new();
                     if (currentValueTypeString != "list")
                     {
-                        result = htmlHelper.GetTreeViewItemResult(new(), targetRawStringList, LayerCount + 1, "", this, null, 1, true);
-                        while (result.ResultString.Length > 0 && (result.ResultString[^1] == ',' ||
-                            result.ResultString[^1] == '\r' ||
-                            result.ResultString[^1] == '\n'))
+                        //将列表状态下的第一个复合元素的子级移动到当前节点下
+                        if (oldSelectedValueTypeItem is not null && oldSelectedValueTypeItem.Text.ToLower() == "list" && cacheItemList.Count > 0)
                         {
-                            result.ResultString.Length--;
+                            CompoundJsonTreeViewItem entryItem = cacheItemList[0] as CompoundJsonTreeViewItem;
+                            foreach (var item in entryItem.Children)
+                            {
+                                item.Parent = this;
+                            }
+                            Children.AddRange(entryItem.Children);
+                            result.ResultString = new(oldResultString);
                         }
-                        htmlHelper.HandlingTheTypingAppearanceOfCompositeItemList(result.Result, this);
-                        for (int i = 0; i < result.Result.Count; i++)
+                        else
                         {
-                            result.Result[i].RemoveElementButtonVisibility = Visibility.Collapsed;
+                            result = htmlHelper.GetTreeViewItemResult(new(), targetRawStringList, LayerCount + 1, "", this, null, 1, true);
+                            while (result.ResultString.Length > 0 && (result.ResultString[^1] == ',' ||
+                                result.ResultString[^1] == '\r' ||
+                                result.ResultString[^1] == '\n'))
+                            {
+                                result.ResultString.Length--;
+                            }
+                            htmlHelper.HandlingTheTypingAppearanceOfCompositeItemList(result.Result, this);
+                            for (int i = 0; i < result.Result.Count; i++)
+                            {
+                                result.Result[i].RemoveElementButtonVisibility = Visibility.Collapsed;
+                            }
+                            Children.AddRange(result.Result);
                         }
-                        Children.AddRange(result.Result);
+                    }
+                    else//把复合状态下的子节点移给列表在状态下
+                    if(cacheItemList is not null)
+                    {
+                        CompoundJsonTreeViewItem addToBottom = new(Plan, JsonItemTool, _container)
+                        {
+                            DataType = DataType.None,
+                            RemoveElementButtonVisibility = Visibility.Collapsed,
+                            AddOrSwitchElementButtonVisibility = Visibility.Visible,
+                            ElementButtonTip = "添加到尾部",
+                            Parent = this
+                        };
+                        CompoundJsonTreeViewItem entry = new(Plan, JsonItemTool, _container)
+                        {
+                            DataType = DataType.Compound,
+                            RemoveElementButtonVisibility = Visibility.Visible,
+                            DisplayText = "Entry",
+                            Parent = this
+                        };
+
+                        addToBottom.SwitchButtonIcon = PlusIcon;
+                        addToBottom.SwitchButtonColor = PlusColor;
+                        addToBottom.PressedSwitchButtonColor = PressedPlusColor;
+
+                        if (Parent is not null)
+                        {
+                            addToBottom.LayerCount = entry.LayerCount = Parent.LayerCount + 1;
+                        }
+                        else
+                        {
+                            addToBottom.LayerCount = entry.LayerCount = 1;
+                        }
+                        entry.Children.AddRange(cacheItemList);
+                        foreach (var item in entry.Children)
+                        {
+                            item.Parent = entry;
+                        }
+                        JsonItemTool.SetLayerCountForEachItem(entry.Children, entry.LayerCount + 1);
+                        Children.Add(entry);
+                        Children.Add(addToBottom);
+                        cacheString = cacheString.Replace("\r\n", "\r\n  ");
+                        result.ResultString = new(new string(' ', (LayerCount + 1) * 2) + cacheString);
                     }
                     currentItemReference.IsExpanded = true;
                     #endregion
@@ -655,17 +821,30 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     #region 更新代码编辑器
                     ResultString = result.ResultString.ToString();
 
-                    if (currentValueTypeString != "list" && ResultString.Length > 0)
-                    {
-                        ResultString = connectorSymbol + (Key.Length > 0 ? "\"" + Key + "\": " : "") + bracketPairString[0] + "\r\n" + ResultString + "\r\n" + new string(' ',LayerCount * 2) + bracketPairString[1] + endConnectorSymbol;
-                    }
-                    else
-                    {
-                        ResultString = connectorSymbol + (Key.Length > 0 ? "\"" + Key + "\": " : "") + bracketPairString + endConnectorSymbol;
-                    }
-                    if (offset > 0 && ResultString.Length > 0)
+                    ResultString = connectorSymbol + (Key.Length > 0 ? "\"" + Key + "\": " : "") + bracketPairString[0] + "\r\n" + ResultString + "\r\n" + new string(' ', LayerCount * 2) + bracketPairString[1] + endConnectorSymbol;
+                    if ((offset > 0 && ResultString.Length > 0) || DisplayText == "Root")
                     {
                         Plan.SetRangeText(offset, 0, ResultString);
+                    }
+                    if (Children.Count > 0 && DisplayText == "Root")
+                    {
+                        Children[0].StartLine = StartLine.NextLine;
+                        JsonTreeViewItem lastItem = null;
+                        if (Children.Count > 0 && Children[0].DisplayText == "Entry")
+                        {
+                            CompoundJsonTreeViewItem compoundJsonTreeViewItem = Children[0] as CompoundJsonTreeViewItem;
+                            JsonItemTool.SetLineNumbersForEachSubItem(compoundJsonTreeViewItem.Children, compoundJsonTreeViewItem);
+                            CompoundJsonTreeViewItem entryItem = Children[0] as CompoundJsonTreeViewItem;
+                            lastItem = JsonItemTool.SearchForTheLastItemWithRowReference(entryItem);
+                            if (lastItem is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
+                            {
+                                entryItem.EndLine = lastCompoundItem.EndLine.NextLine;
+                            }
+                            else
+                            {
+                                entryItem.EndLine = lastItem.StartLine.NextLine;
+                            }
+                        }
                     }
                     #endregion
                 }
@@ -695,7 +874,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     {
                         JsonItemTool.SetParentForEachItem(Children, this);
                         JsonItemTool.SetLayerCountForEachItem(Children, LayerCount + 1);
-                        JsonItemTool.SetLineNumbersForEachItem(Children, this);
+                        JsonItemTool.SetLineNumbersForEachSubItem(Children, this);
                     }
                     JsonTreeViewItem lastItem = JsonItemTool.SearchForTheLastItemWithRowReference(this);
                     if (lastItem is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
@@ -740,7 +919,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 }
                 #endregion
 
-                #region 复位
+                #region 复位并存储类型
                 if (StartLine is not null && StartLine.IsDeleted)
                 {
                     StartLine = null;
@@ -749,6 +928,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 {
                     EndLine = null;
                 }
+                oldSelectedValueTypeItem = SelectedValueType;
                 #endregion
             }
         }
@@ -995,11 +1175,22 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             #endregion
 
             #region 判断是否需要应用枚举结构
+            if (EnumItemsSource[0].Text == "- unset -" && !IsCanBeDefaulted)
+            {
+                EnumItemsSource.RemoveAt(0);
+            }
             if (EnumKey.Length > 0 && !skipCode)
             {
                 if (Plan.EnumCompoundDataDictionary.TryGetValue(EnumKey, out Dictionary<string, List<string>> targetDependencyDictionary) && targetDependencyDictionary.TryGetValue(SelectedEnumItem.Text, out List<string> targetRawList))
                 {
-                    ClearCurrentSubItem(Parent);
+                    if (Parent is not null && Parent.DisplayText != "Root")
+                    {
+                        ClearSubItem();
+                    }
+                    else
+                    {
+                        ClearCurrentItemList();
+                    }
                     Match firstKeyWordMatch = GetEnumValueMode1().Match(targetRawList[0]);
                     List<string> targetRawListTemp = [.. targetRawList];
                     if(firstKeyWordMatch.Success && firstKeyWordMatch.Groups[1].Value == SelectedEnumItem.Text)
@@ -1010,11 +1201,24 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     
                     htmlHelper.HandlingTheTypingAppearanceOfCompositeItemList(result.Result,Parent);
 
-                    int index = 1;
+                    int index = 0;
+                    ObservableCollection<JsonTreeViewItem> treeViewItemList = [];
+                    if(Parent is not null)
+                    {
+                        treeViewItemList = Parent.Children;
+                        index = Parent.Children.IndexOf(this) + 1;
+                    }
+                    else
+                    if(Plan is BaseCustomWorldUnifiedPlan basePlan)
+                    {
+                        treeViewItemList = basePlan.TreeViewItemList;
+                        index = basePlan.TreeViewItemList.IndexOf(this) + 1;
+                    }
+
                     EnumItemCount = result.Result.Count;
                     for (int i = 0; i < result.Result.Count; i++)
                     {
-                        Parent.Children.Insert(index, result.Result[i]);
+                        treeViewItemList.Insert(index, result.Result[i]);
                         result.Result[i].RemoveElementButtonVisibility = Visibility.Collapsed;
                         index++;
                     }
@@ -1024,10 +1228,10 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                         result.Result[0].Previous = this;
                         Next = result.Result[0];
                         int insertIndex = result.Result.Count + 1;
-                        if (insertIndex < Parent.Children.Count)
+                        if (insertIndex < treeViewItemList.Count)
                         {
-                            Parent.Children[insertIndex].Previous = result.Result[^1];
-                            result.Result[^1].Next = Parent.Children[insertIndex];
+                            treeViewItemList[insertIndex].Previous = result.Result[^1];
+                            result.Result[^1].Next = treeViewItemList[insertIndex];
                         }
                     }
                     while (result.ResultString.Length > 0 && (result.ResultString[^1] == '\r' ||
@@ -1051,7 +1255,14 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     if (result.ResultString.Length > 0)
                     {
                         Plan.SetRangeText(StartLine.EndOffset, 0, result.ResultString.Length > 0 ? ",\r\n" + result.ResultString.ToString() : "");
-                        JsonItemTool.SetLineNumbersForEachItem(result.Result, Parent, true);
+                        if (Parent is not null)
+                        {
+                            JsonItemTool.SetLineNumbersForEachSubItem(result.Result, Parent, true);
+                        }
+                        else
+                        {
+                            JsonItemTool.SetLineNumbersForEachSubItem(result.Result, Parent, EndLine is not null ? EndLine.LineNumber + 1 : StartLine.LineNumber + 1);
+                        }
                     }
                     else
                     {
@@ -1074,13 +1285,14 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             if (ChildrenStringList.Count > 0 && IsEnumBranch && DataType is DataType.Enum && !skipCode)
             {
                 List<string> FilteredRawList = [];
-
+                bool isNeedResetNextItem = false;
                 if (SelectedEnumItem.Text != "- unset -")
                 {
                     bool haveCurrentEnum = false;
                     int startIndex = 0, endIndex = 0;
                     int currentStarCount = 0,startStarCount = 0;
 
+                    #region 提取目标分支源码
                     for (int i = 0; i < ChildrenStringList.Count; i++)
                     {
                         Match targetmatch = GetEnumRawKey().Match(ChildrenStringList[i]);
@@ -1106,7 +1318,14 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                         }
                     }
 
-                    ClearCurrentSubItem(Parent);
+                    if (Parent is not null && Parent.DisplayText != "Root")
+                    {
+                        ClearSubItem();
+                    }
+                    else
+                    {
+                        ClearCurrentItemList();
+                    }
                     if (haveCurrentEnum)
                     {
                         if (endIndex > startIndex)
@@ -1114,40 +1333,124 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                             FilteredRawList = ChildrenStringList[startIndex..endIndex];
                         }
                     }
+                    #endregion
 
                     if (FilteredRawList.Count > 0)
                     {
-
                         JsonTreeViewDataStructure result = htmlHelper.GetTreeViewItemResult(new(), FilteredRawList, LayerCount, "", this, null, 1, true);
-                        Parent.Children.AddRange(result.Result);
 
-                        while (result.ResultString[^1] == ' ' || result.ResultString[^1] == '\r' || result.ResultString[^1] == '\n' || result.ResultString[^1] == ',')
+                        int index = 0;
+                        if (Parent is not null)
+                        {
+                            index = Parent.Children.IndexOf(this) + 1;
+                        }
+                        else
+                        if (Plan is BaseCustomWorldUnifiedPlan basePlan)
+                        {
+                            index = basePlan.TreeViewItemList.IndexOf(this) + 1;
+                        }
+                        EnumItemCount = result.Result.Count;
+                        if (Parent is not null)
+                        {
+                            for (int i = 0; i < result.Result.Count; i++)
+                            {
+                                Parent.Children.Insert(index, result.Result[i]);
+                                result.Result[i].RemoveElementButtonVisibility = Visibility.Collapsed;
+                                index++;
+                            }
+                        }
+                        else
+                        {
+                            BaseCustomWorldUnifiedPlan basePlan = Plan as BaseCustomWorldUnifiedPlan;
+                            for (int i = 0; i < result.Result.Count; i++)
+                            {
+                                basePlan.TreeViewItemList.Insert(index, result.Result[i]);
+                                result.Result[i].RemoveElementButtonVisibility = Visibility.Collapsed;
+                                index++;
+                            }
+                        }
+
+                        while (result.ResultString.Length > 0 && (result.ResultString[^1] == ' ' || result.ResultString[^1] == '\r' || result.ResultString[^1] == '\n' || result.ResultString[^1] == ','))
                         {
                             result.ResultString.Length--;
                         }
 
+                        #region 设置前后关系
+                        JsonTreeViewItem nextItem = Next;
                         if (result.Result.Count > 0)
                         {
                             result.Result[0].Previous = this;
                             Next = result.Result[0];
                         }
 
+                        if(nextItem is not null)
+                        {
+                            result.Result[^1].Next = nextItem;
+                            nextItem.Previous = result.Result[^1];
+                        }
+                        #endregion
+
                         Plan.SetRangeText(StartLine.EndOffset, 0, result.ResultString.Length > 0 ? ",\r\n" + result.ResultString.ToString() : "");
-                        JsonItemTool.SetLineNumbersForEachItem(result.Result, Parent, true);
+                        if (Parent is not null && Parent.StartLine is not null && !Parent.StartLine.IsDeleted && Parent.StartLine.LineNumber > 1)
+                        {
+                            JsonItemTool.SetLineNumbersForEachSubItem(result.Result, Parent, true);
+                        }
+                        else
+                        {
+                            JsonItemTool.SetLineNumbersForEachSubItem(result.Result, Parent, EndLine is not null ? EndLine.LineNumber + 1 : StartLine.LineNumber + 1);
+                        }
                         JsonItemTool.SetParentForEachItem(result.Result, Parent);
-                        JsonItemTool.SetLayerCountForEachItem(result.Result, Parent.LayerCount + 1);
+                        JsonItemTool.SetLayerCountForEachItem(result.Result, Parent is not null ? Parent.LayerCount + 1 : 1);
+                    }
+                    else
+                    {
+                        isNeedResetNextItem = true;
                     }
                     skipCode = true;
                 }
                 else
                 {
-                    ClearCurrentSubItem(Parent);
+                    isNeedResetNextItem = true;
+
+                    if (Parent is not null && Parent.DisplayText != "Root")
+                    {
+                        ClearSubItem();
+                    }
+                    else
+                    {
+                        ClearCurrentItemList();
+                    }
                 }
+
+                #region 重新配置前后关系
+                if (isNeedResetNextItem)
+                {
+                    ObservableCollection<JsonTreeViewItem> treeViewItemList = [];
+                    if (Parent is null && Plan is BaseCustomWorldUnifiedPlan basePlan)
+                    {
+                        treeViewItemList = basePlan.TreeViewItemList;
+                    }
+                    else
+                    {
+                        treeViewItemList = Parent.Children;
+                    }
+                    if (treeViewItemList.Count > 0)
+                    {
+                        int index = treeViewItemList.IndexOf(this) + 1;
+                        if (index < treeViewItemList.Count)
+                        {
+                            JsonTreeViewItem nextItem = treeViewItemList[index];
+                            nextItem.Previous = this;
+                            Next = nextItem;
+                        }
+                    }
+                }
+                #endregion
             }
             #endregion
 
             #region 处理父节点的尾行引用
-            if(Parent is not null && (Parent.StartLine == Parent.EndLine || (Parent.EndLine is null || (Parent.EndLine is not null && Parent.EndLine.IsDeleted))) && StartLine is not null)
+            if (Parent is not null && (Parent.StartLine == Parent.EndLine || (Parent.EndLine is null || (Parent.EndLine is not null && Parent.EndLine.IsDeleted))) && StartLine is not null)
             {
                 Parent.EndLine = StartLine.NextLine;
             }
@@ -1162,7 +1465,6 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             {
                 EndLine = null;
             }
-
             oldSelectedEnumItem = SelectedEnumItem;
             #endregion
         }
