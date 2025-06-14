@@ -10,7 +10,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
-            if (item is CompoundJsonTreeViewItem)
+            if (item is BaseCompoundJsonTreeViewItem)
                 return CompoundJsonTreeViewItemTemplate;
             return JsonTreeViewItemTemplate;
         }

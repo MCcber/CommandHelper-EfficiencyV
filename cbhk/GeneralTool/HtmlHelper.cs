@@ -211,21 +211,21 @@ namespace CBHK.GeneralTool
         /// <summary>
         /// 在Wiki文档被解析完毕后由上到下处理一次复合控件的键入外观与键入逻辑
         /// </summary>
-        public void HandlingTheTypingAppearanceOfCompositeItemList(IEnumerable<JsonTreeViewItem> list,CompoundJsonTreeViewItem parent)
+        public void HandlingTheTypingAppearanceOfCompositeItemList(IEnumerable<JsonTreeViewItem> list,BaseCompoundJsonTreeViewItem parent)
         {
             foreach (var element in list)
             {
-                if (element is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
+                if (element is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem)
                 {
                     #region 处理键入外观
-                    foreach (var childString in compoundJsonTreeViewItem.ChildrenStringList)
+                    foreach (var childString in compoundJsonTreeViewItem.CompoundChildrenStringList)
                     {
                         Match contentMatch = GetContextKey().Match(childString);
-                        if (contentMatch.Success && (element.DataType is not DataType.None || (element is CompoundJsonTreeViewItem compoundElementItem && ((compoundElementItem.DataType is not DataType.List && compoundElementItem.DataType is not DataType.OptionalCompound) || (compoundElementItem.DataType is DataType.MultiType && compoundElementItem.SelectedValueType.Text != "List")))))
+                        if (contentMatch.Success && (element.DataType is not DataType.None || (element is BaseCompoundJsonTreeViewItem compoundElementItem && ((compoundElementItem.DataType is not DataType.List && compoundElementItem.DataType is not DataType.OptionalCompound) || (compoundElementItem.DataType is DataType.MultiType && compoundElementItem.SelectedValueType.Text != "List")))))
                         {
                             string key = '#' + contentMatch.Groups[1].Value;
                             string targetKey = "";
-                            CompoundJsonTreeViewItem subCompoundItem = new(plan, jsonTool, _container)
+                            BaseCompoundJsonTreeViewItem subCompoundItem = new(plan, jsonTool, _container)
                             {
                                 LayerCount = compoundJsonTreeViewItem.LayerCount,
                                 DataType = DataType.CustomCompound,
@@ -286,9 +286,9 @@ namespace CBHK.GeneralTool
                             {
                                 if (plan.DependencyItemList.TryGetValue(targetKey, out List<string> subChildrenList))
                                 {
-                                    if (subCompoundItem.ChildrenStringList.Count == 0)
+                                    if (subCompoundItem.CompoundChildrenStringList.Count == 0)
                                     {
-                                        subCompoundItem.ChildrenStringList = subChildrenList;
+                                        subCompoundItem.CompoundChildrenStringList = subChildrenList;
                                     }
                                     bool isHaveExtraField = subChildrenList[^1].Contains("根据内容而指定的额外字段") || GetExtraKey().Match(subChildrenList[^1]).Success;
                                     for (int i = 0; i < subChildrenList.Count; i++)
@@ -312,7 +312,7 @@ namespace CBHK.GeneralTool
                                 else
                                 if (plan.EnumCompoundDataDictionary.TryGetValue(targetKey, out Dictionary<string, List<string>> dictionary) && (compoundJsonTreeViewItem.EnumItemsSource.Count == 0 || (compoundJsonTreeViewItem.EnumItemsSource.Count > 1 && !dictionary.ContainsKey(compoundJsonTreeViewItem.EnumItemsSource[1].Text))))
                                 {
-                                    CompoundJsonTreeViewItem targetItem = null;
+                                    BaseCompoundJsonTreeViewItem targetItem = null;
                                     if (compoundJsonTreeViewItem.Key.Length > 0)
                                     {
                                         targetItem = subCompoundItem;
@@ -577,7 +577,7 @@ namespace CBHK.GeneralTool
         /// <param name="previous">前一个节点</param>
         /// <param name="previousStarCount">前一个节点星号数量</param>
         /// <returns></returns>
-        public JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int layerCount, string currentReferenceKey = "", CompoundJsonTreeViewItem parent = null, JsonTreeViewItem previous = null, int previousStarCount = 1, bool isAddToParent = false)
+        public JsonTreeViewDataStructure GetTreeViewItemResult(JsonTreeViewDataStructure result, List<string> nodeList, int layerCount, string currentReferenceKey = "", BaseCompoundJsonTreeViewItem parent = null, JsonTreeViewItem previous = null, int previousStarCount = 1, bool isAddToParent = false)
         {
             #region Field
             bool isCompoundRoot = false, isListRoot = false;
@@ -821,7 +821,7 @@ namespace CBHK.GeneralTool
                     #region 判断是否为复合节点
                     if (isHaveExtraField || isEnumIDList || isHaveNameSpaceKey || !isSimpleDataType)
                     {
-                        item = new CompoundJsonTreeViewItem(plan, jsonTool, _container)
+                        item = new BaseCompoundJsonTreeViewItem(plan, jsonTool, _container)
                         {
                             IsCanBeDefaulted = IsCurrentOptionalNode
                         };
@@ -833,7 +833,7 @@ namespace CBHK.GeneralTool
                     isParentMultipleCustomCompound = parent is not null && parent.DataType is DataType.CustomCompound && parent.ValueTypeSource.Count > 0;
                     if ((NBTFeatureList is not null && NBTFeatureList.Count > 2 && currentNodeDataType.Length > 0 && currentNodeKey.Length > 0) || isParentMultipleCustomCompound)
                     {
-                        if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
+                        if (item is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem)
                         {
                             if(isParentMultipleCustomCompound)
                             {
@@ -987,7 +987,7 @@ namespace CBHK.GeneralTool
                         {
                             IsNoKeyOrMultiDataTypeItem = true;
                             string description = GetDescription(nodeList[i]);
-                            CompoundJsonTreeViewItem multipleDataTypeElement = new(plan,jsonTool,_container)
+                            BaseCompoundJsonTreeViewItem multipleDataTypeElement = new(plan,jsonTool,_container)
                             {
                                 IsCanBeDefaulted = false,
                                 DataType = DataType.MultiType,
@@ -1051,7 +1051,7 @@ namespace CBHK.GeneralTool
                                                 #endregion
 
                                                 #region 添加子信息
-                                                multipleDataTypeElement.ChildrenStringList = currentSubChildren;
+                                                multipleDataTypeElement.CompoundChildrenStringList = currentSubChildren;
                                                 #endregion
                                             }
                                         }
@@ -1288,10 +1288,10 @@ namespace CBHK.GeneralTool
                     #endregion
 
                     #region 处理复合类型
-                    if (item is CompoundJsonTreeViewItem CurrentCompoundItem)
+                    if (item is BaseCompoundJsonTreeViewItem CurrentCompoundItem)
                     {
                         #region 判断是否需要重新分析上下文关键字
-                        if (NBTFeatureList.Count < 3 && contextMatch.Success && parent is not null && parent.ChildrenStringList.Count == 1 && isAddToParent)
+                        if (NBTFeatureList.Count < 3 && contextMatch.Success && parent is not null && parent.CompoundChildrenStringList.Count == 1 && isAddToParent)
                         {
                             string contextString = contextMatch.Groups[1].Value;
                             //优先处理另类枚举
@@ -1305,17 +1305,17 @@ namespace CBHK.GeneralTool
                             }
                             else//转交给外观检查器，让其检索与当前节点源码匹配的数据上下文并添加子节点
                             {
-                                CurrentCompoundItem.ChildrenStringList.Add(nodeList[i]);
+                                CurrentCompoundItem.CompoundChildrenStringList.Add(nodeList[i]);
                                 HandlingTheTypingAppearanceOfCompositeItemList([CurrentCompoundItem],null);
                                 if (CurrentCompoundItem.Children.Count > 0)
                                 {
-                                    CompoundJsonTreeViewItem subCompoundItem = CurrentCompoundItem.Children[0] as CompoundJsonTreeViewItem;
+                                    BaseCompoundJsonTreeViewItem subCompoundItem = CurrentCompoundItem.Children[0] as BaseCompoundJsonTreeViewItem;
                                     CurrentCompoundItem.Children.Clear();
                                     item = CurrentCompoundItem = subCompoundItem;
                                 }
                                 else
                                 {
-                                    CurrentCompoundItem.ChildrenStringList.Clear();
+                                    CurrentCompoundItem.CompoundChildrenStringList.Clear();
                                 }
                                 if (CurrentCompoundItem.EnumKey.Length > 0)
                                 {
@@ -1412,7 +1412,7 @@ namespace CBHK.GeneralTool
                         if(parent is not null && parent.Parent is not null && NBTFeatureList.Count > 2 && NBTFeatureList[^1].Contains("方块属性"))
                         {
                             bool isHaveIDItem = false;
-                            CompoundJsonTreeViewItem grandParent = parent.Parent;
+                            BaseCompoundJsonTreeViewItem grandParent = parent.Parent;
                             foreach (var parentItem in grandParent.Children)
                             {
                                 Match parentItemMatch = GetEnumKey().Match(parentItem.InfoTipText);
@@ -1420,15 +1420,15 @@ namespace CBHK.GeneralTool
                                 {
                                     isHaveIDItem = true;
                                 }
-                                if (parentItemMatch.Success && parentItemMatch.Groups[1].Value.Contains("ID") && parentItem is CompoundJsonTreeViewItem parentCompoundItem && parentCompoundItem.SelectedEnumItem is not null && parentCompoundItem.SelectedEnumItem.Text == "string" && plan.EnumCompoundDataDictionary["BlockStateProperty"].TryGetValue(parentCompoundItem.SelectedEnumItem.Text.Replace("minecraft:",""),out List<string> targetBlockPropertyList))
+                                if (parentItemMatch.Success && parentItemMatch.Groups[1].Value.Contains("ID") && parentItem is BaseCompoundJsonTreeViewItem parentCompoundItem && parentCompoundItem.SelectedEnumItem is not null && parentCompoundItem.SelectedEnumItem.Text == "string" && plan.EnumCompoundDataDictionary["BlockStateProperty"].TryGetValue(parentCompoundItem.SelectedEnumItem.Text.Replace("minecraft:",""),out List<string> targetBlockPropertyList))
                                 {
-                                    CompoundJsonTreeViewItem oldPropertyItem = null;
+                                    BaseCompoundJsonTreeViewItem oldPropertyItem = null;
                                     foreach (var blockPropertyItem in targetBlockPropertyList)
                                     {
                                         JObject propertyObject = JObject.Parse(blockPropertyItem);
                                         if(propertyObject.First is JProperty jProperty && propertyObject[jProperty.Name] is JArray jarray)
                                         {
-                                            CompoundJsonTreeViewItem newPropertyItem = new(plan, jsonTool, _container)
+                                            BaseCompoundJsonTreeViewItem newPropertyItem = new(plan, jsonTool, _container)
                                             {
                                                 Parent = parent,
                                                 LayerCount = layerCount,
@@ -1488,7 +1488,7 @@ namespace CBHK.GeneralTool
                                     CurrentCompoundItem.SwitchButtonIcon = CurrentCompoundItem.PlusIcon;
                                     CurrentCompoundItem.SwitchButtonColor = CurrentCompoundItem.PlusColor;
                                     CurrentCompoundItem.PressedSwitchButtonColor = CurrentCompoundItem.PressedPlusColor;
-                                    CurrentCompoundItem.ChildrenStringList.Add("{{nbt|" + NBTFeatureList[0] + "|<'>}}");
+                                    CurrentCompoundItem.CompoundChildrenStringList.Add("{{nbt|" + NBTFeatureList[0] + "|<'>}}");
                                     result.Result.Add(CurrentCompoundItem);
                                     return result;
                                 }
@@ -1715,7 +1715,7 @@ namespace CBHK.GeneralTool
 
                                     if (isHaveExtraField)
                                     {
-                                        CompoundJsonTreeViewItem referenceKeyItem = new(plan, jsonTool, _container)
+                                        BaseCompoundJsonTreeViewItem referenceKeyItem = new(plan, jsonTool, _container)
                                         {
                                             RemoveElementButtonVisibility = Visibility.Visible,
                                             Key = currentReferenceKey,
@@ -1791,7 +1791,7 @@ namespace CBHK.GeneralTool
                         if (currentNodeKey.Contains('\'') && parent is not null && targetKey is not null && targetKey.Length > 0 && plan.EnumIDDictionary.TryGetValue(targetKey, out List<string> targetIDList))
                         {
                             CurrentCompoundItem.Key = CurrentCompoundItem.DisplayText = "";
-                            CurrentCompoundItem.ChildrenStringList = parent.ChildrenStringList;
+                            CurrentCompoundItem.CompoundChildrenStringList = parent.CompoundChildrenStringList;
                             CurrentCompoundItem.AddOrSwitchElementButtonVisibility = Visibility.Visible;
                             CurrentCompoundItem.DataType = DataType.CustomCompound;
                             CurrentCompoundItem.EnumBoxVisibility = Visibility.Visible;
@@ -1850,7 +1850,7 @@ namespace CBHK.GeneralTool
                                     result.ResultString.Append(new string(' ', CurrentCompoundItem.LayerCount * 2) + "\"" + CurrentCompoundItem.Key + "\": \"\"");
                                 }
                                 CurrentCompoundItem.IsEnumBranch = true;
-                                CurrentCompoundItem.ChildrenStringList.AddRange(nodeList.Skip(i + 1));
+                                CurrentCompoundItem.CompoundChildrenStringList.AddRange(nodeList.Skip(i + 1));
                                 CurrentCompoundItem.IsCanBeDefaulted = false;
                                 HaveBranches = true;
                                 i = nodeList.Count - 1;
@@ -1950,7 +1950,7 @@ namespace CBHK.GeneralTool
 
                                         if (CurrentCompoundItem.Children.Count == 0 || (CurrentCompoundItem.DisplayText == "Root" && CurrentCompoundItem.Parent is null))
                                         {
-                                            CurrentCompoundItem.ChildrenStringList.AddRange(currentSubChildrenTuple.Item1);
+                                            CurrentCompoundItem.CompoundChildrenStringList.AddRange(currentSubChildrenTuple.Item1);
                                         }
                                         #endregion
 
@@ -1966,7 +1966,7 @@ namespace CBHK.GeneralTool
                                         //没有子信息时，提取当前行的上下文信息作为子信息，因为引用一定包含在当前行中
                                         if (contextMatch.Success && NBTFeatureList.Count < 3)
                                         {
-                                            CurrentCompoundItem.ChildrenStringList.Add("*{{nbt|compound}} [[#" + contextMatch.Groups[1].Value + "]]");
+                                            CurrentCompoundItem.CompoundChildrenStringList.Add("*{{nbt|compound}} [[#" + contextMatch.Groups[1].Value + "]]");
                                         }
                                     }
                                 }
@@ -1986,20 +1986,20 @@ namespace CBHK.GeneralTool
                 if(previous is not null && item.Key == previous.Key && item.Key.Length > 0)
                 {
                     List<string> previousDataTypeList = [];
-                    if(item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.DataType is not DataType.None)
+                    if(item is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.DataType is not DataType.None)
                     {
                         previousDataTypeList.Add(compoundJsonTreeViewItem.DataType.ToString());
                     }
 
                     bool optionalNode = previous.IsCanBeDefaulted;
-                    if (previous is not CompoundJsonTreeViewItem)
+                    if (previous is not BaseCompoundJsonTreeViewItem)
                     {
-                        previous = new CompoundJsonTreeViewItem(plan, jsonTool, _container)
+                        previous = new BaseCompoundJsonTreeViewItem(plan, jsonTool, _container)
                         {
                             IsCanBeDefaulted = optionalNode
                         };
                     }
-                    if(previous is CompoundJsonTreeViewItem previousCompoundItem)
+                    if(previous is BaseCompoundJsonTreeViewItem previousCompoundItem)
                     {
                         if (previousCompoundItem.DataType is not DataType.None)
                         {
@@ -2040,9 +2040,9 @@ namespace CBHK.GeneralTool
                         previousCompoundItem.ValueTypeBoxVisibility = Visibility.Visible;
                         previousCompoundItem.ValueTypeSource.AddRange(previousDataTypeList.Select(previousValueTypeItem => new TextComboBoxItem() { Text = previousValueTypeItem }));
                         previousCompoundItem.SelectedValueType = previousCompoundItem.ValueTypeSource.FirstOrDefault();
-                        if (item is CompoundJsonTreeViewItem CurrentCompoundItem)
+                        if (item is BaseCompoundJsonTreeViewItem CurrentCompoundItem)
                         {
-                            previousCompoundItem.ChildrenStringList = CurrentCompoundItem.ChildrenStringList;
+                            previousCompoundItem.CompoundChildrenStringList = CurrentCompoundItem.CompoundChildrenStringList;
                         }
                     }
                 }
@@ -2074,7 +2074,7 @@ namespace CBHK.GeneralTool
             #region 如果父节点类型为列表，则将当前计算结果放入对象节点中
             if (parent is not null && (parent.DataType is DataType.List || (parent.DataType is DataType.MultiType && parent.SelectedValueType is not null && parent.SelectedValueType.Text == "List")) && (HadPreIdentifiedAsEnumCompoundType || nodeList.Count > 1) && !IsNoKeyOrMultiDataTypeItem)
             {
-                CompoundJsonTreeViewItem entry = new(plan, jsonTool, _container)
+                BaseCompoundJsonTreeViewItem entry = new(plan, jsonTool, _container)
                 {
                     DataType = DataType.Compound,
                     RemoveElementButtonVisibility = Visibility.Visible,

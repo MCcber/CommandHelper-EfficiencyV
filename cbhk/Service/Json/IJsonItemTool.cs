@@ -12,7 +12,7 @@ namespace CBHK.Service.Json
         /// </summary>
         /// <param name="CurrentParent">目前父级节点</param>
         /// <param name="Target">已被删除的子元素</param>
-        void RecursiveRemoveFlattenDescendantNodeList(CompoundJsonTreeViewItem CurrentParent,CompoundJsonTreeViewItem Target);
+        void RecursiveRemoveFlattenDescendantNodeList(BaseCompoundJsonTreeViewItem CurrentParent,BaseCompoundJsonTreeViewItem Target);
         /// <summary>
         /// 定位相邻两个已有值的节点
         /// </summary>
@@ -25,13 +25,13 @@ namespace CBHK.Service.Json
         /// </summary>
         /// <param name="compoundJsonTreeViewItem"></param>
         /// <returns></returns>
-        public JsonTreeViewItem SearchForTheLastItemWithRowReference(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
+        public JsonTreeViewItem SearchForTheLastItemWithRowReference(BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
         /// 从提示源码中提取当前多类型节点所需的子信息
         /// </summary>
         /// <param name="compoundJsonTreeViewItem"></param>
         /// <returns></returns>
-        public List<string> ExtractSubInformationFromPromptSourceCode(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
+        public List<string> ExtractSubInformationFromPromptSourceCode(BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
         /// 递归遍历节点树并执行代理方法
         /// </summary>
@@ -44,7 +44,7 @@ namespace CBHK.Service.Json
         /// <param name="list"></param>
         /// <param name="parent"></param>
         /// <param name="withType"></param>
-        public void SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem parent,bool withType = false);
+        public void SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, BaseCompoundJsonTreeViewItem parent,bool withType = false);
         /// <summary>
         /// 从指定的索引设置每个成员的行引用
         /// </summary>
@@ -52,7 +52,7 @@ namespace CBHK.Service.Json
         /// <param name="parent"></param>
         /// <param name="startIndex"></param>
         /// <param name="withType"></param>
-        public void SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem parent, int lineNumber, bool withType = false);
+        public void SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, BaseCompoundJsonTreeViewItem parent, int lineNumber, bool withType = false);
         /// <summary>
         /// 设置每一个成员的层数
         /// </summary>
@@ -64,17 +64,17 @@ namespace CBHK.Service.Json
         /// </summary>
         /// <param name="list">节点集合</param>
         /// <param name="startParent">起始父级</param>
-        public void SetParentForEachItem(ObservableCollection<JsonTreeViewItem> list, CompoundJsonTreeViewItem startParent);
+        public void SetParentForEachItem(ObservableCollection<JsonTreeViewItem> list, BaseCompoundJsonTreeViewItem startParent);
         /// <summary>
         /// 添加子结构
         /// </summary>
         /// <param name="compoundJsonTreeViewItem">数组节点</param>
-        void AddSubStructure(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
+        void AddSubStructure(BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
         /// 折叠或展开当前复合节点
         /// </summary>
         /// <param name="compoundJsonTreeViewItem"></param>
-        void CollapseCurrentItem(CompoundJsonTreeViewItem compoundJsonTreeViewItem);
+        void CollapseCurrentItem(BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
         /// 删除当前元素
         /// </summary>
@@ -86,6 +86,6 @@ namespace CBHK.Service.Json
         /// </summary>
         /// <param name="result">返回的列表</param>
         /// <param name="list">需要处理的集合</param>
-        void UpdateFlattenDescendantNodeList(CompoundJsonTreeViewItem target,ObservableCollection<JsonTreeViewItem> list);
+        void UpdateFlattenDescendantNodeList(BaseCompoundJsonTreeViewItem target,ObservableCollection<JsonTreeViewItem> list);
     }
 }

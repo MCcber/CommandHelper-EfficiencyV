@@ -79,34 +79,34 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public async void TextEditor_Loaded(object sender, RoutedEventArgs e)
         {
-            await Task.Run(async () =>
+            await Task.Run((Func<Task>)(async () =>
             {
-                TextEditor = sender as TextEditor;
-                await Application.Current.Dispatcher.InvokeAsync(() =>
+                base.TextEditor = sender as TextEditor;
+                await Application.Current.Dispatcher.InvokeAsync((Action)(() =>
                 {
-                    JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(ConfigDirectoryPath + CurrentVersion.Text);
+                    JsonTreeViewDataStructure result = base.htmlHelper.AnalyzeHTMLData(ConfigDirectoryPath + CurrentVersion.Text);
                     string resultString = result.ResultString.ToString().TrimEnd([',', '\r', '\n']);
-                    TextEditor.Text = "{" + (resultString.Length > 0 ? "\r\n" + resultString + "\r\n" : "") + "}";
+                    base.TextEditor.Text = "{" + (resultString.Length > 0 ? "\r\n" + resultString + "\r\n" : "") + "}";
                     foreach (var item in result.Result)
                     {
-                        if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.Children.Count > 0)
+                        if (item is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.Children.Count > 0)
                         {
-                            JsonTool.SetParentForEachItem(compoundJsonTreeViewItem.Children, compoundJsonTreeViewItem);
+                            base.JsonTool.SetParentForEachItem(compoundJsonTreeViewItem.Children, compoundJsonTreeViewItem);
                         }
                     }
 
-                    JsonTool.SetLayerCountForEachItem(result.Result, 1);
-                    JsonTool.SetLineNumbersForEachSubItem(result.Result, null);
+                    base.JsonTool.SetLayerCountForEachItem(result.Result, 1);
+                    base.JsonTool.SetLineNumbersForEachSubItem(result.Result, null);
                     TreeViewItemList = result.Result;
 
                     //为代码编辑器安装大纲管理器
-                    FoldingManager = FoldingManager.Install(TextEditor.TextArea);
+                    base.FoldingManager = FoldingManager.Install(base.TextEditor.TextArea);
                     XshdSyntaxDefinition xshdSyntaxDefinition = new();
                     xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\Json.xshd"));
                     IHighlightingDefinition jsonHighlighting = HighlightingLoader.Load(xshdSyntaxDefinition, HighlightingManager.Instance);
-                    TextEditor.SyntaxHighlighting = jsonHighlighting;
-                });
-            });
+                    base.TextEditor.SyntaxHighlighting = jsonHighlighting;
+                }));
+            }));
         }
 
         /// <summary>

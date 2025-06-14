@@ -138,9 +138,9 @@ namespace CBHK.ViewModel.Common
             #endregion
 
             #region 定位相邻的已有值的两个节点
-            CompoundJsonTreeViewItem parent = item.Parent;
-            CompoundJsonTreeViewItem previousCompound = null;
-            CompoundJsonTreeViewItem nextCompound = null;
+            BaseCompoundJsonTreeViewItem parent = item.Parent;
+            BaseCompoundJsonTreeViewItem previousCompound = null;
+            BaseCompoundJsonTreeViewItem nextCompound = null;
             Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNextItem = item.JsonItemTool.LocateTheNodesOfTwoAdjacentExistingValues(item.Previous, item.Next);
             JsonTreeViewItem previous = previousAndNextItem.Item1;
             JsonTreeViewItem next = previousAndNextItem.Item2;
@@ -157,20 +157,20 @@ namespace CBHK.ViewModel.Common
                 }
             }
 
-            if (previous is CompoundJsonTreeViewItem)
+            if (previous is BaseCompoundJsonTreeViewItem)
             {
-                previousCompound = previous as CompoundJsonTreeViewItem;
+                previousCompound = previous as BaseCompoundJsonTreeViewItem;
             }
-            if (next is CompoundJsonTreeViewItem)
+            if (next is BaseCompoundJsonTreeViewItem)
             {
-                nextCompound = next as CompoundJsonTreeViewItem;
+                nextCompound = next as BaseCompoundJsonTreeViewItem;
             }
             #endregion
 
             #region 处理复合型跟值类型的起始索引与长度
 
             #region 判定起始行位置
-            if (startDocumentLine is null && previous is CompoundJsonTreeViewItem previousItem1 && previousItem1.EndLine is not null)
+            if (startDocumentLine is null && previous is BaseCompoundJsonTreeViewItem previousItem1 && previousItem1.EndLine is not null)
             {
                 IsCurrentNull = true;
                 startDocumentLine = previousItem1.EndLine;
@@ -194,7 +194,7 @@ namespace CBHK.ViewModel.Common
                 startDocumentLine = item.Plan.GetLineByNumber(2);
             }
             //else
-            //    if(item is CompoundJsonTreeViewItem compoundJsonTreeViewItem1 && compoundJsonTreeViewItem1.StartLine == compoundJsonTreeViewItem1.EndLine)
+            //    if(item is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem1 && compoundJsonTreeViewItem1.StartLine == compoundJsonTreeViewItem1.EndLine)
             //{
             //    IsCurrentNull = true;
             //    startDocumentLine = item.Plan.GetLineByNumber(item.StartLine.LineNumber);
@@ -205,7 +205,7 @@ namespace CBHK.ViewModel.Common
 
             if (!IsCurrentNull)
             {
-                if (item is CompoundJsonTreeViewItem compoundJsonTreeViewItem)
+                if (item is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem)
                 {
                     switch (changeType)
                     {
@@ -241,8 +241,8 @@ namespace CBHK.ViewModel.Common
                             }
                         case ChangeType.AddListElementToEnd:
                             {
-                                JsonTreeViewItem lastItem = (item as CompoundJsonTreeViewItem).Children[^1];
-                                if (lastItem is CompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
+                                JsonTreeViewItem lastItem = (item as BaseCompoundJsonTreeViewItem).Children[^1];
+                                if (lastItem is BaseCompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null)
                                 {
                                     offset = lastCompoundItem.EndLine.EndOffset;
                                 }
