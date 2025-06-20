@@ -8,24 +8,11 @@ namespace CBHK.Service.Json
     public interface IJsonItemTool
     {
         /// <summary>
-        /// 递归删除平铺列表成员
+        /// 获取添加到底部的按钮节点
         /// </summary>
-        /// <param name="CurrentParent">目前父级节点</param>
-        /// <param name="Target">已被删除的子元素</param>
-        void RecursiveRemoveFlattenDescendantNodeList(BaseCompoundJsonTreeViewItem CurrentParent,BaseCompoundJsonTreeViewItem Target);
-        /// <summary>
-        /// 定位相邻两个已有值的节点
-        /// </summary>
-        /// <param name="previous"></param>
-        /// <param name="next"></param>
+        /// <param name="template"></param>
         /// <returns></returns>
-        public Tuple<JsonTreeViewItem, JsonTreeViewItem> LocateTheNodesOfTwoAdjacentExistingValues(JsonTreeViewItem previous, JsonTreeViewItem next);
-        /// <summary>
-        /// 搜索最后一个有行引用的子节点
-        /// </summary>
-        /// <param name="compoundJsonTreeViewItem"></param>
-        /// <returns></returns>
-        public JsonTreeViewItem SearchForTheLastItemWithRowReference(BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem);
+        public BaseCompoundJsonTreeViewItem GetAddToBottomButtonItem(BaseCompoundJsonTreeViewItem template);
         /// <summary>
         /// 从提示源码中提取当前多类型节点所需的子信息
         /// </summary>
@@ -41,18 +28,15 @@ namespace CBHK.Service.Json
         /// <summary>
         /// 设置每个成员的行引用
         /// </summary>
-        /// <param name="list"></param>
-        /// <param name="parent"></param>
-        /// <param name="withType"></param>
-        public void SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, BaseCompoundJsonTreeViewItem parent,bool withType = false);
+        /// <param name="list">目标节点集合</param>
+        /// <param name="parent">起始父节点</param>
+        public Tuple<JsonTreeViewItem, JsonTreeViewItem> SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, BaseCompoundJsonTreeViewItem parent);
         /// <summary>
         /// 从指定的索引设置每个成员的行引用
         /// </summary>
         /// <param name="list"></param>
-        /// <param name="parent"></param>
-        /// <param name="startIndex"></param>
-        /// <param name="withType"></param>
-        public void SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, BaseCompoundJsonTreeViewItem parent, int lineNumber, bool withType = false);
+        /// <param name="lineNumber">起始行号</param>
+        public Tuple<JsonTreeViewItem, JsonTreeViewItem> SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, int lineNumber);
         /// <summary>
         /// 设置每一个成员的层数
         /// </summary>
@@ -64,7 +48,7 @@ namespace CBHK.Service.Json
         /// </summary>
         /// <param name="list">节点集合</param>
         /// <param name="startParent">起始父级</param>
-        public void SetParentForEachItem(ObservableCollection<JsonTreeViewItem> list, BaseCompoundJsonTreeViewItem startParent);
+        public void SetParentForEachItem(ObservableCollection<JsonTreeViewItem> list, BaseCompoundJsonTreeViewItem startParent,int startIndex = 0);
         /// <summary>
         /// 添加子结构
         /// </summary>
@@ -81,11 +65,5 @@ namespace CBHK.Service.Json
         /// <param name="compoundJsonTreeViewItem">当前节点</param>
         /// <param name="isNeedRemoveItem">是否需要删除节点</param>
         void RemoveCurrentItem(JsonTreeViewItem compoundJsonTreeViewItem,bool isNeedRemoveItem = true);
-        /// <summary>
-        /// 更新平铺列表
-        /// </summary>
-        /// <param name="result">返回的列表</param>
-        /// <param name="list">需要处理的集合</param>
-        void UpdateFlattenDescendantNodeList(BaseCompoundJsonTreeViewItem target,ObservableCollection<JsonTreeViewItem> list);
     }
 }

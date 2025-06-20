@@ -40,11 +40,16 @@
             Int,
             Float,
             Double,
-            Long,
+            Long
+        }
+
+        public enum ItemType
+        {
+            BottomButton,
+            Enum,
             Compound,
             CustomCompound,
             OptionalCompound,
-            EnumCompound,
             MultiType,
             ArrayElement,
             Array,

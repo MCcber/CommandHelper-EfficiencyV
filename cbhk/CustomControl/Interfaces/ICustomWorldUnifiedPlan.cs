@@ -1,5 +1,7 @@
 ﻿using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.Model.Common;
 using ICSharpCode.AvalonEdit.Document;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -9,6 +11,7 @@ namespace CBHK.CustomControl.Interfaces
 {
     public interface ICustomWorldUnifiedPlan
     {
+        #region Property
         /// <summary>
         /// 当前选中的版本
         /// </summary>
@@ -39,11 +42,42 @@ namespace CBHK.CustomControl.Interfaces
         /// 存储当前Wiki主文档的依赖字典
         /// </summary>
         public Dictionary<string,List<string>> DependencyItemList { get; set; }
-        public void UpdateNullValueBySpecifyingInterval(int endOffset, string newValue = "\r\n");
 
         public Dictionary<string, Dictionary<string, List<string>>> EnumCompoundDataDictionary { get; set; }
 
         public Dictionary<string, List<string>> EnumIDDictionary { get; set; }
+
+        /// <summary>
+        /// 当前子节点层视觉树上最后一个节点
+        /// </summary>
+        public JsonTreeViewItem VisualLastItem { get; set; }
+        #endregion
+
+        #region Method
+        /// <summary>
+        /// 搜索视觉上的前一个与后一个节点
+        /// </summary>
+        public Tuple<JsonTreeViewItem, JsonTreeViewItem> SearchVisualPreviousAndNextItem(JsonTreeViewItem jsonTreeViewItem, bool isNeedSearchPrevious = true);
+
+        /// <summary>
+        /// 为指定节点集合的所有成员设置各自视觉上的前一个与后一个节点引用(二分查找最近邻居算法)
+        /// </summary>
+        /// <param name="treeViewItemList"></param>
+        public void SetVisualPreviousAndNextForEachItem();
+
+        /// <summary>
+        /// 插入子节点
+        /// </summary>
+        /// <param name="targetIndex"></param>
+        /// <param name="childData"></param>
+        public void InsertChild(int targetIndex, JsonTreeViewDataStructure childData);
+
+        /// <summary>
+        /// 插入子节点集
+        /// </summary>
+        /// <param name="targetIndex"></param>
+        /// <param name="childDataList"></param>
+        public void InsertChildrenList(int targetIndex, JsonTreeViewDataStructure childDataList);
 
         public int GetDocumentLineCount();
 
@@ -82,5 +116,6 @@ namespace CBHK.CustomControl.Interfaces
         /// <param name="interval"></param>
         /// <returns></returns>
         public Task<JsonTreeViewItem> FindNodeBySpecifyingPath(string path);
+        #endregion
     }
 }

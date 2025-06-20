@@ -125,22 +125,55 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public async void TextEditor_Loaded(object sender, RoutedEventArgs e)
         {
-            await Task.Run((Func<Task>)(async () =>
+            await Task.Run(async () =>
             {
                 base.TextEditor = sender as TextEditor;
-                await Application.Current.Dispatcher.InvokeAsync((Action)(() =>
+                await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     JsonTreeViewDataStructure result = base.htmlHelper.AnalyzeHTMLData(ConfigDirectoryPath + CurrentVersion.Text);
                     base.TextEditor.Text = result.ResultString.ToString();
+                    TreeViewItemList = result.Result;
+
+                    #region 设置父级与行引用
                     foreach (var item in result.Result)
                     {
-                        if (item is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.Children.Count > 0)
+                        if (item is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.LogicChildren.Count > 0)
                         {
-                            base.JsonTool.SetParentForEachItem(compoundJsonTreeViewItem.Children, compoundJsonTreeViewItem);
+                            base.JsonTool.SetParentForEachItem(compoundJsonTreeViewItem.LogicChildren, compoundJsonTreeViewItem);
                         }
                     }
-                    base.JsonTool.SetLineNumbersForEachSubItem(result.Result, null, !result.IsHaveRootItem ? 2 : 1);
-                    TreeViewItemList = result.Result;
+                    base.JsonTool.SetLineNumbersForEachSubItem(result.Result, !result.IsHaveRootItem ? 2 : 1);
+                    #endregion
+
+                    #region 处理视觉引用
+                    for (int i = 0; i < result.Result.Count; i++)
+                    {
+                        Tuple<JsonTreeViewItem,JsonTreeViewItem> currentPreviousAndNext = base.SearchVisualPreviousAndNextItem(result.Result[i]);
+                        if(currentPreviousAndNext.Item1 is not null)
+                        {
+                            result.Result[i].VisualPrevious = currentPreviousAndNext.Item1;
+                        }
+                        if (currentPreviousAndNext.Item2 is not null)
+                        {
+                            result.Result[i].VisualNext = currentPreviousAndNext.Item2;
+                        }
+                        if (result.Result[i] is BaseCompoundJsonTreeViewItem baseCompoundJsonTreeViewItem)
+                        {
+                            foreach (var item in baseCompoundJsonTreeViewItem.LogicChildren)
+                            {
+                                Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext = baseCompoundJsonTreeViewItem.SearchVisualPreviousAndNextItem(item);
+                                if(previousAndNext.Item1 is not null)
+                                {
+                                    item.VisualPrevious = previousAndNext.Item1;
+                                }
+                                if(previousAndNext.Item2 is not null)
+                                {
+                                    item.VisualNext = previousAndNext.Item2;
+                                }
+                            }
+                        }
+                    }
+                    #endregion
 
                     //为代码编辑器安装大纲管理器
                     base.FoldingManager = FoldingManager.Install(base.TextEditor.TextArea);
@@ -148,8 +181,8 @@ namespace CBHK.ViewModel.Generator
                     xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\Json.xshd"));
                     IHighlightingDefinition jsonHighlighting = HighlightingLoader.Load(xshdSyntaxDefinition, HighlightingManager.Instance);
                     base.TextEditor.SyntaxHighlighting = jsonHighlighting;
-                }));
-            }));
+                });
+            });
         }
 
         /// <summary>

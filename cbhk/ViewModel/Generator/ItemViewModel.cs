@@ -139,7 +139,7 @@ namespace CBHK.ViewModel.Generator
             DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
             await Task.Run(async () =>
             {
-                BlockVersionIDTable = await dataCommunicator.GetData("SELECT * FROM VersionBlock");
+                //BlockVersionIDTable = await dataCommunicator.GetData("SELECT * FROM VersionBlock");
                 ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
                 EnchantmentTable = await dataCommunicator.GetData("SELECT * FROM Enchantments");
                 BlockTable = await dataCommunicator.GetData("SELECT * FROM Blocks");

@@ -163,7 +163,7 @@
     <HierarchicalDataTemplate
         x:Key="CompoundJsonTreeViewItem"
         DataType="compoundItem:CompoundJsonTreeViewItem"
-        ItemsSource="{Binding Children}">
+        ItemsSource="{Binding LogicChildren}">
         <DockPanel LastChildFill="False">
             <Border
                 Height="35"
