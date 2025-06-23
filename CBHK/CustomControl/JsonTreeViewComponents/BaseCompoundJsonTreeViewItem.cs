@@ -14,7 +14,6 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Windows.Media.Protection.PlayReady;
 using static CBHK.Model.Common.Enums;
 
 namespace CBHK.CustomControl.JsonTreeViewComponents
@@ -716,8 +715,8 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             char startBracket = ' ';
             char endBracket = ' ';
             bool isNeedParentHead = StartLine is null && (LogicChildren.Count == 0 || (LogicChildren.Count == 1 && LogicChildren[0] is BaseCompoundJsonTreeViewItem firstCompoundItem && firstCompoundItem.ItemType is ItemType.BottomButton));
-            bool isNeedStartComma = childData.ResultString.Length > 0 && VisualPrevious is not null && VisualNext is null && StartLine is null;
-            bool isNeedEndComma = childData.ResultString.Length > 0 && VisualNext is not null;
+            bool isNeedStartComma = (childData.ResultString.Length > 0 && VisualPrevious is not null && VisualNext is null && StartLine is null) || (targetIndex + 1 < LogicChildren.Count && LogicChildren[targetIndex] is BaseCompoundJsonTreeViewItem lastCompoundItem1 && lastCompoundItem1.ItemType is ItemType.BottomButton);
+            bool isNeedEndComma = childData.ResultString.Length > 0 && (StartLine is null || (targetIndex + 1 < LogicChildren.Count && LogicChildren[targetIndex] is BaseCompoundJsonTreeViewItem lastCompoundItem2 && lastCompoundItem2.ItemType is ItemType.BottomButton));
             #endregion
 
             #region 拼接当前子信息应用于代码编辑器
@@ -735,7 +734,21 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             else
             if(!isNeedParentHead)
             {
-                offset = Parent.StartLine.EndOffset;
+                if (LogicChildren.Count - 1 == targetIndex)
+                {
+                    if (VisualLastChild is BaseCompoundJsonTreeViewItem baseCompoundJsonTreeViewItem && baseCompoundJsonTreeViewItem.EndLine is not null && !baseCompoundJsonTreeViewItem.EndLine.IsDeleted)
+                    {
+                        offset = baseCompoundJsonTreeViewItem.EndLine.EndOffset;
+                    }
+                    else
+                    {
+                        offset = VisualLastChild.StartLine.EndOffset;
+                    }
+                }
+                else
+                {
+                    offset = Parent.StartLine.EndOffset;
+                }
             }
             else
             if(VisualPrevious is not null)
@@ -860,8 +873,8 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             }
             int offset = 0;
             string appendString = "";
-            bool isNeedStartComma = childrenDataList.ResultString.Length > 0 && VisualPrevious is not null && VisualNext is null;
-            bool isNeedEndComma = childrenDataList.ResultString.Length > 0 && VisualNext is not null;
+            bool isNeedStartComma = (childrenDataList.ResultString.Length > 0 && VisualPrevious is not null && VisualNext is null && StartLine is null) || (targetIndex + 1 < LogicChildren.Count && LogicChildren[targetIndex] is BaseCompoundJsonTreeViewItem lastCompoundItem1 && lastCompoundItem1.ItemType is ItemType.BottomButton);
+            bool isNeedEndComma = childrenDataList.ResultString.Length > 0 && (StartLine is null || (targetIndex + 1 < LogicChildren.Count && LogicChildren[targetIndex] is BaseCompoundJsonTreeViewItem lastCompoundItem2 && lastCompoundItem2.ItemType is ItemType.BottomButton));
             #endregion
 
             #region 拼接当前子信息应用于代码编辑器

@@ -1986,7 +1986,15 @@ namespace CBHK.GeneralTool
 
                                         if (CurrentCompoundItem.LogicChildren.Count == 0 || (CurrentCompoundItem.DisplayText == "Root" && CurrentCompoundItem.Parent is null))
                                         {
-                                            CurrentCompoundItem.CompoundChildrenStringList.AddRange(currentSubChildrenTuple.Item1);
+                                            if(CurrentCompoundItem.ItemType is ItemType.List)
+                                            {
+                                                CurrentCompoundItem.ListChildrenStringList = currentSubChildrenTuple.Item1;
+                                            }
+                                            else
+                                            if(CurrentCompoundItem.ItemType is ItemType.Array)
+                                            {
+                                                CurrentCompoundItem.ArrayChildrenStringList = currentSubChildrenTuple.Item1;
+                                            }
                                         }
                                         #endregion
 
