@@ -21,7 +21,7 @@
     <Window.Resources>
         <CompoundItem:JsonTreeViewTemplateSelector
             x:Key="JsonTreeViewTemplateSelector"
-            CompoundJsonTreeViewItemTemplate="{StaticResource CompoundJsonTreeViewItem}"
+            CompoundJsonTreeViewItemTemplate="{StaticResource BaseCompoundJsonTreeViewItem}"
             JsonTreeViewItemTemplate="{StaticResource JsonTreeViewItem}" />
     </Window.Resources>
 

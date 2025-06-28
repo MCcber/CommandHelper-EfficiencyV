@@ -103,6 +103,18 @@ namespace CBHK.GeneralTool
 
         [RelayCommand]
         /// <summary>
+        /// 启动自定义世界生成生成器
+        /// </summary>
+        private void StartCustomWorldGeneratorGenerator()
+        {
+            CustomWorldGeneratorView customWorldGeneratorView = _container.Resolve<CustomWorldGeneratorView>();
+            customWorldGeneratorView.Show();
+            customWorldGeneratorView.Focus();
+            SetCBHKState();
+        }
+
+        [RelayCommand]
+        /// <summary>
         /// 启动ooc生成器
         /// </summary>
         public void StartOnlyOneCommandGenerator()
@@ -170,6 +182,18 @@ namespace CBHK.GeneralTool
             LootTableView lootTableView = _container.Resolve<LootTableView>();
             lootTableView.Show();
             lootTableView.Focus();
+            SetCBHKState();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动战利品表谓词生成器
+        /// </summary>
+        private void StartPredicateGenerator()
+        {
+            PredicateView predicate = _container.Resolve<PredicateView>();
+            predicate.Show();
+            predicate.Focus();
             SetCBHKState();
         }
 
@@ -259,15 +283,6 @@ namespace CBHK.GeneralTool
 
         [RelayCommand]
         /// <summary>
-        /// 启动指定的自定义世界生成器
-        /// </summary>
-        private void StartCustomWorldGenerator()
-        {
-            SetCBHKState();
-        }
-
-        [RelayCommand]
-        /// <summary>
         /// 启动维度类型生成器
         /// </summary>
         private void StartDimensionTypeGenerator()
@@ -297,6 +312,7 @@ namespace CBHK.GeneralTool
                 "DamageType" => function.StartDamageTypeGeneratorCommand,
                 "Datapack" => function.StartDatapacksGeneratorCommand,
                 "ChatType" => function.StartChatTpyeGeneratorCommand,
+                "CustomWorld"=>function.StartCustomWorldGeneratorGeneratorCommand,
                 "Armorstand" => function.StartArmorStandsGeneratorCommand,
                 "WrittenBook" => function.StartWrittenBooksGeneratorCommand,
                 "Spawners" => function.StartSpawnerGeneratorCommand,
@@ -305,11 +321,11 @@ namespace CBHK.GeneralTool
                 "Tags" => function.StartTagsGeneratorCommand,
                 "Items" => function.StartItemsGeneratorCommand,
                 "LootTable" => function.StartLootTableGeneratorCommand,
+                "Predicate"=>function.StartPredicateGeneratorCommand,
                 "ItemModifier" => function.StartItemModifierGeneratorCommand,
                 "Fireworks" => function.StartFireworksGeneratorCommand,
                 "Entities" => function.StartEntitiesGeneratorCommand,
                 "Sign" => function.StartSignCommand,
-                "CustomWorld" => function.StartCustomWorldGeneratorCommand,
                 "Dimension" => function.StartDimensionGeneratorCommand,
                 "DimensionType" => function.StartDimensionTypeGeneratorCommand,
                 _ => null

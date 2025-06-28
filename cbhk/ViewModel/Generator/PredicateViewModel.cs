@@ -21,10 +21,10 @@ using System.Xml;
 
 namespace CBHK.ViewModel.Generator
 {
-    public class ItemModifierViewModel : BaseCustomWorldUnifiedPlan
-    {
+    public partial class PredicateViewModel: BaseCustomWorldUnifiedPlan
+    {        
         #region Property
-        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ItemModifier\Data\Rule\";
+        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Predicate\Data\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
         private TextComboBoxItem _currentVersion = new();
@@ -62,7 +62,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public ItemModifierViewModel(IContainerProvider container, MainView mainView) : base(container, mainView)
+        public PredicateViewModel(IContainerProvider container, MainView mainView) : base(container, mainView)
         {
             Container = container;
             Home = mainView;
@@ -80,6 +80,7 @@ namespace CBHK.ViewModel.Generator
             EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b"]);
             EnumIDDictionary.Add("染料颜色", ["red", "green", "blue"]);
             #endregion
+
             #region 添加复合类数据、调用上下文初始化方法
             string[] commonDirectoryFileArray = Directory.GetFiles(CommonCompoundDataDirectoryPath);
             foreach (var item in commonDirectoryFileArray)
@@ -128,10 +129,8 @@ namespace CBHK.ViewModel.Generator
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     JsonTreeViewDataStructure result = base.htmlHelper.AnalyzeHTMLData(ConfigDirectoryPath + CurrentVersion.Text);
-                    base.TextEditor.Text = result.ResultString.ToString();
-                    TreeViewItemList = result.Result;
-
-                    #region 设置父级与行引用
+                    string resultString = result.ResultString.ToString().TrimEnd([',', '\r', '\n']);
+                    base.TextEditor.Text = "{" + (resultString.Length > 0 ? "\r\n" + resultString + "\r\n" : "") + "}";
                     foreach (var item in result.Result)
                     {
                         if (item is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.LogicChildren.Count > 0)
@@ -139,38 +138,10 @@ namespace CBHK.ViewModel.Generator
                             base.JsonTool.SetParentForEachItem(compoundJsonTreeViewItem.LogicChildren, compoundJsonTreeViewItem);
                         }
                     }
-                    base.JsonTool.SetLineNumbersForEachSubItem(result.Result, !result.IsHaveRootItem ? 2 : 1);
-                    #endregion
 
-                    #region 处理视觉引用
-                    for (int i = 0; i < result.Result.Count; i++)
-                    {
-                        Tuple<JsonTreeViewItem,JsonTreeViewItem> currentPreviousAndNext = base.SearchVisualPreviousAndNextItem(result.Result[i]);
-                        if(currentPreviousAndNext.Item1 is not null)
-                        {
-                            result.Result[i].VisualPrevious = currentPreviousAndNext.Item1;
-                        }
-                        if (currentPreviousAndNext.Item2 is not null)
-                        {
-                            result.Result[i].VisualNext = currentPreviousAndNext.Item2;
-                        }
-                        if (result.Result[i] is BaseCompoundJsonTreeViewItem baseCompoundJsonTreeViewItem)
-                        {
-                            foreach (var item in baseCompoundJsonTreeViewItem.LogicChildren)
-                            {
-                                Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext = baseCompoundJsonTreeViewItem.SearchVisualPreviousAndNextItem(item);
-                                if(previousAndNext.Item1 is not null)
-                                {
-                                    item.VisualPrevious = previousAndNext.Item1;
-                                }
-                                if(previousAndNext.Item2 is not null)
-                                {
-                                    item.VisualNext = previousAndNext.Item2;
-                                }
-                            }
-                        }
-                    }
-                    #endregion
+                    base.JsonTool.SetLayerCountForEachItem(result.Result, 1);
+                    base.JsonTool.SetLineNumbersForEachSubItem(result.Result, null);
+                    TreeViewItemList = result.Result;
 
                     //为代码编辑器安装大纲管理器
                     base.FoldingManager = FoldingManager.Install(base.TextEditor.TextArea);

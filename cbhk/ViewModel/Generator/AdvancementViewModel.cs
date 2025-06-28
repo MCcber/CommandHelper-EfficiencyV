@@ -18,7 +18,6 @@ using CBHK.CustomControl;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using CBHK.ViewModel.Common;
-using CBHK.GeneralTool;
 
 namespace CBHK.ViewModel.Generator
 {

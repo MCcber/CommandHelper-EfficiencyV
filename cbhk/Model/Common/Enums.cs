@@ -33,7 +33,6 @@
             Number,
             Bool,
             String,
-            Enum,
             Byte,
             Decimal,
             Short,
@@ -51,10 +50,8 @@
             CustomCompound,
             OptionalCompound,
             MultiType,
-            ArrayElement,
             Array,
-            List,
-            ListElement
+            List
         }
     }
 }

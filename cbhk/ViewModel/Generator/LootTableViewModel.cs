@@ -80,6 +80,7 @@ namespace CBHK.ViewModel.Generator
             EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b"]);
             EnumIDDictionary.Add("染料颜色", ["red", "green", "blue"]);
             #endregion
+
             #region 添加复合类数据、调用上下文初始化方法
             string[] commonDirectoryFileArray = Directory.GetFiles(CommonCompoundDataDirectoryPath);
             foreach (var item in commonDirectoryFileArray)
@@ -122,10 +123,10 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public async void TextEditor_Loaded(object sender, RoutedEventArgs e)
         {
-            await Task.Run((Func<Task>)(async () =>
+            await Task.Run(async () =>
             {
                 base.TextEditor = sender as TextEditor;
-                await Application.Current.Dispatcher.InvokeAsync((Action)(() =>
+                await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     JsonTreeViewDataStructure result = base.htmlHelper.AnalyzeHTMLData(ConfigDirectoryPath + CurrentVersion.Text);
                     string resultString = result.ResultString.ToString().TrimEnd([',', '\r', '\n']);
@@ -148,8 +149,8 @@ namespace CBHK.ViewModel.Generator
                     xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\Json.xshd"));
                     IHighlightingDefinition jsonHighlighting = HighlightingLoader.Load(xshdSyntaxDefinition, HighlightingManager.Instance);
                     base.TextEditor.SyntaxHighlighting = jsonHighlighting;
-                }));
-            }));
+                });
+            });
         }
 
         /// <summary>

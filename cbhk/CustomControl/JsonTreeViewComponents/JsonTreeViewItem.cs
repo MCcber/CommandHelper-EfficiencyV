@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl.Interfaces;
 using CBHK.Service.Json;
+using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
 using System;
@@ -447,6 +448,20 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         #endregion
 
         #region Event
+        /// <summary>
+        /// 更新所有本层节点的视觉引用
+        /// </summary>
+        private void UpdateCurrentLayerVisualReference()
+        {
+            if (Parent is not null)
+            {
+                Parent.SetVisualPreviousAndNextForEachItem();
+            }
+            else
+            {
+                Plan.SetVisualPreviousAndNextForEachItem();
+            }
+        }
 
         /// <summary>
         /// 向上移动数组元素节点
@@ -656,6 +671,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     StartLine = Plan.GetLineByNumber(lineNumber);
                 }
                 #endregion
+
                 #region 更新父节点的末行引用
                 if (Parent.VisualLastChild is null)
                 {
@@ -664,6 +680,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 #endregion
             }
 
+            UpdateCurrentLayerVisualReference();
             OldValue = (sender as TextBox).Text;
             #endregion
         }
@@ -700,7 +717,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                         offset = VisualPrevious.StartLine.EndOffset;
                     }
 
-                    if (VisualNext is not null)
+                    if (VisualNext is null)
                     {
                         offset--;
                     }
@@ -730,7 +747,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 #region 更新编辑器、设置父节点行引用
                 Plan.SetRangeText(offset, length, "");
 
-                if(Parent.VisualLastChild is null)
+                if(Parent is not null && Parent.VisualLastChild is null)
                 {
                     Parent.EndLine = Parent.StartLine;
                 }
@@ -747,12 +764,13 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 #region 整合当前节点的值并执行更新
                 if (StartLine is null)
                 {
-                    currentValue = (VisualPrevious is not null ? ',' : "") + "\r\n" + new string(' ', LayerCount * 2) + (Key.Length > 0 ? "\"" + Key + "\": " : "") + currentValue + (Parent.VisualLastChild is null ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "") + (VisualNext is not null ? ',' : "");
+                    currentValue = (VisualPrevious is not null && VisualNext is null ? ',' : "") + "\r\n" + new string(' ', LayerCount * 2) + (Key.Length > 0 ? "\"" + Key + "\": " : "") + currentValue + (Parent is not null && Parent.VisualLastChild is null ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "") + (VisualNext is not null ? ',' : "");
                 }
                 Plan.UpdateValueBySpecifyingInterval(this, ChangeType.NumberAndBool, currentValue);
                 #endregion
+
                 #region 更新父节点的末行引用
-                if (Parent.VisualLastChild is null)
+                if (Parent is not null && Parent.VisualLastChild is null)
                 {
                     if (this is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null)
                     {
@@ -765,6 +783,8 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 }
                 #endregion
             }
+
+            UpdateCurrentLayerVisualReference();
             #endregion
         }
 
@@ -773,7 +793,18 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void RemoveCurrentItem_Click(object sender, RoutedEventArgs e) => JsonItemTool.RemoveCurrentItem(this);
+        public void RemoveCurrentItem_Click(object sender, RoutedEventArgs e)
+        {
+            if(Parent is not null)
+            {
+                Parent.RemoveChild(this);
+            }
+            else
+            if(Plan is BaseCustomWorldUnifiedPlan basePlan)
+            {
+                basePlan.RemoveChild(this);
+            }
+        }
         #endregion
     }
 }

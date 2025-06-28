@@ -1,5 +1,5 @@
 ﻿<localWindow:CommonWindow
-    x:Class="CBHK.View.Generator.DimensionView"
+    x:Class="CBHK.View.Generator.CustomWorldGeneratorView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CompoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponents"
@@ -12,12 +12,13 @@
     xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
-    Title="维度编辑器"
+    Title="自定义世界编辑器"
     Width="1080"
     Height="700"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#1B1B1B"
     mc:Ignorable="d">
+
     <Window.Resources>
         <CompoundItem:JsonTreeViewTemplateSelector
             x:Key="JsonTreeViewTemplateSelector"
@@ -35,13 +36,26 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <CustomControl:TextComboBoxs
-            Grid.Row="0"
-            Height="30"
-            ItemsSource="{Binding VersionList}"
-            SelectedIndex="0"
-            SelectedItem="{Binding CurrentVersion}"
-            Style="{StaticResource TextComboBoxStyle}" />
+        <Grid Grid.Row="0" Height="30">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <CustomControl:TextComboBoxs
+                Grid.Column="0"
+                Height="30"
+                ItemsSource="{Binding VersionList}"
+                SelectedIndex="0"
+                SelectedItem="{Binding CurrentVersion}"
+                Style="{StaticResource TextComboBoxStyle}" />
+            <CustomControl:TextComboBoxs
+                Grid.Column="1"
+                Height="30"
+                ItemsSource="{Binding GeneratorList}"
+                SelectedIndex="0"
+                SelectedItem="{Binding CurrentGenerator}"
+                Style="{StaticResource TextComboBoxStyle}" />
+        </Grid>
         <TreeView
             Grid.Row="1"
             Grid.Column="0"

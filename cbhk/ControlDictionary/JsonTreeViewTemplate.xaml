@@ -161,8 +161,8 @@
     </HierarchicalDataTemplate>
 
     <HierarchicalDataTemplate
-        x:Key="CompoundJsonTreeViewItem"
-        DataType="compoundItem:CompoundJsonTreeViewItem"
+        x:Key="BaseCompoundJsonTreeViewItem"
+        DataType="compoundItem:BaseCompoundJsonTreeViewItem"
         ItemsSource="{Binding LogicChildren}">
         <DockPanel LastChildFill="False">
             <Border
