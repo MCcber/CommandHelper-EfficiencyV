@@ -34,7 +34,6 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
         {
             return new BaseCompoundJsonTreeViewItem(template.Plan, template.JsonItemTool, _container)
             {
-                StartLine = template.StartLine,
                 LayerCount = template.LayerCount,
                 ElementButtonTip = "添加到末尾",
                 ItemType = ItemType.BottomButton,
@@ -215,7 +214,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                             }
                             subCompoundItem2.VisualLastChild = result.Item2;
                         }
-                        if (result.Item2 is BaseCompoundJsonTreeViewItem subsubCompoundItem2)
+                        if (result.Item2 is BaseCompoundJsonTreeViewItem subsubCompoundItem2 && subsubCompoundItem2.EndLine is not null && !subsubCompoundItem2.EndLine.IsDeleted)
                         {
                             subCompoundItem2.EndLine = subsubCompoundItem2.EndLine.NextLine;
                         }
@@ -276,15 +275,8 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                 }
                 if (list[i] is not BaseCompoundJsonTreeViewItem || (list[i] is BaseCompoundJsonTreeViewItem subBaseCompoundItem && subBaseCompoundItem.ItemType is not ItemType.BottomButton && subBaseCompoundItem.ItemType is not ItemType.CustomCompound))
                 {
-                    if (startIndex > 0)
-                    {
-                        list[i].Index = startIndex;
-                        startIndex++;
-                    }
-                    else
-                    {
-                        list[i].Index = i;
-                    }
+                    list[i].Index = startIndex;
+                    startIndex++;
                 }
                 if (list[i] is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.LogicChildren.Count > 0)
                 {
@@ -587,12 +579,12 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
             {
                 if (compoundJsonTreeViewItem.Parent is not null)
                 {
-                    compoundJsonTreeViewItem.Parent.RemoveChild(compoundJsonTreeViewItem);
+                    compoundJsonTreeViewItem.Parent.RemoveChild([compoundJsonTreeViewItem]);
                 }
                 else
                 if (compoundJsonTreeViewItem.Plan is BaseCustomWorldUnifiedPlan basePlan)
                 {
-                    basePlan.RemoveChild(compoundJsonTreeViewItem);
+                    basePlan.RemoveChild([compoundJsonTreeViewItem]);
                 }
             }
             else

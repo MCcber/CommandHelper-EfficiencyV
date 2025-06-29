@@ -797,12 +797,12 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         {
             if(Parent is not null)
             {
-                Parent.RemoveChild(this);
+                Parent.RemoveChild([this]);
             }
             else
             if(Plan is BaseCustomWorldUnifiedPlan basePlan)
             {
-                basePlan.RemoveChild(this);
+                basePlan.RemoveChild([this]);
             }
         }
         #endregion

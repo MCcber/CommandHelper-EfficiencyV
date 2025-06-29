@@ -294,52 +294,69 @@ namespace CBHK.ViewModel.Common
         /// 用于删除单个节点或列表元素
         /// </summary>
         /// <param name="childItem"></param>
-        public void RemoveChild(JsonTreeViewItem childItem)
+        public void RemoveChild(List<JsonTreeViewItem> childrenList)
         {
-            #region 处理视觉树
+            #region Field
+            if (childrenList.Count == 0)
+            {
+                return;
+            }
+            JsonTreeViewItem groupLastItem = BaseCompoundJsonTreeViewItem.SearchEnumGroupLastVisualItem(childrenList);
             int offset = 0, length = 0;
-            if (childItem.VisualPrevious is not null && childItem.VisualPrevious is BaseCompoundJsonTreeViewItem previousItem && previousItem.EndLine is not null && !previousItem.EndLine.IsDeleted)
-            {
-                offset = previousItem.EndLine.EndOffset - 1;
-            }
-            else
-            if (childItem.Parent is not null)
-            {
-                offset = childItem.Parent.StartLine.EndOffset;
-            }
-            else
-            {
-                offset = 4;
-            }
-
-            if (childItem is BaseCompoundJsonTreeViewItem baseCompoundJsonTreeViewItem && baseCompoundJsonTreeViewItem.EndLine is not null && !baseCompoundJsonTreeViewItem.EndLine.IsDeleted)
-            {
-                length = baseCompoundJsonTreeViewItem.EndLine.EndOffset - offset;
-            }
-            else
-            {
-                length = childItem.StartLine.EndOffset - offset;
-            }
-            SetRangeText(offset, length, "");
             #endregion
 
-            #region 处理逻辑树
-            JsonTreeViewItem visualPrevious = childItem.VisualPrevious;
-            JsonTreeViewItem visualNext = childItem.VisualNext;
-
-            visualPrevious.VisualNext = visualNext;
-            visualNext.VisualPrevious = visualPrevious;
-
-            if (childItem.Parent is not null)
+            #region 确定替换的起始偏移
+            if (childrenList[0].VisualPrevious is BaseCompoundJsonTreeViewItem visualPreviousCompoundItem && visualPreviousCompoundItem.EndLine is not null && !visualPreviousCompoundItem.EndLine.IsDeleted)
             {
-                childItem.Parent.LogicChildren.Remove(childItem);
+                offset = visualPreviousCompoundItem.EndLine.EndOffset - (childrenList[0].VisualPrevious.VisualNext is null ? 1 : 0);
             }
             else
-            if (childItem.Plan is BaseCustomWorldUnifiedPlan basePlan)
+            if (childrenList[0].VisualPrevious is not null)
             {
-                if (basePlan.TreeViewItemList is not null && basePlan.TreeViewItemList.Count > 0)
+                offset = childrenList[0].VisualPrevious.StartLine.EndOffset - (childrenList[0].VisualPrevious.VisualNext is null ? 1 : 0);
+            }
+            else
+            {
+                offset = 1;
+            }
+            #endregion
+
+            #region 确定替换的长度
+            if (groupLastItem is not null)
+            {
+                if (groupLastItem is BaseCompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null && !lastCompoundItem.EndLine.IsDeleted)
                 {
-                    basePlan.TreeViewItemList.Remove(childItem);
+                    length = lastCompoundItem.EndLine.EndOffset - offset;
+                }
+                else
+                if (groupLastItem.StartLine is not null)
+                {
+                    length = childrenList[^1].StartLine.EndOffset - offset;
+                }
+            }
+            #endregion
+
+            #region 执行替换并删除节点
+            if (groupLastItem is not null)
+            {
+                childrenList[0].Plan.SetRangeText(offset, length, "");
+            }
+            foreach (var item in childrenList)
+            {
+                if (item.IsCanBeDefaulted)
+                {
+                    item.StartLine = null;
+                }
+                if (item.DisplayText == "Entry")
+                {
+                    TreeViewItemList.Remove(item);
+                }
+                else
+                if(item is BaseCompoundJsonTreeViewItem baseCompoundJsonTreeViewItem)
+                {
+                    baseCompoundJsonTreeViewItem.EndLine = null;
+                    baseCompoundJsonTreeViewItem.LogicChildren.Clear();
+                    baseCompoundJsonTreeViewItem.VisualLastChild = null;
                 }
             }
             #endregion
