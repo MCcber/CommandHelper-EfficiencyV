@@ -308,12 +308,12 @@ namespace CBHK.ViewModel.Common
             #region 确定替换的起始偏移
             if (childrenList[0].VisualPrevious is BaseCompoundJsonTreeViewItem visualPreviousCompoundItem && visualPreviousCompoundItem.EndLine is not null && !visualPreviousCompoundItem.EndLine.IsDeleted)
             {
-                offset = visualPreviousCompoundItem.EndLine.EndOffset - (childrenList[0].VisualPrevious.VisualNext is null ? 1 : 0);
+                offset = visualPreviousCompoundItem.EndLine.EndOffset - (childrenList[0].VisualNext is null ? 1 : 0);
             }
             else
             if (childrenList[0].VisualPrevious is not null)
             {
-                offset = childrenList[0].VisualPrevious.StartLine.EndOffset - (childrenList[0].VisualPrevious.VisualNext is null ? 1 : 0);
+                offset = childrenList[0].VisualPrevious.StartLine.EndOffset - (childrenList[0].VisualNext is null ? 1 : 0);
             }
             else
             {
@@ -357,6 +357,21 @@ namespace CBHK.ViewModel.Common
                     baseCompoundJsonTreeViewItem.EndLine = null;
                     baseCompoundJsonTreeViewItem.LogicChildren.Clear();
                     baseCompoundJsonTreeViewItem.VisualLastChild = null;
+                }
+            }
+
+            if (TreeViewItemList.Count == 1 && TreeViewItemList[0] is BaseCompoundJsonTreeViewItem bottomItem && bottomItem.ItemType is ItemType.BottomButton)
+            {
+                TreeViewItemList.Clear();
+            }
+
+            if (TreeViewItemList.Count > 0)
+            {
+                SetVisualPreviousAndNextForEachItem();
+                Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext = SearchVisualPreviousAndNextItem(TreeViewItemList    [^1]);
+                if (previousAndNext is not null && previousAndNext.Item2 is not null)
+                {
+                    VisualLastItem = previousAndNext.Item2;
                 }
             }
             #endregion
@@ -679,7 +694,7 @@ namespace CBHK.ViewModel.Common
                 else
                 if (item.StartLine is null && item.VisualPrevious is not null && item.VisualPrevious.StartLine is not null)
                 {
-                    item.StartLine = item.VisualNext.StartLine.NextLine;
+                    item.StartLine = item.VisualPrevious.StartLine.NextLine;
                 }
                 else
                 if (item.StartLine is null && parent is not null && parent.StartLine is not null)

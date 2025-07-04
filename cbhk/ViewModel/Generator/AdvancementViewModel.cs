@@ -80,9 +80,10 @@ namespace CBHK.ViewModel.Generator
             EnumIDDictionary.Add("方块ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);
             EnumIDDictionary.Add("物品ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);
             EnumIDDictionary.Add("战利品表", ["minecraft:a", "minecraft:b", "minecraft:c"]);
-            EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b"]);
+            EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b", "minecraft:potion_c"]);
             EnumIDDictionary.Add("染料颜色", ["red", "green", "blue"]);
             #endregion
+
             #region 添加复合类数据、调用上下文初始化方法
             string[] commonDirectoryFileArray = Directory.GetFiles(CommonCompoundDataDirectoryPath);
             foreach (var item in commonDirectoryFileArray)
@@ -153,33 +154,7 @@ namespace CBHK.ViewModel.Generator
                     #endregion
 
                     #region 处理视觉引用
-                    for (int i = 0; i < result.Result.Count; i++)
-                    {
-                        Tuple<JsonTreeViewItem, JsonTreeViewItem> currentPreviousAndNext = SearchVisualPreviousAndNextItem(result.Result[i]);
-                        if (currentPreviousAndNext.Item1 is not null)
-                        {
-                            result.Result[i].VisualPrevious = currentPreviousAndNext.Item1;
-                        }
-                        if (currentPreviousAndNext.Item2 is not null)
-                        {
-                            result.Result[i].VisualNext = currentPreviousAndNext.Item2;
-                        }
-                        if (result.Result[i] is BaseCompoundJsonTreeViewItem baseCompoundJsonTreeViewItem)
-                        {
-                            foreach (var item in baseCompoundJsonTreeViewItem.LogicChildren)
-                            {
-                                Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext2 = baseCompoundJsonTreeViewItem.SearchVisualPreviousAndNextItem(item);
-                                if (previousAndNext2.Item1 is not null)
-                                {
-                                    item.VisualPrevious = previousAndNext2.Item1;
-                                }
-                                if (previousAndNext2.Item2 is not null)
-                                {
-                                    item.VisualNext = previousAndNext2.Item2;
-                                }
-                            }
-                        }
-                    }
+                    SetVisualPreviousAndNextForEachItem();
                     #endregion
 
                     #region 为代码编辑器安装大纲管理器并应用文档着色规则

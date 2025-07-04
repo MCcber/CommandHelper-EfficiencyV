@@ -1,4 +1,4 @@
-﻿<Window
+﻿<localWindow:CommonWindow
     x:Class="CBHK.View.Generator.PredicateView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -84,4 +84,4 @@
             </behaviors:Interaction.Triggers>
         </avalonedit:TextEditor>
     </Grid>
-</Window>
+</localWindow:CommonWindow>

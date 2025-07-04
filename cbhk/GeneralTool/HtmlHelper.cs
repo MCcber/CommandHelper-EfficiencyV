@@ -4,6 +4,8 @@ using CBHK.CustomControl.JsonTreeViewComponents;
 using CBHK.Model.Common;
 using CBHK.Service.Json;
 using CBHK.ViewModel.Common;
+using DryIoc;
+using HelixToolkit.Wpf;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -15,6 +17,9 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Diagnostics;
+using System.Windows.Input;
+using Windows.Security.ExchangeActiveSyncProvisioning;
 using static CBHK.Model.Common.Enums;
 
 namespace CBHK.GeneralTool
@@ -96,17 +101,30 @@ namespace CBHK.GeneralTool
         /// <returns></returns>
         private BaseCompoundJsonTreeViewItem GetCustomKeyBaseCompoundItem(BaseCompoundJsonTreeViewItem template)
         {
-            return new(plan, jsonTool, _container)
+            BaseCompoundJsonTreeViewItem result = new(plan, jsonTool, _container)
             {
-                IsCanBeDefaulted = template.IsCanBeDefaulted,
-                Key = template.Key,
-                DisplayText = template.DisplayText,
-                DataType = template.DataType,
-                LayerCount = template.LayerCount,
-                ItemType = ItemType.Compound,
-                AddOrSwitchElementButtonVisibility = Visibility.Collapsed,
-                IsCurrentExpanded = true
+                DataType = template.DataType
             };
+
+            result.RemoveElementButtonVisibility = template.RemoveElementButtonVisibility;
+            result.Value = template.Value;
+            result.SelectedValueType = template.SelectedValueType;
+            result.SelectedEnumItem = template.SelectedEnumItem;
+            result.IsCanBeDefaulted = template.IsCanBeDefaulted;
+            result.Key = template.Key;
+            result.DisplayText = template.DisplayText;
+            result.LayerCount = template.LayerCount;
+            result.ItemType = template.ItemType;
+            result.ArrayChildrenStringList = template.ArrayChildrenStringList;
+            result.CompoundChildrenStringList = template.CompoundChildrenStringList;
+            result.ListChildrenStringList = template.ListChildrenStringList;
+            result.InputBoxVisibility = template.InputBoxVisibility;
+            result.ValueTypeBoxVisibility = template.ValueTypeBoxVisibility;
+            result.EnumBoxVisibility = template.EnumBoxVisibility;
+            result.ValueTypeSource = template.ValueTypeSource;
+            result.AddOrSwitchElementButtonVisibility = Visibility.Collapsed;
+            result.IsCurrentExpanded = true;
+            return result;
         }
 
         private BaseCompoundJsonTreeViewItem GetInputBaseCompoundItem(BaseCompoundJsonTreeViewItem template)
@@ -115,7 +133,7 @@ namespace CBHK.GeneralTool
             {
                 IsCanBeDefaulted = template.IsCanBeDefaulted,
                 LayerCount = template.LayerCount,
-                ItemType = ItemType.CustomCompound,
+                ItemType = ItemType.MultiType,
                 InputBoxVisibility = Visibility.Visible,
                 AddOrSwitchElementButtonVisibility = Visibility.Visible,
                 IsCurrentExpanded = true
@@ -531,6 +549,7 @@ namespace CBHK.GeneralTool
                                 keyValuePairs.Add(enumMatch.Value.Replace("=", "").Trim(), targetRawStringList);
                             }
                             else
+                            if(contextFileMarker.Trim().Length > 0)
                             {
                                 plan.EnumCompoundDataDictionary[contextFileMarker].Add(enumMatch.Value.Replace("=", "").Trim(), targetRawStringList);
                             }
@@ -621,7 +640,6 @@ namespace CBHK.GeneralTool
             for (int i = 0; i < nodeList.Count; i++)
             {
                 #region Field
-                bool isParentMultipleCustomCompound = false;
                 bool isAddedStringInMulipleCode = false;
                 bool HaveBranches = false;
                 string currentNodeItemType = "";
@@ -666,7 +684,7 @@ namespace CBHK.GeneralTool
                     {
                         string currentSourceCode = inheritMatch.Groups[1].Value;
                         List<string> sourceCodeContentList = RemoveUIMarker([.. currentSourceCode.Replace("|", "/").Split('/',StringSplitOptions.RemoveEmptyEntries)]);
-                        currentSourceCode = "#Inherit" + "/" + string.Join("/", sourceCodeContentList);
+                        currentSourceCode = "Inherit" + "/" + string.Join("/", sourceCodeContentList);
                         if (plan.DependencyItemList.TryGetValue(currentSourceCode, out List<string> targetInheritList))
                         {
                             nodeList.RemoveAt(i);
@@ -677,6 +695,11 @@ namespace CBHK.GeneralTool
                             }
                             NBTFeatureList = GetHeadTypeAndKeyList(nodeList[i]);
                             NBTFeatureList = RemoveUIMarker(NBTFeatureList);
+                            if(NBTFeatureList.Count < 2)
+                            {
+                                NBTFeatureList = GetHeadTypeAndKeyList(nodeList[i + 1]);
+                                NBTFeatureList = RemoveUIMarker(NBTFeatureList);
+                            }
                             IsCurrentOptionalNode = !GetRequiredKey().Match(nodeList[i]).Success && KeyList.Count == 0;
                             currentContextNextIndex = i + targetInheritList.Count;
                         }
@@ -858,38 +881,39 @@ namespace CBHK.GeneralTool
                     #endregion
 
                     #region 判断是否捕获多组信息
-                    isParentMultipleCustomCompound = parent is not null && parent.ItemType is ItemType.MultiType && parent.ValueTypeSource.Count > 0;
-                    if ((NBTFeatureList is not null && NBTFeatureList.Count > 2 && currentNodeItemType.Length > 0 && currentNodeKey.Length > 0) || isParentMultipleCustomCompound)
+                    if (NBTFeatureList is not null && NBTFeatureList.Count > 2 && currentNodeItemType.Length > 0 && currentNodeKey.Length > 0)
                     {
                         if (item is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem)
                         {
-                            if(isParentMultipleCustomCompound)
+                            if (compoundJsonTreeViewItem.IsCanBeDefaulted)
                             {
-                                compoundJsonTreeViewItem.ValueTypeSource.AddRange([..parent.ValueTypeSource]);
+                                compoundJsonTreeViewItem.ValueTypeSource.Add(new TextComboBoxItem() { Text = "- unset -" });
                             }
-                            else
+                            for (int j = 0; j < NBTFeatureList.Count - 1; j++)
                             {
-                                if (compoundJsonTreeViewItem.IsCanBeDefaulted)
+                                compoundJsonTreeViewItem.ValueTypeSource.Add(new TextComboBoxItem()
                                 {
-                                    compoundJsonTreeViewItem.ValueTypeSource.Add(new TextComboBoxItem() { Text = "- unset -" });
-                                }
-                                for (int j = 0; j < NBTFeatureList.Count - 1; j++)
-                                {
-                                    compoundJsonTreeViewItem.ValueTypeSource.Add(new TextComboBoxItem()
-                                    {
-                                        Text = NBTFeatureList[j][0].ToString().ToUpper() + NBTFeatureList[j][1..]
-                                    });
-                                }
+                                    Text = NBTFeatureList[j][0].ToString().ToUpper() + NBTFeatureList[j][1..]
+                                });
                             }
-                            compoundJsonTreeViewItem.SelectedValueType ??= compoundJsonTreeViewItem.ValueTypeSource[0];
+
+                            if (compoundJsonTreeViewItem.ValueTypeSource.Count > 0)
+                            {
+                                compoundJsonTreeViewItem.SelectedValueType ??= compoundJsonTreeViewItem.ValueTypeSource[0];
+                            }
                             compoundJsonTreeViewItem.ItemType = ItemType.MultiType;
                             if (!IsCurrentOptionalNode && !(currentDescription == "根标签" || currentDescription == "根节点"))
                             {
                                 result.ResultString.Append(new string(' ', layerCount * 2) + "\"" + (currentReferenceKey.Length > 0 ? currentReferenceKey : currentNodeKey) + "\": ");
+
+                                if(currentReferenceKey.Length > 0)
+                                {
+                                    compoundJsonTreeViewItem.RemoveElementButtonVisibility = Visibility.Visible;
+                                }
                             }
 
-                            isCompoundRoot = NBTFeatureList[0] == "compound";
-                            isListRoot = NBTFeatureList[0] == "list";
+                            isCompoundRoot = NBTFeatureList[0] == "compound" && !isAddToParent;
+                            isListRoot = NBTFeatureList[0] == "list" && !isAddToParent;
                             switch (NBTFeatureList[0])
                             {
                                 case "bool":
@@ -934,6 +958,7 @@ namespace CBHK.GeneralTool
                                         {
                                             compoundJsonTreeViewItem.Value = 0;
                                         }
+
                                         if (compoundJsonTreeViewItem.SelectedValueType is null || (compoundJsonTreeViewItem.SelectedValueType is not null && compoundJsonTreeViewItem.SelectedValueType.Text != "- unset -"))
                                         {
                                             compoundJsonTreeViewItem.InputBoxVisibility = Visibility.Visible;
@@ -987,11 +1012,6 @@ namespace CBHK.GeneralTool
                             compoundJsonTreeViewItem.ValueTypeBoxVisibility = Visibility.Visible;
                             compoundJsonTreeViewItem.SwitchButtonColor = compoundJsonTreeViewItem.PlusColor;
                             compoundJsonTreeViewItem.SwitchButtonIcon = compoundJsonTreeViewItem.PlusIcon;
-                            if(isParentMultipleCustomCompound && NBTFeatureList[0] != "compound")
-                            {
-                                result.Result.Add(compoundJsonTreeViewItem);
-                                return result;
-                            }
                         }
                     }
                     #endregion
@@ -1588,7 +1608,10 @@ namespace CBHK.GeneralTool
                         }
                         if (NBTFeatureList[0] == "string" && (EnumKeyCount > 0 || EnumCollectionMode1.Count > 0 || EnumCollectionMode2.Count > 0 || EnumMatch.Success) && !IsPreIdentifiedAsEnumCompoundType)
                         {
-                            CurrentCompoundItem.ItemType = ItemType.Enum;
+                            if (CurrentCompoundItem.ValueTypeSource.Count == 0)
+                            {
+                                CurrentCompoundItem.ItemType = ItemType.Enum;
+                            }
                             #region 处理Key与外观
                             if (NBTFeatureList[0] == "string")
                             {
@@ -1701,37 +1724,54 @@ namespace CBHK.GeneralTool
                         bool isHaveCustomKeyItem = false;
                         if(currentCustomKey.StartsWith("<''") && currentCustomKey.EndsWith("''>"))
                         {
-                            isHaveCustomKeyItem = true;
-                            result.ResultString.Clear();
-                            result.ResultString.Append(new string(' ',layerCount * 2) + '"' + currentReferenceKey + '"' + ": {\r\n");
-                            CurrentCompoundItem.Key = CurrentCompoundItem.DisplayText = currentReferenceKey;
-                            CurrentCompoundItem.RemoveElementButtonVisibility = Visibility.Visible;
-                            BaseCompoundJsonTreeViewItem customKeyCompoundItem = GetCustomKeyBaseCompoundItem(CurrentCompoundItem);
+                            currentCustomKey = currentCustomKey.Replace("<''","").Replace("''>","");
 
-                            //需要处理有映射的CustomKey
-                            if (plan.TranslateDictionary.TryGetValue(currentCustomKey, out string translatedKey))
+                            CurrentCompoundItem.Key = CurrentCompoundItem.DisplayText = currentReferenceKey;
+                            if (parent.LogicChildren.Count > 0)
+                            {
+                                CurrentCompoundItem.ItemType = ItemType.Compound;
+                                CurrentCompoundItem.RemoveElementButtonVisibility = Visibility.Visible;
+                            }
+                            else
+                            {
+                                CurrentCompoundItem.ItemType = ItemType.CustomCompound;
+                                CurrentCompoundItem.CompoundChildrenStringList = nodeList[i..];
+                                i = nodeList.Count;
+                            }
+                            BaseCompoundJsonTreeViewItem customKeyCompoundItem = GetCustomKeyBaseCompoundItem(CurrentCompoundItem);
+                            isHaveCustomKeyItem = true;
+                            if (NBTFeatureList[0] == "compound" && parent is not null && (parent.StartLine is not null || !parent.IsCanBeDefaulted))
+                            {
+                                result.ResultString.Clear();
+                                result.ResultString.Append(new string(' ', layerCount * 2) + '"' + currentReferenceKey + '"' + ": {\r\n");
+                            }
+
+                            if (plan.TranslateDictionary.TryGetValue(currentCustomKey, out string translatedKey) && parent is not null && (parent.StartLine is not null || !parent.IsCanBeDefaulted))
                             {
                                 #region 处理拥有固定复合结构的枚举节点
                                 if (plan.EnumCompoundDataDictionary.TryGetValue(translatedKey, out Dictionary<string, List<string>> targetDictionary) && !CurrentCompoundItem.IsCanBeDefaulted)
                                 {
+
+                                }
+
+                                if(plan.EnumIDDictionary.TryGetValue(translatedKey,out List<string> targetIDList))
+                                {
+
                                 }
                                 #endregion
 
                                 #region 处理可缺省的方块属性或物品堆叠组件
                                 if (CurrentCompoundItem.IsCanBeDefaulted)
                                 {
-                                    BaseCompoundJsonTreeViewItem inputCompoundItem2 = GetInputBaseCompoundItem(CurrentCompoundItem);
+                                    BaseCompoundJsonTreeViewItem inputCompoundItem = GetInputBaseCompoundItem(CurrentCompoundItem);
                                     result.Result.Clear();
-                                    result.Result.Add(inputCompoundItem2);
+                                    result.Result.Add(inputCompoundItem);
                                 }
                                 #endregion
                             }
-                            else//处理没有映射的CustomKey
-                            {
-                                item = CurrentCompoundItem = customKeyCompoundItem;
-                            }
-                        }
 
+                            item = CurrentCompoundItem = customKeyCompoundItem;
+                        }
                         #endregion
 
                         #region 设置前后关系
@@ -1805,6 +1845,7 @@ namespace CBHK.GeneralTool
 
                                             #region 执行递归
                                             JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), [..currentSubChildrenTuple.Item1], layerCount + 1, currentReferenceKey, CurrentCompoundItem, null, previousStarCount, isAddToParent);
+
                                             CurrentCompoundItem.LogicChildren.AddRange(subResult.Result);
 
                                             while (subResult.ResultString.Length > 0 &&
@@ -2027,13 +2068,23 @@ namespace CBHK.GeneralTool
                     item.RemoveElementButtonVisibility = Visibility.Collapsed;
                 }
                 entry.LogicChildren.AddRange([.. result.Result]);
-                result.ResultString = result.ResultString.Replace("\r\n","\r\n  ");
-                result.ResultString.Insert(0,"  ");
+                result.ResultString = result.ResultString.Replace("\r\n", "\r\n  ");
+                if (result.ResultString.Length > 0)
+                {
+                    result.ResultString.Insert(0, "  ");
+                }
                 while (result.ResultString.Length > 0 && (result.ResultString[^1] == ',' || result.ResultString[^1] == '\r' || result.ResultString[^1] == '\n' || result.ResultString[^1] == ' '))
                 {
                     result.ResultString.Length--;
                 }
-                result.ResultString.Insert(0, new string(' ', entry.LayerCount * 2) + "{\r\n").Append("\r\n" + new string(' ', entry.LayerCount * 2) + '}');
+
+                int resultLength = result.ResultString.Length;
+                result.ResultString.Insert(0, new string(' ', entry.LayerCount * 2) + "{" + (resultLength > 0 ? "\r\n" : ""));
+                if(resultLength > 0)
+                {
+                    result.ResultString.Append("\r\n" + new string(' ', entry.LayerCount * 2));
+                }
+                result.ResultString.Append('}');
                 result.Result.Clear();
                 result.Result.Add(entry);
             }
@@ -2043,8 +2094,8 @@ namespace CBHK.GeneralTool
             if (isCompoundRoot || isListRoot)
             {
                 result.IsHaveRootItem = true;
-                while (result.ResultString[^1] == ' ' || result.ResultString[^1] == ',' ||
-                    result.ResultString[^1] == '\r' || result.ResultString[^1] == '\n')
+                while (result.ResultString.Length > 0 && (result.ResultString[^1] == ' ' || result.ResultString[^1] == ',' ||
+                    result.ResultString[^1] == '\r' || result.ResultString[^1] == '\n'))
                 {
                     result.ResultString.Length--;
                 }

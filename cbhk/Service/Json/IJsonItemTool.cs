@@ -18,7 +18,7 @@ namespace CBHK.Service.Json
         /// </summary>
         /// <param name="compoundJsonTreeViewItem"></param>
         /// <returns></returns>
-        public List<string> ExtractSubInformationFromPromptSourceCode(BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem);
+        public Tuple<List<string>, bool> ExtractSubInformationFromPromptSourceCode(BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem);
         /// <summary>
         /// 递归遍历节点树并执行代理方法
         /// </summary>
