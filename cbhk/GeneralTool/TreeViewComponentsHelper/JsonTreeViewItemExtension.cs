@@ -151,7 +151,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
             JsonTreeViewItem theFirstItem = null;
             for (int i = 0; i < list.Count; i++)
             {
-                if ((list[i].IsCanBeDefaulted && (list[i].StartLine is null || (list[i].StartLine is not null && list[i].StartLine.IsDeleted))) || ((list[i] is not BaseCompoundJsonTreeViewItem && list[i].DataType is DataType.None) || (list[i] is BaseCompoundJsonTreeViewItem compoundElementItem1 && (compoundElementItem1.DataType is DataType.None || compoundElementItem1.ItemType is ItemType.OptionalCompound || compoundElementItem1.ItemType is ItemType.CustomCompound || compoundElementItem1.ItemType is ItemType.BottomButton))))
+                if ((list[i].IsCanBeDefaulted && (list[i].StartLine is null || (list[i].StartLine is not null && list[i].StartLine.IsDeleted))) || ((list[i] is not BaseCompoundJsonTreeViewItem && list[i].DataType is DataType.None) || (list[i] is BaseCompoundJsonTreeViewItem compoundElementItem1 && compoundElementItem1.ValueTypeSource.Count == 0 && (compoundElementItem1.DataType is DataType.None || compoundElementItem1.ItemType is ItemType.CustomCompound || compoundElementItem1.ItemType is ItemType.BottomButton))))
                 {
                     continue;
                 }
@@ -161,7 +161,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                 theFirstItem ??= list[i];
                 theLastItem = list[i];
 
-                if ((!list[i].IsCanBeDefaulted || (list[i].StartLine is not null && !list[0].StartLine.IsDeleted)) && list[i].DataType is not DataType.None || (list[i] is BaseCompoundJsonTreeViewItem compoundElementItem2 && compoundElementItem2.DataType is not DataType.None && compoundElementItem2.ItemType is not ItemType.CustomCompound && compoundElementItem2.ItemType is not ItemType.OptionalCompound))
+                if ((!list[i].IsCanBeDefaulted || (list[i].StartLine is not null && !list[i].StartLine.IsDeleted)) && list[i].DataType is not DataType.None || (list[i] is BaseCompoundJsonTreeViewItem compoundElementItem2 && compoundElementItem2.DataType is not DataType.None && compoundElementItem2.ItemType is not ItemType.CustomCompound && compoundElementItem2.ItemType is not ItemType.OptionalCompound))
                 {
                     lineNumber++;
                 }
@@ -172,14 +172,10 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                         Tuple<JsonTreeViewItem, JsonTreeViewItem> result = SetLineNumbersForEachSubItem(subCompoundItem2.LogicChildren, subCompoundItem2);
                         if (result.Item2 is not null)
                         {
-                            //if (subCompoundItem2.VisualLastChild is not null && result.Item1 != subCompoundItem2.VisualLastChild)
-                            //{
-                            //    subCompoundItem2.VisualLastChild.VisualNext = result.Item1;
-                            //}
                             subCompoundItem2.VisualLastChild = result.Item2;
                         }
 
-                        if (result.Item2 is BaseCompoundJsonTreeViewItem subsubCompoundItem2)
+                        if (result.Item2 is BaseCompoundJsonTreeViewItem subsubCompoundItem2 && subsubCompoundItem2.EndLine is not null && !subsubCompoundItem2.EndLine.IsDeleted)
                         {
                             subCompoundItem2.EndLine = subsubCompoundItem2.EndLine.NextLine;
                         }
@@ -190,7 +186,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                         }
                         else
                         {
-                            subCompoundItem2.EndLine = subCompoundItem2.Plan.GetLineByNumber(subCompoundItem2.StartLine.LineNumber + subCompoundItem2.LogicChildren.Count);
+                            subCompoundItem2.EndLine = subCompoundItem2.StartLine;
                         }
                     }
                     else
@@ -213,7 +209,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
             JsonTreeViewItem theLastItem = null;
             for (int i = 0; i < list.Count; i++)
             {
-                if (list[i].IsCanBeDefaulted || ((list[i] is not BaseCompoundJsonTreeViewItem && list[i].DataType is  DataType.None) || (list[i] is BaseCompoundJsonTreeViewItem compoundElementItem1 && (compoundElementItem1.DataType is DataType.None || compoundElementItem1.ItemType is ItemType.OptionalCompound || compoundElementItem1.ItemType is ItemType.CustomCompound))))
+                if ((list[i].IsCanBeDefaulted && (list[i].StartLine is null || (list[i].StartLine is not null && list[i].StartLine.IsDeleted))) || ((list[i] is not BaseCompoundJsonTreeViewItem && list[i].DataType is DataType.None) || (list[i] is BaseCompoundJsonTreeViewItem compoundElementItem1 && compoundElementItem1.ValueTypeSource.Count == 0 && (compoundElementItem1.DataType is DataType.None || compoundElementItem1.ItemType is ItemType.CustomCompound || compoundElementItem1.ItemType is ItemType.BottomButton))))
                 {
                     continue;
                 }
@@ -223,7 +219,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                 theFirstItem ??= list[i];
                 theLastItem = list[i];
 
-                if (!list[i].IsCanBeDefaulted && list[i].DataType is not DataType.None || (list[i] is BaseCompoundJsonTreeViewItem compoundElementItem2 && compoundElementItem2.DataType is not DataType.None && compoundElementItem2.ItemType is not ItemType.CustomCompound && compoundElementItem2.ItemType is not ItemType.OptionalCompound))
+                if ((!list[i].IsCanBeDefaulted || (list[i].StartLine is not null && !list[i].StartLine.IsDeleted)) && list[i].DataType is not DataType.None || (list[i] is BaseCompoundJsonTreeViewItem compoundElementItem2 && compoundElementItem2.DataType is not DataType.None && compoundElementItem2.ItemType is not ItemType.CustomCompound && compoundElementItem2.ItemType is not ItemType.OptionalCompound))
                 {
                     lineNumber++;
                 }
@@ -235,10 +231,6 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
 
                         if (result is not null)
                         {
-                            if(subCompoundItem2.VisualLastChild is not null)
-                            {
-                                subCompoundItem2.VisualLastChild.VisualNext = result.Item2;
-                            }
                             subCompoundItem2.VisualLastChild = result.Item2;
                         }
                         if (result.Item2 is BaseCompoundJsonTreeViewItem subsubCompoundItem2 && subsubCompoundItem2.EndLine is not null && !subsubCompoundItem2.EndLine.IsDeleted)
@@ -543,12 +535,11 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                 {
                     currentReferenceString = compoundJsonTreeViewItem.SelectedEnumItem.Text;
                 }
-
                 result = htmlHelper.GetTreeViewItemResult(new(), CurrentDependencyItemList, compoundJsonTreeViewItem.LayerCount + 1, currentReferenceString, currentItemType is not ItemType.BottomButton && currentItemType is not ItemType.CustomCompound ? compoundJsonTreeViewItem : parent, null, 1, true);
 
                 htmlHelper.HandlingTheTypingAppearanceOfCompositeItemList(result.Result, compoundJsonTreeViewItem);
 
-                while (result.ResultString.Length > 0 &&
+                while (result.ResultString.Length > 1 &&
                     (result.ResultString[^1] == ',' ||
                      result.ResultString[^1] == '\r' ||
                      result.ResultString[^1] == '\n' ||
@@ -585,7 +576,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                 }
                 else
                 if (result.Result[0] is not BaseCompoundJsonTreeViewItem ||
-                    (result.Result[0] is BaseCompoundJsonTreeViewItem firstCustomCompound && firstCustomCompound.ItemType is not ItemType.CustomCompound))
+                    (result.Result[0] is BaseCompoundJsonTreeViewItem firstCustomCompound && firstCustomCompound.ItemType is not ItemType.CustomCompound) || result.ResultString.Length > 0)
                 {
                     compoundJsonTreeViewItem.AddChildrenList(result);
                 }
@@ -596,6 +587,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
 
                 if (compoundJsonTreeViewItem.Parent is not null)
                 {
+                    SetLineNumbersForEachSubItem(compoundJsonTreeViewItem.Parent.LogicChildren,compoundJsonTreeViewItem.Parent);
                     compoundJsonTreeViewItem.Parent.SetVisualPreviousAndNextForEachItem();
                     Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext = compoundJsonTreeViewItem.Parent.SearchVisualPreviousAndNextItem(compoundJsonTreeViewItem.Parent.LogicChildren[0], false);
                     if (previousAndNext is not null && previousAndNext.Item2 is not null)
@@ -611,12 +603,17 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                             compoundJsonTreeViewItem.Parent.EndLine = previousAndNext.Item2.StartLine.NextLine;
                         }
                     }
-
                 }
                 else
                 if (compoundJsonTreeViewItem.Plan is BaseCustomWorldUnifiedPlan basePlan)
                 {
+                    SetLineNumbersForEachSubItem(basePlan.TreeViewItemList, 2);
                     basePlan.SetVisualPreviousAndNextForEachItem();
+                    Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext = basePlan.SearchVisualPreviousAndNextItem(basePlan.TreeViewItemList[0], false);
+                    if (previousAndNext is not null && previousAndNext.Item2 is not null)
+                    {
+                        basePlan.VisualLastItem = previousAndNext.Item2;
+                    }
                 }
                 #endregion
 

@@ -77,7 +77,7 @@ namespace CBHK.CustomControl.Interfaces
         /// </summary>
         /// <param name="targetIndex"></param>
         /// <param name="childDataList"></param>
-        public void InsertChildrenList(int targetIndex, JsonTreeViewDataStructure childDataList);
+        public void InsertChildren(int targetIndex, JsonTreeViewDataStructure childDataList);
 
         public int GetDocumentLineCount();
 

@@ -26,8 +26,8 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition />
-            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -57,7 +57,8 @@
             VerticalAlignment="Stretch"
             Background="Transparent"
             BorderBrush="Gray"
-            BorderThickness="1,0,1,0" />
+            BorderThickness="1,0,1,0"
+            ResizeBehavior="PreviousAndNext" />
         <avalonedit:TextEditor
             Grid.Row="1"
             Grid.Column="2"

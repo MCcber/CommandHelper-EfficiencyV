@@ -82,6 +82,7 @@ namespace CBHK.ViewModel.Generator
             EnumIDDictionary.Add("战利品表", ["minecraft:a", "minecraft:b", "minecraft:c"]);
             EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b", "minecraft:potion_c"]);
             EnumIDDictionary.Add("染料颜色", ["red", "green", "blue"]);
+            EnumIDDictionary.Add("资源包#字体|字体", ["minecraft:default"]);
             #endregion
 
             #region 添加复合类数据、调用上下文初始化方法

@@ -252,7 +252,7 @@ namespace CBHK.ViewModel.Common
             #endregion
         }
 
-        public void InsertChildrenList(int targetIndex, JsonTreeViewDataStructure childDataList)
+        public void InsertChildren(int targetIndex, JsonTreeViewDataStructure childDataList)
         {
             #region 处理视觉树
             JsonTreeViewItem targetItem = null;

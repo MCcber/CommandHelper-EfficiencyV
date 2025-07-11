@@ -47,7 +47,8 @@ namespace CBHK.ViewModel.Generator
         [ObservableProperty]
         private TextComboBoxItem _currentGenerator = new();
 
-        public ObservableCollection<TextComboBoxItem> GeneratorList { get; set; } = [];
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _generatorList = [];
 
         private ObservableCollection<JsonTreeViewItem> _treeViewItemList;
         public override ObservableCollection<JsonTreeViewItem> TreeViewItemList
