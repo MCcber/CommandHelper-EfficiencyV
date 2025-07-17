@@ -30,6 +30,7 @@
         public enum DataType
         {
             None,
+            Object,
             Number,
             Bool,
             String,

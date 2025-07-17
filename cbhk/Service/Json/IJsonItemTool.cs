@@ -30,13 +30,15 @@ namespace CBHK.Service.Json
         /// </summary>
         /// <param name="list">目标节点集合</param>
         /// <param name="parent">起始父节点</param>
-        public Tuple<JsonTreeViewItem, JsonTreeViewItem> SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, BaseCompoundJsonTreeViewItem parent);
+        /// <param name="currentItem">当前节点</param>
+        public Tuple<JsonTreeViewItem, JsonTreeViewItem> SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, BaseCompoundJsonTreeViewItem parent, JsonTreeViewItem currentItem = null);
         /// <summary>
         /// 从指定的索引设置每个成员的行引用
         /// </summary>
         /// <param name="list"></param>
         /// <param name="lineNumber">起始行号</param>
-        public Tuple<JsonTreeViewItem, JsonTreeViewItem> SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, int lineNumber);
+        /// <param name="currentItem">当前节点</param>
+        public Tuple<JsonTreeViewItem, JsonTreeViewItem> SetLineNumbersForEachSubItem(ObservableCollection<JsonTreeViewItem> list, int lineNumber, JsonTreeViewItem currentItem = null);
         /// <summary>
         /// 设置每一个成员的层数
         /// </summary>

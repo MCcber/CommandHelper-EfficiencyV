@@ -286,6 +286,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             JsonTreeViewItem previous = LogicPrevious;
             JsonTreeViewItem next = LogicNext;
             #endregion
+
             #region 从父级删除当前节点
             int insertIndex = Parent.LogicChildren.IndexOf(this);
             if ((direction is MoveDirection.Down && LogicNext is not null) || (direction is MoveDirection.Up && LogicPrevious is not null))
@@ -297,6 +298,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 return;
             }
             #endregion
+
             #region 处理前后节点关系
             if (direction is MoveDirection.Down)
             {
@@ -350,15 +352,18 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 insertIndex--;
             }
             #endregion
+
             #region 保存并切除当前节点的Json文本
             offset = StartLine.PreviousLine.EndOffset;
             length = this is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.EndLine is not null && !compoundJsonTreeViewItem.EndLine.IsDeleted ? compoundJsonTreeViewItem.EndLine.EndOffset - offset : StartLine.EndOffset - offset;
             currentString = Plan.GetRangeText(offset, length);
             Plan.SetRangeText(offset,length,"");
             #endregion
+
             #region 放置处理引用后当前节点的Json文本
             Plan.SetRangeText(targetLine.EndOffset,0,currentString);
             #endregion
+
             #region 处理放置后当前节点的行应用
             StartLine = targetLine.NextLine;
             if (this is BaseCompoundJsonTreeViewItem thisCompoundItem1)
@@ -376,6 +381,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 }
             }
             #endregion
+
             #region 将当前节点添加回父节点的子级并处理逗号
             Parent.LogicChildren.Insert(insertIndex, this);
 
@@ -607,8 +613,12 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 else
                 {
                     offset = topLine.EndOffset;
-                    if (VisualPrevious is null && VisualNext is not null)
+                    if (VisualNext is not null || VisualPrevious is not null)
                     {
+                        if(VisualNext is null)
+                        {
+                            offset--;
+                        }
                         length = StartLine.EndOffset - offset;
                     }
                     else
