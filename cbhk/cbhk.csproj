@@ -50,15 +50,19 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Common\**" />
     <Compile Remove="GeneralTool\Displayer\**" />
     <Compile Remove="Model\CustomControl\**" />
     <Compile Remove="纹理\**" />
+    <EmbeddedResource Remove="Common\**" />
     <EmbeddedResource Remove="GeneralTool\Displayer\**" />
     <EmbeddedResource Remove="Model\CustomControl\**" />
     <EmbeddedResource Remove="纹理\**" />
+    <None Remove="Common\**" />
     <None Remove="GeneralTool\Displayer\**" />
     <None Remove="Model\CustomControl\**" />
     <None Remove="纹理\**" />
+    <Page Remove="Common\**" />
     <Page Remove="GeneralTool\Displayer\**" />
     <Page Remove="Model\CustomControl\**" />
     <Page Remove="纹理\**" />
@@ -520,7 +524,6 @@
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Common\" />
     <Folder Include="GeneralTool\ScrollViewerHelper\" />
   </ItemGroup>
 </Project>

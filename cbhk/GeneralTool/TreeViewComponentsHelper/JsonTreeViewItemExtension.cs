@@ -151,7 +151,8 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
             JsonTreeViewItem theFirstItem = null;
             for (int i = 0; i < list.Count; i++)
             {
-                if (((list[i].IsCanBeDefaulted && (list[i].StartLine is null || (list[i].StartLine is not null && list[i].StartLine.IsDeleted))) || (list[i] is not BaseCompoundJsonTreeViewItem && list[i].DataType is DataType.None) || (list[i] is BaseCompoundJsonTreeViewItem compoundElementItem1 && compoundElementItem1.ValueTypeSource.Count == 0 && (compoundElementItem1.DataType is DataType.None || compoundElementItem1.ItemType is ItemType.CustomCompound || compoundElementItem1.ItemType is ItemType.BottomButton))) && list[i] != currentItem)
+                BaseCompoundJsonTreeViewItem baseCompoundJsonTreeViewItem = list[i] as BaseCompoundJsonTreeViewItem;
+                if (((list[i].IsCanBeDefaulted && (list[i].StartLine is null || (list[i].StartLine is not null && list[i].StartLine.IsDeleted))) || (list[i] is not BaseCompoundJsonTreeViewItem && list[i].DataType is DataType.None) || (baseCompoundJsonTreeViewItem is not null && baseCompoundJsonTreeViewItem.ValueTypeSource.Count == 0 && (baseCompoundJsonTreeViewItem.ItemType is ItemType.CustomCompound || baseCompoundJsonTreeViewItem.ItemType is ItemType.BottomButton || (baseCompoundJsonTreeViewItem.SelectedEnumItem is not null && baseCompoundJsonTreeViewItem.SelectedEnumItem.Text == "- unset -" && baseCompoundJsonTreeViewItem.IsCanBeDefaulted)))) && list[i] != currentItem)
                 {
                     continue;
                 }
@@ -287,16 +288,16 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
             for (int i = 0; i < list.Count; i++)
             {
                 list[i].Parent = currentParent;
+                list[i].LogicNext = list[i].LogicPrevious = null;
                 if (list[i] is BaseCompoundJsonTreeViewItem baseCompoundJsonTreeViewItem && (baseCompoundJsonTreeViewItem.ItemType is ItemType.CustomCompound || baseCompoundJsonTreeViewItem.ItemType is ItemType.BottomButton))
                 {
-                    list[i].LogicNext = list[i].LogicPrevious = null;
                     previous = list[i];
                     continue;
                 }
 
                 bool isPreviousNotItem = previous is BaseCompoundJsonTreeViewItem previousCompoundJsonTreeViewItem && (previousCompoundJsonTreeViewItem.ItemType is ItemType.CustomCompound || previousCompoundJsonTreeViewItem.ItemType is ItemType.BottomButton);
 
-                if (!isPreviousNotItem)
+                if (!isPreviousNotItem && previous is not null && previous.StartLine is not null && !previous.StartLine.IsDeleted)
                 {
                     list[i].LogicPrevious = previous;
                 }

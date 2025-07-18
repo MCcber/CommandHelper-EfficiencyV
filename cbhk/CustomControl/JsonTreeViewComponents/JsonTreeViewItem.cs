@@ -538,7 +538,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             #endregion
 
             #region 判断是否需要直接返回
-            if (((string.IsNullOrEmpty(Value.ToString()) && StartLine is null) || DataType is DataType.None) && (this is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && (compoundJsonTreeViewItem.ItemType is ItemType.CustomCompound || compoundJsonTreeViewItem.DataType is DataType.None || (compoundJsonTreeViewItem.ItemType is  ItemType.MultiType && compoundJsonTreeViewItem.SelectedValueType.Text == "- unset -"))))
+            if (((string.IsNullOrEmpty(Value.ToString()) && StartLine is null) || DataType is DataType.None) && (this is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && (compoundJsonTreeViewItem.ItemType is ItemType.CustomCompound || compoundJsonTreeViewItem.DataType is DataType.None || (compoundJsonTreeViewItem.ItemType is  ItemType.MultiType && compoundJsonTreeViewItem.SelectedValueType.Text == "- unset -"))) || OldValue == Value)
             {
                 return;
             }
