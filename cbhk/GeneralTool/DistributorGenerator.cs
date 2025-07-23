@@ -57,7 +57,7 @@ namespace CBHK.GeneralTool
         /// <summary>
         /// 启动as生成器
         /// </summary>
-        private void StartArmorStandsGenerator()
+        private void StartArmorStandGenerator()
         {
             ArmorStandView armorStand = _container.Resolve<ArmorStandView>();
             armorStand.Show();
@@ -313,7 +313,7 @@ namespace CBHK.GeneralTool
                 "Datapack" => function.StartDatapacksGeneratorCommand,
                 "ChatType" => function.StartChatTpyeGeneratorCommand,
                 "CustomWorld"=>function.StartCustomWorldGeneratorGeneratorCommand,
-                "Armorstand" => function.StartArmorStandsGeneratorCommand,
+                "Armorstand" => function.StartArmorStandGeneratorCommand,
                 "WrittenBook" => function.StartWrittenBooksGeneratorCommand,
                 "Spawners" => function.StartSpawnerGeneratorCommand,
                 "Recipes" => function.StartRecipesGeneratorCommand,

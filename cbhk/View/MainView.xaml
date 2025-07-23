@@ -18,7 +18,6 @@
     MinHeight="652"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
-    Icon="/cb.ico"
     RenderOptions.BitmapScalingMode="NearestNeighbor"
     RenderOptions.CachingHint="Cache"
     ResizeMode="CanResizeWithGrip"

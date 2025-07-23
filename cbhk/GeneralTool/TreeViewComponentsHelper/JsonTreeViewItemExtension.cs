@@ -635,6 +635,17 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                         {
                             parent.VisualLastChild = previousAndNext.Item2;
                         }
+                        if(parent.VisualLastChild is not null && (parent.StartLine == parent.EndLine || (parent.EndLine is null || (parent.EndLine is not null && !parent.EndLine.IsDeleted))))
+                        {
+                            if(parent.VisualLastChild is BaseCompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null && !lastCompoundItem.EndLine.IsDeleted)
+                            {
+                                parent.EndLine = lastCompoundItem.EndLine.NextLine;
+                            }
+                            else
+                            {
+                                parent.EndLine = parent.VisualLastChild.StartLine.NextLine;
+                            }
+                        }
                     }
                     else
                     if (compoundJsonTreeViewItem.Plan is BaseCustomWorldUnifiedPlan basePlan)

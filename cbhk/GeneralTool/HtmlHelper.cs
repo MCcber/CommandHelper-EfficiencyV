@@ -527,14 +527,18 @@ namespace CBHK.GeneralTool
         public List<string> GetHeadTypeAndKeyList(string target)
         {
             List<string> result = [];
-            string RemoveIrrelevantString = target.Replace("}}{{nbt", "").Replace("}}{{Nbt", "");
-            int nbtFeatureStartIndex = RemoveIrrelevantString.IndexOf("{{");
-            Match isStartMatch = JudgeHead().Match(RemoveIrrelevantString[..(nbtFeatureStartIndex + 2)]);
-            int nbtFeatureEndIndex = RemoveIrrelevantString.IndexOf("}}");
-            if (isStartMatch.Success && RemoveIrrelevantString.Contains('{') && nbtFeatureEndIndex > 0 && nbtFeatureEndIndex > 0)
+            Match inheritMatch = GetInheritString().Match(target);
+            if (!inheritMatch.Success)
             {
-                result.AddRange(RemoveIrrelevantString[(nbtFeatureStartIndex + 2)..nbtFeatureEndIndex].Split('|'));
-                result.RemoveAt(0);
+                string RemoveIrrelevantString = target.Replace("}}{{nbt", "").Replace("}}{{Nbt", "");
+                int nbtFeatureStartIndex = RemoveIrrelevantString.IndexOf("{{");
+                Match isStartMatch = JudgeHead().Match(RemoveIrrelevantString[..(nbtFeatureStartIndex + 2)]);
+                int nbtFeatureEndIndex = RemoveIrrelevantString.IndexOf("}}");
+                if (isStartMatch.Success && RemoveIrrelevantString.Contains('{') && nbtFeatureEndIndex > 0 && nbtFeatureEndIndex > 0)
+                {
+                    result.AddRange(RemoveIrrelevantString[(nbtFeatureStartIndex + 2)..nbtFeatureEndIndex].Split('|'));
+                    result.RemoveAt(0);
+                }
             }
             return result;
         }
@@ -856,7 +860,7 @@ namespace CBHK.GeneralTool
                                 nodeList.RemoveAt(i);
                                 nodeList.InsertRange(i, targetList);
                                 i--;
-                                currentContextNextIndex = (i < 0 ? 1 : 0) + targetList.Count;
+                                currentContextNextIndex = (i < 0 ? 0 : i) + targetList.Count;
                                 continue;
                             }
                             else

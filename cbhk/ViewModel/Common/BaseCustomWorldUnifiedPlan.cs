@@ -151,7 +151,7 @@ namespace CBHK.ViewModel.Common
                 return;
             }
 
-            // 步骤1: 收集必选节点
+            //收集必选节点
             var requiredNodes = TreeViewItemList.Where(item => !item.IsCanBeDefaulted || item.StartLine is not null).ToList();
             int requiredCount = requiredNodes.Count;
 
@@ -166,10 +166,10 @@ namespace CBHK.ViewModel.Common
                 return;
             }
 
-            // 步骤2: 提取索引列表
+            //提取索引列表
             var requiredIndices = requiredNodes.Select(r => r.Index).ToList();
 
-            // 步骤3: 处理每个节点
+            //处理每个节点
             foreach (var node in TreeViewItemList)
             {
                 // 在必选节点索引列表中执行二分查找
@@ -324,14 +324,21 @@ namespace CBHK.ViewModel.Common
             #region 确定替换的长度
             if (groupLastItem is not null)
             {
+                int endOffset = 0;
                 if (groupLastItem is BaseCompoundJsonTreeViewItem lastCompoundItem && lastCompoundItem.EndLine is not null && !lastCompoundItem.EndLine.IsDeleted)
                 {
                     length = lastCompoundItem.EndLine.EndOffset - offset;
+                    endOffset = lastCompoundItem.EndLine.EndOffset;
                 }
                 else
                 if (groupLastItem.StartLine is not null)
                 {
                     length = childrenList[^1].StartLine.EndOffset - offset;
+                    endOffset = childrenList[^1].StartLine.EndOffset;
+                }
+                if(groupLastItem.VisualPrevious is null && groupLastItem.VisualNext is null && groupLastItem.Parent is null)
+                {
+                    length = endOffset + 1;
                 }
             }
             #endregion
@@ -368,7 +375,8 @@ namespace CBHK.ViewModel.Common
             if (TreeViewItemList.Count > 0)
             {
                 SetVisualPreviousAndNextForEachItem();
-                Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext = SearchVisualPreviousAndNextItem(TreeViewItemList    [^1]);
+                Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext = SearchVisualPreviousAndNextItem(TreeViewItemList[^1]);
+                VisualLastItem = null;
                 if (previousAndNext is not null && previousAndNext.Item2 is not null)
                 {
                     VisualLastItem = previousAndNext.Item2;

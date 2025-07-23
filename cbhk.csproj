@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
     <OutputType>WinExe</OutputType>
-    <AssemblyName>cbhk</AssemblyName>
+    <AssemblyName>CBHK</AssemblyName>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -55,7 +55,7 @@
     <Resource Include="cb.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="cbhk\cbhk.csproj" />
+    <ProjectReference Include="CBHK\CBHK.csproj" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8">
