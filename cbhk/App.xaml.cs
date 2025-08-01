@@ -29,11 +29,7 @@ namespace CBHK
         protected override Window CreateShell()
         {
             ExternalDataImportManager.Init();
-#if DEBUG
             return Container.Resolve<MainView>();
-#else
-            return Container.Resolve<SignInView>();
-#endif
         }
 
         /// <summary>

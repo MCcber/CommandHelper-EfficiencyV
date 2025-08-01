@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
+using System.Printing;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -949,18 +950,14 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         /// </summary>
         private void RemoveLastEnumBranch()
         {
-            if (Parent is not null && Parent.DisplayText != "Root")
+            if (Parent is not null)
             {
                 int startIndex = Index + 1;
                 int endIndex = SearchEndOfBranch([.. Parent.LogicChildren]) + 1;
 
                 if (startIndex < endIndex)
                 {
-                    Parent.RemoveChild([.. Parent.LogicChildren.ToList()[startIndex..endIndex]]);
-                }
-                else
-                {
-                    Parent.RemoveChild(Parent.LogicChildren.ToList()[1..]);
+                    Parent.RemoveChild([.. Parent.LogicChildren.ToList()[startIndex..endIndex]], true, true);
                 }
             }
             else
@@ -984,7 +981,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         /// 用于删除单个节点
         /// </summary>
         /// <param name="childrenList"></param>
-        public void RemoveChild(List<JsonTreeViewItem> childrenList,bool isNeedRemove = true)
+        public void RemoveChild(List<JsonTreeViewItem> childrenList,bool isNeedRemove = true,bool isNeedRemovePreviousComma = false)
         {
             #region Field
             if (childrenList.Count == 0)
@@ -999,16 +996,16 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             #region 确定替换的起始偏移
             if (childrenList[0].VisualPrevious is BaseCompoundJsonTreeViewItem visualPreviousCompoundItem && visualPreviousCompoundItem.EndLine is not null && !visualPreviousCompoundItem.EndLine.IsDeleted)
             {
-                offset = visualPreviousCompoundItem.EndLine.EndOffset - (childrenList[0].VisualNext is null && (!childrenList[0].IsCanBeDefaulted || childrenList[0].VisualPrevious is not null) ? 1 : 0);
+                offset = visualPreviousCompoundItem.EndLine.EndOffset - ((isNeedRemovePreviousComma || childrenList[0].VisualNext is null) && (!childrenList[0].IsCanBeDefaulted || childrenList[0].VisualPrevious is not null) ? 1 : 0);
             }
             else
             if (childrenList[0].VisualPrevious is not null)
             {
-                offset = childrenList[0].VisualPrevious.StartLine.EndOffset - (childrenList[0].VisualNext is null && (!childrenList[0].IsCanBeDefaulted || childrenList[0].VisualPrevious is not null) ? 1 : 0);
+                offset = childrenList[0].VisualPrevious.StartLine.EndOffset - ((isNeedRemovePreviousComma || childrenList[0].VisualNext is null) && (!childrenList[0].IsCanBeDefaulted || childrenList[0].VisualPrevious is not null) ? 1 : 0);
             }
             else
             {
-                offset = StartLine.EndOffset;
+                offset = StartLine.EndOffset - (isNeedRemovePreviousComma ? 1 : 0);
             }
             #endregion
 
@@ -2065,6 +2062,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     {
                         result.Result[i].RemoveElementButtonVisibility = Visibility.Collapsed;
                     }
+
                     if (Parent is not null)
                     {
                         Parent.InsertChild(index, 0, result, VisualNext is null, VisualNext is not null);
@@ -2281,4 +2279,4 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         }
         #endregion
     }
-} 
+}

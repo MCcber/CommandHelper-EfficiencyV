@@ -135,7 +135,11 @@ namespace CBHK.ViewModel.Generator
                     #region 分析Wiki源码文档并应用于View
                     JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(ConfigDirectoryPath + CurrentVersion.Text);
                     string resultString = result.ResultString.ToString().TrimEnd([',', '\r', '\n']);
-                    TextEditor.Text = "{" + (resultString.Length > 0 ? "\r\n" + resultString + "\r\n" : "") + "}";
+                    if (!result.IsHaveRootItem)
+                    {
+                        resultString = "{" + (resultString.Length > 0 ? "\r\n" + resultString + "\r\n" : "") + "}";
+                    }
+                    TextEditor.Text = resultString;
                     TreeViewItemList = result.Result;
                     #endregion
 
@@ -148,7 +152,7 @@ namespace CBHK.ViewModel.Generator
                         }
                     }
                     Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext1 = JsonTool.SetLineNumbersForEachSubItem(result.Result, !result.IsHaveRootItem ? 2 : 1);
-                    if(previousAndNext1.Item2 is not null)
+                    if (previousAndNext1.Item2 is not null)
                     {
                         VisualLastItem = previousAndNext1.Item2;
                     }

@@ -962,7 +962,7 @@ namespace CBHK.GeneralTool
                     layerCount = 0;
                 }
 
-                if (NBTFeatureList[0] == "list" && currentDescription == "根标签" || currentDescription == "根节点")
+                if (NBTFeatureList[0] == "list" && (currentDescription == "根标签" || currentDescription == "根节点"))
                 {
                     isListRoot = true;
                 }
@@ -2151,7 +2151,7 @@ namespace CBHK.GeneralTool
                         #endregion
 
                         #region 此处所有处理流程已结束，如果还是没有Key，那自动划分为列表或数组元素
-                        if (CurrentCompoundItem.Key.Length == 0)
+                        if (CurrentCompoundItem.Key.Length == 0 && currentDescription != "根标签")
                         {
                             CurrentCompoundItem.DisplayText = "Entry";
                             CurrentCompoundItem.RemoveElementButtonVisibility = Visibility.Visible;

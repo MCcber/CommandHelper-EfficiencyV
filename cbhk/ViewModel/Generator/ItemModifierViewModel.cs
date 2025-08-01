@@ -127,57 +127,43 @@ namespace CBHK.ViewModel.Generator
                 base.TextEditor = sender as TextEditor;
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    JsonTreeViewDataStructure result = base.htmlHelper.AnalyzeHTMLData(ConfigDirectoryPath + CurrentVersion.Text);
-                    base.TextEditor.Text = result.ResultString.ToString();
+                    #region 分析Wiki源码文档并应用于View
+                    JsonTreeViewDataStructure result = htmlHelper.AnalyzeHTMLData(ConfigDirectoryPath + CurrentVersion.Text);
+                    string resultString = result.ResultString.ToString().TrimEnd([',', '\r', '\n']);
+                    if(!result.IsHaveRootItem)
+                    {
+                        resultString = "{" + (resultString.Length > 0 ? "\r\n" + resultString + "\r\n" : "") + "}";
+                    }
+                    TextEditor.Text = resultString;
                     TreeViewItemList = result.Result;
+                    #endregion
 
                     #region 设置父级与行引用
                     foreach (var item in result.Result)
                     {
                         if (item is BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem && compoundJsonTreeViewItem.LogicChildren.Count > 0)
                         {
-                            base.JsonTool.SetParentForEachItem(compoundJsonTreeViewItem.LogicChildren, compoundJsonTreeViewItem);
+                            JsonTool.SetParentForEachItem(compoundJsonTreeViewItem.LogicChildren, compoundJsonTreeViewItem);
                         }
                     }
-                    base.JsonTool.SetLineNumbersForEachSubItem(result.Result, !result.IsHaveRootItem ? 2 : 1);
+                    Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext1 = JsonTool.SetLineNumbersForEachSubItem(result.Result, !result.IsHaveRootItem ? 2 : 1);
+                    if (previousAndNext1.Item2 is not null)
+                    {
+                        VisualLastItem = previousAndNext1.Item2;
+                    }
                     #endregion
 
                     #region 处理视觉引用
-                    for (int i = 0; i < result.Result.Count; i++)
-                    {
-                        Tuple<JsonTreeViewItem,JsonTreeViewItem> currentPreviousAndNext = base.SearchVisualPreviousAndNextItem(result.Result[i]);
-                        if(currentPreviousAndNext.Item1 is not null)
-                        {
-                            result.Result[i].VisualPrevious = currentPreviousAndNext.Item1;
-                        }
-                        if (currentPreviousAndNext.Item2 is not null)
-                        {
-                            result.Result[i].VisualNext = currentPreviousAndNext.Item2;
-                        }
-                        if (result.Result[i] is BaseCompoundJsonTreeViewItem baseCompoundJsonTreeViewItem)
-                        {
-                            foreach (var item in baseCompoundJsonTreeViewItem.LogicChildren)
-                            {
-                                Tuple<JsonTreeViewItem, JsonTreeViewItem> previousAndNext = baseCompoundJsonTreeViewItem.SearchVisualPreviousAndNextItem(item);
-                                if(previousAndNext.Item1 is not null)
-                                {
-                                    item.VisualPrevious = previousAndNext.Item1;
-                                }
-                                if(previousAndNext.Item2 is not null)
-                                {
-                                    item.VisualNext = previousAndNext.Item2;
-                                }
-                            }
-                        }
-                    }
+                    SetVisualPreviousAndNextForEachItem();
                     #endregion
 
-                    //为代码编辑器安装大纲管理器
-                    base.FoldingManager = FoldingManager.Install(base.TextEditor.TextArea);
+                    #region 为代码编辑器安装大纲管理器并应用文档着色规则
+                    FoldingManager = FoldingManager.Install(TextEditor.TextArea);
                     XshdSyntaxDefinition xshdSyntaxDefinition = new();
                     xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\Json.xshd"));
                     IHighlightingDefinition jsonHighlighting = HighlightingLoader.Load(xshdSyntaxDefinition, HighlightingManager.Instance);
-                    base.TextEditor.SyntaxHighlighting = jsonHighlighting;
+                    TextEditor.SyntaxHighlighting = jsonHighlighting;
+                    #endregion
                 });
             });
         }

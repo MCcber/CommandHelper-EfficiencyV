@@ -592,11 +592,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     {
                         topLine = Parent.StartLine;
                     }
-                    else
-                    {
-                        topLine = StartLine;
-                    }
-                    topLine ??= Plan.GetLineByNumber(2);
+                    topLine ??= Plan.GetLineByNumber(1);
                 }
 
                 if (topLine is null)
@@ -663,7 +659,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 }
                 else
                 {
-                    currentValue = (VisualPrevious is not null && VisualNext is null ? ',' : "") + "\r\n" + new string(' ', LayerCount * 2) + (Key.Length > 0 ? "\"" + Key + "\": " : "") + doubleQuotationMarks + currentValue + doubleQuotationMarks + (Parent.VisualLastChild is null ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "") + (VisualNext is not null ? ',' : "");
+                    currentValue = (VisualPrevious is not null && VisualNext is null ? ',' : "") + "\r\n" + new string(' ', LayerCount * 2) + (Key.Length > 0 ? "\"" + Key + "\": " : "") + doubleQuotationMarks + currentValue + doubleQuotationMarks + (Parent is not null && Parent.VisualLastChild is null ? "\r\n" + new string(' ', Parent.LayerCount * 2) : "") + (VisualNext is not null ? ',' : "");
                 }
 
                 if ((!IsCanBeDefaulted && Parent is not null) || StartLine is not null)
