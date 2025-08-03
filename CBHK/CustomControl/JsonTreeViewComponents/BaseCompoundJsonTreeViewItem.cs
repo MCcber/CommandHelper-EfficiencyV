@@ -957,7 +957,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
 
                 if (startIndex < endIndex)
                 {
-                    Parent.RemoveChild([.. Parent.LogicChildren.ToList()[startIndex..endIndex]], true, true);
+                    Parent.RemoveChild([.. Parent.LogicChildren.ToList()[startIndex..endIndex]], true, VisualPrevious is not null);
                 }
             }
             else
@@ -996,12 +996,12 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             #region 确定替换的起始偏移
             if (childrenList[0].VisualPrevious is BaseCompoundJsonTreeViewItem visualPreviousCompoundItem && visualPreviousCompoundItem.EndLine is not null && !visualPreviousCompoundItem.EndLine.IsDeleted)
             {
-                offset = visualPreviousCompoundItem.EndLine.EndOffset - ((isNeedRemovePreviousComma || childrenList[0].VisualNext is null) && (!childrenList[0].IsCanBeDefaulted || childrenList[0].VisualPrevious is not null) ? 1 : 0);
+                offset = visualPreviousCompoundItem.EndLine.EndOffset - ((isNeedRemovePreviousComma || (childrenList[0].VisualNext is null && !childrenList[0].IsCanBeDefaulted)) && (!childrenList[0].IsCanBeDefaulted || childrenList[0].VisualPrevious is not null) ? 1 : 0);
             }
             else
             if (childrenList[0].VisualPrevious is not null)
             {
-                offset = childrenList[0].VisualPrevious.StartLine.EndOffset - ((isNeedRemovePreviousComma || childrenList[0].VisualNext is null) && (!childrenList[0].IsCanBeDefaulted || childrenList[0].VisualPrevious is not null) ? 1 : 0);
+                offset = childrenList[0].VisualPrevious.StartLine.EndOffset - ((isNeedRemovePreviousComma || (childrenList[0].VisualNext is null && !childrenList[0].IsCanBeDefaulted)) && (!childrenList[0].IsCanBeDefaulted || childrenList[0].VisualPrevious is not null) ? 1 : 0);
             }
             else
             {
@@ -2018,7 +2018,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 if (Plan.EnumCompoundDataDictionary.TryGetValue(EnumKey, out Dictionary<string, List<string>> targetDependencyDictionary) && targetDependencyDictionary.TryGetValue(SelectedEnumItem.Text, out List<string> targetRawList))
                 {
                     RemoveLastEnumBranch();
-                    
+
                     Match firstKeyWordMatch = GetEnumValueMode1().Match(targetRawList[0]);
                     List<string> targetRawListTemp = [.. targetRawList];
                     if(firstKeyWordMatch.Success && firstKeyWordMatch.Groups[1].Value == SelectedEnumItem.Text)
