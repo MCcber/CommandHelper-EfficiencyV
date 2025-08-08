@@ -1,15 +1,11 @@
-﻿using CBHK.Domain.Model;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace CBHKShared.DataContext
+namespace CBHK.Domain
 {
-    public class Entity:VersionBase
+    public class Entity
     {
         [Key]
-        [Column("id")]
         public string ID { get; set; }
-        [Column("name")]
         public string Name { get; set; }
     }
 }

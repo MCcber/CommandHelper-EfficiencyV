@@ -2,7 +2,6 @@
 using CBHK.Model;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Threading.Tasks;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -17,12 +16,15 @@ using Prism.Ioc;
 using CBHK.View.Common;
 using CBHK.ViewModel.Common;
 using CBHK.View;
+using System.Linq;
+using CBHK.Domain;
 
 namespace CBHK.ViewModel
 {
-    public partial class MainViewModel(IContainerProvider container) : ObservableObject
+    public partial class MainViewModel(IContainerProvider container,CBHKDataContext context) : ObservableObject
     {
         #region Field
+        private readonly CBHKDataContext _context = context;
         /// <summary>
         /// 主页可见性
         /// </summary>
@@ -34,8 +36,7 @@ namespace CBHK.ViewModel
         private Grid SkeletonGrid = null;
         private Grid GeneratorTable = null;
         private Grid UserGrid = null;
-        private IProgress<DataTable> SetGeneratorButtonHandler = null;
-        DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
+        private IProgress<byte> SetGeneratorButtonHandler = null;
         /// <summary>
         /// 初始化界面数据
         /// </summary>
@@ -71,9 +72,9 @@ namespace CBHK.ViewModel
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        public void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            SetGeneratorButtonHandler = new Progress<DataTable>((dataTable) =>
+            SetGeneratorButtonHandler = new Progress<byte>((state) =>
             {
                 DistributorGenerator generatorFunction = _container.Resolve<DistributorGenerator>();
                 string baseImagePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
@@ -86,16 +87,16 @@ namespace CBHK.ViewModel
                 GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
                 GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
-                foreach (DataRow row in dataTable.Rows)
+                foreach (var data in _context.GeneratorSet)
                 {
                     GeneratorButtons button = new()
                     {
                         Style = Application.Current.Resources["GeneratorButtons"] as Style,
                         BorderThickness = new Thickness(0)
                     };
-                    string currentId = row["id"].ToString();
+                    string currentId = data.ID;
                     currentId = currentId[0].ToString().ToUpper() + currentId[1..];
-                    string currentName = row["zh"].ToString();
+                    string currentName = data.ZH;
                     string imagePath = baseImagePath + currentId + ".png";
                     BitmapImage bitmapImage = new(new Uri("pack://application:,,,/CBHK;component/Resource/CBHK/Image/GeneratorButtonBackground.png", UriKind.RelativeOrAbsolute));
                     if (bitmapImage is not null)
@@ -121,7 +122,7 @@ namespace CBHK.ViewModel
                 }
             });
 
-            InitUIDataProgress = new Progress<byte>(async (number) =>
+            InitUIDataProgress = new Progress<byte>((number) =>
             {
                 #region 加载用户数据
                 if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png"))
@@ -135,18 +136,18 @@ namespace CBHK.ViewModel
                 if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"))
                     UserBackground = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"));
                 #endregion
+
                 #region 载入生成器按钮
                 if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
                 {
-                    DataTable generatorTable = await dataCommunicator.GetData("SELECT * FROM Generator");
-                    SetGeneratorButtonHandler.Report(generatorTable);
+                    SetGeneratorButtonHandler.Report(0);
                 }
                 #endregion
 
                 StopSkeletonScreen(Task.CompletedTask);
             });
 
-            await ReadDataSource();
+            ReadDataSource();
         }
 
         public void GeneratorTable_Loaded(object sender, RoutedEventArgs e) => GeneratorTable = sender as Grid;
@@ -251,27 +252,28 @@ namespace CBHK.ViewModel
         /// <summary>
         /// 读取启动器配置
         /// </summary>
-        private async Task ReadDataSource()
+        private void ReadDataSource()
         {
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
+            Domain.Model.EnvironmentConfig config = _context.EnvironmentConfigSet.FirstOrDefault();
+            if (config is not null)
             {
-                DataTable dataTable = await dataCommunicator.GetData("SELECT * FROM EnvironmentConfigs");
-                if (dataTable.Rows.Count > 0)
+                if (config.Visibility is string Visibility)
                 {
-                    if (dataTable.Rows[0]["Visibility"] is string Visibility)
+                    MainViewVisibility = Visibility switch
                     {
-                        MainViewVisibility = Visibility switch
-                        {
-                            "KeepState" => MainWindowProperties.Visibility.KeepState,
-                            "MinState" => MainWindowProperties.Visibility.MinState,
-                            "Close" => MainWindowProperties.Visibility.Close,
-                            _ => throw new NotImplementedException()
-                        };
-                    }
-                    if (dataTable.Rows[0]["ShowNotice"] is decimal showNotice)
-                        MainWindowProperties.ShowNotice = showNotice == 1;
-                    if (dataTable.Rows[0]["CloseToTray"] is decimal closeToTray)
-                        MainWindowProperties.CloseToTray = closeToTray == 1;
+                        "KeepState" => MainWindowProperties.Visibility.KeepState,
+                        "MinState" => MainWindowProperties.Visibility.MinState,
+                        "Close" => MainWindowProperties.Visibility.Close,
+                        _ => throw new NotImplementedException()
+                    };
+                }
+                if (int.TryParse(config.ShowNotice, out int ShowNotice))
+                {
+                    MainWindowProperties.ShowNotice = ShowNotice >= 1;
+                }
+                if (int.TryParse(config.CloseToTray, out int CloseToTray))
+                {
+                    MainWindowProperties.CloseToTray = CloseToTray >= 1;
                 }
             }
 

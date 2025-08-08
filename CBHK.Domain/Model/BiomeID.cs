@@ -6,9 +6,7 @@ namespace CBHKShared.ContextModel
     public class BiomeID
     {
         [Key]
-        [Column("id")]
         public string ID { get; set; }
-        [Column("version")]
         public string Version { get; set; }
     }
 }

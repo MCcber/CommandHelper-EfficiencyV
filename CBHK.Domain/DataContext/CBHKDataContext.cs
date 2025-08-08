@@ -2,11 +2,11 @@
 using CBHKShared.ContextModel;
 using Microsoft.EntityFrameworkCore;
 
-namespace CBHKShared.DataContext
+namespace CBHK.Domain
 {
     public class CBHKDataContext:DbContext
     {
-        #region Property
+        #region EntitySet
         public DbSet<Advancement> AdvancementSet { get; set; }
         public DbSet<ArmorStandBaseNBT> ArmorStandBaseNBTSet { get; set; }
         public DbSet<AttributeSlot> AttributeSlotSet { get; set; }
@@ -15,6 +15,7 @@ namespace CBHKShared.DataContext
         public DbSet<Block> BlockSet { get; set; }
         public DbSet<BossbarColor> BossbarColorSet { get; set; }
         public DbSet<BossbarStyle> BossbarStyleSet { get; set; }
+        public DbSet<CustomWorldEntry> CustomWorldEntrySet { get; set; }
         public DbSet<DamageType> DamageTypeSet { get; set; }
         public DbSet<DatapackVersion> DatapackVersionSet { get; set; }
         public DbSet<Enchantment> EnchantmentSet { get; set; }
@@ -22,6 +23,7 @@ namespace CBHKShared.DataContext
         public DbSet<EnvironmentConfig> EnvironmentConfigSet { get; set; }
         public DbSet<GameEventTag> GameEventTagsSet { get; set; }
         public DbSet<GameRule> GameRuleSet { get; set; }
+        public DbSet<Generator> GeneratorSet { get; set; }
         public DbSet<HideInformation> HideInformationSet { get; set; }
         public DbSet<Item> ItemSet { get; set; }
         public DbSet<ItemSlot> ItemSlotSet { get; set; }
@@ -40,8 +42,56 @@ namespace CBHKShared.DataContext
         public DbSet<UserData> UserDataSet { get; set; }
         #endregion
 
+        #region DataStructure
+        public Dictionary<string, List<string>> ItemGroupByVersionDicionary = [];
+        #endregion
+
+        #region Method
+        public CBHKDataContext(DbContextOptions<CBHKDataContext> options) : base(options)
+        {
+            #region 根据版本分类所有物品ID
+            if (ItemGroupByVersionDicionary.Count == 0 && ItemSet is not null)
+            {
+                foreach (var item in ItemSet)
+                {
+                    if(item.Version is not null && item.Version.Length > 0)
+                    {
+                        if (!ItemGroupByVersionDicionary.TryAdd(item.Version, [item.ID]))
+                        {
+                            ItemGroupByVersionDicionary[item.Version].Add(item.ID);
+                        }
+                    }
+                }
+            }
+            #endregion
+        }
+        #endregion
+
         #region Event
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlite("Data Source=Minecraft.db");
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            string path = $"Data Source={AppDomain.CurrentDomain.BaseDirectory}Minecraft.db";
+            optionsBuilder.UseSqlite(path);
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<ArmorStandBaseNBT>().HasNoKey();
+            modelBuilder.Entity<BossbarColor>().HasNoKey();
+            modelBuilder.Entity<BossbarStyle>().HasNoKey();
+            modelBuilder.Entity<DamageType>().HasNoKey();
+            modelBuilder.Entity<EnvironmentConfig>().HasNoKey();
+            modelBuilder.Entity<GameEventTag>().HasNoKey();
+            modelBuilder.Entity<ItemSlot>().HasNoKey();
+            modelBuilder.Entity<Language>().HasNoKey();
+            modelBuilder.Entity<Particle>().HasNoKey();
+            modelBuilder.Entity<ScoreboardCustomID>().HasNoKey();
+            modelBuilder.Entity<ScoreboardType>().HasNoKey();
+            modelBuilder.Entity<SelectorParameter>().HasNoKey();
+            modelBuilder.Entity<TeamColor>().HasNoKey();
+            modelBuilder.Entity<UserData>().HasNoKey();
+        }
         #endregion
     }
 }

@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.Domain;
 using CBHK.GeneralTool.TreeViewComponentsHelper;
 using CBHK.Model.Common;
 using CBHK.View;
@@ -59,16 +60,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public DimensionViewModel(IContainerProvider container, MainView mainView) : base(container, mainView)
+        public DimensionViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context) : base(container, mainView,context)
         {
-            Container = container;
-            Home = mainView;
-            htmlHelper = new(Container)
-            {
-                plan = this,
-                jsonTool = JsonTool = new JsonTreeViewItemExtension(Container)
-            };
-
             #region 添加数据上下文所需的枚举集合与转换字典数据
             EnumIDDictionary.Add("流体ID", ["minecraft:water", "minecraft:lava"]);
             EnumIDDictionary.Add("方块ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);

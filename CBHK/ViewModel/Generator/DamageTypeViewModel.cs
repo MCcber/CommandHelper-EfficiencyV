@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using ICSharpCode.AvalonEdit.Highlighting;
 using System.Xml;
+using CBHK.Domain;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -59,15 +60,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public DamageTypeViewModel(IContainerProvider container, MainView mainView) : base(container, mainView)
+        public DamageTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context) : base(container, mainView,context)
         {
-            Container = container;
-            Home = mainView;
-            htmlHelper = new(Container)
-            {
-                plan = this,
-                jsonTool = JsonTool = new JsonTreeViewItemExtension(Container)
-            };
         }
         #endregion
 

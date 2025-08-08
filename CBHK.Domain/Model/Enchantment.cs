@@ -1,14 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CBHK.Domain.Model
 {
-    public class Enchantment:VersionBase
+    public class Enchantment
     {
-        [Column("id")]
+        [Key]
         public string ID { get; set; }
-        [Column("name")]
         public string Name { get; set; }
-        [Column("number")]
         public string Number { get; set; }
     }
 }

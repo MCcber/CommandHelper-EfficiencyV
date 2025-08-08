@@ -1,16 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace CBHKShared.DataContext
+namespace CBHK.Domain
 {
     public class GameRule
     {
-        [Column("name")]
+        [Key]
         public string Name { get; set; }
-        [Column("description")]
         public string Description { get; set; }
-        [Column("defaultValue")]
         public string DefaultValue { get; set; }
-        [Column("dataType")]
         public string DataType { get; set; }
     }
 }

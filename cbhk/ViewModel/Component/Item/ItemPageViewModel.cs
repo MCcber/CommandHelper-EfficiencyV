@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.Model.Generator.Item;
@@ -149,6 +150,7 @@ namespace CBHK.ViewModel.Component.Item
         string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Item\Data\SpecialTags.json";
         JArray SpecialArray = null;
         private IContainerProvider _container;
+        private CBHKDataContext _context;
 
         /// <summary>
         /// 特指结果集合
@@ -209,7 +211,7 @@ namespace CBHK.ViewModel.Component.Item
         private bool _importMode = false;
         #endregion
 
-        public ItemPageViewModel(IContainerProvider container)
+        public ItemPageViewModel(IContainerProvider container,CBHKDataContext context)
         {
             #region 初始化数据
             buttonNormalBrush = new ImageBrush(new BitmapImage(new Uri(buttonNormalImage, UriKind.RelativeOrAbsolute)));
@@ -219,6 +221,7 @@ namespace CBHK.ViewModel.Component.Item
             #endregion
 
             _container = container;
+            _context = context;
         }
 
         /// <summary>
@@ -231,7 +234,9 @@ namespace CBHK.ViewModel.Component.Item
             currentItemPages ??= (sender as ItemPageView).Parent as RichTabItems;
             itemDataContext ??= Window.GetWindow(sender as ItemPageView).DataContext as ItemViewModel;
             if (VersionSource.Count == 0)
+            {
                 VersionSource = itemDataContext.VersionList;
+            }
 
             #region 初始化物品ID与版本物品ID列表
             List<DataLoadStructure> itemDataList = [];
@@ -243,7 +248,7 @@ namespace CBHK.ViewModel.Component.Item
             {
                 Task.Run(() =>
                 {
-                    foreach (var item in itemDataContext.ItemTable.Rows.Cast<DataRow>())
+                    foreach (var item in _context.ItemGroupByVersionDicionary)
                     {
                         object id = item["id"];
                         string imagePath = "";

@@ -11,11 +11,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
-using System.Printing;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Windows.Perception.People;
 using static CBHK.Model.Common.Enums;
 
 namespace CBHK.CustomControl.JsonTreeViewComponents
@@ -662,10 +662,6 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             if (previousAndNext2 is not null && previousAndNext2.Item2 is not null)
             {
                 VisualLastChild = previousAndNext2.Item2;
-            }
-            else
-            {
-                VisualLastChild = this;
             }
             #endregion
 
@@ -1784,6 +1780,10 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             #region Field
             if (ItemType is ItemType.CustomCompound || EnumItemsSource.Count == 0 || !IsNotValueTypeChanging)
             {
+                if(Parent is not null && !Parent.IsCanBeDefaulted && EnumItemsSource.Count > 0 && EnumItemsSource[0].Text == "- unset -")
+                {
+                    EnumItemsSource.RemoveAt(0);
+                }
                 return;
             }
             bool skipCode = false;

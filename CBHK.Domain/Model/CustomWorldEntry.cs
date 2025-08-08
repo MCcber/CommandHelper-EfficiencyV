@@ -2,7 +2,7 @@
 
 namespace CBHK.Domain.Model
 {
-    public class Generator
+    public class CustomWorldEntry
     {
         [Key]
         public string ID { get; set; }

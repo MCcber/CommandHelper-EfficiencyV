@@ -1,6 +1,7 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
 using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.TreeViewComponentsHelper;
 using CBHK.Model.Common;
@@ -26,6 +27,7 @@ namespace CBHK.ViewModel.Common
     public abstract class BaseCustomWorldUnifiedPlan: ObservableObject,ICustomWorldUnifiedPlan
     {
         #region Property
+        protected CBHKDataContext Context { get; set; }
         protected virtual HtmlHelper htmlHelper { get; set; }
         protected virtual Window Home { get; set; }
         public virtual string ConfigDirectoryPath { get; set; }
@@ -54,8 +56,9 @@ namespace CBHK.ViewModel.Common
         public virtual JsonTreeViewItem VisualLastItem { get; set; }
         #endregion
 
-        public BaseCustomWorldUnifiedPlan(IContainerProvider container, MainView mainView)
+        public BaseCustomWorldUnifiedPlan(IContainerProvider container, MainView mainView, CBHKDataContext context)
         {
+            Context = context;
             Container = container;
             Home = mainView;
             htmlHelper = new(Container)
@@ -657,7 +660,7 @@ namespace CBHK.ViewModel.Common
                 {
                     if (item.VisualPrevious is not null && item.VisualPrevious.StartLine is not null)
                     {
-                        lastOffset = startLineText.LastIndexOf(',') + 1;
+                        lastOffset = startLineText.TrimEnd().Length;
                     }
                     else
                     if (parent is not null && parent.StartLine is not null)

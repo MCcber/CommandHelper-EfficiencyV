@@ -1,6 +1,5 @@
 ﻿using CBHK.CustomControl.JsonTreeViewComponents;
 using CBHK.GeneralTool.TreeViewComponentsHelper;
-using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
@@ -16,6 +15,7 @@ using System.Collections.ObjectModel;
 using CBHK.Model.Common;
 using CBHK.CustomControl;
 using CBHK.ViewModel.Common;
+using CBHK.Domain;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -67,15 +67,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public DimensionTypeViewModel(IContainerProvider container, MainView mainView) :base(container, mainView)
+        public DimensionTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context) :base(container, mainView,context)
         {
-            Container = container;
-            Home = mainView;
-            htmlHelper = new(Container)
-            {
-                plan = this,
-                jsonTool = JsonTool = new JsonTreeViewItemExtension(Container)
-            };
         }
         #endregion
 

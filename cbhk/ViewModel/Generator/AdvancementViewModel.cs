@@ -18,12 +18,14 @@ using CBHK.CustomControl;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using CBHK.ViewModel.Common;
+using CBHK.Domain;
 
 namespace CBHK.ViewModel.Generator
 {
     public partial class AdvancementViewModel : BaseCustomWorldUnifiedPlan
     {
         #region Property
+        private CBHKDataContext context { get; set; }
         public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
@@ -65,16 +67,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public AdvancementViewModel(IContainerProvider container, MainView mainView):base(container, mainView)
+        public AdvancementViewModel(IContainerProvider container, MainView mainView, CBHKDataContext context) : base(container, mainView, context)
         {
-            Container = container;
-            Home = mainView;
-            htmlHelper = new(Container)
-            {
-                plan = this,
-                jsonTool = JsonTool = new JsonTreeViewItemExtension(Container)
-            };
-
             #region 添加数据上下文所需的枚举集合与转换字典数据
             EnumIDDictionary.Add("流体ID", ["minecraft:water", "minecraft:lava"]);
             EnumIDDictionary.Add("方块ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);

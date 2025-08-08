@@ -2,5 +2,6 @@
 {
     public class Particle
     {
+        public string Value { get; set; }
     }
 }

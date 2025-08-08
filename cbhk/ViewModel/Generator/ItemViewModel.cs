@@ -107,19 +107,6 @@ namespace CBHK.ViewModel.Generator
         }
         #endregion
 
-        #region 数据表
-        public DataTable ItemTable = null;
-        public DataTable BlockVersionIDTable = null;
-        public DataTable EnchantmentTable = null;
-        public DataTable AttributeTable = null;
-        public DataTable AttributeSlotTable = null;
-        public DataTable AttributeValueTypeTable = null;
-        public DataTable EffectTable = null;
-        public DataTable HideInfomationTable = null;
-        public DataTable BlockTable = null;
-        public DataTable BlockStateTable = null;
-        #endregion
-
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
@@ -135,27 +122,14 @@ namespace CBHK.ViewModel.Generator
 
         public async void Item_Loaded(object sender,RoutedEventArgs e)
         {
-            #region 初始化数据表与物品页
-            DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-            await Task.Run(async () =>
-            {
-                //BlockVersionIDTable = await dataCommunicator.GetData("SELECT * FROM VersionBlock");
-                ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
-                EnchantmentTable = await dataCommunicator.GetData("SELECT * FROM Enchantments");
-                BlockTable = await dataCommunicator.GetData("SELECT * FROM Blocks");
-                BlockStateTable = await dataCommunicator.GetData("SELECT * FROM BlockStates");
-                AttributeTable = await dataCommunicator.GetData("SELECT * FROM MobAttributes");
-                AttributeSlotTable = await dataCommunicator.GetData("SELECT * FROM AttributeSlots");
-                AttributeValueTypeTable = await dataCommunicator.GetData("SELECT * FROM AttributeValueTypes");
-                EffectTable = await dataCommunicator.GetData("SELECT * FROM MobEffects");
-                HideInfomationTable = await dataCommunicator.GetData("SELECT * FROM HideInfomation");
-            });
-            #endregion
             #region 初始化物品页
-            ItemPageView itemPages = new();
-            ItemPageViewModel itemPageDataContext = itemPages.DataContext as ItemPageViewModel;
-            itemPageDataContext.UseForTool = !IsCloseable;
-            ItemPageList[0].Content = itemPages;
+            await Task.Run(() =>
+            {
+                ItemPageView itemPages = new();
+                ItemPageViewModel itemPageDataContext = itemPages.DataContext as ItemPageViewModel;
+                itemPageDataContext.UseForTool = !IsCloseable;
+                ItemPageList[0].Content = itemPages;
+            });
             #endregion
         }
 

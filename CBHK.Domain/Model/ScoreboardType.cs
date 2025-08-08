@@ -2,5 +2,6 @@
 {
     public class ScoreboardType
     {
+        public string Value { get; set; }
     }
 }

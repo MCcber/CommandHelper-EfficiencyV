@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.Domain;
 using CBHK.GeneralTool.TreeViewComponentsHelper;
 using CBHK.Model.Common;
 using CBHK.View;
@@ -62,16 +63,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public ItemModifierViewModel(IContainerProvider container, MainView mainView) : base(container, mainView)
+        public ItemModifierViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context) : base(container, mainView,context)
         {
-            Container = container;
-            Home = mainView;
-            htmlHelper = new(Container)
-            {
-                plan = this,
-                jsonTool = JsonTool = new JsonTreeViewItemExtension(Container)
-            };
-
             #region 添加数据上下文所需的枚举集合与转换字典数据
             EnumIDDictionary.Add("流体ID", ["minecraft:water", "minecraft:lava"]);
             EnumIDDictionary.Add("方块ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);
@@ -80,6 +73,7 @@ namespace CBHK.ViewModel.Generator
             EnumIDDictionary.Add("药水#物品数据值|酿造药水的ID", ["minecraft:potion_a", "minecraft:potion_b"]);
             EnumIDDictionary.Add("染料颜色", ["red", "green", "blue"]);
             #endregion
+
             #region 添加复合类数据、调用上下文初始化方法
             string[] commonDirectoryFileArray = Directory.GetFiles(CommonCompoundDataDirectoryPath);
             foreach (var item in commonDirectoryFileArray)

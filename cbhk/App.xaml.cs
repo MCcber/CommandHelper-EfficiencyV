@@ -1,9 +1,12 @@
-﻿using CBHK.GeneralTool;
+﻿using CBHK.Domain;
+using CBHK.GeneralTool;
 using CBHK.View;
+using Microsoft.EntityFrameworkCore;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Mvvm;
 using Serilog;
+using SQLitePCL;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -16,12 +19,17 @@ namespace CBHK
     /// </summary>
     public partial class App : PrismApplication
     {
+        #region Field
         private static string StartUpTimeString = "";
+
+        public static IServiceProvider ServiceProvider { get; private set; }
 
 #pragma warning disable IDE0052
         private Mutex _mutex;
 #pragma warning disable IDE0052
+        #endregion
 
+        #region Event
         /// <summary>
         /// 初始化数据与主窗体
         /// </summary>
@@ -49,6 +57,9 @@ namespace CBHK
                 Current.Shutdown();
             }
 
+            //必须步骤，为了让SQLite的代码先行模式能够正常运行
+            Batteries.Init();
+
             //订阅异常处理
             SetupExceptionHandling();
             base.OnStartup(e);
@@ -56,6 +67,13 @@ namespace CBHK
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            containerRegistry.RegisterScoped<CBHKDataContext>(() =>
+            {
+                var options = new DbContextOptionsBuilder<CBHKDataContext>()
+                    .Options;
+
+                return new CBHKDataContext(options);
+            });
         }
 
         protected override void ConfigureViewModelLocator()
@@ -106,5 +124,6 @@ namespace CBHK
                 }
             };
         }
+        #endregion
     }
 }

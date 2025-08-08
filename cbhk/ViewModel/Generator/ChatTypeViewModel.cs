@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.Domain;
 using CBHK.GeneralTool.TreeViewComponentsHelper;
 using CBHK.Model.Common;
 using CBHK.View;
@@ -63,15 +64,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public ChatTypeViewModel(IContainerProvider container, MainView mainView):base(container, mainView)
+        public ChatTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context):base(container, mainView,context)
         {
-            Container = container;
-            Home = mainView;
-            htmlHelper = new(Container)
-            {
-                plan = this,
-                jsonTool = JsonTool = new JsonTreeViewItemExtension(Container)
-            };
         }
         #endregion
 

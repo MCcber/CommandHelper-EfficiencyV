@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.IO;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace CBHK.Domain.Model
 {

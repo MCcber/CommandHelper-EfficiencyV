@@ -2,5 +2,6 @@
 {
     public class ItemSlot
     {
+        public string Value { get; set; }
     }
 }

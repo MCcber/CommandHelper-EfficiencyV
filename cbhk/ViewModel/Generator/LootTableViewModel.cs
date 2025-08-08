@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using CBHK.Domain;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -62,16 +63,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public LootTableViewModel(IContainerProvider container, MainView mainView) : base(container, mainView)
+        public LootTableViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context) : base(container, mainView,context)        
         {
-            Container = container;
-            Home = mainView;
-            htmlHelper = new(Container)
-            {
-                plan = this,
-                jsonTool = JsonTool = new JsonTreeViewItemExtension(Container)
-            };
-
             #region 添加数据上下文所需的枚举集合与转换字典数据
             EnumIDDictionary.Add("流体ID", ["minecraft:water", "minecraft:lava"]);
             EnumIDDictionary.Add("方块ID", ["minecraft:acacia_button", "minecraft:acacia_door"]);

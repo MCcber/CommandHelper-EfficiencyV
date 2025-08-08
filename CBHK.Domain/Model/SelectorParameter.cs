@@ -2,5 +2,6 @@
 {
     public class SelectorParameter
     {
+        public string Value { get; set; }
     }
 }

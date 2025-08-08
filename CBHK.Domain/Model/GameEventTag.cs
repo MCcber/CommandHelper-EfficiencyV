@@ -5,8 +5,6 @@ namespace CBHK.Domain.Model
 {
     public class GameEventTag
     {
-        [Key]
-        [Column("value")]
         public string Value { get; set; }
     }
 }

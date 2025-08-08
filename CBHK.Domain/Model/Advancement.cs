@@ -5,10 +5,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CBHKShared.ContextModel
 {
-    public class Advancement:VersionBase
+    public class Advancement
     {
         [Key]
-        [Column("value")]
         public string Value { get; set; }
+        public string Version { get; set; }
     }
 }

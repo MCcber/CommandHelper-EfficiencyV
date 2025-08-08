@@ -573,6 +573,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                 {
                     currentReferenceString = compoundJsonTreeViewItem.SelectedEnumItem.Text;
                 }
+
                 result = htmlHelper.GetTreeViewItemResult(new(), CurrentDependencyItemList, compoundJsonTreeViewItem.LayerCount + 1, currentReferenceString, (currentItemType is not ItemType.BottomButton && currentItemType is not ItemType.CustomCompound) || (currentItemType is not ItemType.BottomButton && compoundJsonTreeViewItem.SelectedEnumItem is not null) ? compoundJsonTreeViewItem : parent, null, 1, true);
 
                 htmlHelper.HandlingTheTypingAppearanceOfCompositeItemList([.. result.Result], compoundJsonTreeViewItem);
