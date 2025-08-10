@@ -1,5 +1,5 @@
-﻿using CBHK.ControlDataContext;
-using CBHK.CustomControl;
+﻿using CBHK.CustomControl;
+using CBHK.Domain;
 using CBHK.ViewModel.Generator;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -23,8 +23,9 @@ namespace CBHK.View.Component.Entity
     /// </summary>
     public partial class BlockState : UserControl
     {
-        public BlockState()
+        public BlockState(CBHKDataContext context)
         {
+            _context = context;
             InitializeComponent();
         }
 
@@ -36,8 +37,7 @@ namespace CBHK.View.Component.Entity
         #region 字段
         private ImageBrush buttonNormal = new(new BitmapImage(new Uri("pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonNormal.png", UriKind.RelativeOrAbsolute)));
         private ImageBrush buttonPressed = new(new BitmapImage(new Uri("pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonPressed.png", UriKind.RelativeOrAbsolute)));
-        DataTable BlockTable = null;
-        DataTable BlockStateTable = null;
+        private CBHKDataContext _context = null;
         #endregion
 
         #region 数据源
@@ -88,22 +88,18 @@ namespace CBHK.View.Component.Entity
             AttributeAccordion.Fresh = ClearAttribute;
             AttributeAccordion.Modify = AddAttribute;
             EntityViewModel context = Window.GetWindow(sender as UserControl).DataContext as EntityViewModel;
-            BlockTable = context.BlockTable;
-            BlockStateTable = context.BlockStateTable;
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            foreach (DataRow row in BlockTable.Rows)
+            foreach (var item in _context.BlockSet)
             {
-                string id = row["id"].ToString();
-                string name = row["name"].ToString();
-                string imagePath = currentPath + id + ".png";
+                string imagePath = currentPath + item.ID + ".png";
                 BitmapImage bitmapImage = null;
                 if (File.Exists(imagePath))
                     bitmapImage = new(new Uri(imagePath, UriKind.Absolute));
                 BlockList.Add(new IconComboBoxItem()
                 {
                     ComboBoxItemIcon = bitmapImage,
-                    ComboBoxItemId = id,
-                    ComboBoxItemText = name
+                    ComboBoxItemId = item.ID,
+                    ComboBoxItemText = item.Name
                 });
             }
             BlockIdBox.ItemsSource = BlockList;
@@ -122,7 +118,7 @@ namespace CBHK.View.Component.Entity
                 AttributeKeys.Clear();
                 #region 解析方块状态JSON文件,找到对应的属性集合
                 string blockId = (BlockIdBox.SelectedItem as IconComboBoxItem).ComboBoxItemId;
-                string properties = BlockStateTable.Select("id='minecraft:" + blockId + "'").First()["properties"].ToString();
+                string properties = _context.BlockStateSet.First(item=>item.ID == blockId).Properties;
                 if (properties != null && properties.Length > 0)
                 {
                     JObject currentProperties = JObject.Parse(properties);

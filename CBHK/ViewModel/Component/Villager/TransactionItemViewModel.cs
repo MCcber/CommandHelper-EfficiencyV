@@ -1,4 +1,5 @@
-﻿using CBHK.GeneralTool;
+﻿using CBHK.Domain;
+using CBHK.GeneralTool;
 using CBHK.Model.Common;
 using CBHK.View.Component.Villager;
 using CBHK.View.Generator;
@@ -7,7 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Data;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -17,19 +18,21 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Villager
 {
-    public partial class TransactionItemsViewModel:ObservableObject
+    public partial class TransactionItemViewModel : ObservableObject
     {
         #region Field
         public Image Buy = null;
         public Image BuyB = null;
         public Image Sell = null;
+        private Dictionary<string, string> ItemIDAndNameMap;
 
         /// <summary>
         /// 空图像路径
         /// </summary>
         string emptyIcon = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/empty.png";
 
-        DataTable ItemTable = null;
+        private CBHKDataContext _context = null;
+        private DataService _dataService = null;
         #endregion
 
         #region Property
@@ -150,6 +153,13 @@ namespace CBHK.ViewModel.Component.Villager
 
         #endregion
 
+        public TransactionItemViewModel(CBHKDataContext context, DataService dataService)
+        {
+            _context = context;
+            _dataService = dataService;
+            ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
+        }
+
         public void Buy_Loaded(object sender, RoutedEventArgs e) => Buy = sender as Image;
 
         public void BuyB_Loaded(object sender, RoutedEventArgs e) => BuyB = sender as Image;
@@ -163,8 +173,7 @@ namespace CBHK.ViewModel.Component.Villager
         /// <param name="e"></param>
         public void TransactionItems_Loaded(object sender, RoutedEventArgs e)
         {
-            VillagerViewModel context = Window.GetWindow(sender as TransactionItemView).DataContext as VillagerViewModel;
-            ItemTable = context.ItemTable;
+
         }
 
         /// <summary>
@@ -285,7 +294,7 @@ namespace CBHK.ViewModel.Component.Villager
         {
             TransactionItemView template_parent = button.FindParent<TransactionItemView>();
             VillagerViewModel context = (Window.GetWindow(button) as VillagerView).DataContext as VillagerViewModel;
-            context.transactionItems.Remove(template_parent);
+            context.TransactionItemList.Remove(template_parent);
         }
 
         /// <summary>

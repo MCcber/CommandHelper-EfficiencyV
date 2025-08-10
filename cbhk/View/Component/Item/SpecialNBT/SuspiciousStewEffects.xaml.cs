@@ -1,6 +1,7 @@
 ﻿using CBHK.ControlDataContext;
 using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.ViewModel.Component.Item;
 using CBHK.ViewModel.Generator;
@@ -20,7 +21,7 @@ namespace CBHK.View.Component.Item.SpecialNBT
     /// </summary>
     public partial class SuspiciousStewEffect : UserControl,IVersionUpgrader
     {
-        DataTable EffectTable = null;
+        private CBHKDataContext _context = null;
 
         #region 合并结果
         string id = "";
@@ -34,8 +35,9 @@ namespace CBHK.View.Component.Item.SpecialNBT
         }
         #endregion
 
-        public SuspiciousStewEffect()
+        public SuspiciousStewEffect(CBHKDataContext context)
         {
+            _context = context;
             InitializeComponent();
         }
 
@@ -56,18 +58,15 @@ namespace CBHK.View.Component.Item.SpecialNBT
         private async void EffectID_Loaded(object sender, RoutedEventArgs e)
         {
             ItemViewModel context = Window.GetWindow(this).DataContext as ItemViewModel;
-            EffectTable = context.EffectTable;
             ObservableCollection<IconComboBoxItem> source = [];
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            foreach (DataRow row in EffectTable.Rows)
+            foreach (var item in _context.MobEffectSet)
             {
-                string id = row["id"].ToString();
-                string name = row["name"].ToString();
-                string imagePath = id + ".png";
+                string imagePath = item.ID + ".png";
                 source.Add(new IconComboBoxItem()
                 {
-                    ComboBoxItemId = id,
-                    ComboBoxItemText = name,
+                    ComboBoxItemId = item.ID,
+                    ComboBoxItemText = item.Name,
                     ComboBoxItemIcon = new BitmapImage(new Uri(currentPath + imagePath, UriKind.Absolute))
                 });
             }
@@ -94,7 +93,7 @@ namespace CBHK.View.Component.Item.SpecialNBT
                     if (version < 116)
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            id = EffectTable.Select("id='" + currentName + "'").First()["number"].ToString();
+                            id = _context.MobEffectSet.First(item=>item.Name == currentName).Number.ToString();
                         });
                     else
                         Application.Current.Dispatcher.Invoke(() =>

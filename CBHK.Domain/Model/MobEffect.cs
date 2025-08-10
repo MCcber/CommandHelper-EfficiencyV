@@ -8,6 +8,6 @@ namespace CBHK.Domain.Model
         public string ID { get; set; }
         public int Number { get; set; }
         public string Name { get; set; }
-        public string Verion { get; set; }
+        public string? Version { get; set; }
     }
 }

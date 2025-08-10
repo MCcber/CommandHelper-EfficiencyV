@@ -1,4 +1,6 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.Common.Model;
+using CBHK.CustomControl;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.View;
 using CBHK.View.Component.Datapack.EditPage;
@@ -143,21 +145,21 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
             { "tagRemove","tag target remove tag"},
             { "param","### <param name=\"sender\"></param>"} };
         public Dictionary<string, List<string>> ResourceFilePathes = new() { { "advancementValue", [] }, { "predicateValue", [] } };
-        public List<string> ParticleIds = [];
-        public List<string> TeamColors = [];
-        public List<string> BossbarColors = [];
+        public List<string> ParticleIDList = [];
+        public List<string> TeamColorList = [];
+        public List<string> BossbarColorList = [];
         public List<string> BossbarStyles = [];
-        public List<string> ScoreboardTypes = [];
-        public List<string> ScoreboardCustomIds = [];
-        public List<string> DamageTypes = [];
-        public List<string> Enchantments = [];
-        public List<string> Effects = [];
-        public List<string> ItemSlots = [];
-        public List<string> LootTools = [];
-        public List<string> ItemIds = [];
-        public List<string> BlockIds = [];
-        public List<string> EntityIds = [];
-        public List<string> SoundFilePath = [];
+        public List<string> ScoreboardTypeList = [];
+        public List<string> ScoreboardCustomIDList = [];
+        public List<string> DamageTypeList = [];
+        public Dictionary<int,Dictionary<string,string>> EnchantmentIDAndNameGroupByVersionMap = [];
+        public List<string> EffectIDList = [];
+        public List<string> ItemSlotList = [];
+        public List<string> LootToolList = [];
+        public List<string> ItemIDList = [];
+        public List<string> BlockIDList = [];
+        public List<string> EntityIDList = [];
+        public Dictionary<string,string> SoundIDAndNameMap = [];
         public List<string> selectors = ["@a", "@e", "@p", "@r", "@s"];
         public List<string> singleSelectors = ["@a[limit=1]", "@e[limit=1]", "@p", "@r", "@s"];
         public List<string> SelectorParameterValueTypes = ["Number", "PositiveNumber", "Double", "DoubleInterval", "PositiveDouble", "PositiveDoubleInterval", "IntInterval", "AdvancementsValue", "ScoresValue", "Int", "TagValue", "TeamValue", "NameValue", "EntityId", "FileReferrerValue", "JsonValue"];
@@ -171,14 +173,16 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         public List<string> axesTypes = ["x", "y", "z", "xy", "xz", "yz", "xyz"];
         public List<string> pos3DTypes = ["~", "~ ~", "~ ~ ~", "^", "^ ^", "^ ^ ^"];
         public List<string> pos2DTypes = ["~", "~ ~", "^", "^ ^"];
-        public List<string> mobAttributes = [];
-        public List<string> dimensionIds = [];
-        public Dictionary<string, string> SelectorParameterValues = [];
-        public List<string> SelectorParameters = [];
+        public List<string> MobAttributeIDList = [];
+        public List<string> DimensionIDList = [];
+        public Dictionary<string, string> SelectorParameterValueList = [];
+        public List<string> SelectorParameterList = [];
         public List<string> CompoundSelectorParameters = ["advancements", "scores"];
-        public Dictionary<string, GameruleItem> gamerules = [];
+        public Dictionary<string, GameRuleItem> GameRuleMap = [];
         #endregion
 
+        private CBHKDataContext _context = null;
+        private DataService _dataService = null;
         private IContainerProvider _container;
         private MainView home;
 
@@ -199,11 +203,14 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
 
         public Dictionary<string, Dictionary<int, string>> RuntimeVariables { get; set; } = new() { { "bossbarID", [] }, { "storageID", [] }, { "targetObjective", [] }, { "tagValue", [] }, { "triggerObjective", [] }, { "teamID", [] } };
 
-        public EditPageViewModel(IContainerProvider container,MainView mainView)
+        public EditPageViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context,DataService dataService)
         {
             #region 客户端连接语言服务器
             client.Connect(new IPEndPoint(IPAddress.Parse(ipString), port));
             #endregion
+
+            _dataService = dataService;
+            _context = context;
             _container = container;
             home = mainView;
         }
@@ -288,198 +295,52 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
             #endregion
 
             #region 从数据库中读取所需变量
-            Task.Run(async () =>
+            Task.Run(() =>
             {
                 if (File.Exists(databaseFilePath))
                 {
-                    DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-
-                    #region 添加物品槽位编号
-                    DataTable itemSlotTable = await dataCommunicator.GetData("Select * From ItemSlots");
-                    foreach (DataRow row in itemSlotTable.Rows)
-                    {
-                        if (row["value"] is string value)
-                        {
-                            string subContent = ItemSlotMatcher().Match(value).ToString();
-                            if (subContent is not null && subContent.Length > 0)
-                            {
-                                #region 处理区间,与后面引用的数据拼接成完整的数据
-                                string prefix = value[..(value.LastIndexOf('.') + 1)];
-                                int dashIndex = subContent.IndexOf('-');
-                                int start = int.Parse(subContent[..dashIndex]);
-                                int end = int.Parse(subContent[(dashIndex + 1)..]);
-                                for (int i = start; i <= end; i++)
-                                    ItemSlots.Add(prefix + i);
-                                #endregion
-                            }
-                            else
-                                ItemSlots.Add(value);
-                        }
-                    }
-                    #endregion
-                    #region 添加附魔ID
-                    DataTable enchantmentIdTable = await dataCommunicator.GetData("Select * From Enchantments");
-                    foreach (DataRow row in enchantmentIdTable.Rows)
-                    {
-                        if (row["id"] is string value)
-                            Enchantments.Add(value);
-                    }
-                    #endregion
-                    #region 添加伤害类型
-                    DataTable damageTypeTable = await dataCommunicator.GetData("Select * From DamageTypes");
-                    foreach (DataRow row in damageTypeTable.Rows)
-                    {
-                        if (row["value"] is string value)
-                            DamageTypes.Add(value);
-                    }
-                    #endregion
-                    #region 添加维度
-                    dimensionIds.Add("minecraft:over_world");
-                    dimensionIds.Add("minecraft:nether");
-                    dimensionIds.Add("minecraft:the_end");
-                    #endregion
-                    #region 添加选择器参数
-                    DataTable selectorParameterTable = await dataCommunicator.GetData("Select * From SelectorParameters");
-                    foreach (DataRow row in selectorParameterTable.Rows)
-                    {
-                        if (row["value"] is string value)
-                            SelectorParameters.Add(value);
-                    }
-                    #endregion
-                    #region 添加选择器参数值
-                    DataTable selectorParameterValueTable = await dataCommunicator.GetData("Select * From SelectorParameterValues");
-                    foreach (DataRow row in selectorParameterValueTable.Rows)
-                    {
-                        if (row["name"] is string name && row["value"] is string value)
-                            SelectorParameterValues.Add(name, value);
-                    }
-                    #endregion
-                    #region 添加游戏规则名称
-                    DataTable gameruleTable = await dataCommunicator.GetData("Select * From GameRules");
-                    foreach (DataRow row in gameruleTable.Rows)
-                    {
-                        if (row["name"] is string name)
-                        {
-                            GameruleItem gameruleItem = new();
-                            gamerules.Add(name, gameruleItem);
-                            if (row["description"] is string description)
-                                gameruleItem.Description = description;
-                            if (row["defaultValue"] is string defaultValue)
-                                gameruleItem.Value = defaultValue;
-                            if (row["dataType"] is string dataType)
-                                gameruleItem.ItemType = dataType == "Bool" ? GameruleItem.DataType.Bool : GameruleItem.DataType.Int;
-                        }
-                    }
-                    #endregion
-                    #region 添加队伍颜色
-                    DataTable teamColorTable = await dataCommunicator.GetData("Select * From TeamColors");
-                    foreach (DataRow row in teamColorTable.Rows)
-                    {
-                        if (row["value"] is string value)
-                            TeamColors.Add(value);
-                    }
-                    #endregion
-                    #region 添加bossbar颜色
-                    DataTable bossbarColorTable = await dataCommunicator.GetData("Select * From BossbarColors");
-                    foreach (DataRow row in bossbarColorTable.Rows)
-                    {
-                        if (row["value"] is string value)
-                            BossbarColors.Add(value);
-                    }
-                    #endregion
-                    #region 添加bossbar样式
-                    DataTable bossbarStyleTable = await dataCommunicator.GetData("Select * From BossbarStyles");
-                    foreach (DataRow row in bossbarStyleTable.Rows)
-                    {
-                        if (row["value"] is string value)
-                            BossbarStyles.Add(value);
-                    }
-                    #endregion
-                    #region 添加物品Id
-                    DataTable itemIdTable = await dataCommunicator.GetData("Select * From Items");
-                    foreach (DataRow row in itemIdTable.Rows)
-                    {
-                        if (row["id"] is string id)
-                            ItemIds.Add(id);
-                    }
-                    #endregion
-                    #region 添加方块Id
-                    DataTable blockIdTable = await dataCommunicator.GetData("Select * From Blocks");
-                    foreach (DataRow row in blockIdTable.Rows)
-                    {
-                        if (row["id"] is string id)
-                            BlockIds.Add(id);
-                    }
-                    #endregion
-                    #region 添加实体Id
-                    DataTable entityIdTable = await dataCommunicator.GetData("Select * From Entities");
-                    foreach (DataRow row in entityIdTable.Rows)
-                    {
-                        if (row["id"] is string id)
-                            EntityIds.Add(id);
-                    }
-                    #endregion
-                    #region 添加粒子路径
-                    DataTable particleTable = await dataCommunicator.GetData("Select * From Particles");
-                    foreach (DataRow row in particleTable.Rows)
-                    {
-                        if (row["value"] is string value)
-                            ParticleIds.Add(value);
-                    }
-                    #endregion
-                    #region 添加音效路径
-                    DataTable soundFilePathTable = await dataCommunicator.GetData("Select * From Sounds");
-                    foreach (DataRow row in soundFilePathTable.Rows)
-                    {
-                        if (row["id"] is string id)
-                            SoundFilePath.Add(id);
-                    }
-                    #endregion
-                    #region 添加生物属性
-                    DataTable mobAttributeTable = await dataCommunicator.GetData("Select * From MobAttributes");
-                    foreach (DataRow row in mobAttributeTable.Rows)
-                    {
-                        if (row["id"] is string id)
-                            mobAttributes.Add(id);
-                    }
-                    #endregion
-                    #region 添加药水id/生物状态
-                    DataTable mobEffectTable = await dataCommunicator.GetData("Select * From MobEffects");
-                    foreach (DataRow row in mobEffectTable.Rows)
-                    {
-                        if (row["id"] is string id)
-                            Effects.Add(id);
-                    }
-                    #endregion
-                    #region 添加进度列表
-                    DataTable advancementTable = await dataCommunicator.GetData("Select * From Advancements");
-                    foreach (DataRow row in advancementTable.Rows)
-                    {
-                        if (row["value"] is string value)
-                            ResourceFilePathes["advancementValue"].Add("minecraft:" + value);
-                    }
-                    #endregion
-                    #region 添加战利品表工具
-                    LootTools.Add("mainhand");
-                    LootTools.Add("offhand");
-                    LootTools.AddRange([.. ItemIds]);
-                    #endregion
-                    #region 添加记分板准则
-                    DataTable scoreboardIdTable = await dataCommunicator.GetData("Select * From ScoreboardTypes");
-                    foreach (DataRow row in scoreboardIdTable.Rows)
-                    {
-                        if (row["value"] is string value)
-                            ScoreboardTypes.Add(value);
-                    }
-                    #endregion
-                    #region 添加custom命令空间下的ID
-                    DataTable scoreboardCustomIdTable = await dataCommunicator.GetData("Select * From ScoreboardCustomIds");
-                    foreach (DataRow row in scoreboardCustomIdTable.Rows)
-                    {
-                        if (row["value"] is string value)
-                            ScoreboardCustomIds.Add(value);
-                    }
-                    #endregion
+                    //添加物品槽位编号
+                    ItemSlotList = _dataService.GetItemSlotList();
+                    //添加附魔ID
+                    EnchantmentIDAndNameGroupByVersionMap = _dataService.GetEnchantmentIDAndNameGroupByVersionMap();
+                    //添加伤害类型
+                    DamageTypeList = _dataService.GetDamageTypeList();
+                    //添加维度
+                    DimensionIDList = _dataService.GetDimensionList();
+                    //添加选择器参数
+                    SelectorParameterList = _dataService.GetSelectorParameterList();
+                    //添加选择器参数值
+                    SelectorParameterValueList = _dataService.GetSelectorParameterValueList();
+                    //添加游戏规则名称
+                    GameRuleMap = _dataService.GetGameRuleMap();
+                    //添加队伍颜色
+                    TeamColorList = _dataService.GetTeamColorList();
+                    //添加Bossbar颜色
+                    BossbarColorList = _dataService.GetBossbarColorList();
+                    //添加Bossbar样式
+                    BossbarStyles = _dataService.GetBossbarColorList();
+                    //添加物品ID
+                    ItemIDList = _dataService.GetItemIDList();
+                    //添加方块Id
+                    BlockIDList = _dataService.GetBlockIDList();
+                    //添加实体Id
+                    EntityIDList = _dataService.GetEntityIDList();
+                    //添加粒子路径
+                    ParticleIDList = _dataService.GetParticleIDList();
+                    //添加音效路径
+                    SoundIDAndNameMap = _dataService.SoundIDAndNameMap();
+                    //添加生物属性
+                    MobAttributeIDList = _dataService.GetMobAttributeIDList();
+                    //添加药水id/生物状态
+                    EffectIDList = _dataService.GetMobEffectIDList();
+                    //添加进度列表
+                    ResourceFilePathes["advancementValue"].AddRange(_dataService.GetAdvancementList());
+                    //添加战利品表工具
+                    LootToolList = _dataService.GetLootToolList();
+                    //添加记分板准则
+                    ScoreboardTypeList = _dataService.GetScoreboardTypeList();
+                    //添加Custom命令空间下的ID
+                    ScoreboardCustomIDList = _dataService.GetScoreboardCustomIDList();
                 }
             });
             #endregion

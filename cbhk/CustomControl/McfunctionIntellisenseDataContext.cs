@@ -279,24 +279,6 @@ namespace CBHK.CustomControl
     }
 
     /// <summary>
-    /// 游戏规则属性
-    /// </summary>
-    public class GameruleItem
-    {
-        public enum DataType
-        {
-            Bool,
-            Int
-        }
-
-        public DataType ItemType { get; set; }
-
-        public string Value { get; set; } = "";
-
-        public string Description { get; set; } = "";
-    }
-
-    /// <summary>
     /// 语法树节点类
     /// </summary>
     public class SyntaxTreeItem

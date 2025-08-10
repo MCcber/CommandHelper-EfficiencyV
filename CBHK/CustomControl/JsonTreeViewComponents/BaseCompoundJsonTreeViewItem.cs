@@ -15,7 +15,6 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Windows.Perception.People;
 using static CBHK.Model.Common.Enums;
 
 namespace CBHK.CustomControl.JsonTreeViewComponents

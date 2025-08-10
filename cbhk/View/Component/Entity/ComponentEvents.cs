@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.ViewModel.Component.Entity;
 using CommunityToolkit.Mvvm.Input;
@@ -15,8 +16,10 @@ using System.Windows.Data;
 
 namespace CBHK.View.Component.Entity
 {
-    public partial class ComponentEvents
+    public partial class ComponentEvents(CBHKDataContext context)
     {
+        CBHKDataContext _context = context;
+
         /// <summary>
         /// 首次获得焦点时执行绑定
         /// </summary>
@@ -222,7 +225,7 @@ namespace CBHK.View.Component.Entity
             #endregion
 
             #region 是否为药水云施加状态效果列表
-            if (sender is Accordion && (sender as FrameworkElement).Name == "Effects")
+            if (sender is Accordion && (sender as FrameworkElement).Name == "EffectIDList")
             {
                 Accordion areaEffectCloudEffectsAccordion = sender as Accordion;
                 if (!context.VersionNBTList.ContainsKey(areaEffectCloudEffectsAccordion))
@@ -806,7 +809,7 @@ namespace CBHK.View.Component.Entity
         /// <param name="obj"></param>
         public void AddAttributeCommand(FrameworkElement obj)
         {
-            Attributes attributes = new();
+            Attributes attributes = new(_context);
             Accordion accordion = obj as Accordion;
             StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
             stackPanel.Children.Add(attributes);
@@ -927,7 +930,7 @@ namespace CBHK.View.Component.Entity
         public void AddAreaEffectCloudCommand(FrameworkElement obj)
         {
             Accordion accordion = obj as Accordion;
-            AreaEffectCloudEffects areaEffectCloudEffects = new();
+            AreaEffectCloudEffects areaEffectCloudEffects = new(_context);
             ((accordion.Content as ScrollViewer).Content as StackPanel).Children.Add(areaEffectCloudEffects);
             EntityPageViewModel entityPagesDataContext = obj.FindParent<EntityPageView>().DataContext as EntityPageViewModel;
             entityPagesDataContext.VersionComponents.Add(areaEffectCloudEffects);
@@ -953,7 +956,7 @@ namespace CBHK.View.Component.Entity
                         string effectString = await (item as IVersionUpgrader).Result();
                         result.Append(effectString + ",");
                     }
-                    dataStructure.Result = "Effects:[" + result.ToString().TrimEnd(',') + "]";
+                    dataStructure.Result = "EffectIDList:[" + result.ToString().TrimEnd(',') + "]";
                 }
                 else
                     dataStructure.Result = "";

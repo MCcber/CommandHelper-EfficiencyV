@@ -528,6 +528,7 @@
     <Folder Include="GeneralTool\ScrollViewerHelper\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CBHK.Common\CBHK.Common.csproj" />
     <ProjectReference Include="..\CBHK.Domain\CBHK.Domain.csproj" />
   </ItemGroup>
 </Project>

@@ -62,7 +62,7 @@ namespace CBHK.View.Component.Item
         {
             ComboBox comboBox = sender as ComboBox;
             itemPageDataContext = comboBox.FindParent<ItemPageView>().DataContext as ItemPageViewModel;
-            comboBox.ItemsSource = itemPageDataContext.BlockIdList;
+            comboBox.ItemsSource = itemPageDataContext.BlockList;
         }
     }
 }

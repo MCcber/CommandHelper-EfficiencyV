@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.View.Component.Item;
 using CBHK.View.Component.Item.SpecialNBT;
@@ -19,7 +20,12 @@ namespace CBHK.ViewModel.Component.Item
 {
     public class ComponentEvents
     {
-        private static DataTable BlockTable = null;
+        private CBHKDataContext _context = null;
+
+        public ComponentEvents(CBHKDataContext context)
+        {
+            _context = context;
+        }
 
         /// <summary>
         /// 首次获得焦点时执行绑定
@@ -355,7 +361,7 @@ namespace CBHK.ViewModel.Component.Item
             Accordion accordion = obj as Accordion;
             ScrollViewer scrollViewer = accordion.Content as ScrollViewer;
             StackPanel stackPanel = scrollViewer.Content as StackPanel;
-            SuspiciousStewEffect suspiciousStewEffects = new();
+            SuspiciousStewEffect suspiciousStewEffects = new(_context);
             stackPanel.Children.Add(suspiciousStewEffects);
             ItemPageViewModel itemPageDataContext = suspiciousStewEffects.FindParent<ItemPageView>().DataContext as ItemPageViewModel;
             itemPageDataContext.VersionComponents.Add(suspiciousStewEffects);
@@ -401,7 +407,7 @@ namespace CBHK.ViewModel.Component.Item
                         effectString = await suspiciousStewEffects.Result();
                         result.Append(effectString + ",");
                     }
-                    dataStructure.Result = "Effects:[" + result.ToString().Trim(',') + "]";
+                    dataStructure.Result = "EffectIDList:[" + result.ToString().Trim(',') + "]";
                 }
                 else
                     dataStructure.Result = "";
@@ -536,7 +542,7 @@ namespace CBHK.ViewModel.Component.Item
             Accordion accordion = obj as Accordion;
             ScrollViewer scrollViewer = accordion.Content as ScrollViewer;
             StackPanel stackPanel = scrollViewer.Content as StackPanel;
-            CustomPotionEffects customPotionEffects = new();
+            CustomPotionEffects customPotionEffects = new(_context);
             stackPanel.Children.Add(customPotionEffects);
             ItemPageViewModel itemPageDataContext = customPotionEffects.FindParent<ItemPageView>().DataContext as ItemPageViewModel;
             itemPageDataContext.VersionComponents.Add(customPotionEffects);
@@ -595,7 +601,7 @@ namespace CBHK.ViewModel.Component.Item
         {
             Accordion accordion = obj as Accordion;
             StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
-            EnchantmentItem enchantmentItems = new();
+            EnchantmentItem enchantmentItems = new(_context);
             stackPanel.Children.Add(enchantmentItems);
             ItemPageViewModel itemPageDataContext = obj.FindParent<ItemPageView>().DataContext as ItemPageViewModel;
             itemPageDataContext.VersionComponents.Add(enchantmentItems);
@@ -650,11 +656,6 @@ namespace CBHK.ViewModel.Component.Item
             Accordion accordion = sender as Accordion;
             NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
             StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
-            if (BlockTable is null)
-            {
-                ItemViewModel context = Window.GetWindow(accordion).DataContext as ItemViewModel;
-                BlockTable = context.BlockTable;
-            }
             string currentID;
             string result = "";
             if (stackPanel.Children.Count > 0)
@@ -662,7 +663,7 @@ namespace CBHK.ViewModel.Component.Item
                 foreach (DebugProperties debugProperties in stackPanel.Children)
                 {
                     IconComboBoxItem selectedItem = debugProperties.BlockId.SelectedItem as IconComboBoxItem;
-                    currentID = BlockTable.Select("name='" + selectedItem.ComboBoxItemText + "'").First()["id"].ToString();
+                    currentID = _context.BlockSet.First(item => item.Name == selectedItem.ComboBoxItemText).ID;
                     if (debugProperties.BlockProperty.Items.Count > 0)
                         result += "\"" + currentID + "\":\"" + debugProperties.BlockProperty.SelectedItem.ToString() + "\",";
                 }
@@ -680,7 +681,7 @@ namespace CBHK.ViewModel.Component.Item
         {
             Accordion accordion = obj as Accordion;
             StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
-            stackPanel.Children.Add(new DebugProperties());
+            stackPanel.Children.Add(new DebugProperties(_context));
         }
 
         /// <summary>

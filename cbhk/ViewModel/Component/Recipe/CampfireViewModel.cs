@@ -16,15 +16,21 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using CBHK.GeneralTool;
 using CommunityToolkit.Mvvm.Input;
-using CBHK.ViewModel.Generator;
 using CBHK.Model.Common;
 using CBHK.View.Component.Recipe;
+using CBHK.Domain;
+using System.Collections.Generic;
+using DryIoc;
 
 namespace CBHK.ViewModel.Component.Recipe
 {
     public partial class CampfireViewModel : ObservableObject
     {
         #region 字段与引用
+        private DataService _dataService = null;
+        private CBHKDataContext _context = null;
+        private Dictionary<string, string> ItemIDAndNameMap;
+
         /// <summary>
         /// 存储最终结果
         /// </summary>
@@ -151,6 +157,7 @@ namespace CBHK.ViewModel.Component.Recipe
         #endregion
         #region 获得的经验
         private double experience = 0;
+
         public double Experience
         {
             get => experience;
@@ -158,12 +165,13 @@ namespace CBHK.ViewModel.Component.Recipe
         }
         #endregion
 
-        DataTable ItemTable = null;
-
-        public CampfireViewModel()
+        public CampfireViewModel(CBHKDataContext context,DataService dataService)
         {
             #region 初始化数据
+            _dataService = dataService;
+            _context = context;
             MaterialTag.Add("");
+            ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
             #endregion
         }
 
@@ -246,9 +254,6 @@ namespace CBHK.ViewModel.Component.Recipe
             CampfireView campfire = MultiMaterialGrid.FindParent<CampfireView>();
             MultiMaterialSource = campfire.Resources["MultiModeItemViewSource"] as CollectionViewSource;
             MultiMaterialSource.Filter += MultiMaterialSource_Filter;
-
-            RecipeViewModel context = Window.GetWindow(MultiMaterialGrid).DataContext as RecipeViewModel;
-            ItemTable = context.ItemTable;
         }
 
         /// <summary>
@@ -282,7 +287,7 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                        string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                         MaterialList.Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                         if (itemTagObj != null)
                             MaterialTag.Add(itemTagObj.ToString());
@@ -299,7 +304,7 @@ namespace CBHK.ViewModel.Component.Recipe
                         {
                             string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                             Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
-                            string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                            string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                             MaterialList.Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                             if (itemTagObj != null)
                                 MaterialTag.Add(itemTagObj.ToString());
@@ -334,7 +339,7 @@ namespace CBHK.ViewModel.Component.Recipe
             {
                 string itemID = recipeResult.ToString().Replace("minecraft:", "");
                 Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                 ResultItem.Source = new BitmapImage(iconUri);
                 ResultItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
             }

@@ -668,7 +668,7 @@ namespace CBHK.GeneralTool
                             else
                             if (contextFileMarker.Trim().Length > 0)
                             {
-                                plan.EnumCompoundDataDictionary[contextFileMarker].Add(enumMatch.Value.Replace("=", "").Trim(), targetRawStringList);
+                                plan.EnumCompoundDataDictionary[contextFileMarker].TryAdd(enumMatch.Value.Replace("=", "").Trim(), targetRawStringList);
                             }
                         }
                     }

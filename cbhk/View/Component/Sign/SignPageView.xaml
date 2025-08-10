@@ -102,13 +102,7 @@
                 ItemsSource="{Binding TypeSource, IsAsync=True}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedSignType, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}">
-                <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="SelectionChanged">
-                        <behaviors:CallMethodAction MethodName="SignID_SelectionChanged" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
-                </behaviors:Interaction.Triggers>
-            </ComboBox>
+                Style="{DynamicResource TextComboBoxStyle}" />
             <CustomControl:TextToggleButtons
                 Padding="5"
                 HorizontalAlignment="Left"

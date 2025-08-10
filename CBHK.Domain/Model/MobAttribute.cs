@@ -9,6 +9,6 @@ namespace CBHK.Domain.Model
         public string DataType { get; set; }
         public string DataRange { get; set; }
         public string Name { get; set; }
-        public string Version { get; set; }
+        public string? Version { get; set; }
     }
 }

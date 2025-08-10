@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -33,16 +32,10 @@ namespace CBHK.GeneralTool
 {
     public static class ExternalDataImportManager
     {
-        private static DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
         private static DataTable ItemTable = null;
         private static DataTable EntityTable = null;
         public static void Init()
         {
-            Task.Run(async () =>
-            {
-                ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
-                EntityTable = await dataCommunicator.GetData("SELECT * FROM Entities");
-            });
         }
 
         #region 处理导入外部标签
@@ -464,7 +457,7 @@ namespace CBHK.GeneralTool
                     {
                         ExistItem = true;
                         context.AddTransactionItem();
-                        TransactionItemsViewModel transactionItemsViewModel = context.transactionItems[^1].DataContext as TransactionItemsViewModel;
+                        TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItemViewModel;
                         string iconPath = rootPath + buyID + ".png";
                         if (File.Exists(iconPath))
                             transactionItemsViewModel.Buy.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
@@ -487,7 +480,7 @@ namespace CBHK.GeneralTool
                         if (buyBID.Length > 0)
                         {
                             string iconPath = rootPath + buyBID + ".png";
-                            TransactionItemsViewModel transactionItemsViewModel = context.transactionItems[^1].DataContext as TransactionItemsViewModel;
+                            TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItemViewModel;
                             if (File.Exists(iconPath))
                                 transactionItemsViewModel.BuyB.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
@@ -510,7 +503,7 @@ namespace CBHK.GeneralTool
                         if (sellID.Length > 0)
                         {
                             string iconPath = rootPath + sellID + ".png";
-                            TransactionItemsViewModel transactionItemsViewModel = context.transactionItems[^1].DataContext as TransactionItemsViewModel;
+                            TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItemViewModel;
                             if (File.Exists(iconPath))
                                 transactionItemsViewModel.Sell.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
@@ -528,7 +521,7 @@ namespace CBHK.GeneralTool
                     #region other
                     if (ExistItem)
                     {
-                        TransactionItemsViewModel transactionItemsViewModel = context.transactionItems[^1].DataContext as TransactionItemsViewModel;
+                        TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItemViewModel;
                         transactionItemsViewModel.Demand = int.Parse(demand.ToString());
                         transactionItemsViewModel.MaxUses = int.Parse(maxUses.ToString());
                         transactionItemsViewModel.PriceMultiplier = int.Parse(priceMultiplier.ToString());

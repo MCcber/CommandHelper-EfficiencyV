@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.ViewModel.Component.Item;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
@@ -16,7 +17,7 @@ namespace CBHK.View.Component.Item
     /// </summary>
     public partial class Common : UserControl,IVersionUpgrader
     {
-        public DataTable HideInfomationTable { get; set; }
+        private CBHKDataContext _context = null;
         public ObservableCollection<TextComboBoxItem> HideFlagsSource { get; set; } = [];
         ItemPageViewModel itemPageDataContext = null;
         private int CurrentMinVersion = 1202;
@@ -31,7 +32,7 @@ namespace CBHK.View.Component.Item
                 Dispatcher.Invoke(() =>
                 {
                     string selectedItem = (HideFlagsBox.SelectedItem as TextComboBoxItem).Text;
-                    string key = HideInfomationTable.Select("name='" + selectedItem + "'").First()["id"].ToString();
+                    string key = _context.HideInformationSet.First(item => item.Name == selectedItem).ID.ToString();
                     result = key != "0" ? "HideFlags:" + key + "," : "";
                 });
                 return result;
@@ -103,9 +104,10 @@ namespace CBHK.View.Component.Item
         }
         #endregion
 
-        public Common()
+        public Common(CBHKDataContext context)
         {
             InitializeComponent();
+            _context = context;
             ItemLore.Name = "ItemLore";
             ItemLore.IsMultiLine = true;
         }
@@ -159,7 +161,7 @@ namespace CBHK.View.Component.Item
             if (HideFlags != null)
             {
                 string selectedItem = HideFlagsBox.SelectedValue.ToString();
-                string value = HideInfomationTable.Select("id='" + selectedItem + "'").First()["name"].ToString();
+                string value = _context.HideInformationSet.First(item => item.Name == selectedItem).Name;
                 HideFlagsBox.SelectedValue = value;
                 ExternData.Remove("tag.HideFlags");
                 ExternData.Remove("HideFlags");
@@ -204,10 +206,9 @@ namespace CBHK.View.Component.Item
 
         private void UserControl_Loaded(object sender, System.Windows.RoutedEventArgs e)
         {
-            foreach (DataRow row in HideInfomationTable.Rows)
+            foreach (var item in _context.HideInformationSet)
             {
-                string name = row["name"].ToString();
-                HideFlagsSource.Add(new TextComboBoxItem() { Text = name });
+                HideFlagsSource.Add(new TextComboBoxItem() { Text = item.Name });
             }
             HideFlagsBox.ItemsSource = HideFlagsSource;
         }

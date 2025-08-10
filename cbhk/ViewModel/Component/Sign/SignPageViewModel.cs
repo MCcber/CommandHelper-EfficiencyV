@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.View;
@@ -31,6 +32,7 @@ namespace CBHK.ViewModel.Component.Sign
     public partial class SignPageViewModel : ObservableObject
     {
         #region 字段
+        private CBHKDataContext _context = null;
         public ObservableCollection<string> SignTypeSource { get; set; } = [];
 
         public string Result { get; set; } = "";
@@ -279,7 +281,7 @@ namespace CBHK.ViewModel.Component.Sign
 
         #endregion
 
-        public SignPageViewModel(IContainerProvider container)
+        public SignPageViewModel(IContainerProvider container,CBHKDataContext context)
         {
             #region 处理正反面文档
             SignPanelSource = new()
@@ -292,6 +294,8 @@ namespace CBHK.ViewModel.Component.Sign
                 SignDocuments[1].Blocks.Add(new RichParagraph() { FontFamily = new FontFamily(commonFontFamily), FontSize = 40, TextAlignment = TextAlignment.Center, Margin = new(0, 2.5, 0, 2.5) });
             }
             #endregion
+
+            _context = context;
             _container = container;
         }
 
@@ -309,34 +313,30 @@ namespace CBHK.ViewModel.Component.Sign
             //载入进程锁
             object tagItemsLock = new();
             BindingOperations.EnableCollectionSynchronization(SignTypeSource, tagItemsLock);
-            await Task.Run(async () =>
+            await Task.Run(() =>
             {
-                DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-                DataTable ItemTable = await dataCommunicator.GetData("SELECT * FROM SignTypes");
                 string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
                 List<string> typeSource = [];
-                foreach (DataRow item in ItemTable.Rows)
+                foreach (var item in _context.SignTypeSet)
                 {
-                    string id = item["id"].ToString();
-                    string version = item["version"].ToString();
-                    if (!TypeVersionMap.TryGetValue(version, out List<string> value))
-                        TypeVersionMap.Add(version, [id]);
-                    else
-                        value.Add(id);
+                    string id = item.ID;
+                    string version = item.Version;
+                    if (version is not null)
+                    {
+                        if (!TypeVersionMap.TryGetValue(version, out List<string> value))
+                            TypeVersionMap.Add(version, [id]);
+                        else
+                            value.Add(id);
+                    }
                     typeSource.Add(id);
                 }
                 typeSource.Sort();
                 foreach (var item in typeSource)
+                {
                     TypeSource.Add(new TextComboBoxItem() { Text = item });
+                }
             });
             #endregion
-        }
-
-        public void SignID_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            FrameworkElement frameworkElement = sender as FrameworkElement;
-            RichTabItems richTabItems = frameworkElement.FindParent<RichTabItems>();
-            richTabItems.Header = SelectedSignType.Text;
         }
 
         public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)

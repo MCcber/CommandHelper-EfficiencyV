@@ -1,4 +1,5 @@
-﻿using CBHK.GeneralTool;
+﻿using CBHK.Domain;
+using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.Model.Common;
 using CBHK.View.Component.Recipe;
@@ -26,6 +27,9 @@ namespace CBHK.ViewModel.Component.Recipe
     public partial class CraftingTableViewModel : ObservableObject
     {
         #region 字段与引用
+        private DataService _dataService = null;
+        private Dictionary<string, string> ItemIDAndNameMap;
+        private CBHKDataContext _context = null;
         BitmapImage emptyImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Recipe\Image\Empty.png"));
         SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#484848"));
@@ -213,11 +217,12 @@ namespace CBHK.ViewModel.Component.Recipe
         #endregion
         #endregion
 
-        DataTable ItemTable = null;
-
-        public CraftingTableViewModel()
+        public CraftingTableViewModel(CBHKDataContext context,DataService dataService)
         {
             #region 初始化数据
+            _context = context;
+            _dataService = dataService;
+            ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
             for (int i = 0; i < 9; i++)
             {
                 MaterialMap.Add(i, []);
@@ -249,9 +254,6 @@ namespace CBHK.ViewModel.Component.Recipe
             CraftingTableView craftingTable = MultiMaterialGrid.FindParent<CraftingTableView>();
             MultiMaterialSource = craftingTable.Resources["MultiModeItemViewSource"] as CollectionViewSource;
             MultiMaterialSource.Filter += MultiMaterialSource_Filter;
-
-            RecipeViewModel context = Window.GetWindow(MultiMaterialGrid).DataContext as RecipeViewModel;
-            ItemTable = context.ItemTable;
         }
 
         /// <summary>
@@ -311,7 +313,7 @@ namespace CBHK.ViewModel.Component.Recipe
                                     {
                                         string itemID = item.ToString().Replace("minecraft:", "");
                                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                                        string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                                        string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                                         MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                                         (MaterialGrid.Children[i] as Image).Source = new BitmapImage(iconUri);
                                     }
@@ -330,7 +332,7 @@ namespace CBHK.ViewModel.Component.Recipe
                                         {
                                             string itemID = item.ToString().Replace("minecraft:", "");
                                             Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                                            string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                                            string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                                             MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                                         }
                                         if (itemObj["tag"] is JToken tag)
@@ -364,7 +366,7 @@ namespace CBHK.ViewModel.Component.Recipe
                                     {
                                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
-                                        string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                                        string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                                         MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                                         if (itemTagObj != null)
                                             MaterialTag[i].Add(itemTagObj.ToString());
@@ -383,7 +385,7 @@ namespace CBHK.ViewModel.Component.Recipe
                                 {
                                     string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                                     Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
-                                    string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                                    string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                                     MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                                     (MaterialGrid.Children[i] as Image).Source = new BitmapImage(iconUri);
                                     if (itemTagObj != null)
@@ -425,7 +427,7 @@ namespace CBHK.ViewModel.Component.Recipe
                 string iconPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png";
                 if (File.Exists(iconPath))
                     iconUri = new(iconPath);
-                string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                 ResultItem.Source = new BitmapImage(iconUri);
                 ResultItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
                 if (itemCountObj != null)

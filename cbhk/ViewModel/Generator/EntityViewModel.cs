@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.View;
@@ -113,12 +114,9 @@ namespace CBHK.ViewModel.Generator
             }
         }
 
-        public DataTable MobEffectTable = null;
-        public DataTable BlockTable = null;
-        public DataTable BlockStateTable = null;
-        public DataTable MobAttributeTable = null;
-        public DataTable EntityIdTable = null;
+
         private IContainerProvider _container;
+        private CBHKDataContext _context = null;
         #endregion
 
         public EntityViewModel(IContainerProvider container,MainView mainView)
@@ -134,17 +132,6 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public async void Entity_Loaded(object sender,RoutedEventArgs e)
         {
-            #region 初始化数据表
-            DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-            await Task.Run(async () =>
-            {
-                BlockTable = await dataCommunicator.GetData("SELECT * FROM Blocks");
-                BlockStateTable = await dataCommunicator.GetData("SELECT * FROM BlockStates");
-                MobEffectTable = await dataCommunicator.GetData("SELECT * FROM MobEffects");
-                MobAttributeTable = await dataCommunicator.GetData("SELECT * FROM MobAttributes");
-                EntityIdTable = await dataCommunicator.GetData("SELECT * FROM Entities");
-            });
-            #endregion
             #region 载入实体预设数据
             await Task.Run(() =>
             {

@@ -1,10 +1,13 @@
 ﻿using CBHK.CustomControl;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.View.Component.Datapack.TemplateSelectPage;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Generator;
+using CBHKShared.ContextModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -47,6 +50,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// 数据库文件路径
         /// </summary>
         private string databaseFilePath = AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db";
+        private CBHKDataContext _context = null;
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
         private SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#3D3D3D"));
@@ -216,11 +220,10 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                     #region 载入版本
                     if (File.Exists(databaseFilePath))
                     {
-                        DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-                        DataTable versionTable = await dataCommunicator.GetData("SELECT * FROM DatapackVersions");
-                        for (int i = versionTable.Rows.Count - 1; i >= 0 ; i--)
+                        DbSet<DatapackVersion> versionList = _context.DatapackVersionSet;
+                        foreach (var item in versionList)
                         {
-                            VersionList.Add(new TextComboBoxItem() { Text = versionTable.Rows[i]["value"].ToString() });
+                            VersionList.Add(new TextComboBoxItem() { Text = item.Value });
                         }
                     }
                     #endregion

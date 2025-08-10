@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.ViewModel.Component.Entity;
 using CBHK.ViewModel.Generator;
@@ -18,7 +19,7 @@ namespace CBHK.View.Component.Entity
     public partial class Attributes : UserControl
     {
         #region 字段
-        DataTable MobAttributeTable = null;
+        private CBHKDataContext _context = null;
         ObservableCollection<TextComboBoxItem> AttributeNames { get; set; } = [];
         public ObservableCollection<AttributeModifiers> AttributeModifiersSource { get; set; } = [];
         #endregion
@@ -32,15 +33,16 @@ namespace CBHK.View.Component.Entity
                 string SelectedName = (AttributeName.SelectedItem as TextComboBoxItem).Text.ToString();
                 if(SelectedName.Length > 0)
                 {
-                    result = "{Base: " + Base.Value + "d" + (AttributeModifiersSource.Count > 0 ? ",Modifiers:[" + string.Join(',', AttributeModifiersSource.Select(item => (item as IVersionUpgrader).Result().Result)) + "]" : "") + ",Name:\"" + SelectedName[(SelectedName.IndexOf(':') + 1)..SelectedName.LastIndexOf(':')] + "\"}";
+                    result = "{Base: " + Base.Value + "d" + (AttributeModifiersSource.Count > 0 ? ",Modifiers:[" + string.Join(',', AttributeModifiersSource.Select(item => (item as IVersionUpgrader).Result().Result)) + "]" : "") + ",Name:\"" + SelectedName[..SelectedName.IndexOf(':')] + "\"}";
                 }
                 return result;
             }
         }
         #endregion
 
-        public Attributes()
+        public Attributes(CBHKDataContext context)
         {
+            _context = context;
             InitializeComponent();
         }
 
@@ -52,13 +54,10 @@ namespace CBHK.View.Component.Entity
         private void AttributeName_Loaded(object sender, RoutedEventArgs e)
         {
             EntityViewModel context = Window.GetWindow(this).DataContext as EntityViewModel;
-            MobAttributeTable = context.MobAttributeTable;
             ComboBox comboBox = sender as ComboBox;
-            foreach (DataRow row in MobAttributeTable.Rows)
+            foreach (var item in _context.MobAttributeSet)
             {
-                string id = row["id"].ToString();
-                string name = row["name"].ToString();
-                AttributeNames.Add(new TextComboBoxItem() { Text = id + ":" + name });
+                AttributeNames.Add(new TextComboBoxItem() { Text = item.ID + ":" + item.Name });
             }
             comboBox.ItemsSource = AttributeNames;
         }
@@ -70,7 +69,8 @@ namespace CBHK.View.Component.Entity
         /// <param name="e"></param>
         private void AttributeName_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string[] range = MobAttributeTable.Rows[AttributeName.SelectedIndex]["DataRange"].ToString().Split('-');
+            string currentID = (AttributeName.SelectedItem as TextComboBoxItem).Text.Split(':')[0];
+            string[] range = _context.MobAttributeSet.First(item => item.ID == currentID).DataRange.Split('-');
             Base.Minimum = double.Parse(range[0].ToString());
             Base.Maximum = double.Parse(range[1].ToString());
         }

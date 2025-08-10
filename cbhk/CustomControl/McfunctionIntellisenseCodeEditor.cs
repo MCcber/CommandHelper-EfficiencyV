@@ -1,4 +1,5 @@
-﻿using CBHK.View.Component.Datapack.EditPage;
+﻿using CBHK.Common.Model;
+using CBHK.View.Component.Datapack.EditPage;
 using CBHK.ViewModel.Component.Datapack.EditPage;
 using CBHK.ViewModel.Generator;
 using ICSharpCode.AvalonEdit;
@@ -7,6 +8,7 @@ using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using SharpNBT;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -477,7 +479,7 @@ namespace CBHK.CustomControl
             {
                 dataContext.IsCompleteSelectorParameters = false;
                 string inlineContext = dataContext.SelectorInlineContext;
-                if (editPageDataContext.SelectorParameterValues.TryGetValue(inlineContext, out string value))
+                if (editPageDataContext.SelectorParameterValueList.TryGetValue(inlineContext, out string value))
                 {
                     string[] values = value.Split('|');
                     CompletedSource.Clear();
@@ -706,7 +708,7 @@ namespace CBHK.CustomControl
                             }
                             break;
                         case "EntityId":
-                            foreach (string item in editPageDataContext.EntityIds)
+                            foreach (string item in editPageDataContext.EntityIDList)
                             {
                                 CompletedItemData completedItemData = new()
                                 {
@@ -760,7 +762,7 @@ namespace CBHK.CustomControl
             {
                 dataContext.IsCompleteSelectorParameterValues = false;
                 CompletedSource.Clear();
-                foreach (string item in editPageDataContext.SelectorParameters)
+                foreach (string item in editPageDataContext.SelectorParameterList)
                 {
                     CompletedItemData completedItemData = new()
                     {
@@ -887,7 +889,7 @@ namespace CBHK.CustomControl
                                         AddCommandRadicalAndCodeSnippet();
                                         break;
                                     case "particleId":
-                                        foreach (string particleId in editPageDataContext.ParticleIds)
+                                        foreach (string particleId in editPageDataContext.ParticleIDList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -902,7 +904,7 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "effectID":
-                                        foreach (string effect in editPageDataContext.Effects)
+                                        foreach (string effect in editPageDataContext.EffectIDList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -917,7 +919,7 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "lootTool":
-                                        foreach (string lootTool in editPageDataContext.LootTools)
+                                        foreach (string lootTool in editPageDataContext.LootToolList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -932,7 +934,7 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "itemSlot":
-                                        foreach (string itemSlot in editPageDataContext.ItemSlots)
+                                        foreach (string itemSlot in editPageDataContext.ItemSlotList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -947,22 +949,25 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "enchantID":
-                                        foreach (string enchantment in editPageDataContext.Enchantments)
                                         {
-                                            CompletedItemData completedItemData = new()
+                                            List<string> enchantIDList = [.. editPageDataContext.EnchantmentIDAndNameGroupByVersionMap.SelectMany(item => item.Value).Select(item => item.Key)];
+                                            foreach (var enchantment in enchantIDList)
                                             {
-                                                Text = enchantment,
-                                                Content = enchantment,
-                                                Image = ReferenceIcon,
-                                                Description = targetItem.Description
-                                            };
+                                                CompletedItemData completedItemData = new()
+                                                {
+                                                    Text = enchantment,
+                                                    Content = enchantment,
+                                                    Image = ReferenceIcon,
+                                                    Description = targetItem.Description
+                                                };
 
 
-                                            Application.Current.Dispatcher.Invoke(() => { CompletedSource.Add(completedItemData); });
+                                                Application.Current.Dispatcher.Invoke(() => { CompletedSource.Add(completedItemData); });
+                                            }
                                         }
                                         break;
                                     case "damageType":
-                                        foreach (string DamageType in editPageDataContext.DamageTypes)
+                                        foreach (string DamageType in editPageDataContext.DamageTypeList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -977,7 +982,7 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "bossbarColor":
-                                        foreach (string bossbarColor in editPageDataContext.BossbarColors)
+                                        foreach (string bossbarColor in editPageDataContext.BossbarColorList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -1006,8 +1011,8 @@ namespace CBHK.CustomControl
                                             Application.Current.Dispatcher.Invoke(() => { CompletedSource.Add(completedItemData); });
                                         }
                                         break;
-                                    case "TeamColors":
-                                        foreach (string teamColor in editPageDataContext.TeamColors)
+                                    case "TeamColorList":
+                                        foreach (string teamColor in editPageDataContext.TeamColorList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -1054,7 +1059,7 @@ namespace CBHK.CustomControl
                                         break;
 
                                     case "itemId":
-                                        foreach (string itemId in editPageDataContext.ItemIds)
+                                        foreach (string itemId in editPageDataContext.ItemIDList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -1068,7 +1073,7 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "blockId":
-                                        foreach (string blockId in editPageDataContext.BlockIds)
+                                        foreach (string blockId in editPageDataContext.BlockIDList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -1082,7 +1087,7 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "entityId":
-                                        foreach (string entity in editPageDataContext.EntityIds)
+                                        foreach (string entity in editPageDataContext.EntityIDList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -1096,7 +1101,8 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "soundId":
-                                        foreach (string sound in editPageDataContext.SoundFilePath)
+                                        List<string> soundIDList = [..editPageDataContext.SoundIDAndNameMap.Select(item=>item.Value)];
+                                        foreach (var sound in soundIDList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -1126,7 +1132,7 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "mobAttribute":
-                                        foreach (string mobAttribute in editPageDataContext.mobAttributes)
+                                        foreach (string mobAttribute in editPageDataContext.MobAttributeIDList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -1144,28 +1150,28 @@ namespace CBHK.CustomControl
                                         int lastDotIndex = ignoreNameSpace.LastIndexOf('.');
                                         if (lastDotIndex != -1)
                                             ignoreNameSpace = ignoreNameSpace[..lastDotIndex];
-                                        for (int i = 0; i < editPageDataContext.ScoreboardTypes.Count; i++)
+                                        for (int i = 0; i < editPageDataContext.ScoreboardTypeList.Count; i++)
                                         {
-                                            string type = editPageDataContext.ScoreboardTypes[i].Replace("minecraft", "").Replace(".", "").Replace(":", "");
+                                            string type = editPageDataContext.ScoreboardTypeList[i].Replace("minecraft", "").Replace(".", "").Replace(":", "");
                                             int bracketIndex = type.IndexOf('{');
                                             string inlineType = Regex.Match(type, @"(?<={)[a-zA-Z]+(?=})").ToString();
                                             if (bracketIndex != -1)
                                                 type = type[..bracketIndex];
                                             if (type.StartsWith(ignoreNameSpace) && type.Length > ignoreNameSpace.Length)
                                             {
-                                                int startIndex = editPageDataContext.ScoreboardTypes[i].IndexOf('.') + 1;
-                                                int endIndex = editPageDataContext.ScoreboardTypes[i].LastIndexOf(':');
-                                                if (editPageDataContext.ScoreboardTypes[i].Contains('{') && endIndex == -1)
+                                                int startIndex = editPageDataContext.ScoreboardTypeList[i].IndexOf('.') + 1;
+                                                int endIndex = editPageDataContext.ScoreboardTypeList[i].LastIndexOf(':');
+                                                if (editPageDataContext.ScoreboardTypeList[i].Contains('{') && endIndex == -1)
                                                 {
                                                     startIndex = 0;
-                                                    endIndex = editPageDataContext.ScoreboardTypes[i].LastIndexOf('{') - 1;
+                                                    endIndex = editPageDataContext.ScoreboardTypeList[i].LastIndexOf('{') - 1;
                                                 }
                                                 if (endIndex <= 0)
-                                                    endIndex = editPageDataContext.ScoreboardTypes[i].Length;
+                                                    endIndex = editPageDataContext.ScoreboardTypeList[i].Length;
                                                 CompletedItemData completedItemData = new()
                                                 {
-                                                    Content = editPageDataContext.ScoreboardTypes[i][startIndex..endIndex],
-                                                    Text = editPageDataContext.ScoreboardTypes[i][startIndex..endIndex],
+                                                    Content = editPageDataContext.ScoreboardTypeList[i][startIndex..endIndex],
+                                                    Text = editPageDataContext.ScoreboardTypeList[i][startIndex..endIndex],
                                                     Image = ReferenceIcon,
                                                 };
                                                 Application.Current.Dispatcher.Invoke(() => { CompletedSource.Add(completedItemData); });
@@ -1176,7 +1182,7 @@ namespace CBHK.CustomControl
                                                 switch (inlineType)
                                                 {
                                                     case "teamColor":
-                                                        foreach (string TeamColor in editPageDataContext.TeamColors)
+                                                        foreach (string TeamColor in editPageDataContext.TeamColorList)
                                                         {
                                                             if (dataContext.TypingContent.TrimEnd('.').EndsWith(TeamColor))
                                                             {
@@ -1199,7 +1205,7 @@ namespace CBHK.CustomControl
                                                         }
                                                         break;
                                                     case "itemId":
-                                                        foreach (string ItemId in editPageDataContext.ItemIds)
+                                                        foreach (string ItemId in editPageDataContext.ItemIDList)
                                                         {
                                                             if (dataContext.TypingContent.TrimEnd('.').EndsWith(ItemId))
                                                             {
@@ -1222,7 +1228,7 @@ namespace CBHK.CustomControl
                                                         }
                                                         break;
                                                     case "entityId":
-                                                        foreach (string EntityId in editPageDataContext.EntityIds)
+                                                        foreach (string EntityId in editPageDataContext.EntityIDList)
                                                         {
                                                             if (dataContext.TypingContent.TrimEnd('.').EndsWith(EntityId))
                                                             {
@@ -1246,7 +1252,7 @@ namespace CBHK.CustomControl
                                                         }
                                                         break;
                                                     case "customId":
-                                                        foreach (string ScoreboardCustomId in editPageDataContext.ScoreboardCustomIds)
+                                                        foreach (string ScoreboardCustomId in editPageDataContext.ScoreboardCustomIDList)
                                                         {
                                                             if (dataContext.TypingContent.TrimEnd('.').EndsWith(ScoreboardCustomId))
                                                             {
@@ -1286,7 +1292,7 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "dimensionId":
-                                        foreach (string dimension in editPageDataContext.dimensionIds)
+                                        foreach (string dimension in editPageDataContext.DimensionIDList)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -1299,7 +1305,7 @@ namespace CBHK.CustomControl
                                         }
                                         break;
                                     case "gameruleName":
-                                        foreach (var gamerule in editPageDataContext.gamerules)
+                                        foreach (var gamerule in editPageDataContext.GameRuleMap)
                                         {
                                             CompletedItemData completedItemData = new()
                                             {
@@ -1491,9 +1497,9 @@ namespace CBHK.CustomControl
                                         break;
                                     case "gameruleValue":
                                         {
-                                            GameruleItem.DataType dataType = GameruleItem.DataType.Bool;
-                                            GameruleItem currentGameRule = new();
-                                            foreach (var gamerule in editPageDataContext.gamerules)
+                                            GameRuleItem.DataType dataType = GameRuleItem.DataType.Bool;
+                                            GameRuleItem currentGameRule = new();
+                                            foreach (var gamerule in editPageDataContext.GameRuleMap)
                                             {
                                                 if (gamerule.Key == dataContext.CurrentGameRuleName)
                                                 {
@@ -1502,7 +1508,7 @@ namespace CBHK.CustomControl
                                                     break;
                                                 }
                                             }
-                                            if (dataType == GameruleItem.DataType.Int)
+                                            if (dataType == GameRuleItem.DataType.Int)
                                             {
                                                 CompletedItemData completedItemData = new()
                                                 {

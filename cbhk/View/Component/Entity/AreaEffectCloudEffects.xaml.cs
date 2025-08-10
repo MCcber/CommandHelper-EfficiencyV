@@ -1,6 +1,7 @@
 ﻿using CBHK.ControlDataContext;
 using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.ViewModel.Generator;
 using System;
@@ -32,7 +33,7 @@ namespace CBHK.View.Component.Entity
         }
         #endregion
 
-        DataTable MobEffectTable = new();
+        private CBHKDataContext _context = null;
 
         #region 合并数据
         int currentVersion = 0;
@@ -105,9 +106,10 @@ namespace CBHK.View.Component.Entity
         }
         #endregion
 
-        public AreaEffectCloudEffects()
+        public AreaEffectCloudEffects(CBHKDataContext context)
         {
             InitializeComponent();
+            _context = context;
             DataContext = this;
         }
 
@@ -131,10 +133,9 @@ namespace CBHK.View.Component.Entity
             ComboBox comboBox = sender as ComboBox;
             ObservableCollection<IconComboBoxItem> source = [];
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            foreach (DataRow item in MobEffectTable.Rows)
+            foreach (var item in _context.MobEffectSet)
             {
-                string id = item["id"].ToString();
-                string name = item["name"].ToString();
+                id = item.ID;
                 string imagePath = "";
                 if (File.Exists(currentPath + id + ".png"))
                     imagePath = currentPath + id + ".png";
@@ -142,7 +143,7 @@ namespace CBHK.View.Component.Entity
                 {
                     ComboBoxItemIcon = new BitmapImage(new Uri(imagePath, UriKind.Absolute)),
                     ComboBoxItemId = id,
-                    ComboBoxItemText = name
+                    ComboBoxItemText = item.Name
                 });
             }
             comboBox.ItemsSource = source;
@@ -154,9 +155,6 @@ namespace CBHK.View.Component.Entity
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
             EffectAccordion.Fresh = new CommunityToolkit.Mvvm.Input.RelayCommand<FrameworkElement>(CloseEffectCommand);
-            ObservableCollection<IconComboBoxItem> source = [];
-            EntityViewModel context = Window.GetWindow(this).DataContext as EntityViewModel;
-            MobEffectTable = context.MobEffectTable;
         }
 
         public async Task Upgrade(int version)
@@ -167,7 +165,8 @@ namespace CBHK.View.Component.Entity
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    string number = MobEffectTable.Select("id='" + (ID.SelectedItem as IconComboBoxItem).ComboBoxItemId + "'")?.First()["number"].ToString();
+                    string currentID = (ID.SelectedItem as IconComboBoxItem).ComboBoxItemId;
+                    string number = _context.MobEffectSet.First(item => item.ID == currentID).Number.ToString();
                     if (number is not null)
                         id = number;
                 });

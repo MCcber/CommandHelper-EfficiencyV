@@ -23,12 +23,13 @@ using Prism.Ioc;
 using CBHK.ViewModel.Component.Villager;
 using CBHK.Model.Common;
 using CBHK.View.Component.Villager;
+using CBHK.Domain;
 
 namespace CBHK.ViewModel.Generator
 {
     public partial class VillagerViewModel:ObservableObject
     {
-        public DataTable ItemTable = null;
+        private CBHKDataContext _context = null;
 
         #region 处理拖拽
         public static bool IsGrabingItem = false;
@@ -82,7 +83,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 左侧交易项数据源
         /// </summary>
-        public ObservableCollection<TransactionItemView> transactionItems { get; set; } = [];
+        public ObservableCollection<TransactionItemView> TransactionItemList { get; set; } = [];
         /// <summary>
         /// 言论数据源
         /// </summary>
@@ -226,9 +227,9 @@ namespace CBHK.ViewModel.Generator
                 IsEditGossips = CanEditGossips ? Visibility.Visible:Visibility.Collapsed;
                 //恢复所有交易项的价格
                 if (!CanEditGossips)
-                    transactionItems.All(item => { (item.DataContext as TransactionItemsViewModel).HideDiscountData();return true; });
+                    TransactionItemList.All(item => { (item.DataContext as TransactionItemViewModel).HideDiscountData();return true; });
                 else
-                    transactionItems.All(item => { (item.DataContext as TransactionItemsViewModel).HideDiscountData(false); return true; });
+                    TransactionItemList.All(item => { (item.DataContext as TransactionItemViewModel).HideDiscountData(false); return true; });
                 OnlyEditItem = !CanEditBrain && !CanEditGossips ? Visibility.Collapsed : Visibility.Visible;
             }
         }
@@ -301,9 +302,9 @@ namespace CBHK.ViewModel.Generator
         {
             get
             {
-                if (transactionItems.Count == 0) return "";
+                if (TransactionItemList.Count == 0) return "";
                 string result = "Offers:{Recipes:[";
-                string transactionItemData = string.Join("", transactionItems.Select(item => (item.DataContext as TransactionItemsViewModel).TransactionItemData + ","));
+                string transactionItemData = string.Join("", TransactionItemList.Select(item => (item.DataContext as TransactionItemViewModel).TransactionItemData + ","));
                 result += transactionItemData.TrimEnd(',') + "]},";
                 return result;
             }
@@ -673,8 +674,9 @@ namespace CBHK.ViewModel.Generator
 
         #endregion
 
-        public VillagerViewModel(IContainerProvider container,MainView mainView)
+        public VillagerViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context)
         {
+            _context = context;
             _container = container;
             home = mainView;
 
@@ -732,23 +734,20 @@ namespace CBHK.ViewModel.Generator
             #region 初始化物品库
             BindingOperations.EnableCollectionSynchronization(OriginalItemList, new object());
             BindingOperations.EnableCollectionSynchronization(CustomItemList, new object());
-            Task.Run(async () =>
+            Task.Run(() =>
             {
-                DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-                ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
-
-
                 #region 异步载入原版物品序列
                 //加载物品集合
                 string uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
                 string urlPath = "";
-                foreach (DataRow row in ItemTable.Rows)
+                foreach (var item in _context.ItemSet)
                 {
-                    urlPath = uriDirectoryPath + row["id"].ToString() + ".png";
+                    urlPath = uriDirectoryPath + item.ID + ".png";
                     if (File.Exists(urlPath))
-                        OriginalItemList.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, row["id"].ToString() + ":" + row["name"].ToString(), "{id:\"minecraft:" + row["id"].ToString() + "\",Count:1b}"));
+                        OriginalItemList.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, item.ID + ":" + item.Name, "{id:\"minecraft:" + item.ID + "\",Count:1b}"));
                 }
                 #endregion
+
                 #region 异步载入自定义物品序列
                 //加载物品集合
                 uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Item\";
@@ -768,7 +767,7 @@ namespace CBHK.ViewModel.Generator
                             }
                             string itemID = id.ToString().Replace("\"", "").Replace("minecraft:", "");
                             urlPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
-                            string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                            string itemName = _context.ItemSet.First(item=>item.ID == itemID).Name;
                             if (File.Exists(urlPath))
                                 CustomItemList.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, itemID + ":" + itemName, nbt));
                         }
@@ -832,7 +831,7 @@ namespace CBHK.ViewModel.Generator
         public void CloseTransactionDataGrid()
         {
             TransactionDataGridVisibility = Visibility.Collapsed;
-            TransactionItemsViewModel transactionItemsViewModel = CurrentItem.DataContext as TransactionItemsViewModel;
+            TransactionItemViewModel transactionItemsViewModel = CurrentItem.DataContext as TransactionItemViewModel;
             //更新当前交易项的数量显示
             transactionItemsViewModel.BuyCountDisplayText = "x" + BuyCount.ToString();
             transactionItemsViewModel.BuyBCountDisplayText = "x" + BuyBCount.ToString();
@@ -994,7 +993,7 @@ namespace CBHK.ViewModel.Generator
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch
             };
-            transactionItems.Add(transaction);
+            TransactionItemList.Add(transaction);
         }
 
         [RelayCommand]
@@ -1003,7 +1002,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ClearTransactionItem()
         {
-            transactionItems.Clear();
+            TransactionItemList.Clear();
         }
 
         [RelayCommand]

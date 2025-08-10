@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.Model.Generator.Tag;
@@ -23,7 +24,7 @@ using System.Windows.Media;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class TagViewModel(IContainerProvider container, MainView mainView) : ObservableObject
+    public partial class TagViewModel(IContainerProvider container,CBHKDataContext context, MainView mainView) : ObservableObject
     {
         #region 替换
         [ObservableProperty]
@@ -60,6 +61,7 @@ namespace CBHK.ViewModel.Generator
         ListView TagZone = null;
         SolidColorBrush LightOrangeBrush = new((Color)ColorConverter.ConvertFromString("#F0D08C"));
         private IContainerProvider _container = container;
+        private CBHKDataContext _context = context;
         #endregion
 
         #region 当前选中的值成员
@@ -284,7 +286,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void TagView_Loaded(object sender, RoutedEventArgs e)
+        public async void TagView_Loaded(object sender, RoutedEventArgs e)
         {
             #region 加载过滤类型
             if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\Data\TypeFilter.ini"))
@@ -297,110 +299,95 @@ namespace CBHK.ViewModel.Generator
             }
             #endregion
             #region 异步载入标签成员
-            Task.Run(async () =>
+            await Task.Run(async () =>
             {
-                DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
                 string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
                 #region 实体
-                DataTable EntityTable = await dataCommunicator.GetData("SELECT * FROM Entities");
-                foreach (DataRow item in EntityTable.Rows)
+                foreach (var item in _context.EntitySet)
                 {
-                    string id = item["id"].ToString();
-                    string name = Regex.Unescape(item["name"].ToString());
                     Uri uri = null;
-                    if (File.Exists(currentPath + id + ".png"))
-                        uri = new(currentPath + id + ".png", UriKind.Absolute);
+                    if (File.Exists(currentPath + item.ID + ".png"))
+                        uri = new(currentPath + item.ID + ".png", UriKind.Absolute);
                     else
-                    if (File.Exists(currentPath + id + "_spawn_egg.png"))
-                        uri = new(currentPath + id + "_spawn_egg.png", UriKind.Absolute);
+                    if (File.Exists(currentPath + item.ID + "_spawn_egg.png"))
+                        uri = new(currentPath + item.ID + "_spawn_egg.png", UriKind.Absolute);
                     TagItems.Add(new TagItemTemplate()
                     {
                         Icon = uri,
-                        DisplayId = id,
-                        DisplayName = name,
+                        DisplayId = item.ID,
+                        DisplayName = item.Name,
                         DataType = "EntityView",
                         BeChecked = false
                     });
                 }
                 #endregion
                 #region 生物群系
-                DataTable BiomeIdTable = await dataCommunicator.GetData("SELECT * FROM BiomeIds");
-                foreach (DataRow item in BiomeIdTable.Rows)
+                foreach (var item in _context.BiomeIDSet)
                 {
-                    string id = item["id"].ToString();
                     TagItems.Add(new TagItemTemplate()
                     {
-                        DisplayId = id,
+                        DisplayId = item.ID,
                         DataType = "Biome",
                         BeChecked = false
                     });
                 }
                 #endregion
                 #region 游戏事件
-                DataTable GameEventTagsTable = await dataCommunicator.GetData("SELECT * FROM GameEventTags");
-                foreach (DataRow item in GameEventTagsTable.Rows)
+                foreach (var item in _context.GameEventTagSet)
                 {
-                    string id = item["value"].ToString();
                     TagItems.Add(new TagItemTemplate()
                     {
-                        DisplayId = id,
+                        DisplayId = item.Value,
                         DataType = "GameEvent",
                         BeChecked = false
                     });
                 }
                 #endregion
             });
-            Task.Run(async () =>
+            Task.Run(() =>
             {
-                DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
                 #region 物品
-                DataTable ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
                 string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
                 Dictionary<string, TagItemTemplate> ItemData = [];
-                foreach (DataRow item in ItemTable.Rows)
+                foreach (var item in _context.ItemSet)
                 {
-                    string id = item["id"].ToString();
-                    string name = Regex.Unescape(item["name"].ToString());
                     Uri uri = null;
-                    if (File.Exists(currentPath + id + ".png"))
-                        uri = new(currentPath + id + ".png", UriKind.Absolute);
+                    if (File.Exists(currentPath + item.ID + ".png"))
+                        uri = new(currentPath + item.ID + ".png", UriKind.Absolute);
                     else
-                    if (File.Exists(currentPath + id + "_spawn_egg.png"))
-                        uri = new(currentPath + id + "_spawn_egg.png", UriKind.Absolute);
+                    if (File.Exists(currentPath + item.ID + "_spawn_egg.png"))
+                        uri = new(currentPath + item.ID + "_spawn_egg.png", UriKind.Absolute);
                     TagItemTemplate tagItemTemplate = new()
                     {
                         Icon = uri,
-                        DisplayId = id,
-                        DisplayName = name,
+                        DisplayId = item.ID,
+                        DisplayName = item.Name,
                         DataType = "ItemView",
                         BeChecked = false
                     };
-                    ItemData.Add(id, tagItemTemplate);
-                    TagItems.Add(tagItemTemplate);
+                    ItemData.Add(item.ID, tagItemTemplate);
+                    //TagItems.Add(tagItemTemplate);
                 }
                 #endregion
                 #region 方块
-                DataTable BlockTable = await dataCommunicator.GetData("SELECT * FROM Blocks");
-                foreach (DataRow item in BlockTable.Rows)
+                foreach (var item in _context.BlockSet)
                 {
-                    string id = item["id"].ToString();
-                    string name = Regex.Unescape(item["name"].ToString());
-                    if (!ItemData.TryGetValue(id, out TagItemTemplate value))
+                    if (!ItemData.TryGetValue(item.ID, out TagItemTemplate value))
                     {
                         Uri uri = null;
-                        if (File.Exists(currentPath + id + ".png"))
-                            uri = new(currentPath + id + ".png", UriKind.Absolute);
+                        if (File.Exists(currentPath + item.ID + ".png"))
+                            uri = new(currentPath + item.ID + ".png", UriKind.Absolute);
                         else
-                        if (File.Exists(currentPath + id + "_spawn_egg.png"))
-                            uri = new(currentPath + id + "_spawn_egg.png", UriKind.Absolute);
-                        TagItems.Add(new TagItemTemplate()
-                        {
-                            Icon = uri,
-                            DisplayId = id,
-                            DisplayName = name,
-                            DataType = "Block&ItemView",
-                            BeChecked = false
-                        });
+                        if (File.Exists(currentPath + item.ID + "_spawn_egg.png"))
+                            uri = new(currentPath + item.ID + "_spawn_egg.png", UriKind.Absolute);
+                        //TagItems.Add(new TagItemTemplate()
+                        //{
+                        //    Icon = uri,
+                        //    DisplayId = item.ID,
+                        //    DisplayName = item.Name,
+                        //    DataType = "Block&ItemView",
+                        //    BeChecked = false
+                        //});
                     }
                     else
                         value.DataType = "Block&ItemView";

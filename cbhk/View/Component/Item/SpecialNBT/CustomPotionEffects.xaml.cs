@@ -1,6 +1,6 @@
-﻿using CBHK.ControlDataContext;
-using CBHK.CustomControl;
+﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.ViewModel.Component.Item;
 using CBHK.ViewModel.Generator;
@@ -21,7 +21,7 @@ namespace CBHK.View.Component.Item.SpecialNBT
     /// </summary>
     public partial class CustomPotionEffects : UserControl,IVersionUpgrader
     {
-        DataTable EffectTable = null;
+        private CBHKDataContext _context = null;
 
         #region 浮点数取值范围
         public float FloatMinValue
@@ -105,10 +105,11 @@ namespace CBHK.View.Component.Item.SpecialNBT
         }
         #endregion
 
-        public CustomPotionEffects()
+        public CustomPotionEffects(CBHKDataContext context)
         {
             InitializeComponent();
             EffectAccordion.Fresh = new CommunityToolkit.Mvvm.Input.RelayCommand<FrameworkElement>(CloseEffectCommand);
+            _context = context;
         }
 
         /// <summary>
@@ -134,17 +135,15 @@ namespace CBHK.View.Component.Item.SpecialNBT
             ComboBox comboBox = sender as ComboBox;
             ObservableCollection<IconComboBoxItem> source = [];
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            EffectTable = (Window.GetWindow(this).DataContext as ItemViewModel).EffectTable;
-            foreach (DataRow row in EffectTable.Rows)
+            foreach (var item in _context.MobEffectSet)
             {
-                string id = row["id"].ToString();
-                string name = row["name"].ToString();
-                string imagePath = currentPath + id + ".png";
+
+                string imagePath = currentPath + item.ID + ".png";
                 source.Add(new IconComboBoxItem()
                 {
                     ComboBoxItemIcon = new BitmapImage(new Uri(imagePath,UriKind.Absolute)),
-                    ComboBoxItemId = id,
-                    ComboBoxItemText = name
+                    ComboBoxItemId = item.ID,
+                    ComboBoxItemText = item.Name
                 });
             }
             comboBox.ItemsSource = source;
@@ -161,8 +160,9 @@ namespace CBHK.View.Component.Item.SpecialNBT
             if (version < 116)
                 Application.Current.Dispatcher.Invoke(() =>
                 {
+                    string currentID = (ID.SelectedItem as IconComboBoxItem).ComboBoxItemId;
                     if (ID.SelectedItem is not null)
-                        id = EffectTable.Select("id='" + (ID.SelectedItem as IconComboBoxItem).ComboBoxItemId + "'").First()["number"].ToString();
+                        id = _context.MobEffectSet.First(item => item.ID == currentID).Number.ToString();
                 });
             else
                 id = "\"minecraft:" + id + "\"";

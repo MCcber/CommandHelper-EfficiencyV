@@ -1,8 +1,9 @@
-﻿using CBHK.ControlDataContext;
-using CBHK.CustomControl;
+﻿using CBHK.CustomControl;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.ViewModel.Generator;
 using Newtonsoft.Json.Linq;
+using SQLitePCL;
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
@@ -25,9 +26,8 @@ namespace CBHK.View.Component.Item.SpecialNBT
         #endregion
 
         #region 字段
-        DataTable BlockTable = null;
-        DataTable BlockStateTable = null;
         private static JObject BlocksPropertyObject = null;
+        private CBHKDataContext _context = null;
         #endregion
 
         #region 合并数据
@@ -53,8 +53,9 @@ namespace CBHK.View.Component.Item.SpecialNBT
         }
         #endregion
 
-        public DebugProperties()
+        public DebugProperties(CBHKDataContext context)
         {
+            _context = context;
             InitializeComponent();
         }
 
@@ -63,34 +64,28 @@ namespace CBHK.View.Component.Item.SpecialNBT
         /// </summary>
         private async void DebugProperty_Loaded(object sender,RoutedEventArgs e)
         {
-            ItemViewModel context = Window.GetWindow(this).DataContext as ItemViewModel;
-            BlockTable = context.BlockTable;
-            BlockStateTable = context.BlockStateTable;
-
             string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
             ObservableCollection<IconComboBoxItem> Blocksource = [];
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                foreach (DataRow row in BlockTable.Rows)
+                foreach (var block in _context.BlockSet)
                 {
-                    string id = row["id"].ToString();
-                    string name = row["name"].ToString();
-                    string imagePath = currentPath + id + ".png";
+                    string imagePath = currentPath + block.ID + ".png";
                     ImageSource imageSource = new BitmapImage();
                     if (File.Exists(imagePath))
                         imageSource = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
                     Blocksource.Add(new IconComboBoxItem()
                     {
                         ComboBoxItemIcon = imageSource,
-                        ComboBoxItemId = id,
-                        ComboBoxItemText = name
+                        ComboBoxItemId = block.ID,
+                        ComboBoxItemText = block.Name
                     });
                 }
             });
             BlockId.ItemsSource = Blocksource;
 
             BlockProperty.ItemsSource = PropertyList;
-            string propertiesContent = BlockStateTable.Select("id='" + BlockStateTable.Rows[0]["id"].ToString() + "'").First()["properties"].ToString();
+            string propertiesContent = _context.BlockStateSet.First().Properties;
             BlocksPropertyObject = JObject.Parse(propertiesContent);
             BlockId.SelectedIndex = 0;
             BlockProperty.SelectedIndex = 0;
@@ -107,8 +102,8 @@ namespace CBHK.View.Component.Item.SpecialNBT
             {
                 string selectedBlock = iconComboBoxItem.ComboBoxItemId.Replace("minecraft:", "");
                 PropertyList.Clear();
-                DataRow[] dataRows = BlockStateTable.Select("id='minecraft:" + selectedBlock + "'");
-                if (dataRows.Length > 0 && dataRows.First()["properties"] is string properties && properties.Trim().Length > 0)
+                string properties = _context.BlockStateSet.First(item => item.ID == selectedBlock).Properties;
+                if (properties is not null && properties.Trim().Length > 0)
                 {
                     BlocksPropertyObject = JObject.Parse(properties);
                     foreach (JProperty item in BlocksPropertyObject.Properties())

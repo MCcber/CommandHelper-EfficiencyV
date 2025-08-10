@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.Model.Common;
@@ -140,21 +141,18 @@ namespace CBHK.ViewModel.Generator
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush, } ];
 
-        public DataTable ItemTable = new();
+        private CBHKDataContext _context = null;
         private IContainerProvider _container;
 
-        public RecipeViewModel(IContainerProvider container,MainView mainView)
+        public RecipeViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context)
         {
+            _context = context;
             _container = container;
             home = mainView;
 
             BindingOperations.EnableCollectionSynchronization(OriginalItemSource, new object());
             BindingOperations.EnableCollectionSynchronization(CustomItemSource, new object());
             Task.Run(async () =>{
-                #region 初始化数据表
-                DataCommunicator dataCommunicator = DataCommunicator.GetDataCommunicator();
-                ItemTable = await dataCommunicator.GetData("SELECT * FROM Items");
-                #endregion
                 #region 初始化数据
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
@@ -165,16 +163,16 @@ namespace CBHK.ViewModel.Generator
                 //加载物品集合
                 string uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
                 string urlPath = "";
-                foreach (DataRow row in ItemTable.Rows)
+                foreach (var item in _context.ItemSet)
                 {
-                    urlPath = uriDirectoryPath + row["id"].ToString() + ".png";
+                    urlPath = uriDirectoryPath + item.ID + ".png";
                     if (File.Exists(urlPath))
                     {
                         BitmapImage bitmapImage = new(new Uri(urlPath, UriKind.Absolute))
                         {
                             CacheOption = BitmapCacheOption.None
                         };
-                        OriginalItemSource.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, row["id"].ToString() + ":" + row["name"].ToString(), "{id:\"minecraft:" + row["id"].ToString() + "\",Count:1b}"));
+                        OriginalItemSource.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, item.ID + ":" + item.Name, "{id:\"minecraft:" + item.ID + "\",Count:1b}"));
                         bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
                     }
                 }
@@ -198,7 +196,7 @@ namespace CBHK.ViewModel.Generator
                             }
                             string itemID = id.ToString().Replace("\"", "").Replace("minecraft:", "");
                             urlPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
-                            string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                            string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
                             CustomItemSource.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, itemID + ":" + itemName, nbt));
                         }
                     }

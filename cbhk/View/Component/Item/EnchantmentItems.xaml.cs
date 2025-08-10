@@ -1,10 +1,8 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
-using CBHK.ViewModel.Component.Item;
-using CBHK.ViewModel.Generator;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,8 +15,8 @@ namespace CBHK.View.Component.Item
     /// </summary>
     public partial class EnchantmentItem : UserControl, IVersionUpgrader
     {
-        ItemPageViewModel itemPageDataContext = null;
-        ItemViewModel itemDataContext = null;
+        private CBHKDataContext _context = null;
+        private ObservableCollection<TextComboBoxItem> EnchantmentList { get; set; } = [];
 
         #region 合并结果
         string id = "";
@@ -36,9 +34,10 @@ namespace CBHK.View.Component.Item
         }
         #endregion
 
-        public EnchantmentItem()
+        public EnchantmentItem(CBHKDataContext context)
         {
             InitializeComponent();
+            _context = context;
         }
 
         /// <summary>
@@ -49,9 +48,14 @@ namespace CBHK.View.Component.Item
         private void EnchantmentIdLoaded(object sender, RoutedEventArgs e)
         {
             ComboBox comboBoxs = sender as ComboBox;
-            itemDataContext = Window.GetWindow(comboBoxs).DataContext as ItemViewModel;
-            itemPageDataContext = comboBoxs.FindParent<ItemPageView>().DataContext as ItemPageViewModel;
-            comboBoxs.ItemsSource = itemPageDataContext.EnchantmentIDList;
+            comboBoxs.ItemsSource = EnchantmentList;
+            foreach (var item in _context.EnchantmentSet)
+            {
+                EnchantmentList.Add(new TextComboBoxItem()
+                {
+                    Text = item.Name
+                });
+            }
         }
 
         /// <summary>
@@ -94,9 +98,12 @@ namespace CBHK.View.Component.Item
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    object numberResult = itemDataContext.EnchantmentTable.Select("name='" + (ID.SelectedItem as TextComboBoxItem).Text + "'").First()?["number"];
+                    string name = (ID.SelectedItem as TextComboBoxItem).Text;
+                    object numberResult = _context.EnchantmentSet.First(item=>item.Name == name).Number;
                     if (numberResult is not null)
+                    {
                         id = numberResult.ToString();
+                    }
                 });
             }
             else
@@ -105,9 +112,12 @@ namespace CBHK.View.Component.Item
                 {
                     if (ID.SelectedItem is not null)
                     {
-                        DataRow[] dataRows = itemDataContext.EnchantmentTable.Select("name='" + (ID.SelectedItem as TextComboBoxItem).Text + "'");
-                        if (dataRows.Length > 0)
-                            id = "\"minecraft:" + dataRows.First()?["id"].ToString() + "\"";
+                        string name = (ID.SelectedItem as TextComboBoxItem).Text;
+                        var data = _context.EnchantmentSet.First(item => item.Name == name);
+                        if (data is not null)
+                        {
+                            id = "\"minecraft:" + data.ID + "\"";
+                        }
                     }
                 });
             }

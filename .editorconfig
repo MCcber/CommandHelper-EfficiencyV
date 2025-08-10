@@ -65,6 +65,9 @@ csharp_style_var_when_type_is_apparent = false:silent
 csharp_style_var_elsewhere = false:silent
 csharp_prefer_simple_using_statement = true:suggestion
 
+# CS4014: 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+dotnet_diagnostic.CS4014.severity = silent
+
 [*.vb]
 #### 命名样式 ####
 

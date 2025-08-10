@@ -74,6 +74,8 @@ namespace CBHK
 
                 return new CBHKDataContext(options);
             });
+
+            containerRegistry.RegisterSingleton<DataService>();
         }
 
         protected override void ConfigureViewModelLocator()

@@ -102,7 +102,7 @@
                 HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
                 Foreground="White"
-                ItemsSource="{Binding ItemIDList, Mode=OneWay}"
+                ItemsSource="{Binding ItemList, Mode=OneWay}"
                 SelectedItem="{Binding SelectedItemId, Mode=TwoWay}"
                 Style="{DynamicResource IconComboBoxStyle}">
                 <behavior:Interaction.Triggers>

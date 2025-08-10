@@ -1,18 +1,18 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
 using CBHK.Domain;
+using CBHK.Domain.Model;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
-using CBHK.Model.Generator.Item;
 using CBHK.View;
 using CBHK.View.Component.Item;
 using CBHK.View.Component.Item.SpecialNBT;
 using CBHK.View.Generator;
-using CBHK.ViewModel;
-using CBHK.ViewModel.Component.Item;
 using CBHK.ViewModel.Generator;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DryIoc;
+using DryIoc.ImTools;
 using Newtonsoft.Json.Linq;
 using Prism.Ioc;
 using System;
@@ -27,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -76,25 +77,23 @@ namespace CBHK.ViewModel.Component.Item
 
         #region 物品ID列表
         [ObservableProperty]
-        public ObservableCollection<IconComboBoxItem> _itemIDList = [];
-        public Dictionary<string, List<IconComboBoxItem>> ItemIDsCopy = [];
+        private ObservableCollection<IconComboBoxItem> _itemList = [];
+        public Dictionary<int, List<IconComboBoxItem>> ItemIDListCopy = [];
         #endregion
 
         #region 方块ID列表
         [ObservableProperty]
-        public ObservableCollection<IconComboBoxItem> _blockIdList = [];
+        public ObservableCollection<IconComboBoxItem> _blockList = [];
         #endregion
 
         #region 附魔ID列表
         [ObservableProperty]
         public ObservableCollection<TextComboBoxItem> _enchantmentIDList = [];
-        public Dictionary<string, List<TextComboBoxItem>> EnchantmentIDListCopy = [];
         #endregion
 
         #region 属性相关的列表
         [ObservableProperty]
         public ObservableCollection<TextComboBoxItem> _attributeIDList = [];
-        public Dictionary<string, List<TextComboBoxItem>> AttributeIDListCopy = [];
         [ObservableProperty]
         public ObservableCollection<TextComboBoxItem> _attributeSlotList = [];
         [ObservableProperty]
@@ -104,7 +103,6 @@ namespace CBHK.ViewModel.Component.Item
         #region 药水效果ID列表
         [ObservableProperty]
         public ObservableCollection<IconComboBoxItem> _effectItemList = [];
-        public Dictionary<string, List<IconComboBoxItem>> EffectItemListCopy = [];
         #endregion
 
         #region 保存物品ID
@@ -147,10 +145,18 @@ namespace CBHK.ViewModel.Component.Item
         #endregion
 
         #region 字段与引用
+        private object obj = new();
         string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Item\Data\SpecialTags.json";
         JArray SpecialArray = null;
         private IContainerProvider _container;
         private CBHKDataContext _context;
+        private DataService _dataService = null;
+
+        private IProgress<IconComboBoxItem> AddItemProgress = null;
+        private IProgress<(int,string,string,string)> SetItemProgress = null;
+
+        private IProgress<IconComboBoxItem> AddBlockProgress = null;
+        private IProgress<(int, string, string, string)> SetBlockProgress = null;
 
         /// <summary>
         /// 特指结果集合
@@ -211,7 +217,7 @@ namespace CBHK.ViewModel.Component.Item
         private bool _importMode = false;
         #endregion
 
-        public ItemPageViewModel(IContainerProvider container,CBHKDataContext context)
+        public ItemPageViewModel(IContainerProvider container,CBHKDataContext context, DataService dataService)
         {
             #region 初始化数据
             buttonNormalBrush = new ImageBrush(new BitmapImage(new Uri(buttonNormalImage, UriKind.RelativeOrAbsolute)));
@@ -220,8 +226,25 @@ namespace CBHK.ViewModel.Component.Item
             SpecialArray = JArray.Parse(SpecialData);
             #endregion
 
+            AddItemProgress = new Progress<IconComboBoxItem>(ItemList.Add);
+            SetItemProgress = new Progress<(int,string,string,string)>(item =>
+            {
+                ItemList[item.Item1].ComboBoxItemId = item.Item2;
+                ItemList[item.Item1].ComboBoxItemText = item.Item3;
+                ItemList[item.Item1].ComboBoxItemIcon = File.Exists(item.Item4) ? new BitmapImage(new Uri(item.Item4, UriKind.Absolute)) : null;
+            });
+
+            AddBlockProgress = new Progress<IconComboBoxItem>(BlockList.Add);
+            SetBlockProgress = new Progress<(int, string, string, string)>(item =>
+            {
+                BlockList[item.Item1].ComboBoxItemId = item.Item2;
+                BlockList[item.Item1].ComboBoxItemText = item.Item3;
+                BlockList[item.Item1].ComboBoxItemIcon = File.Exists(item.Item4) ? new BitmapImage(new Uri(item.Item4, UriKind.Absolute)) : null;
+            });
+
             _container = container;
             _context = context;
+            _dataService = dataService;
         }
 
         /// <summary>
@@ -229,262 +252,128 @@ namespace CBHK.ViewModel.Component.Item
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ItemPages_Loaded(object sender, RoutedEventArgs e)
+        public async void ItemPages_Loaded(object sender, RoutedEventArgs e)
         {
             currentItemPages ??= (sender as ItemPageView).Parent as RichTabItems;
             itemDataContext ??= Window.GetWindow(sender as ItemPageView).DataContext as ItemViewModel;
+            string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
             if (VersionSource.Count == 0)
             {
                 VersionSource = itemDataContext.VersionList;
             }
 
             #region 初始化物品ID与版本物品ID列表
-            List<DataLoadStructure> itemDataList = [];
-            string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            object obj = new();
-            ParallelOptions parallelOptions = new();
-
-            if (ItemIDList.Count == 0)
+            if (ItemList.Count == 0)
             {
+                Dictionary<string, string> ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+                .Where(pair => pair.Key <= CurrentMinVersion)
+                .SelectMany(pair => pair.Value)
+                .ToDictionary(
+                    pair => pair.Key,
+                    pair => pair.Value
+                );
+
+                List<string> ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
+                ItemKeyList.Sort();
+                ParallelOptions parallelOptions = new();
+                await Parallel.ForAsync(0, ItemIDAndNameMap.Count,parallelOptions, (i,cancellationToken) =>
+                {
+                    AddItemProgress.Report(new IconComboBoxItem());
+                    return new ValueTask();
+                });
+                Parallel.For(0, ItemList.Count, (i) =>
+                {
+                    string currentKey = ItemKeyList[i];
+                    string imagePath = "";
+                    if (File.Exists(currentPath + currentKey + ".png"))
+                    {
+                        imagePath = currentPath + currentKey + ".png";
+                    }
+                    else
+                    if (File.Exists(currentPath + currentKey + "_spawn_egg.png"))
+                    {
+                        imagePath = currentPath + currentKey + "_spawn_egg.png";
+                    }
+                    SetItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath));
+                });
+
                 Task.Run(() =>
                 {
-                    foreach (var item in _context.ItemGroupByVersionDicionary)
-                    {
-                        object id = item["id"];
-                        string imagePath = "";
-                        if (File.Exists(currentPath + id + ".png"))
-                            imagePath = currentPath + id + ".png";
-                        else
-                            if (File.Exists(currentPath + id + "_spawn_egg.png"))
-                            imagePath = currentPath + id + "_spawn_egg.png";
-                        if (id is not null)
-                        {
-                            int index = itemDataContext.ItemTable.Rows.IndexOf(item);
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                IconComboBoxItem iconComboBoxItem = new()
-                                {
-                                    ComboBoxItemId = id.ToString(),
-                                    ComboBoxItemText = item["name"].ToString(),
-                                    ComboBoxItemIcon = File.Exists(imagePath) ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : null
-                                };
-                                ItemIDList.Add(iconComboBoxItem);
-                                itemDataList.Add(new DataLoadStructure(index, iconComboBoxItem, itemDataContext.ItemTable.Rows[index]["Version"]));
-                            });
-                        }
-                    }
-
+                    while (ItemList.Count == 0)
+                    { }
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        SelectedItemId ??= ItemIDList[0];
+                        SelectedItemId = ItemList[0];
                     });
-
-                    if (ItemIDsCopy.Count == 0)
-                    {
-                        Parallel.ForEach(itemDataList, parallelOptions, (item, token) =>
-                        {
-                            if (item.Version is string version)
-                            {
-                                if (ItemIDsCopy.TryGetValue(version, out List<IconComboBoxItem> list))
-                                {
-                                    list.Add(item.Item as IconComboBoxItem);
-                                }
-                                else
-                                {
-                                    if (!ItemIDsCopy.ContainsKey(version))
-                                    {
-                                        lock (obj)
-                                        {
-                                            if (!ItemIDsCopy.ContainsKey(version))
-                                                ItemIDsCopy.Add(version, [item.Item as IconComboBoxItem]);
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
                 });
             }
             #endregion
 
             #region 初始化方块ID列表
-            if (BlockIdList.Count == 0)
+            if (BlockList.Count == 0)
             {
-                Task.Run(() =>
+                List<string> ItemIDList = [.. _dataService.BlockIDAndName.Select(item => item.Key)];
+
+                ParallelOptions parallelOptions = new();
+                await Parallel.ForAsync(0, _context.BlockSet.Count(), parallelOptions, (i,cancellationToken) =>
                 {
-                    foreach (DataRow item in itemDataContext.BlockTable.Rows)
-                    {
-                        object id = item["id"];
-                        object name = item["name"];
-                        if (id is not null)
-                        {
-                            string imagePath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + id.ToString() + ".png";
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                IconComboBoxItem iconComboBoxItem = new()
-                                {
-                                    ComboBoxItemId = id.ToString(),
-                                    ComboBoxItemText = name is not null ? name.ToString() : "",
-                                    ComboBoxItemIcon = File.Exists(imagePath) ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : null
-                                };
-                                BlockIdList.Add(iconComboBoxItem);
-                            });
-                        }
-                    }
+                    AddBlockProgress.Report(new IconComboBoxItem());
+                    return new ValueTask();
                 });
-            }
-            #endregion
-
-            #region 初始化版本方块ID列表
-            if (VersionIDList.Count == 0)
-            {
                 Task.Run(() =>
                 {
-                    foreach (DataRow item in itemDataContext.BlockVersionIDTable.Rows)
+                    Parallel.For(0, BlockList.Count, (i) =>
                     {
-                        object HighVersionID = item["HighVersionID"];
-                        object LowVersionID = item["LowVersionID"];
-                        object Damage = item["Damage"];
-                        if (HighVersionID is null || LowVersionID is null)
+                        string currentKey = ItemIDList[i];
+                        string currentName = _dataService.BlockIDAndName[currentKey].Item1;
+                        string imagePath = "";
+                        if (File.Exists(currentPath + currentKey + ".png"))
                         {
-                            continue;
+                            imagePath = currentPath + currentKey + ".png";
                         }
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            VersionIDList.Add(new VersionID()
-                            {
-                                HighVersionID = HighVersionID.ToString(),
-                                LowVersionID = LowVersionID.ToString(),
-                                Damage = Damage is not null && Damage.ToString().Length > 0 ? int.Parse(Damage.ToString()) : -1
-                            });
-                        });
-                    }
-                });
-            }
-            #endregion
-
-            #region 初始化附魔ID列表
-            List<DataLoadStructure> enchantmentDataList = [];
-            if (EnchantmentIDList.Count == 0)
-            {
-                Task.Run(() =>
-                {
-                    foreach (DataRow item in itemDataContext.EnchantmentTable.Rows)
-                    {
-                        if (item["name"] is string name)
-                        {
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                int index = itemDataContext.EnchantmentTable.Rows.IndexOf(item);
-                                TextComboBoxItem textComboBoxItem = new()
-                                {
-                                    Text = name
-                                };
-                                EnchantmentIDList.Add(textComboBoxItem);
-                                enchantmentDataList.Add(new DataLoadStructure(index, textComboBoxItem, item["Version"]));
-                            });
-                        }
-                    }
-
-                    if (EnchantmentIDListCopy.Count == 0)
-                    {
-                        Parallel.ForEach(enchantmentDataList, item =>
-                        {
-                            if (item.Version is string version)
-                            {
-                                if (EnchantmentIDListCopy.TryGetValue(version, out List<TextComboBoxItem> list))
-                                    list.Add(item.Item as TextComboBoxItem);
-                                else
-                                {
-                                    if (!EnchantmentIDListCopy.ContainsKey(version))
-                                    {
-                                        lock (obj)
-                                        {
-                                            if (EnchantmentIDListCopy.ContainsKey(version))
-                                            {
-                                                EnchantmentIDListCopy.Add(version, [item.Item as TextComboBoxItem]);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
+                        SetBlockProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, currentName, imagePath));
+                    });
                 });
             }
             #endregion
 
             #region 初始化属性ID和值类型列表
-            List<DataLoadStructure> attributeDataList = [];
             if (AttributeIDList.Count == 0)
             {
-                Task.Run(() =>
+                foreach (var item in _context.MobAttributeSet)
                 {
-                    foreach (DataRow item in itemDataContext.AttributeTable.Rows)
+                    if (item.ID is not null)
                     {
-                        if (item["name"] is string name)
+                        TextComboBoxItem textComboBoxItem = new()
                         {
-                            int index = itemDataContext.AttributeTable.Rows.IndexOf(item);
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                TextComboBoxItem textComboBoxItem = new()
-                                {
-                                    Text = name
-                                };
-                                AttributeIDList.Add(textComboBoxItem);
-                                attributeDataList.Add(new DataLoadStructure(index, textComboBoxItem, item["Version"]));
-                            });
-                        }
+                            Text = item.ID
+                        };
+                        AttributeIDList.Add(textComboBoxItem);
                     }
-
-                    if (AttributeIDListCopy.Count == 0)
-                    {
-                        Parallel.ForEach(attributeDataList, item =>
-                        {
-                            if (item.Version is string version)
-                            {
-                                if (AttributeIDListCopy.TryGetValue(version, out List<TextComboBoxItem> list))
-                                    list.Add(item.Item as TextComboBoxItem);
-                                else
-                                {
-                                    if (!AttributeIDListCopy.ContainsKey(version))
-                                    {
-                                        lock (obj)
-                                        {
-                                            if (!AttributeIDListCopy.ContainsKey(version))
-                                            {
-                                                AttributeIDListCopy.Add(version, [item.Item as TextComboBoxItem]);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                });
+                }
             }
             if (AttributeSlotList.Count == 0)
             {
-                foreach (DataRow item in itemDataContext.AttributeSlotTable.Rows)
+                foreach (var item in _context.AttributeSlotSet)
                 {
-                    if (item["value"] is string value)
+                    if (item.Value is not null && item.Value.Length > 0)
                     {
                         AttributeSlotList.Add(new TextComboBoxItem()
                         {
-                            Text = value
+                            Text = item.Value
                         });
                     }
                 }
             }
             if (AttributeValueTypeList.Count == 0)
             {
-                foreach (DataRow item in itemDataContext.AttributeValueTypeTable.Rows)
+                foreach (var item in _context.AttributeSlotSet)
                 {
-                    if (item["value"] is string value)
+                    if (item.Value is not null)
                     {
                         AttributeValueTypeList.Add(new TextComboBoxItem()
                         {
-                            Text = value
+                            Text = item.ID
                         });
                     }
                 }
@@ -492,66 +381,26 @@ namespace CBHK.ViewModel.Component.Item
             #endregion
 
             #region 初始化药水效果列表
-            List<DataLoadStructure> effectDataList = [];
             if (EffectItemList.Count == 0)
             {
-                Task.Run(() =>
+                foreach (var item in _context.MobEffectSet)
                 {
-                    foreach (DataRow item in itemDataContext.EffectTable.Rows)
+                    string imagePath = currentPath + item.ID + ".png";
+                    if (item.ID is not null)
                     {
-                        object id = item["id"];
-                        object name = item["name"];
-                        string imagePath = "";
-                        if (id is not null)
+                        if (File.Exists(imagePath))
                         {
-                            if (File.Exists(currentPath + id + ".png"))
-                                imagePath = currentPath + id + ".png";
-                            if (id is not null)
+                            imagePath = currentPath + item.ID + ".png";
+                            IconComboBoxItem iconComboBoxItem = new()
                             {
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    IconComboBoxItem iconComboBoxItem = new()
-                                    {
-                                        ComboBoxItemId = id.ToString(),
-                                        ComboBoxItemText = name.ToString(),
-                                        ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
-                                    };
-                                    if (File.Exists(imagePath))
-                                    {
-                                        int index = itemDataContext.EffectTable.Rows.IndexOf(item);
-                                        EffectItemList.Add(iconComboBoxItem);
-                                        effectDataList.Add(new DataLoadStructure(index, iconComboBoxItem, item["Version"]));
-                                    }
-                                });
-                            }
+                                ComboBoxItemId = item.ID,
+                                ComboBoxItemText = item.Name,
+                                ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
+                            };
+                            EffectItemList.Add(iconComboBoxItem);
                         }
                     }
-
-                    if (EffectItemListCopy.Count == 0)
-                    {
-                        Parallel.ForEach(effectDataList, item =>
-                        {
-                            if (item.Version is string version)
-                            {
-                                if (EffectItemListCopy.TryGetValue(version, out List<IconComboBoxItem> list))
-                                    list.Add(item.Item as IconComboBoxItem);
-                                else
-                                {
-                                    if (!EffectItemListCopy.ContainsKey(version))
-                                    {
-                                        lock (obj)
-                                        {
-                                            if (!EffectItemListCopy.ContainsKey(version))
-                                            {
-                                                EffectItemListCopy.Add(version, [item.Item as IconComboBoxItem]);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                });
+                }
             }
             #endregion
         }
@@ -570,23 +419,18 @@ namespace CBHK.ViewModel.Component.Item
             {
                 if (item.Uid == "Common")
                 {
-                    common = new()
-                    {
-                        HideInfomationTable = datacontext.HideInfomationTable
-                    };
+                    common = new(_context);
                     VersionComponents.Add(common);
                     (item.Content as ScrollViewer).Content = common;
                 }
                 if (item.Uid == "Data")
                 {
-                    data = new();
+                    data = new(_dataService);
                     (item.Content as ScrollViewer).Content = data;
-                    data.AttributeSlotTable = datacontext.AttributeSlotTable;
-                    data.AttributeTable = datacontext.AttributeTable;
                 }
                 if (item.Uid == "Function")
                 {
-                    function = new();
+                    function = new(_context);
                     VersionComponents.Add(function);
                     (item.Content as ScrollViewer).Content = function;
                 }
@@ -631,106 +475,15 @@ namespace CBHK.ViewModel.Component.Item
                 function.Trim.Visibility = Visibility.Visible;
             }
             #region 处理版本物品ID
-            List<object> NeedRemovedItemList = [];
-            foreach (var item in ItemIDsCopy)
-            {
-                string versionString = item.Key.Replace(".", "");
-                if (int.Parse(versionString) <= CurrentMinVersion)
-                {
-                    if (!ItemIDList.Contains(item.Value[0]))
-                    {
-                        for (int i = 0; i < item.Value.Count; i++)
-                        {
-                            ItemIDList.Add(item.Value[i]);
-                        }
-                    }
-                }
-                else
-                {
-                    NeedRemovedItemList.AddRange(item.Value);
-                }
-            }
-            foreach (var item in NeedRemovedItemList)
-            {
-                ItemIDList.Remove(item as IconComboBoxItem);
-            }
             UpdateItemDamageAndID();
-            NeedRemovedItemList.Clear();
             #endregion
             #region 处理版本属性ID
-            foreach (var item in AttributeIDListCopy)
-            {
-                string versionString = item.Key.Replace(".", "");
-                if (int.Parse(versionString) <= CurrentMinVersion)
-                {
-                    if (!AttributeIDList.Contains(item.Value[0]))
-                    {
-                        for (int i = 0; i < item.Value.Count; i++)
-                        {
-                            AttributeIDList.Add(item.Value[i]);
-                        }
-                    }
-                }
-                else
-                {
-                    NeedRemovedItemList.AddRange(item.Value);
-                }
-            }
-            foreach (var item in NeedRemovedItemList)
-            {
-                AttributeIDList.Remove(item as TextComboBoxItem);
-            }
-            NeedRemovedItemList.Clear();
             #endregion
             #region 处理版本附魔ID
-            foreach (var item in EnchantmentIDListCopy)
-            {
-                string versionString = item.Key.Replace(".", "");
-                if (int.Parse(versionString) <= CurrentMinVersion)
-                {
-                    if (!EnchantmentIDList.Contains(item.Value[0]))
-                    {
-                        for (int i = 0; i < item.Value.Count; i++)
-                        {
-                            EnchantmentIDList.Add(item.Value[i]);
-                        }
-                    }
-                }
-                else
-                {
-                    NeedRemovedItemList.AddRange(item.Value);
-                }
-            }
-            foreach (var item in NeedRemovedItemList)
-            {
-                EnchantmentIDList.Remove(item as TextComboBoxItem);
-            }
-            NeedRemovedItemList.Clear();
+
             #endregion
             #region 处理版本药水效果
-            foreach (var item in EffectItemListCopy)
-            {
-                string versionString = item.Key.Replace(".", "");
-                if (int.Parse(versionString) <= CurrentMinVersion)
-                {
-                    if (!EffectItemList.Contains(item.Value[0]))
-                    {
-                        for (int i = 0; i < item.Value.Count; i++)
-                        {
-                            EffectItemList.Add(item.Value[i]);
-                        }
-                    }
-                }
-                else
-                {
-                    NeedRemovedItemList.AddRange(item.Value);
-                }
-            }
-            foreach (var item in NeedRemovedItemList)
-            {
-                EffectItemList.Remove(item as IconComboBoxItem);
-            }
-            NeedRemovedItemList.Clear();
+
             #endregion
             #region 更新子控件的版本以及执行数据更新事件
             await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
@@ -785,9 +538,9 @@ namespace CBHK.ViewModel.Component.Item
                 data.ItemDamage.IsEnabled = CurrentMinVersion >= 1130;
                 if (!data.ItemDamage.IsEnabled)
                 {
-                    SelectedItemId ??= ItemIDList[0];
+                    SelectedItemId ??= ItemList[0];
                     string currentHighVersionID = SelectedItemId.ComboBoxItemId;
-                    List<VersionID> matchVersionIDList = VersionIDList.Where(item => item.HighVersionID == currentHighVersionID).ToList();
+                    List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == currentHighVersionID)];
                     LowVersionId = "";
                     if (matchVersionIDList.Count > 0)
                     {
@@ -1054,7 +807,7 @@ namespace CBHK.ViewModel.Component.Item
             }
 
             result.Add(displayText);
-            ComponentEvents componentEvents = new();
+            ComponentEvents componentEvents = new(_context);
             Application.Current.Dispatcher.Invoke(() =>
             {
                 switch (Request.dataType)
@@ -1167,7 +920,7 @@ namespace CBHK.ViewModel.Component.Item
                                                 {
                                                     foreach (JObject item in data.Cast<JObject>())
                                                     {
-                                                        EnchantmentItem enchantment = new();
+                                                        EnchantmentItem enchantment = new(_context);
                                                         JToken idObj = item["id"];
                                                         JToken lvlObj = item["lvl"];
                                                         if (idObj != null)
@@ -1175,7 +928,7 @@ namespace CBHK.ViewModel.Component.Item
                                                             string idString = idObj.ToString();
                                                             if (idString.Contains(':'))
                                                                 idString = idString[(idString.IndexOf(':') + 1)..];
-                                                            string id = itemDataContext.EnchantmentTable.Select("id='" + idString + "'").First()["name"].ToString();
+                                                            string id = _context.BlockSet.First(item => item.ID == idString).ID;
                                                             enchantment.ID.SelectedValue = id;
                                                         }
                                                         if (lvlObj != null)
@@ -1375,11 +1128,12 @@ namespace CBHK.ViewModel.Component.Item
                                                         if (Id != null)
                                                         {
                                                             string id = Id.ToString().Replace("minecraft:", "");
-                                                            string currentID = itemDataContext.EffectTable.Select("num='" + id + "'").First()["name"].ToString();
+                                                            MobEffect mobEffect = _context.MobEffectSet.First(item => item.ID == id);
+                                                            string currentID = mobEffect.Name;
                                                             ComboBox idBox = contentPanel.FindChild<ComboBox>("Id");
                                                             idBox.ItemsSource = EffectItemList;
                                                             idBox.SelectedValuePath = "ComboBoxItemId";
-                                                            idBox.SelectedValue = itemDataContext.EffectTable.Select("id='" + currentID + "'").First()["id"].ToString();
+                                                            idBox.SelectedValue = mobEffect.ID;
                                                         }
                                                         if (ShowIcon != null)
                                                             contentPanel.FindChild<TextCheckBoxs>("ShowIcon").IsChecked = ShowIcon.ToString() == "1";
@@ -1454,8 +1208,8 @@ namespace CBHK.ViewModel.Component.Item
                                                         JToken idObj = item["EffectId"];
 
                                                         string id = idObj.ToString();
-                                                        var currentID = itemDataContext.EffectTable.Select("num='" + id + "'").First()["id"].ToString();
-                                                        SuspiciousStewEffect suspiciousStewEffects = new();
+                                                        var currentID = _context.MobEffectSet.First(item => item.ID == id).ID;
+                                                        SuspiciousStewEffect suspiciousStewEffects = new(_context);
                                                         itemPanel.Children.Add(suspiciousStewEffects);
                                                         if (durationObj != null)
                                                             suspiciousStewEffects.EffectDuration.Value = int.Parse(durationObj.ToString());
@@ -1638,8 +1392,8 @@ namespace CBHK.ViewModel.Component.Item
                                                     List<JProperty> properties = data.Properties().ToList();
                                                     for (int i = 0; i < properties.Count; i++)
                                                     {
-                                                        string currentId = itemDataContext.BlockTable.Select("id='" + properties[i].Name + "'").First()["id"].ToString();
-                                                        DebugProperties debugProperties = new();
+                                                        string currentId = _context.BlockSet.First(item=> item.ID == properties[i].Name).ID;
+                                                        DebugProperties debugProperties = new(_context);
                                                         debugProperties.BlockId.SelectedValuePath = "ComboBoxItemId";
                                                         debugProperties.BlockId.SelectedValue = currentId;
                                                         debugProperties.BlockProperty.SelectedValue = properties[i].Value.ToString();
@@ -2104,7 +1858,7 @@ namespace CBHK.ViewModel.Component.Item
         /// </summary>
         private async Task UpdateUILayOut()
         {
-            SelectedItemId ??= ItemIDList[0];
+            SelectedItemId ??= ItemList[0];
             currentItemPages.Header = SelectedItemId.ComboBoxItemId + ":" + SelectedItemId.ComboBoxItemText;
 
             #region 搜索当前物品ID对应的JSON对象

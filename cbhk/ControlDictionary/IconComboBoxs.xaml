@@ -54,12 +54,10 @@
                 Grid.Row="0"
                 Grid.RowSpan="2"
                 Grid.Column="0"
-                Width="60"
-                Height="60"
+                Width="50"
+                Height="50"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
-                SnapsToDevicePixels="True"
-                Source="{Binding ComboBoxItemIcon, Mode=OneWay}"
-                UseLayoutRounding="True" />
+                Source="{Binding ComboBoxItemIcon, Mode=OneWay}" />
             <TextBlock
                 Grid.Row="0"
                 Grid.Column="1"

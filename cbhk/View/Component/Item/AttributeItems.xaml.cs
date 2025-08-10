@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.ViewModel.Component.Item;
 using CBHK.ViewModel.Generator;
@@ -22,8 +23,10 @@ namespace CBHK.View.Component.Item
         async Task<string> IVersionUpgrader.Result()
         {
             await Upgrade(currentVersion);
-            string attributeIDString = itemDataContext.AttributeTable.Select("name='" + (AttributeNameBox.SelectedItem as TextComboBoxItem).Text + "'").First()["id"].ToString();
-            string attributeSlotString = itemDataContext.AttributeSlotTable.Select("value='" + (Slot.SelectedItem as TextComboBoxItem).Text + "'").First()["id"].ToString();
+            string name = (AttributeNameBox.SelectedItem as TextComboBoxItem).Text;
+            string slot = (Slot.SelectedItem as TextComboBoxItem).Text;
+            string attributeIDString = _context.MobAttributeSet.First(item=>item.Name == name).ID;
+            string attributeSlotString = _context.AttributeSlotSet.First(item => item.Value == slot).ID;
             string slotData = attributeSlotString == "all" ? "" : ",Slot:\"" + attributeSlotString + "\"";
             string result = "{AttributeName:\"" + attributeIDString + "\",Name:\"" + NameBox.Text + "\",Amount:" + Amount.Value.ToString() + "d,Operation:" + Operations.SelectedIndex + UUIDString + slotData + "}";
             return result;
@@ -31,11 +34,13 @@ namespace CBHK.View.Component.Item
         #endregion
 
         private string UUIDString = "";
+        private CBHKDataContext _context = null;
         ItemPageViewModel itemPageDataContext = null;
         ItemViewModel itemDataContext = null;
 
-        public AttributeItems()
+        public AttributeItems(CBHKDataContext context)
         {
+            _context = context;
             InitializeComponent();
         }
 

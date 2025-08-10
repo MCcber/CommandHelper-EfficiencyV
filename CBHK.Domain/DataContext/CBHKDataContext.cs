@@ -13,6 +13,7 @@ namespace CBHK.Domain
         public DbSet<AttributeValueType> AttributeValueTypeSet { get; set; }
         public DbSet<BiomeID> BiomeIDSet { get; set; }
         public DbSet<Block> BlockSet { get; set; }
+        public DbSet<BlockState> BlockStateSet { get; set; }
         public DbSet<BossbarColor> BossbarColorSet { get; set; }
         public DbSet<BossbarStyle> BossbarStyleSet { get; set; }
         public DbSet<CustomWorldEntry> CustomWorldEntrySet { get; set; }
@@ -21,7 +22,7 @@ namespace CBHK.Domain
         public DbSet<Enchantment> EnchantmentSet { get; set; }
         public DbSet<Entity> EntitySet { get; set; }
         public DbSet<EnvironmentConfig> EnvironmentConfigSet { get; set; }
-        public DbSet<GameEventTag> GameEventTagsSet { get; set; }
+        public DbSet<GameEventTag> GameEventTagSet { get; set; }
         public DbSet<GameRule> GameRuleSet { get; set; }
         public DbSet<Generator> GeneratorSet { get; set; }
         public DbSet<HideInformation> HideInformationSet { get; set; }
@@ -42,29 +43,8 @@ namespace CBHK.Domain
         public DbSet<UserData> UserDataSet { get; set; }
         #endregion
 
-        #region DataStructure
-        public Dictionary<string, List<string>> ItemGroupByVersionDicionary = [];
-        #endregion
-
         #region Method
-        public CBHKDataContext(DbContextOptions<CBHKDataContext> options) : base(options)
-        {
-            #region 根据版本分类所有物品ID
-            if (ItemGroupByVersionDicionary.Count == 0 && ItemSet is not null)
-            {
-                foreach (var item in ItemSet)
-                {
-                    if(item.Version is not null && item.Version.Length > 0)
-                    {
-                        if (!ItemGroupByVersionDicionary.TryAdd(item.Version, [item.ID]))
-                        {
-                            ItemGroupByVersionDicionary[item.Version].Add(item.ID);
-                        }
-                    }
-                }
-            }
-            #endregion
-        }
+        public CBHKDataContext(DbContextOptions<CBHKDataContext> options) : base(options){}
         #endregion
 
         #region Event

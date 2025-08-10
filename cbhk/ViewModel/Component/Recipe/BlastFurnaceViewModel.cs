@@ -1,4 +1,5 @@
-﻿using CBHK.GeneralTool;
+﻿using CBHK.Domain;
+using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.Model.Common;
 using CBHK.View.Component.Recipe;
@@ -7,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
@@ -24,9 +26,11 @@ namespace CBHK.ViewModel.Component.Recipe
 {
     public partial class BlastFurnaceViewModel : ObservableObject
     {
-        DataTable ItemTable = null;
-
         #region 字段与引用
+        private DataService _dataService = null;
+        private CBHKDataContext _context = null;
+        private Dictionary<string, string> ItemIDAndNameMap = [];
+
         /// <summary>
         /// 存储最终结果
         /// </summary>
@@ -160,10 +164,13 @@ namespace CBHK.ViewModel.Component.Recipe
         }
         #endregion
 
-        public BlastFurnaceViewModel()
+        public BlastFurnaceViewModel(DataService dataService,CBHKDataContext context)
         {
             #region 初始化数据
+            _context = context;
+            _dataService = dataService;
             MaterialTag.Add("");
+            ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
             #endregion
         }
 
@@ -248,7 +255,6 @@ namespace CBHK.ViewModel.Component.Recipe
             MultiMaterialSource.Filter += MultiMaterialSource_Filter;
 
             RecipeViewModel context = Window.GetWindow(MultiMaterialGrid).DataContext as RecipeViewModel;
-            ItemTable = context.ItemTable;
         }
 
         /// <summary>
@@ -282,7 +288,7 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                        string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                         MaterialList.Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                         if (itemTagObj != null)
                             MaterialTag.Add(itemTagObj.ToString());
@@ -299,7 +305,7 @@ namespace CBHK.ViewModel.Component.Recipe
                         {
                             string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                             Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
-                            string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                            string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                             MaterialList.Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
                             if (itemTagObj != null)
                                 MaterialTag.Add(itemTagObj.ToString());
@@ -333,7 +339,7 @@ namespace CBHK.ViewModel.Component.Recipe
             {
                 string itemID = recipeResult.ToString().Replace("minecraft:", "");
                 Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                 ResultItem.Source = new BitmapImage(iconUri);
                 ResultItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
             }

@@ -209,7 +209,7 @@
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
                     <Grid>
-                        <ItemsControl Background="Transparent" ItemsSource="{Binding transactionItems}">
+                        <ItemsControl Background="Transparent" ItemsSource="{Binding TransactionItemList}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <VirtualizingStackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" />

@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.ViewModel.Component.Item;
 using CommunityToolkit.Mvvm.Input;
@@ -19,6 +20,8 @@ namespace CBHK.View.Component.Item
     /// </summary>
     public partial class Function : UserControl,IVersionUpgrader
     {
+        private CBHKDataContext _context = null;
+
         #region 可破坏可放置方块等数据源
         public ObservableCollection<CanDestroyItems> CanDestroyItemsSource { get; set; } = [];
         public ObservableCollection<CanPlaceOnItems> CanPlaceOnItemsSource { get; set; } = [];
@@ -48,7 +51,7 @@ namespace CBHK.View.Component.Item
         #endregion
 
         #region 附魔列表
-        string enchantmentKey = "Enchantments";
+        string enchantmentKey = "EnchantmentIDAndNameGroupByVersionMap";
         private async Task<string> GetEnchantmentResult()
         {
             string result = "";
@@ -113,9 +116,10 @@ namespace CBHK.View.Component.Item
         }
         #endregion
 
-        public Function()
+        public Function(CBHKDataContext context)
         {
             InitializeComponent();
+            _context = context;
             #region 连接指令
             //添加
             CanDestroyBlock.Modify = new RelayCommand<FrameworkElement>(AddCanDestroyBlockClick);
@@ -168,7 +172,7 @@ namespace CBHK.View.Component.Item
         /// <param name="e"></param>
         private void AddEnchantmentClick(FrameworkElement obj)
         {
-            EnchantmentItem enchantmentItems = new();
+            EnchantmentItem enchantmentItems = new(_context);
             EnchantmentItemsSource.Add(enchantmentItems);
             ItemPageViewModel itemPageDataContext = obj.FindParent<ItemPageView>().DataContext as ItemPageViewModel;
             itemPageDataContext.VersionComponents.Add(enchantmentItems);
@@ -271,18 +275,18 @@ namespace CBHK.View.Component.Item
                 ExternData.Remove("tag.CanPlaceOn");
             }
 
-            JToken Enchantments = ExternData.SelectToken("tag.Enchantments");
-            Enchantments ??= ExternData.SelectToken("Enchantments");
+            JToken Enchantments = ExternData.SelectToken("tag.EnchantmentIDAndNameGroupByVersionMap");
+            Enchantments ??= ExternData.SelectToken("EnchantmentIDAndNameGroupByVersionMap");
             if (Enchantments is JArray enchantmentArray && enchantmentArray.Count > 0)
             {
                 foreach (JObject enchant in enchantmentArray.Cast<JObject>())
                 {
-                    EnchantmentItem enchantmentItem = new();
+                    EnchantmentItem enchantmentItem = new(_context);
                     enchantmentItem.ID.SelectedValuePath = "ComboBoxItemId";
                     enchantmentItem.ID.SelectedValue = enchant.SelectToken("id").ToString();
                     enchantmentItem.Level.Value = int.Parse(enchant.SelectToken("lvl").ToString());
                 }
-                ExternData.Remove("tag.Enchantments");
+                ExternData.Remove("tag.EnchantmentIDAndNameGroupByVersionMap");
             }
         }
 
@@ -293,7 +297,7 @@ namespace CBHK.View.Component.Item
             if (version < 1130)
                 enchantmentKey = "ench";
             else
-                enchantmentKey = "Enchantments";
+                enchantmentKey = "EnchantmentIDAndNameGroupByVersionMap";
         }
     }
 }

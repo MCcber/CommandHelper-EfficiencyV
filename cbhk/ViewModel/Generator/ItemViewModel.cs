@@ -13,7 +13,7 @@ using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -120,17 +120,12 @@ namespace CBHK.ViewModel.Generator
             home = mainView;
         }
 
-        public async void Item_Loaded(object sender,RoutedEventArgs e)
+        public void Item_Loaded(object sender,RoutedEventArgs e)
         {
-            #region 初始化物品页
-            await Task.Run(() =>
-            {
-                ItemPageView itemPages = new();
-                ItemPageViewModel itemPageDataContext = itemPages.DataContext as ItemPageViewModel;
-                itemPageDataContext.UseForTool = !IsCloseable;
-                ItemPageList[0].Content = itemPages;
-            });
-            #endregion
+            ItemPageView itemPages = new();
+            ItemPageViewModel itemPageDataContext = itemPages.DataContext as ItemPageViewModel;
+            itemPageDataContext.UseForTool = !IsCloseable;
+            ItemPageList[0].Content = itemPages;
         }
 
         [RelayCommand]

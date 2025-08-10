@@ -106,7 +106,7 @@ namespace CBHK.ViewModel.Component.Villager
             });
 
             if (currentGossipTypes.Count == 5)
-                _ = context.transactionItems.All(item => { (item.DataContext as TransactionItemsViewModel).UpdateDiscountData(currentGossipTypes["minor_negative"], currentGossipTypes["minor_positive"], currentGossipTypes["major_negative"], currentGossipTypes["major_positive"], currentGossipTypes["trading"]); return true; });
+                _ = context.TransactionItemList.All(item => { (item.DataContext as TransactionItemViewModel).UpdateDiscountData(currentGossipTypes["minor_negative"], currentGossipTypes["minor_positive"], currentGossipTypes["major_negative"], currentGossipTypes["major_positive"], currentGossipTypes["trading"]); return true; });
         }
     }
 }

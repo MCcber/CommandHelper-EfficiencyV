@@ -9,7 +9,7 @@ namespace CBHKShared.ContextModel
         [Key]
         public string ID { get; set; }
         public string Name { get; set; }
-        public int Damage { get; set; }
+        public int? Damage { get; set; }
         public string? LowVersionID { get; set; }
     }
 }

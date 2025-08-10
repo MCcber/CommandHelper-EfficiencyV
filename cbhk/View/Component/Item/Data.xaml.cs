@@ -1,8 +1,10 @@
 ﻿using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.ViewModel.Component.Item;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
@@ -20,8 +22,9 @@ namespace CBHK.View.Component.Item
     {
         //属性数据源
         public ObservableCollection<AttributeItems> AttributeSource = [];
-        public DataTable AttributeTable = null;
-        public DataTable AttributeSlotTable = null;
+        private CBHKDataContext _context = null;
+        private DataService _dataService = null;
+        private Dictionary<string, string> ItemIDAndNameMap;
 
         #region 合并结果
         public async Task<string> Result()
@@ -42,9 +45,11 @@ namespace CBHK.View.Component.Item
         }
         #endregion
 
-        public Data()
+        public Data(DataService dataService)
         {
             InitializeComponent();
+            _dataService = dataService;
+            ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
             Attributes.Modify = new RelayCommand<FrameworkElement>(AddAttributeCommand);
             Attributes.Fresh = new RelayCommand<FrameworkElement>(ClearAttributesComand);
             AttributesPanel.ItemsSource = AttributeSource;
@@ -56,7 +61,7 @@ namespace CBHK.View.Component.Item
         /// <param name="obj"></param>
         private void AddAttributeCommand(FrameworkElement obj)
         {
-            AttributeItems attributeItems = new()
+            AttributeItems attributeItems = new(_context)
             {
                 Margin = new(0, 2, 0, 0)
             };
@@ -116,7 +121,10 @@ namespace CBHK.View.Component.Item
                     AttributeItems attributeItem = AttributeSource[^1];
 
                     if (attributeId != null)
-                        attributeItem.AttributeNameBox.SelectedValue = AttributeTable.Select("id='" + attributeId.ToString() + "'").First()["id"].ToString();
+                    {
+                        string attributeIDString = attributeId.ToString();
+                        attributeItem.AttributeNameBox.SelectedValue = _context.MobAttributeSet.First(item => item.ID == attributeIDString).ID;
+                    }
                     if (name != null)
                         attributeItem.NameBox.Text = name.ToString();
                     if (amount != null)
@@ -124,7 +132,10 @@ namespace CBHK.View.Component.Item
                     if (operation != null)
                         attributeItem.Operations.SelectedIndex = int.Parse(operation.ToString());
                     if (slot != null)
-                        attributeItem.Slot.SelectedValue = AttributeSlotTable.Select("id='" + slot.ToString() + "'").First()["name"].ToString();
+                    {
+                        string slotString = slot.ToString();
+                        attributeItem.Slot.SelectedValue = _context.AttributeSlotSet.First(item => item.ID == slotString).Value;
+                    }
                 }
                 ExternData.Remove("tag.Attributes");
             }

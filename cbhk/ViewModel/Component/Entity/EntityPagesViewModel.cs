@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.Interfaces;
+using CBHK.Domain;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.View;
@@ -313,6 +314,7 @@ namespace CBHK.ViewModel.Component.Entity
 
         #region 字段与引用
         private IContainerProvider _container;
+        private CBHKDataContext _context = null;
         //当前实体页引用
         EntityPageView currentEntityPage = null;
         //无特指NBT时提示
@@ -389,9 +391,10 @@ namespace CBHK.ViewModel.Component.Entity
         public string Result { get; set; }
         #endregion
 
-        public EntityPageViewModel(IContainerProvider container)
+        public EntityPageViewModel(IContainerProvider container,CBHKDataContext context)
         {
             #region 初始化字段
+            _context = context;
             _container = container;
             buttonNormalBrush = new ImageBrush(new BitmapImage(new Uri(buttonNormalImage, UriKind.RelativeOrAbsolute)));
             Grid contentGrid = new();
@@ -436,26 +439,25 @@ namespace CBHK.ViewModel.Component.Entity
             string entityImageFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                for (int i = 0; i < entityDataContext.EntityIdTable.Rows.Count; i++)
+                foreach (var item in _context.EntitySet)
                 {
-                    DataRow entityRow = entityDataContext.EntityIdTable.Rows[i];
                     #region 设置实体图标、名称和ID
-                    if (entityRow is not null && entityRow["id"] is string entityID)
+                    if (item.ID is not null)
                     {
-                        string iconPath = File.Exists(entityImageFolderPath + entityID + "_spawn_egg.png") ? entityImageFolderPath + entityID + "_spawn_egg.png" : entityImageFolderPath + entityID + ".png";
+                        string iconPath = File.Exists(entityImageFolderPath + item.ID + "_spawn_egg.png") ? entityImageFolderPath + item.ID + "_spawn_egg.png" : entityImageFolderPath + item.ID + ".png";
                         IconComboBoxItem iconComboBoxItem = new()
                         {
                             ComboBoxItemIcon = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
-                            ComboBoxItemText = entityRow["name"] is not null ? entityRow["name"].ToString() : "",
-                            ComboBoxItemId = entityID
+                            ComboBoxItemText = item.Name ?? "",
+                            ComboBoxItemId = item.ID
                         };
                         EntityIDList.Add(iconComboBoxItem);
-                        if (entityDataContext.EntityIdTable.Rows[i]["Version"] is string version)
+                        if (item.Version is not null)
                         {
-                            if (EntityIDListCopy.TryGetValue(version, out List<IconComboBoxItem> list))
+                            if (EntityIDListCopy.TryGetValue(item.Version, out List<IconComboBoxItem> list))
                                 list.Add(iconComboBoxItem);
                             else
-                                EntityIDListCopy.Add(version, [iconComboBoxItem]);
+                                EntityIDListCopy.Add(item.Version, [iconComboBoxItem]);
                         }
                     }
                     #endregion
@@ -781,13 +783,13 @@ namespace CBHK.ViewModel.Component.Entity
             }
 
             result.Add(displayText);
-            ComponentEvents componentEvents = new();
+            ComponentEvents componentEvents = new(_context);
 
             switch (Request.dataType)
             {
                 case "TAG_BlockState":
                     {
-                        BlockState blockState = new()
+                        BlockState blockState = new(_context)
                         {
                             Uid = Request.nbtType,
                             Tag = new NBTDataStructure() { DataType = Request.dataType,NBTGroup = Request.nbtType },
