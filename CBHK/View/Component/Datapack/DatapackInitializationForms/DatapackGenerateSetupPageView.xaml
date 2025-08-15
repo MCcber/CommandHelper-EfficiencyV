@@ -1,11 +1,11 @@
 ﻿<Page
-    x:Class="CBHK.View.Component.DatapackInitializationForms.DatapackGenerateSetupView"
+    x:Class="CBHK.View.Component.Datapack.DatapackInitializationForms.DatapackGenerateSetupPageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:CBHK.View.Component.DatapackInitializationForms"
+    xmlns:local="clr-namespace:CBHK.View.Component.Datapack.DatapackInitializationForms"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="DatapackGenerateSetupPage"
@@ -141,7 +141,7 @@
             RightBorderTexture="{StaticResource ButtonNormalRight}"
             Style="{DynamicResource StereoTextButton}"
             TopBorderTexture="{StaticResource ButtonNormalTop}" />
-        <!--<TextBlock
+        <TextBlock
             Grid.Row="5"
             Margin="0,5,20,0"
             HorizontalAlignment="Left"
@@ -161,7 +161,7 @@
             BorderBrush="Black"
             FontSize="12"
             Foreground="White"
-            Text="{Binding Description, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />-->
+            Text="{Binding Description, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
         <DockPanel
             Grid.Row="7"
             Grid.Column="1"

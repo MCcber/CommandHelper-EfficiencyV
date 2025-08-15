@@ -88,8 +88,8 @@
         <Border
             Grid.Row="0"
             Grid.Column="3"
-            Width="Auto"
-            Height="Auto"
+            Width="15"
+            Height="15"
             Margin="10,0,20,0"
             HorizontalAlignment="Right"
             VerticalAlignment="Center"

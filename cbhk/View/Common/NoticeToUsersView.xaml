@@ -103,7 +103,8 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Foreground="White"
-                Text="{Binding BrowseTimeBlockText}" />
+                Text="{Binding BrowseTimeBlockText}"
+                Visibility="{Binding CountDownVisibility}" />
             <CustomControl:TextButtons
                 x:Name="understandButton"
                 Grid.Row="1"

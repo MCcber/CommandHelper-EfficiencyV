@@ -3,7 +3,6 @@ using CBHK.GeneralTool;
 using CBHK.GeneralTool.MessageTip;
 using CBHK.Model.Common;
 using CBHK.View.Component.Recipe;
-using CBHK.ViewModel.Generator;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -26,122 +25,28 @@ namespace CBHK.ViewModel.Component.Recipe
 {
     public partial class CraftingTableViewModel : ObservableObject
     {
-        #region 字段与引用
+        #region Field
         private DataService _dataService = null;
         private Dictionary<string, string> ItemIDAndNameMap;
         private CBHKDataContext _context = null;
+        private List<Image> MaterialImageList = [];
         BitmapImage emptyImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Recipe\Image\Empty.png"));
         SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#484848"));
-        #region 存储外部导入的数据
-        public bool ImportMode { get; set; } = false;
-        public JObject ExternalData { get; set; } = null;
-        #endregion
-        #region 多选与单选
-        private bool multiSelect = false;
-        public bool MultiSelect
-        {
-            get => multiSelect;
-            set
-            {
-                multiSelect = value;
-                OnPropertyChanged();
-                if (!MultiSelect)
-                    for (int i = 0; i < MaterialGrid.Children.Count; i++)
-                    {
-                        if (MaterialMap[i].Count > 0)
-                        {
-                            Image currentImage = MaterialGrid.Children[i] as Image;
-                            currentImage.Source = MaterialMap[i][0].ImagePath;
-                            ToolTip toolTip = new()
-                            {
-                                Foreground = whiteBrush,
-                                Background = grayBrush,
-                                Content = MaterialMap[i][0].IDAndName
-                            };
-                            currentImage.ToolTip = toolTip;
-                        }
-                    }
-                else
-                    for (int i = 0; i < MaterialGrid.Children.Count; i++)
-                    {
-                        if (MaterialMap[i].Count > 1)
-                        {
-                            Image currentImage = MaterialGrid.Children[i] as Image;
-                            CurrentMaterialCollection = MaterialMap[i];
-                            GenerateBubbleChart.Generator(ref currentImage, CurrentMaterialCollection);
-                            ToolTip toolTip = new()
-                            {
-                                Foreground = whiteBrush,
-                                Background = grayBrush,
-                                Content = "物品组，左击编辑"
-                            };
-                            currentImage.ToolTip = toolTip;
-                        }
-                    }
-            }
-        }
-        #endregion
-        #region 有序与无序
-        private bool shaped = false;
-        public bool Shaped
-        {
-            get => shaped;
-            set => SetProperty(ref shaped, value);
-        }
-        #endregion
+
         /// <summary>
         /// 9个槽位的合成材料的多选列表
         /// </summary>
         public Dictionary<int, ObservableCollection<ItemStructure>> MaterialMap = [];
         /// <summary>
-        /// 多选模式材料视图数据源
-        /// </summary>
-        private CollectionViewSource MultiMaterialSource = new();
-        #region 用于为前台绑定多选模式下的物品视图数据源
-        private ObservableCollection<ItemStructure> currentMaterialCollection = [];
-        public ObservableCollection<ItemStructure> CurrentMaterialCollection
-        {
-            get => currentMaterialCollection;
-            set => SetProperty(ref currentMaterialCollection, value);
-        }
-        #endregion
-        #region 9个槽位的key
-        private ObservableCollection<string> materialKeys = [];
-        public ObservableCollection<string> MaterialKeys
-        {
-            get => materialKeys;
-            set => SetProperty(ref materialKeys, value);
-        }
-        #region 记录当前的Key
-        private string currentKey = "";
-        public string CurrentKey
-        {
-            get => currentKey;
-            set => SetProperty(ref currentKey, value);
-        }
-        #endregion
-        #endregion
-        #region 9个槽位的Tag
-        private Dictionary<int, ObservableCollection<string>> materialTag = [];
-        public Dictionary<int, ObservableCollection<string>> MaterialTag
-        {
-            get => materialTag;
-            set => SetProperty(ref materialTag, value);
-        }
-        /// <summary>
         /// 记录多选模式当前选中的物品索引,用于设置Tag数据
         /// </summary>
         int MultiModeCurrentSelectedItemIndex = 0;
-        #region 记录当前的Tag
-        private string currentTag = "";
-        public string CurrentTag
-        {
-            get => currentTag;
-            set => SetProperty(ref currentTag, value);
-        }
-        #endregion
-        #endregion
+        /// <summary>
+        /// 多选模式材料视图数据源
+        /// </summary>
+        private CollectionViewSource MultiMaterialSource = new();
+
         /// <summary>
         /// 顺位枚举key
         /// </summary>
@@ -151,30 +56,17 @@ namespace CBHK.ViewModel.Component.Recipe
         /// </summary>
         private int EnumKeyIndex = 0;
         /// <summary>
-        /// 当前所选定的槽位索引
+        /// 当前所选定的槽位行号
+        /// </summary>
+        private int CurrentSelectedSlotRow = 0;
+        /// <summary>
+        /// 当前所选定的槽位列号
+        /// </summary>
+        private int CurrentSelectedSlotColumn = 0;
+        /// <summary>
+        /// 当前选定槽位的混合索引
         /// </summary>
         private int CurrentSelectedSlotIndex = 0;
-        #region 物品搜索字符串
-        private string searchText = "";
-        public string SearchText
-        {
-            get => searchText;
-            set
-            {
-                SetProperty(ref searchText, value);
-                if (MultiMaterialGrid?.Visibility == Visibility.Visible && MultiMaterialViewer?.Visibility == Visibility.Visible)
-                    MultiMaterialSource.View?.Refresh();
-            }
-        }
-        #endregion
-        /// <summary>
-        /// 存储最终结果
-        /// </summary>
-        public string Result { get; set; } = "";
-        /// <summary>
-        /// 需要保存
-        /// </summary>
-        public bool NeedSave { get; set; } = true;
         /// <summary>
         /// 材质面板
         /// </summary>
@@ -191,46 +83,123 @@ namespace CBHK.ViewModel.Component.Recipe
         /// 多选材质视图
         /// </summary>
         private ListView MultiMaterialViewer = null;
-        #region 组标识符
-        private string groupName = "";
-        public string GroupName
-        {
-            get => groupName;
-            set => SetProperty(ref groupName, value);
-        }
-        #endregion
-        #region 配方文件名
-        private string fileName = "";
-        public string FileName
-        {
-            get => fileName;
-            set => SetProperty(ref fileName, value);
-        }
-        #endregion
-        #region 配方结果数量
-        private double count = 1;
-        public double Count
-        {
-            get => count;
-            set => SetProperty(ref count, value);
-        }
-        #endregion
         #endregion
 
+        #region Property
+
+        #region 存储外部导入的数据
+        public bool ImportMode { get; set; } = false;
+        public JObject ExternalData { get; set; } = null;
+        #endregion
+
+        /// <summary>
+        /// 多选与单选
+        /// </summary>
+        [ObservableProperty]
+        private bool _multiSelect = false;
+
+        /// <summary>
+        /// 有序与无序
+        /// </summary>
+        [ObservableProperty]
+        private bool _shaped = false;
+
+        /// <summary>
+        /// 物品搜索字符串
+        /// </summary>
+        [ObservableProperty]
+        private string _searchText = "";
+
+        /// <summary>
+        /// 多选模式下每个槽位是否需要显示多个物品的编辑按钮与物品数量
+        /// </summary>
+        [ObservableProperty]
+        private ObservableCollection<Visibility> _materialMultiItemVisibilityList =
+        [
+            Visibility.Collapsed,
+            Visibility.Collapsed,
+            Visibility.Collapsed,
+            Visibility.Collapsed,
+            Visibility.Collapsed,
+            Visibility.Collapsed,
+            Visibility.Collapsed,
+            Visibility.Collapsed,
+            Visibility.Collapsed
+        ];
+
+        /// <summary>
+        /// 用于为前台绑定多选模式下的物品视图数据源
+        /// </summary>
+        [ObservableProperty]
+        private ObservableCollection<ItemStructure> _currentMaterialCollection = [];
+        /// <summary>
+        /// 9个槽位的key
+        /// </summary>
+        [ObservableProperty]
+        private ObservableCollection<string> _materialKeyList = [];
+        /// <summary>
+        /// 记录当前的Key
+        /// </summary>
+        [ObservableProperty]
+        private string _currentKey = "";
+        /// <summary>
+        /// 9个槽位的Tag
+        /// </summary>
+        [ObservableProperty]
+        private Dictionary<int, ObservableCollection<string>> _materialTag = [];
+        /// <summary>
+        /// 记录当前的Tag
+        /// </summary>
+        [ObservableProperty]
+        private string _currentTag = "";
+
+        /// <summary>
+        /// 存储最终结果
+        /// </summary>
+        public string Result { get; set; } = "";
+        /// <summary>
+        /// 需要保存
+        /// </summary>
+        public bool NeedSave { get; set; } = true;
+
+        /// <summary>
+        /// 组标识符
+        /// </summary>
+        [ObservableProperty]
+        private string _groupName = "";
+
+        /// <summary>
+        /// 配方文件名
+        /// </summary>
+        [ObservableProperty]
+        private string _fileName = "";
+
+        /// <summary>
+        /// 配方结果数量
+        /// </summary>
+        [ObservableProperty]
+        private double _count = 1;
+        #endregion
+
+        #region Event
+
+        /// <summary>
+        /// 初始化数据
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="dataService"></param>
         public CraftingTableViewModel(CBHKDataContext context,DataService dataService)
         {
-            #region 初始化数据
             _context = context;
             _dataService = dataService;
             ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
             for (int i = 0; i < 9; i++)
             {
                 MaterialMap.Add(i, []);
-                MaterialKeys.Add("");
+                MaterialKeyList.Add("");
                 ObservableCollection<string> tags = [""];
                 MaterialTag.Add(i, tags);
             }
-            #endregion
         }
 
         /// <summary>
@@ -264,13 +233,27 @@ namespace CBHK.ViewModel.Component.Recipe
         public async void MaterialGrid_Loaded(object sender, RoutedEventArgs e)
         {
             MaterialGrid = sender as Grid;
-            if (ImportMode)
-                await MaterialsLoaded();
-            else
-                foreach (Image item in MaterialGrid.Children)
+            foreach (var item in MaterialGrid.Children)
+            {
+                if (item is Image image)
                 {
-                    item.Source ??= emptyImage;
+                    MaterialImageList.Add(image);
                 }
+            }
+            if (ImportMode)
+            {
+                await MaterialsLoaded();
+            }
+            else
+            {
+                foreach (var item in MaterialGrid.Children)
+                {
+                    if (item is Image image)
+                    {
+                        image.Source ??= emptyImage;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -291,30 +274,34 @@ namespace CBHK.ViewModel.Component.Recipe
                         string[] OneToThree = pattern[0].ToString().Split(' ');
                         string[] FourToSix = pattern[1].ToString().Split(' ');
                         string[] SevenToNine = pattern[2].ToString().Split(' ');
-                        for (int i = 0; i < MaterialKeys.Count; i++)
+                        for (int i = 0; i < MaterialKeyList.Count; i++)
                         {
                             if (i < 3)
-                                MaterialKeys[i] = OneToThree[i];
+                                MaterialKeyList[i] = OneToThree[i];
                             if (i >= 3 && i < 6)
-                                MaterialKeys[i] = FourToSix[i - 3];
+                                MaterialKeyList[i] = FourToSix[i - 3];
                             if (i >= 6 && i < 9)
-                                MaterialKeys[i] = SevenToNine[i - 6];
+                                MaterialKeyList[i] = SevenToNine[i - 6];
                         }
                     }
                     if (ExternalData.SelectToken("key") is JObject keyObj)
                     {
-                        for (int i = 0; i < MaterialKeys.Count; i++)
+                        for (int i = 0; i < MaterialKeyList.Count; i++)
                         {
-                            if (MaterialKeys[i].Length > 0)
+                            if (MaterialKeyList[i].Length > 0)
                             {
-                                if (keyObj[MaterialKeys[i]] is JObject keyMean)
+                                if (keyObj[MaterialKeyList[i]] is JObject keyMean)
                                 {
                                     if (keyMean["item"] is JToken item)
                                     {
                                         string itemID = item.ToString().Replace("minecraft:", "");
                                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                                         string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
-                                        MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
+                                        MaterialMap[i].Add(new()
+                                        {
+                                            ImagePath = new BitmapImage(iconUri),
+                                            IDAndName = itemID + ":" + itemName
+                                        });
                                         (MaterialGrid.Children[i] as Image).Source = new BitmapImage(iconUri);
                                     }
                                     if (keyMean["tag"] is JToken tag)
@@ -323,7 +310,7 @@ namespace CBHK.ViewModel.Component.Recipe
                                     }
                                 }
                                 else
-                                    if (keyObj[MaterialKeys[i]] is JArray keyMeans)
+                                    if (keyObj[MaterialKeyList[i]] is JArray keyMeans)
                                 {
                                     MultiSelect = true;
                                     foreach (var itemObj in keyMeans)
@@ -333,7 +320,11 @@ namespace CBHK.ViewModel.Component.Recipe
                                             string itemID = item.ToString().Replace("minecraft:", "");
                                             Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                                             string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
-                                            MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
+                                            MaterialMap[i].Add(new()
+                                            {
+                                                ImagePath = new BitmapImage(iconUri),
+                                                IDAndName = itemID + ":" + itemName
+                                            });
                                         }
                                         if (itemObj["tag"] is JToken tag)
                                         {
@@ -341,8 +332,6 @@ namespace CBHK.ViewModel.Component.Recipe
                                         }
                                     }
                                     CurrentMaterialCollection = MaterialMap[i];
-                                    Image currentImage = MaterialGrid.Children[i] as Image;
-                                    GenerateBubbleChart.Generator(ref currentImage, CurrentMaterialCollection);
                                 }
                             }
                         }
@@ -367,14 +356,17 @@ namespace CBHK.ViewModel.Component.Recipe
                                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
                                         string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
-                                        MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
+                                        MaterialMap[i].Add(new()
+                                        {
+                                            ImagePath = new BitmapImage(iconUri),
+                                            IDAndName = itemID + ":" + itemName
+                                        });
                                         if (itemTagObj != null)
                                             MaterialTag[i].Add(itemTagObj.ToString());
                                     }
                                 }
                                 CurrentMaterialCollection = MaterialMap[i];
                                 Image currentImage = MaterialGrid.Children[i] as Image;
-                                GenerateBubbleChart.Generator(ref currentImage, CurrentMaterialCollection);
                             }
                             else
                             if (ingredients[i] is JObject item)
@@ -386,7 +378,11 @@ namespace CBHK.ViewModel.Component.Recipe
                                     string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                                     Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
                                     string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
-                                    MaterialMap[i].Add(new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName));
+                                    MaterialMap[i].Add(new()
+                                    {
+                                        ImagePath = new BitmapImage(iconUri),
+                                        IDAndName = itemID + ":" + itemName
+                                    });
                                     (MaterialGrid.Children[i] as Image).Source = new BitmapImage(iconUri);
                                     if (itemTagObj != null)
                                         MaterialTag[i].Add(itemTagObj.ToString());
@@ -408,9 +404,13 @@ namespace CBHK.ViewModel.Component.Recipe
         {
             ResultItem ??= sender as Image;
             if (ImportMode)
+            {
                 ResultItemLoaded();
+            }
             else
+            {
                 ResultItem.Source ??= emptyImage;
+            }
         }
 
         /// <summary>
@@ -429,10 +429,72 @@ namespace CBHK.ViewModel.Component.Recipe
                     iconUri = new(iconPath);
                 string itemName = ItemIDAndNameMap.First(item => item.Key == itemID).Value;
                 ResultItem.Source = new BitmapImage(iconUri);
-                ResultItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
+                ResultItem.Tag = new ItemStructure()
+                {
+                    ImagePath = new BitmapImage(iconUri),
+                    IDAndName = itemID + ":" + itemName
+                };
                 if (itemCountObj != null)
                     Count = int.Parse(itemCountObj.ToString());
                 ExternalData.Remove("result");
+            }
+        }
+
+        /// <summary>
+        /// 搜索多个内容文本框文本更新事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SearchMultiItemBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (MultiMaterialGrid?.Visibility == Visibility.Visible && MultiMaterialViewer?.Visibility == Visibility.Visible)
+            {
+                MultiMaterialSource.View?.Refresh();
+            }
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 切换单选多选
+        /// </summary>
+        public void SwitchMultipleMode()
+        {
+            if (!MultiSelect)
+            {
+                for (int i = 0; i < MaterialImageList.Count; i++)
+                {
+                    MaterialMultiItemVisibilityList[i] = Visibility.Collapsed;
+                    if (MaterialMap[i].Count > 0)
+                    {
+                        MaterialImageList[i].Source = MaterialMap[i][0].ImagePath;
+                        ToolTip toolTip = new()
+                        {
+                            Foreground = whiteBrush,
+                            Background = grayBrush,
+                            Content = MaterialMap[i][0].IDAndName
+                        };
+                        MaterialImageList[i].ToolTip = toolTip;
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < MaterialImageList.Count; i++)
+                {
+                    MaterialMultiItemVisibilityList[i] = Visibility.Collapsed;
+                    if (MaterialMap[i].Count > 1)
+                    {
+                        MaterialMultiItemVisibilityList[CurrentSelectedSlotIndex] = Visibility.Visible;
+                        CurrentMaterialCollection = MaterialMap[i];
+                        ToolTip toolTip = new()
+                        {
+                            Foreground = whiteBrush,
+                            Background = grayBrush,
+                            Content = "物品组，左击编辑"
+                        };
+                        MaterialImageList[i].ToolTip = toolTip;
+                    }
+                }
             }
         }
 
@@ -444,33 +506,29 @@ namespace CBHK.ViewModel.Component.Recipe
         /// <param name="e"></param>
         public void Run()
         {
-            #region 合成最终数据
-            Result = "";
-            #region 有序还是无序
-            string shapedData = Shaped ? "{\"type\": \"minecraft:crafting_shaped\"," : "{\"type\": \"minecraft:crafting_shapeless\",";
-            #endregion
-            #region 组标识符
-            string groupData = GroupName.Length > 0 ? "\"group\":\"" + GroupName + "\"," : "";
-            #endregion
             #region 根据配方类型合并材料数据
+            //有序还是无序
+            string shapedData = Shaped ? "{\"type\": \"minecraft:crafting_shaped\"," : "{\"type\": \"minecraft:crafting_shapeless\",";
+            //组标识符
+            string groupData = GroupName.Length > 0 ? "\"group\":\"" + GroupName + "\"," : "";
             StringBuilder keyData = new();
             string patternData = "";
             if (Shaped)
             {
                 #region 收集Key数据
                 patternData = "\"pattern\":[\"";
-                for (int i = 0; i < MaterialKeys.Count; i++)
+                for (int i = 0; i < MaterialKeyList.Count; i++)
                 {
-                    if (MaterialKeys[i].Trim() == "")
-                        MaterialKeys[i] = EnumKeys[i];
-                    patternData += (MaterialMap[i].Count > 0 && MaterialMap[i][0].IDAndName.Length > 0 ? MaterialKeys[i] : "") + " ";
-                    if ((i + 1) % 3 == 0 && i < (MaterialKeys.Count - 1))
+                    if (MaterialKeyList[i].Trim() == "")
+                        MaterialKeyList[i] = EnumKeys[i];
+                    patternData += (MaterialMap[i].Count > 0 && MaterialMap[i][0].IDAndName.Length > 0 ? MaterialKeyList[i] : "") + " ";
+                    if ((i + 1) % 3 == 0 && i < (MaterialKeyList.Count - 1))
                     {
                         if (patternData.EndsWith(' '))
                             patternData = patternData[..(patternData.Length - 1)];
                         patternData += "\",\r\n\"";
                     }
-                    if (i == (MaterialKeys.Count - 1))
+                    if (i == (MaterialKeyList.Count - 1))
                     {
                         patternData = patternData[..(patternData.Length - 1)];
                         patternData += "\"";
@@ -479,6 +537,7 @@ namespace CBHK.ViewModel.Component.Recipe
 
                 patternData += "],";
                 #endregion
+
                 #region 合并Key代表的物品数据
                 keyData.Append("\"key\":{");
                 int index = 0;
@@ -497,7 +556,7 @@ namespace CBHK.ViewModel.Component.Recipe
                             return "{\"item\":\"minecraft:" + itemID + "\"" + (MaterialTag[index].Count > 0 && tagIndex < MaterialTag[index].Count && MaterialTag[index][tagIndex].Length > 0 ? "\",\"tag\":\"" + MaterialTag[index][tagIndex] + "\"}" : "}");
                         }));
                         if (itemData.Length > 0)
-                            keyData.Append("\"" + MaterialKeys[material.Key] + "\":[" + itemData + "],");
+                            keyData.Append("\"" + MaterialKeyList[material.Key] + "\":[" + itemData + "],");
                     }
                     else
                     if (itemStructureList.Count > 0)
@@ -505,7 +564,7 @@ namespace CBHK.ViewModel.Component.Recipe
                         itemID = itemStructureList[0].IDAndName[..itemStructureList[0].IDAndName.IndexOf(':')];
                         itemData = "{\"item\":\"minecraft:" + itemID + "\"" + (MaterialTag[index].Count > 0 && MaterialTag[index][0].Length > 0 ? "\",\"tag\":\"" + MaterialTag[index][0] + "\"}" : "}");
                         if (itemData.Length > 0)
-                            keyData.Append("\"" + MaterialKeys[material.Key] + "\":" + itemData + ",");
+                            keyData.Append("\"" + MaterialKeyList[material.Key] + "\":" + itemData + ",");
                     }
                     index++;
                 }
@@ -549,6 +608,7 @@ namespace CBHK.ViewModel.Component.Recipe
                 keyData.Append("],");
                 #endregion
             }
+
             #region 合并合成结果数据
             StringBuilder resultData = new("\"result\":{\"item\":");
             ItemStructure resultStructure = ResultItem.Tag as ItemStructure;
@@ -556,12 +616,11 @@ namespace CBHK.ViewModel.Component.Recipe
             string count = Count > 1 ? ",\"count\":" + int.Parse(Count.ToString()) + "}}" : "}}";
             resultData.Append(resultItemID);
             resultData.Append(count);
+            Result = shapedData + groupData + patternData + keyData + resultData.ToString();
             #endregion
+
             #endregion
-            #region 合并最终结果
-            Result += shapedData + groupData + patternData + keyData + resultData.ToString();
-            #endregion
-            #endregion
+
             #region 选择生成路径，执行生成
             if (NeedSave)
             {
@@ -598,6 +657,8 @@ namespace CBHK.ViewModel.Component.Recipe
             int rowIndex = Grid.GetRow(currentImage);
             int columnIndex = Grid.GetColumn(currentImage);
             int multiMaterialIndex = columnIndex + (rowIndex * 3);
+            CurrentSelectedSlotRow = rowIndex;
+            CurrentSelectedSlotColumn = columnIndex;
             CurrentSelectedSlotIndex = multiMaterialIndex;
 
             ToolTip toolTip = new()
@@ -608,6 +669,8 @@ namespace CBHK.ViewModel.Component.Recipe
             };
             ToolTipService.SetBetweenShowDelay(currentImage, 0);
             ToolTipService.SetInitialShowDelay(currentImage, 0);
+
+            MaterialMultiItemVisibilityList[CurrentSelectedSlotIndex] = Visibility.Collapsed;
             if (currentImage.Parent == MaterialGrid)
             {
                 if (!MultiSelect)
@@ -620,11 +683,11 @@ namespace CBHK.ViewModel.Component.Recipe
                 }
                 else
                 {
+                    MaterialMultiItemVisibilityList[CurrentSelectedSlotIndex] = Visibility.Visible;
                     MaterialMap[CurrentSelectedSlotIndex].Add(itemStructure);
                     if (MaterialMap[CurrentSelectedSlotIndex].Count > 1)
                     {
                         CurrentMaterialCollection = MaterialMap[CurrentSelectedSlotIndex];
-                        GenerateBubbleChart.Generator(ref currentImage, CurrentMaterialCollection);
                         toolTip.Content = "物品组，左击编辑";
                     }
                     else
@@ -632,24 +695,29 @@ namespace CBHK.ViewModel.Component.Recipe
                 }
             }
             else
+            {
                 currentImage.Source = image.Source;
+            }
             currentImage.Tag = itemStructure;
             currentImage.ToolTip = toolTip;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 左击槽位打开槽位数据页面
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void SetSlotData_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        public void SetSlotData(Button currentButton)
         {
-            Image currentImage = sender as Image;
-            int rowIndex = Grid.GetRow(currentImage);
-            int columnIndex = Grid.GetColumn(currentImage);
+            int rowIndex = Grid.GetRow(currentButton);
+            int columnIndex = Grid.GetColumn(currentButton);
+            CurrentSelectedSlotRow = rowIndex;
+            CurrentSelectedSlotColumn = columnIndex;
+
             CurrentSelectedSlotIndex = columnIndex + (rowIndex * 3);
             MultiMaterialViewer.SelectedIndex = MultiModeCurrentSelectedItemIndex = 0;
-            CurrentKey = MaterialKeys[CurrentSelectedSlotIndex];
+            CurrentKey = MaterialKeyList[CurrentSelectedSlotIndex];
             CurrentTag = MaterialTag[CurrentSelectedSlotIndex][0];
 
             if (CurrentKey == "")
@@ -660,22 +728,41 @@ namespace CBHK.ViewModel.Component.Recipe
 
             CurrentMaterialCollection = MaterialMap[CurrentSelectedSlotIndex];
             MultiMaterialGrid.Visibility = Visibility.Visible;
-            MultiMaterialViewer.Visibility = Visibility.Visible;
         }
 
+        [RelayCommand]
         /// <summary>
         /// 更新并关闭多选模式面板
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void UpdateAndCloseSlotGrid_Click(object sender, RoutedEventArgs e)
+        public void UpdateAndCloseSlotGrid()
         {
             MultiMaterialGrid.Visibility = Visibility.Collapsed;
-            MaterialKeys[CurrentSelectedSlotIndex] = CurrentKey.Replace(" ", "").Replace("\r", "").Replace("\n", "");
+            if (MaterialMap[CurrentSelectedSlotIndex].Count == 1)
+            {
+                MaterialMultiItemVisibilityList[CurrentSelectedSlotIndex] = Visibility.Collapsed;
+            }
+            if (MaterialMap[CurrentSelectedSlotIndex].Count == 0)
+            {
+                for (int i = 0; i < MaterialGrid.Children.Count; i++)
+                {
+                    if (MaterialGrid.Children[i] is Image image && Grid.GetRow(image) == CurrentSelectedSlotRow && Grid.GetColumn(image) == CurrentSelectedSlotColumn)
+                    {
+                        image.Source = emptyImage;
+                        break;
+                    }
+                }
+            }
+            MaterialKeyList[CurrentSelectedSlotIndex] = CurrentKey.Replace(" ", "").Replace("\r", "").Replace("\n", "");
             if (!MultiSelect)
+            {
                 MaterialTag[CurrentSelectedSlotIndex][0] = CurrentTag;
+            }
             else
+            {
                 MaterialTag[CurrentSelectedSlotIndex][MultiModeCurrentSelectedItemIndex] = CurrentTag;
+            }
         }
 
         /// <summary>
@@ -721,7 +808,9 @@ namespace CBHK.ViewModel.Component.Recipe
 
             // 遍历可视化树，直到找到ListView的子项
             while (element != null && element is not ListViewItem)
+            {
                 element = VisualTreeHelper.GetParent(element);
+            }
 
             // 获取子项
             if (element is ListViewItem item)
@@ -732,8 +821,15 @@ namespace CBHK.ViewModel.Component.Recipe
                     MaterialMap[CurrentSelectedSlotIndex].RemoveAt(index);
             }
 
-            Image currentImage = MaterialGrid.Children[CurrentSelectedSlotIndex] as Image;
-            GenerateBubbleChart.Generator(ref currentImage, CurrentMaterialCollection);
+            Image currentImage = null;
+            foreach (UIElement currentItem in MaterialGrid.Children)
+            {
+                if(currentItem is Image && Grid.GetRow(currentItem) == CurrentSelectedSlotRow && Grid.GetColumn(currentItem) == CurrentSelectedSlotColumn)
+                {
+                    currentImage = currentItem as Image;
+                    break;
+                }
+            }
             if (MaterialMap[CurrentSelectedSlotIndex].Count == 1)
             {
                 currentImage.Source = MaterialMap[CurrentSelectedSlotIndex][0].ImagePath;
@@ -768,7 +864,10 @@ namespace CBHK.ViewModel.Component.Recipe
                 e.Accepted = result;
             }
             else
+            {
                 e.Accepted = true;
+            }
         }
+        #endregion
     }
 }

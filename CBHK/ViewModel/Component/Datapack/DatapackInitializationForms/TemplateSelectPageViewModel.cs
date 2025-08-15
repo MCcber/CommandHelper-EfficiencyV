@@ -1,6 +1,5 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
-using CBHK.GeneralTool;
 using CBHK.View.Component.Datapack.TemplateSelectPage;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Generator;
@@ -27,9 +26,13 @@ using System.Windows.Navigation;
 
 namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
 {
-    public partial class TemplateSelectViewModel: ObservableObject
+    public partial class TemplateSelectPageViewModel(CBHKDataContext context): ObservableObject
     {
-        #region 字段
+        #region Field
+        /// <summary>
+        /// 主窗体引用
+        /// </summary>
+        DatapackView dataPack = null;
         /// <summary>
         /// 模板存放路径
         /// </summary>
@@ -50,62 +53,63 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// 数据库文件路径
         /// </summary>
         private string databaseFilePath = AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db";
-        private CBHKDataContext _context = null;
+        private CBHKDataContext _context = context;
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
         private SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#3D3D3D"));
         /// <summary>
         /// 载入完毕
         /// </summary>
-        private bool Loaded = false;
-        /// <summary>
-        /// 近期使用的解决方案模板数据源
-        /// </summary>
-        public ObservableCollection<RecentSolutionTemplateItem> RecentSolutionTemplateList { get; set; } = [];
-        /// <summary>
-        /// 包模板数据源
-        /// </summary>
-        public ObservableCollection<SolutionTemplateItems> SolutionTemplateList { get; set; } = [];
-        /// <summary>
-        /// 解决方案视图集合对象
-        /// </summary>
-        private CollectionViewSource SolutionTemplateSource { get; set; }
-        /// <summary>
-        /// 存放版本列表
-        /// </summary>
-        public ObservableCollection<TextComboBoxItem> VersionList { get; set; } = [];
-        /// <summary>
-        /// 存放模板类型列表
-        /// </summary>
-        public ObservableCollection<TextComboBoxItem> DeveloperNameList { get; set; } = [];
-        /// <summary>
-        /// 包功能类型列表
-        /// </summary>
-        public ObservableCollection<TextComboBoxItem> FunctionTypeList { get; set; } = [];
-
+        private bool IsLoaded = false;
         [GeneratedRegex(@"(?<=包版本-)[0-9]+")]
         private static partial Regex packVersionComparer();
         #endregion
 
+        #region Property
+        /// <summary>
+        /// 近期使用的解决方案模板数据源
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<RecentSolutionTemplateItem> _recentSolutionTemplateList = [];
+        /// <summary>
+        /// 包模板数据源
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<SolutionTemplateItems> _solutionTemplateList = [];
+        /// <summary>
+        /// 解决方案视图集合对象
+        /// </summary>
+        [ObservableProperty]
+        private CollectionViewSource _solutionTemplateSource = null;
+        /// <summary>
+        /// 存放版本列表
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _versionList = [];
+        /// <summary>
+        /// 存放模板类型列表
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _developerNameList = [];
+        /// <summary>
+        /// 包功能类型列表
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _functionTypeList = [];
+
+        /// <summary>
+        /// 清除过滤参数可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _clearAllParametersVisibility = Visibility.Hidden;
+
         #region 存储已选择的版本
-        private TextComboBoxItem selectedVersion;
-        public TextComboBoxItem SelectedVersion
-        {
-            get => selectedVersion;
-            set
-            {
-                SetProperty(ref selectedVersion, value);
-                ClearAllParametersVisibility = SelectedVersionIndex <= 0 && SelectedDeveloperNameIndex <= 0 && SelectedFunctionTypeIndex <= 0 && SearchText.Length == 0 ? Visibility.Hidden : Visibility.Visible;
-                if (Loaded)
-                SolutionTemplateSource.View?.Refresh();
-            }
-        }
-        private int selectedVersionIndex = 0;
-        public int SelectedVersionIndex
-        {
-            get => selectedVersionIndex;
-            set => SetProperty(ref selectedVersionIndex, value);
-        }
+        [ObservableProperty]
+        private TextComboBoxItem _selectedVersion;
+
+        [ObservableProperty]
+        private int _selectedVersionIndex = 0;
+
         private int RealSelectedVersion
         {
             get => VersionList.Count - 1 - VersionList.IndexOf(SelectedVersion) + 3;
@@ -121,16 +125,13 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             {
                 SetProperty(ref selectedDeveloperName, value);
                 ClearAllParametersVisibility = SelectedVersionIndex <= 0 && SelectedDeveloperNameIndex <= 0 && SelectedFunctionTypeIndex <= 0 && SearchText.Length == 0 ? Visibility.Hidden : Visibility.Visible;
-                if (Loaded)
+                if (IsLoaded)
                     SolutionTemplateSource.View?.Refresh();
             }
         }
-        private int selectedDeveloperNameIndex = 0;
-        public int SelectedDeveloperNameIndex
-        {
-            get => selectedDeveloperNameIndex;
-            set => SetProperty(ref selectedDeveloperNameIndex, value);
-        }
+
+        [ObservableProperty]
+        private int _selectedDeveloperNameIndex = 0;
         #endregion
 
         #region 存储已选择的功能类型
@@ -142,16 +143,13 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             {
                 SetProperty(ref selectedFunctionType, value);
                 ClearAllParametersVisibility = SelectedVersionIndex <= 0 && SelectedDeveloperNameIndex <= 0 && SelectedFunctionTypeIndex <= 0 && SearchText.Length == 0 ? Visibility.Hidden : Visibility.Visible;
-                if (Loaded)
+                if (IsLoaded)
                     SolutionTemplateSource.View?.Refresh();
             }
         }
-        private int selectedFunctionTypeIndex = 0;
-        public int SelectedFunctionTypeIndex
-        {
-            get => selectedFunctionTypeIndex;
-            set => SetProperty(ref selectedFunctionTypeIndex, value);
-        }
+
+        [ObservableProperty]
+        private int _selectedFunctionTypeIndex = 0;
         #endregion
 
         #region 存储已选择的解决方案
@@ -163,8 +161,10 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             set
             {
                 selectedSolution = value;
-                if(SelectedSolution != null)
+                if (SelectedSolution is not null)
+                {
                     LastSelectedSolution = SelectedSolution;
+                }
             }
         }
         #endregion
@@ -178,25 +178,15 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             {
                 SetProperty(ref searchText, value);
                 ClearAllParametersVisibility = SelectedVersionIndex <= 0 && SelectedDeveloperNameIndex <= 0 && SelectedFunctionTypeIndex <= 0 && SearchText.Length == 0 ? Visibility.Hidden : Visibility.Visible;
-                if (Loaded)
+                if (IsLoaded)
                     SolutionTemplateSource.View?.Refresh();
             }
         }
         #endregion
 
-        #region 清除过滤参数可见性
-        private Visibility clearAllParametersVisibility = Visibility.Hidden;
-        public Visibility ClearAllParametersVisibility
-        {
-            get => clearAllParametersVisibility;
-            set => SetProperty(ref clearAllParametersVisibility,value);
-        }
         #endregion
 
-        #region 主窗体引用
-        DatapackView dataPack = null;
-        #endregion
-
+        #region Method
         /// <summary>
         /// 异步加载数据
         /// </summary>
@@ -207,7 +197,8 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                 dataPack.Dispatcher.InvokeAsync(async () =>
                 {
                     DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
-                    SolutionTemplateSource = context.templateSelectPage.FindResource("SolutionTemplateSource") as CollectionViewSource;
+                    SolutionTemplateSource = context.TemplateSelectPage.FindResource("SolutionTemplateSource") as CollectionViewSource;
+
                     #region 清除数据
                     VersionList.Clear();
                     SolutionTemplateList.Clear();
@@ -217,6 +208,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                     DeveloperNameList.Add(new TextComboBoxItem() { Text = "全部" });
                     FunctionTypeList.Add(new TextComboBoxItem() { Text = "全部" });
                     #endregion
+
                     #region 载入版本
                     if (File.Exists(databaseFilePath))
                     {
@@ -227,10 +219,11 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                         }
                     }
                     #endregion
+                    
                     #region 载入解决方案模板
                     string solutionTemplateContent = File.ReadAllText(TemplateDataFilePath);
                     List<string> BlankSolutions = Directory.GetFiles(BlankSolutionFolder).ToList();
-                    BlankSolutions.Sort(new SolutionNameComparer());
+                    BlankSolutions.Sort(new GeneralTool.SolutionNameComparer());
                     for (int i = 0; i < BlankSolutions.Count; i++)
                         SolutionTemplateArray.Add(BlankSolutions[i]);
                     if (solutionTemplateContent.Length > 0)
@@ -303,23 +296,13 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                         SelectedVersionIndex = SelectedDeveloperNameIndex = SelectedFunctionTypeIndex = 0;
                     }
                     #endregion
+                    
                     #region 载入近期使用的解决方案模板
 
                     #endregion
                 });
-                Loaded = true;
+                IsLoaded = true;
             });
-        }
-
-        /// <summary>
-        /// 模板窗体载入事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void TemplateWindowLoaded(object sender,RoutedEventArgs e)
-        {
-            dataPack = Window.GetWindow(sender as Page) as DatapackView;
-            await InitData();
         }
 
         /// <summary>
@@ -330,12 +313,39 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
             await dataPack.Dispatcher.InvokeAsync(() =>
             {
-                context.datapackGenerateSetupPage ??= new();
-                DatapackGenerateSetupViewModel setUpContext = context.datapackGenerateSetupPage.DataContext as DatapackGenerateSetupViewModel;
-                if(LastSelectedSolution is not null)
-                setUpContext.SolutionTemplatePath = LastSelectedSolution.Uid;
-                NavigationService.GetNavigationService(context.frame).Navigate(context.datapackGenerateSetupPage);
+                context.DatapackGenerateSetupPage ??= new();
+                DatapackGenerateSetupPageViewModel setUpContext = context.DatapackGenerateSetupPage.DataContext as DatapackGenerateSetupPageViewModel;
+                if (LastSelectedSolution is not null)
+                    setUpContext.SolutionTemplatePath = LastSelectedSolution.Uid;
+                NavigationService.GetNavigationService(context.Frame).Navigate(context.DatapackGenerateSetupPage);
             });
+        }
+        #endregion
+
+        #region Event
+        /// <summary>
+        /// 模板窗体载入事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void TemplateSelectPageView_Loaded(object sender,RoutedEventArgs e)
+        {
+            dataPack = Window.GetWindow(sender as Page) as DatapackView;
+            await InitData();
+        }
+
+        /// <summary>
+        /// 选择版本变更
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SelectedVersion_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ClearAllParametersVisibility = SelectedVersionIndex <= 0 && SelectedDeveloperNameIndex <= 0 && SelectedFunctionTypeIndex <= 0 && SearchText.Length == 0 ? Visibility.Hidden : Visibility.Visible;
+            if (IsLoaded)
+            {
+                SolutionTemplateSource.View?.Refresh();
+            }
         }
 
         /// <summary>
@@ -358,7 +368,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         private void TemplateLastStep(Page page)
         {
             DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
-            NavigationService.GetNavigationService(context.frame).Navigate(context.homePage);
+            NavigationService.GetNavigationService(context.Frame).Navigate(context.EditPage);
         }
 
         [RelayCommand]
@@ -378,14 +388,20 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// <param name="e"></param>
         public void SolutionTemplateViewSource_Filter(object sender, FilterEventArgs e)
         {
-            if (!Loaded) return;
+            if (!IsLoaded)
+            {
+                return;
+            }
             SolutionTemplateItems solutionTemplateItems = e.Item as SolutionTemplateItems;
             bool name = false;
             bool description = false;
             bool version = false;
             string versionValue = RealSelectedVersion + "";
             string currentVersion = solutionTemplateItems.Version.Text;
-            if (currentVersion == "Version") return;
+            if (currentVersion == "Version")
+            {
+                return;
+            }
             if (SearchText.Length > 0)
             {
                 name = solutionTemplateItems.SolutionName.Text.StartsWith(SearchText) || solutionTemplateItems.SolutionName.Text.Contains(SearchText);
@@ -401,11 +417,15 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                     typeValue.Add(textBlock.Text);
             }
             bool developer = false;
-            if(SelectedDeveloperName != null)
-            developer = SelectedDeveloperName.Text == "全部" || SelectedDeveloperName.Text.StartsWith(developerValue) || SelectedDeveloperName.Text.Contains(developerValue);
+            if (SelectedDeveloperName is not null)
+            {
+                developer = SelectedDeveloperName.Text == "全部" || SelectedDeveloperName.Text.StartsWith(developerValue) || SelectedDeveloperName.Text.Contains(developerValue);
+            }
             bool type = false;
-            if(SelectedFunctionType != null)
-            type = SelectedFunctionType.Text == "全部" || typeValue.Contains(SelectedFunctionType.Text);
+            if (SelectedFunctionType is not null)
+            {
+                type = SelectedFunctionType.Text == "全部" || typeValue.Contains(SelectedFunctionType.Text);
+            }
             e.Accepted = SearchText.Length > 0?((name || description) && version && developer && type) : version && developer && type;
         }
 
@@ -416,7 +436,6 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// <param name="e"></param>
         public void RecentSolutionTemplateViewSource_Filter(object sender, FilterEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -428,17 +447,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         {
             await NavigationToGenerateSetupPage();
         }
-    }
 
-    public class SolutionNameComparer : IComparer<string>
-    {
-        public int Compare(string x, string y)
-        {
-            string xNumber = Regex.Match(Path.GetFileNameWithoutExtension(x),@"\d+$").ToString();
-            string yNumber = Regex.Match(Path.GetFileNameWithoutExtension(y), @"\d+$").ToString();
-            int xInt = int.Parse(xNumber);
-            int yInt = int.Parse(yNumber);
-            return yInt.CompareTo(xInt);
-        }
+        #endregion
     }
 }

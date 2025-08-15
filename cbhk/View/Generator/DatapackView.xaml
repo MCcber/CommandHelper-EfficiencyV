@@ -28,7 +28,7 @@
 
     <Grid>
         <ContentControl>
-            <Frame Content="{Binding homePage}" NavigationUIVisibility="Hidden" />
+            <Frame Content="{Binding HomePage}" NavigationUIVisibility="Hidden" />
         </ContentControl>
     </Grid>
 </localWindow:CommonWindow>

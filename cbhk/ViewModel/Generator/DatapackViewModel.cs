@@ -5,38 +5,46 @@ using System.Windows;
 using CBHK.View;
 using CBHK.ViewModel.Component.Datapack.HomePage;
 using CBHK.View.Component.Datapack.EditPage;
-using CBHK.View.Component.DatapackInitializationForms;
 using CBHK.View.Component.Datapack.HomePage;
+using CBHK.View.Component.Datapack.DatapackInitializationForms;
 
 namespace CBHK.ViewModel.Generator
 {
-    public class DatapackViewModel : ObservableObject
+    public partial class DatapackViewModel : ObservableObject
     {
-        #region 主页，模板设置页，属性设置页，数据上下文的引用
+        #region Field
+        /// <summary>
+        /// 主页
+        /// </summary>
+        private MainView home = null;
+        #endregion
+
+        #region Property
         /// <summary>
         /// 分页框架
         /// </summary>
-        public DependencyObject frame { get; set; } = null;
+        [ObservableProperty]
+        private DependencyObject _frame = null;
         /// <summary>
         /// 主页
         /// </summary>
-        public HomePageView homePage { get; set; } = new();
+        [ObservableProperty]
+        private HomePageView _homePage = new();
         /// <summary>
         /// 属性设置页
         /// </summary>
-        public DatapackGenerateSetupView datapackGenerateSetupPage { get; set; } = null;
+        [ObservableProperty]
+        private DatapackGenerateSetupPageView _datapackGenerateSetupPage = null;
         /// <summary>
         /// 模板选择页
         /// </summary>
-        public TemplateSelectPageView templateSelectPage { get; set; } = null;
+        [ObservableProperty]
+        private TemplateSelectPageView _templateSelectPage = null;
         /// <summary>
         /// 编辑页
         /// </summary>
-        public EditPageView editPage { get; set; } = null;
-        /// <summary>
-        /// 主页
-        /// </summary>
-        public MainView home = null;
+        [ObservableProperty]
+        private EditPageView _editPage = null;
         #endregion
 
         #region 语言服务器线程
@@ -63,7 +71,7 @@ namespace CBHK.ViewModel.Generator
         public async void Datapack_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             serverProcess.Kill();
-            HomePageViewModel context = homePage.DataContext as HomePageViewModel;
+            HomePageViewModel context = HomePage.DataContext as HomePageViewModel;
             await context.ReCalculateSolutionPath();
         }
     }

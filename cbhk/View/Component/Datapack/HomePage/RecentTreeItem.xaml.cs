@@ -1,7 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.GeneralTool;
 using CBHK.GeneralTool.Time;
-using CBHK.View.Component.DatapackInitializationForms;
 using CBHK.ViewModel.Component.Datapack.HomePage;
 using System;
 using System.IO;
@@ -70,7 +69,7 @@ namespace CBHK.View.Component.Datapack.HomePage
                 //保存当前内容节点
                 RichTreeViewItems currentContentItem = border.FindParent<RichTreeViewItems>();
                 //更新动态路径
-                currentContentItem.Uid = context.RecentSolutionsFolderPath + "\\" + System.IO.Path.GetFileName(currentContentItem.Tag.ToString());
+                currentContentItem.Uid = context.RecentSolutionFolderPath + "\\" + System.IO.Path.GetFileName(currentContentItem.Tag.ToString());
                 //保存当前时间节点
                 TreeViewItem currentDateItem = currentContentItem.Parent as TreeViewItem;
                 currentDateItem.Items.Remove(currentContentItem);
@@ -86,7 +85,7 @@ namespace CBHK.View.Component.Datapack.HomePage
                 //保存当前内容节点
                 RichTreeViewItems currentContentItem = border.FindParent<RichTreeViewItems>();
                 //更新动态路径
-                currentContentItem.Uid = context.RecentSolutionsFolderPath + "\\" + System.IO.Path.GetFileName(currentContentItem.Tag.ToString());
+                currentContentItem.Uid = context.RecentSolutionFolderPath + "\\" + System.IO.Path.GetFileName(currentContentItem.Tag.ToString());
                 context.RecentContentDateItemList[0].Items.Remove(currentContentItem);
                 //如果固定节点没有子级则折叠
                 if (context.RecentContentDateItemList[0].Items.Count == 0)

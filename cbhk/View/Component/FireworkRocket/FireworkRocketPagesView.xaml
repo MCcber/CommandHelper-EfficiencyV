@@ -172,22 +172,6 @@
                         </UniformGrid>
                     </ScrollViewer>
                 </CustomControl:Accordion>
-                <CustomControl:StereoToggleButton
-                    HorizontalAlignment="Stretch"
-                    Background="#D77A34"
-                    BorderThickness="4,5,4,7"
-                    BottomBorderTexture="{StaticResource TextToggleButtonFalseBottomFrame}"
-                    Content="加入淡入"
-                    IsChecked="{Binding AddInMain, Mode=TwoWay}"
-                    IsCheckedThickness="4 4 4 4"
-                    LeftBorderTexture="{StaticResource TextToggleButtonFalseLeftFrame}"
-                    RightBorderTexture="{StaticResource TextToggleButtonFalseRightFrame}"
-                    Style="{DynamicResource StereoToggleButton}"
-                    TopBorderTexture="{StaticResource TextToggleButtonFalseTopFrame}"
-                    TrueBottomBorderTexture="{StaticResource TextToggleButtonTrueBottomFrame}"
-                    TrueLeftBorderTexture="{StaticResource TextToggleButtonTrueLeftFrame}"
-                    TrueRightBorderTexture="{StaticResource TextToggleButtonTrueRightFrame}"
-                    TrueTopBorderTexture="{StaticResource TextToggleButtonTrueTopFrame}" />
                 <CustomControl:Accordion
                     Title="淡入颜色"
                     HorizontalAlignment="Stretch"
@@ -197,6 +181,7 @@
                     FreshForeground="Black"
                     FreshName="清空"
                     FreshVisibility="Visible"
+                    IsExpanded="{Binding AddInMain, Mode=TwoWay}"
                     ModifyVisibility="Collapsed"
                     Style="{DynamicResource AccordionStyle}"
                     TitleForeground="Black">
@@ -225,7 +210,7 @@
                                 HorizontalAlignment="Left"
                                 Background="Transparent"
                                 BorderThickness="0"
-                                ItemsSource="{Binding MainColors}"
+                                ItemsSource="{Binding MainColorList}"
                                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                 ScrollViewer.VerticalScrollBarVisibility="Disabled">
                                 <ItemsControl.ItemsPanel>
@@ -245,23 +230,6 @@
                         </ScrollViewer>
                     </Canvas>
                 </CustomControl:Accordion>
-                <CustomControl:StereoToggleButton
-                    Margin="0,12,0,0"
-                    HorizontalAlignment="Stretch"
-                    Background="#D77A34"
-                    BorderThickness="4,5,4,7"
-                    BottomBorderTexture="{StaticResource TextToggleButtonFalseBottomFrame}"
-                    Content="加入淡出"
-                    IsChecked="{Binding AddInFade, Mode=TwoWay}"
-                    IsCheckedThickness="4 4 4 4"
-                    LeftBorderTexture="{StaticResource TextToggleButtonFalseLeftFrame}"
-                    RightBorderTexture="{StaticResource TextToggleButtonFalseRightFrame}"
-                    Style="{DynamicResource StereoToggleButton}"
-                    TopBorderTexture="{StaticResource TextToggleButtonFalseTopFrame}"
-                    TrueBottomBorderTexture="{StaticResource TextToggleButtonTrueBottomFrame}"
-                    TrueLeftBorderTexture="{StaticResource TextToggleButtonTrueLeftFrame}"
-                    TrueRightBorderTexture="{StaticResource TextToggleButtonTrueRightFrame}"
-                    TrueTopBorderTexture="{StaticResource TextToggleButtonTrueTopFrame}" />
                 <CustomControl:Accordion
                     Title="淡出颜色"
                     Margin="0,0,0,12"
@@ -272,6 +240,7 @@
                     FreshForeground="Black"
                     FreshName="清空"
                     FreshVisibility="Visible"
+                    IsExpanded="{Binding AddInFade, Mode=TwoWay}"
                     ModifyVisibility="Collapsed"
                     Style="{DynamicResource AccordionStyle}"
                     TitleForeground="Black">
@@ -296,7 +265,7 @@
                             <ItemsControl
                                 Height="50"
                                 BorderThickness="0"
-                                ItemsSource="{Binding FadeColors}"
+                                ItemsSource="{Binding FadeColorList}"
                                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                 ScrollViewer.VerticalScrollBarVisibility="Disabled">
                                 <ItemsControl.ItemsPanel>

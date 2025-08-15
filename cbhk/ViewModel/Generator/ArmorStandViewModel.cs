@@ -9,7 +9,6 @@ using DryIoc;
 using HelixToolkit.Wpf;
 using Newtonsoft.Json.Linq;
 using Prism.Ioc;
-using Prism.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -35,7 +34,15 @@ namespace CBHK.ViewModel.Generator
 {
     public partial class ArmorStandViewModel : ObservableObject
     {
-        #region Filed
+        #region Field
+        /// <summary>
+        /// 本生成器的图标路径
+        /// </summary>
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconArmorStand.png";
+        /// <summary>
+        /// 开始三轴合一
+        /// </summary>
+        private bool UsingThreeAxis = false;
         private ArmorStandCameraMovementType _armorStandCameraMovementType;
         private ArmorStandCameraOverTheShoulderType _armorStandCameraOverTheShoulderType;
         private bool IsLeftShoulder = false;
@@ -45,11 +52,101 @@ namespace CBHK.ViewModel.Generator
         double ConeHeight = 2;
         //右上角Gizimo中圆锥离原点的距离
         double ConeDistance = 2.8;
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        private Window home = null;
+
+        /// <summary>
+        /// 当前视图模型
+        /// </summary>
+        private Viewport3D ArmorStandViewer = null;
+        private ModelVisual3D ModelGroup = null;
+
+        /// <summary>
+        /// ArmorStand的所有NBT项
+        /// </summary>
+        private List<string> ArmorStandNBTList = [];
+        /// <summary>
+        /// 动画容器
+        /// </summary>
+        private AnimationContainer animationContainer = null;
+
+        /// <summary>
+        /// 超出三轴合一按钮范围
+        /// </summary>
+        private bool OutOfThreeAxis = false;
+        /// <summary>
+        /// 当前三轴合一按钮位置
+        /// </summary>
+        private Point CurrentButtonCenter;
+        /// <summary>
+        /// 布尔型NBT链表
+        /// </summary>
+        List<string> BoolTypeNBT = [];
+        /// <summary>
+        /// 禁止移除或改变总值
+        /// </summary>
+        private int CannotTakeOrReplceSum;
+        /// <summary>
+        /// 禁止添加或改变总值
+        /// </summary>
+        private int CannotPlaceOrReplaceSum;
+        /// <summary>
+        /// 禁止添加总值
+        /// </summary>
+        private int CannotPlaceSum;
+        /// <summary>
+        /// 布尔NBT集合
+        /// </summary>
+        StackPanel NBTList = null;
+
+        #region 引用
+        private readonly IContainerProvider _container;
+        /// <summary>
+        /// 样式化文本框引用
+        /// </summary>
+        StylizedTextBox stylizedTextBox = null;
+        /// <summary>
+        /// 标签文本框
+        /// </summary>
+        TagRichTextBox tagRichTextBox = null;
+        #endregion
+
+        #region 所有3D视图对象
+        public PerspectiveCamera MainCamera = new();
+        public PerspectiveCamera GizimoCamera = new();
+        public Viewport3D SceneGizmo = new();
+        public GeometryModel3D HeadModel = null;
+        public GeometryModel3D LeftLegModel = null;
+        public GeometryModel3D RightLegModel = null;
+        public GeometryModel3D TopModel = null;
+        public GeometryModel3D BottomModel = null;
+        public GeometryModel3D LeftModel = null;
+        public GeometryModel3D RightModel = null;
+
+        private double lastMousePosX = 0.0;
+
+        private double lastMousePosY = 0.0;
+
+        private double deltaMoveX;
+
+        private double deltaMoveY;
+        #endregion
+
         #endregion
 
         #region Property
+
+        #region 生成器标题
+        [ObservableProperty]
+        public string _title = "盔甲架生成器";
+        #endregion
+
+        #region 预览文本
         [ObservableProperty]
         public string _previewModeText = "预览";
+        #endregion
 
         #region 是否拥有副手权限
         //版本切换锁,防止属性之间无休止更新
@@ -60,14 +157,13 @@ namespace CBHK.ViewModel.Generator
             get => haveOffHandPermission;
             set
             {
-                haveOffHandPermission = value;
+                SetProperty(ref haveOffHandPermission, value);
                 if (!permission_switch_lock)
                 {
                     permission_switch_lock = !permission_switch_lock;
                     UseMainHandPermission = SelectedVersion.Text == "1.9.0" ? Visibility.Collapsed : Visibility.Visible;
                     permission_switch_lock = false;
                 }
-                OnPropertyChanged();
             }
         }
         #endregion
@@ -76,17 +172,16 @@ namespace CBHK.ViewModel.Generator
         private Visibility useMainHandPermission = Visibility.Collapsed;
         public Visibility UseMainHandPermission
         {
-            get { return useMainHandPermission; }
+            get => useMainHandPermission;
             set
             {
-                useMainHandPermission = value;
+                SetProperty(ref useMainHandPermission, value);
                 if (!permission_switch_lock)
                 {
                     permission_switch_lock = !permission_switch_lock;
                     HaveOffHandPermission = SelectedVersion.Text == "1.8.0" ? Visibility.Collapsed : Visibility.Visible;
                     permission_switch_lock = false;
                 }
-                OnPropertyChanged();
             }
         }
         #endregion
@@ -113,24 +208,6 @@ namespace CBHK.ViewModel.Generator
         private Visibility _previewMenuVisibility = Visibility.Visible;
         #endregion
 
-        /// <summary>
-        /// 主页引用
-        /// </summary>
-        private Window home = null;
-
-        /// <summary>
-        /// 当前视图模型
-        /// </summary>
-        private Viewport3D ArmorStandViewer = null;
-        private ModelVisual3D ModelGroup = null;
-
-        /// <summary>
-        /// ArmorStand的所有NBT项
-        /// </summary>
-        List<string> ArmorStandNBTList = [];
-
-        private AnimationContainer animationContainer = null;
-
         #region 显示结果
         [ObservableProperty]
         private bool _showGeneratorResult = false;
@@ -146,7 +223,7 @@ namespace CBHK.ViewModel.Generator
         private bool _customNameVisible = false;
         private string CustomNameVisibleString
         {
-            get { return CustomNameVisible ? "CustomNameVisible:1b," : ""; }
+            get => CustomNameVisible ? "CustomNameVisible:1b," : "";
         }
         #endregion
 
@@ -179,8 +256,8 @@ namespace CBHK.ViewModel.Generator
         }
         #endregion
 
-        #region BoolNBTs
-        private string BoolNBTs
+        #region BoolNBTList
+        private string BoolNBTList
         {
             get
             {
@@ -211,9 +288,9 @@ namespace CBHK.ViewModel.Generator
             get
             {
                 string result = "";
-                bool have_value = HeadXValue || HeadYValue || HeadZValue || BodyXValue || BodyYValue || BodyZValue || LArmXValue || LArmYValue || LArmZValue || RArmXValue || RArmYValue || RArmZValue || LLegXValue || LLegYValue || LLegZValue || RLegXValue || RLegYValue || RLegZValue;
+                bool haveValue = HeadXValue || HeadYValue || HeadZValue || BodyXValue || BodyYValue || BodyZValue || LArmXValue || LArmYValue || LArmZValue || RArmXValue || RArmYValue || RArmZValue || LLegXValue || LLegYValue || LLegZValue || RLegXValue || RLegYValue || RLegZValue;
 
-                result = have_value ? (HeadXValue || HeadYValue || HeadZValue ? "Head:[" + HeadX + "f," + HeadY + "f," + HeadZ + "f]," : "") + (BodyXValue || BodyYValue || BodyZValue ? "Body:[" + BodyX + "f," + BodyY + "f," + BodyZ + "f]," : "")
+                result = haveValue ? (HeadXValue || HeadYValue || HeadZValue ? "Head:[" + HeadX + "f," + HeadY + "f," + HeadZ + "f]," : "") + (BodyXValue || BodyYValue || BodyZValue ? "Body:[" + BodyX + "f," + BodyY + "f," + BodyZ + "f]," : "")
                       + (LArmXValue || LArmYValue || LArmZValue ? "LeftArm:[" + LArmX + "f," + LArmY + "f," + LArmZ + "f]," : "")
                       + (RArmXValue || RArmYValue || RArmZValue ? "RightArm:[" + RArmX + "f," + RArmY + "f," + RArmZ + "f]," : "")
                       + (LLegXValue || LLegYValue || LLegZValue ? "LeftLeg:[" + LLegX + "f," + LLegY + "f," + LLegZ + "f]," : "")
@@ -227,9 +304,9 @@ namespace CBHK.ViewModel.Generator
 
         #region 重置动作的按钮前景颜色对象
         //灰色
-        static SolidColorBrush gray_brush = new((Color)ColorConverter.ConvertFromString("#8F8F8F"));
+        static SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#8F8F8F"));
         //白色
-        static SolidColorBrush black_brush = new((Color)ColorConverter.ConvertFromString("#000000"));
+        static SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
         #endregion
 
         #region 摄像机初始坐标和朝向
@@ -245,15 +322,14 @@ namespace CBHK.ViewModel.Generator
             get => canResetAllPose;
             set
             {
-                canResetAllPose = value;
-                ResetAllPoseButtonForeground = CanResetAllPose ? black_brush : gray_brush;
-                OnPropertyChanged();
+                SetProperty(ref canResetAllPose, value);
+                ResetAllPoseButtonForeground = CanResetAllPose ? blackBrush : grayBrush;
             }
         }
         #endregion
         #region 重置所有动作的按钮前景
         [ObservableProperty]
-        private Brush _resetAllPoseButtonForeground = gray_brush;
+        private Brush _resetAllPoseButtonForeground = grayBrush;
         #endregion
 
         #region 是否可以重置头部动作
@@ -264,13 +340,13 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 can_reset_head_pose = value;
-                ResetHeadPoseButtonForeground = CanResetHeadPose ? black_brush : gray_brush;
+                ResetHeadPoseButtonForeground = CanResetHeadPose ? blackBrush : grayBrush;
                 OnPropertyChanged();
             }
         }
         #endregion
         #region 重置头部动作的按钮前景
-        private Brush reset_head_pose_button_foreground = gray_brush;
+        private Brush reset_head_pose_button_foreground = grayBrush;
         public Brush ResetHeadPoseButtonForeground
         {
             get { return reset_head_pose_button_foreground; }
@@ -290,13 +366,13 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 can_reset_body_pose = value;
-                ResetBodyPoseButtonForeground = CanResetBodyPose ? black_brush : gray_brush;
+                ResetBodyPoseButtonForeground = CanResetBodyPose ? blackBrush : grayBrush;
                 OnPropertyChanged();
             }
         }
         #endregion
         #region 重置身体动作的按钮前景
-        private Brush reset_body_pose_button_foreground = gray_brush;
+        private Brush reset_body_pose_button_foreground = grayBrush;
         public Brush ResetBodyPoseButtonForeground
         {
             get { return reset_body_pose_button_foreground; }
@@ -316,13 +392,13 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 can_reset_larm_pose = value;
-                ResetLArmPoseButtonForeground = CanResetLArmPose ? black_brush : gray_brush;
+                ResetLArmPoseButtonForeground = CanResetLArmPose ? blackBrush : grayBrush;
                 OnPropertyChanged();
             }
         }
         #endregion
         #region 重置左臂动作的按钮前景
-        private Brush reset_larm_pose_button_foreground = gray_brush;
+        private Brush reset_larm_pose_button_foreground = grayBrush;
         public Brush ResetLArmPoseButtonForeground
         {
             get { return reset_larm_pose_button_foreground; }
@@ -342,13 +418,13 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 can_reset_rarm_pose = value;
-                ResetRArmPoseButtonForeground = CanResetRArmPose ? black_brush : gray_brush;
+                ResetRArmPoseButtonForeground = CanResetRArmPose ? blackBrush : grayBrush;
                 OnPropertyChanged();
             }
         }
         #endregion
         #region 重置右臂动作的按钮前景
-        private Brush reset_rarm_pose_button_foreground = gray_brush;
+        private Brush reset_rarm_pose_button_foreground = grayBrush;
         public Brush ResetRArmPoseButtonForeground
         {
             get { return reset_rarm_pose_button_foreground; }
@@ -368,13 +444,13 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 can_reset_lleg_pose = value;
-                ResetLLegPoseButtonForeground = CanResetLLegPose ? black_brush : gray_brush;
+                ResetLLegPoseButtonForeground = CanResetLLegPose ? blackBrush : grayBrush;
                 OnPropertyChanged();
             }
         }
         #endregion
         #region 重置左臂动作的按钮前景
-        private Brush reset_lleg_pose_button_foreground = gray_brush;
+        private Brush reset_lleg_pose_button_foreground = grayBrush;
         public Brush ResetLLegPoseButtonForeground
         {
             get { return reset_lleg_pose_button_foreground; }
@@ -394,13 +470,13 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 can_reset_rleg_pose = value;
-                ResetRLegPoseButtonForeground = CanResetRLegPose ? black_brush : gray_brush;
+                ResetRLegPoseButtonForeground = CanResetRLegPose ? blackBrush : grayBrush;
                 OnPropertyChanged();
             }
         }
         #endregion
         #region 重置右臂动作的按钮前景
-        private Brush reset_rleg_pose_button_foreground = gray_brush;
+        private Brush reset_rleg_pose_button_foreground = grayBrush;
         public Brush ResetRLegPoseButtonForeground
         {
             get { return reset_rleg_pose_button_foreground; }
@@ -414,255 +490,234 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region 整体水平旋转
-        private float rotationX = 0f;
-        public float RotationX
-        {
-            get => rotationX;
-            set => SetProperty(ref rotationX, value);
-        }
+        [ObservableProperty]
+        private float _rotationX = 0f;
         #endregion
 
         #region 头部XYZ
         private bool HeadXValue;
-        private float head_x = 0f;
+        private float headX = 0f;
         public float HeadX
         {
-            get { return head_x; }
+            get => headX;
             set
             {
-                head_x = value;
+                SetProperty(ref headX, value);
                 HeadXValue = HeadX != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
 
         private bool HeadYValue;
-        private float head_y = 0f;
+        private float headY = 0f;
         public float HeadY
         {
-            get { return head_y; }
+            get => headY;
             set
             {
-                head_y = value;
+                SetProperty(ref headY, value);
                 HeadYValue = HeadY != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
 
         private bool HeadZValue;
-        private float head_z = 0f;
+        private float headZ = 0f;
         public float HeadZ
         {
-            get { return head_z; }
+            get => headZ;
             set
             {
-                head_z = value;
+                SetProperty(ref headZ, value);
                 HeadZValue = HeadZ != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
         #endregion
+
         #region 身体XYZ
         private bool BodyXValue;
-        private float body_x = 0f;
+        private float bodyX = 0f;
         public float BodyX
         {
-            get { return body_x; }
+            get => bodyX;
             set
             {
-                body_x = value;
+                SetProperty(ref bodyX, value);
                 BodyXValue = BodyX != 0f ? true : false;
-                //TurnModel(new Point3D(0.5, 9.5, 0.5), TopModel, 0.02, true, BodyX, BodyY, BodyZ);
-                //TurnModel(new Point3D(0.5, 9.5, 0.5), BottomModel, 0.02, true, BodyX, BodyY, BodyZ);
-                //TurnModel(new Point3D(0.5, 9.5, 0.5), LeftModel, 0.02, true, BodyX, BodyY, BodyZ);
-                //TurnModel(new Point3D(0.5, 9.5, 0.5), RightModel, 0.02, true, BodyX, BodyY, BodyZ);
-                OnPropertyChanged();
             }
         }
 
         private bool BodyYValue;
-        private float body_y = 0f;
+        private float bodyY = 0f;
         public float BodyY
         {
-            get { return body_y; }
+            get => bodyY;
             set
             {
-                body_y = value;
+                SetProperty(ref bodyY, value);
                 BodyYValue = BodyY != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
 
         private bool BodyZValue;
-        private float body_z = 0f;
+        private float bodyZ = 0f;
         public float BodyZ
         {
-            get { return body_z; }
+            get => bodyZ;
             set
             {
-                body_z = value;
+                SetProperty(ref bodyZ, value);
                 BodyZValue = BodyZ != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
         #endregion
+
         #region 左臂XYZ
         private bool LArmXValue;
-        private float larm_x = 0f;
+        private float larmX = 0f;
         public float LArmX
         {
-            get { return larm_x; }
+            get => larmX;
             set
             {
-                larm_x = value;
+                SetProperty(ref larmX, value);
                 LArmXValue = LArmX != 0f;
-                OnPropertyChanged();
             }
         }
 
         private bool LArmYValue;
-        private float larm_y = 0f;
+        private float larmY = 0f;
         public float LArmY
         {
-            get { return larm_y; }
+            get => larmY;
             set
             {
-                larm_y = value;
+                SetProperty(ref larmY, value);
                 LArmYValue = LArmY != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
 
         private bool LArmZValue;
-        private float larm_z = 0f;
+        private float larmZ = 0f;
         public float LArmZ
         {
-            get { return larm_z; }
+            get => larmZ;
             set
             {
-                larm_z = value;
+                SetProperty(ref larmZ, value);
                 LArmZValue = LArmZ != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
         #endregion
+
         #region 右臂XYZ
         private bool RArmXValue;
-        private float rarm_x = 0f;
+        private float rarmX = 0f;
         public float RArmX
         {
-            get { return rarm_x; }
+            get => rarmX;
             set
             {
-                rarm_x = value;
+                SetProperty(ref rarmX, value);
                 RArmXValue = RArmX != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
 
         private bool RArmYValue;
-        private float rarm_y = 0f;
+        private float rarmY = 0f;
         public float RArmY
         {
-            get { return rarm_y; }
+            get => rarmY;
             set
             {
-                rarm_y = value;
+                SetProperty(ref rarmY, value);
                 RArmYValue = RArmY != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
 
         private bool RArmZValue;
-        private float rarm_z = 0f;
+        private float rarmZ = 0f;
         public float RArmZ
         {
-            get { return rarm_z; }
+            get => rarmZ;
             set
             {
-                rarm_z = value;
+                SetProperty(ref rarmZ, value);
                 RArmZValue = RArmZ != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
         #endregion
+
         #region 左腿XYZ
         private bool LLegXValue;
-        private float lleg_x = 0f;
+        private float llegX = 0f;
         public float LLegX
         {
-            get { return lleg_x; }
+            get => llegX;
             set
             {
-                lleg_x = value;
+                SetProperty(ref llegX, value);
                 LLegXValue = LLegX != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
 
         private bool LLegYValue;
-        private float lleg_y = 0f;
+        private float llegY = 0f;
         public float LLegY
         {
-            get { return lleg_y; }
+            get => llegY;
             set
             {
-                lleg_y = value;
+                SetProperty(ref llegY, value);
                 LLegYValue = LLegY != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
 
         private bool LLegZValue;
-        private float lleg_z = 0f;
+        private float llegZ = 0f;
         public float LLegZ
         {
-            get { return lleg_z; }
+            get => llegZ;
             set
             {
-                lleg_z = value;
+                SetProperty(ref llegZ, value);
                 LLegZValue = LLegZ != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
         #endregion
+
         #region 右腿XYZ
         private bool RLegXValue;
-        private float rleg_x = 0f;
+        private float rlegX = 0f;
         public float RLegX
         {
-            get { return rleg_x; }
+            get => rlegX;
             set
             {
-                rleg_x = value;
+                SetProperty(ref rlegX, value);
                 RLegXValue = RLegX != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
 
         private bool RLegYValue;
-        private float rleg_y = 0f;
+        private float rlegY = 0f;
         public float RLegY
         {
-            get { return rleg_y; }
+            get => rlegY;
             set
             {
-                rleg_y = value;
+                SetProperty(ref rlegY, value);
                 RLegYValue = RLegY != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
 
         private bool RLegZValue;
-        private float rleg_z = 0f;
+        private float rlegZ = 0f;
         public float RLegZ
         {
-            get { return rleg_z; }
+            get => rlegZ;
             set
             {
-                rleg_z = value;
+                SetProperty(ref rlegZ, value);
                 RLegZValue = RLegZ != 0f ? true : false;
-                OnPropertyChanged();
             }
         }
         #endregion
@@ -670,12 +725,12 @@ namespace CBHK.ViewModel.Generator
         #region 装备
 
         #region 合并装备数据
-        private string Equipments
+        private string EquipmentList
         {
             get
             {
                 string result;
-                string ArmorItems = (HeadItem.Length + BodyItem.Length + LegsItem.Length + FeetItem.Length) > 0 ? "ArmorItems:[" + (HeadItem + "," + BodyItem + "," + LegsItem + "," + FeetItem).Trim(',') + "]," : "";
+                string ArmorItems = (HeadItem.Length + BodyItem.Length + LegItem.Length + FeetItem.Length) > 0 ? "ArmorItems:[" + (HeadItem + "," + BodyItem + "," + LegItem + "," + FeetItem).Trim(',') + "]," : "";
                 string HandItems = (LeftHandItem.Length + RightHandItem.Length) > 0 ? "HandItems:[" + (LeftHandItem + "," + RightHandItem).Trim(',') + "]," : "";
                 result = ArmorItems + HandItems;
                 return result;
@@ -684,75 +739,33 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Head
-        private string head_item = "";
-        public string HeadItem
-        {
-            get { return head_item; }
-            set
-            {
-                head_item = value;
-            }
-        }
+        [ObservableProperty]
+        private string _headItem = "";
         #endregion
 
         #region Body
-        private string body_item = "";
-        public string BodyItem
-        {
-            get { return body_item; }
-            set
-            {
-                body_item = value;
-            }
-        }
+        [ObservableProperty]
+        private string _bodyItem = "";
         #endregion
 
         #region LeftHand
-        private string left_hand_item = "";
-        public string LeftHandItem
-        {
-            get { return left_hand_item; }
-            set
-            {
-                left_hand_item = value;
-            }
-        }
+        [ObservableProperty]
+        private string _leftHandItem = "";
         #endregion
 
         #region RightHand
-        private string right_hand_item = "";
-        public string RightHandItem
-        {
-            get { return right_hand_item; }
-            set
-            {
-                right_hand_item = value;
-            }
-        }
+        [ObservableProperty]
+        private string _rightHandItem = "";
         #endregion
 
         #region Legs
-        private string leg_item = "";
-        public string LegsItem
-        {
-            get { return leg_item; }
-            set
-            {
-                leg_item = value;
-            }
-        }
+        [ObservableProperty]
+        private string _legItem = "";
         #endregion
 
         #region Boots
-        private string feet_item = "";
-        public string FeetItem
-        {
-            get { return feet_item; }
-            set
-            {
-                feet_item = value;
-            }
-        }
+        [ObservableProperty]
+        private string _feetItem = "";
         #endregion
 
         #endregion
@@ -760,37 +773,16 @@ namespace CBHK.ViewModel.Generator
         #region 控制右侧预览视图的双向旋转
         private double horizontalAngleDelta = 0;
         private double verticalAngleDelta = 0;
-        private double horizontalAngle = 0;
-        public double HorizontalAngle
-        {
-            get => horizontalAngle;
-            set => SetProperty(ref horizontalAngle, value);
-        }
-        private double verticalAngle = 0;
-        public double VerticalAngle
-        {
-            get => verticalAngle;
-            set => SetProperty(ref verticalAngle, value);
-        }
+        [ObservableProperty]
+        private double _horizontalAngle = 0;
+        [ObservableProperty]
+        private double _verticalAngle = 0;
         #endregion
 
         #region 记录上一次的鼠标位置
-        private Point last_cursor_position;
-        private Point LastCursorPosition
-        {
-            get { return last_cursor_position; }
-            set
-            {
-                last_cursor_position = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        private Point _lastCursorPosition;
         #endregion
-
-        /// <summary>
-        /// 开始三轴合一
-        /// </summary>
-        private bool UsingThreeAxis = false;
 
         #region 三轴合一数据更新载体
         TextBlock XAxis = new();
@@ -803,88 +795,34 @@ namespace CBHK.ViewModel.Generator
         float ZAxisValue = 0f;
         #endregion
 
-        /// <summary>
-        /// 超出三轴合一按钮范围
-        /// </summary>
-        private bool OutOfThreeAxis = false;
-
-        /// <summary>
-        /// 当前三轴合一按钮位置
-        /// </summary>
-        private Point CurrentButtonCenter;
-
-        // 布尔型NBT链表
-        List<string> BoolTypeNBT = [];
-
-        //禁止移除或改变总值
-        private int CannotTakeOrReplceSum;
-        //禁止添加或改变总值
-        private int CannotPlaceOrReplaceSum;
-        //禁止添加总值
-        private int CannotPlaceSum;
-
         #region 各部位装备图像源
-        private ImageSource leftHandItemImage;
+        [ObservableProperty]
+        private ImageSource _leftHandItemImage;
 
-        public ImageSource LeftHandItemImage
-        {
-            get => leftHandItemImage;
-            set => SetProperty(ref leftHandItemImage, value);
-        }
+        [ObservableProperty]
+        private ImageSource _rightHandItemImage;
 
-        private ImageSource rightHandItemImage;
+        [ObservableProperty]
+        private ImageSource _headItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Helmet.png", UriKind.RelativeOrAbsolute));
 
-        public ImageSource RightHandItemImage
-        {
-            get => rightHandItemImage;
-            set => SetProperty(ref rightHandItemImage, value);
-        }
+        [ObservableProperty]
+        private ImageSource _chestItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Chestplate.png", UriKind.RelativeOrAbsolute));
 
-        private ImageSource headItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Helmet.png", UriKind.RelativeOrAbsolute));
+        [ObservableProperty]
+        private ImageSource _legItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Leggings.png", UriKind.RelativeOrAbsolute));
 
-        public ImageSource HeadItemImage
-        {
-            get => headItemImage;
-            set => SetProperty(ref headItemImage, value);
-        }
-
-        private ImageSource chestItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Chestplate.png", UriKind.RelativeOrAbsolute));
-
-        public ImageSource ChestItemImage
-        {
-            get => chestItemImage;
-            set => SetProperty(ref chestItemImage, value);
-        }
-
-        private ImageSource legItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Leggings.png", UriKind.RelativeOrAbsolute));
-
-        public ImageSource LegItemImage
-        {
-            get => legItemImage;
-            set => SetProperty(ref legItemImage, value);
-        }
-
-        private ImageSource feetItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Boots.png", UriKind.RelativeOrAbsolute));
-
-        public ImageSource FeetItemImage
-        {
-            get => feetItemImage;
-            set => SetProperty(ref feetItemImage, value);
-        }
+        [ObservableProperty]
+        private ImageSource _feetItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Boots.png", UriKind.RelativeOrAbsolute));
         #endregion
 
         #region 禁止移除或改变头部、身体、手部、腿部、脚部装备
         private bool cannotTakeOrReplaceHead;
         public bool CannotTakeOrReplaceHead
         {
-            get
-            {
-                return cannotTakeOrReplaceHead;
-            }
+            get => cannotTakeOrReplaceHead;
             set
             {
-                cannotTakeOrReplaceHead = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotTakeOrReplaceHead, value);
                 CannotTakeOrReplceSum += cannotTakeOrReplaceHead ? 4096 : -4096;
             }
         }
@@ -892,11 +830,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotTakeOrReplaceBody;
         public bool CannotTakeOrReplaceBody
         {
-            get { return cannotTakeOrReplaceBody; }
+            get => cannotTakeOrReplaceBody;
             set
             {
-                cannotTakeOrReplaceBody = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotTakeOrReplaceBody, value);
                 CannotTakeOrReplceSum += cannotTakeOrReplaceBody ? 2048 : -2048;
             }
         }
@@ -904,11 +841,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotTakeOrReplaceMainhand;
         public bool CannotTakeOrReplaceMainHand
         {
-            get { return cannotTakeOrReplaceMainhand; }
+            get => cannotTakeOrReplaceMainhand;
             set
             {
-                cannotTakeOrReplaceMainhand = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotTakeOrReplaceMainhand, value);
                 CannotTakeOrReplceSum += cannotTakeOrReplaceMainhand ? 256 : -256;
             }
         }
@@ -916,11 +852,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotTakeOrReplaceOffHand;
         public bool CannotTakeOrReplaceOffHand
         {
-            get { return cannotTakeOrReplaceOffHand; }
+            get => cannotTakeOrReplaceOffHand;
             set
             {
-                cannotTakeOrReplaceOffHand = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotTakeOrReplaceOffHand, value);
                 CannotTakeOrReplceSum += HaveOffHandPermission == Visibility.Visible && cannotTakeOrReplaceOffHand ? 8192 : -8192;
             }
         }
@@ -928,11 +863,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotTakeOrReplaceLegs;
         public bool CannotTakeOrReplaceLegs
         {
-            get { return cannotTakeOrReplaceLegs; }
+            get => cannotTakeOrReplaceLegs;
             set
             {
-                cannotTakeOrReplaceLegs = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotTakeOrReplaceLegs, value);
                 CannotTakeOrReplceSum += cannotTakeOrReplaceLegs ? 1024 : -1024;
             }
         }
@@ -940,11 +874,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotTakeOrReplaceBoots;
         public bool CannotTakeOrReplaceBoots
         {
-            get { return cannotTakeOrReplaceBoots; }
+            get => cannotTakeOrReplaceBoots;
             set
             {
-                cannotTakeOrReplaceBoots = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotTakeOrReplaceBoots, value);
                 CannotTakeOrReplceSum += cannotTakeOrReplaceBoots ? 512 : -512;
             }
         }
@@ -954,11 +887,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceOrReplacehead;
         public bool CannotPlaceOrReplaceHead
         {
-            get { return cannotPlaceOrReplacehead; }
+            get => cannotPlaceOrReplacehead;
             set
             {
-                cannotPlaceOrReplacehead = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceOrReplacehead, value);
                 CannotPlaceOrReplaceSum += cannotPlaceOrReplacehead ? 16 : -16;
             }
         }
@@ -966,11 +898,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceOrReplacebody;
         public bool CannotPlaceOrReplaceBody
         {
-            get { return cannotPlaceOrReplacebody; }
+            get => cannotPlaceOrReplacebody;
             set
             {
-                cannotPlaceOrReplacebody = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceOrReplacebody, value);
                 CannotPlaceOrReplaceSum += cannotPlaceOrReplacebody ? 8 : -8;
             }
         }
@@ -978,11 +909,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceOrReplaceMainHand;
         public bool CannotPlaceOrReplaceMainHand
         {
-            get { return cannotPlaceOrReplaceMainHand; }
+            get => cannotPlaceOrReplaceMainHand;
             set
             {
-                cannotPlaceOrReplaceMainHand = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceOrReplaceMainHand, value);
                 CannotPlaceOrReplaceSum += cannotPlaceOrReplaceMainHand ? 1 : -1;
             }
         }
@@ -990,11 +920,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceOrReplaceOffHand;
         public bool CannotPlaceOrReplaceOffHand
         {
-            get { return cannotPlaceOrReplaceOffHand; }
+            get => cannotPlaceOrReplaceOffHand;
             set
             {
-                cannotPlaceOrReplaceOffHand = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceOrReplaceOffHand, value);
                 CannotPlaceOrReplaceSum += HaveOffHandPermission == Visibility.Visible && cannotPlaceOrReplaceOffHand ? 32 : -32;
             }
         }
@@ -1002,11 +931,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceOrReplaceLegs;
         public bool CannotPlaceOrReplaceLegs
         {
-            get { return cannotPlaceOrReplaceLegs; }
+            get => cannotPlaceOrReplaceLegs;
             set
             {
-                cannotPlaceOrReplaceLegs = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceOrReplaceLegs, value);
                 CannotPlaceOrReplaceSum += cannotPlaceOrReplaceLegs ? 4 : -4;
             }
         }
@@ -1014,11 +942,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceOrReplaceBoots;
         public bool CannotPlaceOrReplaceBoots
         {
-            get { return cannotPlaceOrReplaceBoots; }
+            get => cannotPlaceOrReplaceBoots;
             set
             {
-                cannotPlaceOrReplaceBoots = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceOrReplaceBoots, value);
                 CannotPlaceOrReplaceSum += cannotPlaceOrReplaceBoots ? 2 : -2;
             }
         }
@@ -1028,14 +955,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceHead;
         public bool CannotPlaceHead
         {
-            get
-            {
-                return cannotPlaceHead;
-            }
+            get => cannotPlaceHead;
             set
             {
-                cannotPlaceHead = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceHead, value);
                 CannotPlaceSum += cannotPlaceHead ? 1048576 : -1048576;
             }
         }
@@ -1043,11 +966,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceBody;
         public bool CannotPlaceBody
         {
-            get { return cannotPlaceBody; }
+            get => cannotPlaceBody;
             set
             {
-                cannotPlaceBody = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceBody, value);
                 CannotPlaceSum += cannotPlaceBody ? 524288 : -524288;
             }
         }
@@ -1055,11 +977,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceMainHand;
         public bool CannotPlaceMainHand
         {
-            get { return cannotPlaceMainHand; }
+            get => cannotPlaceMainHand;
             set
             {
-                cannotPlaceMainHand = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceMainHand, value);
                 CannotPlaceSum += cannotPlaceMainHand ? 65536 : -65536;
             }
         }
@@ -1067,11 +988,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceOffHand;
         public bool CannotPlaceOffHand
         {
-            get { return cannotPlaceOffHand; }
+            get => cannotPlaceOffHand;
             set
             {
-                cannotPlaceOffHand = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceOffHand, value);
                 CannotPlaceSum += HaveOffHandPermission == Visibility.Visible && cannotPlaceOffHand ? 2097152 : -2097152;
             }
         }
@@ -1079,11 +999,10 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceLegs;
         public bool CannotPlaceLegs
         {
-            get { return cannotPlaceLegs; }
+            get => cannotPlaceLegs;
             set
             {
-                cannotPlaceLegs = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceLegs, value);
                 CannotPlaceSum += cannotPlaceLegs ? 262144 : -262144;
             }
         }
@@ -1091,21 +1010,18 @@ namespace CBHK.ViewModel.Generator
         private bool cannotPlaceBoots;
         public bool CannotPlaceBoots
         {
-            get { return cannotPlaceBoots; }
+            get => cannotPlaceBoots;
             set
             {
-                cannotPlaceBoots = value;
-                OnPropertyChanged();
+                SetProperty(ref cannotPlaceBoots, value);
                 CannotPlaceSum += cannotPlaceBoots ? 131072 : -131072;
             }
         }
         #endregion
 
-        //布尔NBT集合
-        StackPanel NBTList = null;
-
         #region 版本数据源
-        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _versionSource = [
             new TextComboBoxItem() { Text = "1.20.2" },
             new TextComboBoxItem() { Text = "1.13.0" },
             new TextComboBoxItem() { Text = "1.12.0" },
@@ -1132,45 +1048,6 @@ namespace CBHK.ViewModel.Generator
             get => currentMinVersion;
             set => currentMinVersion = value;
         }
-        #endregion
-
-        //本生成器的图标路径
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconArmorStand.png";
-        #endregion
-
-        #region 引用
-        /// <summary>
-        /// 样式化文本框引用
-        /// </summary>
-        StylizedTextBox stylizedTextBox = null;
-        /// <summary>
-        /// 标签文本框
-        /// </summary>
-        TagRichTextBox tagRichTextBox = null;
-
-        #region 所有3D视图对象
-        public PerspectiveCamera MainCamera = new();
-        public PerspectiveCamera GizimoCamera = new();
-        public Viewport3D SceneGizmo = new();
-        public GeometryModel3D HeadModel { get; set; }
-        public GeometryModel3D LeftLegModel { get; set; }
-        public GeometryModel3D RightLegModel { get; set; }
-        public GeometryModel3D TopModel { get; set; }
-        public GeometryModel3D BottomModel { get; set; }
-        public GeometryModel3D LeftModel { get; set; }
-        public GeometryModel3D RightModel { get; set; }
-
-        public string Title => throw new NotImplementedException();
-
-        private double lastMousePosX = 0.0;
-
-        private double lastMousePosY = 0.0;
-
-        private double deltaMoveX;
-
-        private double deltaMoveY;
-
-        private readonly IContainerProvider _container;
         #endregion
 
         #endregion
@@ -1604,7 +1481,7 @@ namespace CBHK.ViewModel.Generator
                     case "Legs":
                         if (File.Exists(filePath))
                             LegItemImage = new BitmapImage(new Uri(filePath, UriKind.Absolute));
-                        LegsItem = Result;
+                        LegItem = Result;
                         break;
                     case "Feet":
                         if (File.Exists(filePath))
@@ -1666,7 +1543,7 @@ namespace CBHK.ViewModel.Generator
             #endregion
 
             #region Result
-            string nbt = CustomName + BoolNBTs + Equipments + DisabledValue + CustomNameVisibleString + Tags + PoseString;
+            string nbt = CustomName + BoolNBTList + EquipmentList + DisabledValue + CustomNameVisibleString + Tags + PoseString;
             nbt = nbt.TrimEnd(',');
             if (CurrentMinVersion >= 1130)
                 result = "summon armor_stand ~ ~ ~" + (nbt != "" ? " {" + nbt + "}" : "");
@@ -2358,7 +2235,7 @@ namespace CBHK.ViewModel.Generator
 
         #endregion
 
-        #region Methods
+        #region Method
         public ArmorStandViewModel(IContainerProvider container,MainView mainView)
         {
             //连接三个轴的上下文

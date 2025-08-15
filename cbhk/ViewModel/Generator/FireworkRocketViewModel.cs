@@ -152,7 +152,7 @@ namespace CBHK.ViewModel.Generator
             FireworkRocketView fireworkRocket = Window.GetWindow(frameworkElement) as FireworkRocketView;
             FireworkRocketPageView fireworkRocketPages = SelectedFireworkRocketPage.Content as FireworkRocketPageView;
             FireworkRocketPageViewModel fireworkRocketPagesDataContext = fireworkRocketPages.DataContext as FireworkRocketPageViewModel;
-            if (fireworkRocketPagesDataContext.MainColors.Count + fireworkRocketPagesDataContext.FadeColors.Count == 0) return;
+            if (fireworkRocketPagesDataContext.MainColorList.Count + fireworkRocketPagesDataContext.FadeColorList.Count == 0) return;
 
             //烟花火箭模型引用
             TranslateTransform3D fireworkModel = fireworkRocket.FireworkModel;

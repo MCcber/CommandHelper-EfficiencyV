@@ -203,7 +203,11 @@ namespace CBHK.ViewModel.Component.Recipe
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png");
                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                         TemplateItem.Source = new BitmapImage(iconUri);
-                        TemplateItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
+                        TemplateItem.Tag = new ItemStructure()
+                        {
+                            ImagePath = new BitmapImage(iconUri),
+                            IDAndName = itemID + ":" + itemName
+                        };
                         if (itemTagObj != null)
                             TemplateTag = itemTagObj.ToString();
                     }
@@ -232,7 +236,11 @@ namespace CBHK.ViewModel.Component.Recipe
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                         BaseItem.Source = new BitmapImage(iconUri);
-                        BaseItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
+                        BaseItem.Tag = new ItemStructure()
+                        {
+                            ImagePath = new BitmapImage(iconUri),
+                            IDAndName = itemID + ":" + itemName
+                        };
                         if (itemTagObj != null)
                             BaseTag = itemTagObj.ToString();
                     }
@@ -261,7 +269,11 @@ namespace CBHK.ViewModel.Component.Recipe
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                         AdditionItem.Source = new BitmapImage(iconUri);
-                        AdditionItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
+                        AdditionItem.Tag = new ItemStructure()
+                        {
+                            ImagePath = new BitmapImage(iconUri),
+                            IDAndName = itemID + ":" + itemName
+                        };
                         if (itemTagObj != null)
                             AdditionTag = itemTagObj.ToString();
                     }
@@ -289,7 +301,11 @@ namespace CBHK.ViewModel.Component.Recipe
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
                         string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
                         ResultItem.Source = new BitmapImage(iconUri);
-                        TemplateItem.Tag = new ItemStructure(new BitmapImage(iconUri), itemID + ":" + itemName);
+                        TemplateItem.Tag = new ItemStructure()
+                        {
+                            ImagePath = new BitmapImage(iconUri),
+                            IDAndName = itemID + ":" + itemName
+                        };
                         if (itemCountObj != null)
                             Count = int.Parse(itemCountObj.ToString());
                     }

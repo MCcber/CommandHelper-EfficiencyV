@@ -103,7 +103,7 @@
                 VerticalContentAlignment="Center"
                 Foreground="White"
                 ItemsSource="{Binding ItemList, Mode=OneWay}"
-                SelectedItem="{Binding SelectedItemId, Mode=TwoWay}"
+                SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
                 Style="{DynamicResource IconComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">

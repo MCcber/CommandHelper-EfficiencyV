@@ -49,6 +49,19 @@
             SnapsToDevicePixels="True"
             Source="{StaticResource cellBackground}"
             UseLayoutRounding="True" />
+        <Button
+            Grid.Column="0"
+            Width="20"
+            Height="20"
+            Margin="73,62,7,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Panel.ZIndex="2"
+            Command="{Binding SetSlotDataCommand}"
+            CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+            Content="..."
+            FontWeight="Bold"
+            Visibility="{Binding MaterialMultiItemVisibility}" />
         <Image
             Uid="material"
             Grid.Column="0"
@@ -66,15 +79,12 @@
                 <behaviors:EventTrigger EventName="Loaded">
                     <behaviors:CallMethodAction MethodName="Material_Loaded" TargetObject="{Binding}" />
                 </behaviors:EventTrigger>
-                <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                    <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
                 <behaviors:EventTrigger EventName="Drop">
                     <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
                 </behaviors:EventTrigger>
             </behaviors:Interaction.Triggers>
         </Image>
-        <Grid
+        <!--<Grid
             Width="220"
             Height="270"
             Margin="2,45,0,0"
@@ -219,11 +229,12 @@
                     </ListView.ItemTemplate>
                 </ListView>
             </ScrollViewer>
-        </Grid>
+        </Grid>-->
         <CustomControl:RadiusToggleButtons
             Margin="5,20,0,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
+            Command="{Binding SwitchMultipleModeCommand}"
             IsChecked="{Binding MultiSelect, Mode=TwoWay}"
             SelectedToggleText="多选"
             Style="{DynamicResource RadiusToggleButton}"
@@ -441,15 +452,11 @@
                 Width="25"
                 Height="25"
                 Background="{StaticResource CloseWhite}"
+                Command="{Binding UpdateAndCloseSlotGridCommand}"
                 PressedBackground="{StaticResource CloseWhiteHover}"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="Click">
-                        <behaviors:CallMethodAction MethodName="UpdateAndCloseSlotGrid_Click" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
-                </behaviors:Interaction.Triggers>
                 <CustomControl:IconTextButtons.ToolTip>
                     <ToolTip
                         Background="#484848"

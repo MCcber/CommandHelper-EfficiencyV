@@ -1,10 +1,13 @@
-﻿using CBHK.Model;
+﻿using CBHK.Domain;
+using CBHK.Domain.Model;
+using CBHK.Model;
 using CBHK.View;
 using CBHK.View.Generator;
 using CBHK.ViewModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
+using System.Linq;
 using System.Windows;
 
 namespace CBHK.GeneralTool
@@ -14,12 +17,16 @@ namespace CBHK.GeneralTool
         #region Field
         private MainViewModel CBHK;
         private readonly IContainerProvider _container;
+        private readonly CBHKDataContext _context;
+        private readonly EnvironmentConfig _config;
         #endregion
 
         #region Method
-        public DistributorGenerator(IContainerProvider container)
+        public DistributorGenerator(IContainerProvider container,CBHKDataContext context)
         {
             _container = container;
+            _context = context;
+            _config = _context.EnvironmentConfigSet.First();
             MainView mainWindow = _container.Resolve<MainView>();
             if (mainWindow is not null && mainWindow.DataContext is MainViewModel viewModel)
             {
@@ -32,11 +39,14 @@ namespace CBHK.GeneralTool
         /// </summary>
         private void SetCBHKState()
         {
-            CBHK.WindowState = CBHK.MainViewVisibility switch
+            if (_config.Visibility == "关闭")
             {
-                MainWindowProperties.Visibility.MinState => WindowState.Minimized,
-                MainWindowProperties.Visibility.KeepState => WindowState.Normal,
-                MainWindowProperties.Visibility.Close => WindowState.Minimized,
+                CBHK.ShowInTaskBar = false;
+            }
+            CBHK.WindowState = _config.Visibility switch
+            {
+                "最小化" or "关闭" => WindowState.Minimized,
+                "保持不变" => WindowState.Normal,
                 _ => WindowState.Normal
             };
         }

@@ -37,6 +37,7 @@ namespace CBHK.Domain
         public Dictionary<int, Dictionary<string, string>> ItemGroupByVersionDicionary = [];
         public Dictionary<int, Dictionary<string, string>> EnchantmentGroupByVersionDicionary = [];
         public Dictionary<string, Tuple<string, string?>> BlockIDAndName = [];
+        public Dictionary<int, Dictionary<string, string>> EntityGroupByVersionDictionary = [];
         #endregion
 
         public DataService(CBHKDataContext context)
@@ -86,6 +87,23 @@ namespace CBHK.Domain
                     {
                         if (!BlockIDAndName.TryAdd(item.ID, new Tuple<string, string?>(item.Name, item.LowVersionID)))
                         {
+                        }
+                    }
+                }
+            }
+            #endregion
+
+            #region 根据实体ID为实体数据分组
+            if (EntityGroupByVersionDictionary.Count == 0)
+            {
+                foreach (var item in _context.EntitySet)
+                {
+                    if (item.ID is not null && item.ID.Length > 0)
+                    {
+                        _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
+                        if (!EntityGroupByVersionDictionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
+                        {
+                            EntityGroupByVersionDictionary[version].Add(item.ID, item.Name);
                         }
                     }
                 }
@@ -322,6 +340,15 @@ namespace CBHK.Domain
         public Dictionary<int, Dictionary<string, string>> GetItemIDAndNameGroupByVersionMap()
         {
             return ItemGroupByVersionDicionary;
+        }
+
+        /// <summary>
+        /// 获取实体ID与名称的字典(根据版本号分组)
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<int, Dictionary<string, string>> GetEntityIDAndNameGroupByVersionMap()
+        {
+            return EntityGroupByVersionDictionary;
         }
 
         /// <summary>

@@ -1,9 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace CBHK.Domain.Model
 {
     public class EnvironmentConfig
     {
+        [Key]
+        public int ID { get; set; } = 1;
         public string Visibility { get; set; }
         public string CloseToTray { get; set; }
         public string ShowNotice { get; set; }

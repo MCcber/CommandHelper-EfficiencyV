@@ -1,7 +1,9 @@
-﻿using CBHK.Model;
+﻿using CBHK.Domain;
+using CBHK.Domain.Model;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -10,6 +12,8 @@ namespace CBHK.ViewModel.Common
     public partial class NoticeToUsersViewModel: ObservableObject
     {
         #region Field
+        private CBHKDataContext _context = null;
+        private EnvironmentConfig _config = null;
         private int browseTime = 5;
         DispatcherTimer timer = new()
         {
@@ -26,10 +30,12 @@ namespace CBHK.ViewModel.Common
             set
             {
                 SetProperty(ref donotShowNextTime, value);
-                MainWindowProperties.ShowNotice = !donotShowNextTime;
+                _config.ShowNotice = (!donotShowNextTime).ToString();
             }
         }
 
+        [ObservableProperty]
+        private Visibility _countDownVisibility = Visibility.Visible;
         [ObservableProperty]
         private bool _understandButtonEnable = false;
 
@@ -39,9 +45,10 @@ namespace CBHK.ViewModel.Common
         #endregion
 
         #region Method
-        public NoticeToUsersViewModel()
+        public NoticeToUsersViewModel(CBHKDataContext context)
         {
-            DonotShowNextTime = !MainWindowProperties.ShowNotice;
+            _context = context;
+            _config = _context.EnvironmentConfigSet.First();
             timer.Tick += Readed_Tick;
         }
         #endregion
@@ -52,6 +59,7 @@ namespace CBHK.ViewModel.Common
             BrowseTimeBlockText = browseTime + "s";
             if (browseTime == 0)
             {
+                CountDownVisibility = Visibility.Hidden;
                 timer.IsEnabled = false;
                 UnderstandButtonEnable = true;
             }

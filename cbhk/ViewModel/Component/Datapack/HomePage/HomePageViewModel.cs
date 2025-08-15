@@ -29,7 +29,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
 {
     public partial class HomePageViewModel(IContainerProvider container) : ObservableObject
     {
-        #region 字段
+        #region Field
         private IContainerProvider _container = container;
         /// <summary>
         /// 白色
@@ -43,124 +43,57 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         /// <summary>
         /// 近期的解决方案
         /// </summary>
-        public string RecentSolutionsFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\RecentTemplates";
+        public string RecentSolutionFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\RecentTemplates";
+
+        /// <summary>
+        /// 近期内容载入逻辑锁
+        /// </summary>
+        object RecentContentLoadLock = new();
+
+        /// <summary>
+        /// 主窗体引用
+        /// </summary>
+        DatapackView dataPack = null;
         #endregion
 
-        #region 搜索历史解决方案文本
-        private string searchText = "";
-        public string SearchText
-        {
-            get => searchText;
-            set
-            {
-                SetProperty(ref searchText, value);
-                #region 搜索具有指定标题的近期解决方案
-                if(SearchText.Length > 0)
-                Task.Run(() =>
-                {
-                    dataPack.Dispatcher.InvokeAsync(() =>
-                    {
-                        RecentItemSearchResults.Clear();
-                        foreach (var headItem in RecentContentDateItemList)
-                        {
-                            foreach(RichTreeViewItems contentItem in headItem.Items)
-                            {
-                                RecentTreeItem recentTreeItem = contentItem.Header as RecentTreeItem;
-                                RecentTreeItem newRecentTreeItem = new();
-                                newRecentTreeItem.pinBox.Margin = new Thickness(0,0,5,0);
-                                newRecentTreeItem.Icon.Source = recentTreeItem.Icon.Source;
-                                newRecentTreeItem.Title.Text = recentTreeItem.Title.Text;
-                                newRecentTreeItem.Path.Text = recentTreeItem.Path.Text;
-                                newRecentTreeItem.ModifyDate.Text = recentTreeItem.ModifyDate.Text;
+        #region Property
+        /// <summary>
+        /// 搜索历史解决方案文本
+        /// </summary>
+        [ObservableProperty]
+        private string _searchText = "";
 
-                                string currentValue = recentTreeItem.Title.Text;
-                                if (currentValue == SearchText || currentValue.StartsWith(SearchText) || Regex.IsMatch(currentValue, SearchText,RegexOptions.IgnoreCase))
-                                {
-                                    RichTreeViewItems richTreeViewItems = new()
-                                    {
-                                        Margin = new Thickness(0,0,0,10),
-                                        MinHeight = 35,
-                                        Header = newRecentTreeItem,
-                                        Tag = contentItem.Tag,
-                                        Uid = contentItem.Uid,
-                                        Foreground = contentItem.Foreground,
-                                        ToolTip = contentItem.ToolTip
-                                    };
-                                    ToolTipService.SetBetweenShowDelay(richTreeViewItems, 0);
-                                    ToolTipService.SetInitialShowDelay(richTreeViewItems, 0);
-                                    RecentItemSearchResults.Add(richTreeViewItems);
-                                }
-                            }
-                        }
-                        //如果搜索到了结果，则隐藏近期解决方案视图并且开启搜索视图
-                        //转换两个视图的可见性
-                        RecentItemTreeViewVisibility = Visibility.Collapsed;
-                        SearchResultViewerVisibility = Visibility.Visible;
-                        if (RecentItemSearchResults.Count == 0)
-                            RecentItemSearchResults.Add(new TextBlock() { Text = $"未找到\"{SearchText}\"相关的结果", Foreground = whiteBrush,TextWrapping = TextWrapping.WrapWithOverflow });
-                    });
-                });
-                else
-                {
-                    //转换两个视图的可见性
-                    RecentItemTreeViewVisibility = Visibility.Visible;
-                    SearchResultViewerVisibility = Visibility.Collapsed;
-                }
-                #endregion
-            }
-        }
-        #endregion
-
-        #region 近期内容父级日期节点
-        public ObservableCollection<TreeViewItem> RecentContentDateItemList { get; set; } =
+        /// <summary>
+        /// 近期内容父级日期节点
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<TreeViewItem> _recentContentDateItemList =
                 [
                     new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "已固定",Tag = "Fixed",IsExpanded = true,Visibility = Visibility.Collapsed},
-                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "一天内",Tag = "ToDay",IsExpanded = true,Visibility = Visibility.Collapsed},         
-                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "一天前",Tag = "Yesterday",IsExpanded = true,Visibility = Visibility.Collapsed },        
-                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "七天内",Tag = "ThisWeek",IsExpanded = true,Visibility = Visibility.Collapsed },        
-                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "上周",Tag = "LastWeek",IsExpanded = true , Visibility = Visibility.Collapsed},              
-                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "一月内",Tag = "ThisMonth",IsExpanded = true , Visibility = Visibility.Collapsed},       
-                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "上个月",Tag = "LastMonth",IsExpanded = true , Visibility = Visibility.Collapsed},       
-                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "一年内",Tag = "ThisYear",IsExpanded = true , Visibility = Visibility.Collapsed},             
-                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "去年",Tag = "LastYear",IsExpanded = true , Visibility = Visibility.Collapsed},              
-                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "很久前",Tag = "LongTime",IsExpanded = true , Visibility = Visibility.Collapsed}
+                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "一天内",Tag = "ToDay",IsExpanded = true,Visibility = Visibility.Collapsed},
+                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "一天前",Tag = "Yesterday",IsExpanded = true,Visibility = Visibility.Collapsed },
+                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "一周内",Tag = "ThisWeek",IsExpanded = true,Visibility = Visibility.Collapsed },
+                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "上周",Tag = "LastWeek",IsExpanded = true , Visibility = Visibility.Collapsed},
+                    new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "更早",Tag = "Earlier",IsExpanded = true , Visibility = Visibility.Collapsed}
                 ];
-        #endregion
 
-        #region 近期内容载入逻辑锁
-        object RecentContentLoadLock = new();
-        #endregion
+        /// <summary>
+        /// 搜索结果数据源
+        /// </summary>
+        [ObservableProperty]
+        private ObservableCollection<FrameworkElement> _recentItemSearchResults = [];
 
-        #region 搜索结果数据源
-        private ObservableCollection<FrameworkElement> recentItemSearchResults = [];
-        public ObservableCollection<FrameworkElement> RecentItemSearchResults
-        {
-            get => recentItemSearchResults;
-            set => SetProperty(ref recentItemSearchResults, value);
-        }
-        #endregion
+        /// <summary>
+        /// 历史内容节点视图可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _recentItemTreeViewVisibility = Visibility.Visible;
 
-        #region 历史内容节点视图可见性
-        private Visibility recentItemTreeViewVisibility = Visibility.Visible;
-        public Visibility RecentItemTreeViewVisibility
-        {
-            get => recentItemTreeViewVisibility;
-            set => SetProperty(ref recentItemTreeViewVisibility,value);
-        }
-        #endregion
-
-        #region 搜索结果视图可见性
-        private Visibility searchResultViewerVisibility = Visibility.Collapsed;
-        public Visibility SearchResultViewerVisibility
-        {
-            get => searchResultViewerVisibility;
-            set => SetProperty(ref searchResultViewerVisibility, value);
-        }
-        #endregion
-
-        #region 主窗体引用
-        DatapackView dataPack = null;
-
+        /// <summary>
+        /// 搜索结果视图可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _searchResultViewerVisibility = Visibility.Collapsed;
         #endregion
 
         /// <summary>
@@ -174,16 +107,16 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
             dataPack = Window.GetWindow(textBlock) as DatapackView;
             DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
             //未加载过模板窗体说明需要载入近期解决方案
-            if(context.templateSelectPage is null)
+            if(context.TemplateSelectPage is null)
             await RecentSolutionsLoaded();
             #region 载入分页框架
             DependencyObject frame = null;
             if (frame is null)
             {
-                frame = VisualTreeHelper.GetParent(context.homePage);
+                frame = VisualTreeHelper.GetParent(context.HomePage);
                 while (frame is null || frame is ContentPresenter)
                     frame = VisualTreeHelper.GetParent(frame);
-                context.frame = frame;
+                context.Frame = frame;
             }
             #endregion
         }
@@ -195,22 +128,28 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         private async Task RecentSolutionsLoaded()
         {
             List<bool> HaveChildren = [];
-            foreach (TreeViewItem item in RecentContentDateItemList)
-                HaveChildren.Add(item.Items.Count > 0);
             bool NoLongerNeedInit = false;
+            foreach (TreeViewItem item in RecentContentDateItemList)
+            {
+                HaveChildren.Add(item.Items.Count > 0);
+            }
             foreach (bool item in HaveChildren)
+            {
                 NoLongerNeedInit |= item;
+            }
 
             if (NoLongerNeedInit)
+            {
                 return;
+            }
             BindingOperations.EnableCollectionSynchronization(RecentContentDateItemList, RecentContentLoadLock);
             await Task.Run(() =>
             {
                 lock (RecentContentLoadLock)
                 {
-                    if (Directory.Exists(RecentSolutionsFolderPath))
+                    if (Directory.Exists(RecentSolutionFolderPath))
                     {
-                        string[] Contents = Directory.GetFiles(RecentSolutionsFolderPath);
+                        string[] Contents = Directory.GetFiles(RecentSolutionFolderPath);
                         _ = dataPack.Dispatcher.InvokeAsync(() =>
                         {
                             RecentContentDateItemList.All(item =>
@@ -278,6 +217,68 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         }
 
         /// <summary>
+        /// 搜索具有指定标题的近期解决方案
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (SearchText.Length > 0)
+            {
+                Task.Run(() =>
+                {
+                    dataPack.Dispatcher.InvokeAsync(() =>
+                    {
+                        RecentItemSearchResults.Clear();
+                        foreach (var headItem in RecentContentDateItemList)
+                        {
+                            foreach (RichTreeViewItems contentItem in headItem.Items)
+                            {
+                                RecentTreeItem recentTreeItem = contentItem.Header as RecentTreeItem;
+                                RecentTreeItem newRecentTreeItem = new();
+                                newRecentTreeItem.pinBox.Margin = new Thickness(0, 0, 5, 0);
+                                newRecentTreeItem.Icon.Source = recentTreeItem.Icon.Source;
+                                newRecentTreeItem.Title.Text = recentTreeItem.Title.Text;
+                                newRecentTreeItem.Path.Text = recentTreeItem.Path.Text;
+                                newRecentTreeItem.ModifyDate.Text = recentTreeItem.ModifyDate.Text;
+
+                                string currentValue = recentTreeItem.Title.Text;
+                                if (currentValue == SearchText || currentValue.StartsWith(SearchText) || Regex.IsMatch(currentValue, SearchText, RegexOptions.IgnoreCase))
+                                {
+                                    RichTreeViewItems richTreeViewItems = new()
+                                    {
+                                        Margin = new Thickness(0, 0, 0, 10),
+                                        MinHeight = 35,
+                                        Header = newRecentTreeItem,
+                                        Tag = contentItem.Tag,
+                                        Uid = contentItem.Uid,
+                                        Foreground = contentItem.Foreground,
+                                        ToolTip = contentItem.ToolTip
+                                    };
+                                    ToolTipService.SetBetweenShowDelay(richTreeViewItems, 0);
+                                    ToolTipService.SetInitialShowDelay(richTreeViewItems, 0);
+                                    RecentItemSearchResults.Add(richTreeViewItems);
+                                }
+                            }
+                        }
+                        //如果搜索到了结果，则隐藏近期解决方案视图并且开启搜索视图
+                        //转换两个视图的可见性
+                        RecentItemTreeViewVisibility = Visibility.Collapsed;
+                        SearchResultViewerVisibility = Visibility.Visible;
+                        if (RecentItemSearchResults.Count == 0)
+                            RecentItemSearchResults.Add(new TextBlock() { Text = $"未找到\"{SearchText}\"相关的结果", Foreground = whiteBrush, TextWrapping = TextWrapping.WrapWithOverflow });
+                    });
+                });
+            }
+            else
+            {
+                //转换两个视图的可见性
+                RecentItemTreeViewVisibility = Visibility.Visible;
+                SearchResultViewerVisibility = Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
         /// 左击抬起后打开选中的解决方案
         /// </summary>
         /// <param name="sender"></param>
@@ -295,7 +296,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                 {
                     NavigationToEditPage();
                     DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
-                    EditPageViewModel editContext = context.editPage.DataContext as EditPageViewModel;
+                    EditPageViewModel editContext = context.EditPage.DataContext as EditPageViewModel;
                     foreach (var item in result)
                         editContext.DatapackTreeViewItems.Add(item);
                     dataPack.Hide();
@@ -313,7 +314,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
             else
             {
                 Message.PushMessage("无法打开！所选解决方案不存在,已删除");
-                File.Delete(RecentSolutionsFolderPath + "\\" + recentTreeItem.Title.Text);
+                File.Delete(RecentSolutionFolderPath + "\\" + recentTreeItem.Title.Text);
                 TreeViewItem timeMarkerItem = treeViewItem.Parent as TreeViewItem;
                 timeMarkerItem.Items.Remove(treeViewItem);
                 if (timeMarkerItem.Items.Count == 0)
@@ -338,8 +339,8 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         private async void NavigationToEditPage()
         {
             DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
-            context.editPage ??= new();
-            NavigationService.GetNavigationService(context.frame).Navigate(context.editPage);
+            context.EditPage ??= new();
+            NavigationService.GetNavigationService(context.Frame).Navigate(context.EditPage);
             await ReCalculateSolutionPath();
         }
 
@@ -382,7 +383,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         {
             NavigationToEditPage();
             DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
-            EditPageViewModel editContext = context.editPage.DataContext as EditPageViewModel;
+            EditPageViewModel editContext = context.EditPage.DataContext as EditPageViewModel;
             await dataPack.Dispatcher.InvokeAsync(() =>
             {
                 foreach (string fileName in filePathes)
@@ -454,8 +455,8 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
             {
                 dataPack.Hide();
                 DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
-                context.editPage ??= new EditPageView();
-                EditPageViewModel editContext = context.editPage.DataContext as EditPageViewModel;
+                context.EditPage ??= new EditPageView();
+                EditPageViewModel editContext = context.EditPage.DataContext as EditPageViewModel;
                 NavigationToEditPage();
                 List<TreeViewItem> result = ContentReader.ReadTheContentOfTheSpecifiedPath(openFileDialog.FileName);
                 foreach (var item in result)
@@ -480,8 +481,8 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         private void CreateLocalDataPack()
         {
             DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
-            context.templateSelectPage ??= new();
-            NavigationService.GetNavigationService(context.frame)?.Navigate(context.templateSelectPage);
+            context.TemplateSelectPage ??= new();
+            NavigationService.GetNavigationService(context.Frame)?.Navigate(context.TemplateSelectPage);
         }
     }
 }

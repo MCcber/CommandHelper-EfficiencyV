@@ -143,14 +143,20 @@
                     Foreground="White"
                     Maximum="32767"
                     Minimum="-32768"
-                    Style="{DynamicResource NumberBoxStyle}" />
+                    Style="{DynamicResource NumberBoxStyle}"
+                    Value="{Binding Delay}">
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="ValueChanged">
+                            <behavior:CallMethodAction MethodName="SliderValue_ValueChanged" TargetObject="{Binding}" />
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
+                </Slider>
                 <CustomControl:RadiusToggleButtons
-                    Uid="Delay"
                     Grid.Row="0"
                     Grid.Column="2"
                     Margin="0,0,5,0"
                     Foreground="White"
-                    IsChecked="True"
+                    IsChecked="{Binding IsDefaultDelay}"
                     SelectedToggleText="使用默认值"
                     Style="{DynamicResource RadiusToggleButton}"
                     ToggleHeight="25"
@@ -179,14 +185,20 @@
                     Foreground="White"
                     Maximum="32767"
                     Minimum="-32768"
-                    Style="{DynamicResource NumberBoxStyle}" />
+                    Style="{DynamicResource NumberBoxStyle}"
+                    Value="{Binding MaxNearbyEntities}">
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="ValueChanged">
+                            <behavior:CallMethodAction MethodName="SliderValue_ValueChanged" TargetObject="{Binding}" />
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
+                </Slider>
                 <CustomControl:RadiusToggleButtons
-                    Uid="MaxNearbyEntities"
                     Grid.Row="1"
                     Grid.Column="2"
                     Margin="0,0,5,0"
                     Foreground="White"
-                    IsChecked="True"
+                    IsChecked="{Binding IsDefaultMaxNearbyEntities}"
                     SelectedToggleText="使用默认值"
                     Style="{DynamicResource RadiusToggleButton}"
                     ToggleHeight="25"
@@ -215,14 +227,20 @@
                     Foreground="White"
                     Maximum="32767"
                     Minimum="-32768"
-                    Style="{DynamicResource NumberBoxStyle}" />
+                    Style="{DynamicResource NumberBoxStyle}"
+                    Value="{Binding MaxSpawnDelay}">
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="ValueChanged">
+                            <behavior:CallMethodAction MethodName="SliderValue_ValueChanged" TargetObject="{Binding}" />
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
+                </Slider>
                 <CustomControl:RadiusToggleButtons
-                    Uid="MaxSpawnDelay"
                     Grid.Row="2"
                     Grid.Column="2"
                     Margin="0,0,5,0"
                     Foreground="White"
-                    IsChecked="True"
+                    IsChecked="{Binding IsDefaultMaxSpawnDelay}"
                     SelectedToggleText="使用默认值"
                     Style="{DynamicResource RadiusToggleButton}"
                     ToggleHeight="25"
@@ -251,14 +269,20 @@
                     Foreground="White"
                     Maximum="32767"
                     Minimum="-32768"
-                    Style="{DynamicResource NumberBoxStyle}" />
+                    Style="{DynamicResource NumberBoxStyle}"
+                    Value="{Binding MinSpawnDelay}">
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="ValueChanged">
+                            <behavior:CallMethodAction MethodName="SliderValue_ValueChanged" TargetObject="{Binding}" />
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
+                </Slider>
                 <CustomControl:RadiusToggleButtons
-                    Uid="MinSpawnDelay"
                     Grid.Row="3"
                     Grid.Column="2"
                     Margin="0,0,5,0"
                     Foreground="White"
-                    IsChecked="True"
+                    IsChecked="{Binding IsDefaultMinSpawnDelay}"
                     SelectedToggleText="使用默认值"
                     Style="{DynamicResource RadiusToggleButton}"
                     ToggleHeight="25"
@@ -287,14 +311,20 @@
                     Foreground="White"
                     Maximum="32767"
                     Minimum="-32768"
-                    Style="{DynamicResource NumberBoxStyle}" />
+                    Style="{DynamicResource NumberBoxStyle}"
+                    Value="{Binding RequiredPlayerRange}">
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="ValueChanged">
+                            <behavior:CallMethodAction MethodName="SliderValue_ValueChanged" TargetObject="{Binding}" />
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
+                </Slider>
                 <CustomControl:RadiusToggleButtons
-                    Uid="RequiredPlayerRange"
                     Grid.Row="4"
                     Grid.Column="2"
                     Margin="0,0,5,0"
                     Foreground="White"
-                    IsChecked="True"
+                    IsChecked="{Binding IsDefaultRequiredPlayerRange}"
                     SelectedToggleText="使用默认值"
                     Style="{DynamicResource RadiusToggleButton}"
                     ToggleHeight="25"
@@ -323,14 +353,20 @@
                     Foreground="White"
                     Maximum="32767"
                     Minimum="-32768"
-                    Style="{DynamicResource NumberBoxStyle}" />
+                    Style="{DynamicResource NumberBoxStyle}"
+                    Value="{Binding SpawnCount}">
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="ValueChanged">
+                            <behavior:CallMethodAction MethodName="SliderValue_ValueChanged" TargetObject="{Binding}" />
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
+                </Slider>
                 <CustomControl:RadiusToggleButtons
-                    Uid="SpawnCount"
                     Grid.Row="5"
                     Grid.Column="2"
                     Margin="0,0,5,0"
                     Foreground="White"
-                    IsChecked="True"
+                    IsChecked="{Binding IsDefaultSpawnCount}"
                     SelectedToggleText="使用默认值"
                     Style="{DynamicResource RadiusToggleButton}"
                     ToggleHeight="25"
@@ -359,14 +395,20 @@
                     Foreground="White"
                     Maximum="32767"
                     Minimum="-32768"
-                    Style="{DynamicResource NumberBoxStyle}" />
+                    Style="{DynamicResource NumberBoxStyle}"
+                    Value="{Binding SpawnRange}">
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="ValueChanged">
+                            <behavior:CallMethodAction MethodName="SliderValue_ValueChanged" TargetObject="{Binding}" />
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
+                </Slider>
                 <CustomControl:RadiusToggleButtons
-                    Uid="SpawnRange"
                     Grid.Row="6"
                     Grid.Column="2"
                     Margin="0,0,5,0"
                     Foreground="White"
-                    IsChecked="True"
+                    IsChecked="{Binding IsDefaultSpawnRange}"
                     SelectedToggleText="使用默认值"
                     Style="{DynamicResource RadiusToggleButton}"
                     ToggleHeight="25"
@@ -389,10 +431,10 @@
                     </TextBlock.ToolTip>
                 </TextBlock>
                 <local:ReferenceEntity
-                    Uid="SpawnData"
                     Grid.Row="7"
                     Grid.Column="1"
-                    Grid.ColumnSpan="2" />
+                    Grid.ColumnSpan="2"
+                    Tag="{Binding ReferenceEntityTag}" />
             </Grid>
             <CustomControl:Accordion
                 Title="SpawnPotentials"
@@ -420,7 +462,7 @@
                     Background="#2F2F2F"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding SpawnPotentials}">
+                    <ItemsControl ItemsSource="{Binding SpawnPotentialList}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingStackPanel />

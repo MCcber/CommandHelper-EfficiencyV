@@ -27,6 +27,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using static CBHK.Model.Common.Enums;
 
 namespace CBHK.GeneralTool
 {
@@ -102,7 +103,7 @@ namespace CBHK.GeneralTool
                         case "crafting_shaped":
                         case "crafting_shapeness":
                             {
-                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.CraftingTable;
+                                RecipeType type = RecipeType.CraftingTable;
                                 CraftingTableView craftingTable = recipeContext.AddExternRecipe(type) as CraftingTableView;
                                 CraftingTableViewModel context = craftingTable.DataContext as CraftingTableViewModel;
                                 context.ImportMode = true;
@@ -112,7 +113,7 @@ namespace CBHK.GeneralTool
                         case "smithing_transform":
                         case "smithing_trim":
                             {
-                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.SmithingTable;
+                                RecipeType type = RecipeType.SmithingTable;
                                 SmithingTableView smithingTable = recipeContext.AddExternRecipe(type) as SmithingTableView;
                                 SmithingTableViewModel context = smithingTable.DataContext as SmithingTableViewModel;
                                 context.ImportMode = true;
@@ -121,7 +122,7 @@ namespace CBHK.GeneralTool
                             break;
                         case "blasting":
                             {
-                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.BlastFurnace;
+                                RecipeType type = RecipeType.BlastFurnace;
                                 BlastFurnaceView blastFurnace = recipeContext.AddExternRecipe(type) as BlastFurnaceView;
                                 BlastFurnaceViewModel context = blastFurnace.DataContext as BlastFurnaceViewModel;
                                 context.ImportMode = true;
@@ -130,7 +131,7 @@ namespace CBHK.GeneralTool
                             break;
                         case "campfire_cooking":
                             {
-                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.Campfire;
+                                RecipeType type = RecipeType.Campfire;
                                 CampfireView campfire = recipeContext.AddExternRecipe(type) as CampfireView;
                                 CampfireViewModel context = campfire.DataContext as CampfireViewModel;
                                 context.ImportMode = true;
@@ -139,7 +140,7 @@ namespace CBHK.GeneralTool
                             break;
                         case "smelting":
                             {
-                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.Furnace;
+                                RecipeType type = RecipeType.Furnace;
                                 FurnaceView furnace = recipeContext.AddExternRecipe(type) as FurnaceView;
                                 FurnaceViewModel context = furnace.DataContext as FurnaceViewModel;
                                 context.ImportMode = true;
@@ -148,7 +149,7 @@ namespace CBHK.GeneralTool
                             break;
                         case "smoker":
                             {
-                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.Smoker;
+                                RecipeType type = RecipeType.Smoker;
                                 SmokerView smoker = recipeContext.AddExternRecipe(type) as SmokerView;
                                 SmokerViewModel context = smoker.DataContext as SmokerViewModel;
                                 context.ImportMode = true;
@@ -157,7 +158,7 @@ namespace CBHK.GeneralTool
                             break;
                         case "stonecutting":
                             {
-                                RecipeViewModel.RecipeType type = RecipeViewModel.RecipeType.Stonecutter;
+                                RecipeType type = RecipeType.Stonecutter;
                                 StonecutterView stonecutter = recipeContext.AddExternRecipe(type) as StonecutterView;
                                 StonecutterViewModel context = stonecutter.DataContext as StonecutterViewModel;
                                 context.ImportMode = true;
@@ -259,12 +260,12 @@ namespace CBHK.GeneralTool
             #endregion
 
             #region 处理潜在实体数据
-            if (nbtObj.SelectToken("SpawnPotentials") is JArray spawnPotentials)
+            if (nbtObj.SelectToken("SpawnPotentialList") is JArray spawnPotentials)
             {
                 foreach (JObject spawnPotential in spawnPotentials.Cast<JObject>())
                 {
                     context.AddSpawnPotential(null);
-                    SpawnPotential spawnPotentialInstance = context.SpawnPotentials[^1];
+                    SpawnPotential spawnPotentialInstance = context.SpawnPotentialList[^1];
                     if (spawnPotential.SelectToken("weight") is JToken weight)
                         spawnPotentialInstance.weight.Value = short.Parse(weight.ToString());
 
@@ -467,7 +468,12 @@ namespace CBHK.GeneralTool
                             transactionItemsViewModel.BuyCountDisplayText = "x" + int.Parse(buyCountObj.ToString());
                         }
                         Uri iconUri = new(iconPath, UriKind.Absolute);
-                        ItemStructure imageTag = new(new BitmapImage(iconUri), buyID, recipe.SelectToken("buy.tag") is JObject buyTagObj ? buyTagObj.ToString() : "");
+                        ItemStructure imageTag = new()
+                        {
+                            ImagePath = new BitmapImage(iconUri), 
+                            IDAndName = buyID,
+                            NBT = recipe.SelectToken("buy.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
+                        };
                         transactionItemsViewModel.Buy.Source = new BitmapImage(iconUri);
                         transactionItemsViewModel.Buy.Tag = imageTag;
                     }
@@ -489,7 +495,12 @@ namespace CBHK.GeneralTool
                                 transactionItemsViewModel.BuyBCountDisplayText = "x" + int.Parse(buyCountObj.ToString());
                             }
                             Uri iconUri = new(iconPath, UriKind.Absolute);
-                            ItemStructure imageTag = new(new BitmapImage(iconUri), buyBID, recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : "");
+                            ItemStructure imageTag = new()
+                            {
+                                ImagePath = new BitmapImage(iconUri), 
+                                IDAndName = buyBID, 
+                                NBT = recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
+                            };
                             transactionItemsViewModel.BuyB.Source = new BitmapImage(iconUri);
                             transactionItemsViewModel.BuyB.Tag = imageTag;
                         }
@@ -512,7 +523,12 @@ namespace CBHK.GeneralTool
                                 transactionItemsViewModel.SellCountDisplayText = "x" + int.Parse(sellCountObj.ToString());
                             }
                             Uri iconUri = new(iconPath, UriKind.Absolute);
-                            ItemStructure imageTag = new(new BitmapImage(iconUri), sellID, recipe.SelectToken("sell.tag") is JObject sellTagObj ? sellTagObj.ToString() : "");
+                            ItemStructure imageTag = new()
+                            {
+                                ImagePath = new BitmapImage(iconUri),
+                                IDAndName = buyBID,
+                                NBT = recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
+                            };
                             transactionItemsViewModel.Sell.Source = new BitmapImage(iconUri);
                             transactionItemsViewModel.Sell.Tag = imageTag;
                         }
@@ -867,7 +883,7 @@ namespace CBHK.GeneralTool
             }
             if (version1_12)
                 context.SelectedVersion.Text = "1.12-";
-            context.SelectedItemId = new IconComboBoxItem() { ComboBoxItemId = selectedItemID };
+            context.SelectedItem = new IconComboBoxItem() { ComboBoxItemId = selectedItemID };
 
             richTabItems.Content = itemPages;
             itemPageList.Add(richTabItems);

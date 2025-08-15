@@ -21,6 +21,7 @@ namespace CBHK.View.Component.Item
     public partial class Function : UserControl,IVersionUpgrader
     {
         private CBHKDataContext _context = null;
+        private ItemPageViewModel _viewModel;
 
         #region 可破坏可放置方块等数据源
         public ObservableCollection<CanDestroyItems> CanDestroyItemsSource { get; set; } = [];
@@ -116,10 +117,12 @@ namespace CBHK.View.Component.Item
         }
         #endregion
 
-        public Function(CBHKDataContext context)
+        public Function(CBHKDataContext context,ItemPageViewModel viewModel)
         {
             InitializeComponent();
             _context = context;
+            _viewModel = viewModel;
+
             #region 连接指令
             //添加
             CanDestroyBlock.Modify = new RelayCommand<FrameworkElement>(AddCanDestroyBlockClick);
@@ -172,7 +175,7 @@ namespace CBHK.View.Component.Item
         /// <param name="e"></param>
         private void AddEnchantmentClick(FrameworkElement obj)
         {
-            EnchantmentItem enchantmentItems = new(_context);
+            EnchantmentItem enchantmentItems = new(_context,_viewModel);
             EnchantmentItemsSource.Add(enchantmentItems);
             ItemPageViewModel itemPageDataContext = obj.FindParent<ItemPageView>().DataContext as ItemPageViewModel;
             itemPageDataContext.VersionComponents.Add(enchantmentItems);
@@ -281,7 +284,7 @@ namespace CBHK.View.Component.Item
             {
                 foreach (JObject enchant in enchantmentArray.Cast<JObject>())
                 {
-                    EnchantmentItem enchantmentItem = new(_context);
+                    EnchantmentItem enchantmentItem = new(_context,_viewModel);
                     enchantmentItem.ID.SelectedValuePath = "ComboBoxItemId";
                     enchantmentItem.ID.SelectedValue = enchant.SelectToken("id").ToString();
                     enchantmentItem.Level.Value = int.Parse(enchant.SelectToken("lvl").ToString());

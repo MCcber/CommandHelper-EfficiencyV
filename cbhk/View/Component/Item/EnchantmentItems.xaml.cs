@@ -2,6 +2,7 @@
 using CBHK.CustomControl.Interfaces;
 using CBHK.Domain;
 using CBHK.GeneralTool;
+using CBHK.ViewModel.Component.Item;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,7 +17,8 @@ namespace CBHK.View.Component.Item
     public partial class EnchantmentItem : UserControl, IVersionUpgrader
     {
         private CBHKDataContext _context = null;
-        private ObservableCollection<TextComboBoxItem> EnchantmentList { get; set; } = [];
+        private ItemPageViewModel _viewModel = null;
+        private ObservableCollection<IconComboBoxItem> EnchantmentList { get; set; } = [];
 
         #region 合并结果
         string id = "";
@@ -34,10 +36,12 @@ namespace CBHK.View.Component.Item
         }
         #endregion
 
-        public EnchantmentItem(CBHKDataContext context)
+        public EnchantmentItem(CBHKDataContext context, ItemPageViewModel viewModel)
         {
             InitializeComponent();
             _context = context;
+            _viewModel = viewModel;
+            EnchantmentList = _viewModel.EnchantmentIDList;
         }
 
         /// <summary>
@@ -49,13 +53,6 @@ namespace CBHK.View.Component.Item
         {
             ComboBox comboBoxs = sender as ComboBox;
             comboBoxs.ItemsSource = EnchantmentList;
-            foreach (var item in _context.EnchantmentSet)
-            {
-                EnchantmentList.Add(new TextComboBoxItem()
-                {
-                    Text = item.Name
-                });
-            }
         }
 
         /// <summary>

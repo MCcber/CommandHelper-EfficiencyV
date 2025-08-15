@@ -23,8 +23,8 @@
     mc:Ignorable="d">
 
     <Window.Resources>
-        <CollectionViewSource x:Key="OriginalItemView" Source="{Binding OriginalItemSource, IsAsync=True}" />
-        <CollectionViewSource x:Key="CustomItemView" Source="{Binding CustomItemSource, IsAsync=True}" />
+        <CollectionViewSource x:Key="OriginalItemView" Source="{Binding OriginalItemList, IsAsync=True}" />
+        <CollectionViewSource x:Key="CustomItemView" Source="{Binding CustomItemList, IsAsync=True}" />
         <ImageBrush x:Key="EditBox" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
         <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
         <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
@@ -349,6 +349,30 @@
                 RightBorderTexture="{StaticResource ButtonNormalRight}"
                 Style="{DynamicResource StereoTextButton}"
                 TopBorderTexture="{StaticResource ButtonNormalTop}" />
+            <TextBlock
+                Margin="10,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="版本"
+                TextAlignment="Center" />
+            <ComboBox
+                Width="110"
+                Height="30"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                FontSize="15"
+                IsReadOnly="True"
+                ItemsSource="{Binding VersionSource, IsAsync=True}"
+                SelectedIndex="0"
+                SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+                Style="{DynamicResource TextComboBoxStyle}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="SelectionChanged">
+                        <behavior:CallMethodAction MethodName="Version_SelectionChanged" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </ComboBox>
             <TextBox
                 Height="30"
                 Margin="5"
@@ -358,6 +382,11 @@
                 FontSize="20"
                 Foreground="White"
                 Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="TextChanged">
+                        <behavior:CallMethodAction MethodName="SearchTextBox_TextChanged" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
                 <TextBox.Resources>
                     <VisualBrush
                         x:Key="BackgroundBrush"

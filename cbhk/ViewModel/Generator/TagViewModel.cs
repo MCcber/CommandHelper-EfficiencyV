@@ -8,13 +8,13 @@ using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using Newtonsoft.Json.Linq;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.IO;
-using System.Text.RegularExpressions;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,9 +24,9 @@ using System.Windows.Media;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class TagViewModel(IContainerProvider container,CBHKDataContext context, MainView mainView) : ObservableObject
+    public partial class TagViewModel : ObservableObject
     {
-        #region 替换
+        #region 是否替换
         [ObservableProperty]
         private bool _replace = false;
         #endregion
@@ -54,14 +54,25 @@ namespace CBHK.ViewModel.Generator
 
         #region 所有标签成员
         [ObservableProperty]
-        private ObservableCollection<TagItemTemplate> _tagItems = [];
+        private ObservableCollection<TagItemTemplate> _tagItemList = [];
+        #endregion
+
+        #region 版本列表
+        [ObservableProperty]
+        private ObservableCollection<TextComboBoxItem> _versionList = [new TextComboBoxItem() { Text = "1.20.4" }];
+        [ObservableProperty]
+        private TextComboBoxItem _selectedVersion = null;
         #endregion
 
         #region 字段
         ListView TagZone = null;
         SolidColorBrush LightOrangeBrush = new((Color)ColorConverter.ConvertFromString("#F0D08C"));
-        private IContainerProvider _container = container;
-        private CBHKDataContext _context = context;
+        private IContainerProvider _container = null;
+        private CBHKDataContext _context = null;
+        private DataService _dataService;
+        private IProgress<TagItemTemplate> AddItemProgress = null;
+        private IProgress<(int, string, string, string, string, bool)> SetItemProgress = null;
+        private IProgress<bool> InitSelectedTypeItemProgress = null;
         #endregion
 
         #region 当前选中的值成员
@@ -207,7 +218,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 主页引用
         /// </summary>
-        private Window home = mainView;
+        private Window home = null;
 
         /// <summary>
         /// 对象数据源
@@ -215,7 +226,39 @@ namespace CBHK.ViewModel.Generator
         CollectionViewSource TagViewSource = null;
         //标签生成器的过滤类型数据源
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _typeItemSource = [];
+        private ObservableCollection<TextComboBoxItem> _typeItemSource = [];
+
+        public TagViewModel(IContainerProvider container,DataService dataService, CBHKDataContext context, MainView mainView)
+        {
+            home = mainView;
+            _container = container;
+            _context = context;
+            _dataService = dataService;
+
+            InitSelectedTypeItemProgress = new Progress<bool>(item =>
+            {
+                SelectedTypeItem = TypeItemSource[0];
+            });
+            AddItemProgress = new Progress<TagItemTemplate>(TagItemList.Add);
+            SetItemProgress = new Progress<(int, string, string, string, string, bool)>(item =>
+            {
+                Uri uri = null;
+                if (File.Exists(item.Item2 + ".png"))
+                {
+                    uri = new Uri(item.Item2 + ".png", UriKind.RelativeOrAbsolute);
+                }
+                else
+                if (File.Exists(item.Item2 + "_spawn_egg.png"))
+                {
+                    uri = new Uri(item.Item2 + "_spawn_egg.png", UriKind.RelativeOrAbsolute);
+                }
+                TagItemList[item.Item1].Icon = uri;
+                TagItemList[item.Item1].DisplayId = item.Item3;
+                TagItemList[item.Item1].DisplayName = item.Item4;
+                TagItemList[item.Item1].DataType = item.Item5;
+                TagItemList[item.Item1].BeChecked = item.Item6;
+            });
+        }
 
         [RelayCommand]
         /// <summary>
@@ -223,7 +266,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFromClipboard()
         {
-            ObservableCollection<TagItemTemplate> items = TagItems;
+            ObservableCollection<TagItemTemplate> items = TagItemList;
             TagViewModel context = this;
             ExternalDataImportManager.ImportTagDataHandler(Clipboard.GetText(),ref items,ref context,false);
         }
@@ -234,7 +277,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFromFile()
         {
-            ObservableCollection<TagItemTemplate> items = TagItems;
+            ObservableCollection<TagItemTemplate> items = TagItemList;
             TagViewModel context = this;
             OpenFileDialog dialog = new()
             {
@@ -263,13 +306,14 @@ namespace CBHK.ViewModel.Generator
             }
             TagItemTemplate currentItem = e.Item as TagItemTemplate;
 
+            #region 执行搜索
             if (currentItem is not null)
             {
-                bool needDisplay = e.Accepted = currentItem.DataType.Contains(SelectedTypeItem.Text) || SelectedTypeItem.Text == "All";
-                #region 执行搜索
+                bool needDisplay = e.Accepted = (currentItem.DataType is not null && currentItem.DataType.Contains(SelectedTypeItem.Text)) || SelectedTypeItem.Text == "All";
+
                 if (needDisplay)
                 {
-                    if (SearchText.Trim().Length > 0)
+                    if (SearchText.Trim().Length > 0 && currentItem.DisplayId is not null)
                     {
                         string currentItemIDAndName = currentItem.DisplayId;
                         e.Accepted = currentItemIDAndName.Contains(SearchText);
@@ -277,8 +321,8 @@ namespace CBHK.ViewModel.Generator
                     else
                         e.Accepted = true;
                 }
-                #endregion
             }
+            #endregion
         }
 
         /// <summary>
@@ -286,7 +330,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void TagView_Loaded(object sender, RoutedEventArgs e)
+        public void TagView_Loaded(object sender, RoutedEventArgs e)
         {
             #region 加载过滤类型
             if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\Data\TypeFilter.ini"))
@@ -298,103 +342,77 @@ namespace CBHK.ViewModel.Generator
                 }
             }
             #endregion
-            #region 异步载入标签成员
-            await Task.Run(async () =>
+
+            #region 启动异步载入标签成员任务
+            SelectedVersion = VersionList[0];
+            int ItemIDCount = _dataService.GetItemIDList().Count;
+            List<string> BlockIDList = [.._context.BlockSet.Select(item => item.ID)];
+            int EntityIDCount = _dataService.GetEntityIDList().Count;
+            int BiomeIDCount = _context.BiomeIDSet.Count();
+            int GameEventValueCount = _context.GameEventTagSet.Count();
+            List<string> IDOrValueList = [.. _context.ItemSet.Select(item => item.ID), .. _context.EntitySet.Select(item => item.ID), .. _context.BiomeIDSet.Select(item => item.ID), .. _context.GameEventTagSet.Select(item => item.Value)];
+
+            Task.Run(async () =>
             {
-                string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                #region 实体
-                foreach (var item in _context.EntitySet)
+                ParallelOptions parallelOptions = new();
+                await Parallel.ForAsync(0, IDOrValueList.Count, parallelOptions, (i, cancellationToken) =>
                 {
-                    Uri uri = null;
-                    if (File.Exists(currentPath + item.ID + ".png"))
-                        uri = new(currentPath + item.ID + ".png", UriKind.Absolute);
-                    else
-                    if (File.Exists(currentPath + item.ID + "_spawn_egg.png"))
-                        uri = new(currentPath + item.ID + "_spawn_egg.png", UriKind.Absolute);
-                    TagItems.Add(new TagItemTemplate()
-                    {
-                        Icon = uri,
-                        DisplayId = item.ID,
-                        DisplayName = item.Name,
-                        DataType = "EntityView",
-                        BeChecked = false
-                    });
-                }
-                #endregion
-                #region 生物群系
-                foreach (var item in _context.BiomeIDSet)
-                {
-                    TagItems.Add(new TagItemTemplate()
-                    {
-                        DisplayId = item.ID,
-                        DataType = "Biome",
-                        BeChecked = false
-                    });
-                }
-                #endregion
-                #region 游戏事件
-                foreach (var item in _context.GameEventTagSet)
-                {
-                    TagItems.Add(new TagItemTemplate()
-                    {
-                        DisplayId = item.Value,
-                        DataType = "GameEvent",
-                        BeChecked = false
-                    });
-                }
-                #endregion
-            });
-            Task.Run(() =>
-            {
+                    AddItemProgress.Report(new TagItemTemplate());
+                    return new ValueTask();
+                });
+
                 #region 物品
                 string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                Dictionary<string, TagItemTemplate> ItemData = [];
-                foreach (var item in _context.ItemSet)
+
+                Dictionary<string, string> ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+                .SelectMany(pair => pair.Value)
+                .ToDictionary(
+                    pair => pair.Key,
+                    pair => pair.Value
+                );
+
+                List<string> ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
+                ItemKeyList.Sort();
+
+                Parallel.For(0, _context.ItemSet.Count(), i =>
                 {
-                    Uri uri = null;
-                    if (File.Exists(currentPath + item.ID + ".png"))
-                        uri = new(currentPath + item.ID + ".png", UriKind.Absolute);
-                    else
-                    if (File.Exists(currentPath + item.ID + "_spawn_egg.png"))
-                        uri = new(currentPath + item.ID + "_spawn_egg.png", UriKind.Absolute);
-                    TagItemTemplate tagItemTemplate = new()
-                    {
-                        Icon = uri,
-                        DisplayId = item.ID,
-                        DisplayName = item.Name,
-                        DataType = "ItemView",
-                        BeChecked = false
-                    };
-                    ItemData.Add(item.ID, tagItemTemplate);
-                    //TagItems.Add(tagItemTemplate);
-                }
+                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, currentPath + IDOrValueList[i], IDOrValueList[i], ItemIDAndNameMap[IDOrValueList[i]], BlockIDList.Contains(IDOrValueList[i]) ? "Block&ItemView" : "ItemView", false));
+                });
                 #endregion
-                #region 方块
-                foreach (var item in _context.BlockSet)
+
+                #region 实体
+                Dictionary<string, string> EntityIDAndNameMap = _dataService.EntityGroupByVersionDictionary
+                .SelectMany(pair => pair.Value)
+                .ToDictionary(
+                    pair => pair.Key,
+                    pair => pair.Value
+                );
+
+                await Parallel.ForAsync(ItemIDCount, ItemIDCount + EntityIDCount,parallelOptions, (i,cancellationToken) =>
                 {
-                    if (!ItemData.TryGetValue(item.ID, out TagItemTemplate value))
-                    {
-                        Uri uri = null;
-                        if (File.Exists(currentPath + item.ID + ".png"))
-                            uri = new(currentPath + item.ID + ".png", UriKind.Absolute);
-                        else
-                        if (File.Exists(currentPath + item.ID + "_spawn_egg.png"))
-                            uri = new(currentPath + item.ID + "_spawn_egg.png", UriKind.Absolute);
-                        //TagItems.Add(new TagItemTemplate()
-                        //{
-                        //    Icon = uri,
-                        //    DisplayId = item.ID,
-                        //    DisplayName = item.Name,
-                        //    DataType = "Block&ItemView",
-                        //    BeChecked = false
-                        //});
-                    }
-                    else
-                        value.DataType = "Block&ItemView";
-                }
+                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, currentPath + IDOrValueList[i], IDOrValueList[i], EntityIDAndNameMap[IDOrValueList[i]], "EntityView", false));
+                    return new ValueTask();
+                });
                 #endregion
+
+                #region 生物群系
+                Parallel.For(ItemIDCount + EntityIDCount, ItemIDCount + EntityIDCount + BiomeIDCount, i =>
+                {
+                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, null, IDOrValueList[i], "", "Biome", false));
+                });
+                #endregion
+
+                #region 游戏事件
+                List<string> GameEventValueList = [.. _context.GameEventTagSet.Select(item => item.Value)];
+                Parallel.For(ItemIDCount + EntityIDCount + BiomeIDCount, ItemIDCount + EntityIDCount + BiomeIDCount + GameEventValueCount, (i) =>
+                {
+                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, null, IDOrValueList[i], "", "GameEvent", false));
+                });
+                #endregion
+
+                InitSelectedTypeItemProgress.Report(true);
             });
-            SelectedTypeItem = TypeItemSource[0];
+
             #endregion
         }
 
@@ -430,6 +448,9 @@ namespace CBHK.ViewModel.Generator
         {
             string result = (string.Join("\r\n",Items) + "\r\n" + string.Join("\r\n",Blocks) + "\r\n" + string.Join("\r\n",Entities) + "\r\n" + string.Join("\r\n",Biomes) + "\r\n" + string.Join("\r\n",GameEvent)).TrimEnd().TrimEnd(',');
             result = "{\r\n  \"replace\": " + Replace.ToString().ToLower() + ",\r\n\"values\": [\r\n" + result.Trim('\n').Trim('\r') + "\r\n]\r\n}";
+            JToken resultToken = JToken.Parse(result);
+            result = resultToken.ToString(Newtonsoft.Json.Formatting.Indented);
+
             SaveFileDialog saveFileDialog = new()
             {
                 AddExtension = true,
@@ -488,6 +509,9 @@ namespace CBHK.ViewModel.Generator
         /// <param name="CurrentItem"></param>
         private void ReverseValue(TagItemTemplate CurrentItem)
         {
+            int index = TagItemList.IndexOf(CurrentItem);
+            int itemCount = _context.ItemSet.Count();
+            int entityCount = _context.EntitySet.Count();
             string itemString = CurrentItem.DisplayId;
             if (itemString.Trim().Length > 0)
             {

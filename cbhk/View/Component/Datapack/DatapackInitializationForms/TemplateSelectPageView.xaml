@@ -1,11 +1,11 @@
 ﻿<Page
-    x:Class="CBHK.View.Component.DatapackInitializationForms.TemplateSelectPageView"
+    x:Class="CBHK.View.Component.Datapack.DatapackInitializationForms.TemplateSelectPageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:CBHK.View.Component.DatapackInitializationForms"
+    xmlns:local="clr-namespace:CBHK.View.Component.Datapack.DatapackInitializationForms"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:templateDatacontext="clr-namespace:CBHK.ViewModel.Component.Datapack.DatapackInitializationForms"
@@ -17,7 +17,7 @@
 
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
-            <behavior:CallMethodAction MethodName="TemplateWindowLoaded" TargetObject="{Binding}" />
+            <behavior:CallMethodAction MethodName="TemplateSelectPageView_Loaded" TargetObject="{Binding}" />
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
 
@@ -40,7 +40,6 @@
         <ImageBrush x:Key="EditBox" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
         <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
         <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
-        <templateDatacontext:TemplateSelectViewModel x:Key="templateDatacontext" />
     </Page.Resources>
 
     <Grid>
@@ -191,7 +190,13 @@
                 ItemsSource="{Binding VersionList, IsAsync=True}"
                 SelectedIndex="{Binding SelectedVersionIndex, Mode=TwoWay}"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}" />
+                Style="{DynamicResource TextComboBoxStyle}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="SelectionChanged">
+                        <behavior:CallMethodAction MethodName="SelectedVersion_SelectionChanged" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </ComboBox>
             <Grid Margin="0,5,0,20">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />

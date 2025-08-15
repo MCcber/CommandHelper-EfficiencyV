@@ -5,28 +5,31 @@ using System.Collections.ObjectModel;
 using System.Drawing.Text;
 using System;
 using System.Windows.Media;
-using CBHK.Model;
 using System.IO;
 using System.Linq;
 using System.Windows.Controls;
-using System.Windows;
+using CBHK.Domain;
+using CBHK.Domain.Model;
 
 namespace CBHK.ViewModel.Common
 {
     public partial class SettingsViewModel: ObservableObject
     {
         #region Field
-        InstalledFontCollection SystemFonts = new();
+        private InstalledFontCollection SystemFonts = new();
+        private CBHKDataContext _context;
+        private EnvironmentConfig _config = null;
         string fontListDirectory = AppDomain.CurrentDomain.BaseDirectory + "Resource\\Fonts";
         #endregion
 
         #region Property
-        public ObservableCollection<TextComboBoxItem> CurrentFontFamilyNameList { get; set; } = [];
         [ObservableProperty]
-        public int _selectVisibleIndex = 0;
+        private ObservableCollection<TextComboBoxItem> _currentFontFamilyNameList = [];
+        [ObservableProperty]
+        private TextComboBoxItem _selectVisibleItem = null;
 
         [ObservableProperty]
-        public int _selectFontIndex = 0;
+        private int _selectFontIndex = 0;
 
         [ObservableProperty]
         private TextComboBoxItem _selectedFontFamilyItem;
@@ -36,28 +39,36 @@ namespace CBHK.ViewModel.Common
 
         List<FontFamily> CurrentFontFamilyList { get; set; } = [];
 
-        public ObservableCollection<TextComboBoxItem> StateList { get; set; } = [
+        [ObservableProperty]
+        private ObservableCollection<TextComboBoxItem> _stateList = [
                 new() { Text = "保持不变" },
                 new() { Text = "最小化" },
                 new() { Text = "关闭" }
             ];
 
-        private bool closeToTray = MainWindowProperties.CloseToTray;
-
+        private bool _closeToTray = false;
         public bool CloseToTray
         {
-            get => closeToTray;
+            get => _closeToTray;
             set
             {
-                SetProperty(ref closeToTray, value);
-                MainWindowProperties.CloseToTray = closeToTray;
+                SetProperty(ref _closeToTray, value);
+                _config.CloseToTray = value.ToString().ToLower();
             }
         }
 
         #endregion
 
-        public SettingsViewModel()
+        public SettingsViewModel(CBHKDataContext context)
         {
+            _context = context;
+            _config = _context.EnvironmentConfigSet.First();
+            TextComboBoxItem visibilityItem = StateList.Where(item=>item.Text == _config.Visibility).First();
+            if(visibilityItem is not null)
+            {
+                SelectVisibleItem = visibilityItem;
+            }
+
             #region 获取自定义字体库
             string[] fontListFolder = Directory.GetFiles(fontListDirectory, "*ttf", SearchOption.AllDirectories);
             List<string> fontNameList = [];
@@ -91,8 +102,15 @@ namespace CBHK.ViewModel.Common
             }
             #endregion
 
+            #region 设置默认字体
+            CloseToTray = _config.CloseToTray.ToLower() == "true";
             SelectedFontFamilyItem = CurrentFontFamilyNameList[0];
-            SelectVisibleIndex = 0;
+            #endregion
+        }
+
+        public void ViewState_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _config.Visibility = SelectVisibleItem.Text;
         }
 
         public void FontComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

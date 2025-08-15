@@ -306,18 +306,28 @@ namespace CBHK.ViewModel.Component.Villager
         public void Edit(Button button)
         {
             VillagerViewModel context = Window.GetWindow(button).DataContext as VillagerViewModel;
+            context.CurrentItem = button.FindParent<TransactionItemView>();
             context.TransactionDataGridVisibility = Visibility.Visible;
+            context.RewardExp = RewardExp;
+            context.VillagerGetXp = Xp;
+
             context.BuyItemIcon = Buy.Source;
             context.BuyBItemIcon = BuyB.Source;
             context.SellItemIcon = Sell.Source;
+
             context.BuyItemData = Buy.Tag;
             context.BuyBItemData = BuyB.Tag;
             context.SellItemData = Sell.Tag;
+
             context.BuyCount = int.Parse(BuyCountDisplayText.Replace("x", ""));
             context.BuyBCount = int.Parse(BuyBCountDisplayText.Replace("x", ""));
             context.SellCount = int.Parse(SellCountDisplayText.Replace("x", ""));
 
-            context.CurrentItem = button.FindParent<TransactionItemView>();
+            context.MaxUses = MaxUses;
+            context.Uses = Uses;
+            context.Demand = Demand;
+            context.SpecialPrice = SpecialPrice;
+            context.PriceMultiplier = PriceMultiplier;
         }
 
         /// <summary>

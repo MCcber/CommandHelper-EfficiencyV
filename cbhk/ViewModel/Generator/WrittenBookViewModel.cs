@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -30,7 +31,7 @@ namespace CBHK.ViewModel.Generator
 {
     public partial class WrittenBookViewModel(IContainerProvider container,MainView mainView) : ObservableObject
     {
-        #region 字段
+        #region Field
         //成书编辑框引用
         public RichTextBox WrittenBookEditor = null;
 
@@ -60,9 +61,10 @@ namespace CBHK.ViewModel.Generator
         public List<EnabledFlowDocument> WrittenBookPages = [];
 
         /// <summary>
-        /// 一页总字符数
+        /// 一页总字节数
         /// </summary>
-        int PageMaxCharCount = 377;
+        int PageMaxByteLength = 1024;
+        int PageMaxLineCount = 7;
 
         //字符数量超出提示
         TextBlock ExceedsBlock = null;
@@ -115,15 +117,6 @@ namespace CBHK.ViewModel.Generator
             }
         }
         private int CurrentMinVersion = 1205;
-        #endregion
-
-        #region 字符超出数量
-        string exceedsCount = "0";
-        public string ExceedsCount
-        {
-            get => exceedsCount;
-            set => SetProperty(ref exceedsCount,value);
-        }
         #endregion
 
         #region 显示字符超出数量
@@ -863,24 +856,26 @@ namespace CBHK.ViewModel.Generator
                 enabledFlowDocument.Blocks.Add(paragraph);
             }
 
-            #region 更新超出的字符数量
+            #region 更新超出的内容
             TextRange AllRange = new(WrittenBookEditor.Document.ContentStart, WrittenBookEditor.Document.ContentEnd);
-            int exceedCount = AllRange.Text.Length - PageMaxCharCount;
-            if (exceedCount > 0)
+
+            byte[] exceedByteArray = Encoding.UTF8.GetBytes(AllRange.Text);
+            int exceedLength = exceedByteArray.Length - PageMaxByteLength;
+            int exceedLineCount = enabledFlowDocument.Blocks.Count - PageMaxLineCount;
+
+            if (exceedLineCount > 0)
             {
-                ExceedsBlock.ToolTip = "当前超出" + exceedCount.ToString() + "个字符(仅作参考)";
+                ExceedsBlock.ToolTip = "当前超出" + exceedLineCount + "行";
+            }
+            if (exceedLength > 0)
+            {
+                ExceedsBlock.ToolTip += "当前超出" + exceedLength + "个字节";
+            }
+            if (exceedLength > 0 || exceedLineCount > 0)
+            {
                 ToolTipService.SetInitialShowDelay(ExceedsBlock, 0);
                 ToolTipService.SetBetweenShowDelay(ExceedsBlock, 0);
-                if (exceedCount > 100)
-                {
-                    ExceedsCount = "";
-                    ExceedsBlock.Text = "查看超出的字符数";
-                }
-                else
-                {
-                    ExceedsBlock.Text = "查看超出的字符数:";
-                    ExceedsCount = exceedCount.ToString();
-                }
+                ExceedsBlock.Text = "查看超出内容";
                 DisplayExceedsCount = Visibility.Visible;
             }
             else

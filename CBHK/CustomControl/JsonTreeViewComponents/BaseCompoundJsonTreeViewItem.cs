@@ -1823,7 +1823,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             if (StartLine is null)
             {
                 string connectorString = (VisualPrevious is not null && VisualNext is null ? "," : "") + "\r\n" + new string(' ', LayerCount * 2);
-                string endConnectorString = VisualNext is not null && VisualNext.StartLine is not null ? "," : "";
+                string endConnectorString = (VisualNext is not null && VisualNext.StartLine is not null ? "," : "") + (Parent is null || (Parent is not null && Parent.LogicChildren.Count == 0) ? "\r\n" : "");
                 if (VisualPrevious is BaseCompoundJsonTreeViewItem previousCompoundItem1 && previousCompoundItem1.EndLine is not null)
                 {
                     Plan.SetRangeText(previousCompoundItem1.EndLine.EndOffset,0, connectorString + (Key.Length > 0 ? "\"" + Key + "\": " : "") + "\"" + SelectedEnumItem.Text + "\"" + endConnectorString);

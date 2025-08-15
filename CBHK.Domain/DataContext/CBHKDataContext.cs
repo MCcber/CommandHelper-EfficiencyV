@@ -61,7 +61,6 @@ namespace CBHK.Domain
             modelBuilder.Entity<BossbarColor>().HasNoKey();
             modelBuilder.Entity<BossbarStyle>().HasNoKey();
             modelBuilder.Entity<DamageType>().HasNoKey();
-            modelBuilder.Entity<EnvironmentConfig>().HasNoKey();
             modelBuilder.Entity<GameEventTag>().HasNoKey();
             modelBuilder.Entity<ItemSlot>().HasNoKey();
             modelBuilder.Entity<Language>().HasNoKey();

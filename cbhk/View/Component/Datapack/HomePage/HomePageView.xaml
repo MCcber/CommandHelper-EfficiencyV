@@ -67,6 +67,11 @@
                 CaretBrush="White"
                 Foreground="White"
                 Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="TextChanged">
+                        <behavior:CallMethodAction MethodName="SearchBox_TextChanged" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
                 <TextBox.Resources>
                     <VisualBrush
                         x:Key="BackgroundBrush"

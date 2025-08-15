@@ -24,7 +24,13 @@
             HeaderText="关闭后缩小到托盘"
             HeaderWidth="20"
             IsChecked="{Binding CloseToTray}"
-            Style="{StaticResource TextCheckBox}" />
+            Style="{StaticResource TextCheckBox}">
+            <behavior:Interaction.Triggers>
+                <behavior:EventTrigger EventName="Click">
+                    <behavior:CallMethodAction MethodName="IsCloseToTray_Click" TargetObject="{Binding}" />
+                </behavior:EventTrigger>
+            </behavior:Interaction.Triggers>
+        </CustomControl:TextCheckBoxs>
         <DockPanel>
             <TextBlock
                 Grid.Row="1"
@@ -43,8 +49,14 @@
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
                 ItemsSource="{Binding StateList}"
-                SelectedIndex="{Binding SelectVisibleIndex}"
-                Style="{DynamicResource TextComboBoxStyle}" />
+                SelectedItem="{Binding SelectVisibleItem}"
+                Style="{DynamicResource TextComboBoxStyle}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="SelectionChanged">
+                        <behavior:CallMethodAction MethodName="ViewState_SelectionChanged" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </ComboBox>
         </DockPanel>
         <Grid>
             <Grid.ColumnDefinitions>

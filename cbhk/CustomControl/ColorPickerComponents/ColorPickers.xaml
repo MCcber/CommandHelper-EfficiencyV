@@ -115,13 +115,14 @@
 
     </UserControl.Resources>
     <Grid>
+        <!--  /CBHK;component/Resource/Common/Image/ColorPicker.png  -->
         <Image
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Panel.ZIndex="1"
             IsHitTestVisible="False"
             RenderOptions.BitmapScalingMode="NearestNeighbor"
-            Source="/CBHK;component/Resource/Common/Image/ColorPicker.png" />
+            Source="{StaticResource Palette}" />
         <Button
             x:Name="btn"
             Panel.ZIndex="0"

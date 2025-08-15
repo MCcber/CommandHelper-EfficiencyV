@@ -12,8 +12,8 @@ using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using Prism.Ioc;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,63 +23,37 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using static CBHK.Model.Common.Enums;
 
 namespace CBHK.ViewModel.Generator
 {
     public partial class RecipeViewModel : ObservableObject
     {
-        #region 保存物品ID
-        private IconComboBoxItem select_item_id_source;
-        public IconComboBoxItem SelectItemIdSource
-        {
-            get { return select_item_id_source; }
-            set
-            {
-                select_item_id_source = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
-        #region 配方类型
-        public enum RecipeType
-        {
-            CraftingTable,
-            Furnace,
-            BlastFurnace,
-            Campfire,
-            SmithingTable,
-            Smoker,
-            Stonecutter
-        }
-        #endregion
-
-        #region 字段
+        #region Field
         /// <summary>
         /// 主页引用
         /// </summary>
         private Window home = null;
-
-        //被抓取的物品
+        /// <summary>
+        /// 被抓取的物品
+        /// </summary>
         public static Image GrabedImage = new();
-
-        //是否选择物品
+        /// <summary>
+        /// 是否选择物品
+        /// </summary>
         public static bool IsGrabingItem = false;
-        //原版物品库视图引用
+        /// <summary>
+        /// 原版物品库视图引用
+        /// </summary>
         public ListView originalItemViewer = null;
-        //自定义物品库视图引用
+        /// <summary>
+        /// 自定义物品库视图引用
+        /// </summary>
         public ListView customItemViewer = null;
-        //拖拽源
+        /// <summary>
+        /// 拖拽源
+        /// </summary>
         public static Image drag_source = null;
-
-        /// <summary>
-        /// 原版物品库
-        /// </summary>
-        public ObservableCollection<ItemStructure> OriginalItemSource { get; set; } = [];
-        /// <summary>
-        /// 自定义物品库
-        /// </summary>
-        public ObservableCollection<ItemStructure> CustomItemSource { get; set; } = [];
         /// <summary>
         /// 原版物品库数据源
         /// </summary>
@@ -88,121 +62,156 @@ namespace CBHK.ViewModel.Generator
         /// 自定义物品库数据源
         /// </summary>
         public CollectionViewSource CustomItemViewSource = new();
-        #endregion
 
-        #region 已选中的成员
-        private ItemStructure selectedItem = null;
-        public ItemStructure SelectedItem
-        {
-            get => selectedItem;
-            set => SetProperty(ref selectedItem,value);
-        }
-        #endregion
-
-        #region 已选中的物品库索引
-        private int selectedItemListIndex;
-
-        public int SelectedItemListIndex
-        {
-            get => selectedItemListIndex;
-            set => SetProperty(ref selectedItemListIndex,value);
-        }
-
-        #endregion
-
-        #region 搜索值
-        private string searchText = "";
-        public string SearchText
-        {
-            get => searchText;
-            set
-            {
-                searchText = value;
-                if (SelectedItemListIndex == 0)
-                    OriginalItemViewSource.View?.Refresh();
-                else
-                    CustomItemViewSource.View?.Refresh();
-            }
-        }
-        #endregion
-
-        //配方标签页数据源
-        public ObservableCollection<RichTabItems> RecipeList { get; set; } = [ new RichTabItems() {Header = "工作台",               
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush, } ];
+        private Dictionary<string, string> ItemIDAndNameMap = [];
+        private List<string> ItemKeyList = [];
 
         private CBHKDataContext _context = null;
-        private IContainerProvider _container;
+        private IContainerProvider _container = null;
+        private DataService _dataService = null;
 
-        public RecipeViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context)
+        private IProgress<ItemStructure> AddOriginalItemProgress = null;
+        private IProgress<(int, string, string, string)> SetOriginalItemProgress = null;
+        private IProgress<ItemStructure> AddCustomItemProgress = null;
+        private IProgress<(int, string, string, string, string)> SetCustomItemProgress = null;
+
+        private string ImageSetFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
+        /// <summary>
+        /// 加载物品集合
+        /// </summary>
+        private string ItemSaveFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Item";
+        #endregion
+
+        #region Property
+        /// <summary>
+        /// 原版物品库
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<ItemStructure> _originalItemList = [];
+        /// <summary>
+        /// 自定义物品库
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<ItemStructure> _customItemList = [];
+        /// <summary>
+        /// 已选中的成员
+        /// </summary>
+        [ObservableProperty]
+        private ItemStructure _selectedItem = null;
+
+        #region 已选择的版本
+        private TextComboBoxItem selectedVersion;
+        public TextComboBoxItem SelectedVersion
+        {
+            get => selectedVersion;
+            set
+            {
+                SetProperty(ref selectedVersion, value);
+                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
+            }
+        }
+
+        public int CurrentMinVersion = 1202;
+        #endregion
+
+        #region 版本数据源
+        [ObservableProperty]
+        private ObservableCollection<TextComboBoxItem> _versionSource = 
+            [ 
+                new TextComboBoxItem() 
+                {
+                    Text = "1.20.4"
+                }
+            ];
+        #endregion
+
+        /// <summary>
+        /// 已选中的物品库索引
+        /// </summary>
+        [ObservableProperty]
+        private int _selectedItemListIndex;
+
+        /// <summary>
+        /// 搜索值
+        /// </summary>
+        [ObservableProperty]
+        private string _searchText = "";
+
+        /// <summary>
+        /// 配方标签页数据源
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<RichTabItems> _recipeList = 
+            [ 
+                new RichTabItems()
+                {
+                    Header = "工作台",
+                    IsContentSaved = true,
+                    BorderThickness = new(4, 4, 4, 0),
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                    SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                    Foreground = new SolidColorBrush(Colors.White),
+                    Style = Application.Current.Resources["RichTabItemStyle"] as Style,
+                    LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
+                    RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
+                    TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
+                    SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
+                    SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
+                    SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                }
+            ];
+        #endregion
+
+        public RecipeViewModel(IContainerProvider container,DataService dataService,MainView mainView,CBHKDataContext context)
         {
             _context = context;
             _container = container;
+            _dataService = dataService;
+
             home = mainView;
 
-            BindingOperations.EnableCollectionSynchronization(OriginalItemSource, new object());
-            BindingOperations.EnableCollectionSynchronization(CustomItemSource, new object());
-            Task.Run(async () =>{
-                #region 初始化数据
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    RecipeList[0].Content = new CraftingTableView() { FontWeight = FontWeights.Normal };
-                });
-                #endregion
-                #region 异步载入原版物品序列
-                //加载物品集合
-                string uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                string urlPath = "";
-                foreach (var item in _context.ItemSet)
-                {
-                    urlPath = uriDirectoryPath + item.ID + ".png";
-                    if (File.Exists(urlPath))
-                    {
-                        BitmapImage bitmapImage = new(new Uri(urlPath, UriKind.Absolute))
-                        {
-                            CacheOption = BitmapCacheOption.None
-                        };
-                        OriginalItemSource.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, item.ID + ":" + item.Name, "{id:\"minecraft:" + item.ID + "\",Count:1b}"));
-                        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                    }
-                }
-                #endregion
-                #region 异步载入自定义物品序列
-                //加载物品集合
-                uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Item";
-                string[] itemFileList = Directory.GetFiles(uriDirectoryPath);
-                foreach (string item in itemFileList)
-                {
-                    if (File.Exists(item))
-                    {
-                        string nbt = ExternalDataImportManager.GetItemDataHandler(item);
-                        if (nbt.Length > 0)
-                        {
-                            JObject data = JObject.Parse(nbt);
-                            JToken id = data.SelectToken("id");
-                            if (id is null)
-                            {
-                                continue;
-                            }
-                            string itemID = id.ToString().Replace("\"", "").Replace("minecraft:", "");
-                            urlPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
-                            string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
-                            CustomItemSource.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, itemID + ":" + itemName, nbt));
-                        }
-                    }
-                }
-                #endregion
+            RecipeList[0].Content = new CraftingTableView() { FontWeight = FontWeights.Normal };
+
+            AddOriginalItemProgress = new Progress<ItemStructure>(OriginalItemList.Add);
+            SetOriginalItemProgress = new Progress<(int, string, string, string)>(item =>
+            {
+                OriginalItemList[item.Item1].IDAndName = item.Item2 + ':' + item.Item3;
+                bool haveImage = File.Exists(item.Item4);
+                OriginalItemList[item.Item1].ImagePath = haveImage ? new BitmapImage(new Uri(item.Item4, UriKind.Absolute)) : null;
             });
+
+            AddCustomItemProgress = new Progress<ItemStructure>(CustomItemList.Add);
+            SetCustomItemProgress = new Progress<(int, string, string, string, string)>(item =>
+            {
+                CustomItemList[item.Item1].IDAndName = item.Item2 + ':' + item.Item3;
+                CustomItemList[item.Item1].ImagePath = File.Exists(item.Item4) ? new BitmapImage(new Uri(item.Item4, UriKind.Absolute)) : null;
+                CustomItemList[item.Item1].NBT = item.Item5;
+            });
+
+            ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+            .Where(pair => pair.Key <= CurrentMinVersion)
+            .SelectMany(pair => pair.Value)
+            .ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value
+            );
+
+            List<string> HaveNoIImageList = [];
+            foreach (var item in ItemIDAndNameMap)
+            {
+                if (!File.Exists(ImageSetFolderPath + item.Key + ".png") && !File.Exists(ImageSetFolderPath + item.Key + "_spawn_egg.png"))
+                {
+                    HaveNoIImageList.Add(item.Key);
+                }
+            }
+
+            foreach (var item in HaveNoIImageList)
+            {
+                ItemIDAndNameMap.Remove(item);
+            }
+
+            ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
+            ItemKeyList.Sort();
         }
 
         /// <summary>
@@ -210,11 +219,16 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OriginalListView_Loaded(object sender,RoutedEventArgs e)
+        public async void OriginalListView_Loaded(object sender,RoutedEventArgs e)
         {
-            Window window = Window.GetWindow(sender as ListView);
-            OriginalItemViewSource = window.FindResource("OriginalItemView") as CollectionViewSource;
-            OriginalItemViewSource.Filter += CollectionViewSource_Filter;
+            if (OriginalItemList.Count == 0)
+            {
+                Window window = Window.GetWindow(sender as ListView);
+                OriginalItemViewSource = window.FindResource("OriginalItemView") as CollectionViewSource;
+                OriginalItemViewSource.Filter += CollectionViewSource_Filter;
+                await InitOriginItemList();
+                OriginalItemViewSource.View?.Refresh();
+            }
         }
 
         /// <summary>
@@ -222,11 +236,116 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void CustomListView_Loaded(object sender, RoutedEventArgs e)
+        public async void CustomListView_Loaded(object sender, RoutedEventArgs e)
         {
-            Window window = Window.GetWindow(sender as ListView);
-            CustomItemViewSource = window.FindResource("CustomItemView") as CollectionViewSource;
-            CustomItemViewSource.Filter += CollectionViewSource_Filter;
+            if (CustomItemList.Count == 0)
+            {
+                Window window = Window.GetWindow(sender as ListView);
+                CustomItemViewSource = window.FindResource("CustomItemView") as CollectionViewSource;
+                CustomItemViewSource.Filter += CollectionViewSource_Filter;
+                await InitCustomItemList();
+                CustomItemViewSource.View?.Refresh();
+            }
+        }
+
+        /// <summary>
+        /// 初始化物品ID与版本物品ID列表
+        /// </summary>
+        private async Task InitOriginItemList()
+        {
+            OriginalItemList.Clear();
+
+            ParallelOptions parallelOptions = new();
+            await Parallel.ForAsync(0, ItemKeyList.Count, parallelOptions, (i, cancellationToken) =>
+            {
+                AddOriginalItemProgress.Report(new());
+                return new ValueTask();
+            });
+
+            Parallel.For(0, ItemKeyList.Count, (i) =>
+            {
+                string currentKey = ItemKeyList[i];
+                string imagePath = "";
+                if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
+                {
+                    imagePath = ImageSetFolderPath + currentKey + ".png";
+                }
+                else
+                if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
+                {
+                    imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
+                }
+
+                if (imagePath.Length > 0)
+                {
+                    SetOriginalItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath));
+                }
+            });
+
+
+        }
+
+        /// <summary>
+        /// 初始化自定义物品列表
+        /// </summary>
+        private async Task InitCustomItemList()
+        {
+            CustomItemList.Clear();
+            string[] itemFileList = Directory.GetFiles(ItemSaveFolderPath);
+            ParallelOptions parallelOptions = new();
+            await Parallel.ForAsync(0, itemFileList.Length, parallelOptions, (i, cancellationToken) =>
+            {
+                if (File.Exists(ImageSetFolderPath + ItemKeyList[i] + ".png") || File.Exists(ImageSetFolderPath + ItemKeyList[i] + "_spawn_egg.png"))
+                {
+                    AddCustomItemProgress.Report(new ItemStructure());
+                }
+                return new ValueTask();
+            });
+
+            Parallel.For(0, itemFileList.Length, (i) =>
+            {
+                if (File.Exists(itemFileList[i]))
+                {
+                    string nbt = ExternalDataImportManager.GetItemDataHandler(itemFileList[i], true);
+                    string currentKey = "";
+                    if(JObject.Parse(nbt)["id"] is JToken IDToken)
+                    {
+                        currentKey = IDToken.Value<string>().Replace("minecraft:", "");
+                    }
+                    string imagePath = "";
+                    if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
+                    {
+                        imagePath = ImageSetFolderPath + currentKey + ".png";
+                    }
+                    else
+                    if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
+                    {
+                        imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
+                    }
+
+                    if (imagePath.Length > 0)
+                    {
+                        SetCustomItemProgress.Report(new ValueTuple<int, string, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath, nbt));
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// 搜索文本更新
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SearchTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            if (SelectedItemListIndex == 0)
+            {
+                OriginalItemViewSource.View?.Refresh();
+            }
+            else
+            {
+                CustomItemViewSource.View?.Refresh();
+            }
         }
 
         [RelayCommand]

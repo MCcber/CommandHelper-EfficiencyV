@@ -13,7 +13,6 @@ using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -72,8 +71,9 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region 版本列表
-        public ObservableCollection<TextComboBoxItem> VersionList { get; set; } = [
-            new TextComboBoxItem() { Text = "1.20.5" }, 
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _versionList = [
+            new TextComboBoxItem() { Text = "1.20.4" }, 
             new TextComboBoxItem() { Text = "1.20.2" },
             new TextComboBoxItem() { Text = "1.20.0" },
             new TextComboBoxItem() { Text = "1.19.4" },
@@ -89,13 +89,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region 版本ID数据源
-        private ObservableCollection<VersionID> versionIDList = [];
-
-        public ObservableCollection<VersionID> VersionIDList
-        {
-            get => versionIDList;
-            set => SetProperty(ref versionIDList, value);
-        }
+        [ObservableProperty]
+        private ObservableCollection<VersionID> _versionIDList = [];
         #endregion
 
         #region 当前选中的物品页
@@ -135,11 +130,11 @@ namespace CBHK.ViewModel.Generator
         private void ClearUnnecessaryData()
         {
             ItemPageViewModel itemPageDataContext = (SelectedItemPage.Content as ItemPageView).DataContext as ItemPageViewModel;
-            if (itemPageDataContext.specialDataDictionary.TryGetValue(itemPageDataContext.SelectedItemId.ComboBoxItemId, out Grid grid))
-                grid = itemPageDataContext.specialDataDictionary[itemPageDataContext.SelectedItemId.ComboBoxItemId];
+            if (itemPageDataContext.specialDataDictionary.TryGetValue(itemPageDataContext.SelectedItem.ComboBoxItemId, out Grid grid))
+                grid = itemPageDataContext.specialDataDictionary[itemPageDataContext.SelectedItem.ComboBoxItemId];
             itemPageDataContext.specialDataDictionary.Clear();
             grid ??= new();
-            itemPageDataContext.specialDataDictionary.Add(itemPageDataContext.SelectedItemId.ComboBoxItemId, grid);
+            itemPageDataContext.specialDataDictionary.Add(itemPageDataContext.SelectedItem.ComboBoxItemId, grid);
         }
 
         [RelayCommand]
@@ -261,7 +256,7 @@ namespace CBHK.ViewModel.Generator
                         if (nbt.Length > 0)
                         entityIDPath = "CustomName";
                     JToken name = resultJSON.SelectToken(entityIDPath);
-                    FileNameList.Add(context.SelectedItemId.ComboBoxItemId + (name != null ? "-" + name.ToString() : ""));
+                    FileNameList.Add(context.SelectedItem.ComboBoxItemId + (name != null ? "-" + name.ToString() : ""));
                     Result.Add(result);
                 });
             }

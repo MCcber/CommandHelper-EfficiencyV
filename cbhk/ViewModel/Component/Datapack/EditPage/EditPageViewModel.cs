@@ -238,10 +238,10 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
             DatapackViewModel context = datapack.DataContext as DatapackViewModel;
             await datapack.Dispatcher.InvokeAsync(() =>
             {
-                context.datapackGenerateSetupPage ??= new();
+                context.DatapackGenerateSetupPage ??= new();
                 DatapackTreeViewItems.Clear();
                 FunctionModifyTabItems.Clear();
-                System.Windows.Navigation.NavigationService.GetNavigationService(context.frame).Navigate(context.homePage);
+                System.Windows.Navigation.NavigationService.GetNavigationService(context.Frame).Navigate(context.HomePage);
             });
         }
 

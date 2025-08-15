@@ -106,7 +106,7 @@ namespace CBHK.View.Component.Spawner
         {
             IconTextButtons iconTextButtons = sender as IconTextButtons;
             SpawnerPageViewModel context = iconTextButtons.FindParent<SpawnerPageView>().DataContext as SpawnerPageViewModel;
-            context.SpawnPotentials.Remove(this);
+            context.SpawnPotentialList.Remove(this);
         }
     }
 }

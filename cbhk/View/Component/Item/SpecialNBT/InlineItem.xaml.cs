@@ -97,11 +97,11 @@ namespace CBHK.View.Component.Item.SpecialNBT
             {
                 pageContext.UseForReference = true;
                 string imagePath = "";
-                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItemId.ComboBoxItemId + ".png"))
-                    imagePath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItemId.ComboBoxItemId + ".png";
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItem.ComboBoxItemId + ".png"))
+                    imagePath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItem.ComboBoxItemId + ".png";
                 else
-                    if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItemId.ComboBoxItemId + "_spawn_egg.png"))
-                    imagePath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItemId.ComboBoxItemId + "_spawn_egg.png";
+                    if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItem.ComboBoxItemId + "_spawn_egg.png"))
+                    imagePath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + pageContext.SelectedItem.ComboBoxItemId + "_spawn_egg.png";
 
                 if (slider.Value < itemContext.ItemPageList.Count && currentIndex != index)
                 {

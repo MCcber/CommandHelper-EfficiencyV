@@ -23,8 +23,22 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
     /// <summary>
     /// 属性设置窗体逻辑处理
     /// </summary>
-    public partial class DatapackGenerateSetupViewModel : ObservableObject
+    public partial class DatapackGenerateSetupPageViewModel : ObservableObject
     {
+        #region Field
+        public string SolutionTemplatePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\SolutionTemplates.json";
+        /// <summary>
+        /// 历史生成目录
+        /// </summary>
+        private readonly string DatapackGeneratorFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\GeneratorPathes.ini";
+        /// <summary>
+        /// 空白解决方案路径
+        /// </summary>
+        private readonly string BlankSolutionFolder = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\Template";
+        #endregion
+
+        #region Property
+
         #region 存储解决方案的名称
         private string solutionName = "DatapackView";
         public string SolutionName
@@ -42,44 +56,73 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         #endregion
 
         #region 存储解决方案的保存路径
-        private TextComboBoxItem selectedSolutionPath;
-        public TextComboBoxItem SelectedSolutionPath
-        {
-            get => selectedSolutionPath;
-            set => SetProperty(ref selectedSolutionPath, value);
-        }
+        [ObservableProperty]
+        private TextComboBoxItem _selectedSolutionPath;
         #endregion
 
         #region 解决方案名称为空时的提示可见性
-        private Visibility solutionNameIsNull = Visibility.Hidden;
-        public Visibility SolutionNameIsNull
-        {
-            get => solutionNameIsNull;
-            set => SetProperty(ref solutionNameIsNull, value);
-        }
+        [ObservableProperty]
+        private Visibility _solutionNameIsNull = Visibility.Hidden;
         #endregion
 
         #region 生成路径、描述等数据
-        public string SolutionTemplatePath = "";
-        public ObservableCollection<TextComboBoxItem> GeneratorPathList { get; set; } = [];
-        public string Description { get; set; } = "";
-
-        private readonly string DatapackGeneratorFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\GeneratorPathes.ini";
-        /// <summary>
-        /// 空白解决方案路径
-        /// </summary>
-        private readonly string BlankSolutionFolder = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\Templates";
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _generatorPathList = [];
+        [ObservableProperty]
+        public string _description = "";
         #endregion
 
-        public DatapackGenerateSetupViewModel()
+        #endregion
+
+        #region Method
+        public DatapackGenerateSetupPageViewModel()
         {
             #region 初始化数据
             List<string> generatorList = [.. File.ReadAllLines(DatapackGeneratorFilePath)];
             foreach (var item in generatorList)
+            {
                 GeneratorPathList.Add(new TextComboBoxItem() { Text = item });
+            }
             #endregion
         }
 
+        /// <summary>
+        /// 复制文件夹及文件
+        /// </summary>
+        /// <param name="sourceFolder">原文件路径</param>
+        /// <param name="destFolder">目标文件路径</param>
+        /// <returns></returns>
+        public void CopyFolder(string sourceFolder, string destFolder)
+        {
+            try
+            {
+                //如果目标路径不存在,则创建目标路径
+                if (!Directory.Exists(destFolder))
+                {
+                    Directory.CreateDirectory(destFolder);
+                }
+                //得到原文件根目录下的所有文件
+                string[] files = Directory.GetFiles(sourceFolder);
+                foreach (string file in files)
+                {
+                    string name = Path.GetFileName(file);
+                    string dest = Path.Combine(destFolder, name);
+                    File.Copy(file, dest);//复制文件
+                }
+                //得到原文件根目录下的所有文件夹
+                string[] folders = Directory.GetDirectories(sourceFolder);
+                foreach (string folder in folders)
+                {
+                    string name = Path.GetFileName(folder);
+                    string dest = Path.Combine(destFolder, name);
+                    CopyFolder(folder, dest);//构建目标路径,递归复制文件
+                }
+            }
+            catch { }
+        }
+        #endregion
+
+        #region Event
         [RelayCommand]
         /// <summary>
         /// 设置解决方案的路径
@@ -128,6 +171,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                 return;
             }
             #endregion
+
             #region 复制解决方案到指定目录,并转移数据包，新建编辑页数据包节点
             if (File.Exists(SolutionTemplatePath))
                 File.Copy(SolutionTemplatePath,SelectedSolutionPath.Text + "\\" + SolutionName + ".sln",true);
@@ -135,8 +179,8 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             string solutionContent = File.ReadAllText(SolutionTemplatePath);
             DatapackView datapack = Window.GetWindow(ele) as DatapackView;
             DatapackViewModel context = datapack.DataContext as DatapackViewModel;
-            context.editPage ??= new();
-            EditPageViewModel editContext = context.editPage.DataContext as EditPageViewModel;
+            context.EditPage ??= new();
+            EditPageViewModel editContext = context.EditPage.DataContext as EditPageViewModel;
             if (solutionContent.Length > 0)
             {
                 JObject data = JObject.Parse(solutionContent);
@@ -193,11 +237,13 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                 }
             }
             #endregion
+
             #region 把当前生成路径集合写入指定文件
             await File.WriteAllLinesAsync(DatapackGeneratorFilePath, GeneratorPathList.Select(item=>item.Text));
             #endregion
+
             #region 导航到编辑页
-            NavigationService.GetNavigationService(context.frame).Navigate(context.editPage);
+            NavigationService.GetNavigationService(context.Frame).Navigate(context.EditPage);
             #endregion
         }
 
@@ -210,42 +256,8 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             //返回模板选择页
             DatapackView datapack = Window.GetWindow(ele) as DatapackView;
             DatapackViewModel context = datapack.DataContext as DatapackViewModel;
-            NavigationService.GetNavigationService(context.frame).Navigate(context.templateSelectPage);
+            NavigationService.GetNavigationService(context.Frame).Navigate((object)context.TemplateSelectPage);
         }
-
-        /// <summary>
-        /// 复制文件夹及文件
-        /// </summary>
-        /// <param name="sourceFolder">原文件路径</param>
-        /// <param name="destFolder">目标文件路径</param>
-        /// <returns></returns>
-        public void CopyFolder(string sourceFolder, string destFolder)
-        {
-            try
-            {
-                //如果目标路径不存在,则创建目标路径
-                if (!Directory.Exists(destFolder))
-                {
-                    Directory.CreateDirectory(destFolder);
-                }
-                //得到原文件根目录下的所有文件
-                string[] files = Directory.GetFiles(sourceFolder);
-                foreach (string file in files)
-                {
-                    string name = Path.GetFileName(file);
-                    string dest = Path.Combine(destFolder, name);
-                    File.Copy(file, dest);//复制文件
-                }
-                //得到原文件根目录下的所有文件夹
-                string[] folders = Directory.GetDirectories(sourceFolder);
-                foreach (string folder in folders)
-                {
-                    string name = Path.GetFileName(folder);
-                    string dest = Path.Combine(destFolder, name);
-                    CopyFolder(folder, dest);//构建目标路径,递归复制文件
-                }
-            }
-            catch{}
-        }
+        #endregion
     }
 }

@@ -30,12 +30,8 @@ namespace CBHK.ViewModel.Component.FireworkRocket
     public partial class FireworkRocketPageViewModel : ObservableObject
     {
         #region 已选版本
-        private TextComboBoxItem selectedVersion;
-        public TextComboBoxItem SelectedVersion
-        {
-            get => selectedVersion;
-            set => SetProperty(ref selectedVersion, value);
-        }
+        [ObservableProperty]
+        private TextComboBoxItem _selectedVersion;
         #endregion
 
         #region 版本数据源
@@ -213,9 +209,9 @@ namespace CBHK.ViewModel.Component.FireworkRocket
             get
             {
                 string result = "Colors:[I;";
-                if (MainColors.Count > 0)
+                if (MainColorList.Count > 0)
                 {
-                    result += string.Join(',', MainColors.Select(item => Convert.ToUInt64(item.Background.ToString()[2..], 16)));
+                    result += string.Join(',', MainColorList.Select(item => Convert.ToUInt64(item.Background.ToString()[2..], 16)));
                     result += "],";
                 }
                 else
@@ -230,10 +226,10 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         {
             get
             {
-                string result = "FadeColors:[I;";
-                if (FadeColors.Count > 0)
+                string result = "FadeColorList:[I;";
+                if (FadeColorList.Count > 0)
                 {
-                    result += string.Join(',', FadeColors.Select(item => Convert.ToUInt64(item.Background.ToString()[2..], 16)));
+                    result += string.Join(',', FadeColorList.Select(item => Convert.ToUInt64(item.Background.ToString()[2..], 16)));
                     result += "],";
                 }
                 else
@@ -338,7 +334,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                         };
                         border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
                         border.Uid = "Main";
-                        MainColors.Add(border);
+                        MainColorList.Add(border);
                     }
                     if(AddInFade)
                     {
@@ -349,7 +345,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                         };
                         border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
                         border.Uid = "Fade";
-                        FadeColors.Add(border);
+                        FadeColorList.Add(border);
                     }
                 }
                 OnPropertyChanged();
@@ -368,65 +364,18 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         }
         #endregion
 
-        #region 主颜色库
-        private ObservableCollection<Border> mainColors = [];
-        public ObservableCollection<Border> MainColors
-        {
-            get
-            {
-                return mainColors;
-            }
-            set
-            {
-                mainColors = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
-        #region 备选颜色库
-        private ObservableCollection<Border> fadeColors = [];
-        public ObservableCollection<Border> FadeColors
-        {
-            get
-            {
-                return fadeColors;
-            }
-            set
-            {
-                fadeColors = value;
-                OnPropertyChanged();
-            }
-        }
+        #region 主颜色库与备选颜色库
+        [ObservableProperty]
+        private ObservableCollection<Border> _mainColorList = [];
+        [ObservableProperty]
+        private ObservableCollection<Border> _fadeColorList = [];
         #endregion
 
         #region 加入淡入或淡出
-        private bool addInMain = true;
-        public bool AddInMain
-        {
-            get
-            {
-                return addInMain;
-            }
-            set
-            {
-                addInMain = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        private bool _addInMain = true;
+        [ObservableProperty]
         private bool addInFade = false;
-        public bool AddInFade
-        {
-            get
-            {
-                return addInFade;
-            }
-            set
-            {
-                addInFade = value;
-                OnPropertyChanged();
-            }
-        }
         #endregion
 
         #region 淡入淡出滚动视图引用
@@ -563,7 +512,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                     Explosion = Explosions[0] as JObject;
 
                 colors = Explosion.SelectToken("Colors") as JArray;
-                fadeColors = Explosion.SelectToken("FadeColors") as JArray;
+                fadeColors = Explosion.SelectToken("FadeColorList") as JArray;
                 flight = ExternallyReadEntityData.SelectToken("ItemView.Flight");
                 flicker = Explosion.SelectToken("Flicker");
                 trail = Explosion.SelectToken("Trail");
@@ -585,7 +534,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F" + colorString)),
                                 Width = 25
                             };
-                            MainColors.Add(border);
+                            MainColorList.Add(border);
                         }
                     if (fadeColors != null)
                         foreach (JValue item in fadeColors.Cast<JValue>())
@@ -596,7 +545,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F" + colorString)),
                                 Width = 25
                             };
-                            FadeColors.Add(border);
+                            FadeColorList.Add(border);
                         }
                 });
                 #endregion
@@ -687,7 +636,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
             IconCheckBoxs iconCheckBoxs = sender as IconCheckBoxs;
             string searchTarget = iconCheckBoxs.Tag.ToString();
             string colorValue = OriginColorDictionary.Where(item => item.Value == searchTarget).Select(item => item.Key).First();
-            if (AddInMain && MainColors.Count < ParticleCount)
+            if (AddInMain && MainColorList.Count < ParticleCount)
             {
                 Border border = new()
                 {
@@ -699,9 +648,9 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 ToolTipService.SetInitialShowDelay(border, 0);
                 border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
                 border.Uid = "Main";
-                MainColors.Add(border);
+                MainColorList.Add(border);
             }
-            if (AddInFade && FadeColors.Count < ParticleCount)
+            if (AddInFade && FadeColorList.Count < ParticleCount)
             {
                 Border border = new()
                 {
@@ -713,7 +662,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 ToolTipService.SetInitialShowDelay(border, 0);
                 border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
                 border.Uid = "Fade";
-                FadeColors.Add(border);
+                FadeColorList.Add(border);
             }
 
         }
@@ -752,9 +701,9 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         {
             Border border = sender as Border;
             if (border.Uid == "Main")
-                MainColors.Remove(border);
+                MainColorList.Remove(border);
             else
-                FadeColors.Remove(border);
+                FadeColorList.Remove(border);
         }
 
         [RelayCommand]
@@ -881,8 +830,8 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                     #endregion
 
                     #region 处理淡入颜色变换
-                    if (MainColors.Count > 0)
-                        imageBrush.ImageSource = ColoringBitmapImage(particleTexture, new SolidColorBrush((Color)ColorConverter.ConvertFromString(MainColors[random.Next(0, MainColors.Count - 1)].Background.ToString())));
+                    if (MainColorList.Count > 0)
+                        imageBrush.ImageSource = ColoringBitmapImage(particleTexture, new SolidColorBrush((Color)ColorConverter.ConvertFromString(MainColorList[random.Next(0, MainColorList.Count - 1)].Background.ToString())));
                     else
                         imageBrush.ImageSource = ColoringBitmapImage(particleTexture, new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")));
                     #endregion
@@ -925,7 +874,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 if (!context.View.Children.Contains(modelVisual3D))
                     context.View.Children.Add(modelVisual3D);
             });
-            if (FadeColors.Count > 0)
+            if (FadeColorList.Count > 0)
             {
                 //等待烟花爆炸动画结束，执行淡出动画
                 await Task.Delay(TimeSpan.FromSeconds(fireworkExplosionDuration));
@@ -946,10 +895,10 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// <param name="e"></param>
         private void FireworkPosAnimationCompleted()
         {
-            if (FadeColors.Count == 0)
+            if (FadeColorList.Count == 0)
                 return;
             Random random = new();
-            ParticleCount = FadeColors.Count < ParticleCount ? FadeColors.Count : 350;
+            ParticleCount = FadeColorList.Count < ParticleCount ? FadeColorList.Count : 350;
             for (int i = 0; i < ParticleCount; i++)
             {
                 #region 处理烟花粒子缓降和淡出颜色变换动画
@@ -968,7 +917,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 //实例化纹理笔刷
                 ImageBrush imageBrush = new()
                 {
-                    ImageSource = ColoringBitmapImage(particleTexture, new SolidColorBrush((Color)ColorConverter.ConvertFromString(FadeColors[random.Next(0, FadeColors.Count - 1)].Background.ToString())))
+                    ImageSource = ColoringBitmapImage(particleTexture, new SolidColorBrush((Color)ColorConverter.ConvertFromString(FadeColorList[random.Next(0, FadeColorList.Count - 1)].Background.ToString())))
                 };
                 (ParticleContainer.Children[i] as GeometryModel3D).Material = new DiffuseMaterial() { Brush = imageBrush };
                 translateTransform3D.BeginAnimation(TranslateTransform3D.OffsetYProperty, posYAnimation);
@@ -1151,7 +1100,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                     ToolTipService.SetInitialShowDelay(border, 0);
                     border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
                     border.Uid = "Main";
-                    MainColors.Add(border);
+                    MainColorList.Add(border);
                 }
                 if (AddInFade)
                 {
@@ -1165,7 +1114,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                     ToolTipService.SetInitialShowDelay(border, 0);
                     border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
                     border.Uid = "Fade";
-                    FadeColors.Add(border);
+                    FadeColorList.Add(border);
                 }
             }
         }
@@ -1176,7 +1125,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// </summary>
         private void ClearFadeColor(FrameworkElement obj)
         {
-            FadeColors.Clear();
+            FadeColorList.Clear();
         }
 
         [RelayCommand]
@@ -1185,7 +1134,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// </summary>
         private void ClearMainColor(FrameworkElement obj)
         {
-            MainColors.Clear();
+            MainColorList.Clear();
         }
 
         [RelayCommand]

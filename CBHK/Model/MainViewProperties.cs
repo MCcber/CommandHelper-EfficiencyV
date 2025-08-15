@@ -1,13 +1,15 @@
 ﻿namespace CBHK.Model
 {
-    public class MainWindowProperties
+    public class MainViewProperties
     {
         /// <summary>
         /// 关闭后缩小到托盘
         /// </summary>
-        public static bool CloseToTray { get; set; } = false;
+        public string CloseToTray { get; set; } = "true";
 
-        public static bool ShowNotice { get; set; } = true;
+        public string ShowNotice { get; set; } = "true";
+
+        public Visibility MainViewVisibility { get; set; }
 
         /// <summary>
         /// 主页可见性

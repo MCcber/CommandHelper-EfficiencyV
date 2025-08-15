@@ -1,7 +1,5 @@
 ﻿using CBHK.GeneralTool;
-using CBHK.Model;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -15,9 +13,9 @@ using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using CBHK.View.Common;
 using CBHK.ViewModel.Common;
-using CBHK.View;
 using System.Linq;
 using CBHK.Domain;
+using CBHK.Domain.Model;
 
 namespace CBHK.ViewModel
 {
@@ -28,15 +26,11 @@ namespace CBHK.ViewModel
         /// <summary>
         /// 主页可见性
         /// </summary>
-        public MainWindowProperties.Visibility MainViewVisibility = MainWindowProperties.Visibility.MinState;
-        /// <summary>
-        /// 用户数据
-        /// </summary>
-        public Dictionary<string, string> UserData = [];
+        public EnvironmentConfig _config = null;
         private Grid SkeletonGrid = null;
         private Grid GeneratorTable = null;
         private Grid UserGrid = null;
-        private IProgress<byte> SetGeneratorButtonHandler = null;
+        private IProgress<byte> SetGeneratorButtonProgress = null;
         /// <summary>
         /// 初始化界面数据
         /// </summary>
@@ -74,7 +68,7 @@ namespace CBHK.ViewModel
         /// <param name="e"></param>
         public void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            SetGeneratorButtonHandler = new Progress<byte>((state) =>
+            SetGeneratorButtonProgress = new Progress<byte>((state) =>
             {
                 DistributorGenerator generatorFunction = _container.Resolve<DistributorGenerator>();
                 string baseImagePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
@@ -125,28 +119,29 @@ namespace CBHK.ViewModel
             InitUIDataProgress = new Progress<byte>((number) =>
             {
                 #region 加载用户数据
-                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png"))
-                {
-                    UserHead = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png", UriKind.RelativeOrAbsolute));
-                }
-                if (UserData.TryGetValue("UserID", out string userID))
-                    UserID = userID;
-                if (UserData.TryGetValue("description", out string description))
-                    UserDescription = description;
-                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"))
-                    UserBackground = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"));
+                //if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png"))
+                //{
+                //    UserHead = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png", UriKind.RelativeOrAbsolute));
+                //}
+                //if (UserData.TryGetValue("UserID", out string userID))
+                //    UserID = userID;
+                //if (UserData.TryGetValue("description", out string description))
+                //    UserDescription = description;
+                //if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"))
+                //    UserBackground = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"));
                 #endregion
 
                 #region 载入生成器按钮
                 if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db"))
                 {
-                    SetGeneratorButtonHandler.Report(0);
+                    SetGeneratorButtonProgress.Report(0);
                 }
                 #endregion
 
                 StopSkeletonScreen(Task.CompletedTask);
             });
 
+            _config = _context.EnvironmentConfigSet.FirstOrDefault();
             ReadDataSource();
         }
 
@@ -154,17 +149,17 @@ namespace CBHK.ViewModel
 
         public void SkeletonGrid_Loaded(object sender, RoutedEventArgs e) => SkeletonGrid = sender as Grid;
 
-        public void UserGrid_Loaded(object sender, RoutedEventArgs e)
-        {
-            UserGrid = sender as Grid;
-            Brush BackgroundBrush = _container.Resolve<MainView>().FindResource("BackgroundBrush") as Brush;
-            if (UserID.Length == 0 && BackgroundBrush is not null)
-                UserGrid.Background = BackgroundBrush;
-        }
+        //public void UserGrid_Loaded(object sender, RoutedEventArgs e)
+        //{
+        //    UserGrid = sender as Grid;
+        //    Brush BackgroundBrush = _container.Resolve<MainView>().FindResource("BackgroundBrush") as Brush;
+        //    if (UserID.Length == 0 && BackgroundBrush is not null)
+        //        UserGrid.Background = BackgroundBrush;
+        //}
 
-        public void UserHead_Loaded(object sender, RoutedEventArgs e) => UserHead = sender as BitmapImage;
+        //public void UserHead_Loaded(object sender, RoutedEventArgs e) => UserHead = sender as BitmapImage;
 
-        public void UserBackground_Loaded(object sender, RoutedEventArgs e) => UserBackground = sender as BitmapImage;
+        //public void UserBackground_Loaded(object sender, RoutedEventArgs e) => UserBackground = sender as BitmapImage;
 
         public void TaskBarIcon_Loaded(object sender, RoutedEventArgs e)
         {
@@ -172,21 +167,15 @@ namespace CBHK.ViewModel
             TaskBarIcon.Visibility = Visibility.Visible;
         }
 
-        [RelayCommand]
-        private void UserHeadClick()
-        {
-            if (UserData.TryGetValue("UserID", out string value))
-                System.Diagnostics.Process.Start("explorer.exe", "https://mc.metamo.cn/u/" + value);
-        }
-
         /// <summary>
         /// 主窗体关闭事件
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        public async void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            e.Cancel = MainWindowProperties.CloseToTray;
+            e.Cancel = bool.Parse(_config.CloseToTray);
+            await _context.SaveChangesAsync();
             if (e.Cancel)
             {
                 WindowState = WindowState.Minimized;
@@ -195,6 +184,7 @@ namespace CBHK.ViewModel
             else
             {
                 WindowState = WindowState.Minimized;
+                TaskBarIcon.Dispose();
                 Environment.Exit(0);
             }
         }
@@ -222,7 +212,7 @@ namespace CBHK.ViewModel
         [RelayCommand]
         public void ExitApplication()
         {
-            TaskBarIcon.Visibility = Visibility.Collapsed;
+            TaskBarIcon.Dispose();
             Environment.Exit(0);
         }
         #endregion
@@ -235,18 +225,18 @@ namespace CBHK.ViewModel
         /// <param name="e"></param>
         private void StopSkeletonScreen(Task task)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            SkeletonGrid.Visibility = Visibility.Collapsed;
+            GeneratorTable.Visibility = Visibility.Visible;
+            if (bool.TryParse(_config.ShowNotice,out bool showNotice) && showNotice)
             {
-                SkeletonGrid.Visibility = Visibility.Collapsed;
-                GeneratorTable.Visibility = Visibility.Visible;
-                if (MainWindowProperties.ShowNotice)
+                NoticeToUsersView noticeToUsers = _container.Resolve<NoticeToUsersView>();
+                noticeToUsers.Topmost = true;
+                NoticeToUsersViewModel notichViewModel = noticeToUsers.DataContext as NoticeToUsersViewModel;
+                if (noticeToUsers.ShowDialog().Value)
                 {
-                    NoticeToUsersView noticeToUsers = _container.Resolve<NoticeToUsersView>();
-                    NoticeToUsersViewModel notichViewModel = noticeToUsers.DataContext as NoticeToUsersViewModel;
-                    if (noticeToUsers.ShowDialog().Value)
-                        MainWindowProperties.ShowNotice = !notichViewModel.DonotShowNextTime;
+                    _config.ShowNotice = (!notichViewModel.DonotShowNextTime).ToString();
                 }
-            });
+            }
         }
 
         /// <summary>
@@ -254,28 +244,7 @@ namespace CBHK.ViewModel
         /// </summary>
         private void ReadDataSource()
         {
-            Domain.Model.EnvironmentConfig config = _context.EnvironmentConfigSet.FirstOrDefault();
-            if (config is not null)
-            {
-                if (config.Visibility is string Visibility)
-                {
-                    MainViewVisibility = Visibility switch
-                    {
-                        "KeepState" => MainWindowProperties.Visibility.KeepState,
-                        "MinState" => MainWindowProperties.Visibility.MinState,
-                        "Close" => MainWindowProperties.Visibility.Close,
-                        _ => throw new NotImplementedException()
-                    };
-                }
-                if (int.TryParse(config.ShowNotice, out int ShowNotice))
-                {
-                    MainWindowProperties.ShowNotice = ShowNotice >= 1;
-                }
-                if (int.TryParse(config.CloseToTray, out int CloseToTray))
-                {
-                    MainWindowProperties.CloseToTray = CloseToTray >= 1;
-                }
-            }
+            _config = _context.EnvironmentConfigSet.FirstOrDefault();
 
             InitUIDataProgress.Report(0);
         }

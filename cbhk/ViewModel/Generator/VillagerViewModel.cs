@@ -48,8 +48,11 @@ namespace CBHK.ViewModel.Generator
                 if ((CanEditBrain || CanEditGossips) && SelectedVersion.Text == "1.20.2")
                     CanEditBrain = CanEditGossips = false;
                 CanTouchBrain = CanTouchGossips = SelectedVersion.Text != "1.20.2";
+                CurrentMinVersion = int.Parse(selectedVersion.Text.Split('-')[0].Replace(".", ""));
             }
         }
+
+        int CurrentMinVersion = 0;
 
         public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
             new TextComboBoxItem() { Text = "1.20.2" },
@@ -79,6 +82,24 @@ namespace CBHK.ViewModel.Generator
         private SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
+
+        private Dictionary<string, string> ItemIDAndNameMap = [];
+        private List<string> ItemKeyList = [];
+
+        private IProgress<ItemStructure> AddOriginalItemProgress = null;
+        private IProgress<(int, string, string, string)> SetOriginalItemProgress = null;
+        private IProgress<ItemStructure> AddCustomItemProgress = null;
+        private IProgress<(int, string, string, string, string)> SetCustomItemProgress = null;
+
+        private DataService _dataService = null;
+        private IContainerProvider _container;
+
+        private string ImageSetFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
+        /// <summary>
+        /// 加载物品集合
+        /// </summary>
+        private string ItemSaveFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Item";
+
         public ObservableCollection<TextComboBoxItem> GossipTypes { get; set; } = [];
         /// <summary>
         /// 左侧交易项数据源
@@ -127,15 +148,19 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 原版物品库
         /// </summary>
-        public ObservableCollection<ItemStructure> OriginalItemList { get; set; } = [];
+        [ObservableProperty]
+        public ObservableCollection<ItemStructure> _originalItemList = [];
         /// <summary>
         /// 自定义物品库
         /// </summary>
-        public ObservableCollection<ItemStructure> CustomItemList { get; set; } = [];
+        [ObservableProperty]
+        public ObservableCollection<ItemStructure> _customItemList = [];
         //物品描述引用
-        public ObservableCollection<string> BagItemToolTips { get; set; } = [];
+        [ObservableProperty]
+        public ObservableCollection<string> _bagItemToolTips = [];
         //言论搜索类型数据源
-        ObservableCollection<TextComboBoxItem> GossipSearchType = [];
+        [ObservableProperty]
+        ObservableCollection<TextComboBoxItem> _gossipSearchType = [];
         //言论搜索类型配置文件路径
         string gossipSearchTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\GossipSearchTypes.ini";
         //维度数据源
@@ -165,7 +190,6 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region 主、副、结果物品图像源
-        private IContainerProvider _container;
         [ObservableProperty]
         private ImageSource _buyItemIcon = null;
 
@@ -280,19 +304,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region 搜索内容
-        private string searchText = "";
-        public string SearchText
-        {
-            get => searchText;
-            set
-            {
-                SetProperty(ref searchText, value);
-                if (SelectedItemListIndex == 0)
-                    OriginalViewSource.View?.Refresh();
-                else
-                    CustomViewSource.View?.Refresh();
-            }
-        }
+        [ObservableProperty]
+        private string _searchText = "";
         #endregion
 
         #region 村民数据
@@ -657,12 +670,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region 此村民当前的经验值
-        private double xp = 1;
-        public double Xp
-        {
-            get { return xp; }
-            set { xp = value; OnPropertyChanged(); }
-        }
+        [ObservableProperty]
+        private double _xp = 1;
         private string XpString
         {
             get
@@ -674,8 +683,9 @@ namespace CBHK.ViewModel.Generator
 
         #endregion
 
-        public VillagerViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context)
+        public VillagerViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context,DataService dataService)
         {
+            _dataService = dataService;
             _context = context;
             _container = container;
             home = mainView;
@@ -731,52 +741,6 @@ namespace CBHK.ViewModel.Generator
             }
             #endregion
 
-            #region 初始化物品库
-            BindingOperations.EnableCollectionSynchronization(OriginalItemList, new object());
-            BindingOperations.EnableCollectionSynchronization(CustomItemList, new object());
-            Task.Run(() =>
-            {
-                #region 异步载入原版物品序列
-                //加载物品集合
-                string uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                string urlPath = "";
-                foreach (var item in _context.ItemSet)
-                {
-                    urlPath = uriDirectoryPath + item.ID + ".png";
-                    if (File.Exists(urlPath))
-                        OriginalItemList.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, item.ID + ":" + item.Name, "{id:\"minecraft:" + item.ID + "\",Count:1b}"));
-                }
-                #endregion
-
-                #region 异步载入自定义物品序列
-                //加载物品集合
-                uriDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Item\";
-                string[] itemFileList = Directory.GetFiles(uriDirectoryPath);
-                foreach (var item in itemFileList)
-                {
-                    if (File.Exists(item))
-                    {
-                        string nbt = ExternalDataImportManager.GetItemDataHandler(item);
-                        if (nbt.Length > 0)
-                        {
-                            JObject data = JObject.Parse(nbt);
-                            JToken id = data.SelectToken("id");
-                            if (id is null)
-                            {
-                                continue;
-                            }
-                            string itemID = id.ToString().Replace("\"", "").Replace("minecraft:", "");
-                            urlPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
-                            string itemName = _context.ItemSet.First(item=>item.ID == itemID).Name;
-                            if (File.Exists(urlPath))
-                                CustomItemList.Add(new ItemStructure(new ImageSourceConverter().ConvertFromString(urlPath) as ImageSource, itemID + ":" + itemName, nbt));
-                        }
-                    }
-                }
-                #endregion
-            });
-            #endregion
-
             #region 初始化维度列表、设置三个点位数据
             if (DimensionTypeSource.Count == 0)
             {
@@ -798,6 +762,52 @@ namespace CBHK.ViewModel.Generator
             }
             MeetingPointDimension = HomeDimension = JobSiteDimension = DimensionTypeSource[0];
             #endregion
+
+            AddOriginalItemProgress = new Progress<ItemStructure>(OriginalItemList.Add);
+            SetOriginalItemProgress = new Progress<(int, string, string, string)>(item =>
+            {
+                if (File.Exists(item.Item4))
+                {
+                    OriginalItemList[item.Item1].IDAndName = item.Item2 + ':' + item.Item3;
+                    OriginalItemList[item.Item1].ImagePath = new BitmapImage(new Uri(item.Item4, UriKind.Absolute));
+                }
+            });
+
+            AddCustomItemProgress = new Progress<ItemStructure>(CustomItemList.Add);
+            SetCustomItemProgress = new Progress<(int, string, string, string, string)>(item =>
+            {
+                if (File.Exists(item.Item4))
+                {
+                    CustomItemList[item.Item1].IDAndName = item.Item2 + ':' + item.Item3;
+                    CustomItemList[item.Item1].NBT = item.Item5;
+                    CustomItemList[item.Item1].ImagePath = new BitmapImage(new Uri(item.Item4, UriKind.Absolute));
+                }
+            });
+
+            ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+            .Where(pair => pair.Key <= CurrentMinVersion)
+            .SelectMany(pair => pair.Value)
+            .ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value
+            );
+
+            List<string> HaveNoIImageList = [];
+            foreach (var item in ItemIDAndNameMap)
+            {
+                if (!File.Exists(ImageSetFolderPath + item.Key + ".png") && !File.Exists(ImageSetFolderPath + item.Key + "_spawn_egg.png"))
+                {
+                    HaveNoIImageList.Add(item.Key);
+                }
+            }
+
+            foreach (var item in HaveNoIImageList)
+            {
+                ItemIDAndNameMap.Remove(item);
+            }
+
+            ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
+            ItemKeyList.Sort();
         }
 
         /// <summary>
@@ -807,9 +817,13 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void OriginalItemListView_Loaded(object sender,RoutedEventArgs e)
         {
-            Window parent = Window.GetWindow(sender as ListView);
-            OriginalViewSource = parent.FindResource("OriginalItemView") as CollectionViewSource;
-            OriginalViewSource.Filter += CollectionViewSource_Filter;
+            if (OriginalItemList.Count == 0)
+            {
+                Window parent = Window.GetWindow(sender as ListView);
+                OriginalViewSource = parent.FindResource("OriginalItemView") as CollectionViewSource;
+                InitOriginItemList();
+                OriginalViewSource.Filter += CollectionViewSource_Filter;
+            }
         }
 
         /// <summary>
@@ -819,9 +833,113 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void CustomItemListView_Loaded(object sender, RoutedEventArgs e)
         {
-            Window parent = Window.GetWindow(sender as ListView);
-            CustomViewSource = parent.FindResource("CustomItemView") as CollectionViewSource;
-            CustomViewSource.Filter += CollectionViewSource_Filter;
+            if (CustomItemList.Count == 0)
+            {
+                Window parent = Window.GetWindow(sender as ListView);
+                CustomViewSource = parent.FindResource("CustomItemView") as CollectionViewSource;
+                InitCustomItemList();
+                CustomViewSource.Filter += CollectionViewSource_Filter;
+            }
+        }
+
+        /// <summary>
+        /// 搜索文本更新
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SearchTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            if (SelectedItemListIndex == 0)
+            {
+                OriginalViewSource.View?.Refresh();
+            }
+            else
+            {
+                CustomViewSource.View?.Refresh();
+            }
+        }
+
+        /// <summary>
+        /// 初始化物品ID与版本物品ID列表
+        /// </summary>
+        private void InitOriginItemList()
+        {
+            OriginalItemList.Clear();
+
+            Task.Run(async () =>
+            {
+                ParallelOptions parallelOptions = new();
+                await Parallel.ForAsync(0, ItemKeyList.Count, parallelOptions, (i, cancellationToken) =>
+                {
+                    AddOriginalItemProgress.Report(new());
+                    return new ValueTask();
+                });
+
+                Parallel.For(0, ItemKeyList.Count, (i) =>
+                {
+                    string currentKey = ItemKeyList[i];
+                    string imagePath = "";
+                    if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
+                    {
+                        imagePath = ImageSetFolderPath + currentKey + ".png";
+                    }
+                    else
+                    if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
+                    {
+                        imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
+                    }
+                    SetOriginalItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath));
+                });
+            });
+        }
+
+        /// <summary>
+        /// 初始化自定义物品列表
+        /// </summary>
+        private void InitCustomItemList()
+        {
+            CustomItemList.Clear();
+
+            Task.Run(async () =>
+            {
+                string[] itemFileList = Directory.GetFiles(ItemSaveFolderPath);
+                ParallelOptions parallelOptions = new();
+                await Parallel.ForAsync(0, itemFileList.Length, parallelOptions, (i, cancellationToken) =>
+                {
+                    if (File.Exists(ImageSetFolderPath + ItemKeyList[i] + ".png") || File.Exists(ImageSetFolderPath + ItemKeyList[i] + "_spawn_egg.png"))
+                    {
+                        AddCustomItemProgress.Report(new ItemStructure());
+                    }
+                    return new ValueTask();
+                });
+
+                Parallel.For(0, itemFileList.Length, (i) =>
+                {
+                    if (File.Exists(itemFileList[i]))
+                    {
+                        string nbt = ExternalDataImportManager.GetItemDataHandler(itemFileList[i], true);
+                        string currentKey = "";
+                        if (JObject.Parse(nbt)["id"] is JToken IDToken)
+                        {
+                            currentKey = IDToken.Value<string>().Replace("minecraft:", "");
+                        }
+                        string imagePath = "";
+                        if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
+                        {
+                            imagePath = ImageSetFolderPath + currentKey + ".png";
+                        }
+                        else
+                        if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
+                        {
+                            imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
+                        }
+                        if (imagePath.Length > 0)
+                        {
+                            SetCustomItemProgress.Report(new ValueTuple<int, string, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath, nbt));
+                        }
+                    }
+                });
+            });
         }
 
         [RelayCommand]
@@ -833,9 +951,16 @@ namespace CBHK.ViewModel.Generator
             TransactionDataGridVisibility = Visibility.Collapsed;
             TransactionItemViewModel transactionItemsViewModel = CurrentItem.DataContext as TransactionItemViewModel;
             //更新当前交易项的数量显示
+            transactionItemsViewModel.RewardExp = RewardExp is not null ? RewardExp.Value : false;
             transactionItemsViewModel.BuyCountDisplayText = "x" + BuyCount.ToString();
             transactionItemsViewModel.BuyBCountDisplayText = "x" + BuyBCount.ToString();
             transactionItemsViewModel.SellCountDisplayText = "x" + SellCount.ToString();
+            transactionItemsViewModel.MaxUses = MaxUses;
+            transactionItemsViewModel.Uses = Uses;
+            transactionItemsViewModel.Xp = VillagerGetXp;
+            transactionItemsViewModel.Demand = Demand;
+            transactionItemsViewModel.SpecialPrice = SpecialPrice;
+            transactionItemsViewModel.PriceMultiplier = PriceMultiplier;
         }
 
         [RelayCommand]
@@ -899,14 +1024,21 @@ namespace CBHK.ViewModel.Generator
             {
                 e.Accepted = false;
                 ItemStructure itemStructure = e.Item as ItemStructure;
-                string currentItemID = Path.GetFileNameWithoutExtension(itemStructure.ImagePath.ToString());
-                string IDAndName = itemStructure.IDAndName;
+                if (itemStructure.IDAndName is not null && itemStructure.ImagePath is not null)
+                {
+                    string currentItemID = Path.GetFileNameWithoutExtension(itemStructure.ImagePath.ToString());
+                    string currentItemName = itemStructure.IDAndName.Split(':')[1];
 
-                if ((currentItemID.Contains(SearchText) && IDAndName.Contains(SearchText)) || (IDAndName.Contains(SearchText) && IDAndName.StartsWith(currentItemID)))
-                    e.Accepted = true;
+                    if (currentItemID.StartsWith(SearchText) || currentItemName.StartsWith(SearchText))
+                    {
+                        e.Accepted = true;
+                    }
+                }
             }
             else
+            {
                 e.Accepted = true;
+            }
         }
 
         /// <summary>

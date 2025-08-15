@@ -1,5 +1,6 @@
 ﻿using CBHK.Domain;
 using CBHK.GeneralTool;
+using CBHK.Model;
 using CBHK.View;
 using Microsoft.EntityFrameworkCore;
 using Prism.DryIoc;
@@ -76,6 +77,7 @@ namespace CBHK
             });
 
             containerRegistry.RegisterSingleton<DataService>();
+            containerRegistry.RegisterSingleton<MainViewProperties>();
         }
 
         protected override void ConfigureViewModelLocator()

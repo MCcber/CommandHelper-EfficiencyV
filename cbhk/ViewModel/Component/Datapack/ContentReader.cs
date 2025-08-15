@@ -381,7 +381,7 @@ namespace CBHK.ViewModel.Component.Datapack
                                     {
                                         headerItems.Icon.Source = Application.Current.Resources[ReadableFileExtensionList[extersionIndex]] as ImageSource;
                                         DatapackViewModel datapackContext = Window.GetWindow(currentItem).DataContext as DatapackViewModel;
-                                        EditPageViewModel editContext = datapackContext.editPage.DataContext as EditPageViewModel;
+                                        EditPageViewModel editContext = datapackContext.EditPage.DataContext as EditPageViewModel;
                                         richTreeViewItems.MouseDoubleClick += editContext.DoubleClickAnalysisAndOpenAsync;
                                     }
                                 }

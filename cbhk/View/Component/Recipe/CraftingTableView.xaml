@@ -52,25 +52,51 @@
                     <behaviors:CallMethodAction MethodName="MaterialGrid_Loaded" TargetObject="{Binding}" />
                 </behaviors:EventTrigger>
             </behaviors:Interaction.Triggers>
+            <Button
+                Grid.Row="0"
+                Grid.Column="0"
+                Width="20"
+                Height="20"
+                Margin="0,2,7,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="1"
+                Command="{Binding SetSlotDataCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Content="..."
+                FontWeight="Bold"
+                Visibility="{Binding MaterialMultiItemVisibilityList[0]}" />
             <Image
                 Uid="0"
                 Grid.Row="0"
                 Grid.Column="0"
                 Width="70"
                 Height="70"
+                Panel.ZIndex="0"
                 AllowDrop="True"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True">
                 <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                        <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
+            <Button
+                Grid.Row="0"
+                Grid.Column="1"
+                Width="20"
+                Height="20"
+                Margin="0,2,7,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="1"
+                Command="{Binding SetSlotDataCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Content="..."
+                FontWeight="Bold"
+                Visibility="{Binding MaterialMultiItemVisibilityList[1]}" />
             <Image
                 Uid="1"
                 Grid.Row="0"
@@ -82,14 +108,25 @@
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True">
                 <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                        <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
+            <Button
+                Grid.Row="0"
+                Grid.Column="2"
+                Width="20"
+                Height="20"
+                Margin="0,2,7,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="1"
+                Command="{Binding SetSlotDataCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Content="..."
+                FontWeight="Bold"
+                Visibility="{Binding MaterialMultiItemVisibilityList[2]}" />
             <Image
                 Uid="2"
                 Grid.Row="0"
@@ -101,14 +138,25 @@
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True">
                 <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                        <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
+            <Button
+                Grid.Row="1"
+                Grid.Column="0"
+                Width="20"
+                Height="20"
+                Margin="0,2,7,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="1"
+                Command="{Binding SetSlotDataCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Content="..."
+                FontWeight="Bold"
+                Visibility="{Binding MaterialMultiItemVisibilityList[3]}" />
             <Image
                 Uid="3"
                 Grid.Row="1"
@@ -120,14 +168,25 @@
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True">
                 <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                        <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
+            <Button
+                Grid.Row="1"
+                Grid.Column="1"
+                Width="20"
+                Height="20"
+                Margin="0,2,7,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="1"
+                Command="{Binding SetSlotDataCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Content="..."
+                FontWeight="Bold"
+                Visibility="{Binding MaterialMultiItemVisibilityList[4]}" />
             <Image
                 Uid="4"
                 Grid.Row="1"
@@ -139,14 +198,25 @@
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True">
                 <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                        <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
+            <Button
+                Grid.Row="1"
+                Grid.Column="2"
+                Width="20"
+                Height="20"
+                Margin="0,2,7,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="1"
+                Command="{Binding SetSlotDataCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Content="..."
+                FontWeight="Bold"
+                Visibility="{Binding MaterialMultiItemVisibilityList[5]}" />
             <Image
                 Grid.Row="1"
                 Grid.Column="2"
@@ -157,14 +227,25 @@
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True">
                 <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                        <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
+            <Button
+                Grid.Row="2"
+                Grid.Column="0"
+                Width="20"
+                Height="20"
+                Margin="0,2,7,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="1"
+                Command="{Binding SetSlotDataCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Content="..."
+                FontWeight="Bold"
+                Visibility="{Binding MaterialMultiItemVisibilityList[6]}" />
             <Image
                 Grid.Row="2"
                 Grid.Column="0"
@@ -175,14 +256,25 @@
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True">
                 <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                        <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
+            <Button
+                Grid.Row="2"
+                Grid.Column="1"
+                Width="20"
+                Height="20"
+                Margin="0,2,7,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="1"
+                Command="{Binding SetSlotDataCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Content="..."
+                FontWeight="Bold"
+                Visibility="{Binding MaterialMultiItemVisibilityList[7]}" />
             <Image
                 Grid.Row="2"
                 Grid.Column="1"
@@ -193,14 +285,25 @@
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True">
                 <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                        <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
+            <Button
+                Grid.Row="2"
+                Grid.Column="2"
+                Width="20"
+                Height="20"
+                Margin="0,2,7,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="1"
+                Command="{Binding SetSlotDataCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Content="..."
+                FontWeight="Bold"
+                Visibility="{Binding MaterialMultiItemVisibilityList[8]}" />
             <Image
                 Grid.Row="2"
                 Grid.Column="2"
@@ -211,9 +314,6 @@
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True">
                 <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="MouseLeftButtonDown">
-                        <behaviors:CallMethodAction MethodName="SetSlotData_MouseLeftButtonDown" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
@@ -234,6 +334,7 @@
             Margin="145,10,0,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
+            Command="{Binding SwitchMultipleModeCommand}"
             IsChecked="{Binding MultiSelect, Mode=TwoWay}"
             SelectedToggleText="多选"
             Style="{DynamicResource RadiusToggleButton}"
@@ -449,22 +550,24 @@
                 BorderBrush="Black"
                 FontSize="20"
                 Foreground="White"
-                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
+                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="TextChanged">
+                        <behaviors:CallMethodAction MethodName="SearchMultiItemBox_TextChanged" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </TextBox>
             <CustomControl:IconTextButtons
                 Grid.Row="0"
                 Grid.Column="2"
                 Width="25"
                 Height="25"
                 Background="{StaticResource CloseWhite}"
+                Command="{Binding UpdateAndCloseSlotGridCommand}"
                 PressedBackground="{StaticResource CloseWhiteHover}"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="Click">
-                        <behaviors:CallMethodAction MethodName="UpdateAndCloseSlotGrid_Click" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
-                </behaviors:Interaction.Triggers>
                 <CustomControl:IconTextButtons.ToolTip>
                     <ToolTip
                         Background="#484848"
@@ -509,23 +612,37 @@
                     </ListView.ItemsPanel>
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Image
-                                Width="50"
-                                Height="50"
-                                RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                RenderOptions.ClearTypeHint="Enabled"
-                                SnapsToDevicePixels="True"
-                                Source="{Binding Path=ImagePath, IsAsync=True, Mode=OneWay}"
-                                ToolTipService.BetweenShowDelay="0"
-                                ToolTipService.InitialShowDelay="0"
-                                UseLayoutRounding="True">
-                                <Image.ToolTip>
-                                    <ToolTip
-                                        Background="#484848"
-                                        Content="{Binding IsAsync=True, Path=IDAndName, Mode=OneWay}"
-                                        Foreground="White" />
-                                </Image.ToolTip>
-                            </Image>
+                            <Grid>
+                                <Image
+                                    Width="50"
+                                    Height="50"
+                                    Panel.ZIndex="0"
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                    RenderOptions.ClearTypeHint="Enabled"
+                                    SnapsToDevicePixels="True"
+                                    Source="{StaticResource Slot}"
+                                    ToolTipService.BetweenShowDelay="0"
+                                    ToolTipService.InitialShowDelay="0"
+                                    UseLayoutRounding="True" />
+                                <Image
+                                    Width="50"
+                                    Height="50"
+                                    Panel.ZIndex="1"
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                    RenderOptions.ClearTypeHint="Enabled"
+                                    SnapsToDevicePixels="True"
+                                    Source="{Binding Path=ImagePath, IsAsync=True, Mode=OneWay}"
+                                    ToolTipService.BetweenShowDelay="0"
+                                    ToolTipService.InitialShowDelay="0"
+                                    UseLayoutRounding="True">
+                                    <Image.ToolTip>
+                                        <ToolTip
+                                            Background="#484848"
+                                            Content="{Binding IsAsync=True, Path=IDAndName, Mode=OneWay}"
+                                            Foreground="White" />
+                                    </Image.ToolTip>
+                                </Image>
+                            </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>

@@ -27,7 +27,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -36,115 +35,7 @@ namespace CBHK.ViewModel.Component.Item
 {
     public partial class ItemPageViewModel : ObservableObject
     {
-        #region 给予
-        [ObservableProperty]
-        private bool _summon = false;
-
-        private bool isNoStyleText = true;
-
-        public bool IsNoStyleText
-        {
-            get => isNoStyleText;
-            set
-            {
-                SetProperty(ref isNoStyleText, value);
-                if (!IsNoStyleText)
-                    Summon = false;
-            }
-        }
-
-        #endregion
-
-        #region 已选择的版本
-        private TextComboBoxItem selectedVersion;
-        public TextComboBoxItem SelectedVersion
-        {
-            get => selectedVersion;
-            set
-            {
-                SetProperty(ref selectedVersion, value);
-                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
-            }
-        }
-
-        public int CurrentMinVersion = 1202;
-        #endregion
-
-        #region 版本数据源
-        [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionSource = [];
-        #endregion
-
-        #region 物品ID列表
-        [ObservableProperty]
-        private ObservableCollection<IconComboBoxItem> _itemList = [];
-        public Dictionary<int, List<IconComboBoxItem>> ItemIDListCopy = [];
-        #endregion
-
-        #region 方块ID列表
-        [ObservableProperty]
-        public ObservableCollection<IconComboBoxItem> _blockList = [];
-        #endregion
-
-        #region 附魔ID列表
-        [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _enchantmentIDList = [];
-        #endregion
-
-        #region 属性相关的列表
-        [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _attributeIDList = [];
-        [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _attributeSlotList = [];
-        [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _attributeValueTypeList = [];
-        #endregion
-
-        #region 药水效果ID列表
-        [ObservableProperty]
-        public ObservableCollection<IconComboBoxItem> _effectItemList = [];
-        #endregion
-
-        #region 保存物品ID
-        private IconComboBoxItem selectedItemId;
-        public IconComboBoxItem SelectedItemId
-        {
-            get => selectedItemId;
-            set
-            {
-                SetProperty(ref selectedItemId, value);
-                SpecialViewer?.Dispatcher.Invoke(UpdateUILayOut);
-                LowVersionId = "";
-                if (CurrentMinVersion < 1130)
-                {
-                    List<VersionID> matchVersionIDList = VersionIDList.Where(item => item.HighVersionID == SelectedItemId.ComboBoxItemId).ToList();
-                    if (matchVersionIDList.Count > 0)
-                        LowVersionId = matchVersionIDList.First().LowVersionID;
-                }
-            }
-        }
-
-        private string LowVersionId = "";
-        #endregion
-
-        #region 版本ID数据源
-        [ObservableProperty]
-        public ObservableCollection<VersionID> _versionIDList = [];
-        #endregion
-
-        #region 显示结果
-        [ObservableProperty]
-        private bool _showGeneratorResult = false;
-        #endregion
-
-        #region 是否作为工具或引用
-        [ObservableProperty]
-        public bool _useForTool = false;
-        [ObservableProperty]
-        public bool _useForReference = false;
-        #endregion
-
-        #region 字段与引用
+        #region Field
         private object obj = new();
         string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Item\Data\SpecialTags.json";
         JArray SpecialArray = null;
@@ -153,15 +44,7 @@ namespace CBHK.ViewModel.Component.Item
         private DataService _dataService = null;
 
         private IProgress<IconComboBoxItem> AddItemProgress = null;
-        private IProgress<(int,string,string,string)> SetItemProgress = null;
-
-        private IProgress<IconComboBoxItem> AddBlockProgress = null;
-        private IProgress<(int, string, string, string)> SetBlockProgress = null;
-
-        /// <summary>
-        /// 特指结果集合
-        /// </summary>
-        public Dictionary<string, ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
+        private IProgress<(int, string, string, string)> SetItemProgress = null;
         /// <summary>
         /// 需要适应版本变化的特指数据所属控件的事件
         /// </summary>
@@ -191,6 +74,7 @@ namespace CBHK.ViewModel.Component.Item
 
         //本生成器的图标路径
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItems.png";
+        private string ImageSetFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
         //Data页
         public Data data = null;
         //Function页
@@ -207,6 +91,120 @@ namespace CBHK.ViewModel.Component.Item
         ItemViewModel itemDataContext = null;
         #endregion
 
+        #region Property
+
+        #region 给予
+        [ObservableProperty]
+        private bool _summon = false;
+
+        private bool isNoStyleText = true;
+
+        public bool IsNoStyleText
+        {
+            get => isNoStyleText;
+            set
+            {
+                SetProperty(ref isNoStyleText, value);
+                if (!IsNoStyleText)
+                {
+                    Summon = false;
+                }
+            }
+        }
+
+        #endregion
+
+        #region 已选择的版本
+        private TextComboBoxItem selectedVersion;
+        public TextComboBoxItem SelectedVersion
+        {
+            get => selectedVersion;
+            set
+            {
+                SetProperty(ref selectedVersion, value);
+                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
+            }
+        }
+
+        public int CurrentMinVersion = 1202;
+        private bool IsVersionUpdating = false;
+        #endregion
+
+        #region 版本数据源
+        [ObservableProperty]
+        private ObservableCollection<TextComboBoxItem> _versionSource = [];
+        #endregion
+
+        #region 物品ID列表
+        [ObservableProperty]
+        private ObservableCollection<IconComboBoxItem> _itemList = [];
+        public Dictionary<int, List<IconComboBoxItem>> ItemIDListCopy = [];
+        #endregion
+
+        #region 方块ID列表
+        [ObservableProperty]
+        public ObservableCollection<IconComboBoxItem> _blockList = [];
+        #endregion
+
+        #region 附魔ID列表
+        [ObservableProperty]
+        public ObservableCollection<IconComboBoxItem> _enchantmentIDList = [];
+        #endregion
+
+        #region 属性相关的列表
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _attributeIDList = [];
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _attributeSlotList = [];
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _attributeValueTypeList = [];
+        #endregion
+
+        #region 药水效果ID列表
+        [ObservableProperty]
+        public ObservableCollection<IconComboBoxItem> _effectItemList = [];
+        #endregion
+
+        #region 保存物品ID
+        private IconComboBoxItem selectedItem;
+        public IconComboBoxItem SelectedItem
+        {
+            get => selectedItem;
+            set
+            {
+                SetProperty(ref selectedItem, value);
+                SpecialViewer?.Dispatcher.Invoke(UpdateUILayOut);
+                LowVersionId = "";
+                if (CurrentMinVersion < 1130)
+                {
+                    List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == selectedItem.ComboBoxItemId)];
+                    if (matchVersionIDList.Count > 0)
+                        LowVersionId = matchVersionIDList.First().LowVersionID;
+                }
+            }
+        }
+
+        private string LowVersionId = "";
+        #endregion
+
+        #region 版本ID数据源
+        [ObservableProperty]
+        public ObservableCollection<VersionID> _versionIDList = [];
+        #endregion
+
+        #region 显示结果
+        [ObservableProperty]
+        private bool _showGeneratorResult = false;
+        #endregion
+
+        #region 是否作为工具或引用
+        [ObservableProperty]
+        public bool _useForTool = false;
+        [ObservableProperty]
+        public bool _useForReference = false;
+        #endregion
+
+
         #region 是否同步到文件、存储外部数据
         public bool SyncToFile { get; set; }
         public string ExternFilePath { get; set; }
@@ -217,9 +215,19 @@ namespace CBHK.ViewModel.Component.Item
         private bool _importMode = false;
         #endregion
 
+        /// <summary>
+        /// 特指结果集合
+        /// </summary>
+        public Dictionary<string, ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
+
+        #endregion
+
         public ItemPageViewModel(IContainerProvider container,CBHKDataContext context, DataService dataService)
         {
             #region 初始化数据
+            _container = container;
+            _context = context;
+            _dataService = dataService;
             buttonNormalBrush = new ImageBrush(new BitmapImage(new Uri(buttonNormalImage, UriKind.RelativeOrAbsolute)));
             buttonPressedBrush = new ImageBrush(new BitmapImage(new Uri(buttonPressedImage, UriKind.RelativeOrAbsolute)));
             string SpecialData = File.ReadAllText(SpecialNBTStructureFilePath);
@@ -227,24 +235,16 @@ namespace CBHK.ViewModel.Component.Item
             #endregion
 
             AddItemProgress = new Progress<IconComboBoxItem>(ItemList.Add);
-            SetItemProgress = new Progress<(int,string,string,string)>(item =>
+            SetItemProgress = new Progress<(int, string, string, string)>(item =>
             {
                 ItemList[item.Item1].ComboBoxItemId = item.Item2;
                 ItemList[item.Item1].ComboBoxItemText = item.Item3;
                 ItemList[item.Item1].ComboBoxItemIcon = File.Exists(item.Item4) ? new BitmapImage(new Uri(item.Item4, UriKind.Absolute)) : null;
+                if (item.Item1 == 0)
+                {
+                    SelectedItem = ItemList[0];
+                }
             });
-
-            AddBlockProgress = new Progress<IconComboBoxItem>(BlockList.Add);
-            SetBlockProgress = new Progress<(int, string, string, string)>(item =>
-            {
-                BlockList[item.Item1].ComboBoxItemId = item.Item2;
-                BlockList[item.Item1].ComboBoxItemText = item.Item3;
-                BlockList[item.Item1].ComboBoxItemIcon = File.Exists(item.Item4) ? new BitmapImage(new Uri(item.Item4, UriKind.Absolute)) : null;
-            });
-
-            _container = container;
-            _context = context;
-            _dataService = dataService;
         }
 
         /// <summary>
@@ -252,157 +252,183 @@ namespace CBHK.ViewModel.Component.Item
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void ItemPages_Loaded(object sender, RoutedEventArgs e)
+        public void ItemPages_Loaded(object sender, RoutedEventArgs e)
         {
             currentItemPages ??= (sender as ItemPageView).Parent as RichTabItems;
             itemDataContext ??= Window.GetWindow(sender as ItemPageView).DataContext as ItemViewModel;
-            string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
             if (VersionSource.Count == 0)
             {
                 VersionSource = itemDataContext.VersionList;
+                SelectedVersion = VersionSource[0];
+            }
+        }
+
+        /// <summary>
+        /// 初始化物品ID与版本物品ID列表
+        /// </summary>
+        private async void InitItemList()
+        {
+            if(!IsVersionUpdating)
+            {
+                return;
             }
 
-            #region 初始化物品ID与版本物品ID列表
-            if (ItemList.Count == 0)
+            ItemList.Clear();
+            Dictionary<string, string> ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+            .Where(pair => pair.Key <= CurrentMinVersion)
+            .SelectMany(pair => pair.Value)
+            .ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value
+            );
+
+            List<string> ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
+            ItemKeyList.Sort();
+
+            ParallelOptions parallelOptions = new();
+            await Parallel.ForAsync(0, ItemIDAndNameMap.Count, parallelOptions, (i, cancellationToken) =>
             {
-                Dictionary<string, string> ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
-                .Where(pair => pair.Key <= CurrentMinVersion)
-                .SelectMany(pair => pair.Value)
-                .ToDictionary(
-                    pair => pair.Key,
-                    pair => pair.Value
-                );
+                AddItemProgress.Report(new IconComboBoxItem());
+                return new ValueTask();
+            });
 
-                List<string> ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
-                ItemKeyList.Sort();
-                ParallelOptions parallelOptions = new();
-                await Parallel.ForAsync(0, ItemIDAndNameMap.Count,parallelOptions, (i,cancellationToken) =>
+            Parallel.For(0, ItemList.Count, (i) =>
+            {
+                string currentKey = ItemKeyList[i];
+                string imagePath = "";
+                if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
                 {
-                    AddItemProgress.Report(new IconComboBoxItem());
-                    return new ValueTask();
-                });
-                Parallel.For(0, ItemList.Count, (i) =>
+                    imagePath = ImageSetFolderPath + currentKey + ".png";
+                }
+                else
+                if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
                 {
-                    string currentKey = ItemKeyList[i];
-                    string imagePath = "";
-                    if (File.Exists(currentPath + currentKey + ".png"))
-                    {
-                        imagePath = currentPath + currentKey + ".png";
-                    }
-                    else
-                    if (File.Exists(currentPath + currentKey + "_spawn_egg.png"))
-                    {
-                        imagePath = currentPath + currentKey + "_spawn_egg.png";
-                    }
-                    SetItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath));
-                });
+                    imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
+                }
+                SetItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath));
+            });
+        }
 
-                Task.Run(() =>
-                {
-                    while (ItemList.Count == 0)
-                    { }
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        SelectedItemId = ItemList[0];
-                    });
-                });
+        /// <summary>
+        /// 初始化药水效果列表
+        /// </summary>
+        private void InitEffectList()
+        {
+            if (!IsVersionUpdating)
+            {
+                return;
             }
-            #endregion
-
-            #region 初始化方块ID列表
-            if (BlockList.Count == 0)
+            EffectItemList.Clear();
+            foreach (var item in _context.MobEffectSet)
             {
-                List<string> ItemIDList = [.. _dataService.BlockIDAndName.Select(item => item.Key)];
-
-                ParallelOptions parallelOptions = new();
-                await Parallel.ForAsync(0, _context.BlockSet.Count(), parallelOptions, (i,cancellationToken) =>
+                if(item.Version is not null && int.Parse(item.Version.Replace(".", "")) > CurrentMinVersion)
                 {
-                    AddBlockProgress.Report(new IconComboBoxItem());
-                    return new ValueTask();
-                });
-                Task.Run(() =>
+                    continue;
+                }
+                string imagePath = ImageSetFolderPath + item.ID + ".png";
+                if (item.ID is not null)
                 {
-                    Parallel.For(0, BlockList.Count, (i) =>
+                    if (File.Exists(imagePath))
                     {
-                        string currentKey = ItemIDList[i];
-                        string currentName = _dataService.BlockIDAndName[currentKey].Item1;
-                        string imagePath = "";
-                        if (File.Exists(currentPath + currentKey + ".png"))
+                        imagePath = ImageSetFolderPath + item.ID + ".png";
+                        IconComboBoxItem iconComboBoxItem = new()
                         {
-                            imagePath = currentPath + currentKey + ".png";
-                        }
-                        SetBlockProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, currentName, imagePath));
-                    });
-                });
-            }
-            #endregion
-
-            #region 初始化属性ID和值类型列表
-            if (AttributeIDList.Count == 0)
-            {
-                foreach (var item in _context.MobAttributeSet)
-                {
-                    if (item.ID is not null)
-                    {
-                        TextComboBoxItem textComboBoxItem = new()
-                        {
-                            Text = item.ID
+                            ComboBoxItemId = item.ID,
+                            ComboBoxItemText = item.Name,
+                            ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
                         };
-                        AttributeIDList.Add(textComboBoxItem);
+                        EffectItemList.Add(iconComboBoxItem);
                     }
                 }
             }
-            if (AttributeSlotList.Count == 0)
-            {
-                foreach (var item in _context.AttributeSlotSet)
-                {
-                    if (item.Value is not null && item.Value.Length > 0)
-                    {
-                        AttributeSlotList.Add(new TextComboBoxItem()
-                        {
-                            Text = item.Value
-                        });
-                    }
-                }
-            }
-            if (AttributeValueTypeList.Count == 0)
-            {
-                foreach (var item in _context.AttributeSlotSet)
-                {
-                    if (item.Value is not null)
-                    {
-                        AttributeValueTypeList.Add(new TextComboBoxItem()
-                        {
-                            Text = item.ID
-                        });
-                    }
-                }
-            }
-            #endregion
+        }
 
-            #region 初始化药水效果列表
-            if (EffectItemList.Count == 0)
+        /// <summary>
+        /// 初始化附魔列表
+        /// </summary>
+        private void InitEnchantmentList()
+        {
+            if (!IsVersionUpdating)
             {
-                foreach (var item in _context.MobEffectSet)
+                return;
+            }
+            EnchantmentIDList.Clear();
+            foreach (var item in _context.EnchantmentSet)
+            {
+                if (item.Version is not null && int.Parse(item.Version.Replace(".", "")) > CurrentMinVersion)
                 {
-                    string imagePath = currentPath + item.ID + ".png";
-                    if (item.ID is not null)
+                    continue;
+                }
+                string imagePath = ImageSetFolderPath + item.ID + ".png";
+                if (item.ID is not null)
+                {
+                    if (File.Exists(imagePath))
                     {
-                        if (File.Exists(imagePath))
+                        imagePath = ImageSetFolderPath + item.ID + ".png";
+                        IconComboBoxItem iconComboBoxItem = new()
                         {
-                            imagePath = currentPath + item.ID + ".png";
-                            IconComboBoxItem iconComboBoxItem = new()
-                            {
-                                ComboBoxItemId = item.ID,
-                                ComboBoxItemText = item.Name,
-                                ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
-                            };
-                            EffectItemList.Add(iconComboBoxItem);
-                        }
+                            ComboBoxItemId = item.ID,
+                            ComboBoxItemText = item.Name,
+                            ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
+                        };
+                        EnchantmentIDList.Add(iconComboBoxItem);
                     }
                 }
             }
-            #endregion
+        }
+
+        /// <summary>
+        /// 初始化属性ID和值类型列表
+        /// </summary>
+        private void InitAttributeIDAndValueTypeAndSlotList()
+        {
+            if (!IsVersionUpdating)
+            {
+                return;
+            }
+            AttributeIDList.Clear();
+
+            foreach (var item in _context.MobAttributeSet)
+            {
+                if (item.Version is not null && int.Parse(item.Version.Replace(".", "")) > CurrentMinVersion)
+                {
+                    continue;
+                }
+                if (item.ID is not null)
+                {
+                    TextComboBoxItem textComboBoxItem = new()
+                    {
+                        Text = item.ID
+                    };
+                    AttributeIDList.Add(textComboBoxItem);
+                }
+            }
+
+            AttributeSlotList.Clear();
+
+            foreach (var item in _context.AttributeSlotSet)
+            {
+                if (item.Value is not null && item.Value.Length > 0)
+                {
+                    AttributeSlotList.Add(new TextComboBoxItem()
+                    {
+                        Text = item.Value
+                    });
+                }
+            }
+
+            AttributeValueTypeList.Clear();
+
+            foreach (var item in _context.AttributeSlotSet)
+            {
+                if (item.Value is not null)
+                {
+                    AttributeValueTypeList.Add(new TextComboBoxItem()
+                    {
+                        Text = item.ID
+                    });
+                }
+            }
         }
 
         /// <summary>
@@ -430,7 +456,7 @@ namespace CBHK.ViewModel.Component.Item
                 }
                 if (item.Uid == "Function")
                 {
-                    function = new(_context);
+                    function = new(_context,this);
                     VersionComponents.Add(function);
                     (item.Content as ScrollViewer).Content = function;
                 }
@@ -474,17 +500,15 @@ namespace CBHK.ViewModel.Component.Item
             {
                 function.Trim.Visibility = Visibility.Visible;
             }
-            #region 处理版本物品ID
+
             UpdateItemDamageAndID();
-            #endregion
-            #region 处理版本属性ID
-            #endregion
-            #region 处理版本附魔ID
+            IsVersionUpdating = true;
+            InitItemList();
+            InitEffectList();
+            InitAttributeIDAndValueTypeAndSlotList();
+            InitEnchantmentList();
+            IsVersionUpdating = false;
 
-            #endregion
-            #region 处理版本药水效果
-
-            #endregion
             #region 更新子控件的版本以及执行数据更新事件
             await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
             {
@@ -533,22 +557,22 @@ namespace CBHK.ViewModel.Component.Item
         /// </summary>
         private void UpdateItemDamageAndID()
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            if(ItemList.Count > 0 && SelectedItem is null)
             {
-                data.ItemDamage.IsEnabled = CurrentMinVersion >= 1130;
-                if (!data.ItemDamage.IsEnabled)
+                SelectedItem = ItemList[0];
+            }
+            data.ItemDamage.IsEnabled = CurrentMinVersion >= 1130;
+            if (!data.ItemDamage.IsEnabled)
+            {
+                string currentHighVersionID = SelectedItem.ComboBoxItemId;
+                List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == currentHighVersionID)];
+                LowVersionId = "";
+                if (matchVersionIDList.Count > 0)
                 {
-                    SelectedItemId ??= ItemList[0];
-                    string currentHighVersionID = SelectedItemId.ComboBoxItemId;
-                    List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == currentHighVersionID)];
-                    LowVersionId = "";
-                    if (matchVersionIDList.Count > 0)
-                    {
-                        data.ItemDamage.Value = matchVersionIDList[0].Damage;
-                        LowVersionId = matchVersionIDList[0].LowVersionID;
-                    }
+                    data.ItemDamage.Value = matchVersionIDList[0].Damage;
+                    LowVersionId = matchVersionIDList[0].LowVersionID;
                 }
-            });
+            }
         }
 
         /// <summary>
@@ -560,7 +584,7 @@ namespace CBHK.ViewModel.Component.Item
             StringBuilder nbt = new();
             if (SpecialTagsResult.Count > 0)
             {
-                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItemId.ComboBoxItemId];
+                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.ComboBoxItemId];
                 nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
             }
             string commonResult = await common.Result();
@@ -570,7 +594,7 @@ namespace CBHK.ViewModel.Component.Item
             if (nbt.ToString().EndsWith(','))
                 nbt.Remove(nbt.ToString().Length - 1, 1);
 
-            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItemId.ComboBoxItemId;
+            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItem.ComboBoxItemId;
 
             if (!Summon)
             {
@@ -646,14 +670,14 @@ namespace CBHK.ViewModel.Component.Item
 
             if (SpecialTagsResult.Count > 0)
             {
-                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItemId.ComboBoxItemId];
+                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.ComboBoxItemId];
                 nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
             }
 
             if (nbt.ToString().EndsWith(','))
                 nbt.Remove(nbt.ToString().Length - 1, 1);
 
-            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItemId.ComboBoxItemId;
+            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItem.ComboBoxItemId;
 
             if (Summon)
             {
@@ -715,7 +739,7 @@ namespace CBHK.ViewModel.Component.Item
             StringBuilder nbt = new();
             if (SpecialTagsResult.Count > 0)
             {
-                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItemId.ComboBoxItemId];
+                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.ComboBoxItemId];
                 nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
             }
             string CommonResult = await common.Result();
@@ -725,7 +749,7 @@ namespace CBHK.ViewModel.Component.Item
             if (nbt.ToString().EndsWith(','))
                 nbt.Remove(nbt.ToString().Length - 1, 1);
 
-            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItemId.ComboBoxItemId;
+            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItem.ComboBoxItemId;
 
             if (Summon)
             {
@@ -920,7 +944,7 @@ namespace CBHK.ViewModel.Component.Item
                                                 {
                                                     foreach (JObject item in data.Cast<JObject>())
                                                     {
-                                                        EnchantmentItem enchantment = new(_context);
+                                                        EnchantmentItem enchantment = new(_context,this);
                                                         JToken idObj = item["id"];
                                                         JToken lvlObj = item["lvl"];
                                                         if (idObj != null)
@@ -1858,14 +1882,14 @@ namespace CBHK.ViewModel.Component.Item
         /// </summary>
         private async Task UpdateUILayOut()
         {
-            SelectedItemId ??= ItemList[0];
-            currentItemPages.Header = SelectedItemId.ComboBoxItemId + ":" + SelectedItemId.ComboBoxItemText;
+            SelectedItem ??= ItemList[0];
+            currentItemPages.Header = SelectedItem.ComboBoxItemId + ":" + SelectedItem.ComboBoxItemText;
 
             #region 搜索当前物品ID对应的JSON对象
             List<JToken> targetList = SpecialArray.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedItemId.ComboBoxItemId)
+                if (currentObj["type"].ToString() == SelectedItem.ComboBoxItemId)
                     return true;
                 return false;
             }).ToList();
@@ -1877,7 +1901,7 @@ namespace CBHK.ViewModel.Component.Item
                 {
                     JObject targetObj = targetList.First() as JObject;
                     #region 处理特指NBT
-                    if (!specialDataDictionary.TryGetValue(SelectedItemId.ComboBoxItemId, out Grid value))
+                    if (!specialDataDictionary.TryGetValue(SelectedItem.ComboBoxItemId, out Grid value))
                     {
                         JArray children = JArray.Parse(targetObj["children"].ToString());
                         List<FrameworkElement> components = [];
@@ -1923,8 +1947,8 @@ namespace CBHK.ViewModel.Component.Item
                         });
                         #endregion
 
-                        if (!specialDataDictionary.ContainsKey(SelectedItemId.ComboBoxItemId))
-                            specialDataDictionary.Add(SelectedItemId.ComboBoxItemId, newGrid);
+                        if (!specialDataDictionary.ContainsKey(SelectedItem.ComboBoxItemId))
+                            specialDataDictionary.Add(SelectedItem.ComboBoxItemId, newGrid);
                         await SpecialViewer.Dispatcher.InvokeAsync(() =>
                         {
                             SpecialViewer.Content = newGrid;

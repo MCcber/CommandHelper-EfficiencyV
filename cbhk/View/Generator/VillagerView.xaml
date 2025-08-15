@@ -347,14 +347,14 @@
                                         HorizontalAlignment="Center"
                                         Cursor="Hand"
                                         Foreground="White"
-                                        IsChecked="{Binding CurrentItem.RewardExp, Mode=TwoWay}"
-                                        SelectedToggleText="rewardExp"
+                                        IsChecked="{Binding RewardExp, Mode=TwoWay}"
+                                        SelectedToggleText="RewardExp"
                                         Style="{DynamicResource RadiusToggleButton}"
                                         ToggleHeight="30"
                                         ToggleWidth="55"
                                         ToolTipService.BetweenShowDelay="0"
                                         ToolTipService.InitialShowDelay="0"
-                                        UnSelectedToggleText="rewardExp">
+                                        UnSelectedToggleText="RewardExp">
                                         <CustomControl:RadiusToggleButtons.ToolTip>
                                             <ToolTip
                                                 Background="#424242"
@@ -403,7 +403,7 @@
                                             Maximum="2147483647"
                                             Minimum="0"
                                             Style="{DynamicResource NumberBoxStyle}"
-                                            Value="{Binding CurrentItem.MaxUses, Mode=TwoWay}" />
+                                            Value="{Binding MaxUses, Mode=TwoWay}" />
                                         <TextBlock
                                             Grid.Row="1"
                                             Grid.Column="0"
@@ -432,7 +432,7 @@
                                             Maximum="2147483647"
                                             Minimum="0"
                                             Style="{DynamicResource NumberBoxStyle}"
-                                            Value="{Binding CurrentItem.Uses, Mode=TwoWay}" />
+                                            Value="{Binding Uses, Mode=TwoWay}" />
                                         <TextBlock
                                             Grid.Row="2"
                                             Grid.Column="0"
@@ -463,7 +463,7 @@
                                             Maximum="2147483647"
                                             Minimum="0"
                                             Style="{DynamicResource NumberBoxStyle}"
-                                            Value="{Binding CurrentItem.Xp, Mode=TwoWay}" />
+                                            Value="{Binding VillagerGetXp, Mode=TwoWay}" />
                                         <TextBlock
                                             Grid.Row="3"
                                             Grid.Column="0"
@@ -492,7 +492,7 @@
                                             Maximum="2147483647"
                                             Minimum="-2147483648"
                                             Style="{DynamicResource NumberBoxStyle}"
-                                            Value="{Binding CurrentItem.Demand, Mode=TwoWay}" />
+                                            Value="{Binding Demand, Mode=TwoWay}" />
                                         <TextBlock
                                             Grid.Row="4"
                                             Grid.Column="0"
@@ -521,7 +521,7 @@
                                             Maximum="2147483647"
                                             Minimum="-2147483648"
                                             Style="{DynamicResource NumberBoxStyle}"
-                                            Value="{Binding CurrentItem.SpecialPrice, Mode=TwoWay}" />
+                                            Value="{Binding SpecialPrice, Mode=TwoWay}" />
                                         <TextBlock
                                             Grid.Row="5"
                                             Grid.Column="0"
@@ -550,7 +550,7 @@
                                             Maximum="2147483647"
                                             Minimum="-2147483648"
                                             Style="{DynamicResource NumberBoxStyle}"
-                                            Value="{Binding CurrentItem.PriceMultiplier, Mode=TwoWay}" />
+                                            Value="{Binding PriceMultiplier, Mode=TwoWay}" />
                                     </Grid>
                                 </Grid>
                             </ScrollViewer>
@@ -1327,6 +1327,11 @@
                         FontSize="15"
                         Foreground="White"
                         Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                        <behavior:Interaction.Triggers>
+                            <behavior:EventTrigger EventName="TextChanged">
+                                <behavior:CallMethodAction MethodName="SearchTextBox_TextChanged" TargetObject="{Binding}" />
+                            </behavior:EventTrigger>
+                        </behavior:Interaction.Triggers>
                         <TextBox.Resources>
                             <VisualBrush
                                 x:Key="BackgroundBrush"

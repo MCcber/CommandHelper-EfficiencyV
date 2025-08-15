@@ -777,7 +777,7 @@ namespace CBHK.GeneralTool
                 #endregion
 
                 #region 提取引用节点所代指的文档并将其内容插入到当前节点列表中
-                if (parent is not null && isAddToParent && parent.DisplayText != "Root")
+                if (parent is not null && isAddToParent /*&& parent.DisplayText != "Root"*/)
                 {
                     #region 处理父级列表与当前列表节点都为有key的情况
                     if ((parent.ItemType is ItemType.List || (parent.ItemType is ItemType.MultiType && parent.SelectedValueType is not null && parent.SelectedValueType.Text == "List")) && i >= currentContextNextIndex && parent.Key.Length > 0 && NBTFeatureList.Except(dataStringType).Any() && NBTFeatureList.Count > 0 && NBTFeatureList[0] == "list")
@@ -1665,7 +1665,7 @@ namespace CBHK.GeneralTool
                                 {
                                     isHaveIDItem = true;
                                 }
-                                if (parentItemMatch.Success && parentItemMatch.Groups[1].Value.Contains("ID") && parentItem is BaseCompoundJsonTreeViewItem parentCompoundItem && parentCompoundItem.SelectedEnumItem is not null && parentCompoundItem.SelectedEnumItem.Text == "string" && plan.EnumCompoundDataDictionary["BlockStateProperty"].TryGetValue(parentCompoundItem.SelectedEnumItem.Text.Replace("minecraft:", ""), out List<string> targetBlockPropertyList))
+                                if (isHaveIDItem && parentItem is BaseCompoundJsonTreeViewItem parentCompoundItem && plan.EnumCompoundDataDictionary["BlockStateProperty"].TryGetValue(parentCompoundItem.SelectedEnumItem.Text.Replace("minecraft:", ""), out List<string> targetBlockPropertyList))
                                 {
                                     BaseCompoundJsonTreeViewItem oldPropertyItem = null;
                                     foreach (var blockPropertyItem in targetBlockPropertyList)
@@ -1715,6 +1715,8 @@ namespace CBHK.GeneralTool
                         #endregion
 
                         #region 处理字符串枚举
+
+                        #region 处理逻辑运算符和默认值
                         string currentCustomKey = currentNodeKey.TrimStart('!');
                         string operatorString = "";
                         if (currentCustomKey.Length != currentNodeKey.Length)
@@ -1726,6 +1728,7 @@ namespace CBHK.GeneralTool
                         {
                             item.DefaultValue = item.Value = "\"" + DefaultEnumValueMatch.Value + "\"";
                         }
+                        #endregion
 
                         #region 处理Key与外观
                         if ((NBTFeatureList[0] == "string" || (currentCustomKey.StartsWith("<''") && currentCustomKey.EndsWith("''>"))) && (EnumKeyCount > 0 || EnumCollectionMode1.Count > 0 || EnumCollectionMode2.Count > 0 || EnumCollectionMode3.Count > 0 || EnumMatch.Success) && !IsPreIdentifiedAsEnumCompoundType)
@@ -1856,6 +1859,10 @@ namespace CBHK.GeneralTool
                         #endregion
 
                         #region 处理复合枚举
+                        if(parent is not null && parent.LogicChildren.Count > 0 && parent.LogicChildren[0] is BaseCompoundJsonTreeViewItem firstCompoundItem && firstCompoundItem.ItemType is ItemType.CustomCompound)
+                        {
+                            CurrentCompoundItem.RemoveElementButtonVisibility = Visibility.Visible;
+                        }
                         if (currentCustomKey.StartsWith("<''") && currentCustomKey.EndsWith("''>"))
                         {
                             currentCustomKey = currentCustomKey.Replace("<''", "").Replace("''>", "");
@@ -1865,7 +1872,6 @@ namespace CBHK.GeneralTool
                             if (parent.LogicChildren.Count > 0 || parent.ItemType is ItemType.CustomCompound)
                             {
                                 CurrentCompoundItem.Parent = parent.Parent;
-                                CurrentCompoundItem.RemoveElementButtonVisibility = Visibility.Visible;
                                 if(!parent.IsProcessedByAppearanceChecker && parent.ItemType is ItemType.CustomCompound)
                                 {
                                     i++;
@@ -2047,7 +2053,7 @@ namespace CBHK.GeneralTool
                                             #endregion
 
                                             #region 执行递归
-                                            JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), [.. currentSubChildrenTuple.Item1], layerCount + 1, currentReferenceKey, CurrentCompoundItem, null, previousStarCount, isAddToParent);
+                                            JsonTreeViewDataStructure subResult = GetTreeViewItemResult(new(), [.. currentSubChildrenTuple.Item1], layerCount + 1, "", CurrentCompoundItem, null, previousStarCount, CurrentCompoundItem is not null);
 
                                             CurrentCompoundItem.LogicChildren.AddRange(subResult.Result);
 
@@ -2171,14 +2177,25 @@ namespace CBHK.GeneralTool
                         #endregion
 
                         #region 闭合列表、数组、对象
-                        if (isNeedCloseListOrArray && result.ResultString.Length > 0)
+                        if ((isNeedCloseListOrArray || isListRoot) && result.ResultString.Length > 0)
                         {
-                            result.ResultString.Append(']');
+                            result.ResultString.Append(new string(' ', layerCount * 2) + ']');
                         }
-                        if (isNeedCloseCompound && result.ResultString.Length > 0)
+                        if ((isNeedCloseCompound || isCompoundRoot) && result.ResultString.Length > 0)
                         {
-                            result.ResultString.Append('}');
+                            result.ResultString.Append(new string(' ', layerCount * 2) + '}');
                         }
+                        //if((isListRoot || isCompoundRoot) && layerCount > 0)
+                        //{
+                        //    while (result.ResultString.Length > 0 && 
+                        //        (result.ResultString[^1] == ' ' || 
+                        //        result.ResultString[^1] == ',' || 
+                        //        result.ResultString[^1] == '\r' || 
+                        //        result.ResultString[^1] == '\n'))
+                        //    {
+                        //        result.ResultString.Length--;
+                        //    }
+                        //}
                         #endregion
 
                         #region 此处所有处理流程已结束，如果还是没有Key，那自动划分为列表或数组元素
@@ -2303,7 +2320,10 @@ namespace CBHK.GeneralTool
                 foreach (var item in result.Result)
                 {
                     item.LayerCount = entry.LayerCount + 1;
-                    item.RemoveElementButtonVisibility = Visibility.Collapsed;
+                    if (item.Parent is not null && item.Parent.ItemType is not ItemType.CustomCompound)
+                    {
+                        item.RemoveElementButtonVisibility = Visibility.Collapsed;
+                    }
                 }
                 entry.LogicChildren.AddRange([.. result.Result]);
                 result.ResultString = result.ResultString.Replace("\r\n", "\r\n  ");
@@ -2332,21 +2352,6 @@ namespace CBHK.GeneralTool
             if (isCompoundRoot || isListRoot)
             {
                 result.IsHaveRootItem = true;
-                while (result.ResultString.Length > 0 && (result.ResultString[^1] == ' ' || result.ResultString[^1] == ',' ||
-                    result.ResultString[^1] == '\r' || result.ResultString[^1] == '\n'))
-                {
-                    result.ResultString.Length--;
-                }
-                result.ResultString.Append("\r\n");
-                if (isCompoundRoot)
-                {
-                    result.ResultString.Append('}');
-                }
-                else
-                if (isListRoot)
-                {
-                    result.ResultString.Append(']');
-                }
             }
             #endregion
 

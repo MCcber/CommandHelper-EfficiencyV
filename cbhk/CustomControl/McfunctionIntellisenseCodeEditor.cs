@@ -1908,7 +1908,7 @@ namespace CBHK.CustomControl
         public void TextBox_Loaded(object sender, RoutedEventArgs e)
         {
             DatapackViewModel datapackDataContext = Window.GetWindow(this).DataContext as DatapackViewModel;
-            editPageDataContext = datapackDataContext.editPage.DataContext as EditPageViewModel;
+            editPageDataContext = datapackDataContext.EditPage.DataContext as EditPageViewModel;
             client = editPageDataContext.client;
             SyntaxItemDicionary = editPageDataContext.SyntaxItemDicionary;
             Thread thread = new(ReceiveData);

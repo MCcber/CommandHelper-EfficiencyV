@@ -3,11 +3,11 @@
 namespace CBHK.View.Component.Datapack.DatapackInitializationForms
 {
     /// <summary>
-    /// TemplateSelectPageView.xaml 的交互逻辑
+    /// DatapackGenerateSetupPageView.xaml 的交互逻辑
     /// </summary>
-    public partial class TemplateSelectPageView : Page
+    public partial class DatapackGenerateSetupPageView : Page
     {
-        public TemplateSelectPageView()
+        public DatapackGenerateSetupPageView()
         {
             InitializeComponent();
         }

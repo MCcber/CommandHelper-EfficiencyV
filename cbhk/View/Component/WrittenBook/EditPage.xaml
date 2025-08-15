@@ -45,10 +45,6 @@
                         </behaviors:EventTrigger>
                     </behaviors:Interaction.Triggers>
                 </TextBlock>
-                <TextBlock
-                    FontSize="15"
-                    Foreground="Red"
-                    Text="{Binding ExceedsCount, Mode=OneWay}" />
             </DockPanel>
             <TextBlock
                 Grid.Row="0"

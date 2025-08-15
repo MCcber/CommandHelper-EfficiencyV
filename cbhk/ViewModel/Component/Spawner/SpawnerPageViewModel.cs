@@ -14,7 +14,6 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace CBHK.ViewModel.Component.Spawner
 {
@@ -56,13 +55,10 @@ namespace CBHK.ViewModel.Component.Spawner
         #endregion
 
         #region 字段与引用
-        /// <summary>
-        /// 控件面板
-        /// </summary>
-        public Grid componentsGrid = null;
 
         //潜在实体数据源
-        public ObservableCollection<SpawnPotential> SpawnPotentials { get; set; } = [];
+        [ObservableProperty]
+        public ObservableCollection<SpawnPotential> _spawnPotentialList = [];
 
         /// <summary>
         /// 存储外部数据
@@ -74,8 +70,48 @@ namespace CBHK.ViewModel.Component.Spawner
         public bool ImportMode { get; set; } = false;
 
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
         private IContainerProvider _container;
+        #endregion
+
+        #region Property
+        [ObservableProperty]
+        private short _delay = 0;
+        [ObservableProperty]
+        private bool? _isDefaultDelay = true;
+
+        [ObservableProperty]
+        private short _maxNearbyEntities = 0;
+        [ObservableProperty]
+        private bool? _isDefaultMaxNearbyEntities = true;
+
+        [ObservableProperty]
+        private short _maxSpawnDelay = 0;
+        [ObservableProperty]
+        private bool? _isDefaultMaxSpawnDelay = true;
+
+        [ObservableProperty]
+        private short _minSpawnDelay = 0;
+        [ObservableProperty]
+        private bool? _isDefaultMinSpawnDelay = true;
+
+        [ObservableProperty]
+        private short _requiredPlayerRange = 0;
+        [ObservableProperty]
+        private bool? _isDefaultRequiredPlayerRange = true;
+
+        [ObservableProperty]
+        private short _spawnCount = 0;
+        [ObservableProperty]
+        private bool? _isDefaultSpawnCount = true;
+
+        [ObservableProperty]
+        private short _spawnRange = 0;
+        [ObservableProperty]
+        private bool? _isDefaultSpawnRange = true;
+
+        [ObservableProperty]
+        private object _referenceEntityTag = null;
         #endregion
 
         public SpawnerPageViewModel(IContainerProvider container)
@@ -101,24 +137,83 @@ namespace CBHK.ViewModel.Component.Spawner
         /// <param name="e"></param>
         public void ComponentsGrid_Loaded(object sender, RoutedEventArgs e)
         {
-            componentsGrid = sender as Grid;
-
-            if (ImportMode)
+            if (ImportMode && ExternalSpawnerData is not null)
             {
-                foreach (FrameworkElement item in componentsGrid.Children)
+                if(ExternalSpawnerData.SelectToken("Delay") is JToken delayToken)
                 {
-                    if (item is Slider slider)
-                    {
-                        JToken currentObj = ExternalSpawnerData.SelectToken(slider.Uid);
-                        if (currentObj != null && currentObj.ToString() != "0")
-                            slider.Value = short.Parse(currentObj.ToString());
-                    }
-                    if (item is RadiusToggleButtons radiusToggleButtons)
-                    {
-                        JToken currentObj = ExternalSpawnerData.SelectToken(radiusToggleButtons.Uid);
-                        radiusToggleButtons.IsChecked = currentObj is null;
-                    }
+                    Delay = short.Parse(delayToken.ToString());
                 }
+                if (ExternalSpawnerData.SelectToken("MaxNearbyEntities") is JToken maxNearbyEntitiesToken)
+                {
+                    MaxNearbyEntities = short.Parse(maxNearbyEntitiesToken.ToString());
+                }
+                if (ExternalSpawnerData.SelectToken("MaxSpawnDelay") is JToken maxSpawnDelayToken)
+                {
+                    MaxSpawnDelay = short.Parse(maxSpawnDelayToken.ToString());
+                }
+                if (ExternalSpawnerData.SelectToken("MinSpawnDelay") is JToken minSpawnDelayToken)
+                {
+                    MinSpawnDelay = short.Parse(minSpawnDelayToken.ToString());
+                }
+                if (ExternalSpawnerData.SelectToken("RequiredPlayerRange") is JToken requiredPlayerRangeToken)
+                {
+                    RequiredPlayerRange = short.Parse(requiredPlayerRangeToken.ToString());
+                }
+                if (ExternalSpawnerData.SelectToken("SpawnCount") is JToken spawnCountToken)
+                {
+                    SpawnCount = short.Parse(spawnCountToken.ToString());
+                }
+                if (ExternalSpawnerData.SelectToken("SpawnRange") is JToken spawnRangeToken)
+                {
+                    SpawnRange = short.Parse(spawnRangeToken.ToString());
+                }
+                if (ExternalSpawnerData.SelectToken("SpawnData") is JToken spawnDataToken)
+                {
+                    ReferenceEntityTag = spawnDataToken.ToString();
+                }
+            }
+        }
+
+        public void SliderValue_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            UIElement element = sender as UIElement;
+            switch (element.Uid)
+            {
+                case "Delay":
+                    {
+                        IsDefaultDelay = Delay == 0;
+                        break;
+                    }
+                case "MaxNearbyEntities":
+                    {
+                        IsDefaultMaxNearbyEntities = MaxNearbyEntities == 0;
+                        break;
+                    }
+                case "MaxSpawnDelay":
+                    {
+                        IsDefaultMaxSpawnDelay = MaxSpawnDelay == 0;
+                        break;
+                    }
+                case "MinSpawnDelay":
+                    {
+                        IsDefaultMinSpawnDelay = MinSpawnDelay == 0;
+                        break;
+                    }
+                case "RequiredPlayerRange":
+                    {
+                        IsDefaultRequiredPlayerRange = RequiredPlayerRange == 0;
+                        break;
+                    }
+                case "SpawnCount":
+                    {
+                        IsDefaultSpawnCount = SpawnCount == 0;
+                        break;
+                    }
+                case "SpawnRange":
+                    {
+                        IsDefaultSpawnRange = SpawnRange == 0;
+                        break;
+                    }
             }
         }
 
@@ -126,13 +221,13 @@ namespace CBHK.ViewModel.Component.Spawner
         /// <summary>
         /// 添加潜在实体
         /// </summary>
-        public void AddSpawnPotential(FrameworkElement ele) => SpawnPotentials.Add(new SpawnPotential());
+        public void AddSpawnPotential(FrameworkElement ele) => SpawnPotentialList.Add(new SpawnPotential());
 
         [RelayCommand]
         /// <summary>
         /// 清空潜在实体
         /// </summary>
-        private void ClearSpawnPotential(FrameworkElement ele) => SpawnPotentials.Clear();
+        private void ClearSpawnPotential(FrameworkElement ele) => SpawnPotentialList.Clear();
 
         [RelayCommand]
         /// <summary>
@@ -140,35 +235,24 @@ namespace CBHK.ViewModel.Component.Spawner
         /// </summary>
         public void Run()
         {
-            Result = "";
-            foreach (FrameworkElement item in componentsGrid.Children)
-            {
-                if (item is Slider slider)
-                {
-                    RadiusToggleButtons radiusToggleButtons = null;
-                    foreach (FrameworkElement ele in componentsGrid.Children)
-                    {
-                        if (Grid.GetRow(ele) == Grid.GetRow(slider) && Grid.GetColumn(ele) == (Grid.GetColumn(slider) + 1) && ele is RadiusToggleButtons)
-                        {
-                            radiusToggleButtons = ele as RadiusToggleButtons;
-                            break;
-                        }
-                    }
-                    if (!radiusToggleButtons.IsChecked.Value)
-                        Result += slider.Uid + ":" + slider.Value + ",";
-                }
-                if (item is ReferenceEntity reference && reference.Tag != null)
-                    Result += reference.Uid + ":{entity:" + reference.Tag.ToString() + "},";
-            }
+            Result = $"Delay:{Delay},MaxNearbyEntities:{MaxNearbyEntities},MaxSpawnDelay:{MaxSpawnDelay},RequiredPlayerRange:{RequiredPlayerRange},SpawnCount:{SpawnCount},SpawnRange:{SpawnRange}";
+            Result += "SpawnData:{entity:" + (ReferenceEntityTag ?? "") + "},";
+
             string SpawnPotentialsData = "";
-            if (SpawnPotentials.Count > 0)
-                SpawnPotentialsData = "SpawnPotentials:[" + string.Join(",", SpawnPotentials.Select(item => item.Result)) + "],";
+            if (SpawnPotentialList.Count > 0)
+            {
+                SpawnPotentialsData = "SpawnPotentialList:[" + string.Join(",", SpawnPotentialList.Select(item => item.Result)) + "],";
+            }
             Result += SpawnPotentialsData;
 
             if (CurrentMinVersion >= 1130)
+            {
                 Result = "/setblock ~ ~ ~ minecraft:spawner{" + Result.Trim(',') + "}";
+            }
             else
+            {
                 Result = "/setblock ~ ~ ~ minecraft:mob_spawner 0 replace {" + Result.Trim(',') + "}";
+            }
 
             #region 显示生成结果
             if (ShowResult)
@@ -177,7 +261,7 @@ namespace CBHK.ViewModel.Component.Spawner
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
-                    displayerViewModel.GeneratorResult(Result.Trim(','), "刷怪笼", icon_path);
+                    displayerViewModel.GeneratorResult(Result.Trim(','), "刷怪笼", iconPath);
                 }
             }
             else

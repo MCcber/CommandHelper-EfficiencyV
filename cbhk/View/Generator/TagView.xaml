@@ -22,7 +22,7 @@
     mc:Ignorable="d">
 
     <Window.Resources>
-        <CollectionViewSource x:Key="TagItemSource" Source="{Binding TagItems, IsAsync=True}" />
+        <CollectionViewSource x:Key="TagItemSource" Source="{Binding TagItemList, IsAsync=True}" />
         <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
         <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
         <ImageBrush x:Key="EditBox" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
@@ -148,8 +148,23 @@
                 FontSize="15"
                 Foreground="White"
                 IsReadOnly="True"
-                ItemsSource="{Binding TypeItemSource}"
+                ItemsSource="{Binding TypeItemSource, IsAsync=True}"
                 SelectedItem="{Binding SelectedTypeItem, Mode=TwoWay}"
+                Style="{DynamicResource TextComboBoxStyle}" />
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="15"
+                Text="版本" />
+            <ComboBox
+                Width="80"
+                Margin="10,0"
+                VerticalAlignment="Center"
+                BorderBrush="Black"
+                FontSize="15"
+                Foreground="White"
+                IsReadOnly="True"
+                ItemsSource="{Binding VersionList}"
+                SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
                 Style="{DynamicResource TextComboBoxStyle}" />
             <CustomControl:IconTextButtons
                 Padding="5"
@@ -273,7 +288,7 @@
                             VerticalAlignment="Center"
                             IsHitTestVisible="False"
                             RenderOptions.BitmapScalingMode="NearestNeighbor"
-                            Source="{Binding Icon, IsAsync=True, Mode=OneTime}" />
+                            Source="{Binding Icon, IsAsync=True}" />
                         <TextBlock
                             Grid.Row="0"
                             Grid.Column="1"
@@ -281,7 +296,7 @@
                             FontSize="25"
                             FontStyle="Italic"
                             IsHitTestVisible="False"
-                            Text="{Binding DisplayId, IsAsync=True, Mode=OneTime}"
+                            Text="{Binding DisplayId, IsAsync=True}"
                             TextAlignment="Left" />
                         <TextBlock
                             Grid.Row="1"
@@ -289,7 +304,7 @@
                             VerticalAlignment="Center"
                             FontSize="25"
                             IsHitTestVisible="False"
-                            Text="{Binding DisplayName, IsAsync=True, Mode=OneTime}"
+                            Text="{Binding DisplayName, IsAsync=True}"
                             TextAlignment="Left" />
                     </Grid>
                 </DataTemplate>

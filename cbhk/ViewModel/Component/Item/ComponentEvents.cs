@@ -46,8 +46,8 @@ namespace CBHK.ViewModel.Component.Item
                 Mode = BindingMode.OneWayToSource,
                 Converter = new TagToString()
             };
-            if (!context.SpecialTagsResult.ContainsKey(context.SelectedItemId.ComboBoxItemId))
-                context.SpecialTagsResult.Add(context.SelectedItemId.ComboBoxItemId, []);
+            if (!context.SpecialTagsResult.ContainsKey(context.SelectedItem.ComboBoxItemId))
+                context.SpecialTagsResult.Add(context.SelectedItem.ComboBoxItemId, []);
             #endregion
 
             #region 是否为谜之炖菜状态效果
@@ -64,9 +64,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += StewEffectList_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -85,9 +85,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += MapDecorations_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -104,9 +104,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += MapDisplay_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -123,9 +123,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += ShieldBlockEntityTag_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -148,9 +148,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += CustomPotionEffects_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -169,9 +169,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += NameSpaceReference_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -193,9 +193,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += StoredEnchantments_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -214,9 +214,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += DebugProperties_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -235,9 +235,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += Item_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -256,9 +256,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 accordion.LostFocus += LodestonePos_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -275,9 +275,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = slider.Tag as NBTDataStructure;
                 slider.ValueChanged += NumberBoxValueChanged;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = slider.Tag;
@@ -300,9 +300,9 @@ namespace CBHK.ViewModel.Component.Item
                 else
                     textBox.LostFocus += StringBox_LostFocus;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(textBox.Tag as NBTDataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(textBox.Tag as NBTDataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currengTag = dataStructure;
@@ -320,9 +320,9 @@ namespace CBHK.ViewModel.Component.Item
                 textCheckBoxs.Checked += CheckBox_Checked;
                 textCheckBoxs.Unchecked += CheckBox_Unchecked;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = textCheckBoxs.Tag;
@@ -339,9 +339,9 @@ namespace CBHK.ViewModel.Component.Item
                 NBTDataStructure dataStructure = comboBox.Tag as NBTDataStructure;
                 comboBox.SelectionChanged += EnumBox_SelectionChanged;
 
-                context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedItemId.ComboBoxItemId].Count - 1;
-                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItemId.ComboBoxItemId + "][" + currentIndex + "]");
+                context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedItem.ComboBoxItemId].Count - 1;
+                propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedItem.ComboBoxItemId + "][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = comboBox.Tag;
@@ -601,7 +601,8 @@ namespace CBHK.ViewModel.Component.Item
         {
             Accordion accordion = obj as Accordion;
             StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
-            EnchantmentItem enchantmentItems = new(_context);
+            ItemPageView itemPageView = stackPanel.FindParent<ItemPageView>();
+            EnchantmentItem enchantmentItems = new(_context, itemPageView is not null ? itemPageView.DataContext as ItemPageViewModel : null);
             stackPanel.Children.Add(enchantmentItems);
             ItemPageViewModel itemPageDataContext = obj.FindParent<ItemPageView>().DataContext as ItemPageViewModel;
             itemPageDataContext.VersionComponents.Add(enchantmentItems);

@@ -34,10 +34,9 @@
             Grid.Column="1"
             Height="25"
             VerticalContentAlignment="Center"
-            Loaded="EnchantmentIdLoaded"
             SelectedIndex="0"
             SelectionChanged="EnchantmentID_SelectionChanged"
-            Style="{DynamicResource TextComboBoxStyle}" />
+            Style="{DynamicResource IconComboBoxStyle}" />
         <TextBlock
             Grid.Column="2"
             Margin="5,0"

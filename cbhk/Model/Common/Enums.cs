@@ -54,5 +54,16 @@
             Array,
             List
         }
+
+        public enum RecipeType
+        {
+            CraftingTable,
+            Furnace,
+            BlastFurnace,
+            Campfire,
+            SmithingTable,
+            Smoker,
+            Stonecutter
+        }
     }
 }

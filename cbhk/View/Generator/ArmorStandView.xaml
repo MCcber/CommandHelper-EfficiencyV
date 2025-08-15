@@ -13,7 +13,7 @@
     xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
-    Title="盔甲架生成器"
+    Title="{Binding Title}"
     Width="1080"
     Height="840"
     MinWidth="1080"
