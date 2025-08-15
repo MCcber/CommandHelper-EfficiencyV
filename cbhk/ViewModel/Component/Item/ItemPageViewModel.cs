@@ -451,7 +451,7 @@ namespace CBHK.ViewModel.Component.Item
                 }
                 if (item.Uid == "Data")
                 {
-                    data = new(_dataService);
+                    data = new(_dataService,_context);
                     (item.Content as ScrollViewer).Content = data;
                 }
                 if (item.Uid == "Function")

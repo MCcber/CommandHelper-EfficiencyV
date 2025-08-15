@@ -45,10 +45,11 @@ namespace CBHK.View.Component.Item
         }
         #endregion
 
-        public Data(DataService dataService)
+        public Data(DataService dataService,CBHKDataContext context)
         {
             InitializeComponent();
             _dataService = dataService;
+            _context = context;
             ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
             Attributes.Modify = new RelayCommand<FrameworkElement>(AddAttributeCommand);
             Attributes.Fresh = new RelayCommand<FrameworkElement>(ClearAttributesComand);

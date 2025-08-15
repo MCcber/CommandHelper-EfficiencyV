@@ -25,7 +25,7 @@ namespace CBHK.View.Component.Item
             await Upgrade(currentVersion);
             string name = (AttributeNameBox.SelectedItem as TextComboBoxItem).Text;
             string slot = (Slot.SelectedItem as TextComboBoxItem).Text;
-            string attributeIDString = _context.MobAttributeSet.First(item=>item.Name == name).ID;
+            string attributeIDString = _context.MobAttributeSet.First(item=>item.ID == name).ID;
             string attributeSlotString = _context.AttributeSlotSet.First(item => item.Value == slot).ID;
             string slotData = attributeSlotString == "all" ? "" : ",Slot:\"" + attributeSlotString + "\"";
             string result = "{AttributeName:\"" + attributeIDString + "\",Name:\"" + NameBox.Text + "\",Amount:" + Amount.Value.ToString() + "d,Operation:" + Operations.SelectedIndex + UUIDString + slotData + "}";
@@ -40,8 +40,8 @@ namespace CBHK.View.Component.Item
 
         public AttributeItems(CBHKDataContext context)
         {
-            _context = context;
             InitializeComponent();
+            _context = context;
         }
 
         /// <summary>
