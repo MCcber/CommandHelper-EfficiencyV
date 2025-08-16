@@ -102,9 +102,46 @@ namespace CBHK.ViewModel.Component.Villager
 
                 #region 购入物品AB与卖出物品数据
                 //补齐双引号对
-                string buyData = Buy.Tag is ItemStructure buyItemData ? Regex.Replace(buyItemData.NBT, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":") : "{}";
-                string buyBData = BuyB.Tag is ItemStructure buyBItemData ? Regex.Replace(buyBItemData.NBT, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":") : "{}";
-                string sellData = Sell.Tag is ItemStructure sellItemData ? Regex.Replace(sellItemData.NBT, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":") : "{id:\"minecraft:air\",Count:1}";
+                string buyData = "{id:\"minecraft:stick\"}";
+                string buyBData = "{}";
+                string sellData = "{id:\"minecraft:stick\"}";
+
+                if (Buy.Tag is ItemStructure buyItemData)
+                {
+                    if(buyItemData.NBT is not null)
+                    {
+                        buyData = Regex.Replace(buyItemData.NBT, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
+                    }
+                    else
+                    {
+                        buyData = "{id:\"minecraft:" + buyItemData.IDAndName.Split(':')[0] + "\"}";
+                    }
+                }
+
+                if (BuyB.Tag is ItemStructure buybItemData)
+                {
+                    if (buybItemData.NBT is not null)
+                    {
+                        buyBData = Regex.Replace(buybItemData.NBT, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
+                    }
+                    else
+                    {
+                        buyBData = "{id:\"minecraft:" + buybItemData.IDAndName.Split(':')[0] + "\"}";
+                    }
+                }
+
+                if (Sell.Tag is ItemStructure sellItemData)
+                {
+                    if (sellItemData.NBT is not null)
+                    {
+                        sellData = Regex.Replace(sellItemData.NBT, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
+                    }
+                    else
+                    {
+                        sellData = "{id:\"minecraft:" + sellItemData.IDAndName.Split(':')[0] + "\"}";
+                    }
+                }
+
                 //清除数值型数据的单位
                 buyData = Regex.Replace(buyData, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
                 buyBData = Regex.Replace(buyBData, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
@@ -114,15 +151,15 @@ namespace CBHK.ViewModel.Component.Villager
                 JObject buybObj = JObject.Parse(buyBData);
                 JObject sellObj = JObject.Parse(sellData);
 
-                buyObj["Count"] = int.Parse(buyItemCount);
-                buybObj["Count"] = int.Parse(buyBItemCount);
-                sellObj["Count"] = int.Parse(sellItemCount);
+                buyObj["count"] = int.Parse(buyItemCount);
+                buybObj["count"] = int.Parse(buyBItemCount);
+                sellObj["count"] = int.Parse(sellItemCount);
                 //去除双引号对
-                string buy = buyData != "{}" ? "buy:" + Regex.Replace(buyObj.ToString(), @"([\{\[,])([\s+]?\w+[\s+]?):", "$1$2:").Replace("\r", "").Replace("\n", "") + "," : "";
+                string buy = buyData != "{}" ? "buy:" + buyObj.ToString().Replace("\r", "").Replace("\n", "") + "," : "";
                 buy = Regex.Replace(buy, @"\s+", "");
-                string buyB = buyBData != "{}" ? "buyB:" + Regex.Replace(buybObj.ToString(), @"([\{\[,])([\s+]?\w+[\s+]?):", "$1$2:").Replace("\r", "").Replace("\n", "") + "," : "";
+                string buyB = buyBData != "{}" ? "buyB:" + buybObj.ToString().Replace("\r", "").Replace("\n", "") + "," : "";
                 buyB = Regex.Replace(buyB, @"\s+", "");
-                string sell = "sell:" + Regex.Replace(sellObj.ToString(), @"([\{\[,])([\s+]?\w+[\s+]?):", "$1$2:").Replace("\r", "").Replace("\n", "") + ",";
+                string sell = "sell:" + sellObj.ToString().Replace("\r", "").Replace("\n", "") + ",";
                 sell = Regex.Replace(sell, @"\s+", "");
                 #endregion
 
