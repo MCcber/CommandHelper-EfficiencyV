@@ -243,6 +243,12 @@ namespace CBHK.ViewModel.Component.Item
                 if (item.Item1 == 0)
                 {
                     SelectedItem = ItemList[0];
+
+                    data.ItemDamage.IsEnabled = CurrentMinVersion >= 1130;
+                    if (!data.ItemDamage.IsEnabled && SelectedItem is not null)
+                    {
+                        UpdateItemDamageAndID();
+                    }
                 }
             });
         }
@@ -501,7 +507,6 @@ namespace CBHK.ViewModel.Component.Item
                 function.Trim.Visibility = Visibility.Visible;
             }
 
-            UpdateItemDamageAndID();
             IsVersionUpdating = true;
             InitItemList();
             InitEffectList();
@@ -550,28 +555,26 @@ namespace CBHK.ViewModel.Component.Item
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ItemID_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateItemDamageAndID();
+        public void ItemID_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(!IsVersionUpdating)
+            {
+                UpdateItemDamageAndID();
+            }
+        }
 
         /// <summary>
         /// 低版本时更新数据值和ID
         /// </summary>
         private void UpdateItemDamageAndID()
         {
-            if(ItemList.Count > 0 && SelectedItem is null)
+            string currentHighVersionID = SelectedItem.ComboBoxItemId;
+            List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == currentHighVersionID)];
+            LowVersionId = "";
+            if (matchVersionIDList.Count > 0)
             {
-                SelectedItem = ItemList[0];
-            }
-            data.ItemDamage.IsEnabled = CurrentMinVersion >= 1130;
-            if (!data.ItemDamage.IsEnabled)
-            {
-                string currentHighVersionID = SelectedItem.ComboBoxItemId;
-                List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == currentHighVersionID)];
-                LowVersionId = "";
-                if (matchVersionIDList.Count > 0)
-                {
-                    data.ItemDamage.Value = matchVersionIDList[0].Damage;
-                    LowVersionId = matchVersionIDList[0].LowVersionID;
-                }
+                data.ItemDamage.Value = matchVersionIDList[0].Damage;
+                LowVersionId = matchVersionIDList[0].LowVersionID;
             }
         }
 
