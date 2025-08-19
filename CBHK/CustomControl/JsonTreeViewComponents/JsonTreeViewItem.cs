@@ -1,5 +1,4 @@
-﻿using CBHK.CustomControl.Interfaces;
-using CBHK.Service.Json;
+﻿using CBHK.Interface;
 using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
@@ -17,7 +16,6 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         private SolidColorBrush CorrectBrush = Brushes.Gray;
         private SolidColorBrush ErrorBrush = Brushes.Red;
         public ICustomWorldUnifiedPlan Plan { get; set; } = null;
-        public TreeViewItem currentItemReference = null;
         #endregion
 
         #region Property

@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility.Common
 {
     public class ScrollToSomeWhere
     {

@@ -1,7 +1,8 @@
 ﻿using CBHK.Common.Model;
+using CBHK.Common.Utility;
 using CBHK.CustomControl;
 using CBHK.Domain;
-using CBHK.GeneralTool;
+using CBHK.Utility.Common;
 using CBHK.View;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.View.Generator;
@@ -21,7 +22,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -33,44 +33,11 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
 {
     public partial class EditPageViewModel : ObservableObject
     {
-        #region 数据包搜索文本框内容
-        private string datapackSeacherValue = "";
-        public string DatapackSeacherValue
-        {
-            get => datapackSeacherValue;
-            set
-            {
-                SetProperty(ref datapackSeacherValue, value);
-                SearchForSpecifyDatapackNode();
-            }
-        }
-        #endregion
+        #region Field
 
-        #region 文本编辑器标签页数据源、数据包管理器树视图等数据源
-        public ObservableCollection<RichTabItems> FunctionModifyTabItems { get; set; } = [];
-        public ObservableCollection<TreeViewItem> DatapackTreeViewItems { get; set; } = [];
-        public ObservableCollection<TreeViewItem> DatapackTreeViewSearchResult { get; set; } = [];
-        #endregion
-
-        #region 文本编辑器标签页容器可见性
-        private Visibility functionModifyTabControlVisibility = Visibility.Visible;
-        public Visibility FunctionModifyTabControlVisibility
-        {
-            get => functionModifyTabControlVisibility;
-            set => SetProperty(ref functionModifyTabControlVisibility,value);
-        }
-        #endregion
-
-        #region 当前选中的文本编辑器
-        private RichTabItems selectedFileItem = null;
-        public RichTabItems SelectedFileItem
-        {
-            get => selectedFileItem;
-            set => SetProperty(ref selectedFileItem, value);
-        }
-        #endregion
-
-        #region 初始标签页
+        /// <summary>
+        /// 初始标签页
+        /// </summary>
         private RichTabItems WelComeTab = new()
         {
             Style = Application.Current.Resources["RichTabItemStyle"] as Style,
@@ -90,21 +57,14 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
             SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
             SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
         };
-        #endregion
-
-        #region 符号数据文件路径
         /// <summary>
         /// 符号结构文件
         /// </summary>
         private string symbolStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"\Resource\Configs\Common\SymbolStructure.json";
-        private string databaseFilePath = AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db";
         /// <summary>
         /// 语法字典
         /// </summary>
         public Dictionary<string, Dictionary<string, List<SyntaxTreeItem>>> SyntaxItemDicionary = [];
-        #endregion
-
-        #region 初始化数据结构所需标记
         /// <summary>
         /// 初始化语法字典记录命令部首
         /// </summary>
@@ -117,24 +77,32 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// 语法树数组
         /// </summary>
         public JArray DataArray = [];
-        #endregion
-
-        #region 画刷
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
         private SolidColorBrush darkGrayBrush = new((Color)ColorConverter.ConvertFromString("#1E1E1E"));
-        #endregion
-
+        private CBHKDataContext _context = null;
+        private RegexService _regexService;
+        private DataService _dataService = null;
+        private IContainerProvider _container;
+        private MainView home;
+        /// <summary>
+        /// 记录剪切状态
+        /// </summary>
+        bool IsCuted = false;
+        /// <summary>
+        /// 被剪切的节点
+        /// </summary>
+        TreeViewItem BeCopyOrCutNode = null;
+        private DatapackView datapack = null;
         #region 语言客户端
         private const int port = 5500;
         private const string ipString = "127.0.0.1";
-        // 创建一个Socket对象
+        /// <summary>
+        /// 创建一个Socket对象
+        /// </summary>
         public readonly Socket client = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         #endregion
-
         #region 补全数据中的常量
-        [GeneratedRegex(@"(?<={)[0-9\-]+(?=})")]
-        private static partial Regex ItemSlotMatcher();
         public Dictionary<string, string> CodeSnippetList = new() { { "dataModifyStorageFromSelf", "data modify storage id path set from entity @s path" },
             { "executeIfScoreSet","execute if score score_holder objective = score_holder objective" },
             { "scoreboardPlayersOperation","scoreboard players operation target_score_holder target_objective += source_score_holder source_objective" },
@@ -152,14 +120,14 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         public List<string> ScoreboardTypeList = [];
         public List<string> ScoreboardCustomIDList = [];
         public List<string> DamageTypeList = [];
-        public Dictionary<int,Dictionary<string,string>> EnchantmentIDAndNameGroupByVersionMap = [];
+        public Dictionary<int, Dictionary<string, string>> EnchantmentIDAndNameGroupByVersionMap = [];
         public List<string> EffectIDList = [];
         public List<string> ItemSlotList = [];
         public List<string> LootToolList = [];
         public List<string> ItemIDList = [];
         public List<string> BlockIDList = [];
         public List<string> EntityIDList = [];
-        public Dictionary<string,string> SoundIDAndNameMap = [];
+        public Dictionary<string, string> SoundIDAndNameMap = [];
         public List<string> selectors = ["@a", "@e", "@p", "@r", "@s"];
         public List<string> singleSelectors = ["@a[limit=1]", "@e[limit=1]", "@p", "@r", "@s"];
         public List<string> SelectorParameterValueTypes = ["Number", "PositiveNumber", "Double", "DoubleInterval", "PositiveDouble", "PositiveDoubleInterval", "IntInterval", "AdvancementsValue", "ScoresValue", "Int", "TagValue", "TeamValue", "NameValue", "EntityId", "FileReferrerValue", "JsonValue"];
@@ -181,39 +149,257 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         public Dictionary<string, GameRuleItem> GameRuleMap = [];
         #endregion
 
-        private CBHKDataContext _context = null;
-        private DataService _dataService = null;
-        private IContainerProvider _container;
-        private MainView home;
+        #endregion
+
+        #region Property
+        /// <summary>
+        /// 数据包搜索文本框内容
+        /// </summary>
+        [ObservableProperty]
+        private string _datapackSeacherText = "";
+        [ObservableProperty]
+        public ObservableCollection<RichTabItems> _functionModifyTabItems = [];
+        [ObservableProperty]
+        public ObservableCollection<TreeViewItem> _datapackTreeViewItems = [];
+        [ObservableProperty]
+        public ObservableCollection<TreeViewItem> _datapackTreeViewSearchResult = [];
+        /// <summary>
+        /// 函数编辑器标签页容器可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _functionModifyTabControlVisibility = Visibility.Visible;
 
         /// <summary>
-        /// 记录剪切状态
+        /// 当前选中的文本编辑器
         /// </summary>
-        bool IsCuted = false;
-        /// <summary>
-        /// 被剪切的节点
-        /// </summary>
-        TreeViewItem BeCopyOrCutNode = null;
+        [ObservableProperty]
+        private RichTabItems _selectedFileItem = null;
         /// <summary>
         /// 解决方案视图被选中的成员
         /// </summary>
-        TreeViewItem SolutionViewSelectedItem { get; set; } = null;
+        [ObservableProperty]
+        TreeViewItem _solutionViewSelectedItem = null;
+        [ObservableProperty]
+        public Dictionary<string, Dictionary<int, string>> _runtimeVariables = new() { { "bossbarID", [] }, { "storageID", [] }, { "targetObjective", [] }, { "tagValue", [] }, { "triggerObjective", [] }, { "teamID", [] } };
+        #endregion
 
-        private DatapackView datapack = null;
-
-        public Dictionary<string, Dictionary<int, string>> RuntimeVariables { get; set; } = new() { { "bossbarID", [] }, { "storageID", [] }, { "targetObjective", [] }, { "tagValue", [] }, { "triggerObjective", [] }, { "teamID", [] } };
-
-        public EditPageViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context,DataService dataService)
+        #region Method
+        public EditPageViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context,DataService dataService,RegexService regexService)
         {
             #region 客户端连接语言服务器
             client.Connect(new IPEndPoint(IPAddress.Parse(ipString), port));
             #endregion
 
+            _regexService = regexService;
             _dataService = dataService;
             _context = context;
             _container = container;
             home = mainView;
         }
+
+        /// <summary>
+        /// 初始化语法树
+        /// </summary>
+        /// <param name="currentArray"></param>
+        /// <param name="parent"></param>
+        private void InitSyntaxTree(JArray currentArray, StringBuilder currentKey, SyntaxTreeItem currentTreeItem = null)
+        {
+            string value = "";
+            currentKey ??= new();
+            for (int i = 0; i < currentArray.Count; i++)
+            {
+                if (currentArray[i] is JObject jobject)
+                {
+                    #region 检查是否为部首
+                    SyntaxTreeItem.SyntaxTreeItemType type = SyntaxTreeItem.SyntaxTreeItemType.Literal;
+                    if (jobject["radical"] is JToken radical)
+                    {
+                        value = radical.ToString();
+                        initRadical = value + "Radical";
+                        if (!currentKey.ToString().StartsWith("commands."))
+                            currentKey.Append("commands.");
+                        currentKey.Append(radical.ToString() + '.');
+                        if (!SyntaxItemDicionary.ContainsKey(initRadical))
+                            SyntaxItemDicionary.Add(initRadical, []);
+                    }
+                    else
+                    if (jobject["path"] is JToken token)
+                        value = token.ToString();
+                    #endregion
+                    #region 确定节点的类型
+                    if (jobject.ContainsKey("radical"))
+                        type = SyntaxTreeItem.SyntaxTreeItemType.Radical;
+                    else
+                    if (jobject.ContainsKey("type"))
+                    {
+                        if (jobject["type"]!.ToString() == "reference")
+                            type = SyntaxTreeItem.SyntaxTreeItemType.Reference;
+                        else
+                            if (jobject["type"]!.ToString() == "DataType")
+                            type = SyntaxTreeItem.SyntaxTreeItemType.DataType;
+                        else
+                            if (jobject["type"]!.ToString() == "redirect")
+                            type = SyntaxTreeItem.SyntaxTreeItemType.Redirect;
+                    }
+                    #endregion
+                    #region 把key或path添加进语法字典当作键
+                    SyntaxTreeItem syntaxTreeItem = new()
+                    {
+                        Text = value,
+                        Type = type,
+                        Children = []
+                    };
+
+                    if (jobject["Key"] is JToken key)
+                    {
+                        syntaxTreeItem.Key = key.ToString();
+                        currentKey.Append(key.ToString() + ".");
+                    }
+                    else
+                        if (jobject["path"] is JToken path)
+                    {
+                        currentKey.Append(path.ToString() + ".");
+                    }
+                    if (jobject["format"] is JToken format)
+                        syntaxTreeItem.Description = format.ToString();
+                    #endregion
+                    #region 添加子级作为父级的补全数据并加入语法字典
+                    if (SyntaxItemDicionary.TryGetValue(initRadical, out Dictionary<string, List<SyntaxTreeItem>> parameterDictionaries))
+                    {
+                        if (!parameterDictionaries.ContainsKey(currentKey.ToString()))
+                            parameterDictionaries.Add(currentKey.ToString(), [syntaxTreeItem]);
+                        else
+                            parameterDictionaries[currentKey.ToString()].Add(syntaxTreeItem);
+                        currentTreeItem?.Children.Add(syntaxTreeItem);
+                    }
+                    #endregion
+                    #region 处理递归
+                    if (currentArray[i]["Children"] is JArray subChildren)
+                    {
+                        initKeyLength = currentKey.Length;
+                        InitSyntaxTree(subChildren, currentKey, syntaxTreeItem);
+                    }
+                    #endregion
+                    #region 不执行递归时把最后一层的key删掉避免错误的拼接
+                    if (currentKey.Length > 0)
+                        currentKey.Remove(currentKey.Length - 1, 1);
+                    int lastDotIndex = currentKey.ToString().LastIndexOf('.') + 1;
+                    if (lastDotIndex != -1)
+                        currentKey.Remove(lastDotIndex, currentKey.Length - lastDotIndex);
+                    else
+                        currentKey.Clear();
+                    #endregion
+                }
+            }
+        }
+
+        /// <summary>
+        /// 搜索拥有指定数据的节点
+        /// </summary>
+        private async void SearchForSpecifyDatapackNode()
+        {
+            if (datapack is not null)
+            {
+                List<string> allSolutionEntries = [];
+                List<string> searchResult = [];
+                // Collect all file system entries
+                foreach (TreeViewItem item in DatapackTreeViewItems)
+                {
+                    if (Directory.Exists(item.Uid) || File.Exists(item.Uid))
+                        allSolutionEntries.AddRange(Directory.GetFileSystemEntries(item.Uid, "*.*", SearchOption.AllDirectories));
+                }
+                // Search for matching items
+                foreach (string item in allSolutionEntries)
+                {
+                    if (item[(item.LastIndexOf('\\') + 1)..].Contains(DatapackSeacherText))
+                    {
+                        searchResult.Add(item);
+                    }
+                }
+                await SearchForSpecifyDatapackNodeAsync(searchResult);
+            }
+        }
+
+        /// <summary>
+        /// 搜索拥有指定数据的节点
+        /// </summary>
+        /// <returns></returns>
+        private async Task SearchForSpecifyDatapackNodeAsync(List<string> searchResult)
+        {
+            await Task.Run(() =>
+            {
+                // Invoke UI-related logic on the UI thread
+                datapack.Dispatcher.Invoke(() =>
+                {
+                    List<TreeViewItem> nodesToDisplay = [];
+
+                    // Perform breadth-first search
+                    Queue<TreeViewItem> queue = new(DatapackTreeViewItems);
+                    while (queue.Count > 0)
+                    {
+                        TreeViewItem currentNode = queue.Dequeue();
+                        // If the node is null, skip it
+                        if (currentNode.Header is null) continue;
+                        // Check if the current node matches the search criteria
+                        if (NodeMatchesSearchCriteria(currentNode, searchResult))
+                        {
+                            currentNode.IsExpanded = searchResult.Select(item => item.Contains(currentNode.Uid)).Any();
+                            DatapackTreeItem header = currentNode.Header as DatapackTreeItem;
+                            string test = header.HeadText.Text;
+                            nodesToDisplay.Add(currentNode);
+                        }
+
+                        // Enqueue child nodes for further exploration
+                        foreach (TreeViewItem childNode in currentNode.Items)
+                            queue.Enqueue(childNode);
+                    }
+
+                    // Update the UI after processing all nodes
+                    queue = new(DatapackTreeViewItems);
+                    while (queue.Count > 0)
+                    {
+                        TreeViewItem currentNode = queue.Dequeue();
+                        if (nodesToDisplay.Contains(currentNode))
+                            currentNode.Visibility = Visibility.Visible;
+                        else
+                            currentNode.Visibility = Visibility.Collapsed;
+                        foreach (TreeViewItem childNode in currentNode.Items)
+                            queue.Enqueue(childNode);
+                    }
+                });
+            });
+        }
+
+        /// <summary>
+        /// 判断节点是否可以显示
+        /// </summary>
+        /// <param name="currentNode"></param>
+        /// <param name="searchResult"></param>
+        /// <returns></returns>
+        private bool NodeMatchesSearchCriteria(TreeViewItem currentNode, List<string> searchResult)
+        {
+            DatapackTreeItem header = currentNode.Header as DatapackTreeItem;
+            string targetValue = header.HeadText.Text;
+            bool matchHeaderContent = false;
+            for (int i = 0; i < searchResult.Count; i++)
+            {
+                if ((searchResult[i][(searchResult[i].LastIndexOf('\\') + 1)..].Contains(DatapackSeacherText) && searchResult[i].StartsWith(currentNode.Uid)) || DatapackSeacherText.Length == 0)
+                {
+                    matchHeaderContent = true;
+                    break;
+                }
+            }
+            return matchHeaderContent;
+        }
+        #endregion
+
+        #region Event
+        /// <summary>
+        /// 数据包内容结构树视图搜索文本更新
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void DatapackSeacherTextBox_TextChanged(object sender, TextChangedEventArgs e) => SearchForSpecifyDatapackNode();
 
         [RelayCommand]
         /// <summary>
@@ -297,51 +483,48 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
             #region 从数据库中读取所需变量
             Task.Run(() =>
             {
-                if (File.Exists(databaseFilePath))
-                {
-                    //添加物品槽位编号
-                    ItemSlotList = _dataService.GetItemSlotList();
-                    //添加附魔ID
-                    EnchantmentIDAndNameGroupByVersionMap = _dataService.GetEnchantmentIDAndNameGroupByVersionMap();
-                    //添加伤害类型
-                    DamageTypeList = _dataService.GetDamageTypeList();
-                    //添加维度
-                    DimensionIDList = _dataService.GetDimensionList();
-                    //添加选择器参数
-                    SelectorParameterList = _dataService.GetSelectorParameterList();
-                    //添加选择器参数值
-                    SelectorParameterValueList = _dataService.GetSelectorParameterValueList();
-                    //添加游戏规则名称
-                    GameRuleMap = _dataService.GetGameRuleMap();
-                    //添加队伍颜色
-                    TeamColorList = _dataService.GetTeamColorList();
-                    //添加Bossbar颜色
-                    BossbarColorList = _dataService.GetBossbarColorList();
-                    //添加Bossbar样式
-                    BossbarStyles = _dataService.GetBossbarColorList();
-                    //添加物品ID
-                    ItemIDList = _dataService.GetItemIDList();
-                    //添加方块Id
-                    BlockIDList = _dataService.GetBlockIDList();
-                    //添加实体Id
-                    EntityIDList = _dataService.GetEntityIDList();
-                    //添加粒子路径
-                    ParticleIDList = _dataService.GetParticleIDList();
-                    //添加音效路径
-                    SoundIDAndNameMap = _dataService.SoundIDAndNameMap();
-                    //添加生物属性
-                    MobAttributeIDList = _dataService.GetMobAttributeIDList();
-                    //添加药水id/生物状态
-                    EffectIDList = _dataService.GetMobEffectIDList();
-                    //添加进度列表
-                    ResourceFilePathes["advancementValue"].AddRange(_dataService.GetAdvancementList());
-                    //添加战利品表工具
-                    LootToolList = _dataService.GetLootToolList();
-                    //添加记分板准则
-                    ScoreboardTypeList = _dataService.GetScoreboardTypeList();
-                    //添加Custom命令空间下的ID
-                    ScoreboardCustomIDList = _dataService.GetScoreboardCustomIDList();
-                }
+                //添加物品槽位编号
+                ItemSlotList = _dataService.GetItemSlotList();
+                //添加附魔ID
+                EnchantmentIDAndNameGroupByVersionMap = _dataService.GetEnchantmentIDAndNameGroupByVersionMap();
+                //添加伤害类型
+                DamageTypeList = _dataService.GetDamageTypeList();
+                //添加维度
+                DimensionIDList = _dataService.GetDimensionList();
+                //添加选择器参数
+                SelectorParameterList = _dataService.GetSelectorParameterList();
+                //添加选择器参数值
+                SelectorParameterValueList = _dataService.GetSelectorParameterValueList();
+                //添加游戏规则名称
+                GameRuleMap = _dataService.GetGameRuleMap();
+                //添加队伍颜色
+                TeamColorList = _dataService.GetTeamColorList();
+                //添加Bossbar颜色
+                BossbarColorList = _dataService.GetBossbarColorList();
+                //添加Bossbar样式
+                BossbarStyles = _dataService.GetBossbarColorList();
+                //添加物品ID
+                ItemIDList = _dataService.GetItemIDList();
+                //添加方块Id
+                BlockIDList = _dataService.GetBlockIDList();
+                //添加实体Id
+                EntityIDList = _dataService.GetEntityIDList();
+                //添加粒子路径
+                ParticleIDList = _dataService.GetParticleIDList();
+                //添加音效路径
+                SoundIDAndNameMap = _dataService.SoundIDAndNameMap();
+                //添加生物属性
+                MobAttributeIDList = _dataService.GetMobAttributeIDList();
+                //添加药水id/生物状态
+                EffectIDList = _dataService.GetMobEffectIDList();
+                //添加进度列表
+                ResourceFilePathes["advancementValue"].AddRange(_dataService.GetAdvancementList());
+                //添加战利品表工具
+                LootToolList = _dataService.GetLootToolList();
+                //添加记分板准则
+                ScoreboardTypeList = _dataService.GetScoreboardTypeList();
+                //添加Custom命令空间下的ID
+                ScoreboardCustomIDList = _dataService.GetScoreboardCustomIDList();
             });
             #endregion
 
@@ -350,102 +533,6 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
             //DatapackTreeViewItems.Add(item);
             //DatapackTreeViewItems.Remove(item);
             //#endregion
-        }
-
-        /// <summary>
-        /// 初始化语法树
-        /// </summary>
-        /// <param name="currentArray"></param>
-        /// <param name="parent"></param>
-        private void InitSyntaxTree(JArray currentArray, StringBuilder currentKey, SyntaxTreeItem currentTreeItem = null)
-        {
-            string value = "";
-            currentKey ??= new();
-            for (int i = 0; i < currentArray.Count; i++)
-            {
-                if (currentArray[i] is JObject jobject)
-                {
-                    #region 检查是否为部首
-                    SyntaxTreeItem.SyntaxTreeItemType type = SyntaxTreeItem.SyntaxTreeItemType.Literal;
-                    if (jobject["radical"] is JToken radical)
-                    {
-                        value = radical.ToString();
-                        initRadical = value + "Radical";
-                        if (!currentKey.ToString().StartsWith("commands."))
-                            currentKey.Append("commands.");
-                        currentKey.Append(radical.ToString() + '.');
-                        if (!SyntaxItemDicionary.ContainsKey(initRadical))
-                            SyntaxItemDicionary.Add(initRadical, []);
-                    }
-                    else
-                    if (jobject["path"] is JToken token)
-                        value = token.ToString();
-                    #endregion
-                    #region 确定节点的类型
-                    if (jobject.ContainsKey("radical"))
-                        type = SyntaxTreeItem.SyntaxTreeItemType.Radical;
-                    else
-                    if (jobject.ContainsKey("type"))
-                    {
-                        if (jobject["type"]!.ToString() == "reference")
-                            type = SyntaxTreeItem.SyntaxTreeItemType.Reference;
-                        else
-                            if (jobject["type"]!.ToString() == "dataType")
-                            type = SyntaxTreeItem.SyntaxTreeItemType.DataType;
-                        else
-                            if (jobject["type"]!.ToString() == "redirect")
-                            type = SyntaxTreeItem.SyntaxTreeItemType.Redirect;
-                    }
-                    #endregion
-                    #region 把key或path添加进语法字典当作键
-                    SyntaxTreeItem syntaxTreeItem = new()
-                    {
-                        Text = value,
-                        Type = type,
-                        Children = []
-                    };
-
-                    if (jobject["key"] is JToken key)
-                    {
-                        syntaxTreeItem.Key = key.ToString();
-                        currentKey.Append(key.ToString() + ".");
-                    }
-                    else
-                        if (jobject["path"] is JToken path)
-                    {
-                        currentKey.Append(path.ToString() + ".");
-                    }
-                    if (jobject["format"] is JToken format)
-                        syntaxTreeItem.Description = format.ToString();
-                    #endregion
-                    #region 添加子级作为父级的补全数据并加入语法字典
-                    if (SyntaxItemDicionary.TryGetValue(initRadical, out Dictionary<string, List<SyntaxTreeItem>> parameterDictionaries))
-                    {
-                        if (!parameterDictionaries.ContainsKey(currentKey.ToString()))
-                            parameterDictionaries.Add(currentKey.ToString(), [syntaxTreeItem]);
-                        else
-                            parameterDictionaries[currentKey.ToString()].Add(syntaxTreeItem);
-                        currentTreeItem?.Children.Add(syntaxTreeItem);
-                    }
-                    #endregion
-                    #region 处理递归
-                    if (currentArray[i]["children"] is JArray subChildren)
-                    {
-                        initKeyLength = currentKey.Length;
-                        InitSyntaxTree(subChildren, currentKey, syntaxTreeItem);
-                    }
-                    #endregion
-                    #region 不执行递归时把最后一层的key删掉避免错误的拼接
-                    if (currentKey.Length > 0)
-                        currentKey.Remove(currentKey.Length - 1, 1);
-                    int lastDotIndex = currentKey.ToString().LastIndexOf('.') + 1;
-                    if (lastDotIndex != -1)
-                        currentKey.Remove(lastDotIndex, currentKey.Length - lastDotIndex);
-                    else
-                        currentKey.Clear();
-                    #endregion
-                }
-            }
         }
 
         /// <summary>
@@ -466,103 +553,6 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         public void SolutionViewer_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             SolutionViewSelectedItem = (sender as TreeView).SelectedItem as TreeViewItem;
-        }
-
-        /// <summary>
-        /// 搜索拥有指定数据的节点
-        /// </summary>
-        private async void SearchForSpecifyDatapackNode()
-        {
-            if (datapack != null)
-            {
-                List<string> allSolutionEntries = [];
-                List<string> searchResult = [];
-                // Collect all file system entries
-                foreach (TreeViewItem item in DatapackTreeViewItems)
-                {
-                    if (Directory.Exists(item.Uid) || File.Exists(item.Uid))
-                        allSolutionEntries.AddRange(Directory.GetFileSystemEntries(item.Uid, "*.*", SearchOption.AllDirectories));
-                }
-                // Search for matching items
-                foreach (string item in allSolutionEntries)
-                {
-                    if (item[(item.LastIndexOf('\\') + 1)..].Contains(DatapackSeacherValue))
-                        searchResult.Add(item);
-                }
-                await SearchForSpecifyDatapackNodeAsync(searchResult);
-            }
-        }
-
-        /// <summary>
-        /// 搜索拥有指定数据的节点
-        /// </summary>
-        /// <returns></returns>
-        private async Task SearchForSpecifyDatapackNodeAsync(List<string> searchResult)
-        {
-            await Task.Run(() =>
-            {
-                // Invoke UI-related logic on the UI thread
-                datapack.Dispatcher.Invoke(() =>
-                {
-                    List<TreeViewItem> nodesToDisplay = [];
-
-                    // Perform breadth-first search
-                    Queue<TreeViewItem> queue = new(DatapackTreeViewItems);
-                    while (queue.Count > 0)
-                    {
-                        TreeViewItem currentNode = queue.Dequeue();
-                        // If the node is null, skip it
-                        if (currentNode.Header is null) continue;
-                        // Check if the current node matches the search criteria
-                        if (NodeMatchesSearchCriteria(currentNode, searchResult))
-                        {
-                            currentNode.IsExpanded = searchResult.Select(item => item.Contains(currentNode.Uid)).Any();
-                            DatapackTreeItem header = currentNode.Header as DatapackTreeItem;
-                            string test = header.HeadText.Text;
-                            nodesToDisplay.Add(currentNode);
-                        }
-
-                        // Enqueue child nodes for further exploration
-                        foreach (TreeViewItem childNode in currentNode.Items)
-                            queue.Enqueue(childNode);
-                    }
-
-                    // Update the UI after processing all nodes
-                    queue = new(DatapackTreeViewItems);
-                    while (queue.Count > 0)
-                    {
-                        TreeViewItem currentNode = queue.Dequeue();
-                        if (nodesToDisplay.Contains(currentNode))
-                            currentNode.Visibility = Visibility.Visible;
-                        else
-                            currentNode.Visibility = Visibility.Collapsed;
-                        foreach (TreeViewItem childNode in currentNode.Items)
-                            queue.Enqueue(childNode);
-                    }
-                });
-            });
-        }
-
-        /// <summary>
-        /// 判断节点是否可以显示
-        /// </summary>
-        /// <param name="currentNode"></param>
-        /// <param name="searchResult"></param>
-        /// <returns></returns>
-        private bool NodeMatchesSearchCriteria(TreeViewItem currentNode, List<string> searchResult)
-        {
-            DatapackTreeItem header = currentNode.Header as DatapackTreeItem;
-            string targetValue = header.HeadText.Text;
-            bool matchHeaderContent = false;
-            for (int i = 0; i < searchResult.Count; i++)
-            {
-                if ((searchResult[i][(searchResult[i].LastIndexOf('\\') + 1)..].Contains(DatapackSeacherValue) && searchResult[i].StartsWith(currentNode.Uid)) || DatapackSeacherValue.Length == 0)
-                {
-                    matchHeaderContent = true;
-                    break;
-                }
-            }
-            return matchHeaderContent;
         }
 
         [RelayCommand]
@@ -875,7 +865,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
                     };
 
                     EditPageView editPageView = _container.Resolve<EditPageView>();
-                    McfunctionIntellisenseCodeEditor textEditor = new(editPageView)
+                    McfunctionIntellisenseCodeEditor textEditor = new(editPageView,_regexService)
                     {
                         ShowLineNumbers = true,
                         Background = transparentBrush,
@@ -930,5 +920,6 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
             RichTabItems parent = textEditor.Parent as RichTabItems;
             parent.IsContentSaved = false;
         }
+        #endregion
     }
 }

@@ -1,6 +1,5 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
-using CBHK.GeneralTool.TreeViewComponentsHelper;
 using CBHK.Model.Common;
 using CBHK.View;
 using CBHK.ViewModel.Common;
@@ -19,6 +18,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using CBHK.Domain;
+using CBHK.Common.Utility;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -63,7 +63,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public LootTableViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context) : base(container, mainView,context)        
+        public LootTableViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context,RegexService regexService) : base(container, mainView,context,regexService)
         {
             #region 添加数据上下文所需的枚举集合与转换字典数据
             EnumIDDictionary.Add("流体ID", ["minecraft:water", "minecraft:lava"]);

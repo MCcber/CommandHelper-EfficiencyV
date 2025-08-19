@@ -1,5 +1,5 @@
 ﻿
-using CBHK.GeneralTool;
+using CBHK.Utility;
 
 namespace CBHK.View.Generator
 {

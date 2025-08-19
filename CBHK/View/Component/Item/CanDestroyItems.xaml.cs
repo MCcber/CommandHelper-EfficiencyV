@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool;
+using CBHK.Utility.Common;
 using CBHK.ViewModel.Component.Item;
 using System.Collections.ObjectModel;
 using System.Windows;

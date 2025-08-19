@@ -6,9 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Collections.ObjectModel;
-using CBHK.GeneralTool.MessageTip;
 using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 using System.Text;
 using ICSharpCode.AvalonEdit;
 using Microsoft.Win32;
@@ -17,31 +15,44 @@ using SharpNBT;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using CBHK.ViewModel;
 using Prism.Ioc;
 using CBHK.View;
 using CBHK.View.Generator;
+using CBHK.Utility.MessageTip;
+using CBHK.Common.Utility;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class OnlyOneCommandViewModel : ObservableObject
+    public partial class OnlyOneCommandViewModel(IContainerProvider container, MainView mainView,RegexService regexService) : ObservableObject
     {
-        //本生成器的图标路径
-        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconCommandBlock.png";
-
+        #region Field
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        public Window home = mainView;
+        private IContainerProvider _container = container;
+        private RegexService _regexService = regexService;
+        /// <summary>
+        /// 本生成器的图标路径
+        /// </summary>
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconCommandBlock.png";
         SolidColorBrush tranparentBrush = Brushes.Transparent;
         SolidColorBrush textBrush = Brushes.White;
         SolidColorBrush caretBrush = Brushes.White;
+        #endregion
 
-        #region 显示结果
+        #region Property
+        /// <summary>
+        /// 显示结果
+        /// </summary>
         [ObservableProperty]
         public bool _showGeneratorResult = false;
-        #endregion
 
         /// <summary>
         /// OOC标签页数据源
         /// </summary>
-        public ObservableCollection<RichTabItems> OocTabSource { get; set; } = [
+        [ObservableProperty]
+        public ObservableCollection<RichTabItems> _oocTabSource = [
             new RichTabItems()
         {
             Style = Application.Current.Resources["RichTabItemStyle"] as Style,
@@ -60,31 +71,13 @@ namespace CBHK.ViewModel.Generator
         }];
 
         /// <summary>
-        /// 主页引用
+        /// 当前选中的标签页
         /// </summary>
-        public Window home = null;
-
-        #region 当前选中的标签页
         [ObservableProperty]
         private RichTabItems _selectedItem = null;
-        private IContainerProvider _container;
         #endregion
 
-        //[GeneratedRegex(@"summon falling_block ~ ~[-+]?[0-9]*\.?[0-9]+ ~ {""Time"":1,""Block"":""minecraft:redstone_block"",""Motion"":\[0,-1,0\],""Passengers"":\[{""id"":""falling_block"",""Time"":""1"",""Block"":""minecraft:activator_rail"",""Passengers"":\[{""id"":""commandblock_minecart"",""Command"":""blockdata ~ ~\-2 ~ {\\\""auto\\\"":0,""Command"":\""\""}""},{""id"":""commandblock_minecart"",""Command"":""setblock ~1 ~\-2 ~ repeating_command_block 5 replace {""Command"":\\\""\\\"",\\\""auto\\\"":""1""}""},")]
-        //private static partial Regex OocStart();
-
-        //[GeneratedRegex(@"{""id"":""commandblock_minecart"",""Command"":""setblock ~ ~1 ~ command_block 0 replace {\\\""auto\\\"":""1"",""Command"":\""fill ~ ~ ~ ~ ~-2 ~ air\""}""},{""id"":""commandblock_minecart"",""Command"":""kill @e\[type=commandblock_minecart,r=1\]""}]}]}", RegexOptions.RightToLeft)]
-        //private static partial Regex OocEnd();
-
-        [GeneratedRegex(@"(?<=Command:\\\"")([\w \:""\[\]'()!@#$%^&*\-=+\\|;,./?<>`~]*)+(?=\\\"")")]
-        private static partial Regex GetCommand();
-
-        public OnlyOneCommandViewModel(IContainerProvider container,MainView mainView)
-        {
-            _container = container;
-            home = mainView;
-        }
-
+        #region Event
         [RelayCommand]
         /// <summary>
         /// 从文件导入
@@ -255,7 +248,7 @@ namespace CBHK.ViewModel.Generator
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
-                    displayerViewModel.GeneratorResult(Result, "OOC", icon_path);
+                    displayerViewModel.GeneratorResult(Result, "OOC", iconPath);
                 }
             }
             else
@@ -264,5 +257,6 @@ namespace CBHK.ViewModel.Generator
                 Message.PushMessage("Ooc生成成功！数据已进入剪切板", MessageBoxImage.Information);
             }
         }
+        #endregion
     }
 }

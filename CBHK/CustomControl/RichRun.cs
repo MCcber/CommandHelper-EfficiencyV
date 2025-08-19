@@ -1,5 +1,4 @@
-﻿using CBHK.GeneralTool;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -11,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using CBHK.CustomControl.ColorPickerComponents;
+using CBHK.Utility.Common;
 
 namespace CBHK.CustomControl
 {

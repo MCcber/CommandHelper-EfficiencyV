@@ -10,7 +10,7 @@ using Prism.Ioc;
 using System.Linq;
 using System.Windows;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility
 {
     public partial class DistributorGenerator : ObservableObject
     {
@@ -46,7 +46,6 @@ namespace CBHK.GeneralTool
             CBHK.WindowState = _config.Visibility switch
             {
                 "最小化" or "关闭" => WindowState.Minimized,
-                "保持不变" => WindowState.Normal,
                 _ => WindowState.Normal
             };
         }

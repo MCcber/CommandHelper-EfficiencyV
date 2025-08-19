@@ -1,7 +1,7 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.Common.Utility;
+using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
 using CBHK.Domain;
-using CBHK.GeneralTool.TreeViewComponentsHelper;
 using CBHK.Model.Common;
 using CBHK.View;
 using CBHK.ViewModel.Common;
@@ -64,7 +64,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public ChatTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context):base(container, mainView,context)
+        public ChatTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context,RegexService regexService):base(container, mainView,context,regexService)
         {
         }
         #endregion

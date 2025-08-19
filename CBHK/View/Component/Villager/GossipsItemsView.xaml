@@ -47,7 +47,7 @@
             Height="30"
             Background="{StaticResource CloseWhite}"
             Command="{Binding DeleteCommand}"
-            CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+            CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
             Foreground="Black"
             PressedBackground="{StaticResource CloseWhiteHover}"
             Style="{DynamicResource IconTextButton}" />
@@ -83,13 +83,7 @@
             Foreground="White"
             Maximum="2147483647"
             Minimum="0"
-            Style="{DynamicResource NumberBoxStyle}">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:CallMethodAction MethodName="Value_Loaded" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
-        </Slider>
+            Style="{DynamicResource NumberBoxStyle}" />
         <TextBlock
             Grid.Row="2"
             Grid.Column="0"
@@ -133,7 +127,7 @@
             ItemsSource="{Binding GossipTypeList}"
             SelectedIndex="0"
             SelectedItem="{Binding SelectedTypeItem}"
-            SelectedValuePath="{Binding selectedTypeItemPath}"
+            SelectedValuePath="{Binding SelectedTypeItemPath}"
             Style="{DynamicResource TextComboBoxStyle}" />
         <CustomControl:IconTextButtons
             Grid.Row="3"

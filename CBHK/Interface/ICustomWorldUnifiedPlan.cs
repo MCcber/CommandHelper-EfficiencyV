@@ -1,5 +1,7 @@
-﻿using CBHK.CustomControl.JsonTreeViewComponents;
+﻿using CBHK.CustomControl;
+using CBHK.CustomControl.JsonTreeViewComponents;
 using CBHK.Model.Common;
+using CBHK.Utility.Common;
 using ICSharpCode.AvalonEdit.Document;
 using System;
 using System.Collections.Generic;
@@ -7,7 +9,7 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using static CBHK.Model.Common.Enums;
 
-namespace CBHK.CustomControl.Interfaces
+namespace CBHK.Interface
 {
     public interface ICustomWorldUnifiedPlan
     {

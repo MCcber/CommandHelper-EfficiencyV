@@ -20,7 +20,8 @@ using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CBHK.Domain;
 using System.Windows.Controls;
-using CBHK.CustomControl.Interfaces;
+using CBHK.Common.Utility;
+using CBHK.Interface;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -83,7 +84,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public CustomWorldGeneratorViewModel(IContainerProvider container, MainView mainView, CBHKDataContext context) : base(container, mainView,context)
+        public CustomWorldGeneratorViewModel(IContainerProvider container, MainView mainView, CBHKDataContext context,RegexService regexService) : base(container, mainView,context,regexService)
         {
             #region 添加数据上下文所需的枚举集合与转换字典数据
             EnumIDDictionary.Add("流体ID", ["minecraft:water", "minecraft:lava"]);

@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.Interfaces;
+using CBHK.Interface;
 using System;
 using System.Threading.Tasks;
 using System.Windows;

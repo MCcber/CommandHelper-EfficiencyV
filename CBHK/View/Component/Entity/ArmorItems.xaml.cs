@@ -1,4 +1,4 @@
-﻿using CBHK.GeneralTool;
+﻿using CBHK.Utility.Common;
 using CBHK.View.Component.Item;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Component.Item;

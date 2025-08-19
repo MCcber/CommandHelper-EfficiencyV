@@ -7,8 +7,8 @@ using System.IO;
 using System.Windows.Data;
 using System;
 using System.Globalization;
-using CBHK.GeneralTool;
 using System.Collections.ObjectModel;
+using CBHK.Utility.Common;
 
 namespace CBHK.CustomControl
 {

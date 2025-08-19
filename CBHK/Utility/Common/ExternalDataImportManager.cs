@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool.MessageTip;
 using CBHK.Model.Common;
 using CBHK.Model.Generator.Tag;
+using CBHK.Utility.MessageTip;
 using CBHK.View.Component.Entity;
 using CBHK.View.Component.FireworkRocket;
 using CBHK.View.Component.Item;
@@ -29,7 +29,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using static CBHK.Model.Common.Enums;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility.Common
 {
     public static class ExternalDataImportManager
     {
@@ -559,7 +559,7 @@ namespace CBHK.GeneralTool
                 {
                     context.AddGossipItem();
                     JToken value = gossip.SelectToken("Value");
-                    GossipsItemsViewModel gossipsItemsViewModel = context.gossipItems[^1].DataContext as GossipsItemsViewModel;
+                    GossipsItemsViewModel gossipsItemsViewModel = context.GossipItemList[^1].DataContext as GossipsItemsViewModel;
                     if (gossip.SelectToken("Target") is JArray targetUID)
                         gossipsItemsViewModel.TargetText = targetUID[0].ToString() + "," + targetUID[1].ToString() + "," + targetUID[2].ToString() + "," + targetUID[3].ToString();
                     if (gossip.SelectToken("Type") is JObject type)

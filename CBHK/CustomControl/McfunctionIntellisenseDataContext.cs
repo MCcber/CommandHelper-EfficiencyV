@@ -6,7 +6,6 @@ using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Rendering;
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
 
@@ -170,9 +169,6 @@ namespace CBHK.CustomControl
     public partial class CompletedItemData : ICompletionData
     {
         #region 字段
-        [GeneratedRegex(@"[a-zA-Z0-9\:\._\-+]")]
-        private static partial Regex IsWord();
-
         /// <summary>
         /// 主程序状态更新委托
         /// </summary>

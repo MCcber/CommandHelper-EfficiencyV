@@ -1,8 +1,8 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
 using CBHK.Model.Generator.Tag;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -26,10 +26,24 @@ namespace CBHK.ViewModel.Generator
 {
     public partial class TagViewModel : ObservableObject
     {
-        #region 是否替换
-        [ObservableProperty]
-        private bool _replace = false;
-        #endregion
+        #region Field
+        ListView TagZone = null;
+        SolidColorBrush LightOrangeBrush = new((Color)ColorConverter.ConvertFromString("#F0D08C"));
+        private IContainerProvider _container = null;
+        private CBHKDataContext _context = null;
+        private DataService _dataService;
+        private IProgress<TagItemTemplate> AddItemProgress = null;
+        private IProgress<(int, string, string, string, string, bool)> SetItemProgress = null;
+        private IProgress<bool> InitSelectedTypeItemProgress = null;
+        private int LastSelectedIndex = 0;
+        /// <summary>
+        /// 主页引用
+        /// </summary>
+        private Window home = null;
+        /// <summary>
+        /// 对象数据源
+        /// </summary>
+        CollectionViewSource TagViewSource = null;
 
         #region 存储最终生成的列表
         public List<string> Blocks = [];
@@ -39,195 +53,62 @@ namespace CBHK.ViewModel.Generator
         public List<string> Biomes = [];
         #endregion
 
-        #region 搜索内容
-        private string searchText;
-        public string SearchText
-        {
-            get => searchText;
-            set
-            {
-                searchText = value;
-                TagViewSource?.View.Refresh();
-            }
-        }
         #endregion
 
-        #region 所有标签成员
-        [ObservableProperty]
-        private ObservableCollection<TagItemTemplate> _tagItemList = [];
-        #endregion
-
-        #region 版本列表
-        [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionList = [new TextComboBoxItem() { Text = "1.20.4" }];
-        [ObservableProperty]
-        private TextComboBoxItem _selectedVersion = null;
-        #endregion
-
-        #region 字段
-        ListView TagZone = null;
-        SolidColorBrush LightOrangeBrush = new((Color)ColorConverter.ConvertFromString("#F0D08C"));
-        private IContainerProvider _container = null;
-        private CBHKDataContext _context = null;
-        private DataService _dataService;
-        private IProgress<TagItemTemplate> AddItemProgress = null;
-        private IProgress<(int, string, string, string, string, bool)> SetItemProgress = null;
-        private IProgress<bool> InitSelectedTypeItemProgress = null;
-        #endregion
-
-        #region 当前选中的值成员
-        [ObservableProperty]
-        private TagItemTemplate _selectedItem = null;
-
-        private int LastSelectedIndex = 0;
-        #endregion
-
-        #region 当前选中的类型成员
-        private TextComboBoxItem selectedTypeItem = null;
-        public TextComboBoxItem SelectedTypeItem
-        {
-            get => selectedTypeItem;
-            set
-            {
-                SetProperty(ref selectedTypeItem, value);
-                TypeSelectionChanged();
-            }
-        }
-        #endregion
-
-        #region 全选或反选
-        private bool selectedAll = false;
-        public bool SelectedAll
-        {
-            get => selectedAll;
-            set
-            {
-                selectedAll = value;
-                SetProperty(ref selectedAll,value);
-                SolidColorBrush brush;
-                if (selectedAll)
-                    brush = LightOrangeBrush;
-                else
-                    brush = null;
-                if (TagViewSource != null)
-                {
-                    foreach (TagItemTemplate tagItemTemplate in TagViewSource.View)
-                    {
-                        if (tagItemTemplate.DisplayId.Trim().Length > 0)
-                        {
-                            string itemString = tagItemTemplate.DisplayId;
-                            tagItemTemplate.BeChecked = selectedAll;
-                            tagItemTemplate.Background = brush;
-
-                            if (tagItemTemplate.BeChecked.Value)
-                            {
-                                if (tagItemTemplate.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
-                                    Items.Add("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
-                                    Entities.Add("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
-                                    Blocks.Add("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
-                                    Biomes.Add("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                                    GameEvent.Add("\"minecraft:" + itemString + "\",");
-                            }
-                            else
-                            {
-                                if (tagItemTemplate.DataType == "ItemView" && Items.Contains("\"minecraft:" + itemString + "\","))
-                                    Items.Remove("\"minecraft:" + itemString + "\",");
-                                if (tagItemTemplate.DataType == "EntityView" && Entities.Contains("\"minecraft:" + itemString + "\","))
-                                    Entities.Remove("\"minecraft:" + itemString + "\",");
-                                if (tagItemTemplate.DataType == "Block&ItemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
-                                    Blocks.Remove("\"minecraft:" + itemString + "\",");
-                                if (tagItemTemplate.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
-                                    Biomes.Remove("\"minecraft:" + itemString + "\",");
-                                if (tagItemTemplate.DataType == "GameEvent" && GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                                    GameEvent.Remove("\"minecraft:" + itemString + "\",");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        private bool reverseAll = false;
-        public bool ReverseAll
-        {
-            get => reverseAll;
-            set
-            {
-                reverseAll = value;
-                SetProperty(ref reverseAll,value);
-                if (TagViewSource != null)
-                {
-                    foreach (TagItemTemplate tagItemTemplate in TagViewSource.View)
-                    {
-                        if (tagItemTemplate.DisplayId.Trim().Length > 0)
-                        {
-                            string itemString = tagItemTemplate.DisplayId.Contains(' ') ? tagItemTemplate.DisplayId[..tagItemTemplate.DisplayId.IndexOf(' ')] : tagItemTemplate.DisplayId;
-                            tagItemTemplate.BeChecked = !tagItemTemplate.BeChecked.Value;
-                            if (tagItemTemplate.BeChecked.Value)
-                                tagItemTemplate.Background = LightOrangeBrush;
-                            else
-                                tagItemTemplate.Background = null;
-                            if (tagItemTemplate.BeChecked.Value)
-                            {
-                                if (tagItemTemplate.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
-                                    Items.Add("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
-                                    Entities.Add("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
-                                    Blocks.Add("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
-                                    Biomes.Add("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                                    GameEvent.Add("\"minecraft:" + itemString + "\",");
-                            }
-                            else
-                            {
-                                if (tagItemTemplate.DataType == "ItemView")
-                                    Items.Remove("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "EntityView")
-                                    Entities.Remove("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "Block&ItemView")
-                                    Blocks.Remove("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "Biome")
-                                    Biomes.Remove("\"minecraft:" + itemString + "\",");
-                                else
-                                if (tagItemTemplate.DataType == "GameEvent")
-                                    GameEvent.Remove("\"minecraft:" + itemString + "\",");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        #endregion
-
+        #region Property
         /// <summary>
-        /// 主页引用
+        /// 标签生成器的过滤类型数据源
         /// </summary>
-        private Window home = null;
-
-        /// <summary>
-        /// 对象数据源
-        /// </summary>
-        CollectionViewSource TagViewSource = null;
-        //标签生成器的过滤类型数据源
         [ObservableProperty]
         private ObservableCollection<TextComboBoxItem> _typeItemSource = [];
+        /// <summary>
+        /// 是否替换
+        /// </summary>
+        [ObservableProperty]
+        private bool _replace = false;
+        /// <summary>
+        /// 所有标签成员
+        /// </summary>
+        [ObservableProperty]
+        private ObservableCollection<TagItemTemplate> _tagItemList = [];
+        /// <summary>
+        /// 版本列表
+        /// </summary>
+        [ObservableProperty]
+        private ObservableCollection<TextComboBoxItem> _versionList = [new TextComboBoxItem() { Text = "1.20.4" }];
+        /// <summary>
+        /// 已选中版本
+        /// </summary>
+        [ObservableProperty]
+        private TextComboBoxItem _selectedVersion = null;
+        /// <summary>
+        /// 当前选中的值成员
+        /// </summary>
+        [ObservableProperty]
+        private TagItemTemplate _selectedItem = null;
+        /// <summary>
+        /// 搜索内容
+        /// </summary>
+        [ObservableProperty]
+        private string _searchText;
+        /// <summary>
+        /// 当前选中的类型成员
+        /// </summary>
+        [ObservableProperty]
+        private TextComboBoxItem _selectedTypeItem = null;
+        /// <summary>
+        /// 全选
+        /// </summary>
+        [ObservableProperty]
+        private bool _selectedAll = false;
+        /// <summary>
+        /// 反选
+        /// </summary>
+        [ObservableProperty]
+        private bool _reverseAll = false;
+        #endregion
 
+        #region Method
         public TagViewModel(IContainerProvider container,DataService dataService, CBHKDataContext context, MainView mainView)
         {
             home = mainView;
@@ -260,6 +141,59 @@ namespace CBHK.ViewModel.Generator
             });
         }
 
+        /// <summary>
+        /// 反转目标成员的值
+        /// </summary>
+        /// <param name="CurrentItem"></param>
+        private void ReverseValue(TagItemTemplate CurrentItem)
+        {
+            int index = TagItemList.IndexOf(CurrentItem);
+            int itemCount = _context.ItemSet.Count();
+            int entityCount = _context.EntitySet.Count();
+            string itemString = CurrentItem.DisplayId;
+            if (itemString.Trim().Length > 0)
+            {
+                CurrentItem.BeChecked = !CurrentItem.BeChecked;
+                if (CurrentItem.BeChecked.Value)
+                    CurrentItem.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F0D08C"));
+                else
+                    CurrentItem.Background = null;
+                if (CurrentItem.BeChecked.Value)
+                {
+                    if (CurrentItem.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
+                        Items.Add("\"minecraft:" + itemString + "\",");
+                    else
+                    if (CurrentItem.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
+                        Entities.Add("\"minecraft:" + itemString + "\",");
+                    else
+                    if (CurrentItem.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
+                        Blocks.Add("\"minecraft:" + itemString + "\",");
+                    else
+                    if (CurrentItem.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
+                        Biomes.Add("\"minecraft:" + itemString + "\",");
+                    else
+                    if (CurrentItem.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
+                        GameEvent.Add("\"minecraft:" + itemString + "\",");
+                }
+                else
+                {
+                    if (CurrentItem.DataType == "ItemView" && Items.Contains("\"minecraft:" + itemString + "\","))
+                        Items.Remove("\"minecraft:" + itemString + "\",");
+                    if (CurrentItem.DataType == "EntityView" && Entities.Contains("\"minecraft:" + itemString + "\","))
+                        Entities.Remove("\"minecraft:" + itemString + "\",");
+                    if (CurrentItem.DataType == "Block&ItemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
+                        Blocks.Remove("\"minecraft:" + itemString + "\",");
+                    if (CurrentItem.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
+                        Biomes.Remove("\"minecraft:" + itemString + "\",");
+                    if (CurrentItem.DataType == "GameEvent" && GameEvent.Contains("\"minecraft:" + itemString + "\","))
+                        GameEvent.Remove("\"minecraft:" + itemString + "\",");
+                }
+            }
+        }
+
+        #endregion
+
+        #region Event
         [RelayCommand]
         /// <summary>
         /// 从剪切板导入标签数据
@@ -417,13 +351,16 @@ namespace CBHK.ViewModel.Generator
         }
 
         /// <summary>
-        /// 更新过滤类型
+        /// 背包视图载入事件
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void TypeSelectionChanged()
+        public void ListViewLoaded(object sender, RoutedEventArgs e)
         {
-            TagViewSource?.View?.Refresh();
+            TagZone = sender as ListView;
+            Window parent = Window.GetWindow(TagZone);
+            TagViewSource = parent.FindResource("TagItemSource") as CollectionViewSource;
+            TagViewSource.Filter += CollectionViewSource_Filter;
         }
 
         [RelayCommand]
@@ -489,68 +426,137 @@ namespace CBHK.ViewModel.Generator
         }
 
         /// <summary>
-        /// 背包视图载入事件
+        /// 更新过滤类型
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ListViewLoaded(object sender, RoutedEventArgs e)
-        {
-            #region 获取数据源引用，订阅过滤事件
-            TagZone = sender as ListView;
-            Window parent = Window.GetWindow(TagZone);
-            TagViewSource = parent.FindResource("TagItemSource") as CollectionViewSource;
-            TagViewSource.Filter += CollectionViewSource_Filter;
-            #endregion
-        }
+        public void TypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => TagViewSource?.View?.Refresh();
 
         /// <summary>
-        /// 反转目标成员的值
+        /// 更新搜索结果视图
         /// </summary>
-        /// <param name="CurrentItem"></param>
-        private void ReverseValue(TagItemTemplate CurrentItem)
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e) => TagViewSource?.View?.Refresh();
+
+        /// <summary>
+        /// 全选
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SelectAll_Click(object sender, RoutedEventArgs e)
         {
-            int index = TagItemList.IndexOf(CurrentItem);
-            int itemCount = _context.ItemSet.Count();
-            int entityCount = _context.EntitySet.Count();
-            string itemString = CurrentItem.DisplayId;
-            if (itemString.Trim().Length > 0)
+            SolidColorBrush brush;
+            if (SelectedAll)
             {
-                CurrentItem.BeChecked = !CurrentItem.BeChecked;
-                if (CurrentItem.BeChecked.Value)
-                    CurrentItem.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F0D08C"));
-                else
-                    CurrentItem.Background = null;
-                if (CurrentItem.BeChecked.Value)
+                brush = LightOrangeBrush;
+            }
+            else
+            {
+                brush = null;
+            }
+            if (TagViewSource is not null)
+            {
+                foreach (TagItemTemplate tagItemTemplate in TagViewSource.View)
                 {
-                    if (CurrentItem.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
-                        Items.Add("\"minecraft:" + itemString + "\",");
-                    else
-                    if (CurrentItem.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
-                        Entities.Add("\"minecraft:" + itemString + "\",");
-                    else
-                    if (CurrentItem.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
-                        Blocks.Add("\"minecraft:" + itemString + "\",");
-                    else
-                    if (CurrentItem.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
-                        Biomes.Add("\"minecraft:" + itemString + "\",");
-                    else
-                    if (CurrentItem.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                        GameEvent.Add("\"minecraft:" + itemString + "\",");
-                }
-                else
-                {
-                    if (CurrentItem.DataType == "ItemView" && Items.Contains("\"minecraft:" + itemString + "\","))
-                        Items.Remove("\"minecraft:" + itemString + "\",");
-                    if (CurrentItem.DataType == "EntityView" && Entities.Contains("\"minecraft:" + itemString + "\","))
-                        Entities.Remove("\"minecraft:" + itemString + "\",");
-                    if (CurrentItem.DataType == "Block&ItemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
-                        Blocks.Remove("\"minecraft:" + itemString + "\",");
-                    if (CurrentItem.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
-                        Biomes.Remove("\"minecraft:" + itemString + "\",");
-                    if (CurrentItem.DataType == "GameEvent" && GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                        GameEvent.Remove("\"minecraft:" + itemString + "\",");
+                    if (tagItemTemplate.DisplayId.Trim().Length > 0)
+                    {
+                        string itemString = tagItemTemplate.DisplayId;
+                        tagItemTemplate.BeChecked = SelectedAll;
+                        tagItemTemplate.Background = brush;
+
+                        if (tagItemTemplate.BeChecked.Value)
+                        {
+                            if (tagItemTemplate.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
+                                Items.Add("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
+                                Entities.Add("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
+                                Blocks.Add("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
+                                Biomes.Add("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
+                                GameEvent.Add("\"minecraft:" + itemString + "\",");
+                        }
+                        else
+                        {
+                            if (tagItemTemplate.DataType == "ItemView" && Items.Contains("\"minecraft:" + itemString + "\","))
+                                Items.Remove("\"minecraft:" + itemString + "\",");
+                            if (tagItemTemplate.DataType == "EntityView" && Entities.Contains("\"minecraft:" + itemString + "\","))
+                                Entities.Remove("\"minecraft:" + itemString + "\",");
+                            if (tagItemTemplate.DataType == "Block&ItemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
+                                Blocks.Remove("\"minecraft:" + itemString + "\",");
+                            if (tagItemTemplate.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
+                                Biomes.Remove("\"minecraft:" + itemString + "\",");
+                            if (tagItemTemplate.DataType == "GameEvent" && GameEvent.Contains("\"minecraft:" + itemString + "\","))
+                                GameEvent.Remove("\"minecraft:" + itemString + "\",");
+                        }
+                    }
                 }
             }
         }
+
+        /// <summary>
+        /// 反选
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ReverseAll_Click(object sender, RoutedEventArgs e)
+        {
+            if (TagViewSource is not null)
+            {
+                foreach (TagItemTemplate tagItemTemplate in TagViewSource.View)
+                {
+                    if (tagItemTemplate.DisplayId.Trim().Length > 0)
+                    {
+                        string itemString = tagItemTemplate.DisplayId.Contains(' ') ? tagItemTemplate.DisplayId[..tagItemTemplate.DisplayId.IndexOf(' ')] : tagItemTemplate.DisplayId;
+                        tagItemTemplate.BeChecked = !tagItemTemplate.BeChecked.Value;
+                        if (tagItemTemplate.BeChecked.Value)
+                            tagItemTemplate.Background = LightOrangeBrush;
+                        else
+                            tagItemTemplate.Background = null;
+                        if (tagItemTemplate.BeChecked.Value)
+                        {
+                            if (tagItemTemplate.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
+                                Items.Add("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
+                                Entities.Add("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
+                                Blocks.Add("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
+                                Biomes.Add("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
+                                GameEvent.Add("\"minecraft:" + itemString + "\",");
+                        }
+                        else
+                        {
+                            if (tagItemTemplate.DataType == "ItemView")
+                                Items.Remove("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "EntityView")
+                                Entities.Remove("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "Block&ItemView")
+                                Blocks.Remove("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "Biome")
+                                Biomes.Remove("\"minecraft:" + itemString + "\",");
+                            else
+                            if (tagItemTemplate.DataType == "GameEvent")
+                                GameEvent.Remove("\"minecraft:" + itemString + "\",");
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
     }
 }

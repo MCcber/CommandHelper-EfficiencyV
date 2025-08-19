@@ -4,7 +4,7 @@ using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Documents;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility.Common
 {
     public class ObfuscateRunHelper
     {

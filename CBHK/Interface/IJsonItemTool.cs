@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace CBHK.Service.Json
+namespace CBHK.Interface
 {
     public interface IJsonItemTool
     {

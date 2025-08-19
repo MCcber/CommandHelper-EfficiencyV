@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.Interfaces;
 using CBHK.Domain;
+using CBHK.Interface;
 using CBHK.ViewModel.Component.Item;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;

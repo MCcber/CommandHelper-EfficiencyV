@@ -1,4 +1,4 @@
-﻿using CBHK.GeneralTool;
+﻿using CBHK.Utility.Common;
 using System;
 using System.Windows;
 using System.Windows.Controls;

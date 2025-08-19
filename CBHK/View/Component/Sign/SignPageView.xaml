@@ -102,7 +102,13 @@
                 ItemsSource="{Binding TypeSource, IsAsync=True}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedSignType, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}" />
+                Style="{DynamicResource TextComboBoxStyle}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="SelectionChanged">
+                        <behaviors:CallMethodAction MethodName="SignTypeSelectComboBox_SelectionChanged" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </ComboBox>
             <CustomControl:TextToggleButtons
                 Padding="5"
                 HorizontalAlignment="Left"
@@ -152,7 +158,13 @@
                 Style="{DynamicResource RadiusToggleButton}"
                 ToggleHeight="26"
                 ToggleWidth="46"
-                UnSelectedToggleText="正面" />
+                UnSelectedToggleText="正面">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="Click">
+                        <behaviors:CallMethodAction MethodName="IsBackUpdate_Click" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </CustomControl:RadiusToggleButtons>
             <CustomControl:RadiusToggleButtons
                 Margin="5,0"
                 Foreground="White"
@@ -358,6 +370,11 @@
                 SelectColor="{Binding SelectionColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="PropertyChanged">
+                        <behaviors:CallMethodAction MethodName="ColorPickers_PropertyChanged" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
                 <ColorPicker:ColorPickers.ToolTip>
                     <ToolTip
                         Background="#424242"

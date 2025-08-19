@@ -6,7 +6,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility.Common
 {
     public class SignIn
     {

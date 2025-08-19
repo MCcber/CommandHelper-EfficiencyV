@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool.MessageTip;
-using CBHK.GeneralTool.Time;
+using CBHK.Utility.MessageTip;
+using CBHK.Utility.Time;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.View.Component.Datapack.HomePage;
 using CBHK.View.Generator;

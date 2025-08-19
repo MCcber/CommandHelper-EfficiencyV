@@ -1,10 +1,9 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.ColorPickerComponents;
-using CBHK.GeneralTool.MessageTip;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.FireworkRocket;
 using CBHK.View.Generator;
-using CBHK.ViewModel;
 using CBHK.ViewModel.Generator;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -27,397 +26,18 @@ using System.Windows.Media.Media3D;
 
 namespace CBHK.ViewModel.Component.FireworkRocket
 {
-    public partial class FireworkRocketPageViewModel : ObservableObject
+    public partial class FireworkRocketPageViewModel(IContainerProvider container) : ObservableObject
     {
-        #region 已选版本
-        [ObservableProperty]
-        private TextComboBoxItem _selectedVersion;
-        #endregion
-
-        #region 版本数据源
-        private ObservableCollection<TextComboBoxItem> versionSource = [];
-        public ObservableCollection<TextComboBoxItem> VersionSource
-        {
-            get => versionSource;
-            set => SetProperty(ref versionSource, value);
-        }
-        #endregion
-
-        #region 形状数据源
-        private ObservableCollection<TextComboBoxItem> shapeList = [];
-        public ObservableCollection<TextComboBoxItem> ShapeList
-        {
-            get => shapeList;
-            set => SetProperty(ref shapeList, value);
-        }
-        #endregion
-        
-        #region 生成行为
-        private bool give = false;
-        public bool Give
-        {
-            get => give;
-            set => SetProperty(ref give,value);
-        }
-        #endregion
-
-        #region 生成烟花火箭
-        private bool generatorFireStar = false;
-        public bool GeneratorFireStar
-        {
-            get
-            {
-                return generatorFireStar;
-            }
-            set
-            {
-                generatorFireStar = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
-        #region 是否展示生成结果
-        private bool showGeneratorResult = false;
-        public bool ShowGeneratorResult
-        {
-            get => showGeneratorResult;
-            set => SetProperty(ref showGeneratorResult,value);
-        }
-        #endregion
-
-        #region 导入模式
-        private bool importMode = false;
-        public bool ImportMode
-        {
-            get
-            {
-                return importMode;
-            }
-            set
-            {
-                importMode = value;
-            }
-        }
-        private string externFilePath = "";
-        public string ExternFilePath
-        {
-            get
-            {
-                return externFilePath;
-            }
-            set
-            {
-                externFilePath = value;
-            }
-        }
-        #endregion
-
-        #region 轨迹
-        private string FireworkTrajectoryString
-        {
-            get
-            {
-                string result = (Flicker ? "Flicker:1b," : "") + (Trail ? "Trail:1b," : "");
-                return result;
-            }
-        }
-        #endregion
-
-        #region 闪烁
-        public bool Flicker { get; set; } = false;
-        #endregion
-
-        #region 拖尾
-        public bool Trail { get; set; } = false;
-        #endregion
-
-        #region 时长
-        private double duration = 1;
-        public double Duration
-        {
-            get { return duration; }
-            set
-            {
-                duration = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private string FireworkDurationString
-        {
-            get
-            {
-                string result;
-                result = "Flight:" + Duration;
-                return result;
-            }
-        }
-        #endregion
-
-        #region 已飞行刻数
-        private double life = 0;
-        public double Life
-        {
-            get
-            {
-                return life;
-            }
-            set
-            {
-                life = value;
-                OnPropertyChanged();
-            }
-        }
-        private string LifeString
-        {
-            get
-            {
-                string result = Life > 0 ? "Life:" + Life + "," : "";
-                return result;
-            }
-        }
-        #endregion
-
-        #region 发射时长
-        private double lifeTime = 20;
-        public double LifeTime
-        {
-            get
-            {
-                return lifeTime;
-            }
-            set
-            {
-                lifeTime = value;
-                OnPropertyChanged();
-            }
-        }
-        private string LifeTimeString
-        {
-            get
-            {
-                string result = LifeTime > 0 ? "LifeTime:" + LifeTime + "," : "";
-                return result;
-            }
-        }
-        #endregion
-
-        #region 主颜色
-        private string MainColorsString
-        {
-            get
-            {
-                string result = "Colors:[I;";
-                if (MainColorList.Count > 0)
-                {
-                    result += string.Join(',', MainColorList.Select(item => Convert.ToUInt64(item.Background.ToString()[2..], 16)));
-                    result += "],";
-                }
-                else
-                    result = "";
-                return result;
-            }
-        }
-        #endregion
-
-        #region 备选颜色
-        private string FadeColorsString
-        {
-            get
-            {
-                string result = "FadeColorList:[I;";
-                if (FadeColorList.Count > 0)
-                {
-                    result += string.Join(',', FadeColorList.Select(item => Convert.ToUInt64(item.Background.ToString()[2..], 16)));
-                    result += "],";
-                }
-                else
-                    result = "";
-                return result;
-            }
-        }
-        #endregion
-
-        #region 按角度飞出
-        //按角度飞出
-        public bool FlyAngle { get; set; }
-        private string FlyAngleString
-        {
-            get
-            {
-                string result;
-                result = FlyAngle ? "ShotAtAngle:true," : "";
-                return result;
-            }
-        }
-        #endregion
-
-        #region 已选择的形状
-        private int selectedShape = 0;
-        public int SelectedShape
-        {
-            get
-            {
-                return selectedShape;
-            }
-            set
-            {
-                selectedShape = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
-        #region 点/连续(模式切换)
-        private bool selectedModeLock = true;
-        private bool pointMode = true;
-        public bool PointMode
-        {
-            get
-            {
-                return pointMode;
-            }
-            set
-            {
-                pointMode = value;
-                if (selectedModeLock)
-                {
-                    selectedModeLock = false;
-                    ContinuousMode = !pointMode;
-                    selectedModeLock = true;
-                }
-                OnPropertyChanged();
-            }
-        }
-
-        private bool continuousMode = false;
-        public bool ContinuousMode
-        {
-            get
-            {
-                return continuousMode;
-            }
-            set
-            {
-                continuousMode = value;
-                if (selectedModeLock)
-                {
-                    selectedModeLock = false;
-                    PointMode = !continuousMode;
-                    selectedModeLock = true;
-                }
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
-        #region 已选择颜色
-        private SolidColorBrush selectedColor = new((Color)ColorConverter.ConvertFromString("#FF0000"));
-        public SolidColorBrush SelectedColor
-        {
-            get
-            {
-                return selectedColor;
-            }
-            set
-            {
-                selectedColor = value;
-                if (ContinuousMode)
-                {
-                    if (AddInMain)
-                    {
-                        Border border = new()
-                        {
-                            Width = 25,
-                            Background = selectedColor
-                        };
-                        border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
-                        border.Uid = "Main";
-                        MainColorList.Add(border);
-                    }
-                    if(AddInFade)
-                    {
-                        Border border = new()
-                        {
-                            Width = 25,
-                            Background = selectedColor
-                        };
-                        border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
-                        border.Uid = "Fade";
-                        FadeColorList.Add(border);
-                    }
-                }
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
-        #region 最终形状数据
-        private string FireworkShapeString
-        {
-            get
-            {
-                string result = "Type:" + SelectedShape + ",";
-                return result;
-            }
-        }
-        #endregion
-
-        #region 主颜色库与备选颜色库
-        [ObservableProperty]
-        private ObservableCollection<Border> _mainColorList = [];
-        [ObservableProperty]
-        private ObservableCollection<Border> _fadeColorList = [];
-        #endregion
-
-        #region 加入淡入或淡出
-        [ObservableProperty]
-        private bool _addInMain = true;
-        [ObservableProperty]
-        private bool addInFade = false;
-        #endregion
-
-        #region 淡入淡出滚动视图引用
-        ScrollViewer mainScrollViewer = null;
-        ScrollViewer fadeScrollViewer = null;
-        #endregion
-
-        #region 滚轮缩放倍率
-        double viewScale = 0;
-        double ViewScale
-        {
-            get
-            {
-                return viewScale;
-            }
-            set
-            {
-                viewScale = value;
-                if (viewScale < 0.1)
-                    viewScale = 0.1;
-                if (viewScale > 2)
-                    viewScale = 2;
-            }
-        }
-        #endregion
-
-        #region 存储生成结果
-        public string Result { get; set; }
-        #endregion
+        #region Field
 
         /// <summary>
-        /// 外部数据
+        /// 存储生成结果
         /// </summary>
-        public JObject ExternallyReadEntityData { get; set; }
-        /// <summary>
-        /// 预览效果的粒子集合
-        /// </summary>
-        public List<ModelVisual3D> Particles { get; set; } = [];
+        public string Result = "";
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconFireworks.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconFireworks.png";
         /// <summary>
         /// 原版颜色库路径
         /// </summary>
@@ -460,14 +80,385 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// 原版颜色映射库
         /// </summary>
         private Dictionary<string, string> OriginColorDictionary = [];
-        private IContainerProvider _container;
+        private IContainerProvider _container = container;
 
-        public FireworkRocketPageViewModel(IContainerProvider container)
+        #region 淡入淡出滚动视图引用
+        ScrollViewer mainScrollViewer = null;
+        ScrollViewer fadeScrollViewer = null;
+        #endregion
+
+        #endregion
+
+        #region Property
+        /// <summary>
+        /// 已选版本
+        /// </summary>
+        [ObservableProperty]
+        private TextComboBoxItem _selectedVersion;
+
+        /// <summary>
+        /// 版本数据源
+        /// </summary>
+        [ObservableProperty]
+        private ObservableCollection<TextComboBoxItem> _versionSource = [];
+
+        /// <summary>
+        /// 形状数据源
+        /// </summary>
+        [ObservableProperty]
+        private ObservableCollection<TextComboBoxItem> _shapeList = [];
+
+        /// <summary>
+        /// 生成行为
+        /// </summary>
+        [ObservableProperty]
+        private bool _give = false;
+
+        /// <summary>
+        /// 生成烟花火箭
+        /// </summary>
+        [ObservableProperty]
+        private bool _generatorFireStar = false;
+
+        /// <summary>
+        /// 是否展示生成结果
+        /// </summary>
+        [ObservableProperty]
+        private bool _showGeneratorResult = false;
+
+        /// <summary>
+        /// 导入模式
+        /// </summary>
+        public bool ImportMode { get; set; } = false;
+        /// <summary>
+        /// 外部文件路径
+        /// </summary>
+        public string ExternFilePath { get; set; } = "";
+        /// <summary>
+        /// 闪烁
+        /// </summary>
+        public bool Flicker { get; set; } = false;
+        /// <summary>
+        /// 拖尾
+        /// </summary>
+        public bool Trail { get; set; } = false;
+        /// <summary>
+        /// 时长
+        /// </summary>
+        [ObservableProperty]
+        private double _duration = 1;
+
+        #region 时长字符串
+        private string FireworkDurationString
         {
-            _container = container;
+            get
+            {
+                string result;
+                result = "Flight:" + Duration;
+                return result;
+            }
+        }
+        #endregion
+
+        #region 轨迹
+        private string FireworkTrajectoryString
+        {
+            get
+            {
+                string result = (Flicker ? "Flicker:1b," : "") + (Trail ? "Trail:1b," : "");
+                return result;
+            }
+        }
+        #endregion
+
+        #region 已飞行刻数
+        [ObservableProperty]
+        private double _life = 0;
+        private string LifeString
+        {
+            get
+            {
+                string result = Life > 0 ? "Life:" + Life + "," : "";
+                return result;
+            }
+        }
+        #endregion
+
+        #region 发射时长
+        [ObservableProperty]
+        private double _lifeTime = 20;
+        private string LifeTimeString
+        {
+            get
+            {
+                string result = LifeTime > 0 ? "LifeTime:" + LifeTime + "," : "";
+                return result;
+            }
+        }
+        #endregion
+
+        #region 主颜色
+        private string MainColorsString
+        {
+            get
+            {
+                string result = "Colors:[I;";
+                if (MainColorList.Count > 0)
+                {
+                    result += string.Join(',', MainColorList.Select(item => Convert.ToUInt64(item.Background.ToString()[2..], 16)));
+                    result += "],";
+                }
+                else
+                {
+                    result = "";
+                }
+                return result;
+            }
+        }
+        #endregion
+
+        #region 备选颜色
+        private string FadeColorsString
+        {
+            get
+            {
+                string result = "FadeColorList:[I;";
+                if (FadeColorList.Count > 0)
+                {
+                    result += string.Join(',', FadeColorList.Select(item => Convert.ToUInt64(item.Background.ToString()[2..], 16)));
+                    result += "],";
+                }
+                else
+                {
+                    result = "";
+                }
+                return result;
+            }
+        }
+        #endregion
+
+        #region 按角度飞出
+        /// <summary>
+        /// 按角度飞出
+        /// </summary>
+        [ObservableProperty]
+        public bool _flyAngle = false;
+        private string FlyAngleString
+        {
+            get
+            {
+                string result;
+                result = FlyAngle ? "ShotAtAngle:true," : "";
+                return result;
+            }
+        }
+        #endregion
+
+        #region 点/连续(模式切换)
+        private bool selectedModeLock = true;
+        private bool pointMode = true;
+        public bool PointMode
+        {
+            get => pointMode;
+            set
+            {
+                SetProperty(ref pointMode, value);
+                if (selectedModeLock)
+                {
+                    selectedModeLock = false;
+                    ContinuousMode = !pointMode;
+                    selectedModeLock = true;
+                }
+            }
         }
 
-        #region Events
+        private bool continuousMode = false;
+        public bool ContinuousMode
+        {
+            get => continuousMode;
+            set
+            {
+                SetProperty(ref continuousMode, value);
+                if (selectedModeLock)
+                {
+                    selectedModeLock = false;
+                    PointMode = !continuousMode;
+                    selectedModeLock = true;
+                }
+            }
+        }
+        #endregion
+
+        #region 已选择颜色
+        private SolidColorBrush selectedColor = new((Color)ColorConverter.ConvertFromString("#FF0000"));
+        public SolidColorBrush SelectedColor
+        {
+            get => selectedColor;
+            set
+            {
+                SetProperty(ref selectedColor, value);
+                if (ContinuousMode)
+                {
+                    if (AddInMain)
+                    {
+                        Border border = new()
+                        {
+                            Width = 25,
+                            Background = selectedColor
+                        };
+                        border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
+                        border.Uid = "Main";
+                        MainColorList.Add(border);
+                    }
+                    if(AddInFade)
+                    {
+                        Border border = new()
+                        {
+                            Width = 25,
+                            Background = selectedColor
+                        };
+                        border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
+                        border.Uid = "Fade";
+                        FadeColorList.Add(border);
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region 最终形状数据
+        /// <summary>
+        /// 已选择的形状
+        /// </summary>
+        [ObservableProperty]
+        private int _selectedShape = 0;
+        private string FireworkShapeString
+        {
+            get
+            {
+                string result = "Type:" + SelectedShape + ",";
+                return result;
+            }
+        }
+        #endregion
+
+        #region 主颜色库与备选颜色库
+        [ObservableProperty]
+        private ObservableCollection<Border> _mainColorList = [];
+        [ObservableProperty]
+        private ObservableCollection<Border> _fadeColorList = [];
+        #endregion
+
+        #region 加入淡入或淡出
+        [ObservableProperty]
+        private bool _addInMain = true;
+        [ObservableProperty]
+        private bool addInFade = false;
+        #endregion
+
+        #region 滚轮缩放倍率
+        private double viewScale = 0;
+        private double ViewScale
+        {
+            get => viewScale;
+            set
+            {
+                viewScale = value;
+                if (viewScale < 0.1)
+                    viewScale = 0.1;
+                if (viewScale > 2)
+                    viewScale = 2;
+            }
+        }
+        #endregion
+
+        /// <summary>
+        /// 外部数据
+        /// </summary>
+        public JObject ExternallyReadEntityData { get; set; }
+        /// <summary>
+        /// 预览效果的粒子集合
+        /// </summary>
+        public List<ModelVisual3D> Particles { get; set; } = [];
+        #endregion
+
+        #region Method
+        /// <summary>
+        /// 为图像对象着色
+        /// </summary>
+        /// <param name="bitmapImage"></param>
+        /// <param name="brush"></param>
+        public BitmapImage ColoringBitmapImage(BitmapImage bitmapImage,SolidColorBrush brush)
+        {
+            // Get the pixel data from the original image
+            int[] pixelData = new int[bitmapImage.PixelWidth * bitmapImage.PixelHeight];
+            bitmapImage.CopyPixels(pixelData, bitmapImage.PixelWidth * 4, 0);
+
+            // Create a new WriteableBitmap with the same dimensions as the original image
+            WriteableBitmap coloredBitmap = new(bitmapImage.PixelWidth, bitmapImage.PixelHeight, bitmapImage.DpiX, bitmapImage.DpiY, PixelFormats.Bgra32, null);
+            coloredBitmap.Lock();
+            unsafe
+            {
+                int* pBackBuffer = (int*)coloredBitmap.BackBuffer;
+                int backBufferStride = coloredBitmap.BackBufferStride / 4;
+                // Get the alpha value from the original image
+                int alpha = 0;
+                for (int y = 0; y < coloredBitmap.PixelHeight; y++)
+                {
+                    for (int x = 0; x < coloredBitmap.PixelWidth; x++)
+                    {
+                        alpha = (pixelData[y * backBufferStride + x] >> 24) & 0xff;
+                        pBackBuffer[y * backBufferStride + x] = (alpha << 24) | (brush.Color.R << 16) | (brush.Color.G << 8) | brush.Color.B;
+                    }
+                }
+            }
+            coloredBitmap.Unlock();
+
+            // Convert the colored WriteableBitmap back to a BitmapImage
+            using MemoryStream memoryStream = new();
+            PngBitmapEncoder encoder = new();
+            encoder.Frames.Add(BitmapFrame.Create(coloredBitmap));
+            encoder.Save(memoryStream);
+            memoryStream.Position = 0;
+            BitmapImage coloredImage = new();
+            coloredImage.BeginInit();
+            coloredImage.StreamSource = memoryStream;
+            coloredImage.CacheOption = BitmapCacheOption.OnLoad;
+            coloredImage.EndInit();
+            return coloredImage;
+        }
+
+        private Vector3D CalculateNormal(MeshGeometry3D mesh, int vertexIndex)
+        {
+            var normal = new Vector3D();
+
+            // Find all triangles that share the vertex
+            var triangles = new List<int>();
+            for (int i = 0; i < mesh.TriangleIndices.Count; i += 3)
+            {
+                if (mesh.TriangleIndices[i] == vertexIndex || mesh.TriangleIndices[i + 1] == vertexIndex || mesh.TriangleIndices[i + 2] == vertexIndex)
+                {
+                    triangles.Add(i);
+                }
+            }
+
+            // Calculate the normal vector as the average of the normals of the triangles
+            foreach (var triangleIndex in triangles)
+            {
+                var p1 = mesh.Positions[mesh.TriangleIndices[triangleIndex]];
+                var p2 = mesh.Positions[mesh.TriangleIndices[triangleIndex + 1]];
+                var p3 = mesh.Positions[mesh.TriangleIndices[triangleIndex + 2]];
+                var triangleNormal = Vector3D.CrossProduct(p2 - p1, p3 - p1);
+                triangleNormal.Normalize();
+                normal += triangleNormal;
+            }
+            normal.Normalize();
+
+            return normal;
+        }
+        #endregion
+
+        #region Event
         /// <summary>
         /// 载入时读取外部数据
         /// </summary>
@@ -480,9 +471,11 @@ namespace CBHK.ViewModel.Component.FireworkRocket
             FireworkRocketViewModel fireworkRocketDataContext = Window.GetWindow(fireworkRocketPage).DataContext as FireworkRocketViewModel;
             ShapeList = fireworkRocketDataContext.ShapeList;
             #endregion
+
             #region 载入版本数据
             VersionSource = fireworkRocketDataContext.VersionSource;
             #endregion
+
             #region 是否需要导入数据
             if (ImportMode)
                 await Task.Run(() =>
@@ -984,7 +977,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
-                    displayerViewModel.GeneratorResult(Result, "烟花火箭", icon_path);
+                    displayerViewModel.GeneratorResult(Result, "烟花火箭", iconPath);
                 }
             }
             else
@@ -1048,7 +1041,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 DisplayerView displayer = _container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
-                    displayerViewModel.GeneratorResult(Result, "烟花火箭", icon_path);
+                    displayerViewModel.GeneratorResult(Result, "烟花火箭", iconPath);
                 }
             }
             else
@@ -1176,82 +1169,6 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// <param name="sender"></param>
         /// <param name="e"></param>
         public void FadeColorItemsControl_SizeChanged(object sender, SizeChangedEventArgs e) => fadeScrollViewer.ScrollToHorizontalOffset(fadeScrollViewer.ExtentWidth);
-        #endregion
-
-        #region Methods
-        /// <summary>
-        /// 为图像对象着色
-        /// </summary>
-        /// <param name="bitmapImage"></param>
-        /// <param name="brush"></param>
-        public BitmapImage ColoringBitmapImage(BitmapImage bitmapImage,SolidColorBrush brush)
-        {
-            // Get the pixel data from the original image
-            int[] pixelData = new int[bitmapImage.PixelWidth * bitmapImage.PixelHeight];
-            bitmapImage.CopyPixels(pixelData, bitmapImage.PixelWidth * 4, 0);
-
-            // Create a new WriteableBitmap with the same dimensions as the original image
-            WriteableBitmap coloredBitmap = new(bitmapImage.PixelWidth, bitmapImage.PixelHeight, bitmapImage.DpiX, bitmapImage.DpiY, PixelFormats.Bgra32, null);
-            coloredBitmap.Lock();
-            unsafe
-            {
-                int* pBackBuffer = (int*)coloredBitmap.BackBuffer;
-                int backBufferStride = coloredBitmap.BackBufferStride / 4;
-                // Get the alpha value from the original image
-                int alpha = 0;
-                for (int y = 0; y < coloredBitmap.PixelHeight; y++)
-                {
-                    for (int x = 0; x < coloredBitmap.PixelWidth; x++)
-                    {
-                        alpha = (pixelData[y * backBufferStride + x] >> 24) & 0xff;
-                        pBackBuffer[y * backBufferStride + x] = (alpha << 24) | (brush.Color.R << 16) | (brush.Color.G << 8) | brush.Color.B;
-                    }
-                }
-            }
-            coloredBitmap.Unlock();
-
-            // Convert the colored WriteableBitmap back to a BitmapImage
-            using MemoryStream memoryStream = new();
-            PngBitmapEncoder encoder = new();
-            encoder.Frames.Add(BitmapFrame.Create(coloredBitmap));
-            encoder.Save(memoryStream);
-            memoryStream.Position = 0;
-            BitmapImage coloredImage = new();
-            coloredImage.BeginInit();
-            coloredImage.StreamSource = memoryStream;
-            coloredImage.CacheOption = BitmapCacheOption.OnLoad;
-            coloredImage.EndInit();
-            return coloredImage;
-        }
-
-        private Vector3D CalculateNormal(MeshGeometry3D mesh, int vertexIndex)
-        {
-            var normal = new Vector3D();
-
-            // Find all triangles that share the vertex
-            var triangles = new List<int>();
-            for (int i = 0; i < mesh.TriangleIndices.Count; i += 3)
-            {
-                if (mesh.TriangleIndices[i] == vertexIndex || mesh.TriangleIndices[i + 1] == vertexIndex || mesh.TriangleIndices[i + 2] == vertexIndex)
-                {
-                    triangles.Add(i);
-                }
-            }
-
-            // Calculate the normal vector as the average of the normals of the triangles
-            foreach (var triangleIndex in triangles)
-            {
-                var p1 = mesh.Positions[mesh.TriangleIndices[triangleIndex]];
-                var p2 = mesh.Positions[mesh.TriangleIndices[triangleIndex + 1]];
-                var p3 = mesh.Positions[mesh.TriangleIndices[triangleIndex + 2]];
-                var triangleNormal = Vector3D.CrossProduct(p2 - p1, p3 - p1);
-                triangleNormal.Normalize();
-                normal += triangleNormal;
-            }
-            normal.Normalize();
-
-            return normal;
-        }
         #endregion
     }
 }

@@ -1,8 +1,8 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.Interfaces;
 using CBHK.Domain;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
+using CBHK.Interface;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Entity;
 using CBHK.View.Generator;
@@ -33,291 +33,51 @@ namespace CBHK.ViewModel.Component.Entity
 {
     public partial class EntityPageViewModel : ObservableObject
     {
-        #region 指示是否需要展示生成结果
-        private bool showResult = false;
-        public bool ShowResult
-        {
-            get => showResult;
-            set => SetProperty(ref showResult, value);
-        }
-        #endregion
-
-        #region 生成方式
-        private bool give = false;
-        public bool Give
-        {
-            get => give;
-            set => SetProperty(ref give, value);
-        }
+        #region Field
 
         public bool HaveCustomName = false;
-        #endregion
-
-        #region 作为工具或引用
-        public bool UseForTool { get; set; } = false;
-        public bool UseForReference { get; set; } = false;
-        #endregion
-
-        #region 通用NBT
-
-        #region 共通标签是否开放编辑
-
-        #region 允许编辑实体共通标签
-        private bool entityCommonTagsEnabled = true;
-        public bool EntityCommonTagsEnabled
-        {
-            get => entityCommonTagsEnabled;
-            set => SetProperty(ref entityCommonTagsEnabled, value);
-        }
-        #endregion
-
-        #region 允许编辑活体共通标签
-        private bool livingBodyCommonTagsEnabled = true;
-        public bool LivingBodyCommonTagsEnabled
-        {
-            get => livingBodyCommonTagsEnabled; 
-            set => SetProperty(ref livingBodyCommonTagsEnabled, value);
-        }
-        #endregion
-
-        #region 允许编辑活体共通标签
-        private bool mobCommonTagsEnabled = true;
-        public bool MobCommonTagsEnabled
-        {
-            get => mobCommonTagsEnabled; 
-            set => SetProperty(ref mobCommonTagsEnabled, value);
-        }
-        #endregion
-
-        #endregion
-
-        #region 共通标签显示隐藏
-
-        #region 实体共通标签可见性
-        private Visibility entityCommonTagsVisibility = Visibility.Visible;
-        public Visibility EntityCommonTagsVisibility
-        {
-            get => entityCommonTagsVisibility; 
-            set => SetProperty(ref entityCommonTagsVisibility, value);
-        }
-        #endregion
-
-        #region 活体共通标签可见性
-        private Visibility livingBodyCommonTagsVisibility = Visibility.Visible;
-        public Visibility LivingBodyCommonTagsVisibility
-        {
-            get => livingBodyCommonTagsVisibility; 
-            set => SetProperty(ref livingBodyCommonTagsVisibility, value);
-        }
-        #endregion
-
-        #region 生物共通标签可见性
-        private Visibility mobCommonTagsVisibility = Visibility.Visible;
-        public Visibility MobCommonTagsVisibility
-        {
-            get => mobCommonTagsVisibility; 
-            set => SetProperty(ref mobCommonTagsVisibility, value);
-        }
-        #endregion
-
-        #endregion
-
-        #region 其余共通标签显示隐藏
-
-        #region 可愤怒生物额外字段可见性
-        private Visibility angryCreatureExtraFieldVisibility = Visibility.Collapsed;
-        public Visibility AngryCreatureExtraFieldVisibility
-        {
-            get => angryCreatureExtraFieldVisibility; 
-            set => SetProperty(ref angryCreatureExtraFieldVisibility, value);
-        }
-        #endregion
-
-        #region 可繁殖生物额外字段可见性
-        private Visibility breedableMobExtraFieldsVisibility = Visibility.Collapsed;
-        public Visibility BreedableMobExtraFieldsVisibility
-        {
-            get => breedableMobExtraFieldsVisibility;
-            set => SetProperty(ref breedableMobExtraFieldsVisibility, value);
-        }
-        #endregion
-
-        #region 可在袭击中生成的生物共通标签可见性
-        private Visibility commonTagsForMobsSpawnedInRaidsVisibility = Visibility.Collapsed;
-        public Visibility CommonTagsForMobsSpawnedInRaidsVisibility
-        {
-            get => commonTagsForMobsSpawnedInRaidsVisibility; 
-            set => SetProperty(ref commonTagsForMobsSpawnedInRaidsVisibility, value);
-        }
-        #endregion
-
-        #region 可骑乘生物共通标签可见性
-        private Visibility commonTagsForRideableEntitiesVisibility = Visibility.Collapsed;
-        public Visibility CommonTagsForRideableEntitiesVisibility
-        {
-            get => commonTagsForRideableEntitiesVisibility; 
-            set => SetProperty(ref commonTagsForRideableEntitiesVisibility, value);
-        }
-        #endregion
-
-        #region 僵尸类生物共通标签可见性
-        private Visibility commonTagsForZombiesVisibility = Visibility.Collapsed;
-        public Visibility CommonTagsForZombiesVisibility
-        {
-            get => commonTagsForZombiesVisibility; 
-            set => SetProperty(ref commonTagsForZombiesVisibility, value);
-        }
-        #endregion
-
-        #region 可驯服生物共通标签可见性
-        private Visibility tameableMobExtraFieldsVisibility = Visibility.Collapsed;
-        public Visibility TameableMobExtraFieldsVisibility
-        {
-            get => tameableMobExtraFieldsVisibility; 
-            set => SetProperty(ref tameableMobExtraFieldsVisibility, value);
-        }
-        #endregion
-
-        #region 箭类投掷物共通标签可见性
-        private Visibility arrowProjectileCommonTagsVisibility = Visibility.Collapsed;
-        public Visibility ArrowProjectileCommonTagsVisibility
-        {
-            get => arrowProjectileCommonTagsVisibility; 
-            set => SetProperty(ref arrowProjectileCommonTagsVisibility, value);
-        }
-        #endregion
-
-        #region 容器实体共通标签可见性
-        private Visibility containerEntityCommonTagsVisibility = Visibility.Collapsed;
-        public Visibility ContainerEntityCommonTagsVisibility
-        {
-            get => containerEntityCommonTagsVisibility; 
-            set => SetProperty(ref containerEntityCommonTagsVisibility, value);
-        }
-        #endregion
-
-        #region 火球类投掷物共通标签可见性
-        private Visibility fireballProjectileCommonTagsVisibility = Visibility.Collapsed;
-        public Visibility FireballProjectileCommonTagsVisibility
-        {
-            get => fireballProjectileCommonTagsVisibility; 
-            set => SetProperty(ref fireballProjectileCommonTagsVisibility, value);
-        }
-        #endregion
-
-        #region 物品类投掷物共通标签可见性
-        private Visibility itemProjectileCommonTagsVisibility = Visibility.Collapsed;
-        public Visibility ItemProjectileCommonTagsVisibility
-        {
-            get => itemProjectileCommonTagsVisibility; 
-            set => SetProperty(ref itemProjectileCommonTagsVisibility, value);
-        }
-        #endregion
-
-        #region 矿车共通标签可见性
-        private Visibility mineCartCommonTagsVisibility = Visibility.Collapsed;
-        public Visibility MineCartCommonTagsVisibility
-        {
-            get => mineCartCommonTagsVisibility; 
-            set => SetProperty(ref mineCartCommonTagsVisibility, value);
-        }
-        #endregion
-
-        #region 药水效果共通标签可见性
-        private Visibility potionEffectCommonTagsVisibility = Visibility.Collapsed;
-        public Visibility PotionEffectCommonTagsVisibility
-        {
-            get => potionEffectCommonTagsVisibility;
-            set => SetProperty(ref potionEffectCommonTagsVisibility, value);
-        }
-        #endregion
-
-        #region 投掷物共通标签可见性
-        private Visibility projectileCommonTagsVisibility = Visibility.Collapsed;
-        public Visibility ProjectileCommonTagsVisibility
-        {
-            get => projectileCommonTagsVisibility;
-            set => SetProperty(ref projectileCommonTagsVisibility, value);
-        }
-        #endregion
-
-        #endregion
-
-        #endregion
-
-        #region 实体ID
-        private IconComboBoxItem selectedEntityId = null;
-        public IconComboBoxItem SelectedEntityId
-        {
-            get => selectedEntityId;
-            set
-            {
-                SetProperty(ref selectedEntityId, value);
-                //更新特指和共通标签、额外字段
-                Task.Run(async () =>
-                {
-                    await currentEntityPage.Dispatcher.InvokeAsync(async () =>
-                    {
-                        await UpdateUILayOut();
-                    });
-                });
-            }
-        }
-        public string SelectedEntityIDString
-        {
-            get
-            {
-                string result = SelectedEntityId.ComboBoxItemId;
-                return result;
-            }
-        }
-        #endregion
-
-        #region 版本数据源
-        private ObservableCollection<TextComboBoxItem> versionSource = [];
-        public ObservableCollection<TextComboBoxItem> VersionSource
-        {
-            get => versionSource;
-            set => SetProperty(ref versionSource, value);
-        }
-        #endregion
-
-        #region 已选版本
-        private TextComboBoxItem selectedVersion;
-        public TextComboBoxItem SelectedVersion
-        {
-            get => selectedVersion;
-            set
-            {
-                SetProperty(ref selectedVersion, value);
-                if (SelectedVersion is not null)
-                    CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
-            }
-        }
-
-        private int currentMinVersion = 1202;
-        public int CurrentMinVersion
-        {
-            get => currentMinVersion;
-            set => currentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
-        }
-        #endregion
-
-        #region 路径
-        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
-        string buttonNormalImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonNormal.png";
-        string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonPressed.png";
-        ImageBrush buttonNormalBrush;
-        ImageBrush buttonPressedBrush;
-        string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\";
-        #endregion
-
-        #region 字段与引用
+        public int CurrentMinVersion = 1202;
+        private string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
+        private string buttonNormalImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonNormal.png";
+        private string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonPressed.png";
+        private ImageBrush buttonNormalBrush;
+        private ImageBrush buttonPressedBrush;
+        private string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\";
+        /// <summary>
+        /// 需要适应版本变化的特指数据所属控件的事件
+        /// </summary>
+        public Dictionary<FrameworkElement, Action<FrameworkElement, RoutedEventArgs>> VersionNBTList = [];
+        /// <summary>
+        /// 版本控件
+        /// </summary>
+        public List<IVersionUpgrader> VersionComponents { get; set; } = [];
+        //特指结果集合
+        public Dictionary<string, ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
+        /// <summary>
+        /// 在生成时标记当前实体拥有哪些共通标签
+        /// </summary>
+        private List<string> CurrentCommonTags = [];
+        /// <summary>
+        /// 白色画刷
+        /// </summary>
+        SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+        /// <summary>
+        /// 黑色画刷
+        /// </summary>
+        SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
+        /// <summary>
+        /// 橙色画刷
+        /// </summary>
+        SolidColorBrush orangeBrush = new((Color)ColorConverter.ConvertFromString("#FFE5B663"));
         private IContainerProvider _container;
         private CBHKDataContext _context = null;
-        //当前实体页引用
-        EntityPageView currentEntityPage = null;
-        //无特指NBT时提示
+        /// <summary>
+        /// 当前实体页引用
+        /// </summary>
+        private EntityPageView currentEntityPage = null;
+        /// <summary>
+        /// 无特指NBT时提示
+        /// </summary>
         VisualBrush emptyDataTip = new()
         {
             AlignmentX = AlignmentX.Center,
@@ -330,47 +90,209 @@ namespace CBHK.ViewModel.Component.Entity
         /// </summary>
         private Grid CacheGrid = null;
 
-        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
-
-        //实体数据源
-        public ObservableCollection<IconComboBoxItem> EntityIDList { get; set; } = [];
-        private Dictionary<string, List<IconComboBoxItem>> EntityIDListCopy { get; set; } = [];
-
-        //属性数据
-        public ObservableCollection<NBTDataStructure> AttributeResult { get; set; } = [];
-        //存储当前实体的乘客
-        public ObservableCollection<NBTDataStructure> PassengerResult { get; set; } = [];
+        private string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
 
         /// <summary>
-        /// 需要适应版本变化的特指数据所属控件的事件
+        /// 特殊实体的共通标签链表
         /// </summary>
-        public Dictionary<FrameworkElement, Action<FrameworkElement, RoutedEventArgs>> VersionNBTList = [];
+        List<string> specialEntityCommonTagList = [];
         /// <summary>
-        /// 版本控件
+        /// 特殊实体特指标签字典,用于动态切换内容
         /// </summary>
-        public List<IVersionUpgrader> VersionComponents { get; set; } = [];
-        //特指结果集合
-        public Dictionary<string,ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
-        //实体、活体、生物结果集合
-        public ObservableCollection<NBTDataStructure> CommonResult { get; set; } = [];
-        //在生成时标记当前实体拥有哪些共通标签
-        private List<string> CurrentCommonTags = [];
-        //白色画刷
-        SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-        //黑色画刷
-        SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
-        //橙色画刷
-        SolidColorBrush orangeBrush = new((Color)ColorConverter.ConvertFromString("#FFE5B663"));
+        public Dictionary<string, Grid> SpecialDataDictionary = [];
+        /// <summary>
+        /// 特殊标签面板
+        /// </summary>
+        ScrollViewer SpecialViewer = null;
+        /// <summary>
+        /// 存储最终的结果
+        /// </summary>
+        public string Result = "";
+
+        #endregion
+
+        #region Property
+
+        /// <summary>
+        /// 指示是否需要展示生成结果
+        /// </summary>
+        [ObservableProperty]
+        private bool _showResult = false;
+        /// <summary>
+        /// 生成方式
+        /// </summary>
+        [ObservableProperty]
+        private bool _give = false;
+        /// <summary>
+        /// 实体ID
+        /// </summary>
+        [ObservableProperty]
+        private IconComboBoxItem _selectedEntityId = null;
+        /// <summary>
+        /// 实体数据源
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<IconComboBoxItem> _entityIDList = [];
+        [ObservableProperty]
+        private Dictionary<string, List<IconComboBoxItem>> _entityIDListCopy = [];
+
+        /// <summary>
+        /// 属性数据
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<NBTDataStructure> _attributeResult = [];
+        /// <summary>
+        /// 存储当前实体的乘客
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<NBTDataStructure> _passengerResult = [];
+
+        /// <summary>
+        /// 实体、活体、生物结果集合
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<NBTDataStructure> _commonResult = [];
         //存储外部读取进来的实体数据
         public JObject ExternallyReadEntityData { get; set; } = null;
 
-        #region 标记当前是否为导入外部数据的模式
-        private bool importMode = false;
-        public bool ImportMode
-        {
-            get => importMode;
-            set => SetProperty(ref importMode, value);
-        }
+        /// <summary>
+        /// 标记当前是否为导入外部数据的模式
+        /// </summary>
+        [ObservableProperty]
+        private bool _importMode = false;
+
+        /// <summary>
+        /// 获取实体英文id
+        /// </summary>
+        /// <returns></returns>
+        [GeneratedRegex("[a-zA-Z_]+")]
+        private partial Regex GetEntityID();
+
+        /// <summary>
+        /// 版本数据源
+        /// </summary>
+        [ObservableProperty]
+        private ObservableCollection<TextComboBoxItem> _versionSource = [];
+
+        /// <summary>
+        /// 已选版本
+        /// </summary>
+        [ObservableProperty]
+        private TextComboBoxItem _selectedVersion;
+
+        #region 作为工具或引用
+        [ObservableProperty]
+        public bool _useForTool = false;
+        [ObservableProperty]
+        public bool _useForReference = false;
+        #endregion
+
+        #region 通用NBT
+
+        /// <summary>
+        /// 允许编辑实体共通标签
+        /// </summary>
+        [ObservableProperty]
+        private bool _entityCommonTagsEnabled = true;
+        [ObservableProperty]
+        /// <summary>
+        /// 允许编辑活体共通标签
+        /// </summary>
+        private bool _livingBodyCommonTagsEnabled = true;
+        [ObservableProperty]
+        /// <summary>
+        /// 允许编辑活体共通标签
+        /// </summary>
+        private bool _mobCommonTagsEnabled = true;
+        /// <summary>
+        /// 实体共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _entityCommonTagsVisibility = Visibility.Visible;
+        /// <summary>
+        /// 活体共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _livingBodyCommonTagsVisibility = Visibility.Visible;
+        /// <summary>
+        /// 生物共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _mobCommonTagsVisibility = Visibility.Visible;
+        /// <summary>
+        /// 可愤怒生物额外字段可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _angryCreatureExtraFieldVisibility = Visibility.Collapsed;
+        /// <summary>
+        /// 可繁殖生物额外字段可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _breedableMobExtraFieldsVisibility = Visibility.Collapsed;
+        /// <summary>
+        /// 可在袭击中生成的生物共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _commonTagsForMobsSpawnedInRaidsVisibility = Visibility.Collapsed;
+        /// <summary>
+        /// 可骑乘生物共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _commonTagsForRideableEntitiesVisibility = Visibility.Collapsed;
+        /// <summary>
+        /// 僵尸类生物共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _commonTagsForZombiesVisibility = Visibility.Collapsed;
+
+        /// <summary>
+        /// 可驯服生物共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _tameableMobExtraFieldsVisibility = Visibility.Collapsed;
+
+        /// <summary>
+        /// 箭类投掷物共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _arrowProjectileCommonTagsVisibility = Visibility.Collapsed;
+
+        /// <summary>
+        /// 容器实体共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _containerEntityCommonTagsVisibility = Visibility.Collapsed;
+
+        /// <summary>
+        /// 火球类投掷物共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _fireballProjectileCommonTagsVisibility = Visibility.Collapsed;
+
+        /// <summary>
+        /// 物品类投掷物共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _itemProjectileCommonTagsVisibility = Visibility.Collapsed;
+
+        /// <summary>
+        /// 矿车共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _mineCartCommonTagsVisibility = Visibility.Collapsed;
+
+        /// <summary>
+        /// 药水效果共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _potionEffectCommonTagsVisibility = Visibility.Collapsed;
+
+        /// <summary>
+        /// 投掷物共通标签可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _projectileCommonTagsVisibility = Visibility.Collapsed;
+
         #endregion
 
         #region 是否同步到文件
@@ -378,19 +300,9 @@ namespace CBHK.ViewModel.Component.Entity
         public string ExternFilePath { get; set; }
         #endregion
 
-        //获取实体英文id
-        [GeneratedRegex("[a-zA-Z_]+")]
-        private partial Regex GetEntityID();
-        //特殊实体的共通标签链表
-        List<string> specialEntityCommonTagList = [];
-        //特殊实体特指标签字典,用于动态切换内容
-        public Dictionary<string,Grid> SpecialDataDictionary = [];
-        //特殊标签面板
-        ScrollViewer SpecialViewer = null;
-        //存储最终的结果
-        public string Result { get; set; }
         #endregion
 
+        #region Method
         public EntityPageViewModel(IContainerProvider container,CBHKDataContext context)
         {
             #region 初始化字段
@@ -425,90 +337,36 @@ namespace CBHK.ViewModel.Component.Entity
             buttonPressedBrush = new ImageBrush(new BitmapImage(new Uri(buttonPressedImage, UriKind.RelativeOrAbsolute)));
             #endregion
         }
-        
-        /// <summary>
-        /// 载入实体页
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void EntityPages_Loaded(object sender,RoutedEventArgs e)
-        {
-            currentEntityPage = sender as EntityPageView;
-            EntityViewModel entityDataContext = Window.GetWindow(currentEntityPage).DataContext as EntityViewModel;
-            VersionSource = entityDataContext.VersionSource;
-            string entityImageFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                foreach (var item in _context.EntitySet)
-                {
-                    #region 设置实体图标、名称和ID
-                    if (item.ID is not null)
-                    {
-                        string iconPath = File.Exists(entityImageFolderPath + item.ID + "_spawn_egg.png") ? entityImageFolderPath + item.ID + "_spawn_egg.png" : entityImageFolderPath + item.ID + ".png";
-                        IconComboBoxItem iconComboBoxItem = new()
-                        {
-                            ComboBoxItemIcon = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
-                            ComboBoxItemText = item.Name ?? "",
-                            ComboBoxItemId = item.ID
-                        };
-                        EntityIDList.Add(iconComboBoxItem);
-                        if (item.Version is not null)
-                        {
-                            if (EntityIDListCopy.TryGetValue(item.Version, out List<IconComboBoxItem> list))
-                                list.Add(iconComboBoxItem);
-                            else
-                                EntityIDListCopy.Add(item.Version, [iconComboBoxItem]);
-                        }
-                    }
-                    #endregion
-                }
-            });
-        }
 
         /// <summary>
-        /// 版本更新事件
+        /// JSON转控件
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        /// <param name="grid"></param>
+        /// <param name="nbtStructure"></param>
+        private List<FrameworkElement> JsonToComponentConverter(JObject nbtStructure, string NBTType = "")
         {
-            #region 处理版本控件的数据更新
-            CancellationTokenSource cancellationTokenSource = new();
-            await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
+            string tag = JArray.Parse(nbtStructure["tag"].ToString())[0].ToString();
+            string key = nbtStructure["Key"].ToString();
+            JToken children = nbtStructure["Children"];
+            JToken descriptionObj = nbtStructure["Description"];
+            string description = descriptionObj != null ? descriptionObj.ToString() : "";
+            JToken toolTipObj = nbtStructure["ToolTip"];
+            string toolTip = toolTipObj != null ? toolTipObj.ToString() : "";
+            JToken dependencyObj = nbtStructure["Dependency"];
+            string dependency = dependencyObj != null ? dependencyObj.ToString() : "";
+            ComponentData componentData = new()
             {
-                await VersionComponents[i].Upgrade(CurrentMinVersion);
-            });
-            await Parallel.ForEachAsync(VersionNBTList, async (item, cancellationToken) =>
-            {
-                await Task.Delay(0, cancellationToken);
-                item.Value.Invoke(item.Key, null);
-            });
-            #endregion
-            #region 处理版本实体ID的更新
-            List<object> NeedRemovedItemList = [];
-            foreach (var item in EntityIDListCopy)
-            {
-                string versionString = item.Key.Replace(".", "");
-                if (int.Parse(versionString) <= CurrentMinVersion)
-                {
-                    if (!EntityIDList.Contains(item.Value[0]))
-                    {
-                        for (int i = 0; i < item.Value.Count; i++)
-                        {
-                            EntityIDList.Add(item.Value[i]);
-                        }
-                    }
-                }
-                else
-                {
-                    NeedRemovedItemList.AddRange(item.Value);
-                }
-            }
-            foreach (var item in NeedRemovedItemList)
-            {
-                EntityIDList.Remove(item as IconComboBoxItem);
-            }
-            #endregion
+                DataType = tag,
+                Key = key,
+                ToolTip = toolTip,
+                Description = description,
+                Dependency = dependency,
+                NBTType = NBTType
+            };
+            if (children != null)
+                componentData.Children = children.ToString();
+            List<FrameworkElement> componentGroup = ComponentsGenerator(componentData);
+            return componentGroup;
         }
 
         /// <summary>
@@ -522,18 +380,19 @@ namespace CBHK.ViewModel.Component.Entity
             List<JToken> result = array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityIDString)
+                if (currentObj["type"].ToString() == SelectedEntityId.ComboBoxItemId)
                     return true;
                 return false;
             }).ToList();
-            if(result.Count == 0)
+            if (result.Count == 0)
             {
                 return;
             }
             JObject targetObj = result[0] as JObject;
             #endregion
+
             CurrentCommonTags.Clear();
-            CurrentCommonTags = JArray.Parse(targetObj["common"].ToString()).ToList().ConvertAll(item=>item.ToString());
+            CurrentCommonTags = JArray.Parse(targetObj["common"].ToString()).ToList().ConvertAll(item => item.ToString());
         }
 
         /// <summary>
@@ -543,7 +402,7 @@ namespace CBHK.ViewModel.Component.Entity
         private void FinalSettlement(object MultipleOrExtern)
         {
             CollectionCommonTagsMark();
-            Result = string.Join(",",SpecialTagsResult[SelectedEntityIDString].Select(item =>
+            Result = string.Join(",", SpecialTagsResult[SelectedEntityId.ComboBoxItemId].Select(item =>
             {
                 if (item != null && item.Result.Length > 0)
                     return item.Result;
@@ -559,24 +418,24 @@ namespace CBHK.ViewModel.Component.Entity
             if (!Give)
             {
                 if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~") + @"\\\""}\""}}""}}";
+                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}";
                 else
-                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
+                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~";
             }
             else
             {
                 if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
+                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
                 else
-                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
+                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
             }
 
-            if(bool.Parse(MultipleOrExtern.ToString()))
+            if (bool.Parse(MultipleOrExtern.ToString()))
             {
                 DisplayerView displayer = _container.Resolve<DisplayerView>();
-                if(displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
+                if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
-                    displayerViewModel.GeneratorResult(Result, "实体", icon_path);
+                    displayerViewModel.GeneratorResult(Result, "实体", iconPath);
                 }
             }
         }
@@ -589,102 +448,6 @@ namespace CBHK.ViewModel.Component.Entity
         {
             Thread settlement = new(new ParameterizedThreadStart(FinalSettlement));
             settlement.Start(MultipleOrExtern);
-        }
-
-        [RelayCommand]
-        /// <summary>
-        /// 运行保存
-        /// </summary>
-        private void Save()
-        {
-            //执行生成
-            FinalSettlement(false);
-            Microsoft.Win32.SaveFileDialog saveFileDialog = new()
-            {
-                AddExtension = true,
-                RestoreDirectory = true,
-                CheckPathExists = true,
-                DefaultExt = ".command",
-                Filter = "Command files (*.command;)|*.command;",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                Title = "保存为命令文件"
-            };
-            if (saveFileDialog.ShowDialog().Value)
-            {
-                if (Directory.Exists(Path.GetDirectoryName(saveFileDialog.FileName)))
-                    _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
-                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\EntityView\\");
-                _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\EntityView\\" + Path.GetFileName(saveFileDialog.FileName), Result);
-            }
-        }
-
-        [RelayCommand]
-        /// <summary>
-        /// 运行生成
-        /// </summary>
-        private void Run()
-        {
-            CollectionCommonTagsMark();
-
-            Result = (SpecialTagsResult.TryGetValue(SelectedEntityIDString, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
-            {
-                if (item != null && item.Result.Length > 0)
-                    return item.Result;
-                return "";
-            })) + ",":"") + string.Join(",", CommonResult.Select(item =>
-            {
-                if (CurrentCommonTags.Contains(item.NBTGroup) && item.Result.Length > 0)
-                    return item.Result;
-                else
-                    return "";
-            }));
-            Result = Regex.Replace(Result.Trim(','), @",{2,}", ",");
-
-            if (UseForTool)
-            {
-                Result = "{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result != null && Result.Length > 0 ? "," + Result : "") + "}";
-                EntityView entity = Window.GetWindow(currentEntityPage) as EntityView;
-                entity.DialogResult = true;
-                return;
-            }
-
-            if (!Give)
-            {
-                if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~") + @"\\\""}\""}}""}}";
-                else
-                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
-            }
-            else
-            {
-                if (CurrentMinVersion < 1130)
-                {
-                    if (!HaveCustomName)
-                        Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
-                    else
-                        Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
-                }
-                else
-                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
-            }
-
-            if(SyncToFile && ExternFilePath.Length > 0 && File.Exists(ExternFilePath))
-                File.WriteAllText(ExternFilePath, Result);
-
-            if (ShowResult)
-            {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
-                if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
-                {
-                    displayer.Show();
-                    displayerViewModel.GeneratorResult(Result, "实体", icon_path);
-                }
-            }
-            else
-            {
-                Clipboard.SetText(Result);
-                Message.PushMessage("实体生成成功！数据已进入剪切板",MessageBoxImage.Information);
-            }
         }
 
         /// <summary>
@@ -701,23 +464,23 @@ namespace CBHK.ViewModel.Component.Entity
             string PassengersData = PassengerResult.Count > 0 ? "Passengers:[" + string.Join(",", PassengerResult.Select(item => item.Result)).Trim(',') + "]" : "";
             PassengersData = PassengersData == "Passengers:[]" ? "" : PassengersData;
 
-            Result = (SpecialTagsResult.TryGetValue(SelectedEntityIDString, out ObservableCollection<NBTDataStructure> value) && value.Count > 0? string.Join(",", value.Select(item =>
+            Result = (SpecialTagsResult.TryGetValue(SelectedEntityId.ComboBoxItemId, out ObservableCollection<NBTDataStructure> value) && value.Count > 0 ? string.Join(",", value.Select(item =>
             {
                 if (item != null && item.Result.Length > 0)
                     return item.Result;
                 return "";
-            })):"") + (CommonResult.Count > 0?"," + string.Join(",", CommonResult.Select(item =>
+            })) : "") + (CommonResult.Count > 0 ? "," + string.Join(",", CommonResult.Select(item =>
             {
                 if (CurrentCommonTags.Contains(item.NBTGroup) && item.Result.Length > 0)
                     return item.Result;
                 else
                     return "";
-            })):"") + "," + AttributesData + "," + PassengersData;
+            })) : "") + "," + AttributesData + "," + PassengersData;
             Result = Regex.Replace(Result.Trim(','), @",{2,}", ",");
 
-            if(UseForReference)
+            if (UseForReference)
             {
-                Result = "{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}";
+                Result = "{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}";
                 EntityView entity = Window.GetWindow(currentEntityPage) as EntityView;
                 return Result;
             }
@@ -725,19 +488,19 @@ namespace CBHK.ViewModel.Component.Entity
             if (!Give)
             {
                 if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~") + @"\\\""}\""}}""}}";
+                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}";
                 else
-                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityIDString + " ~ ~ ~";
+                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~";
             }
             else
             {
                 if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
+                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
                 else
                 if (CurrentMinVersion < 1130)
-                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
+                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
                 else
-                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityIDString + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
+                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
             }
 
             if (showResult)
@@ -745,7 +508,7 @@ namespace CBHK.ViewModel.Component.Entity
                 DisplayerView displayer = _container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
-                    displayerViewModel.GeneratorResult(Result, "实体", icon_path);
+                    displayerViewModel.GeneratorResult(Result, "实体", iconPath);
                 }
             }
             else
@@ -763,19 +526,19 @@ namespace CBHK.ViewModel.Component.Entity
             List<FrameworkElement> result = [];
             TextBlock displayText = new()
             {
-                Uid = Request.nbtType,
-                Text = Request.description.TrimEnd('。').TrimEnd('.'),
+                Uid = Request.NBTType,
+                Text = Request.Description.TrimEnd('。').TrimEnd('.'),
                 Foreground = whiteBrush,
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            if (Request.toolTip.Length > 0)
+            if (Request.ToolTip.Length > 0)
             {
                 ToolTip toolTip = new()
                 {
                     Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
                     Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#484848")),
-                    Content = Request.toolTip
+                    Content = Request.ToolTip
                 };
                 displayText.ToolTip = toolTip;
                 ToolTipService.SetInitialShowDelay(displayText, 0);
@@ -785,34 +548,34 @@ namespace CBHK.ViewModel.Component.Entity
             result.Add(displayText);
             ComponentEvents componentEvents = new(_context);
 
-            switch (Request.dataType)
+            switch (Request.DataType)
             {
                 case "TAG_BlockState":
                     {
                         BlockState blockState = new(_context)
                         {
-                            Uid = Request.nbtType,
-                            Tag = new NBTDataStructure() { DataType = Request.dataType,NBTGroup = Request.nbtType },
-                            Name = Request.key
+                            Uid = Request.NBTType,
+                            Tag = new NBTDataStructure() { DataType = Request.DataType, NBTGroup = Request.NBTType },
+                            Name = Request.Key
                         };
-                        blockState.BlockID.ToolTip = Request.description;
-                        ToolTipService.SetBetweenShowDelay(blockState.BlockID,0);
+                        blockState.BlockID.ToolTip = Request.Description;
+                        ToolTipService.SetBetweenShowDelay(blockState.BlockID, 0);
                         ToolTipService.SetInitialShowDelay(blockState.BlockID, 0);
-                        Grid.SetColumnSpan(blockState,2);
+                        Grid.SetColumnSpan(blockState, 2);
                         blockState.GotFocus += componentEvents.ValueChangedHandler;
                         result.Remove(displayText);
                         result.Add(blockState);
                         #region 分析是否需要代入导入的数据
                         if (ImportMode)
                         {
-                            string key = Request.key;
+                            string key = Request.Key;
                             if (!!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
                             if (currentObj != null)
                             {
                                 JToken BlockID = currentObj["Name"];
-                                if(BlockID != null)
+                                if (BlockID != null)
                                 {
                                     string BlockIDString = BlockID.ToString();
                                     JToken BlockProperties = currentObj["Properties"];
@@ -839,26 +602,26 @@ namespace CBHK.ViewModel.Component.Entity
                     break;
                 case "TAG_List":
                     {
-                        if (Request.dependency != null && Request.dependency.Length > 0)
+                        if (Request.Dependency != null && Request.Dependency.Length > 0)
                         {
-                            switch (Request.dependency)
+                            switch (Request.Dependency)
                             {
                                 case "ItemGenerator":
                                     {
                                         Binding visibilityBinder = new()
                                         {
                                             Mode = BindingMode.OneWay,
-                                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                                             Source = this
                                         };
                                         Accordion itemAccordion = new()
                                         {
                                             MaxHeight = 200,
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
                                             Style = Application.Current.Resources["AccordionStyle"] as Style,
                                             Background = orangeBrush,
-                                            Title = Request.description,
+                                            Title = Request.Description,
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
@@ -866,7 +629,7 @@ namespace CBHK.ViewModel.Component.Entity
                                             FreshName = "清空",
                                             ModifyForeground = blackBrush,
                                             FreshForeground = blackBrush,
-                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         StackPanel itemPanel = new() { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")) };
                                         ScrollViewer scrollViewer = new()
@@ -879,12 +642,12 @@ namespace CBHK.ViewModel.Component.Entity
                                         itemAccordion.Content = scrollViewer;
                                         itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
                                         result.Add(itemAccordion);
-                                        itemAccordion.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                                        itemAccordion.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                                         result.Remove(displayText);
                                         #region 分析是否需要代入导入的数据
                                         if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             JToken data = ExternallyReadEntityData.SelectToken(key);
@@ -895,7 +658,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 for (int i = 0; i < Items.Count; i++)
                                                 {
                                                     string itemID = JObject.Parse(Items[i].ToString())["id"].ToString();
-                                                    Image image = new() { Tag = new NBTDataStructure() { Result = Items[i].ToString(), Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
+                                                    Image image = new() { Tag = new NBTDataStructure() { Result = Items[i].ToString(), Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType } };
                                                     imagePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
                                                     if (File.Exists(imagePath))
                                                         image.Source = new BitmapImage(new Uri(imagePath, UriKind.RelativeOrAbsolute));
@@ -914,11 +677,11 @@ namespace CBHK.ViewModel.Component.Entity
                                         Accordion areaEffectCloudEffectsAccordion = new()
                                         {
                                             MaxHeight = 200,
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
                                             Style = Application.Current.Resources["AccordionStyle"] as Style,
                                             Background = orangeBrush,
-                                            Title = Request.description,
+                                            Title = Request.Description,
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
@@ -926,7 +689,7 @@ namespace CBHK.ViewModel.Component.Entity
                                             FreshName = "清空",
                                             ModifyForeground = blackBrush,
                                             FreshForeground = blackBrush,
-                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         StackPanel itemPanel = new() { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")) };
                                         ScrollViewer scrollViewer = new()
@@ -944,7 +707,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         #region 分析是否需要代入导入的数据
                                         if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray Effects)
@@ -970,37 +733,37 @@ namespace CBHK.ViewModel.Component.Entity
                                                     #endregion
                                                     #region 应用数据
                                                     if (Ambient != null)
-                                                    contentPanel.FindChild<TextCheckBoxs>("Ambient").IsChecked = Ambient.ToString() == "1";
-                                                    if(Amplifier != null)
-                                                    contentPanel.FindChild<Slider>("Amplifier").Value = byte.Parse(Amplifier.ToString());
-                                                    if(Duration != null)
-                                                    contentPanel.FindChild<Slider>("Duration").Value = int.Parse(Duration.ToString());
-                                                    if(Id != null)
+                                                        contentPanel.FindChild<TextCheckBoxs>("Ambient").IsChecked = Ambient.ToString() == "1";
+                                                    if (Amplifier != null)
+                                                        contentPanel.FindChild<Slider>("Amplifier").Value = byte.Parse(Amplifier.ToString());
+                                                    if (Duration != null)
+                                                        contentPanel.FindChild<Slider>("Duration").Value = int.Parse(Duration.ToString());
+                                                    if (Id != null)
                                                     {
-                                                        string id = Id.ToString().Replace("minecraft:","");
+                                                        string id = Id.ToString().Replace("minecraft:", "");
                                                         ComboBox comboBox = contentPanel.FindChild<ComboBox>("Id");
                                                         comboBox.SelectedValuePath = "id";
                                                         comboBox.SelectedValue = id;
                                                     }
                                                     if (ShowIcon != null)
-                                                    contentPanel.FindChild<TextCheckBoxs>("ShowIcon").IsChecked = ShowIcon.ToString() == "1";
-                                                    if(ShowParticles != null)
-                                                    contentPanel.FindChild<TextCheckBoxs>("ShowParticles").IsChecked = ShowParticles.ToString() == "1";
+                                                        contentPanel.FindChild<TextCheckBoxs>("ShowIcon").IsChecked = ShowIcon.ToString() == "1";
+                                                    if (ShowParticles != null)
+                                                        contentPanel.FindChild<TextCheckBoxs>("ShowParticles").IsChecked = ShowParticles.ToString() == "1";
                                                     Grid grid = (contentPanel.FindChild<Accordion>().Content as ScrollViewer).Content as Grid;
-                                                    if(effect_changed_timestamp != null)
-                                                    grid.FindChild<Slider>("effect_changed_timestamp").Value = int.Parse(effect_changed_timestamp.ToString());
-                                                    if(factor_current != null)
-                                                    grid.FindChild<Slider>("factor_current").Value = int.Parse(factor_current.ToString());
-                                                    if(factor_previous_frame != null)
-                                                    grid.FindChild<Slider>("factor_previous_frame").Value = int.Parse(factor_previous_frame.ToString());
-                                                    if(factor_start != null)
-                                                    grid.FindChild<Slider>("factor_start").Value = int.Parse(factor_start.ToString());
-                                                    if(factor_target != null)
-                                                    grid.FindChild<Slider>("factor_target").Value = int.Parse(factor_target.ToString());
-                                                    if(had_effect_last_tick != null)
-                                                    grid.FindChild<TextCheckBoxs>("had_effect_last_tick").IsChecked = had_effect_last_tick.ToString() == "1";
-                                                    if(padding_duration != null)
-                                                    grid.FindChild<Slider>("padding_duration").Value = int.Parse(padding_duration.ToString());
+                                                    if (effect_changed_timestamp != null)
+                                                        grid.FindChild<Slider>("effect_changed_timestamp").Value = int.Parse(effect_changed_timestamp.ToString());
+                                                    if (factor_current != null)
+                                                        grid.FindChild<Slider>("factor_current").Value = int.Parse(factor_current.ToString());
+                                                    if (factor_previous_frame != null)
+                                                        grid.FindChild<Slider>("factor_previous_frame").Value = int.Parse(factor_previous_frame.ToString());
+                                                    if (factor_start != null)
+                                                        grid.FindChild<Slider>("factor_start").Value = int.Parse(factor_start.ToString());
+                                                    if (factor_target != null)
+                                                        grid.FindChild<Slider>("factor_target").Value = int.Parse(factor_target.ToString());
+                                                    if (had_effect_last_tick != null)
+                                                        grid.FindChild<TextCheckBoxs>("had_effect_last_tick").IsChecked = had_effect_last_tick.ToString() == "1";
+                                                    if (padding_duration != null)
+                                                        grid.FindChild<Slider>("padding_duration").Value = int.Parse(padding_duration.ToString());
                                                     #endregion
                                                 }
                                                 areaEffectCloudEffectsAccordion.Focus();
@@ -1014,11 +777,11 @@ namespace CBHK.ViewModel.Component.Entity
                                         Accordion AttributesAccordion = new()
                                         {
                                             MaxHeight = 200,
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
                                             Style = Application.Current.Resources["AccordionStyle"] as Style,
                                             Background = orangeBrush,
-                                            Title = Request.description,
+                                            Title = Request.Description,
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
@@ -1026,7 +789,7 @@ namespace CBHK.ViewModel.Component.Entity
                                             FreshName = "清空",
                                             ModifyForeground = blackBrush,
                                             FreshForeground = blackBrush,
-                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         StackPanel itemPanel = new() { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")) };
                                         ScrollViewer scrollViewer = new()
@@ -1042,9 +805,9 @@ namespace CBHK.ViewModel.Component.Entity
                                         result.Remove(displayText);
                                         result.Add(AttributesAccordion);
                                         #region 分析是否需要代入导入的数据
-                                        if(ImportMode)
+                                        if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray AttributeArray)
@@ -1098,17 +861,17 @@ namespace CBHK.ViewModel.Component.Entity
                                         Binding visibilityBinder = new()
                                         {
                                             Mode = BindingMode.OneWay,
-                                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                                             Source = this
                                         };
                                         Accordion itemAccordion = new()
                                         {
                                             MaxHeight = 200,
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
                                             Style = Application.Current.Resources["AccordionStyle"] as Style,
                                             Background = orangeBrush,
-                                            Title = Request.description,
+                                            Title = Request.Description,
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
@@ -1116,7 +879,7 @@ namespace CBHK.ViewModel.Component.Entity
                                             FreshName = "清空",
                                             ModifyForeground = blackBrush,
                                             FreshForeground = blackBrush,
-                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         StackPanel itemPanel = new() { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")) };
                                         ScrollViewer scrollViewer = new()
@@ -1134,7 +897,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         #region 分析是否需要代入导入的数据
                                         if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             JToken data = ExternallyReadEntityData.SelectToken(key);
@@ -1145,7 +908,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 for (int i = 0; i < Entities.Count; i++)
                                                 {
                                                     string itemID = JObject.Parse(Entities[i].ToString())["id"].ToString();
-                                                    Image image = new() { Tag = new NBTDataStructure() { Result = Entities[i].ToString(), Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
+                                                    Image image = new() { Tag = new NBTDataStructure() { Result = Entities[i].ToString(), Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType } };
                                                     imagePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
                                                     if (File.Exists(imagePath))
                                                         image.Source = new BitmapImage(new Uri(imagePath, UriKind.RelativeOrAbsolute));
@@ -1164,24 +927,24 @@ namespace CBHK.ViewModel.Component.Entity
                                         Binding visibilityBinder = new()
                                         {
                                             Mode = BindingMode.OneWay,
-                                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                                             Source = this
                                         };
                                         Accordion itemAccordion = new()
                                         {
                                             MaxHeight = 200,
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
                                             Style = Application.Current.Resources["AccordionStyle"] as Style,
                                             Background = orangeBrush,
-                                            Title = Request.description,
+                                            Title = Request.Description,
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
                                             ModifyName = "",
                                             ModifyVisibility = Visibility.Hidden,
                                             FreshVisibility = Visibility.Collapsed,
-                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         ArmorDropChances armorDropChances = new();
                                         ScrollViewer scrollViewer = new()
@@ -1195,12 +958,12 @@ namespace CBHK.ViewModel.Component.Entity
                                         itemAccordion.Content = scrollViewer;
                                         itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
                                         result.Add(itemAccordion);
-                                        itemAccordion.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                                        itemAccordion.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                                         result.Remove(displayText);
                                         #region 分析是否需要代入导入的数据
                                         if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray data)
@@ -1219,24 +982,24 @@ namespace CBHK.ViewModel.Component.Entity
                                         Binding visibilityBinder = new()
                                         {
                                             Mode = BindingMode.OneWay,
-                                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                                             Source = this
                                         };
                                         Accordion itemAccordion = new()
                                         {
                                             MaxHeight = 200,
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
                                             Style = Application.Current.Resources["AccordionStyle"] as Style,
                                             Background = orangeBrush,
-                                            Title = Request.description,
+                                            Title = Request.Description,
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
                                             ModifyName = "",
                                             ModifyVisibility = Visibility.Hidden,
                                             FreshVisibility = Visibility.Collapsed,
-                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         ArmorItems armorItems = new();
                                         ScrollViewer scrollViewer = new()
@@ -1250,12 +1013,12 @@ namespace CBHK.ViewModel.Component.Entity
                                         itemAccordion.Content = scrollViewer;
                                         itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
                                         result.Add(itemAccordion);
-                                        itemAccordion.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                                        itemAccordion.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                                         result.Remove(displayText);
                                         #region 分析是否需要代入导入的数据
                                         if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray data)
@@ -1274,24 +1037,24 @@ namespace CBHK.ViewModel.Component.Entity
                                         Binding visibilityBinder = new()
                                         {
                                             Mode = BindingMode.OneWay,
-                                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                                             Source = this
                                         };
                                         Accordion itemAccordion = new()
                                         {
                                             MaxHeight = 200,
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
                                             Style = Application.Current.Resources["AccordionStyle"] as Style,
                                             Background = orangeBrush,
-                                            Title = Request.description,
+                                            Title = Request.Description,
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
                                             ModifyName = "",
                                             ModifyVisibility = Visibility.Hidden,
                                             FreshVisibility = Visibility.Collapsed,
-                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         HandDropChances handDropChances = new();
                                         ScrollViewer scrollViewer = new()
@@ -1305,12 +1068,12 @@ namespace CBHK.ViewModel.Component.Entity
                                         itemAccordion.Content = scrollViewer;
                                         itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
                                         result.Add(itemAccordion);
-                                        itemAccordion.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                                        itemAccordion.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                                         result.Remove(displayText);
                                         #region 分析是否需要代入导入的数据
                                         if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray data)
@@ -1327,24 +1090,24 @@ namespace CBHK.ViewModel.Component.Entity
                                         Binding visibilityBinder = new()
                                         {
                                             Mode = BindingMode.OneWay,
-                                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                                             Source = this
                                         };
                                         Accordion itemAccordion = new()
                                         {
                                             MaxHeight = 200,
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
                                             Style = Application.Current.Resources["AccordionStyle"] as Style,
                                             Background = orangeBrush,
-                                            Title = Request.description,
+                                            Title = Request.Description,
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(2, 2, 2, 0),
                                             TitleForeground = blackBrush,
                                             ModifyName = "",
                                             ModifyVisibility = Visibility.Hidden,
                                             FreshVisibility = Visibility.Collapsed,
-                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         HandItems handItems = new();
                                         ScrollViewer scrollViewer = new()
@@ -1358,12 +1121,12 @@ namespace CBHK.ViewModel.Component.Entity
                                         itemAccordion.Content = scrollViewer;
                                         itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
                                         result.Add(itemAccordion);
-                                        itemAccordion.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                                        itemAccordion.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                                         result.Remove(displayText);
                                         #region 分析是否需要代入导入的数据
                                         if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray data)
@@ -1381,42 +1144,42 @@ namespace CBHK.ViewModel.Component.Entity
                     break;
                 case "TAG_Compound":
                     {
-                        if (Request.dependency != null && Request.dependency.Length > 0)
+                        if (Request.Dependency != null && Request.Dependency.Length > 0)
                         {
-                            switch (Request.dependency)
+                            switch (Request.Dependency)
                             {
                                 case "SuspectsEntity":
                                     {
                                         SuspectsEntities suspectsEntities = new()
                                         {
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
-                                            Tag = new NBTDataStructure() { DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
+                                            Tag = new NBTDataStructure() { DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         suspectsEntities.GotFocus += componentEvents.ValueChangedHandler;
                                         result.Remove(displayText);
                                         result.Add(suspectsEntities);
                                         #region 分析是否需要代入导入的数据
-                                        if(ImportMode)
+                                        if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag.";
                                             else
                                                 key = "";
-                                            JArray suspectArray = ExternallyReadEntityData.SelectToken(key+"anger.suspects") as JArray;
+                                            JArray suspectArray = ExternallyReadEntityData.SelectToken(key + "anger.suspects") as JArray;
                                             Accordion accordion = suspectsEntities.FindChild<Accordion>();
-                                            
+
                                             StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
                                             for (int i = 0; i < suspectArray.Count; i++)
                                             {
                                                 suspectsEntities.AddSuspectsEntitiesCommand(accordion);
                                                 StackPanel contentPanel = stackPanel.Children[^1] as StackPanel;
-                                                JToken anger = ExternallyReadEntityData.SelectToken(key+"anger.suspects[" + i + "].anger");
+                                                JToken anger = ExternallyReadEntityData.SelectToken(key + "anger.suspects[" + i + "].anger");
                                                 JToken uuid = ExternallyReadEntityData.SelectToken(key + "anger.suspects[" + i + "].uuid").ToString();
                                                 if (anger != null)
-                                                (contentPanel.Children[0] as Slider).Value = int.Parse(anger.ToString());
-                                                if(uuid != null)
+                                                    (contentPanel.Children[0] as Slider).Value = int.Parse(anger.ToString());
+                                                if (uuid != null)
                                                 {
                                                     JArray uuids = JArray.Parse(uuid.ToString());
                                                     UUIDOrPosGroup uUIDOrPosGroup = contentPanel.Children[0] as UUIDOrPosGroup;
@@ -1436,24 +1199,24 @@ namespace CBHK.ViewModel.Component.Entity
                                     {
                                         VibrationMonitors vibrationMonitors = new()
                                         {
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
-                                            Tag = new NBTDataStructure() { DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
+                                            Tag = new NBTDataStructure() { DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         vibrationMonitors.GotFocus += componentEvents.ValueChangedHandler;
                                         result.Remove(displayText);
                                         result.Add(vibrationMonitors);
                                         #region 分析是否需要代入导入的数据
-                                        if(ImportMode)
+                                        if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             else
                                                 key = "";
                                             vibrationMonitors.VibrationMonitorsEnableButton.IsChecked = ExternallyReadEntityData.SelectToken(key + "listener") != null;
                                             #region 游戏事件
-                                            JToken gameEvent = ExternallyReadEntityData.SelectToken(key+"listener.event.game_event");
+                                            JToken gameEvent = ExternallyReadEntityData.SelectToken(key + "listener.event.game_event");
                                             JToken distance = ExternallyReadEntityData.SelectToken(key + "listener.event.distance");
                                             #endregion
                                             #region 候选的游戏事件
@@ -1478,7 +1241,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 vibrationMonitors.VibrationSourcePos.number1.Value = double.Parse(event_pos[1].ToString());
                                                 vibrationMonitors.VibrationSourcePos.number2.Value = double.Parse(event_pos[2].ToString());
                                             }
-                                            if(ExternallyReadEntityData.SelectToken(key + "listener.event.source") is JArray event_source)
+                                            if (ExternallyReadEntityData.SelectToken(key + "listener.event.source") is JArray event_source)
                                             {
                                                 vibrationMonitors.TargetUUID.EnableButton.IsChecked = true;
                                                 vibrationMonitors.TargetUUID.number0.Value = int.Parse(event_source[0].ToString());
@@ -1486,7 +1249,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 vibrationMonitors.TargetUUID.number2.Value = int.Parse(event_source[2].ToString());
                                                 vibrationMonitors.TargetUUID.number3.Value = int.Parse(event_source[3].ToString());
                                             }
-                                            if(ExternallyReadEntityData.SelectToken(key + "listener.event.projectile_owner") is JArray projectile_owner)
+                                            if (ExternallyReadEntityData.SelectToken(key + "listener.event.projectile_owner") is JArray projectile_owner)
                                             {
                                                 vibrationMonitors.ProjectileUUID.EnableButton.IsChecked = true;
                                                 vibrationMonitors.ProjectileUUID.number0.Value = int.Parse(projectile_owner[0].ToString());
@@ -1499,13 +1262,13 @@ namespace CBHK.ViewModel.Component.Entity
                                             if (range != null)
                                                 vibrationMonitors.Range.Value = int.Parse(range.ToString());
                                             //振动选择器
-                                            if(selector_tick != null)
+                                            if (selector_tick != null)
                                                 vibrationMonitors.tick.Value = int.Parse(selector_tick.ToString());
                                             if (gameEventC != null)
                                                 vibrationMonitors.game_eventC.Text = gameEventC.ToString();
                                             if (distanceC != null)
                                                 vibrationMonitors.distanceC.Value = float.Parse(distanceC.ToString());
-                                            if(ExternallyReadEntityData.SelectToken(key + "listener.selector.event.pos") is JArray event_posC)
+                                            if (ExternallyReadEntityData.SelectToken(key + "listener.selector.event.pos") is JArray event_posC)
                                             {
                                                 vibrationMonitors.VibrationSourcePosC.EnableButton.IsChecked = true;
                                                 vibrationMonitors.VibrationSourcePosC.IsUUID = false;
@@ -1513,7 +1276,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 vibrationMonitors.VibrationSourcePosC.number1.Value = double.Parse(event_posC[1].ToString());
                                                 vibrationMonitors.VibrationSourcePosC.number2.Value = double.Parse(event_posC[2].ToString());
                                             }
-                                            if(ExternallyReadEntityData.SelectToken(key + "listener.selector.event.source") is JArray event_sourceC)
+                                            if (ExternallyReadEntityData.SelectToken(key + "listener.selector.event.source") is JArray event_sourceC)
                                             {
                                                 vibrationMonitors.TargetUUIDC.EnableButton.IsChecked = true;
                                                 vibrationMonitors.TargetUUIDC.number0.Value = int.Parse(event_sourceC[0].ToString());
@@ -1521,7 +1284,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 vibrationMonitors.TargetUUIDC.number2.Value = int.Parse(event_sourceC[2].ToString());
                                                 vibrationMonitors.TargetUUIDC.number3.Value = int.Parse(event_sourceC[3].ToString());
                                             }
-                                            if(ExternallyReadEntityData.SelectToken(key + "listener.selector.event.projectile_owner") is JArray projectile_ownerC)
+                                            if (ExternallyReadEntityData.SelectToken(key + "listener.selector.event.projectile_owner") is JArray projectile_ownerC)
                                             {
                                                 vibrationMonitors.ProjectileUUIDC.EnableButton.IsChecked = true;
                                                 vibrationMonitors.ProjectileUUIDC.number0.Value = int.Parse(projectile_ownerC[0].ToString());
@@ -1587,17 +1350,17 @@ namespace CBHK.ViewModel.Component.Entity
                                         Binding visibilityBinder = new()
                                         {
                                             Mode = BindingMode.OneWay,
-                                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                                             Source = this
                                         };
                                         Accordion itemAccordion = new()
                                         {
                                             MaxHeight = 200,
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
                                             Style = Application.Current.Resources["AccordionStyle"] as Style,
                                             Background = orangeBrush,
-                                            Title = Request.description,
+                                            Title = Request.Description,
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(0, 0, 0, 2),
                                             TitleForeground = blackBrush,
@@ -1605,7 +1368,7 @@ namespace CBHK.ViewModel.Component.Entity
                                             FreshName = "清空",
                                             ModifyForeground = blackBrush,
                                             FreshForeground = blackBrush,
-                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         StackPanel itemPanel = new() { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")) };
                                         ScrollViewer scrollViewer = new()
@@ -1618,12 +1381,12 @@ namespace CBHK.ViewModel.Component.Entity
                                         itemAccordion.Content = scrollViewer;
                                         itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
                                         result.Add(itemAccordion);
-                                        itemAccordion.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                                        itemAccordion.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                                         result.Remove(displayText);
                                         #region 分析是否需要代入导入的数据
                                         if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             JToken data = ExternallyReadEntityData.SelectToken(key);
@@ -1634,7 +1397,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 for (int i = 0; i < Items.Count; i++)
                                                 {
                                                     string itemID = JObject.Parse(Items[i].ToString())["id"].ToString();
-                                                    Image image = new() { Tag = new NBTDataStructure() { Result = Items[i].ToString(), Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
+                                                    Image image = new() { Tag = new NBTDataStructure() { Result = Items[i].ToString(), Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType } };
                                                     imagePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png";
                                                     if (File.Exists(imagePath))
                                                         image.Source = new BitmapImage(new Uri(imagePath, UriKind.RelativeOrAbsolute));
@@ -1653,17 +1416,17 @@ namespace CBHK.ViewModel.Component.Entity
                                         Binding visibilityBinder = new()
                                         {
                                             Mode = BindingMode.OneWay,
-                                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                                             Source = this
                                         };
                                         Accordion leashAccordion = new()
                                         {
                                             MaxHeight = 200,
-                                            Uid = Request.nbtType,
-                                            Name = Request.key,
+                                            Uid = Request.NBTType,
+                                            Name = Request.Key,
                                             Style = Application.Current.Resources["AccordionStyle"] as Style,
                                             Background = orangeBrush,
-                                            Title = Request.description,
+                                            Title = Request.Description,
                                             BorderThickness = new Thickness(0),
                                             Margin = new Thickness(10, 2, 10, 0),
                                             TitleForeground = blackBrush,
@@ -1672,18 +1435,18 @@ namespace CBHK.ViewModel.Component.Entity
                                             FreshVisibility = Visibility.Collapsed,
                                             ModifyForeground = blackBrush,
                                             FreshForeground = blackBrush,
-                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                                         };
                                         LeashData leashData = new();
                                         leashAccordion.Content = leashData;
                                         leashAccordion.GotFocus += componentEvents.ValueChangedHandler;
                                         result.Add(leashAccordion);
-                                        leashAccordion.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                                        leashAccordion.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                                         result.Remove(displayText);
                                         #region 分析是否需要导入数据
-                                        if(ImportMode)
+                                        if (ImportMode)
                                         {
-                                            string key = Request.key;
+                                            string key = Request.Key;
                                             if (!!Give)
                                                 key = "EntityTag." + key;
                                             JToken uuid = ExternallyReadEntityData.SelectToken(key + ".UUID");
@@ -1691,11 +1454,11 @@ namespace CBHK.ViewModel.Component.Entity
                                             JToken y = ExternallyReadEntityData.SelectToken(key + ".Y");
                                             JToken z = ExternallyReadEntityData.SelectToken(key + ".Z");
                                             leashData.Tied.IsChecked = uuid != null || x != null || y != null || z != null;
-                                            if(uuid != null)
+                                            if (uuid != null)
                                             {
                                                 JArray uuidArray = JArray.Parse(uuid.ToString());
                                                 leashData.TiedByEntity.IsChecked = true;
-                                                leashData.BeingLed_Click(leashData.TiedByEntity,null);
+                                                leashData.BeingLed_Click(leashData.TiedByEntity, null);
                                             }
                                             else
                                             if (x != null && y != null && z != null)
@@ -1722,32 +1485,32 @@ namespace CBHK.ViewModel.Component.Entity
                         Binding visibilityBinder = new()
                         {
                             Mode = BindingMode.OneWay,
-                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                             Source = this
                         };
                         UUIDListGenerator uUIDListGenerator = new()
                         {
-                            Uid = Request.nbtType,
-                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                            Uid = Request.NBTType,
+                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                         };
                         uUIDListGenerator.GotFocus += componentEvents.ValueChangedHandler;
-                        uUIDListGenerator.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                        uUIDListGenerator.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         result.Add(uUIDListGenerator);
                         result.Remove(displayText);
                         #region 分析是否需要代入导入的数据
                         if (ImportMode)
                         {
-                            string key = Request.key;
+                            string key = Request.Key;
                             if (!!Give)
                                 key = "EntityTag." + key;
                             JToken data = ExternallyReadEntityData.SelectToken(key);
                             if (data != null)
                             {
-                                JArray uuidArray = JArray.Parse(data.ToString().Replace("I;",""));
+                                JArray uuidArray = JArray.Parse(data.ToString().Replace("I;", ""));
                                 for (int i = 0; i < uuidArray.Count; i++)
                                 {
                                     JArray idToken = JArray.Parse(uuidArray[i].ToString());
-                                    if(idToken != null)
+                                    if (idToken != null)
                                     {
                                         string itemID = idToken[i].ToString();
                                     }
@@ -1763,22 +1526,22 @@ namespace CBHK.ViewModel.Component.Entity
                         Binding visibilityBinder = new()
                         {
                             Mode = BindingMode.OneWay,
-                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                             Source = this
                         };
-                        JArray children = JArray.Parse(Request.children);
-                        Grid floatGrid = new() { Uid = Request.nbtType, Name = Request.key, Tag = new NBTDataStructure() { Result = "",Visibility = Visibility.Collapsed,DataType = Request.dataType,NBTGroup = Request.nbtType } };
+                        JArray children = JArray.Parse(Request.Children);
+                        Grid floatGrid = new() { Uid = Request.NBTType, Name = Request.Key, Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType } };
 
-                        displayText.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
-                        floatGrid.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                        displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
+                        floatGrid.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         for (int i = 0; i < children.Count; i++)
                         {
                             floatGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
                             floatGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
                             JObject child = JObject.Parse(children[i].ToString());
                             JArray range = JArray.Parse(child["range"].ToString());
-                            string description = child["description"].ToString();
-                            string toolTip = child["toolTip"].ToString();
+                            string description = child["Description"].ToString();
+                            string toolTip = child["ToolTip"].ToString();
                             float minValue = float.MinValue;
                             float maxValue = float.MaxValue;
                             if (range != null)
@@ -1794,7 +1557,7 @@ namespace CBHK.ViewModel.Component.Entity
                                 HorizontalAlignment = HorizontalAlignment.Center,
                                 VerticalAlignment = VerticalAlignment.Center
                             };
-                            if(toolTip.Length > 0)
+                            if (toolTip.Length > 0)
                             {
                                 descriptionText.ToolTip = toolTip;
                                 ToolTipService.SetInitialShowDelay(descriptionText, 0);
@@ -1814,19 +1577,19 @@ namespace CBHK.ViewModel.Component.Entity
                                 numberBox.Uid = "1";
                             floatGrid.Children.Add(descriptionText);
                             floatGrid.Children.Add(numberBox);
-                            Grid.SetColumn(descriptionText,floatGrid.ColumnDefinitions.Count - 2);
-                            Grid.SetColumn(numberBox,floatGrid.ColumnDefinitions.Count - 1);
+                            Grid.SetColumn(descriptionText, floatGrid.ColumnDefinitions.Count - 2);
+                            Grid.SetColumn(numberBox, floatGrid.ColumnDefinitions.Count - 1);
                         }
                         floatGrid.GotFocus += componentEvents.ValueChangedHandler;
                         result.Add(floatGrid);
                         #region 分析是否需要代入导入的数据
-                        if(ImportMode)
+                        if (ImportMode)
                         {
-                            string key = Request.key;
+                            string key = Request.Key;
                             if (!!Give)
                                 key = "EntityTag." + key;
                             JToken currentToken = ExternallyReadEntityData.SelectToken(key);
-                            if(currentToken != null)
+                            if (currentToken != null)
                             {
                                 JArray floatArray = JArray.Parse(currentToken.ToString());
                                 float number0 = float.Parse(floatArray[0].ToString());
@@ -1872,60 +1635,60 @@ namespace CBHK.ViewModel.Component.Entity
                         Binding visibilityBinder = new()
                         {
                             Mode = BindingMode.OneWay,
-                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                             Source = this
                         };
                         displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
-                        if (Request.dataType == "TAG_Byte")
+                        if (Request.DataType == "TAG_Byte")
                         {
                             minValue = byte.MinValue;
                             maxValue = byte.MaxValue;
                         }
                         else
-                            if (Request.dataType == "TAG_Int" || Request.dataType == "TAG_UUID")
+                            if (Request.DataType == "TAG_Int" || Request.DataType == "TAG_UUID")
                         {
                             minValue = int.MinValue;
                             maxValue = int.MaxValue;
                         }
                         else
-                            if (Request.dataType == "TAG_Float")
+                            if (Request.DataType == "TAG_Float")
                         {
                             minValue = float.MinValue;
                             maxValue = float.MaxValue;
                         }
                         else
-                            if (Request.dataType == "TAG_Double" || Request.dataType == "TAG_Pos")
+                            if (Request.DataType == "TAG_Double" || Request.DataType == "TAG_Pos")
                         {
                             minValue = double.MinValue;
                             maxValue = double.MaxValue;
                         }
                         else
-                            if (Request.dataType == "TAG_Short")
+                            if (Request.DataType == "TAG_Short")
                         {
                             minValue = short.MinValue;
                             maxValue = short.MaxValue;
                         }
 
-                        if (Request.dataType == "TAG_Pos" || Request.dataType == "TAG_UUID")
+                        if (Request.DataType == "TAG_Pos" || Request.DataType == "TAG_UUID")
                         {
                             UUIDOrPosGroup uUIDOrPosGroup = new()
                             {
-                                Uid = Request.nbtType,
-                                Name = Request.key,
-                                IsUUID = Request.dataType == "TAG_UUID",
-                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                Uid = Request.NBTType,
+                                Name = Request.Key,
+                                IsUUID = Request.DataType == "TAG_UUID",
+                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                             };
                             result.Add(uUIDOrPosGroup);
-                            uUIDOrPosGroup.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                            uUIDOrPosGroup.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                             uUIDOrPosGroup.GotFocus += componentEvents.ValueChangedHandler;
                             #region 分析是否需要代入导入的数据
                             if (ImportMode)
                             {
-                                string key = Request.key;
+                                string key = Request.Key;
                                 if (!!Give)
                                     key = "EntityTag." + key;
                                 JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if(currentObj != null)
+                                if (currentObj != null)
                                 {
                                     JArray dataArray = JArray.Parse(currentObj.ToString());
                                     uUIDOrPosGroup.number0.Value = int.Parse(dataArray[0].ToString());
@@ -1941,13 +1704,13 @@ namespace CBHK.ViewModel.Component.Entity
                         {
                             Slider numberBox1 = new()
                             {
-                                Name = Request.key,
-                                Uid = Request.nbtType,
+                                Name = Request.Key,
+                                Uid = Request.NBTType,
                                 Minimum = minValue,
                                 Maximum = maxValue,
                                 Value = 0,
                                 Style = Application.Current.Resources["NumberBoxStyle"] as Style,
-                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                             };
                             numberBox1.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                             numberBox1.GotFocus += componentEvents.ValueChangedHandler;
@@ -1955,11 +1718,11 @@ namespace CBHK.ViewModel.Component.Entity
                             #region 分析是否需要代入导入的数据
                             if (ImportMode)
                             {
-                                string key = Request.key;
+                                string key = Request.Key;
                                 if (!!Give)
                                     key = "EntityTag." + key;
                                 JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if(currentObj != null)
+                                if (currentObj != null)
                                 {
                                     numberBox1.Value = int.Parse(currentObj.ToString());
                                 }
@@ -1975,16 +1738,16 @@ namespace CBHK.ViewModel.Component.Entity
                         Binding visibilityBinder = new()
                         {
                             Mode = BindingMode.OneWay,
-                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                             Source = this
                         };
-                        TextBox stringBox = new() { BorderBrush = blackBrush, Foreground = whiteBrush, Uid = Request.nbtType, Name = Request.key, Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
+                        TextBox stringBox = new() { BorderBrush = blackBrush, Foreground = whiteBrush, Uid = Request.NBTType, Name = Request.Key, Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType } };
                         displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         stringBox.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         stringBox.GotFocus += componentEvents.ValueChangedHandler;
-                        if (Request.dataType == "TAG_String_List")
+                        if (Request.DataType == "TAG_String_List")
                         {
-                            string NewToolTip = Request.toolTip + "(以,分割成员,请遵守NBT语法)";
+                            string NewToolTip = Request.ToolTip + "(以,分割成员,请遵守NBT语法)";
                             ToolTip toolTip = new()
                             {
                                 Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
@@ -1997,7 +1760,7 @@ namespace CBHK.ViewModel.Component.Entity
                         #region 分析是否需要代入导入的数据
                         if (ImportMode)
                         {
-                            string key = Request.key;
+                            string key = Request.Key;
                             if (!!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
@@ -2015,31 +1778,31 @@ namespace CBHK.ViewModel.Component.Entity
                         Binding visibilityBinder = new()
                         {
                             Mode = BindingMode.OneWay,
-                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                             Source = this
                         };
                         StylizedTextBox stylizedTextBox = new()
                         {
                             BorderBrush = blackBrush,
                             Foreground = whiteBrush,
-                            Uid = Request.nbtType,
-                            Name = Request.key,
-                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                            Uid = Request.NBTType,
+                            Name = Request.Key,
+                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                         };
                         displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         stylizedTextBox.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
-                        stylizedTextBox.colorPicker.PropertyChanged += (a,b) =>
+                        stylizedTextBox.colorPicker.PropertyChanged += (a, b) =>
                         {
-                            componentEvents.StylizedTextBox_LostFocus(stylizedTextBox,null);
+                            componentEvents.StylizedTextBox_LostFocus(stylizedTextBox, null);
                         };
 
                         if (!VersionNBTList.ContainsKey(stylizedTextBox))
                             VersionNBTList.Add(stylizedTextBox, componentEvents.StylizedTextBox_LostFocus);
 
                         stylizedTextBox.GotFocus += componentEvents.ValueChangedHandler;
-                        if (Request.dataType == "TAG_JsonComponent")
+                        if (Request.DataType == "TAG_JsonComponent")
                         {
-                            string NewToolTip = Request.toolTip;
+                            string NewToolTip = Request.ToolTip;
                             ToolTip toolTip = new()
                             {
                                 Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
@@ -2052,7 +1815,7 @@ namespace CBHK.ViewModel.Component.Entity
                         #region 分析是否需要代入导入的数据
                         if (ImportMode)
                         {
-                            string key = Request.key;
+                            string key = Request.Key;
                             if (!!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
@@ -2073,24 +1836,24 @@ namespace CBHK.ViewModel.Component.Entity
                         Binding visibilityBinder = new()
                         {
                             Mode = BindingMode.OneWay,
-                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                             Source = this
                         };
                         TagRichTextBox tagRichTextBox = new()
                         {
                             BorderBrush = blackBrush,
                             Foreground = whiteBrush,
-                            Uid = Request.nbtType,
-                            Name = Request.key,
-                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                            Uid = Request.NBTType,
+                            Name = Request.Key,
+                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                         };
                         displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         tagRichTextBox.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
 
                         tagRichTextBox.GotFocus += componentEvents.ValueChangedHandler;
-                        if (Request.dataType == "TAG_Tags")
+                        if (Request.DataType == "TAG_Tags")
                         {
-                            string NewToolTip = Request.toolTip;
+                            string NewToolTip = Request.ToolTip;
                             ToolTip toolTip = new()
                             {
                                 Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
@@ -2103,7 +1866,7 @@ namespace CBHK.ViewModel.Component.Entity
                         #region 分析是否需要代入导入的数据
                         if (ImportMode)
                         {
-                            string key = Request.key;
+                            string key = Request.Key;
                             if (!!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
@@ -2127,20 +1890,20 @@ namespace CBHK.ViewModel.Component.Entity
                         Binding visibilityBinder = new()
                         {
                             Mode = BindingMode.OneWay,
-                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                             Source = this
                         };
-                        Grid grid = new() { Uid = Request.nbtType, Name = Request.key, Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
+                        Grid grid = new() { Uid = Request.NBTType, Name = Request.Key, Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType } };
                         grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(5, GridUnitType.Star) });
                         grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
-                        TextBox stringBox = new() { IsReadOnly = true,CaretBrush = whiteBrush, BorderBrush = blackBrush, Foreground = whiteBrush };
+                        TextBox stringBox = new() { IsReadOnly = true, CaretBrush = whiteBrush, BorderBrush = blackBrush, Foreground = whiteBrush };
                         IconTextButtons textButtons = new()
                         {
                             Style = Application.Current.Resources["IconTextButton"] as Style,
                             Background = buttonNormalBrush,
                             PressedBackground = buttonPressedBrush,
                             Content = "设置引用",
-                            Padding = new Thickness(5,2,5,2)
+                            Padding = new Thickness(5, 2, 5, 2)
                         };
                         grid.Children.Add(stringBox);
                         grid.Children.Add(textButtons);
@@ -2157,13 +1920,13 @@ namespace CBHK.ViewModel.Component.Entity
                         Binding visibilityBinder = new()
                         {
                             Mode = BindingMode.OneWay,
-                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                             Source = this
                         };
                         TextCheckBoxs textCheckBoxs = new()
                         {
-                            Uid = Request.nbtType,
-                            Name = Request.key,
+                            Uid = Request.NBTType,
+                            Name = Request.Key,
                             Foreground = whiteBrush,
                             VerticalContentAlignment = VerticalAlignment.Center,
                             VerticalAlignment = VerticalAlignment.Center,
@@ -2171,22 +1934,22 @@ namespace CBHK.ViewModel.Component.Entity
                             HeaderWidth = 20,
                             HeaderHeight = 20,
                             Style = Application.Current.Resources["TextCheckBox"] as Style,
-                            Content = Request.description,
-                            Tag = new NBTDataStructure() { Result = "",Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                            Content = Request.Description,
+                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                         };
                         displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         textCheckBoxs.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
-                        Grid.SetColumnSpan(textCheckBoxs,2);
-                        if (Request.toolTip.Length > 0)
+                        Grid.SetColumnSpan(textCheckBoxs, 2);
+                        if (Request.ToolTip.Length > 0)
                         {
                             ToolTip toolTip = new()
                             {
                                 Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
                                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#484848")),
-                                Content = Request.toolTip
+                                Content = Request.ToolTip
                             };
                             textCheckBoxs.ToolTip = toolTip;
-                            ToolTipService.SetBetweenShowDelay(textCheckBoxs,0);
+                            ToolTipService.SetBetweenShowDelay(textCheckBoxs, 0);
                             ToolTipService.SetInitialShowDelay(textCheckBoxs, 0);
                         }
                         result.Remove(displayText);
@@ -2195,11 +1958,11 @@ namespace CBHK.ViewModel.Component.Entity
                         #region 分析是否需要代入导入的数据
                         if (ImportMode)
                         {
-                            string key = Request.key;
+                            string key = Request.Key;
                             if (!!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                            if(currentObj != null)
+                            if (currentObj != null)
                                 textCheckBoxs.IsChecked = currentObj.ToString() == "1" || currentObj.ToString() == "true";
                             textCheckBoxs.Focus();
                         }
@@ -2211,30 +1974,30 @@ namespace CBHK.ViewModel.Component.Entity
                         Binding visibilityBinder = new()
                         {
                             Mode = BindingMode.OneWay,
-                            Path = new PropertyPath(Request.nbtType + "Visibility"),
+                            Path = new PropertyPath(Request.NBTType + "Visibility"),
                             Source = this
                         };
-                        MatchCollection matchCollection = Regex.Matches(Request.toolTip,@"[a-zA-Z_]+");
-                        List<string> enumValueList = matchCollection.ToList().ConvertAll(item=>item.ToString());
+                        MatchCollection matchCollection = Regex.Matches(Request.ToolTip, @"[a-zA-Z_]+");
+                        List<string> enumValueList = matchCollection.ToList().ConvertAll(item => item.ToString());
                         ComboBox comboBox = new()
                         {
                             ItemsSource = enumValueList,
-                            Uid = Request.nbtType,
+                            Uid = Request.NBTType,
                             Foreground = whiteBrush,
                             VerticalContentAlignment = VerticalAlignment.Center,
                             Style = Application.Current.Resources["TextComboBoxStyle"] as Style,
-                            Name = Request.key,
+                            Name = Request.Key,
                             SelectedIndex = 0,
-                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                            Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.DataType, NBTGroup = Request.NBTType }
                         };
                         comboBox.GotFocus += componentEvents.ValueChangedHandler;
-                        displayText.SetBinding(UIElement.VisibilityProperty,visibilityBinder);
+                        displayText.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         comboBox.SetBinding(UIElement.VisibilityProperty, visibilityBinder);
                         result.Add(comboBox);
                         #region 分析是否需要代入导入的数据
                         if (ImportMode)
                         {
-                            string key = Request.key;
+                            string key = Request.Key;
                             if (!!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
@@ -2251,8 +2014,8 @@ namespace CBHK.ViewModel.Component.Entity
 
             #region 删除已读取的键
             if (ImportMode)
-                ExternallyReadEntityData.Remove(Request.key);
-            if(ExternallyReadEntityData != null)
+                ExternallyReadEntityData.Remove(Request.Key);
+            if (ExternallyReadEntityData != null)
             {
                 string RemainData = ExternallyReadEntityData.ToString();
                 if (RemainData == "[]" || RemainData == "{}")
@@ -2264,6 +2027,358 @@ namespace CBHK.ViewModel.Component.Entity
             #endregion
 
             return result;
+        }
+
+        /// <summary>
+        /// 根据当前切换的实体ID来动态切换UI元素的显隐
+        /// </summary>
+        public async Task UpdateUILayOut(Task task = null)
+        {
+            SelectedEntityId ??= EntityIDList[0];
+            string data = File.ReadAllText(SpecialNBTStructureFilePath);
+            JArray array = JArray.Parse(data);
+            //更新标签页显示文本
+            if (currentEntityPage.Parent is TabItem currentTab)
+                currentTab.Header = SelectedEntityId.ComboBoxItemId + ":" + SelectedEntityId.ComboBoxItemText;
+
+            #region 搜索当前实体ID对应的JSON对象
+            List<JToken> targetList = array.Where(item =>
+            {
+                JObject currentObj = item as JObject;
+                if (currentObj["type"].ToString() == SelectedEntityId.ComboBoxItemId)
+                    return true;
+                return false;
+            }).ToList();
+            #endregion
+
+            if (targetList.Count > 0)
+            {
+                JObject targetObj = targetList.First() as JObject;
+                JArray commonTags = JArray.Parse(targetObj["common"].ToString());
+                List<string> commonTagList = commonTags.ToList().ConvertAll(item => item.ToString());
+                //计算本次与上次共通标签的差集,关闭指定菜单，而不是全部关闭再依次判断打开
+                List<string> closedCommonTagList = specialEntityCommonTagList.Except(commonTagList).ToList();
+
+                #region 处理特指NBT
+                if (!SpecialDataDictionary.TryGetValue(SelectedEntityId.ComboBoxItemId, out Grid value))
+                {
+                    JArray children = JArray.Parse(targetObj["Children"].ToString());
+                    List<FrameworkElement> components = [];
+                    CacheGrid = new();
+                    CacheGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
+                    CacheGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+
+                    #region 更新控件集合
+                    foreach (JObject nbtStructure in children.Cast<JObject>())
+                    {
+                        List<FrameworkElement> result = JsonToComponentConverter(nbtStructure);
+                        components.AddRange(result);
+                    }
+                    #endregion
+                    #region 应用更新后的集合
+                    bool LeftIndex = true;
+                    Window window = Window.GetWindow(currentEntityPage);
+                    await window.Dispatcher.InvokeAsync(() =>
+                    {
+                        for (int j = 0; j < components.Count; j++)
+                        {
+                            if (LeftIndex || CacheGrid.RowDefinitions.Count == 0)
+                                CacheGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
+                            CacheGrid.Children.Add(components[j]);
+                            if (components[j] is Accordion || components[j] is TextCheckBoxs || components[j] is SuspectsEntities || components[j] is VibrationMonitors)
+                            {
+                                Grid.SetRow(components[j], CacheGrid.RowDefinitions.Count - 1);
+                                Grid.SetColumn(components[j], 0);
+                                Grid.SetColumnSpan(components[j], 2);
+                                LeftIndex = true;
+                            }
+                            else
+                            {
+                                Grid.SetRow(components[j], CacheGrid.RowDefinitions.Count - 1);
+                                Grid.SetColumn(components[j], LeftIndex ? 0 : 1);
+                                LeftIndex = !LeftIndex;
+                            }
+                        }
+                        SpecialDataDictionary.TryAdd(SelectedEntityId.ComboBoxItemId, CacheGrid);
+                        if (SpecialViewer is not null)
+                            SpecialViewer.Content = CacheGrid;
+                        if (CacheGrid.Children.Count == 0)
+                            CacheGrid.Background = emptyDataTip;
+                    });
+                    #endregion
+                }
+                else
+                {
+                    Grid newGrid = value;
+                    if (newGrid.Children.Count == 0)
+                        newGrid.Background = emptyDataTip;
+                    if (SpecialViewer is not null)
+                        SpecialViewer.Content = newGrid;
+                }
+                #endregion
+
+                #region 处理额外字段与共通标签的显示隐藏
+                Type currentClassType = GetType();
+
+                #region 需要隐藏的共通标签
+                TabControl tabControl = (SpecialViewer?.Parent as TextTabItems).Parent as TabControl;
+                foreach (var item in closedCommonTagList)
+                {
+                    PropertyInfo visibilityPropertyInfo = currentClassType.GetProperty(item + "Visibility");
+                    if (visibilityPropertyInfo != null)
+                    {
+                        object visibility = Convert.ChangeType(Visibility.Collapsed, visibilityPropertyInfo.PropertyType);
+                        currentClassType.GetProperty(item + "Visibility")?.SetValue(this, visibility, null);
+                    }
+                    PropertyInfo enabledPropertyInfo = currentClassType.GetProperty(item + "Enabled");
+                    if (enabledPropertyInfo != null)
+                    {
+                        object enable = Convert.ChangeType(false, enabledPropertyInfo.PropertyType);
+                        currentClassType.GetProperty(item + "Enabled")?.SetValue(this, enable, null);
+                    }
+                }
+                if (closedCommonTagList.Count == 0)
+                {
+                    for (int i = 6; i < tabControl.Items.Count; i++)
+                        (tabControl.Items[i] as FrameworkElement).Visibility = Visibility.Collapsed;
+                }
+                #endregion
+
+                #region 需要显示的共通标签
+                foreach (var item in commonTagList)
+                {
+                    PropertyInfo visibilityPropertyInfo = currentClassType.GetProperty(item + "Visibility");
+                    if (visibilityPropertyInfo != null)
+                    {
+                        object visibility = Convert.ChangeType(Visibility.Visible, visibilityPropertyInfo.PropertyType);
+                        if (currentClassType.GetProperty(item + "Visibility") is PropertyInfo propertyInfo)
+                            propertyInfo.SetValue(this, visibility, null);
+                    }
+                    PropertyInfo enabledPropertyInfo = currentClassType.GetProperty(item + "Enabled");
+                    if (enabledPropertyInfo != null)
+                    {
+                        object enable = Convert.ChangeType(true, enabledPropertyInfo.PropertyType);
+                        if (currentClassType.GetProperty(item + "Enabled") is PropertyInfo propertyInfo)
+                            propertyInfo.SetValue(this, enable, null);
+                    }
+                }
+                #endregion
+
+                #region 同步本次计算后的特殊实体共通标签链表
+                if (specialEntityCommonTagList.Count > 0)
+                    specialEntityCommonTagList.Clear();
+                specialEntityCommonTagList.AddRange(commonTagList);
+                #endregion
+
+                #endregion
+            }
+        }
+
+        #endregion
+
+        #region Event
+        /// <summary>
+        /// 载入实体页
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void EntityPages_Loaded(object sender,RoutedEventArgs e)
+        {
+            currentEntityPage = sender as EntityPageView;
+            EntityViewModel entityDataContext = Window.GetWindow(currentEntityPage).DataContext as EntityViewModel;
+            VersionSource = entityDataContext.VersionSource;
+            string entityImageFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                foreach (var item in _context.EntitySet)
+                {
+                    #region 设置实体图标、名称和ID
+                    if (item.ID is not null)
+                    {
+                        string iconPath = File.Exists(entityImageFolderPath + item.ID + "_spawn_egg.png") ? entityImageFolderPath + item.ID + "_spawn_egg.png" : entityImageFolderPath + item.ID + ".png";
+                        IconComboBoxItem iconComboBoxItem = new()
+                        {
+                            ComboBoxItemIcon = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
+                            ComboBoxItemText = item.Name ?? "",
+                            ComboBoxItemId = item.ID
+                        };
+                        EntityIDList.Add(iconComboBoxItem);
+                        if (item.Version is not null)
+                        {
+                            if (EntityIDListCopy.TryGetValue(item.Version, out List<IconComboBoxItem> list))
+                                list.Add(iconComboBoxItem);
+                            else
+                                EntityIDListCopy.Add(item.Version, [iconComboBoxItem]);
+                        }
+                    }
+                    #endregion
+                }
+            });
+        }
+
+        /// <summary>
+        /// 实体ID更新
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void EntityIDBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //更新特指和共通标签、额外字段
+            Task.Run(async () =>
+            {
+                await currentEntityPage.Dispatcher.InvokeAsync(async () =>
+                {
+                    await UpdateUILayOut();
+                });
+            });
+        }
+
+        /// <summary>
+        /// 版本更新事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SelectedVersion is not null)
+            {
+                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
+            }
+
+            #region 处理版本控件的数据更新
+            CancellationTokenSource cancellationTokenSource = new();
+            await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
+            {
+                await VersionComponents[i].Upgrade(CurrentMinVersion);
+            });
+            await Parallel.ForEachAsync(VersionNBTList, async (item, cancellationToken) =>
+            {
+                await Task.Delay(0, cancellationToken);
+                item.Value.Invoke(item.Key, null);
+            });
+            #endregion
+
+            #region 处理版本实体ID的更新
+            List<object> NeedRemovedItemList = [];
+            foreach (var item in EntityIDListCopy)
+            {
+                string versionString = item.Key.Replace(".", "");
+                if (int.Parse(versionString) <= CurrentMinVersion)
+                {
+                    if (!EntityIDList.Contains(item.Value[0]))
+                    {
+                        for (int i = 0; i < item.Value.Count; i++)
+                        {
+                            EntityIDList.Add(item.Value[i]);
+                        }
+                    }
+                }
+                else
+                {
+                    NeedRemovedItemList.AddRange(item.Value);
+                }
+            }
+            foreach (var item in NeedRemovedItemList)
+            {
+                EntityIDList.Remove(item as IconComboBoxItem);
+            }
+            #endregion
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 运行保存
+        /// </summary>
+        private void Save()
+        {
+            //执行生成
+            FinalSettlement(false);
+            Microsoft.Win32.SaveFileDialog saveFileDialog = new()
+            {
+                AddExtension = true,
+                RestoreDirectory = true,
+                CheckPathExists = true,
+                DefaultExt = ".command",
+                Filter = "Command files (*.command;)|*.command;",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
+                Title = "保存为命令文件"
+            };
+            if (saveFileDialog.ShowDialog().Value)
+            {
+                if (Directory.Exists(Path.GetDirectoryName(saveFileDialog.FileName)))
+                    _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
+                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\EntityView\\");
+                _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\EntityView\\" + Path.GetFileName(saveFileDialog.FileName), Result);
+            }
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 运行生成
+        /// </summary>
+        private void Run()
+        {
+            CollectionCommonTagsMark();
+
+            Result = (SpecialTagsResult.TryGetValue(SelectedEntityId.ComboBoxItemId, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
+            {
+                if (item != null && item.Result.Length > 0)
+                    return item.Result;
+                return "";
+            })) + ",":"") + string.Join(",", CommonResult.Select(item =>
+            {
+                if (CurrentCommonTags.Contains(item.NBTGroup) && item.Result.Length > 0)
+                    return item.Result;
+                else
+                    return "";
+            }));
+            Result = Regex.Replace(Result.Trim(','), @",{2,}", ",");
+
+            if (UseForTool)
+            {
+                Result = "{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result != null && Result.Length > 0 ? "," + Result : "") + "}";
+                EntityView entity = Window.GetWindow(currentEntityPage) as EntityView;
+                entity.DialogResult = true;
+                return;
+            }
+
+            if (!Give)
+            {
+                if (CurrentMinVersion < 1130 && HaveCustomName)
+                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}";
+                else
+                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~";
+            }
+            else
+            {
+                if (CurrentMinVersion < 1130)
+                {
+                    if (!HaveCustomName)
+                        Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
+                    else
+                        Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
+                }
+                else
+                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
+            }
+
+            if(SyncToFile && ExternFilePath.Length > 0 && File.Exists(ExternFilePath))
+                File.WriteAllText(ExternFilePath, Result);
+
+            if (ShowResult)
+            {
+                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
+                {
+                    displayer.Show();
+                    displayerViewModel.GeneratorResult(Result, "实体", iconPath);
+                }
+            }
+            else
+            {
+                Clipboard.SetText(Result);
+                Message.PushMessage("实体生成成功！数据已进入剪切板",MessageBoxImage.Information);
+            }
         }
 
         /// <summary>
@@ -2303,145 +2418,6 @@ namespace CBHK.ViewModel.Component.Entity
         }
 
         /// <summary>
-        /// 根据当前切换的实体ID来动态切换UI元素的显隐
-        /// </summary>
-        public async Task UpdateUILayOut(Task task = null)
-        {
-            SelectedEntityId ??= EntityIDList[0];
-            string data = File.ReadAllText(SpecialNBTStructureFilePath);
-            JArray array = JArray.Parse(data);
-            //更新标签页显示文本
-            if (currentEntityPage.Parent is TabItem currentTab)
-                currentTab.Header = SelectedEntityId.ComboBoxItemId + ":" + SelectedEntityId.ComboBoxItemText;
-
-            #region 搜索当前实体ID对应的JSON对象
-            List<JToken> targetList = array.Where(item =>
-            {
-                JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityIDString)
-                    return true;
-                return false;
-            }).ToList();
-            #endregion
-
-            if (targetList.Count > 0)
-            {
-                JObject targetObj = targetList.First() as JObject;
-                JArray commonTags = JArray.Parse(targetObj["common"].ToString());
-                List<string> commonTagList = commonTags.ToList().ConvertAll(item => item.ToString());
-                //计算本次与上次共通标签的差集,关闭指定菜单，而不是全部关闭再依次判断打开
-                List<string> closedCommonTagList = specialEntityCommonTagList.Except(commonTagList).ToList();
-                #region 处理特指NBT
-                if (!SpecialDataDictionary.TryGetValue(SelectedEntityIDString, out Grid value))
-                {
-                    JArray children = JArray.Parse(targetObj["children"].ToString());
-                    List<FrameworkElement> components = [];
-                    CacheGrid = new();
-                    CacheGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
-                    CacheGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-
-                    #region 更新控件集合
-                    foreach (JObject nbtStructure in children.Cast<JObject>())
-                    {
-                        List<FrameworkElement> result = JsonToComponentConverter(nbtStructure);
-                        components.AddRange(result);
-                    }
-                    #endregion
-                    #region 应用更新后的集合
-                    bool LeftIndex = true;
-                    Window window = Window.GetWindow(currentEntityPage);
-                    await window.Dispatcher.InvokeAsync(() =>
-                    {
-                        for (int j = 0; j < components.Count; j++)
-                        {
-                            if (LeftIndex || CacheGrid.RowDefinitions.Count == 0)
-                                CacheGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
-                            CacheGrid.Children.Add(components[j]);
-                            if (components[j] is Accordion || components[j] is TextCheckBoxs || components[j] is SuspectsEntities || components[j] is VibrationMonitors)
-                            {
-                                Grid.SetRow(components[j], CacheGrid.RowDefinitions.Count - 1);
-                                Grid.SetColumn(components[j], 0);
-                                Grid.SetColumnSpan(components[j], 2);
-                                LeftIndex = true;
-                            }
-                            else
-                            {
-                                Grid.SetRow(components[j], CacheGrid.RowDefinitions.Count - 1);
-                                Grid.SetColumn(components[j], LeftIndex ? 0 : 1);
-                                LeftIndex = !LeftIndex;
-                            }
-                        }
-                        SpecialDataDictionary.TryAdd(SelectedEntityIDString, CacheGrid);
-                        if (SpecialViewer is not null)
-                            SpecialViewer.Content = CacheGrid;
-                        if (CacheGrid.Children.Count == 0)
-                            CacheGrid.Background = emptyDataTip;
-                    });
-                    #endregion
-                }
-                else
-                {
-                    Grid newGrid = value;
-                    if (newGrid.Children.Count == 0)
-                        newGrid.Background = emptyDataTip;
-                    if (SpecialViewer is not null)
-                        SpecialViewer.Content = newGrid;
-                }
-                #endregion
-                #region 处理额外字段与共通标签的显示隐藏
-                Type currentClassType = GetType();
-                #region 需要隐藏的共通标签
-                TabControl tabControl = (SpecialViewer?.Parent as TextTabItems).Parent as TabControl;
-                foreach (var item in closedCommonTagList)
-                {
-                    PropertyInfo visibilityPropertyInfo = currentClassType.GetProperty(item + "Visibility");
-                    if (visibilityPropertyInfo != null)
-                    {
-                        object visibility = Convert.ChangeType(Visibility.Collapsed, visibilityPropertyInfo.PropertyType);
-                        currentClassType.GetProperty(item + "Visibility")?.SetValue(this, visibility, null);
-                    }
-                    PropertyInfo enabledPropertyInfo = currentClassType.GetProperty(item + "Enabled");
-                    if (enabledPropertyInfo != null)
-                    {
-                        object enable = Convert.ChangeType(false, enabledPropertyInfo.PropertyType);
-                        currentClassType.GetProperty(item + "Enabled")?.SetValue(this, enable, null);
-                    }
-                }
-                if (closedCommonTagList.Count == 0)
-                {
-                    for (int i = 6; i < tabControl.Items.Count; i++)
-                        (tabControl.Items[i] as FrameworkElement).Visibility = Visibility.Collapsed;
-                }
-                #endregion
-                #region 需要显示的共通标签
-                foreach (var item in commonTagList)
-                {
-                    PropertyInfo visibilityPropertyInfo = currentClassType.GetProperty(item + "Visibility");
-                    if (visibilityPropertyInfo != null)
-                    {
-                        object visibility = Convert.ChangeType(Visibility.Visible, visibilityPropertyInfo.PropertyType);
-                        if (currentClassType.GetProperty(item + "Visibility") is PropertyInfo propertyInfo)
-                            propertyInfo.SetValue(this, visibility, null);
-                    }
-                    PropertyInfo enabledPropertyInfo = currentClassType.GetProperty(item + "Enabled");
-                    if (enabledPropertyInfo != null)
-                    {
-                        object enable = Convert.ChangeType(true, enabledPropertyInfo.PropertyType);
-                        if (currentClassType.GetProperty(item + "Enabled") is PropertyInfo propertyInfo)
-                            propertyInfo.SetValue(this, enable, null);
-                    }
-                }
-                #endregion
-                #region 同步本次计算后的特殊实体共通标签链表
-                if (specialEntityCommonTagList.Count > 0)
-                    specialEntityCommonTagList.Clear();
-                specialEntityCommonTagList.AddRange(commonTagList);
-                #endregion
-                #endregion
-            }
-        }
-
-        /// <summary>
         /// 切换特指或共通标签顶级页面
         /// </summary>
         /// <param name="sender"></param>
@@ -2475,7 +2451,7 @@ namespace CBHK.ViewModel.Component.Entity
             List<JToken> result = array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityIDString)
+                if (currentObj["type"].ToString() == SelectedEntityId.ComboBoxItemId)
                     return true;
                 return false;
             }).ToList();
@@ -2584,7 +2560,7 @@ namespace CBHK.ViewModel.Component.Entity
             JObject targetObj = array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityIDString)
+                if (currentObj["type"].ToString() == SelectedEntityId.ComboBoxItemId)
                     return true;
                 return false;
             }).First() as JObject;
@@ -2645,37 +2621,6 @@ namespace CBHK.ViewModel.Component.Entity
             #endregion
         }
 
-        /// <summary>
-        /// JSON转控件
-        /// </summary>
-        /// <param name="grid"></param>
-        /// <param name="nbtStructure"></param>
-        private List<FrameworkElement> JsonToComponentConverter(JObject nbtStructure,string NBTType = "")
-        {
-            string tag = JArray.Parse(nbtStructure["tag"].ToString())[0].ToString();
-            string key = nbtStructure["key"].ToString();
-            JToken children = nbtStructure["children"];
-            JToken descriptionObj = nbtStructure["description"];
-            string description = descriptionObj != null ?descriptionObj.ToString():"";
-            JToken toolTipObj = nbtStructure["toolTip"];
-            string toolTip = toolTipObj != null ? toolTipObj.ToString() : "";
-            JToken dependencyObj = nbtStructure["dependency"];
-            string dependency = dependencyObj != null ? dependencyObj.ToString() : "";
-            ComponentData componentData = new()
-            {
-                dataType = tag,
-                key = key,
-                toolTip = toolTip,
-                description = description,
-                dependency = dependency,
-                nbtType = NBTType
-            };
-            if (children != null)
-                componentData.children = children.ToString();
-            List<FrameworkElement> componentGroup = ComponentsGenerator(componentData);
-            return componentGroup;
-        }
-
         [RelayCommand]
         /// <summary>
         /// 反选所有bool型NBT
@@ -2728,6 +2673,7 @@ namespace CBHK.ViewModel.Component.Entity
             ScrollViewer scrollViewer = accordion.FindParent<ScrollViewer>();
             ScrollToSomeWhere.Scroll(accordion,scrollViewer);
         }
+        #endregion
     }
 
     /// <summary>
@@ -2735,12 +2681,12 @@ namespace CBHK.ViewModel.Component.Entity
     /// </summary>
     public class ComponentData
     {
-        public string children { get; set; }
-        public string dataType { get; set; }
-        public string nbtType { get; set; }
-        public string key { get; set; }
-        public string description { get; set; }
-        public string toolTip { get; set; }
-        public string dependency { get; set; }
+        public string Children { get; set; }
+        public string DataType { get; set; }
+        public string NBTType { get; set; }
+        public string Key { get; set; }
+        public string Description { get; set; }
+        public string ToolTip { get; set; }
+        public string Dependency { get; set; }
     }
 }

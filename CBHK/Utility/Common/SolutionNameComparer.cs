@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility.Common
 {
     public class SolutionNameComparer : IComparer<string>
     {

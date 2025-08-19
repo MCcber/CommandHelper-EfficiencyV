@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Spawner;
 using CBHK.ViewModel.Generator;
@@ -14,67 +14,51 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace CBHK.ViewModel.Component.Spawner
 {
-    public partial class SpawnerPageViewModel:ObservableObject
+    public partial class SpawnerPageViewModel(IContainerProvider container) : ObservableObject
     {
-        #region 存储结果
-        public string Result { get; set; }
-        #endregion
-
-        #region 显示结果
-        private bool showResult = false;
-        public bool ShowResult
-        {
-            get => showResult;
-            set => SetProperty(ref showResult, value);
-        }
-        #endregion
-
-        #region 选中版本以及版本数据源
-        private TextComboBoxItem selectedVersion;
-        public TextComboBoxItem SelectedVersion
-        {
-            get => selectedVersion;
-            set
-            {
-                SetProperty(ref selectedVersion, value);
-                CurrentMinVersion = int.Parse(selectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
-            }
-        }
-
-        private ObservableCollection<TextComboBoxItem> versionSource = [];
-        public ObservableCollection<TextComboBoxItem> VersionSource
-        {
-            get => versionSource;
-            set => SetProperty(ref versionSource, value);
-        }
-
+        #region Field
+        private IContainerProvider _container = container;
         private int CurrentMinVersion = 1205;
-        #endregion
-
-        #region 字段与引用
-
-        //潜在实体数据源
-        [ObservableProperty]
-        public ObservableCollection<SpawnPotential> _spawnPotentialList = [];
-
+        /// <summary>
+        /// 存储结果
+        /// </summary>
+        public string Result = "";
         /// <summary>
         /// 存储外部数据
         /// </summary>
-        public JObject ExternalSpawnerData { get; set; }
+        public JObject ExternalSpawnerData = null;
         /// <summary>
         /// 导入模式
         /// </summary>
-        public bool ImportMode { get; set; } = false;
-
-        //本生成器的图标路径
+        public bool ImportMode = false;
+        /// <summary>
+        /// 本生成器的图标路径
+        /// </summary>
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
-        private IContainerProvider _container;
         #endregion
 
         #region Property
+        /// <summary>
+        /// 显示结果
+        /// </summary>
+        [ObservableProperty]
+        private bool _showResult = false;
+        /// <summary>
+        /// 选中版本以及版本数据源
+        /// </summary>
+        [ObservableProperty]
+        private TextComboBoxItem _selectedVersion;
+        [ObservableProperty]
+        private ObservableCollection<TextComboBoxItem> _versionSource = [];
+        /// <summary>
+        /// 潜在实体数据源
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<SpawnPotential> _spawnPotentialList = [];
         [ObservableProperty]
         private short _delay = 0;
         [ObservableProperty]
@@ -114,11 +98,7 @@ namespace CBHK.ViewModel.Component.Spawner
         private object _referenceEntityTag = null;
         #endregion
 
-        public SpawnerPageViewModel(IContainerProvider container)
-        {
-            _container = container;
-        }
-
+        #region  Event
         /// <summary>
         /// 载入刷怪笼页面
         /// </summary>
@@ -172,6 +152,11 @@ namespace CBHK.ViewModel.Component.Spawner
                     ReferenceEntityTag = spawnDataToken.ToString();
                 }
             }
+        }
+
+        public void VersionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
         }
 
         public void SliderValue_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -295,5 +280,6 @@ namespace CBHK.ViewModel.Component.Spawner
                 File.WriteAllTextAsync(openFolderDialog.FolderName + entityID + "SpawnerPageView" + ".command", Result);
             }
         }
+        #endregion
     }
 }

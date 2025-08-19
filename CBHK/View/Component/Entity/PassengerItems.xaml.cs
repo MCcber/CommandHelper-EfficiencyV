@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool;
+using CBHK.Utility.Common;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Component.Entity;
 using CBHK.ViewModel.Generator;
@@ -115,7 +115,7 @@ namespace CBHK.View.Component.Entity
                     if (slider.Value < entityContext.EntityPageList.Count && currentIndex != index)
                     {
                         DisplayEntity.Tag = pageContext.Run(false);
-                        (DisplayEntity.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + pageContext.SelectedEntityIDString + "_spawn_egg.png", UriKind.RelativeOrAbsolute));
+                        (DisplayEntity.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + pageContext.SelectedEntityId.ComboBoxItemId + "_spawn_egg.png", UriKind.RelativeOrAbsolute));
                     }
                     else
                     {

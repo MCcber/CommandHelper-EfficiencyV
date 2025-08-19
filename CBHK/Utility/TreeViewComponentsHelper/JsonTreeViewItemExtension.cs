@@ -1,7 +1,8 @@
-﻿using CBHK.CustomControl.Interfaces;
+﻿using CBHK.Common.Utility;
 using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.Interface;
 using CBHK.Model.Common;
-using CBHK.Service.Json;
+using CBHK.Utility.Common;
 using CBHK.ViewModel.Common;
 using Prism.Ioc;
 using System;
@@ -12,26 +13,20 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using static CBHK.Model.Common.Enums;
 
-namespace CBHK.GeneralTool.TreeViewComponentsHelper
+namespace CBHK.Utility.TreeViewComponentsHelper
 {
-    public partial class JsonTreeViewItemExtension(IContainerProvider container) : IJsonItemTool
+    public partial class JsonTreeViewItemExtension(IContainerProvider container,RegexService regexService) : IJsonItemTool
     {
         #region Field
         private IContainerProvider _container = container;
-
-        [GeneratedRegex(@"\[\[\#?((?<1>[\u4e00-\u9fff]+)\|(?<2>[\u4e00-\u9fff]+)|(?<1>[\u4e00-\u9fff]+))\]\]")]
-        private static partial Regex GetContextKey();
-
-        [GeneratedRegex(@"\s?\s*\*+\s?\s*{{[nN]bt\sinherit(?<1>[a-z_/|=*\s]+)}}\s?\s*", RegexOptions.IgnoreCase)]
-        private static partial Regex GetInheritString();
-
+        private RegexService _regexService = regexService;
         private List<string> singleLineElementType = ["string", "bool", "int", "short", "float", "double", "long"];
         #endregion
 
         #region Method
         public BaseCompoundJsonTreeViewItem GetAddToBottomButtonItem(BaseCompoundJsonTreeViewItem template)
         {
-            return new BaseCompoundJsonTreeViewItem(template.Plan, template.JsonItemTool, _container)
+            return new BaseCompoundJsonTreeViewItem(template.Plan, template.JsonItemTool, _container,_regexService)
             {
                 CompoundChildrenStringList = template.CompoundChildrenStringList,
                 ListChildrenStringList = template.ListChildrenStringList,
@@ -51,10 +46,10 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
 
         public Tuple<List<string>,bool> ExtractSubInformationFromPromptSourceCode(BaseCompoundJsonTreeViewItem compoundJsonTreeViewItem)
         {
-            Match contextMatch = GetContextKey().Match(compoundJsonTreeViewItem.CompoundChildrenStringList.Count > 0 ? compoundJsonTreeViewItem.CompoundChildrenStringList.FirstOrDefault() : "");
+            Match contextMatch = _regexService.GetContextKey().Match(compoundJsonTreeViewItem.CompoundChildrenStringList.Count > 0 ? compoundJsonTreeViewItem.CompoundChildrenStringList.FirstOrDefault() : "");
             if(!contextMatch.Success)
             {
-                contextMatch = GetContextKey().Match(compoundJsonTreeViewItem.InfoTipText);
+                contextMatch = _regexService.GetContextKey().Match(compoundJsonTreeViewItem.InfoTipText);
             }
             string currentValueTypeString = compoundJsonTreeViewItem.SelectedValueType is not null ? compoundJsonTreeViewItem.SelectedValueType.Text.ToLower() : "";
             string contextKey = contextMatch.Groups[1].Value;
@@ -366,7 +361,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
                 }
             }
 
-            HtmlHelper htmlHelper = new(_container)
+            HtmlHelper htmlHelper = new(_container,_regexService)
             {
                 plan = compoundJsonTreeViewItem.Plan,
                 jsonTool = compoundJsonTreeViewItem.JsonItemTool
@@ -448,7 +443,7 @@ namespace CBHK.GeneralTool.TreeViewComponentsHelper
 
             if (CurrentChildrenStringList.Count == 0)
             {
-                Match contextMatch = GetContextKey().Match(targetCompoundItem.InfoTipText);
+                Match contextMatch = _regexService.GetContextKey().Match(targetCompoundItem.InfoTipText);
 
                 #region 分析上下文
                 if (contextMatch.Success)

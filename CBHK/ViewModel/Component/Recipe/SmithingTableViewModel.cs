@@ -1,5 +1,6 @@
-﻿using CBHK.GeneralTool.MessageTip;
+﻿using CBHK.Domain;
 using CBHK.Model.Common;
+using CBHK.Utility.MessageTip;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
@@ -15,23 +16,18 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Recipe
 {
-    public partial class SmithingTableViewModel : ObservableObject
+    public partial class SmithingTableViewModel(CBHKDataContext context) : ObservableObject
     {
-        #region 字段与引用
+        #region Field
+        private CBHKDataContext _context = context;
         /// <summary>
         /// 存储最终结果
         /// </summary>
-        public string Result { get; set; } = "";
+        public string Result = "";
         /// <summary>
         /// 需要保存
         /// </summary>
-        public bool NeedSave { get; set; } = true;
-
-        #region 存储外部导入的数据
-        public bool ImportMode { get; set; } = false;
-        public JObject ExternalData { get; set; } = null;
-        #endregion
-
+        public bool NeedSave = true;
         /// <summary>
         /// 当前物品
         /// </summary>
@@ -58,58 +54,52 @@ namespace CBHK.ViewModel.Component.Recipe
         SolidColorBrush greenBrush = new((Color)ColorConverter.ConvertFromString("#00FF00"));
         SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
 
-        #region 结果数量
-        private double count = 1;
-        public double Count
-        {
-            get => count;
-            set => SetProperty(ref count, value);
-        }
-        #endregion
-        #region 当前Tag
-        private string currentTag = "";
-        public string CurrentTag
-        {
-            get => currentTag;
-            set => SetProperty(ref currentTag, value);
-        }
-        #endregion
-        #region 模板的Tag
-        private string templateTag = "";
-        public string TemplateTag
-        {
-            get => templateTag;
-            set => SetProperty(ref templateTag, value);
-        }
-        #endregion
-        #region 基础的Tag
-        private string baseTag = "";
-        public string BaseTag
-        {
-            get => baseTag;
-            set => SetProperty(ref baseTag, value);
-        }
-        #endregion
-        #region 修饰物的Tag
-        private string additionTag = "";
-        public string AdditionTag
-        {
-            get => additionTag;
-            set => SetProperty(ref additionTag, value);
-        }
-        #endregion
-        #endregion
-        #region 配方文件名
-        private string fileName = "";
-        public string FileName
-        {
-            get => fileName;
-            set => SetProperty(ref fileName, value);
-        }
+        #region 存储外部导入的数据
+        public bool ImportMode = false;
+        public JObject ExternalData = null;
         #endregion
 
-        DataTable ItemTable = null;
+        #endregion
 
+        #region Proprety
+        /// <summary>
+        /// 结果数量
+        /// </summary>
+        [ObservableProperty]
+        private double _count = 1;
+
+        /// <summary>
+        /// 当前Tag
+        /// </summary>
+        [ObservableProperty]
+        private string _currentTag = "";
+
+        /// <summary>
+        /// 模板的Tag
+        /// </summary>
+        [ObservableProperty]
+        private string _templateTag = "";
+
+        /// <summary>
+        /// 基础的Tag
+        /// </summary>
+        [ObservableProperty]
+        private string _baseTag = "";
+
+        /// <summary>
+        /// 修饰物的Tag
+        /// </summary>
+        [ObservableProperty]
+        private string _additionTag = "";
+
+        /// <summary>
+        /// 配方文件名
+        /// </summary>
+        [ObservableProperty]
+        private string _fileName = "";
+        #endregion
+
+        #region Event
         [RelayCommand]
         /// <summary>
         /// 执行配方
@@ -126,7 +116,7 @@ namespace CBHK.ViewModel.Component.Recipe
             if (TemplateItem.Tag is ItemStructure templateStructure)
             {
                 templateItemID = templateStructure.IDAndName[..templateStructure.IDAndName.IndexOf(':')];
-                templateData = "\"template\":{\"item\":\"minecraft:" + templateItemID + "\"" + (templateTag.Length > 0 ? ",\"tag\":\"" + templateTag + "\"}," : "},");
+                templateData = "\"template\":{\"item\":\"minecraft:" + templateItemID + "\"" + (TemplateTag.Length > 0 ? ",\"tag\":\"" + TemplateTag + "\"}," : "},");
             }
             #endregion
             #region 合并基础数据
@@ -160,6 +150,7 @@ namespace CBHK.ViewModel.Component.Recipe
             Result += (templateData + baseData + additionData + resultData).TrimEnd(',') + "}";
             #endregion
             #endregion
+
             #region 选择生成路径，执行生成
             if (NeedSave)
             {
@@ -201,7 +192,7 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png");
-                        string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                        string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
                         TemplateItem.Source = new BitmapImage(iconUri);
                         TemplateItem.Tag = new ItemStructure()
                         {
@@ -234,7 +225,7 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                        string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
                         BaseItem.Source = new BitmapImage(iconUri);
                         BaseItem.Tag = new ItemStructure()
                         {
@@ -267,7 +258,7 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                        string itemName = _context.ItemSet.First(item=>item.ID == itemID).Name;
                         AdditionItem.Source = new BitmapImage(iconUri);
                         AdditionItem.Tag = new ItemStructure()
                         {
@@ -295,11 +286,11 @@ namespace CBHK.ViewModel.Component.Recipe
                 {
                     JToken itemIDObj = ingredient.SelectToken("item");
                     JToken itemCountObj = ingredient.SelectToken("count");
-                    if (itemIDObj != null)
+                    if (itemIDObj is not null)
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
+                        string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
                         ResultItem.Source = new BitmapImage(iconUri);
                         TemplateItem.Tag = new ItemStructure()
                         {
@@ -393,5 +384,6 @@ namespace CBHK.ViewModel.Component.Recipe
             ResultItem.Tag = null;
             ResultItem.Source = emptyImage;
         }
+        #endregion
     }
 }

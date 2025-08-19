@@ -17,6 +17,17 @@ namespace CBHK.ViewModel.Generator
         /// 主页
         /// </summary>
         private MainView home = null;
+
+        #region 语言服务器线程
+        Process serverProcess = new();
+        ProcessStartInfo startInfo = new()
+        {
+            // 设置不在新窗口中启动新的进程
+            CreateNoWindow = true,
+            UseShellExecute = false
+        };
+        #endregion
+        
         #endregion
 
         #region Property
@@ -45,16 +56,6 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         [ObservableProperty]
         private EditPageView _editPage = null;
-        #endregion
-
-        #region 语言服务器线程
-        Process serverProcess = new();
-        ProcessStartInfo startInfo = new()
-        {
-            // 设置不在新窗口中启动新的进程
-            CreateNoWindow = true,
-            UseShellExecute = false
-        };
         #endregion
 
         public DatapackViewModel()

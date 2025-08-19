@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Item;
 using CBHK.ViewModel.Component.Item;
@@ -23,54 +23,67 @@ using System.Windows.Media;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class ItemViewModel:ObservableObject
+    public partial class ItemViewModel(IContainerProvider container, MainView mainView) : ObservableObject
     {
-        #region 显示结果
-        private bool showGeneratorResult = false;
-        public bool ShowGeneratorResult
-        {
-            get => showGeneratorResult;
-            set => SetProperty(ref showGeneratorResult, value);
-        }
-        #endregion
-
-        #region 字段
+        #region Field
         /// <summary>
         /// 主页引用
         /// </summary>
-        private Window home = null;
-        //物品页数据源
-        public ObservableCollection<RichTabItems> ItemPageList { get; set; } =
-        [
-            new RichTabItems()
-                    {
-                        Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                        Header = "物品",
-                        FontWeight = FontWeights.Normal,
-                        IsContentSaved = true,
-                        BorderThickness = new(4, 4, 4, 0),
-                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                        SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                        LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                        RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                        TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                        SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                        SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                        SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
-                    }
-        ];
-
-        #region 能否关闭标签页
-        private bool isCloseable = true;
-
-        public bool IsCloseable
-        {
-            get => isCloseable;
-            set => SetProperty(ref isCloseable, value);
-        }
+        private Window home = mainView;
+        private IContainerProvider _container = container;
+        /// <summary>
+        /// 本生成器的图标路径
+        /// </summary>
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItems.png";
         #endregion
 
-        #region 版本列表
+        #region Property
+        /// <summary>
+        /// 显示结果
+        /// </summary>
+        [ObservableProperty]
+        private bool _showGeneratorResult = false;
+
+        /// <summary>
+        /// 能否关闭标签页
+        /// </summary>
+        [ObservableProperty]
+        private bool _isCloseable = true;
+
+        /// <summary>
+        /// 当前选中的物品页
+        /// </summary>
+        [ObservableProperty]
+        private RichTabItems _selectedItemPage = null;
+
+        /// <summary>
+        /// 物品页数据源
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<RichTabItems> _itemPageList =
+        [
+            new RichTabItems()
+            {
+                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
+                Header = "物品",
+                FontWeight = FontWeights.Normal,
+                IsContentSaved = true,
+                BorderThickness = new(4, 4, 4, 0),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
+                RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
+                TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
+                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
+                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+            }
+        ];
+
+
+        /// <summary>
+        /// 版本列表
+        /// </summary>
         [ObservableProperty]
         public ObservableCollection<TextComboBoxItem> _versionList = [
             new TextComboBoxItem() { Text = "1.20.4" }, 
@@ -86,35 +99,15 @@ namespace CBHK.ViewModel.Generator
             new TextComboBoxItem() { Text = "1.13.1" },
             new TextComboBoxItem() { Text = "1.13.0" }, 
             new TextComboBoxItem() { Text = "1.12.0" }];
-        #endregion
 
-        #region 版本ID数据源
+        /// <summary>
+        /// 版本ID数据源
+        /// </summary>
         [ObservableProperty]
         private ObservableCollection<VersionID> _versionIDList = [];
         #endregion
 
-        #region 当前选中的物品页
-        private RichTabItems selectedItemPage = null;
-        public RichTabItems SelectedItemPage
-        {
-            get => selectedItemPage;
-            set => SetProperty(ref selectedItemPage,value);
-        }
-        #endregion
-
-        /// <summary>
-        /// 本生成器的图标路径
-        /// </summary>
-        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItems.png";
-        private IContainerProvider _container;
-        #endregion
-
-        public ItemViewModel(IContainerProvider container,MainView mainView)
-        {
-            _container = container;
-            home = mainView;
-        }
-
+        #region Event
         public void Item_Loaded(object sender,RoutedEventArgs e)
         {
             ItemPageView itemPages = new();
@@ -168,7 +161,10 @@ namespace CBHK.ViewModel.Generator
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
             };
-            ItemPageView itemPage = new() { FontWeight = FontWeights.Normal };
+            ItemPageView itemPage = new() 
+            { 
+                FontWeight = FontWeights.Normal
+            };
             ItemPageViewModel pageContext = itemPage.DataContext as ItemPageViewModel;
             pageContext.UseForReference = false;
             pageContext.UseForTool = !IsCloseable;
@@ -188,7 +184,9 @@ namespace CBHK.ViewModel.Generator
         private void ClearItem()
         {
             if (IsCloseable)
+            {
                 ItemPageList.Clear();
+            }
         }
 
         [RelayCommand]
@@ -197,7 +195,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportItemFromFile()
         {
-            Microsoft.Win32.OpenFileDialog dialog = new()
+            OpenFileDialog dialog = new()
             {
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
                 RestoreDirectory = true,
@@ -205,12 +203,11 @@ namespace CBHK.ViewModel.Generator
                 Multiselect = false,
                 Title = "请选择一个Minecraft实体数据文件"
             };
-            if (dialog.ShowDialog().Value)
-                if (File.Exists(dialog.FileName))
-                {
-                    ObservableCollection<RichTabItems> result = ItemPageList;
-                    ExternalDataImportManager.ImportItemDataHandler(dialog.FileName, ref result);
-                }
+            if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
+            {
+                ObservableCollection<RichTabItems> result = ItemPageList;
+                ExternalDataImportManager.ImportItemDataHandler(dialog.FileName, ref result);
+            }
         }
 
         [RelayCommand]
@@ -287,8 +284,8 @@ namespace CBHK.ViewModel.Generator
         private void Return(CommonWindow win)
         {
             home.WindowState = WindowState.Normal;
-            home.Show();
             home.ShowInTaskbar = true;
+            home.Show();
             home.Focus();
             win.Close();
         }
@@ -312,7 +309,7 @@ namespace CBHK.ViewModel.Generator
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
-                    displayerViewModel.GeneratorResult(Result.ToString(), "物品", icon_path);
+                    displayerViewModel.GeneratorResult(Result.ToString(), "物品", iconPath);
                 }
             }
             else
@@ -321,6 +318,7 @@ namespace CBHK.ViewModel.Generator
                 Message.PushMessage("物品全部生成成功！数据已进入剪切板", MessageBoxImage.Information);
             }
         }
+        #endregion
     }
 
     public class VersionID

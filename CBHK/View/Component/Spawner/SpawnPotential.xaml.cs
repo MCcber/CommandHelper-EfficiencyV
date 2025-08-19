@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool;
+using CBHK.Utility.Common;
 using CBHK.ViewModel.Component.Spawner;
 using System.Windows;
 using System.Windows.Controls;

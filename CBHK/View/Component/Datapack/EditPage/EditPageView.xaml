@@ -963,7 +963,12 @@
                 CaretBrush="White"
                 FontSize="12"
                 Foreground="White"
-                Text="{Binding DatapackSeacherValue, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                Text="{Binding DatapackSeacherText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="TextChanged">
+                        <behavior:CallMethodAction MethodName="DatapackSeacherTextBox_TextChanged" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
                 <TextBox.Resources>
                     <VisualBrush
                         x:Key="BackgroundBrush"

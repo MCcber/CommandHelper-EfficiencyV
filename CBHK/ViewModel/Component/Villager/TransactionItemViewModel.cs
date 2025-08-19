@@ -1,6 +1,6 @@
 ﻿using CBHK.Domain;
-using CBHK.GeneralTool;
 using CBHK.Model.Common;
+using CBHK.Utility.Common;
 using CBHK.View.Component.Villager;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Generator;
@@ -190,27 +190,12 @@ namespace CBHK.ViewModel.Component.Villager
 
         #endregion
 
+        #region Method
         public TransactionItemViewModel(CBHKDataContext context, DataService dataService)
         {
             _context = context;
             _dataService = dataService;
             ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
-        }
-
-        public void Buy_Loaded(object sender, RoutedEventArgs e) => Buy = sender as Image;
-
-        public void BuyB_Loaded(object sender, RoutedEventArgs e) => BuyB = sender as Image;
-
-        public void Sell_Loaded(object sender, RoutedEventArgs e) => Sell = sender as Image;
-
-        /// <summary>
-        /// 载入事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void TransactionItems_Loaded(object sender, RoutedEventArgs e)
-        {
-
         }
 
         /// <summary>
@@ -237,47 +222,6 @@ namespace CBHK.ViewModel.Component.Villager
             ToolTipService.SetBetweenShowDelay(oldImage, 0);
             ToolTipService.SetInitialShowDelay(oldImage, 0);
         }
-
-        #region 处理拖拽后的数据更新
-        /// <summary>
-        /// 更新第一个收购物品
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void UpdateBuyItem(object sender, DragEventArgs e)
-        {
-            Image image = e.Data.GetData(typeof(Image)) as Image;
-            Image currentImage = sender as Image;
-            currentImage.Tag = image.Tag;
-            UpdateItem(currentImage, image);
-        }
-
-        /// <summary>
-        /// 更新第二个收购物品
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void UpdateBuybItem(object sender, DragEventArgs e)
-        {
-            Image image = e.Data.GetData(typeof(Image)) as Image;
-            Image currentImage = sender as Image;
-            currentImage.Tag = image.Tag;
-            UpdateItem(currentImage, image);
-        }
-
-        /// <summary>
-        /// 更新出售物品
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void UpdateSellItem(object sender, DragEventArgs e)
-        {
-            Image image = e.Data.GetData(typeof(Image)) as Image;
-            Image currentImage = sender as Image;
-            currentImage.Tag = image.Tag;
-            UpdateItem(currentImage, image);
-        }
-        #endregion
 
         /// <summary>
         /// 处理打折后的数据
@@ -319,6 +263,64 @@ namespace CBHK.ViewModel.Component.Villager
                 BuyDecorations = null;
                 BuyDisCountDisplayVisible = Visibility.Hidden;
             }
+        }
+
+        #endregion
+
+        #region Event
+        public void Buy_Loaded(object sender, RoutedEventArgs e) => Buy = sender as Image;
+
+        public void BuyB_Loaded(object sender, RoutedEventArgs e) => BuyB = sender as Image;
+
+        public void Sell_Loaded(object sender, RoutedEventArgs e) => Sell = sender as Image;
+
+        /// <summary>
+        /// 载入事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void TransactionItems_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// 更新第一个收购物品
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void UpdateBuyItem(object sender, DragEventArgs e)
+        {
+            Image image = e.Data.GetData(typeof(Image)) as Image;
+            Image currentImage = sender as Image;
+            currentImage.Tag = image.Tag;
+            UpdateItem(currentImage, image);
+        }
+
+        /// <summary>
+        /// 更新第二个收购物品
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void UpdateBuybItem(object sender, DragEventArgs e)
+        {
+            Image image = e.Data.GetData(typeof(Image)) as Image;
+            Image currentImage = sender as Image;
+            currentImage.Tag = image.Tag;
+            UpdateItem(currentImage, image);
+        }
+
+        /// <summary>
+        /// 更新出售物品
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void UpdateSellItem(object sender, DragEventArgs e)
+        {
+            Image image = e.Data.GetData(typeof(Image)) as Image;
+            Image currentImage = sender as Image;
+            currentImage.Tag = image.Tag;
+            UpdateItem(currentImage, image);
         }
 
         /// <summary>
@@ -402,5 +404,6 @@ namespace CBHK.ViewModel.Component.Villager
             Sell.Source = new BitmapImage(new Uri(emptyIcon));
             Sell.Tag = null;
         }
+        #endregion
     }
 }

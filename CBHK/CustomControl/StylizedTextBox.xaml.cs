@@ -5,12 +5,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using CBHK.GeneralTool;
 using System.Windows.Input;
-using CBHK.CustomControl.Interfaces;
 using System.Threading.Tasks;
 using System.Text;
 using System.Threading;
+using CBHK.Utility.Common;
+using CBHK.Interface;
 
 namespace CBHK.CustomControl
 {

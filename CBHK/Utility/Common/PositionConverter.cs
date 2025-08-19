@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media.Media3D;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility.Common
 {
     public class PositionConverter : IMultiValueConverter
     {

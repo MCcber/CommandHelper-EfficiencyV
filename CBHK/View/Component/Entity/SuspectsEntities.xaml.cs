@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool;
+using CBHK.Utility.Common;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
 using System.Windows.Controls;

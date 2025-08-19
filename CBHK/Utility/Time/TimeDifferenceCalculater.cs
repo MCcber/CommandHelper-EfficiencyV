@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CBHK.GeneralTool.Time
+namespace CBHK.Utility.Time
 {
     class TimeDifferenceCalculater
     {
@@ -11,7 +11,7 @@ namespace CBHK.GeneralTool.Time
             int month = DateTime.Now.Month - targetTime.Month;
             int day = DateTime.Now.Day - targetTime.Day;
             int hour = DateTime.Now.Hour - targetTime.Hour;
-            if (year > 0 || (month > 0 && day < 0))
+            if (year > 0 || month > 0 && day < 0)
             {
                 result = "更早";
             }

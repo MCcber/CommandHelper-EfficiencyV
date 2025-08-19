@@ -136,7 +136,7 @@
             Grid.Row="1"
             Background="Transparent"
             BorderThickness="0"
-            ItemsSource="{Binding SpawnerPages}"
+            ItemsSource="{Binding SpawnerPageList}"
             SelectedIndex="0"
             SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
             Style="{DynamicResource TabControlWithScrollBar}" />

@@ -5,7 +5,7 @@
     xmlns:AnimationComponents="clr-namespace:CBHK.CustomControl.AnimationComponents"
     xmlns:ColorPickers="clr-namespace:CBHK.CustomControl.ColorPickerComponents"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
-    xmlns:GeneralTool="clr-namespace:CBHK.GeneralTool"
+    xmlns:UtilityCommon="clr-namespace:CBHK.Utility.Common"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:control_datacontexts="clr-namespace:CBHK.ControlDataContext"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -49,7 +49,7 @@
 
         <control_datacontexts:DoubleToFloat x:Key="DoubleToFloatConverter" />
 
-        <GeneralTool:PositionConverter x:Key="PositionConverter" />
+        <UtilityCommon:PositionConverter x:Key="PositionConverter" />
     </Window.Resources>
     <Grid Background="#7F323232">
         <Grid.RowDefinitions>
@@ -1832,7 +1832,7 @@
                         Grid.Row="1"
                         Grid.Column="0"
                         Margin="5"
-                        Result="{Binding Tags, Mode=TwoWay}">
+                        Result="{Binding TagList, Mode=TwoWay}">
                         <behaviors:Interaction.Triggers>
                             <behaviors:EventTrigger EventName="Loaded">
                                 <behaviors:CallMethodAction MethodName="TagRichTextBox_Loaded" TargetObject="{Binding}" />
@@ -1878,7 +1878,7 @@
                             <StackPanel>
                                 <behaviors:Interaction.Triggers>
                                     <behaviors:EventTrigger EventName="Loaded">
-                                        <behaviors:CallMethodAction MethodName="NBTCheckboxListLoaded" TargetObject="{Binding}" />
+                                        <behaviors:CallMethodAction MethodName="NBTCheckboxList_Loaded" TargetObject="{Binding}" />
                                     </behaviors:EventTrigger>
                                 </behaviors:Interaction.Triggers>
                             </StackPanel>
@@ -2134,7 +2134,7 @@
                                 HorizontalAlignment="Center"
                                 Background="Transparent"
                                 Command="{Binding UpdateCameraMovementTypeCommand}"
-                                CommandParameter="{x:Static GeneralTool:ArmorStandCameraMovementType.Watch}"
+                                CommandParameter="{x:Static UtilityCommon:ArmorStandCameraMovementType.Watch}"
                                 FontSize="15"
                                 FontWeight="Normal"
                                 ImageData="{StaticResource IconGaze}"
@@ -2157,7 +2157,7 @@
                                 HorizontalAlignment="Center"
                                 Background="Transparent"
                                 Command="{Binding UpdateCameraMovementTypeCommand}"
-                                CommandParameter="{x:Static GeneralTool:ArmorStandCameraMovementType.Free}"
+                                CommandParameter="{x:Static UtilityCommon:ArmorStandCameraMovementType.Free}"
                                 FontSize="15"
                                 FontWeight="Normal"
                                 ImageData="{StaticResource IconFree}"
@@ -2180,7 +2180,7 @@
                                 HorizontalAlignment="Center"
                                 Background="Transparent"
                                 Command="{Binding UpdateCameraMovementTypeCommand}"
-                                CommandParameter="{x:Static GeneralTool:ArmorStandCameraMovementType.ThirdPerson}"
+                                CommandParameter="{x:Static UtilityCommon:ArmorStandCameraMovementType.ThirdPerson}"
                                 FontSize="15"
                                 FontWeight="Normal"
                                 ImageData="{StaticResource IconThirdPerson}"
@@ -2203,7 +2203,7 @@
                                 HorizontalAlignment="Center"
                                 Background="Transparent"
                                 Command="{Binding UpdateCameraMovementTypeCommand}"
-                                CommandParameter="{x:Static GeneralTool:ArmorStandCameraMovementType.OverTheShoulder}"
+                                CommandParameter="{x:Static UtilityCommon:ArmorStandCameraMovementType.OverTheShoulder}"
                                 FontSize="15"
                                 FontWeight="Normal"
                                 ImageData="{StaticResource IconShouder}"
@@ -2444,14 +2444,14 @@
                                                             <GeometryModel3D.BackMaterial>
                                                                 <DiffuseMaterial>
                                                                     <DiffuseMaterial.Brush>
-                                                                        <ImageBrush ImageSource="{Binding woodenImage}" />
+                                                                        <ImageBrush ImageSource="{Binding WoodenImage}" />
                                                                     </DiffuseMaterial.Brush>
                                                                 </DiffuseMaterial>
                                                             </GeometryModel3D.BackMaterial>
                                                             <GeometryModel3D.Material>
                                                                 <DiffuseMaterial>
                                                                     <DiffuseMaterial.Brush>
-                                                                        <ImageBrush ImageSource="{Binding woodenImage}" />
+                                                                        <ImageBrush ImageSource="{Binding WoodenImage}" />
                                                                     </DiffuseMaterial.Brush>
                                                                 </DiffuseMaterial>
                                                             </GeometryModel3D.Material>
@@ -2620,14 +2620,14 @@
                                                             <GeometryModel3D.BackMaterial>
                                                                 <DiffuseMaterial>
                                                                     <DiffuseMaterial.Brush>
-                                                                        <ImageBrush ImageSource="{Binding woodenImage}" />
+                                                                        <ImageBrush ImageSource="{Binding WoodenImage}" />
                                                                     </DiffuseMaterial.Brush>
                                                                 </DiffuseMaterial>
                                                             </GeometryModel3D.BackMaterial>
                                                             <GeometryModel3D.Material>
                                                                 <DiffuseMaterial>
                                                                     <DiffuseMaterial.Brush>
-                                                                        <ImageBrush ImageSource="{Binding woodenImage}" />
+                                                                        <ImageBrush ImageSource="{Binding WoodenImage}" />
                                                                     </DiffuseMaterial.Brush>
                                                                 </DiffuseMaterial>
                                                             </GeometryModel3D.Material>
@@ -2677,14 +2677,14 @@
                                                             <GeometryModel3D.BackMaterial>
                                                                 <DiffuseMaterial>
                                                                     <DiffuseMaterial.Brush>
-                                                                        <ImageBrush ImageSource="{Binding woodenImage}" />
+                                                                        <ImageBrush ImageSource="{Binding WoodenImage}" />
                                                                     </DiffuseMaterial.Brush>
                                                                 </DiffuseMaterial>
                                                             </GeometryModel3D.BackMaterial>
                                                             <GeometryModel3D.Material>
                                                                 <DiffuseMaterial>
                                                                     <DiffuseMaterial.Brush>
-                                                                        <ImageBrush ImageSource="{Binding woodenImage}" />
+                                                                        <ImageBrush ImageSource="{Binding WoodenImage}" />
                                                                     </DiffuseMaterial.Brush>
                                                                 </DiffuseMaterial>
                                                             </GeometryModel3D.Material>
@@ -2737,14 +2737,14 @@
                                                                     <GeometryModel3D.BackMaterial>
                                                                         <DiffuseMaterial>
                                                                             <DiffuseMaterial.Brush>
-                                                                                <ImageBrush ImageSource="{Binding horizontalImage}" />
+                                                                                <ImageBrush ImageSource="{Binding HorizontalImage}" />
                                                                             </DiffuseMaterial.Brush>
                                                                         </DiffuseMaterial>
                                                                     </GeometryModel3D.BackMaterial>
                                                                     <GeometryModel3D.Material>
                                                                         <DiffuseMaterial>
                                                                             <DiffuseMaterial.Brush>
-                                                                                <ImageBrush ImageSource="{Binding horizontalImage}" />
+                                                                                <ImageBrush ImageSource="{Binding HorizontalImage}" />
                                                                             </DiffuseMaterial.Brush>
                                                                         </DiffuseMaterial>
                                                                     </GeometryModel3D.Material>
@@ -2773,14 +2773,14 @@
                                                                     <GeometryModel3D.BackMaterial>
                                                                         <DiffuseMaterial>
                                                                             <DiffuseMaterial.Brush>
-                                                                                <ImageBrush ImageSource="{Binding horizontalImage}" />
+                                                                                <ImageBrush ImageSource="{Binding HorizontalImage}" />
                                                                             </DiffuseMaterial.Brush>
                                                                         </DiffuseMaterial>
                                                                     </GeometryModel3D.BackMaterial>
                                                                     <GeometryModel3D.Material>
                                                                         <DiffuseMaterial>
                                                                             <DiffuseMaterial.Brush>
-                                                                                <ImageBrush ImageSource="{Binding horizontalImage}" />
+                                                                                <ImageBrush ImageSource="{Binding HorizontalImage}" />
                                                                             </DiffuseMaterial.Brush>
                                                                         </DiffuseMaterial>
                                                                     </GeometryModel3D.Material>
@@ -2809,14 +2809,14 @@
                                                                     <GeometryModel3D.BackMaterial>
                                                                         <DiffuseMaterial>
                                                                             <DiffuseMaterial.Brush>
-                                                                                <ImageBrush ImageSource="{Binding woodenImage}" />
+                                                                                <ImageBrush ImageSource="{Binding WoodenImage}" />
                                                                             </DiffuseMaterial.Brush>
                                                                         </DiffuseMaterial>
                                                                     </GeometryModel3D.BackMaterial>
                                                                     <GeometryModel3D.Material>
                                                                         <DiffuseMaterial>
                                                                             <DiffuseMaterial.Brush>
-                                                                                <ImageBrush ImageSource="{Binding woodenImage}" />
+                                                                                <ImageBrush ImageSource="{Binding WoodenImage}" />
                                                                             </DiffuseMaterial.Brush>
                                                                         </DiffuseMaterial>
                                                                     </GeometryModel3D.Material>
@@ -2842,14 +2842,14 @@
                                                                     <GeometryModel3D.BackMaterial>
                                                                         <DiffuseMaterial>
                                                                             <DiffuseMaterial.Brush>
-                                                                                <ImageBrush ImageSource="{Binding woodenImage}" />
+                                                                                <ImageBrush ImageSource="{Binding WoodenImage}" />
                                                                             </DiffuseMaterial.Brush>
                                                                         </DiffuseMaterial>
                                                                     </GeometryModel3D.BackMaterial>
                                                                     <GeometryModel3D.Material>
                                                                         <DiffuseMaterial>
                                                                             <DiffuseMaterial.Brush>
-                                                                                <ImageBrush ImageSource="{Binding woodenImage}" />
+                                                                                <ImageBrush ImageSource="{Binding WoodenImage}" />
                                                                             </DiffuseMaterial.Brush>
                                                                         </DiffuseMaterial>
                                                                     </GeometryModel3D.Material>

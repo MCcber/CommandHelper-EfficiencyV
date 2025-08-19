@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.Time;
+using CBHK.Utility.Common;
+using CBHK.Utility.Time;
 using CBHK.ViewModel.Component.Datapack.HomePage;
 using System;
 using System.IO;

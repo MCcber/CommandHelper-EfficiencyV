@@ -1,6 +1,4 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
 using CBHK.View.Component.Item;
 using Newtonsoft.Json.Linq;
 using System;
@@ -12,6 +10,8 @@ using System.Windows.Media;
 using CBHK.ViewModel.Generator;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Component.Item;
+using CBHK.Utility.MessageTip;
+using CBHK.Utility.Common;
 
 namespace CBHK.View.Component.Entity
 {

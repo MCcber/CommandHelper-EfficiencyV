@@ -143,7 +143,7 @@ namespace CBHK.View.Component.Datapack.EditPage
                                 JObject fileData = JObject.Parse(File.ReadAllText(fileTemplates[i]));
                                 if (fileData["type"] is JToken fileType)
                                     type = fileType.ToString();
-                                if (fileData["description"] is JToken fileDescription)
+                                if (fileData["Description"] is JToken fileDescription)
                                     description = fileDescription.ToString();
                                 if (fileData["path"] is JToken filePath)
                                 {

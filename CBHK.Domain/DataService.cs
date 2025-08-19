@@ -1,5 +1,5 @@
 ﻿using CBHK.Common.Model;
-using System.Text.RegularExpressions;
+using CBHK.Common.Utility;
 
 namespace CBHK.Domain
 {
@@ -7,6 +7,7 @@ namespace CBHK.Domain
     {
         #region Field
         private CBHKDataContext _context = null;
+        private RegexService _regexService = null;
         private List<string> ItemSlotList = [];
         private List<string> Enchantments = [];
         private List<string> DamageTypeList = [];
@@ -28,9 +29,6 @@ namespace CBHK.Domain
         private List<string> LootToolList = [];
         private List<string> ScoreboardTypeList = [];
         private List<string> ScoreboardCustomIDList = [];
-
-        [GeneratedRegex(@"(?<={)[0-9\-]+(?=})")]
-        private static partial Regex ItemSlotMatcher();
         #endregion
 
         #region DataStructure
@@ -40,9 +38,10 @@ namespace CBHK.Domain
         public Dictionary<int, Dictionary<string, string>> EntityGroupByVersionDictionary = [];
         #endregion
 
-        public DataService(CBHKDataContext context)
+        public DataService(CBHKDataContext context,RegexService regexService)
         {
             _context = context;
+            _regexService = regexService;
 
             #region 根据版本分类所有物品ID
             if (ItemGroupByVersionDicionary.Count == 0 && _context.ItemSet is not null)
@@ -146,7 +145,7 @@ namespace CBHK.Domain
                 if (item.Value is not null)
                 {
                     string value = item.Value;
-                    string subContent = ItemSlotMatcher().Match(value).ToString();
+                    string subContent = _regexService.ItemSlotMatcher().Match(value).ToString();
                     if (subContent is not null && subContent.Length > 0)
                     {
                         #region 处理区间,与后面引用的数据拼接成完整的数据

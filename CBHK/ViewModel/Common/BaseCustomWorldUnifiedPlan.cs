@@ -1,9 +1,8 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.Interfaces;
 using CBHK.CustomControl.JsonTreeViewComponents;
 using CBHK.Domain;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.TreeViewComponentsHelper;
+using CBHK.Utility;
+using CBHK.Utility.TreeViewComponentsHelper;
 using CBHK.Model.Common;
 using CBHK.View;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -21,12 +20,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using static CBHK.Model.Common.Enums;
+using CBHK.Common.Utility;
+using CBHK.Interface;
 
 namespace CBHK.ViewModel.Common
 {
     public abstract class BaseCustomWorldUnifiedPlan: ObservableObject,ICustomWorldUnifiedPlan
     {
         #region Property
+        protected virtual RegexService BaseRegexService { get; set; }
         protected CBHKDataContext Context { get; set; }
         protected virtual HtmlHelper htmlHelper { get; set; }
         protected virtual Window Home { get; set; }
@@ -56,15 +58,16 @@ namespace CBHK.ViewModel.Common
         public virtual JsonTreeViewItem VisualLastItem { get; set; }
         #endregion
 
-        public BaseCustomWorldUnifiedPlan(IContainerProvider container, MainView mainView, CBHKDataContext context)
+        public BaseCustomWorldUnifiedPlan(IContainerProvider container, MainView mainView, CBHKDataContext context,RegexService regexService)
         {
             Context = context;
             Container = container;
             Home = mainView;
-            htmlHelper = new(Container)
+            BaseRegexService = regexService;
+            htmlHelper = new(Container,BaseRegexService)
             {
                 plan = this,
-                jsonTool = JsonTool = new JsonTreeViewItemExtension(Container)
+                jsonTool = JsonTool = new JsonTreeViewItemExtension(Container,BaseRegexService)
             };
 
             CurrentVersion = VersionList[0];

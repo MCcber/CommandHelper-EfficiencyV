@@ -1,4 +1,4 @@
-﻿using CBHK.GeneralTool;
+﻿using CBHK.Utility;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,6 +22,7 @@ namespace CBHK.ViewModel
     public partial class MainViewModel(IContainerProvider container,CBHKDataContext context) : ObservableObject
     {
         #region Field
+        private IContainerProvider _container = container;
         private readonly CBHKDataContext _context = context;
         /// <summary>
         /// 主页可见性
@@ -29,7 +30,6 @@ namespace CBHK.ViewModel
         public EnvironmentConfig _config = null;
         private Grid SkeletonGrid = null;
         private Grid GeneratorTable = null;
-        private Grid UserGrid = null;
         private IProgress<byte> SetGeneratorButtonProgress = null;
         /// <summary>
         /// 初始化界面数据
@@ -44,20 +44,6 @@ namespace CBHK.ViewModel
         public WindowState _windowState = WindowState.Normal;
         [ObservableProperty]
         private bool _showInTaskBar = true;
-
-        [ObservableProperty]
-        public BitmapImage _userHead = null;
-
-        [ObservableProperty]
-        public string _userID = "";
-
-        [ObservableProperty]
-        public string _userDescription = "";
-
-        [ObservableProperty]
-        public BitmapImage _userBackground = null;
-        private IContainerProvider _container = container;
-
         #endregion
 
         #region Event
@@ -125,8 +111,8 @@ namespace CBHK.ViewModel
                 //}
                 //if (UserData.TryGetValue("UserID", out string userID))
                 //    UserID = userID;
-                //if (UserData.TryGetValue("description", out string description))
-                //    UserDescription = description;
+                //if (UserData.TryGetValue("Description", out string Description))
+                //    UserDescription = Description;
                 //if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"))
                 //    UserBackground = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"));
                 #endregion
@@ -148,18 +134,6 @@ namespace CBHK.ViewModel
         public void GeneratorTable_Loaded(object sender, RoutedEventArgs e) => GeneratorTable = sender as Grid;
 
         public void SkeletonGrid_Loaded(object sender, RoutedEventArgs e) => SkeletonGrid = sender as Grid;
-
-        //public void UserGrid_Loaded(object sender, RoutedEventArgs e)
-        //{
-        //    UserGrid = sender as Grid;
-        //    Brush BackgroundBrush = _container.Resolve<MainView>().FindResource("BackgroundBrush") as Brush;
-        //    if (UserID.Length == 0 && BackgroundBrush is not null)
-        //        UserGrid.Background = BackgroundBrush;
-        //}
-
-        //public void UserHead_Loaded(object sender, RoutedEventArgs e) => UserHead = sender as BitmapImage;
-
-        //public void UserBackground_Loaded(object sender, RoutedEventArgs e) => UserBackground = sender as BitmapImage;
 
         public void TaskBarIcon_Loaded(object sender, RoutedEventArgs e)
         {

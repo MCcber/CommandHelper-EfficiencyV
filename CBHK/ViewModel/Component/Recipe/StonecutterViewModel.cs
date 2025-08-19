@@ -1,6 +1,7 @@
-﻿using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
+﻿using CBHK.Domain;
 using CBHK.Model.Common;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View.Component.Recipe;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -23,34 +24,24 @@ namespace CBHK.ViewModel.Component.Recipe
 {
     public partial class StonecutterViewModel : ObservableObject
     {
-        #region 字段与引用
+        #region Field
+        private CBHKDataContext _context;
         /// <summary>
         /// 存储最终结果
         /// </summary>
-        public string Result { get; set; } = "";
-
-        #region 存储外部导入的数据
-        public bool ImportMode { get; set; } = false;
-        public JObject ExternalData { get; set; } = null;
-        #endregion
-
+        public string Result = "";
+        BitmapImage emptyImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Recipe\Image\Empty.png"));
+        SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+        SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#484848"));
         /// <summary>
         /// 需要保存
         /// </summary>
-        public bool NeedSave { get; set; } = true;
+        public bool NeedSave = true;
         public Image MaterialItem = null;
         /// <summary>
         /// 结果物品
         /// </summary>
         public Image ResultItem = null;
-        /// <summary>
-        /// 材料列表
-        /// </summary>
-        public ObservableCollection<ItemStructure> MaterialList { get; set; } = [];
-        public ObservableCollection<string> MaterialTag { get; set; } = [];
-        BitmapImage emptyImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Recipe\Image\Empty.png"));
-        SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-        SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#484848"));
         /// <summary>
         /// 多选材质面板
         /// </summary>
@@ -67,67 +58,203 @@ namespace CBHK.ViewModel.Component.Recipe
         /// 多选模式材料视图数据源
         /// </summary>
         private CollectionViewSource MultiMaterialSource = new();
-        #region 记录当前的Tag
-        private string currentTag = "";
-        public string CurrentTag
-        {
-            get => currentTag;
-            set => SetProperty(ref currentTag, value);
-        }
+
+        #region 存储外部导入的数据
+        public bool ImportMode = false;
+        public JObject ExternalData = null;
         #endregion
-        #region 物品搜索字符串
-        private string searchText = "";
-        public string SearchText
-        {
-            get => searchText;
-            set
-            {
-                SetProperty(ref searchText, value);
-                if (MultiMaterialGrid?.Visibility == Visibility.Visible && MultiMaterialViewer?.Visibility == Visibility.Visible)
-                    MultiMaterialSource.View?.Refresh();
-            }
-        }
+
         #endregion
-        #endregion
-        #region 多选与单选
+
+        #region Property
+        /// <summary>
+        /// 材料列表
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<ItemStructure> _materialList = [];
+        [ObservableProperty]
+        public ObservableCollection<string> _materialTag = [];
+
+        /// <summary>
+        /// 记录当前的Tag
+        /// </summary>
+        [ObservableProperty]
+        private string _currentTag = "";
+
+        /// <summary>
+        /// 物品搜索字符串
+        /// </summary>
+        [ObservableProperty]
+        private string _searchText = "";
+
+        /// <summary>
+        /// 多选与单选
+        /// </summary>
         [ObservableProperty]
         private bool _multiSelect = false;
-        #endregion
-        #region 组标识符
-        private string groupName = "";
-        public string GroupName
-        {
-            get => groupName;
-            set => SetProperty(ref groupName, value);
-        }
-        #endregion
-        #region 配方文件名
-        private string fileName = "";
-        public string FileName
-        {
-            get => fileName;
-            set => SetProperty(ref fileName, value);
-        }
-        #endregion
-        #region 结果数量
-        private double count = 1;
-        public double Count
-        {
-            get => count;
-            set => SetProperty(ref count, value);
-        }
-        #endregion
+
+        /// <summary>
+        /// 组标识符
+        /// </summary>
+        [ObservableProperty]
+        private string _groupName = "";
+
+        /// <summary>
+        /// 配方文件名
+        /// </summary>
+        [ObservableProperty]
+        private string _fileName = "";
+
+        /// <summary>
+        /// 结果数量
+        /// </summary>
+        [ObservableProperty]
+        private double _count = 1;
 
         [ObservableProperty]
         private Visibility _materialMultiItemVisibility = Visibility.Collapsed;
+        #endregion
 
-        DataTable ItemTable = null;
-
-        public StonecutterViewModel()
+        #region Method
+        public StonecutterViewModel(CBHKDataContext context)
         {
-            #region 初始化数据
+            _context = context;
             MaterialTag.Add("");
-            #endregion
+        }
+
+        /// <summary>
+        /// 异步载入外部材料数据
+        /// </summary>
+        /// <returns></returns>
+        private async Task MaterialsLoaded()
+        {
+            StonecutterView stonecutter = MaterialItem.FindParent<StonecutterView>();
+            await stonecutter.Dispatcher.InvokeAsync(() =>
+            {
+                if (ExternalData.SelectToken("ingredient") is JObject ingredient)
+                {
+                    JToken itemIDObj = ExternalData.SelectToken("ingredient.item");
+                    JToken itemTagObj = ExternalData.SelectToken("ingredient.tag");
+                    if (itemIDObj != null)
+                    {
+                        string itemID = itemIDObj.ToString().Replace("minecraft:", "");
+                        Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
+                        string itemName = _context.ItemSet.First(item=>item.ID == itemID).Name;
+                        MaterialList.Add(new()
+                        {
+                            ImagePath = new BitmapImage(iconUri),
+                            IDAndName = itemID + ":" + itemName
+                        });
+                        if (itemTagObj != null)
+                            MaterialTag.Add(itemTagObj.ToString());
+                    }
+                }
+                else
+                    if (ExternalData.SelectToken("ingredient") is JArray ingredients)
+                {
+                    foreach (JToken item in ingredients)
+                    {
+                        JToken itemIDObj = item.SelectToken("item");
+                        JToken itemTagObj = item.SelectToken("tag");
+                        if (itemIDObj != null)
+                        {
+                            string itemID = itemIDObj.ToString().Replace("minecraft:", "");
+                            Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
+                            string itemName = _context.ItemSet.First(item=>item.ID == itemID).Name;
+                            MaterialList.Add(new()
+                            {
+                                ImagePath = new BitmapImage(iconUri),
+                                IDAndName = itemID + ":" + itemName
+                            });
+                            if (itemTagObj != null)
+                                MaterialTag.Add(itemTagObj.ToString());
+                        }
+                    }
+                    MaterialMultiItemVisibility = Visibility.Visible;
+                }
+            });
+        }
+
+        /// <summary>
+        /// 异步载入外部结果数据
+        /// </summary>
+        /// <returns></returns>
+        private void ResultItemLoaded()
+        {
+            if (ExternalData.SelectToken("result") is JToken recipeResult)
+            {
+                string itemID = recipeResult.ToString().Replace("minecraft:", "");
+                Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
+                string itemName = _context.ItemSet.First(item=>item.ID == itemID).Name;
+                ResultItem.Source = new BitmapImage(iconUri);
+                ResultItem.Tag = new ItemStructure()
+                {
+                    ImagePath = new BitmapImage(iconUri),
+                    IDAndName = itemID + ":" + itemName
+                };
+            }
+        }
+        #endregion
+
+        #region Event
+        /// <summary>
+        /// 载入多选材质面板
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void MultiMaterialGrid_Loaded(object sender, RoutedEventArgs e)
+        {
+            MultiMaterialGrid = sender as Grid;
+            StonecutterView stonecutter = MultiMaterialGrid.FindParent<StonecutterView>();
+            MultiMaterialSource = stonecutter.Resources["MultiModeItemViewSource"] as CollectionViewSource;
+            MultiMaterialSource.Filter += MultiMaterialSource_Filter;
+        }
+
+        /// <summary>
+        /// 载入材料
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void Material_Loaded(object sender, RoutedEventArgs e)
+        {
+            MaterialItem = sender as Image;
+            MaterialItem.Source ??= emptyImage;
+            if (ImportMode)
+                await MaterialsLoaded();
+        }
+
+        /// <summary>
+        /// 载入结果物品
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ResultItem_Loaded(object sender, RoutedEventArgs e)
+        {
+            ResultItem = sender as Image;
+            ResultItem.Source ??= emptyImage;
+            if (ImportMode)
+                ResultItemLoaded();
+        }
+
+        /// <summary>
+        /// 载入多选模式视图
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void MultiMaterialViewer_Loaded(object sender, RoutedEventArgs e)
+        {
+            MultiMaterialViewer = sender as ListView;
+        }
+
+        /// <summary>
+        /// 搜索文本更新
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SearchTextBox_SelectionChanged(object sender,TextChangedEventArgs e)
+        {
+            if (MultiMaterialGrid?.Visibility == Visibility.Visible && MultiMaterialViewer?.Visibility == Visibility.Visible)
+                MultiMaterialSource.View?.Refresh();
         }
 
         [RelayCommand]
@@ -167,7 +294,7 @@ namespace CBHK.ViewModel.Component.Recipe
             }
             ItemStructure resultItemStructure = ResultItem.Tag as ItemStructure;
             string resultItemID = resultItemStructure.IDAndName[..resultItemStructure.IDAndName.IndexOf(':')];
-            string countData = ",\"count\":" + int.Parse(count.ToString()) + "}";
+            string countData = ",\"count\":" + int.Parse(Count.ToString()) + "}";
             string resultData = "\"result\":\"minecraft:" + resultItemID + "\"";
             #endregion
             #endregion
@@ -175,6 +302,7 @@ namespace CBHK.ViewModel.Component.Recipe
             Result += groupData + keyData + resultData + countData;
             #endregion
             #endregion
+
             #region 选择生成路径，执行生成
             if (NeedSave)
             {
@@ -195,128 +323,6 @@ namespace CBHK.ViewModel.Component.Recipe
                 }
             }
             #endregion
-        }
-
-        /// <summary>
-        /// 载入多选材质面板
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void MultiMaterialGrid_Loaded(object sender, RoutedEventArgs e)
-        {
-            MultiMaterialGrid = sender as Grid;
-            StonecutterView stonecutter = MultiMaterialGrid.FindParent<StonecutterView>();
-            MultiMaterialSource = stonecutter.Resources["MultiModeItemViewSource"] as CollectionViewSource;
-            MultiMaterialSource.Filter += MultiMaterialSource_Filter;
-        }
-
-        /// <summary>
-        /// 载入材料
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void Material_Loaded(object sender, RoutedEventArgs e)
-        {
-            MaterialItem = sender as Image;
-            MaterialItem.Source ??= emptyImage;
-            if (ImportMode)
-                await MaterialsLoaded();
-        }
-
-        /// <summary>
-        /// 异步载入外部材料数据
-        /// </summary>
-        /// <returns></returns>
-        private async Task MaterialsLoaded()
-        {
-            StonecutterView stonecutter = MaterialItem.FindParent<StonecutterView>();
-            await stonecutter.Dispatcher.InvokeAsync(() =>
-            {
-                if (ExternalData.SelectToken("ingredient") is JObject ingredient)
-                {
-                    JToken itemIDObj = ExternalData.SelectToken("ingredient.item");
-                    JToken itemTagObj = ExternalData.SelectToken("ingredient.tag");
-                    if (itemIDObj != null)
-                    {
-                        string itemID = itemIDObj.ToString().Replace("minecraft:", "");
-                        Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                        MaterialList.Add(new()
-                        {
-                            ImagePath = new BitmapImage(iconUri),
-                            IDAndName = itemID + ":" + itemName
-                        });
-                        if (itemTagObj != null)
-                            MaterialTag.Add(itemTagObj.ToString());
-                    }
-                }
-                else
-                    if (ExternalData.SelectToken("ingredient") is JArray ingredients)
-                {
-                    foreach (JToken item in ingredients)
-                    {
-                        JToken itemIDObj = item.SelectToken("item");
-                        JToken itemTagObj = item.SelectToken("tag");
-                        if (itemIDObj != null)
-                        {
-                            string itemID = itemIDObj.ToString().Replace("minecraft:", "");
-                            Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
-                            string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                            MaterialList.Add(new()
-                            {
-                                ImagePath = new BitmapImage(iconUri),
-                                IDAndName = itemID + ":" + itemName
-                            });
-                            if (itemTagObj != null)
-                                MaterialTag.Add(itemTagObj.ToString());
-                        }
-                    }
-                    //GenerateBubbleChart.Generator(ref MaterialItem, MaterialList);
-                }
-            });
-        }
-
-        /// <summary>
-        /// 载入结果物品
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ResultItem_Loaded(object sender, RoutedEventArgs e)
-        {
-            ResultItem = sender as Image;
-            ResultItem.Source ??= emptyImage;
-            if (ImportMode)
-                ResultItemLoaded();
-        }
-
-        /// <summary>
-        /// 异步载入外部结果数据
-        /// </summary>
-        /// <returns></returns>
-        private void ResultItemLoaded()
-        {
-            if (ExternalData.SelectToken("result") is JToken recipeResult)
-            {
-                string itemID = recipeResult.ToString().Replace("minecraft:", "");
-                Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                string itemName = ItemTable.Select("id='" + itemID + "'").First()["name"].ToString();
-                ResultItem.Source = new BitmapImage(iconUri);
-                ResultItem.Tag = new ItemStructure()
-                {
-                    ImagePath = new BitmapImage(iconUri),
-                    IDAndName = itemID + ":" + itemName
-                };
-            }
-        }
-
-        /// <summary>
-        /// 载入多选模式视图
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void MultiMaterialViewer_Loaded(object sender, RoutedEventArgs e)
-        {
-            MultiMaterialViewer = sender as ListView;
         }
 
         [RelayCommand]
@@ -521,5 +527,6 @@ namespace CBHK.ViewModel.Component.Recipe
             else
                 e.Accepted = true;
         }
+        #endregion
     }
 }

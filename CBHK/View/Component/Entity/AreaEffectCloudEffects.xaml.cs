@@ -1,13 +1,10 @@
-﻿using CBHK.ControlDataContext;
-using CBHK.CustomControl;
-using CBHK.CustomControl.Interfaces;
+﻿using CBHK.CustomControl;
 using CBHK.Domain;
-using CBHK.GeneralTool;
-using CBHK.ViewModel.Generator;
+using CBHK.Interface;
+using CBHK.Utility.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;

@@ -1,22 +1,16 @@
-﻿namespace CBHK.ViewModel.Component.Datapack.DatapackGenerateSetupPage
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+
+namespace CBHK.ViewModel.Component.Datapack.DatapackGenerateSetupPage
 {
     /// <summary>
     /// 包过滤器数据结构
     /// </summary>
-    public class PackFilter
+    public partial class PackFilter:ObservableObject
     {
-        private string nameSpace = "";
-        public string NameSpace
-        {
-            get => nameSpace;
-            set => nameSpace = value;
-        }
+        [ObservableProperty]
+        private string _nameSpace = "";
 
-        private string path = "";
-        public string Path
-        {
-            get => path;
-            set => path = value;
-        }
+        [ObservableProperty]
+        private string _path = "";
     }
 }

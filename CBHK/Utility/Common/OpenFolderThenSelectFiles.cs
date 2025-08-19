@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility.Common
 {
     public class OpenFolderThenSelectFiles
     {
@@ -13,13 +13,13 @@ namespace CBHK.GeneralTool
         /// </summary>
         /// <param name="filePath">文件绝对路径</param>
         [DllImport("shell32.dll", ExactSpelling = true)]
-        private static extern void ILFree(IntPtr pidlList);
+        private static extern void ILFree(nint pidlList);
 
         [DllImport("shell32.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
-        private static extern IntPtr ILCreateFromPathW(string pszPath);
+        private static extern nint ILCreateFromPathW(string pszPath);
 
         [DllImport("shell32.dll", ExactSpelling = true)]
-        private static extern int SHOpenFolderAndSelectItems(IntPtr pidlList, uint cild, IntPtr children, uint dwFlags);
+        private static extern int SHOpenFolderAndSelectItems(nint pidlList, uint cild, nint children, uint dwFlags);
 
         public static void ExplorerFile(string filePath)
         {
@@ -30,12 +30,12 @@ namespace CBHK.GeneralTool
                 Process.Start(@"explorer.exe", "/select,\"" + filePath + "\"");
             else
             {
-                IntPtr pidlList = ILCreateFromPathW(filePath);
-                if (pidlList != IntPtr.Zero)
+                nint pidlList = ILCreateFromPathW(filePath);
+                if (pidlList != nint.Zero)
                 {
                     try
                     {
-                        Marshal.ThrowExceptionForHR(SHOpenFolderAndSelectItems(pidlList, 0, IntPtr.Zero, 0));
+                        Marshal.ThrowExceptionForHR(SHOpenFolderAndSelectItems(pidlList, 0, nint.Zero, 0));
                     }
                     finally
                     {

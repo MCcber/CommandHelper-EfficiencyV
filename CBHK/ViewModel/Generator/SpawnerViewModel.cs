@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Spawner;
 using CBHK.ViewModel.Component.Spawner;
@@ -23,33 +23,32 @@ namespace CBHK.ViewModel.Generator
 {
     public partial class SpawnerViewModel: ObservableObject
     {
-        #region 存储结果
-        public StringBuilder Result { get; set; }
-        #endregion
-
-        #region 显示结果
-        private bool showResult = false;
-        public bool ShowResult
-        {
-            get => showResult;
-            set => SetProperty(ref showResult, value);
-        }
-        #endregion
-
-        #region 选中版本以及版本数据源
-        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
-            new TextComboBoxItem() { Text = "1.20.5" },
-            new TextComboBoxItem() { Text = "1.12.0" }
-        ];
-        #endregion
-
-        #region 字段与引用
+        #region Field
+        /// <summary>
+        /// 存储结果
+        /// </summary>
+        public StringBuilder Result = new();
         /// <summary>
         /// 主页引用
         /// </summary>
         private Window home = null;
-        //刷怪笼标签页集合
-        public ObservableCollection<RichTabItems> SpawnerPages { get; set; } = [ new RichTabItems() { Header = "刷怪笼",
+        /// <summary>
+        /// 本生成器的图标路径
+        /// </summary>
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
+        private IContainerProvider _container;
+        #endregion
+
+        #region Property
+        /// <summary>
+        /// 刷怪笼标签页集合
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<RichTabItems> _spawnerPageList =
+        [
+            new RichTabItems()
+            {
+                Header = "刷怪笼",
                 IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
@@ -61,36 +60,45 @@ namespace CBHK.ViewModel.Generator
                 TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
                 SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,} ];
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush
+            }
+        ];
 
-        //本生成器的图标路径
-        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
+        /// <summary>
+        /// 已选中的刷怪笼
+        /// </summary>
+        [ObservableProperty]
+        private RichTabItems _selectedItem = null;
 
-        #region 已选中的刷怪笼
-        private RichTabItems selectedItem = null;
-        private IContainerProvider _container;
+        /// <summary>
+        /// 显示结果
+        /// </summary>
+        [ObservableProperty]
+        private bool _showResult = false;
 
-        public RichTabItems SelectedItem
-        {
-            get => selectedItem;
-            set => SetProperty(ref selectedItem,value);
-        }
+        /// <summary>
+        /// 选中版本以及版本数据源
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _versionSource = [
+            new TextComboBoxItem() { Text = "1.20.5" },
+            new TextComboBoxItem() { Text = "1.12.0" }
+        ];
         #endregion
 
-        #endregion
-
-        #region 初始化数据
+        #region Method
         public SpawnerViewModel(IContainerProvider container, MainView mainView)
         {
             _container = container;
             SpawnerPageView spawnerPageView = _container.Resolve<SpawnerPageView>();
             spawnerPageView.FontWeight = FontWeights.Normal;
-            SpawnerPages[0].Content = spawnerPageView;
-            SelectedItem = SpawnerPages[0];
+            SpawnerPageList[0].Content = spawnerPageView;
+            SelectedItem = SpawnerPageList[0];
             home = mainView;
         }
         #endregion
 
+        #region Event
         [RelayCommand]
         /// <summary>
         /// 添加刷怪笼
@@ -114,8 +122,8 @@ namespace CBHK.ViewModel.Generator
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
             };
-            SpawnerPages.Add(richTabItems);
-            if(SpawnerPages.Count == 1)
+            SpawnerPageList.Add(richTabItems);
+            if(SpawnerPageList.Count == 1)
             SelectedItem = richTabItems;
         }
 
@@ -125,7 +133,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ClearSpawner()
         {
-            SpawnerPages.Clear();
+            SpawnerPageList.Clear();
         }
 
         [RelayCommand]
@@ -134,7 +142,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFromClipboard()
         {
-            ObservableCollection<RichTabItems> items = SpawnerPages;
+            ObservableCollection<RichTabItems> items = SpawnerPageList;
             ExternalDataImportManager.ImportSpawnerDataHandler(Clipboard.GetText(),ref items,false);
         }
 
@@ -144,7 +152,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFromFile()
         {
-            Microsoft.Win32.OpenFileDialog openFileDialog = new()
+            OpenFileDialog openFileDialog = new()
             {
                 AddExtension = true,
                 DefaultExt = ".command",
@@ -156,7 +164,7 @@ namespace CBHK.ViewModel.Generator
             };
             if (openFileDialog.ShowDialog().Value)
             {
-                ObservableCollection<RichTabItems> items = SpawnerPages;
+                ObservableCollection<RichTabItems> items = SpawnerPageList;
                 ExternalDataImportManager.ImportSpawnerDataHandler(openFileDialog.FileName,ref items);
             }
         }
@@ -182,7 +190,7 @@ namespace CBHK.ViewModel.Generator
         private void Run()
         {
             Result = new();
-            foreach (RichTabItems item in SpawnerPages)
+            foreach (RichTabItems item in SpawnerPageList)
             {
                 SpawnerPageView spawnerPage = item.Content as SpawnerPageView;
                 SpawnerPageViewModel context = spawnerPage.DataContext as SpawnerPageViewModel;
@@ -197,7 +205,7 @@ namespace CBHK.ViewModel.Generator
                 DisplayerView displayer = _container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
-                    displayerViewModel.GeneratorResult(Result.ToString().Trim(','), "刷怪笼", icon_path);
+                    displayerViewModel.GeneratorResult(Result.ToString().Trim(','), "刷怪笼", iconPath);
                 }
             }
             else
@@ -217,7 +225,7 @@ namespace CBHK.ViewModel.Generator
             List<string> Results = [];
             await Task.Run(() =>
             {
-                foreach (RichTabItems item in SpawnerPages)
+                foreach (RichTabItems item in SpawnerPageList)
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
@@ -252,5 +260,6 @@ namespace CBHK.ViewModel.Generator
                 }
             });
         }
+        #endregion
     }
 }

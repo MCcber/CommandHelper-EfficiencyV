@@ -16,7 +16,7 @@ namespace CBHK.ViewModel.Component.Villager
     {
         #region Property
         [ObservableProperty]
-        public string _selectedTypeItemPath = "";
+        public string _selectedTypeItemPath = "Text";
 
         [ObservableProperty]
         public double _gossipValue = 0;
@@ -51,6 +51,7 @@ namespace CBHK.ViewModel.Component.Villager
 
         #endregion
 
+        #region Event
         /// <summary>
         /// 载入言论类型
         /// </summary>
@@ -59,7 +60,7 @@ namespace CBHK.ViewModel.Component.Villager
         public void GossipItem_Loaded(object sender, RoutedEventArgs e)
         {
             VillagerViewModel context = Window.GetWindow(sender as UserControl).DataContext as VillagerViewModel;
-            GossipTypeList = context.GossipTypes;
+            GossipTypeList = context.GossipTypeList;
         }
 
         [RelayCommand]
@@ -67,7 +68,7 @@ namespace CBHK.ViewModel.Component.Villager
         {
             GossipsItemsViewModel context = view.DataContext as GossipsItemsViewModel;
             VillagerViewModel villagerViewModel = Window.GetWindow(view).DataContext as VillagerViewModel;
-            villagerViewModel.gossipItems.Remove(view);
+            villagerViewModel.GossipItemList.Remove(view);
         }
 
         /// <summary>
@@ -83,7 +84,7 @@ namespace CBHK.ViewModel.Component.Villager
             Dictionary<string, int> currentGossipTypes = [];
             //已处理的标记
             Dictionary<string, bool> handedMarkers = [];
-            foreach (var item in context.GossipTypes)
+            foreach (var item in context.GossipTypeList)
             {
                 currentGossipTypes.Add(item.Text, 0);
                 handedMarkers.Add(item.Text, false);
@@ -93,7 +94,7 @@ namespace CBHK.ViewModel.Component.Villager
             currentGossipTypes[currentType] = int.Parse(GossipValue.ToString());
             handedMarkers[currentType] = true;
 
-            _ = context.gossipItems.Where(item =>
+            _ = context.GossipItemList.Where(item =>
             {
                 GossipsItemsViewModel gossipsItemsViewModel = item.DataContext as GossipsItemsViewModel;
                 string currentGossipType = gossipsItemsViewModel.SelectedTypeItem.Text;
@@ -108,5 +109,6 @@ namespace CBHK.ViewModel.Component.Villager
             if (currentGossipTypes.Count == 5)
                 _ = context.TransactionItemList.All(item => { (item.DataContext as TransactionItemViewModel).UpdateDiscountData(currentGossipTypes["minor_negative"], currentGossipTypes["minor_positive"], currentGossipTypes["major_negative"], currentGossipTypes["major_positive"], currentGossipTypes["trading"]); return true; });
         }
+        #endregion
     }
 }

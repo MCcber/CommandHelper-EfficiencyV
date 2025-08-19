@@ -87,7 +87,7 @@ namespace CBHK.WindowDictionaries
         }
 
         /// <summary>
-        /// Identifies the IsTransitioning dependency property.
+        /// Identifies the IsTransitioning Dependency property.
         /// </summary>
         public static readonly DependencyProperty IsTransitioningProperty =
             DependencyProperty.Register(
@@ -153,7 +153,7 @@ namespace CBHK.WindowDictionaries
         }
 
         /// <summary>
-        /// Identifies the Transition dependency property.
+        /// Identifies the Transition Dependency property.
         /// </summary>
         public static readonly DependencyProperty TransitionProperty =
             DependencyProperty.Register(
@@ -218,7 +218,7 @@ namespace CBHK.WindowDictionaries
         }
 
         /// <summary>
-        /// Identifies the RestartTransitionOnContentChange dependency property.
+        /// Identifies the RestartTransitionOnContentChange Dependency property.
         /// </summary>
         public static readonly DependencyProperty RestartTransitionOnContentChangeProperty =
             DependencyProperty.Register(

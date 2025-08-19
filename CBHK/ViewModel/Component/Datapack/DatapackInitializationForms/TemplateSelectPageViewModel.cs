@@ -1,4 +1,5 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.Common.Utility;
+using CBHK.CustomControl;
 using CBHK.Domain;
 using CBHK.View.Component.Datapack.TemplateSelectPage;
 using CBHK.View.Generator;
@@ -14,7 +15,6 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,7 +26,7 @@ using System.Windows.Navigation;
 
 namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
 {
-    public partial class TemplateSelectPageViewModel(CBHKDataContext context): ObservableObject
+    public partial class TemplateSelectPageViewModel(CBHKDataContext context,RegexService regexService): ObservableObject
     {
         #region Field
         /// <summary>
@@ -54,6 +54,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// </summary>
         private string databaseFilePath = AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db";
         private CBHKDataContext _context = context;
+        private RegexService _regexService = regexService;
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
         private SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#3D3D3D"));
@@ -61,8 +62,6 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// 载入完毕
         /// </summary>
         private bool IsLoaded = false;
-        [GeneratedRegex(@"(?<=包版本-)[0-9]+")]
-        private static partial Regex packVersionComparer();
         #endregion
 
         #region Property
@@ -223,7 +222,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                     #region 载入解决方案模板
                     string solutionTemplateContent = File.ReadAllText(TemplateDataFilePath);
                     List<string> BlankSolutions = Directory.GetFiles(BlankSolutionFolder).ToList();
-                    BlankSolutions.Sort(new GeneralTool.SolutionNameComparer());
+                    BlankSolutions.Sort(new Utility.Common.SolutionNameComparer());
                     for (int i = 0; i < BlankSolutions.Count; i++)
                         SolutionTemplateArray.Add(BlankSolutions[i]);
                     if (solutionTemplateContent.Length > 0)
@@ -408,7 +407,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                 description = solutionTemplateItems.Description.Text.StartsWith(SearchText) || solutionTemplateItems.Description.Text.Contains(SearchText);
             }
             //if(solutionTemplateItems.CurrentType == SolutionTemplateItems.ItemTypes.DatapackView)
-            version = versionValue == packVersionComparer().Match(currentVersion).ToString() || SelectedVersion.Text == "全部";
+            version = versionValue == _regexService.PackVersionComparer().Match(currentVersion).ToString() || SelectedVersion.Text == "全部";
             string developerValue = solutionTemplateItems.Developer.Text;
             List<string> typeValue = [];
             foreach (Border item in solutionTemplateItems.TypePanel.Children)

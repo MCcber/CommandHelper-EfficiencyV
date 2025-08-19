@@ -5,7 +5,7 @@ using System.Windows.Documents;
 using System.Windows;
 using System.Windows.Media;
 
-namespace CBHK.GeneralTool.MessageTip
+namespace CBHK.Utility.MessageTip
 {
     public static class Message
     {

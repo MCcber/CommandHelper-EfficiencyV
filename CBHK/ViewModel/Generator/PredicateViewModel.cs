@@ -1,4 +1,5 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.Common.Utility;
+using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
 using CBHK.Domain;
 using CBHK.Model.Common;
@@ -62,7 +63,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public PredicateViewModel(IContainerProvider container, MainView mainView, CBHKDataContext context) : base(container, mainView, context)
+        public PredicateViewModel(IContainerProvider container, MainView mainView, CBHKDataContext context,RegexService regexService) : base(container, mainView, context, regexService)
         {
             #region 添加数据上下文所需的枚举集合与转换字典数据
             EnumIDDictionary.Add("流体ID", ["minecraft:water", "minecraft:lava"]);

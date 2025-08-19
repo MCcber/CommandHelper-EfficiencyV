@@ -211,7 +211,7 @@ namespace CBHK.View.Component.Entity
             {
                 Style = Application.Current.Resources["TextComboBoxStyle"] as Style,
                 Uid = currentIndex.ToString(),
-                Name = "key",
+                Name = "Key",
                 DataContext = this,
                 ItemsSource = AttributeKeys,
                 Height = 25

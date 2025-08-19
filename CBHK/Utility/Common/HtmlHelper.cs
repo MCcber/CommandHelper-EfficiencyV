@@ -1,8 +1,9 @@
-﻿using CBHK.CustomControl;
-using CBHK.CustomControl.Interfaces;
+﻿using CBHK.Common.Utility;
+using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.Interface;
 using CBHK.Model.Common;
-using CBHK.Service.Json;
+using CBHK.Utility.Common;
 using CBHK.ViewModel.Common;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
@@ -18,9 +19,9 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using static CBHK.Model.Common.Enums;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility
 {
-    public partial class HtmlHelper(IContainerProvider container)
+    public partial class HtmlHelper(IContainerProvider container,RegexService regexService)
     {
         #region Field
         public string RootDirectory { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\";
@@ -33,66 +34,10 @@ namespace CBHK.GeneralTool
 
         private List<string> dataStringType = ["string", "bool", "int", "short", "float", "double", "long", "decimal", "compound", "list"];
 
-        [GeneratedRegex(@"\s*\s?\*+\s*\s?{{")]
-        private static partial Regex JudgeHead();
-        [GeneratedRegex(@"{{slink\|\|(?<1>[\u4e00-\u9fff]+)}}")]
-        private static partial Regex GetSlinkData();
-        [GeneratedRegex(@"\s?\s*\*+\s?\s*{{([nN]bt\s)?inherit(?<1>[a-z_/|=*\s]+)}}\s?\s*", RegexOptions.IgnoreCase)]
-        private static partial Regex GetInheritString();
-
-        [GeneratedRegex(@"(其余的附加条件，)?取决于{{nbt\|string\|(?<1>[a-z_:]+)}}的值")]
-        private static partial Regex GetExtraKey();
-
-        [GeneratedRegex(@"(?<=与).+(?=不能同时存在)")]
-        private static partial Regex GetMutexKey();
-
-        [GeneratedRegex(@"(?<=\s*\s?\*+;?\s*\s?(如果|若|当)).+(?=为|是).+")]
-        private static partial Regex GetEnumRawKey();
-
-        [GeneratedRegex(@"\[\[\#?((?<1>[\u4e00-\u9fff]+)\|(?<2>[\u4e00-\u9fff]+)|(?<1>[\u4e00-\u9fff]+))\]\]")]
-        private static partial Regex GetContextKey();
-
-        [GeneratedRegex(@"\[\[(?<1>[a-zA-Z_\u4e00-\u9fff|#]+)\]\]")]
-        private static partial Regex GetEnumKey();
-
-        [GeneratedRegex(@"^\s*\s?\:?\s*\s?(\*+)")]
-        private static partial Regex GetLineStarCount();
-
-        [GeneratedRegex(@"{{interval(\|left=(?<1>\d+))?(\|right=(?<2>\d+))?}}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetNumberRange();
-
-        [GeneratedRegex(@"required=1", RegexOptions.IgnoreCase)]
-        private static partial Regex GetRequiredKey();
-
-        [GeneratedRegex(@"默认为\{\{cd\|(?<1>[a-z_]+)\}\}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetDefaultStringValue();
-
-        [GeneratedRegex(@"默认为(?<1>\d)+", RegexOptions.IgnoreCase)]
-        private static partial Regex GetDefaultNumberValue();
-
-        [GeneratedRegex(@"默认为\{\{cd\|(?<1>true|false)\}\}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetDefaultBoolValue();
-
-        [GeneratedRegex(@"(?<=默认为<code>)(?<1>[a-z:_]+)(?=</code>)", RegexOptions.IgnoreCase)]
-        private static partial Regex GetDefaultEnumValue();
-
-        [GeneratedRegex(@"(?<=<code>)(?<1>[a-z_:]+)(?=</code>)")]
-        private static partial Regex GetEnumValueMode1();
-
-        [GeneratedRegex(@"\{\{cd\|(?<1>[a-z:_]+)\}\}", RegexOptions.IgnoreCase)]
-        private static partial Regex GetEnumValueMode2();
-        [GeneratedRegex(@"<''(?<1>[a-z_\u4e00-\u9fff]+)''>", RegexOptions.IgnoreCase)]
-        private static partial Regex GetEnumValueMode3();
-
-        [GeneratedRegex(@"\s?\s*=+\s?\s*([#\u4e00-\u9fffa-z_/]+)\s?\s*=+\s?\s*", RegexOptions.IgnoreCase)]
-        private static partial Regex GetContextFileMarker();
-
-        [GeneratedRegex(@"=+\s*\s?((minecraft\:)?[a-z_/]+)\s*\s?=+", RegexOptions.IgnoreCase)]
-        private static partial Regex GetEnumTypeKeywords();
-
         public List<string> ProgressClassList = ["treeview"];
 
         private IContainerProvider _container = container;
+        private RegexService _regexService = regexService;
         private bool HadPreIdentifiedAsEnumCompoundType { get; set; }
         #endregion
 
@@ -103,7 +48,7 @@ namespace CBHK.GeneralTool
         /// <returns></returns>
         private BaseCompoundJsonTreeViewItem GetCustomKeyBaseCompoundItem(BaseCompoundJsonTreeViewItem template)
         {
-            BaseCompoundJsonTreeViewItem result = new(plan, jsonTool, _container)
+            BaseCompoundJsonTreeViewItem result = new(plan, jsonTool, _container,_regexService)
             {
                 DataType = template.DataType
             };
@@ -266,7 +211,7 @@ namespace CBHK.GeneralTool
                             for (int j = 0; j < treeviewDivs.Count; j++)
                             {
                                 int enumKeyIndex = treeviewDivs[j].Line - 1;
-                                Match enumMatch = GetEnumTypeKeywords().Match(fileArrayContent[enumKeyIndex]);
+                                Match enumMatch = _regexService.GetEnumTypeKeywords().Match(fileArrayContent[enumKeyIndex]);
                                 while (!enumMatch.Success)
                                 {
                                     if (enumKeyIndex > 0)
@@ -277,11 +222,11 @@ namespace CBHK.GeneralTool
                                     {
                                         break;
                                     }
-                                    enumMatch = GetEnumTypeKeywords().Match(fileArrayContent[enumKeyIndex]);
+                                    enumMatch = _regexService.GetEnumTypeKeywords().Match(fileArrayContent[enumKeyIndex]);
                                 }
                                 if (!enumMatch.Success)
                                 {
-                                    enumMatch = GetEnumValueMode1().Match(fileArrayContent[treeviewDivs[j].Line]);
+                                    enumMatch = _regexService.GetEnumValueMode1().Match(fileArrayContent[treeviewDivs[j].Line]);
                                 }
                                 if (enumMatch.Success)
                                 {
@@ -350,12 +295,12 @@ namespace CBHK.GeneralTool
                     for (int j = 0; j < compoundJsonTreeViewItem.CompoundChildrenStringList.Count; j++)
                     {
                         string childString = compoundJsonTreeViewItem.CompoundChildrenStringList[j];
-                        Match contentMatch = GetContextKey().Match(childString);
+                        Match contentMatch = _regexService.GetContextKey().Match(childString);
                         if (contentMatch.Success && (list[i].DataType is not DataType.None || (list[i] is BaseCompoundJsonTreeViewItem compoundElementItem && ((compoundElementItem.ItemType is not ItemType.List && compoundElementItem.ItemType is not ItemType.OptionalCompound) || (compoundElementItem.ItemType is ItemType.MultiType && compoundElementItem.SelectedValueType.Text != "List")))))
                         {
                             string key = contentMatch.Groups[1].Value;
                             string targetKey2 = "";
-                            BaseCompoundJsonTreeViewItem subCompoundItem = new(plan, jsonTool, _container)
+                            BaseCompoundJsonTreeViewItem subCompoundItem = new(plan, jsonTool, _container, _regexService)
                             {
                                 LayerCount = compoundJsonTreeViewItem.LayerCount,
                                 ItemType = ItemType.CustomCompound,
@@ -374,10 +319,10 @@ namespace CBHK.GeneralTool
                                     {
                                         if (NBTFeatureItem.Contains('\'') && NBTFeatureItem.Contains('<'))
                                         {
-                                            MatchCollection enumValueList1 = GetEnumValueMode1().Matches(NBTFeatureItem);
-                                            MatchCollection enumValueList2 = GetEnumValueMode2().Matches(NBTFeatureItem);
-                                            int enumMode1Count = GetEnumValueMode1().Matches(NBTFeatureItem).Count;
-                                            int enumMode2Count = GetEnumValueMode2().Matches(NBTFeatureItem).Count;
+                                            MatchCollection enumValueList1 = _regexService.GetEnumValueMode1().Matches(NBTFeatureItem);
+                                            MatchCollection enumValueList2 = _regexService.GetEnumValueMode2().Matches(NBTFeatureItem);
+                                            int enumMode1Count = _regexService.GetEnumValueMode1().Matches(NBTFeatureItem).Count;
+                                            int enumMode2Count = _regexService.GetEnumValueMode2().Matches(NBTFeatureItem).Count;
                                             if (enumMode1Count + enumMode2Count > 0)
                                             {
                                                 subCompoundItem.EnumBoxVisibility = Visibility.Visible;
@@ -511,10 +456,10 @@ namespace CBHK.GeneralTool
         private int CountInLineSourceCodeSameLayerItem(List<string> inlineSourceCode)
         {
             int result = 0;
-            int firstLineCount = GetLineStarCount().Match(inlineSourceCode[0]).Value.Trim().Length;
+            int firstLineCount = _regexService.GetLineStarCount().Match(inlineSourceCode[0]).Value.Trim().Length;
             for (int i = 1; i < inlineSourceCode.Count; i++)
             {
-                int currentCount = GetLineStarCount().Match(inlineSourceCode[i]).Value.Trim().Length;
+                int currentCount = _regexService.GetLineStarCount().Match(inlineSourceCode[i]).Value.Trim().Length;
                 if (firstLineCount == currentCount)
                 {
                     result++;
@@ -531,12 +476,12 @@ namespace CBHK.GeneralTool
         public List<string> GetHeadTypeAndKeyList(string target)
         {
             List<string> result = [];
-            Match inheritMatch = GetInheritString().Match(target);
+            Match inheritMatch = _regexService.GetInheritString().Match(target);
             if (!inheritMatch.Success)
             {
                 string RemoveIrrelevantString = target.Replace("}}{{nbt", "").Replace("}}{{Nbt", "");
                 int nbtFeatureStartIndex = RemoveIrrelevantString.IndexOf("{{");
-                Match isStartMatch = JudgeHead().Match(RemoveIrrelevantString[..(nbtFeatureStartIndex + 2)]);
+                Match isStartMatch = _regexService.JudgeHead().Match(RemoveIrrelevantString[..(nbtFeatureStartIndex + 2)]);
                 int nbtFeatureEndIndex = RemoveIrrelevantString.IndexOf("}}");
                 if (isStartMatch.Success && RemoveIrrelevantString.Contains('{') && nbtFeatureEndIndex > 0 && nbtFeatureEndIndex > 0)
                 {
@@ -571,18 +516,18 @@ namespace CBHK.GeneralTool
             return result;
         }
 
-        private static Tuple<List<string>, int> CollectionSubItem(List<string> nodeList, int currentIndex, int currentLinestarCount, int nextLineStarCount)
+        private Tuple<List<string>, int> CollectionSubItem(List<string> nodeList, int currentIndex, int currentLinestarCount, int nextLineStarCount)
         {
             List<string> result = [];
             int nextNodeIndex = currentIndex;
             result.Add(nodeList[currentIndex]);
-            Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+            Match nextLineStarMatch = _regexService.GetLineStarCount().Match(nodeList[nextNodeIndex]);
             nextNodeIndex++;
             while (nextLineStarMatch.Success && nextLineStarCount > currentLinestarCount)
             {
                 if (nextNodeIndex < nodeList.Count)
                 {
-                    nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                    nextLineStarMatch = _regexService.GetLineStarCount().Match(nodeList[nextNodeIndex]);
                     if (nextLineStarMatch.Success && nextLineStarMatch.Groups[1].Value.Trim().Length > currentLinestarCount)
                     {
                         nextLineStarCount = nextLineStarMatch.Groups[1].Value.Trim().Length;
@@ -631,8 +576,8 @@ namespace CBHK.GeneralTool
                     #endregion
 
                     #region 执行解析、分析是否需要被添加为依赖项
-                    Match mainContextFileMarker = GetContextFileMarker().Match(wikiLines[0]);
-                    Match subContextFileMarker = GetContextFileMarker().Match(wikiLines[1]);
+                    Match mainContextFileMarker = _regexService.GetContextFileMarker().Match(wikiLines[0]);
+                    Match subContextFileMarker = _regexService.GetContextFileMarker().Match(wikiLines[1]);
                     string contextFileMarker = mainContextFileMarker.Value.Replace("=", "").Replace("#", "").Trim() + (subContextFileMarker.Success ? "|" + subContextFileMarker.Value.Replace("=", "").Trim() : "");
 
                     if (treeviewDivs.Count == 1)
@@ -644,7 +589,7 @@ namespace CBHK.GeneralTool
                         for (int i = 0; i < treeviewDivs.Count; i++)
                         {
                             int enumKeyIndex = treeviewDivs[i].Line - 1;
-                            Match enumMatch = GetEnumTypeKeywords().Match(wikiLines[enumKeyIndex]);
+                            Match enumMatch = _regexService.GetEnumTypeKeywords().Match(wikiLines[enumKeyIndex]);
                             while (!enumMatch.Success)
                             {
                                 if (enumKeyIndex > 0)
@@ -655,7 +600,7 @@ namespace CBHK.GeneralTool
                                 {
                                     break;
                                 }
-                                enumMatch = GetEnumTypeKeywords().Match(wikiLines[enumKeyIndex]);
+                                enumMatch = _regexService.GetEnumTypeKeywords().Match(wikiLines[enumKeyIndex]);
                             }
                             Dictionary<string, List<string>> keyValuePairs = [];
                             List<string> targetRawStringList = [.. wikiLines.Skip(treeviewDivs[i].Line).Take(treeviewDivs[i].EndNode.Line - 1 - treeviewDivs[i].Line)];
@@ -764,15 +709,15 @@ namespace CBHK.GeneralTool
                 string currentDescription = "";
                 bool IsSimpleItem = true;
                 currentReferenceKey ??= "";
-                bool IsCurrentOptionalNode = !GetRequiredKey().Match(nodeList[i]).Success && KeyList.Count == 0 && !(parent is not null && parent.ItemType is ItemType.CustomCompound);
-                Match inheritMatch = GetInheritString().Match(nodeList[i]);
-                Match contextMatch = GetContextKey().Match(nodeList[i]);
+                bool IsCurrentOptionalNode = !_regexService.GetRequiredKey().Match(nodeList[i]).Success && KeyList.Count == 0 && !(parent is not null && parent.ItemType is ItemType.CustomCompound);
+                Match inheritMatch = _regexService.GetInheritString().Match(nodeList[i]);
+                Match contextMatch = _regexService.GetContextKey().Match(nodeList[i]);
                 List<string> NBTFeatureList = GetHeadTypeAndKeyList(nodeList[i]);
                 NBTFeatureList = RemoveUIMarker(NBTFeatureList);
                 #endregion
 
                 #region 获取当前行星号数量
-                Match starMatch = GetLineStarCount().Match(nodeList[i]);
+                Match starMatch = _regexService.GetLineStarCount().Match(nodeList[i]);
                 int starCount = starMatch.Value.Trim().Length;
                 #endregion
 
@@ -785,7 +730,7 @@ namespace CBHK.GeneralTool
                         int nextLineStarCount = 0;
                         if (i + 1 < nodeList.Count)
                         {
-                            Match nextLineStarMatch = GetLineStarCount().Match(nodeList[i + 2]);
+                            Match nextLineStarMatch = _regexService.GetLineStarCount().Match(nodeList[i + 2]);
                             nextLineStarCount = nextLineStarMatch.Value.Trim().Length;
                             Tuple<List<string>, int> subNodeTuple = CollectionSubItem(nodeList, i + 1, starCount, nextLineStarCount);
                             nodeList.RemoveRange(i, nodeList.Count - i);
@@ -817,7 +762,7 @@ namespace CBHK.GeneralTool
                                 NBTFeatureList = GetHeadTypeAndKeyList(nodeList[i + 1]);
                                 NBTFeatureList = RemoveUIMarker(NBTFeatureList);
                             }
-                            IsCurrentOptionalNode = !GetRequiredKey().Match(nodeList[i]).Success && KeyList.Count == 0;
+                            IsCurrentOptionalNode = !_regexService.GetRequiredKey().Match(nodeList[i]).Success && KeyList.Count == 0;
                             currentContextNextIndex = i + targetInheritList.Count;
                         }
                         else
@@ -879,7 +824,7 @@ namespace CBHK.GeneralTool
                                 isSimpleDataType = false;
                                 KeyList.AddRange(targetDictionary.Keys);
                                 List<string> inlineSourceCode = targetDictionary[KeyList.FirstOrDefault()];
-                                bool haveExtraItem = GetExtraKey().Match(nodeList[^1]).Success;
+                                bool haveExtraItem = _regexService.GetExtraKey().Match(nodeList[^1]).Success;
                                 if (!haveExtraItem && ((!NBTFeatureList.Contains("compound") &&
                                     !NBTFeatureList.Where(item => item.Contains("array")).Any() &&
                                     !NBTFeatureList.Contains("list")) || i >= currentContextNextIndex))
@@ -887,7 +832,7 @@ namespace CBHK.GeneralTool
                                     nodeList.RemoveAt(i);
                                     nodeList.InsertRange(i, inlineSourceCode);
 
-                                    int firstInlineLayer = GetLineStarCount().Match(inlineSourceCode[0]).Value.Trim().Length;
+                                    int firstInlineLayer = _regexService.GetLineStarCount().Match(inlineSourceCode[0]).Value.Trim().Length;
                                     EnumItemCount = CountInLineSourceCodeSameLayerItem(inlineSourceCode);
                                     currentContextNextIndex = i + inlineSourceCode.Count;
                                     i--;
@@ -901,15 +846,15 @@ namespace CBHK.GeneralTool
                 #endregion
 
                 #region 获取当前行星号数量
-                starMatch = GetLineStarCount().Match(nodeList[i]);
+                starMatch = _regexService.GetLineStarCount().Match(nodeList[i]);
                 starCount = starMatch.Value.Trim().Length;
                 #endregion
 
                 #region Field
-                MatchCollection EnumCollectionMode1 = GetEnumValueMode1().Matches(nodeList[i]);
-                MatchCollection EnumCollectionMode2 = GetEnumValueMode2().Matches(nodeList[i]);
-                MatchCollection EnumCollectionMode3 = GetEnumValueMode3().Matches(nodeList[i]);
-                Match EnumMatch = GetEnumKey().Match(nodeList[i]);
+                MatchCollection EnumCollectionMode1 = _regexService.GetEnumValueMode1().Matches(nodeList[i]);
+                MatchCollection EnumCollectionMode2 = _regexService.GetEnumValueMode2().Matches(nodeList[i]);
+                MatchCollection EnumCollectionMode3 = _regexService.GetEnumValueMode3().Matches(nodeList[i]);
+                Match EnumMatch = _regexService.GetEnumKey().Match(nodeList[i]);
                 bool isEnumKey = plan.TranslateDictionary.Count > 0 && (plan.TranslateDictionary.ContainsKey(EnumMatch.Groups[1].Value) || plan.EnumIDDictionary.ContainsKey(EnumMatch.Groups[1].Value));
                 bool isBoolKey = (EnumCollectionMode1.Count > 0 && (EnumCollectionMode1[0].Groups[1].Value == "false" || EnumCollectionMode1[0].Groups[1].Value == "true")) || (EnumCollectionMode2.Count > 0 && (EnumCollectionMode2[0].Groups[1].Value == "false" || EnumCollectionMode2[0].Groups[1].Value == "true"));
                 if (NBTFeatureList.Count > 0 && !IsPreIdentifiedAsEnumCompoundType)
@@ -925,10 +870,10 @@ namespace CBHK.GeneralTool
                 {
                     isEnumIDList = plan.EnumIDDictionary.Count > 0 && plan.EnumIDDictionary.ContainsKey(EnumMatch.Groups[1].Value);
                 }
-                Match DefaultEnumValueMatch = GetDefaultEnumValue().Match(nodeList[i]);
-                Match DefaultNumberValueMatch = GetDefaultNumberValue().Match(nodeList[i]);
-                Match DefaultBoolValueMatch = GetDefaultBoolValue().Match(nodeList[i]);
-                Match DefaultStringValueMatch = GetDefaultStringValue().Match(nodeList[i]);
+                Match DefaultEnumValueMatch = _regexService.GetDefaultEnumValue().Match(nodeList[i]);
+                Match DefaultNumberValueMatch = _regexService.GetDefaultNumberValue().Match(nodeList[i]);
+                Match DefaultBoolValueMatch = _regexService.GetDefaultBoolValue().Match(nodeList[i]);
+                Match DefaultStringValueMatch = _regexService.GetDefaultStringValue().Match(nodeList[i]);
                 #endregion
 
                 #region 判断是否跳过本次处理
@@ -995,7 +940,7 @@ namespace CBHK.GeneralTool
                     #region 判断是否为复合节点
                     if (isEnumIDList || isHaveNameSpaceKey || !isSimpleDataType)
                     {
-                        item = new BaseCompoundJsonTreeViewItem(plan, jsonTool, _container)
+                        item = new BaseCompoundJsonTreeViewItem(plan, jsonTool, _container,_regexService)
                         {
                             IsCanBeDefaulted = IsCurrentOptionalNode
                         };
@@ -1158,7 +1103,7 @@ namespace CBHK.GeneralTool
                         {
                             IsNoKeyOrMultiDataTypeItem = true;
                             string description = GetDescription(nodeList[i]);
-                            BaseCompoundJsonTreeViewItem multipleDataTypeElement = new(plan, jsonTool, _container)
+                            BaseCompoundJsonTreeViewItem multipleDataTypeElement = new(plan, jsonTool, _container, _regexService)
                             {
                                 IsCanBeDefaulted = false,
                                 ItemType = ItemType.MultiType,
@@ -1183,7 +1128,7 @@ namespace CBHK.GeneralTool
                                 {
                                     if (nextNodeIndex < nodeList.Count)
                                     {
-                                        Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                                        Match nextLineStarMatch = _regexService.GetLineStarCount().Match(nodeList[nextNodeIndex]);
                                         if (nextLineStarMatch.Success)
                                         {
                                             string nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
@@ -1198,7 +1143,7 @@ namespace CBHK.GeneralTool
 
                                                     if (nextNodeIndex < nodeList.Count)
                                                     {
-                                                        nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                                                        nextLineStarMatch = _regexService.GetLineStarCount().Match(nodeList[nextNodeIndex]);
                                                         if (nextLineStarMatch.Success && nextLineStarMatch.Groups[1].Value.Trim().Length > starCount)
                                                         {
                                                             nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
@@ -1660,7 +1605,7 @@ namespace CBHK.GeneralTool
                             BaseCompoundJsonTreeViewItem grandParent = parent.Parent;
                             foreach (var parentItem in grandParent.LogicChildren)
                             {
-                                Match parentItemMatch = GetEnumKey().Match(parentItem.InfoTipText);
+                                Match parentItemMatch = _regexService.GetEnumKey().Match(parentItem.InfoTipText);
                                 if (parentItemMatch.Success && parentItemMatch.Groups[1].Value.Contains("ID"))
                                 {
                                     isHaveIDItem = true;
@@ -1673,7 +1618,7 @@ namespace CBHK.GeneralTool
                                         JObject propertyObject = JObject.Parse(blockPropertyItem);
                                         if (propertyObject.First is JProperty jProperty && propertyObject[jProperty.Name] is JArray jarray)
                                         {
-                                            BaseCompoundJsonTreeViewItem newPropertyItem = new(plan, jsonTool, _container)
+                                            BaseCompoundJsonTreeViewItem newPropertyItem = new(plan, jsonTool, _container, _regexService)
                                             {
                                                 Parent = parent,
                                                 LayerCount = layerCount,
@@ -1791,7 +1736,7 @@ namespace CBHK.GeneralTool
                             else
                             if (parent is not null)
                             {
-                                Match parentEnumMatch = GetEnumKey().Match(parent.InfoTipText);
+                                Match parentEnumMatch = _regexService.GetEnumKey().Match(parent.InfoTipText);
                                 if (parentEnumMatch.Success && plan.EnumIDDictionary.TryGetValue(parentEnumMatch.Groups[1].Value, out List<string> parentEnumIDList))
                                 {
                                     enumSource.AddRange(parentEnumIDList);
@@ -1847,7 +1792,7 @@ namespace CBHK.GeneralTool
                             CurrentCompoundItem.SelectedEnumItem = CurrentCompoundItem.EnumItemsSource.FirstOrDefault();
                             CurrentCompoundItem.EnumKey = CurrentEnumKey;
                             result.ResultString.Append(new string(' ', layerCount * 2) + '"' + currentNodeKey + '"' + ": \"\"");
-                            Match extraMatch = GetExtraKey().Match(nodeList[^1]);
+                            Match extraMatch = _regexService.GetExtraKey().Match(nodeList[^1]);
                             //这行范围删除源码的操作，可能会导致错误
                             if (!extraMatch.Success && i == nodeList.Count - 1)
                             {
@@ -1884,7 +1829,7 @@ namespace CBHK.GeneralTool
                                 CurrentCompoundItem.AddOrSwitchElementButtonVisibility = Visibility.Visible;
                                 if (i + 1 < nodeList.Count)
                                 {
-                                    Match nextLineStarMatch = GetLineStarCount().Match(nodeList[i + 1]);
+                                    Match nextLineStarMatch = _regexService.GetLineStarCount().Match(nodeList[i + 1]);
                                     string nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
                                     Tuple<List<string>, int> currentSubChildrenTuple = CollectionSubItem(nodeList, i, starCount, nextLineStar.Length);
                                     if (currentSubChildrenTuple.Item1.Count > 1 || (currentSubChildrenTuple.Item1.Count == 1 && currentSubChildrenTuple.Item1[0] != nodeList[i]))
@@ -1976,7 +1921,7 @@ namespace CBHK.GeneralTool
                         //分支文档有主动分支和被动分支两种情况
                         if (i + 1 < nodeList.Count)
                         {
-                            Match nextEnumLineMatch = GetEnumRawKey().Match(nodeList[i + 1]);
+                            Match nextEnumLineMatch = _regexService.GetEnumRawKey().Match(nodeList[i + 1]);
                             if (nextEnumLineMatch.Success)
                             {
                                 if (isAddedStringInMulipleCode || CurrentCompoundItem.IsCanBeDefaulted)
@@ -1999,7 +1944,7 @@ namespace CBHK.GeneralTool
                         {
                             if (nextNodeIndex < nodeList.Count)
                             {
-                                Match nextLineStarMatch = GetLineStarCount().Match(nodeList[nextNodeIndex]);
+                                Match nextLineStarMatch = _regexService.GetLineStarCount().Match(nodeList[nextNodeIndex]);
                                 if (nextLineStarMatch.Success)
                                 {
                                     string nextLineStar = nextLineStarMatch.Groups[1].Value.Trim();
@@ -2027,8 +1972,8 @@ namespace CBHK.GeneralTool
                                         if ((NBTFeatureList[0] == "compound" || NBTFeatureList[0].Contains("array")) && currentSubChildrenTuple.Item1.Count > 0 && !IsCurrentOptionalNode)
                                         {
                                             #region 如果子信息只有一条并引用指定文件，则将其文档内容取出并直接解析
-                                            Match subInheritMatch = GetInheritString().Match(currentSubChildrenTuple.Item1.Count > 0 ? currentSubChildrenTuple.Item1[0] : "");
-                                            Match subSlinkMatch = GetSlinkData().Match(currentSubChildrenTuple.Item1.Count > 0 ? currentSubChildrenTuple.Item1[0] : "");
+                                            Match subInheritMatch = _regexService.GetInheritString().Match(currentSubChildrenTuple.Item1.Count > 0 ? currentSubChildrenTuple.Item1[0] : "");
+                                            Match subSlinkMatch = _regexService.GetSlinkData().Match(currentSubChildrenTuple.Item1.Count > 0 ? currentSubChildrenTuple.Item1[0] : "");
                                             int subInheritIndex = subInheritMatch.Groups[1].Value.IndexOf('|');
                                             string subInheritMatchString = subInheritMatch.Groups[1].Value;
                                             string subSlinkMatchString = subSlinkMatch.Groups[1].Value;
@@ -2227,7 +2172,7 @@ namespace CBHK.GeneralTool
                     bool optionalNode = previous.IsCanBeDefaulted;
                     if (previous is not BaseCompoundJsonTreeViewItem)
                     {
-                        previous = new BaseCompoundJsonTreeViewItem(plan, jsonTool, _container)
+                        previous = new BaseCompoundJsonTreeViewItem(plan, jsonTool, _container, _regexService)
                         {
                             IsCanBeDefaulted = optionalNode
                         };
@@ -2309,7 +2254,7 @@ namespace CBHK.GeneralTool
             #region 如果父节点类型为列表，则将当前计算结果放入对象节点中
             if (parent is not null && (parent.ItemType is ItemType.List || (parent.ItemType is ItemType.MultiType && parent.SelectedValueType is not null && parent.SelectedValueType.Text == "List")) && (HadPreIdentifiedAsEnumCompoundType || nodeList.Count > 1) && !IsNoKeyOrMultiDataTypeItem)
             {
-                BaseCompoundJsonTreeViewItem entry = new(plan, jsonTool, _container)
+                BaseCompoundJsonTreeViewItem entry = new(plan, jsonTool, _container, _regexService)
                 {
                     ItemType = ItemType.Compound,
                     RemoveElementButtonVisibility = Visibility.Visible,

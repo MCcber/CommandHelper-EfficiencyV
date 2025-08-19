@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.ColorPickerComponents;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Compoment.WrittenBook;
 using CBHK.WindowDictionaries;
@@ -32,8 +32,28 @@ namespace CBHK.ViewModel.Generator
     public partial class WrittenBookViewModel(IContainerProvider container,MainView mainView) : ObservableObject
     {
         #region Field
-        //成书编辑框引用
+        /// <summary>
+        /// 拾色器
+        /// </summary>
+        ColorPickers colorPicker = null;
+        /// <summary>
+        /// 成书编辑框引用
+        /// </summary>
         public RichTextBox WrittenBookEditor = null;
+        /// <summary>
+        /// 悬浮菜单
+        /// </summary>
+        Popup popup = new()
+        {
+            IsOpen = false,
+            Placement = PlacementMode.AbsolutePoint,
+            StaysOpen = false
+        };
+
+        Frame PageFrame = new() { NavigationUIVisibility = NavigationUIVisibility.Hidden };
+        EditPage editPage = new();
+        SignaturePage signaturePage = new();
+        private IContainerProvider _container = container;
 
         //成书背景文件路径
         string backgroundFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Image\written_book_background.png";
@@ -64,6 +84,9 @@ namespace CBHK.ViewModel.Generator
         /// 一页总字节数
         /// </summary>
         int PageMaxByteLength = 1024;
+        /// <summary>
+        /// 一页的总行数
+        /// </summary>
         int PageMaxLineCount = 7;
 
         //字符数量超出提示
@@ -100,8 +123,77 @@ namespace CBHK.ViewModel.Generator
         public List<EnabledFlowDocument> HistroyFlowDocumentList = [];
         #endregion
 
+        #region Property
+
+        /// <summary>
+        /// 显示字符超出数量
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _displayExceedsCount = Visibility.Collapsed;
+        /// <summary>
+        /// 总页数
+        /// </summary>
+        [ObservableProperty]
+        private int _maxPage = 1;
+        /// <summary>
+        /// 当前页码下标
+        /// </summary>
+        [ObservableProperty]
+        int _currentPageIndex = 0;
+        /// <summary>
+        /// 当前光标所在的文本对象引用
+        /// </summary>
+        [ObservableProperty]
+        private RichRun _currentRichRun = null;
+        /// <summary>
+        /// 开启点击事件
+        /// </summary>
+        [ObservableProperty]
+        private bool _enableClickEvent = false;
+        /// <summary>
+        /// 开启悬浮事件
+        /// </summary>
+        [ObservableProperty]
+        private bool _enableHoverEvent = false;
+        /// <summary>
+        /// 开启插入
+        /// </summary>
+        [ObservableProperty]
+        private bool _enableInsertion = false;
+        /// <summary>
+        /// 被选择文本的字体颜色
+        /// </summary>
+        [ObservableProperty]
+        private SolidColorBrush _selectionColor = new(Color.FromRgb(0,0,0));
+        /// <summary>
+        /// 当前页码与总页数数据
+        /// </summary>
+        [ObservableProperty]
+        private string _pageData = "页面 ：1/1";
+        /// <summary>
+        /// 是否显示左箭头
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _displayLeftArrow = Visibility.Collapsed;
+        /// <summary>
+        /// 是否显示右箭头
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _displayRightArrow = Visibility.Visible;
+        /// <summary>
+        /// 显示结果
+        /// </summary>
+        [ObservableProperty]
+        private bool _showGeneratorResult = false;
+        /// <summary>
+        /// 跳转页面数字
+        /// </summary>
+        [ObservableProperty]
+        private int _jumpSpecificPageNumber;
+
         #region 版本数据源与已选择版本
-        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _versionSource = [
             new TextComboBoxItem() { Text = "1.20.5+" },
             new TextComboBoxItem() { Text = "1.12" }
             ];
@@ -119,175 +211,182 @@ namespace CBHK.ViewModel.Generator
         private int CurrentMinVersion = 1205;
         #endregion
 
-        #region 显示字符超出数量
-        private Visibility displayExceedsCount = Visibility.Collapsed;
-        public Visibility DisplayExceedsCount
-        {
-            get { return displayExceedsCount; }
-            set
-            {
-                displayExceedsCount = value;
-                OnPropertyChanged();
-            }
-        }
         #endregion
 
-        #region 总页数
-        int maxPage = 1;
-        int MaxPage
+        #region Method
+        /// <summary>
+        /// 更新页面显示数据
+        /// </summary>
+        private void UpdatePageViewDisplay()
         {
-            get => maxPage;
-            set => SetProperty(ref maxPage,value);
+            MaxPage = WrittenBookPages.Count;
+            PageData = "页面 ：" + (CurrentPageIndex + 1).ToString() + "/" + MaxPage.ToString();
+            if (CurrentPageIndex > 0)
+                DisplayLeftArrow = Visibility.Visible;
+            else
+                DisplayLeftArrow = Visibility.Collapsed;
         }
-        #endregion
 
-        #region 当前页码下标
-        int currentPageIndex = 0;
-        int CurrentPageIndex
+        /// <summary>
+        /// 弹出悬浮菜单
+        /// </summary>
+        private void ShowHoverMenu()
         {
-            get => currentPageIndex;
-            set
+            bool SameRun = false;
+            if (WrittenBookEditor.Selection.Text.Trim().Length > 0)
             {
-                SetProperty(ref currentPageIndex,value);
-                MaxPage = WrittenBookPages.Count;
-                PageData = "页面 ：" + (currentPageIndex + 1).ToString() + "/" + MaxPage.ToString();
-                if (currentPageIndex > 0)
-                    DisplayLeftArrow = Visibility.Visible;
+                Point relativePoint = WrittenBookEditor.Selection.End.GetCharacterRect(LogicalDirection.Forward).TopLeft;
+                Point absolutePoint = WrittenBookEditor.PointToScreen(relativePoint);
+                double screenWidth = SystemParameters.PrimaryScreenWidth;
+                double screenHeight = SystemParameters.PrimaryScreenHeight;
+                bool isBottom = absolutePoint.Y > screenHeight / 2;
+                bool isLeft = absolutePoint.X < screenWidth / 2;
+
+                popup.HorizontalOffset = absolutePoint.X;
+                popup.VerticalOffset = absolutePoint.Y;
+
+                if (isBottom)
+                {
+                    // 显示在光标上方
+                    popup.VerticalOffset -= 50;
+                }
                 else
-                    DisplayLeftArrow = Visibility.Collapsed;
+                if (isLeft)
+                {
+                    // 显示在光标右侧
+                    popup.HorizontalOffset += 50;
+                }
+                else
+                {
+                    popup.HorizontalOffset += 50;
+                    popup.VerticalOffset -= 50;
+                }
+
+                #region 设置数据
+                RichRun startRun = WrittenBookEditor.Selection.Start.Parent as RichRun;
+                RichRun endRun = WrittenBookEditor.Selection.End.Parent as RichRun;
+                if (startRun is Run)
+                    startRun ??= new RichRun() { Text = startRun.Text };
+                if (endRun is Run)
+                    endRun ??= new RichRun() { Text = endRun.Text };
+                if (endRun is null)
+                {
+                    Paragraph paragraph = WrittenBookEditor.Selection.Start.Paragraph;
+                    List<Run> runs = paragraph.Inlines.Cast<Run>().ToList();
+                    int startIndex = runs.IndexOf(startRun);
+                    runs[startIndex] = new RichRun() { Text = startRun.Text };
+                }
+                SameRun = Equals(startRun, endRun);
+                if (SameRun)
+                {
+                    #region 同步数据
+                    CurrentRichRun = startRun;
+
+                    #region 事件的开关
+                    Binding HaveClickEventBinder = new()
+                    {
+                        Path = new PropertyPath("CurrentRichRun.HasClickEvent"),
+                        Mode = BindingMode.TwoWay,
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                    };
+                    Binding HaveHoverEventBinder = new()
+                    {
+                        Path = new PropertyPath("CurrentRichRun.HasHoverEvent"),
+                        Mode = BindingMode.TwoWay,
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                    };
+                    Binding HaveInsertionBinder = new()
+                    {
+                        Path = new PropertyPath("CurrentRichRun.HasInsertion"),
+                        Mode = BindingMode.TwoWay,
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                    };
+                    #endregion
+
+                    #region 事件的类型和值
+                    Binding ClickEventActionBinder = new()
+                    {
+                        Path = new PropertyPath("CurrentRichRun.ClickEventActionItem"),
+                        Mode = BindingMode.TwoWay,
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                    };
+                    Binding HoverEventActionBinder = new()
+                    {
+                        Path = new PropertyPath("CurrentRichRun.HoverEventActionItem"),
+                        Mode = BindingMode.TwoWay,
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                    };
+
+                    Binding ClickEventValueBinder = new()
+                    {
+                        Path = new PropertyPath("CurrentRichRun.ClickEventValue"),
+                        Mode = BindingMode.TwoWay,
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                    };
+                    Binding HoverEventValueBinder = new()
+                    {
+                        Path = new PropertyPath("CurrentRichRun.HoverEventValue"),
+                        Mode = BindingMode.TwoWay,
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                    };
+                    Binding InsertionValueBinder = new()
+                    {
+                        Path = new PropertyPath("CurrentRichRun.InsertionValue"),
+                        Mode = BindingMode.TwoWay,
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                    };
+                    #endregion
+
+                    BindingOperations.SetBinding(EventComponent.EnableClickEvent, ToggleButton.IsCheckedProperty, HaveClickEventBinder);
+                    BindingOperations.SetBinding(EventComponent.EnableHoverEvent, ToggleButton.IsCheckedProperty, HaveHoverEventBinder);
+                    BindingOperations.SetBinding(EventComponent.EnableInsertion, ToggleButton.IsCheckedProperty, HaveInsertionBinder);
+
+                    EventComponent.ClickEventPanel.Visibility = CurrentRichRun.HasClickEvent ? Visibility.Visible : Visibility.Collapsed;
+                    EventComponent.HoverEventPanel.Visibility = CurrentRichRun.HasHoverEvent ? Visibility.Visible : Visibility.Collapsed;
+                    EventComponent.InsertionPanel.Visibility = CurrentRichRun.HasInsertion ? Visibility.Visible : Visibility.Collapsed;
+
+                    BindingOperations.SetBinding(EventComponent.ClickEventActionBox, Selector.SelectedItemProperty, ClickEventActionBinder);
+                    BindingOperations.SetBinding(EventComponent.HoverEventActionBox, Selector.SelectedItemProperty, HoverEventActionBinder);
+
+                    BindingOperations.SetBinding(EventComponent.ClickEventValueBox, TextBox.TextProperty, ClickEventValueBinder);
+                    BindingOperations.SetBinding(EventComponent.HoverEventValueBox, TextBox.TextProperty, HoverEventValueBinder);
+                    BindingOperations.SetBinding(EventComponent.InsertionValueBox, TextBox.TextProperty, InsertionValueBinder);
+                    #endregion
+                }
+                else//选区首尾文本块不同则更新它们之间的所有文本块
+                {
+
+                }
+                #endregion
             }
+            //判断是否需要关闭悬浮菜单
+            popup.StaysOpen = popup.IsOpen = WrittenBookEditor.Selection.Text.Trim().Length > 0 && SameRun;
+        }
+
+        /// <summary>
+        /// 异步获取标题
+        /// </summary>
+        /// <returns></returns>
+        private async Task<string> GetTitle()
+        {
+            string result = await signaturePage.title.Result();
+            string quotation = CurrentMinVersion < 113 ? "\"" : "'";
+            return "title:" + quotation + result.TrimEnd(',') + quotation + ",";
+        }
+
+        /// <summary>
+        /// 异步获取作者
+        /// </summary>
+        /// <returns></returns>
+        private async Task<string> GetAuthor()
+        {
+            string result = await signaturePage.author.Result();
+            string quotation = CurrentMinVersion < 113 ? "\"" : "'";
+            return "author:" + quotation + result.TrimEnd(',') + quotation + ",";
         }
         #endregion
 
-        #region 当前光标所在的文本对象引用
-        private RichRun currentRichRun = null;
-        public RichRun CurrentRichRun
-        {
-            get => currentRichRun;
-            set => SetProperty(ref currentRichRun,value);
-        }
-        #endregion
-
-        #region 开启点击事件
-        private bool enableClickEvent = false;
-        public bool EnableClickEvent
-        {
-            get => enableClickEvent;
-            set => SetProperty(ref enableClickEvent,value);
-        }
-        #endregion
-
-        #region 开启悬浮事件
-        private bool enableHoverEvent = false;
-        public bool EnableHoverEvent
-        {
-            get { return enableHoverEvent; }
-            set
-            {
-                enableHoverEvent = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
-        #region 开启插入
-        private bool enableInsertion = false;
-        public bool EnableInsertion
-        {
-            get { return enableInsertion; }
-            set
-            {
-                enableInsertion = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
-        #region 拾色器
-        ColorPickers colorPicker = null;
-        #endregion
-
-        #region 被选择文本的字体颜色
-        private SolidColorBrush selectionColor = new(Color.FromRgb(0,0,0));
-        public SolidColorBrush SelectionColor
-        {
-            get => selectionColor;
-            set => SetProperty(ref selectionColor,value);
-        }
-        #endregion
-
-        #region 当前页码与总页数数据
-        private string pageData = "页面 ：1/1";
-        public string PageData
-        {
-            get { return pageData; }
-            set { pageData = value; OnPropertyChanged(); }
-        }
-        #endregion
-
-        #region 是否显示左箭头
-        private Visibility displayLeftArrow = Visibility.Collapsed;
-        public Visibility DisplayLeftArrow
-        {
-            get { return displayLeftArrow; }
-            set
-            {
-                displayLeftArrow = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
-        #region 是否显示右箭头
-        private Visibility displayRightArrow = Visibility.Visible;
-        public Visibility DisplayRightArrow
-        {
-            get { return displayRightArrow; }
-            set
-            {
-                displayRightArrow = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-
-        #region 显示结果
-        private bool showGeneratorResult = false;
-        public bool ShowGeneratorResult
-        {
-            get => showGeneratorResult;
-            set => SetProperty(ref showGeneratorResult, value);
-        }
-        #endregion
-
-        #region 跳转页面数字
-        private int jumpSpecificPageNumber;
-
-        public int JumpSpecificPageNumber
-        {
-            get => jumpSpecificPageNumber;
-            set => SetProperty(ref jumpSpecificPageNumber, value);
-
-        }
-
-        #endregion
-
-        #region 悬浮菜单
-        Popup popup = new()
-        {
-            IsOpen = false,
-            Placement = PlacementMode.AbsolutePoint,
-            StaysOpen = false
-        };
-        #endregion
-
-        #region 初始化两个页面
-        Frame PageFrame = new() { NavigationUIVisibility = NavigationUIVisibility.Hidden };
-        EditPage editPage = new();
-        SignaturePage signaturePage = new();
-        private IContainerProvider _container = container;
-        #endregion
-
+        #region Event
         /// <summary>
         /// 载入编辑页
         /// </summary>
@@ -317,6 +416,7 @@ namespace CBHK.ViewModel.Generator
                 {
                     WrittenBookEditor.Document = WrittenBookPages[JumpSpecificPageNumber - 1];
                     CurrentPageIndex = JumpSpecificPageNumber - 1;
+                    UpdatePageViewDisplay();
                 }
             }
         }
@@ -330,28 +430,6 @@ namespace CBHK.ViewModel.Generator
         {
             await signaturePage.title.Upgrade(CurrentMinVersion);
             await signaturePage.author.Upgrade(CurrentMinVersion);
-        }
-
-        /// <summary>
-        /// 异步获取标题
-        /// </summary>
-        /// <returns></returns>
-        private async Task<string> GetTitle()
-        {
-            string result = await signaturePage.title.Result();
-            string quotation = CurrentMinVersion < 113 ? "\"" : "'";
-            return "title:" + quotation + result.TrimEnd(',') + quotation + ",";
-        }
-
-        /// <summary>
-        /// 异步获取作者
-        /// </summary>
-        /// <returns></returns>
-        private async Task<string> GetAuthor()
-        {
-            string result = await signaturePage.author.Result();
-            string quotation = CurrentMinVersion < 113 ? "\"" : "'";
-            return "author:" + quotation + result.TrimEnd(',') + quotation + ",";
         }
 
         [RelayCommand]
@@ -638,142 +716,6 @@ namespace CBHK.ViewModel.Generator
                 CommonWindow window = Window.GetWindow(WrittenBookEditor) as CommonWindow;
                 window.DialogResult = true;
             }
-        }
-
-        /// <summary>
-        /// 弹出悬浮菜单
-        /// </summary>
-        private void ShowHoverMenu()
-        {
-            bool SameRun = false;
-            if (WrittenBookEditor.Selection.Text.Trim().Length > 0)
-            {
-                Point relativePoint = WrittenBookEditor.Selection.End.GetCharacterRect(LogicalDirection.Forward).TopLeft;
-                Point absolutePoint = WrittenBookEditor.PointToScreen(relativePoint);
-                double screenWidth = SystemParameters.PrimaryScreenWidth;
-                double screenHeight = SystemParameters.PrimaryScreenHeight;
-                bool isBottom = absolutePoint.Y > screenHeight / 2;
-                bool isLeft = absolutePoint.X < screenWidth / 2;
-
-                popup.HorizontalOffset = absolutePoint.X;
-                popup.VerticalOffset = absolutePoint.Y;
-
-                if (isBottom)
-                {
-                    // 显示在光标上方
-                    popup.VerticalOffset -= 50;
-                }
-                else
-                if (isLeft)
-                {
-                    // 显示在光标右侧
-                    popup.HorizontalOffset += 50;
-                }
-                else
-                {
-                    popup.HorizontalOffset += 50;
-                    popup.VerticalOffset -= 50;
-                }
-
-                #region 设置数据
-                RichRun startRun = WrittenBookEditor.Selection.Start.Parent as RichRun;
-                RichRun endRun = WrittenBookEditor.Selection.End.Parent as RichRun;
-                if (startRun is Run)
-                    startRun ??= new RichRun() { Text = startRun.Text };
-                if (endRun is Run)
-                    endRun ??= new RichRun() { Text = endRun.Text };
-                if (endRun is null)
-                {
-                    Paragraph paragraph = WrittenBookEditor.Selection.Start.Paragraph;
-                    List<Run> runs = paragraph.Inlines.Cast<Run>().ToList();
-                    int startIndex = runs.IndexOf(startRun);
-                    runs[startIndex] = new RichRun() { Text = startRun.Text };
-                }
-                SameRun = Equals(startRun, endRun);
-                if (SameRun)
-                {
-                    #region 同步数据
-                    CurrentRichRun = startRun;
-
-                    #region 事件的开关
-                    Binding HaveClickEventBinder = new()
-                    {
-                        Path = new PropertyPath("CurrentRichRun.HasClickEvent"),
-                        Mode = BindingMode.TwoWay,
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-                    };
-                    Binding HaveHoverEventBinder = new()
-                    {
-                        Path = new PropertyPath("CurrentRichRun.HasHoverEvent"),
-                        Mode = BindingMode.TwoWay,
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-                    };
-                    Binding HaveInsertionBinder = new()
-                    {
-                        Path = new PropertyPath("CurrentRichRun.HasInsertion"),
-                        Mode = BindingMode.TwoWay,
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-                    };
-                    #endregion
-
-                    #region 事件的类型和值
-                    Binding ClickEventActionBinder = new()
-                    {
-                        Path = new PropertyPath("CurrentRichRun.ClickEventActionItem"),
-                        Mode = BindingMode.TwoWay,
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-                    };
-                    Binding HoverEventActionBinder = new()
-                    {
-                        Path = new PropertyPath("CurrentRichRun.HoverEventActionItem"),
-                        Mode = BindingMode.TwoWay,
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-                    };
-
-                    Binding ClickEventValueBinder = new()
-                    {
-                        Path = new PropertyPath("CurrentRichRun.ClickEventValue"),
-                        Mode = BindingMode.TwoWay,
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-                    };
-                    Binding HoverEventValueBinder = new()
-                    {
-                        Path = new PropertyPath("CurrentRichRun.HoverEventValue"),
-                        Mode = BindingMode.TwoWay,
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-                    };
-                    Binding InsertionValueBinder = new()
-                    {
-                        Path = new PropertyPath("CurrentRichRun.InsertionValue"),
-                        Mode = BindingMode.TwoWay,
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-                    };
-                    #endregion
-
-                    BindingOperations.SetBinding(EventComponent.EnableClickEvent, ToggleButton.IsCheckedProperty, HaveClickEventBinder);
-                    BindingOperations.SetBinding(EventComponent.EnableHoverEvent, ToggleButton.IsCheckedProperty, HaveHoverEventBinder);
-                    BindingOperations.SetBinding(EventComponent.EnableInsertion, ToggleButton.IsCheckedProperty, HaveInsertionBinder);
-
-                    EventComponent.ClickEventPanel.Visibility = CurrentRichRun.HasClickEvent ? Visibility.Visible : Visibility.Collapsed;
-                    EventComponent.HoverEventPanel.Visibility = CurrentRichRun.HasHoverEvent ? Visibility.Visible : Visibility.Collapsed;
-                    EventComponent.InsertionPanel.Visibility = CurrentRichRun.HasInsertion ? Visibility.Visible : Visibility.Collapsed;
-
-                    BindingOperations.SetBinding(EventComponent.ClickEventActionBox, Selector.SelectedItemProperty, ClickEventActionBinder);
-                    BindingOperations.SetBinding(EventComponent.HoverEventActionBox, Selector.SelectedItemProperty, HoverEventActionBinder);
-
-                    BindingOperations.SetBinding(EventComponent.ClickEventValueBox, TextBox.TextProperty, ClickEventValueBinder);
-                    BindingOperations.SetBinding(EventComponent.HoverEventValueBox, TextBox.TextProperty, HoverEventValueBinder);
-                    BindingOperations.SetBinding(EventComponent.InsertionValueBox, TextBox.TextProperty, InsertionValueBinder);
-                    #endregion
-                }
-                else//选区首尾文本块不同则更新它们之间的所有文本块
-                {
-
-                }
-                #endregion
-            }
-            //判断是否需要关闭悬浮菜单
-            popup.StaysOpen = popup.IsOpen = WrittenBookEditor.Selection.Text.Trim().Length > 0 && SameRun;
         }
 
         /// <summary>
@@ -1120,6 +1062,7 @@ namespace CBHK.ViewModel.Generator
         public void LeftArrowMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             --CurrentPageIndex;
+            UpdatePageViewDisplay();
             WrittenBookEditor.Document = WrittenBookPages[CurrentPageIndex];
         }
 
@@ -1136,7 +1079,9 @@ namespace CBHK.ViewModel.Generator
                 WrittenBookPages.Add(new EnabledFlowDocument() { FontFamily = new FontFamily("Bitstream Vera Sans Mono"), LineHeight = 10 });
             }
             CurrentPageIndex++;
+            UpdatePageViewDisplay();
             WrittenBookEditor.Document = WrittenBookPages[CurrentPageIndex];
         }
+        #endregion
     }
 }

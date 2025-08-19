@@ -9,7 +9,7 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using System.Linq;
 
-namespace CBHK.GeneralTool.MessageTip
+namespace CBHK.Utility.MessageTip
 {
     public class MessageAdorner : Adorner
     {

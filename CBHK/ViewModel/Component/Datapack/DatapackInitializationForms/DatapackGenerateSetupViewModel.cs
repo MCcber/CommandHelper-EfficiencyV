@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool.MessageTip;
+using CBHK.Utility.MessageTip;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Component.Datapack.EditPage;

@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.Interfaces;
 using CBHK.Domain;
-using CBHK.GeneralTool;
+using CBHK.Interface;
+using CBHK.Utility.Common;
 using CBHK.View.Component.Item;
 using CBHK.View.Component.Item.SpecialNBT;
 using CBHK.ViewModel.Generator;

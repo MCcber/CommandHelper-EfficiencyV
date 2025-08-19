@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.Interfaces;
+﻿using CBHK.Interface;
 using CBHK.ViewModel.Generator;
 using System;
 using System.Threading.Tasks;

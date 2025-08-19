@@ -1,7 +1,7 @@
 ﻿using CBHK.Domain;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
 using CBHK.Model.Common;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View.Component.Recipe;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -181,14 +181,14 @@ namespace CBHK.ViewModel.Component.Recipe
         private double _count = 1;
         #endregion
 
-        #region Event
+        #region Method
 
         /// <summary>
         /// 初始化数据
         /// </summary>
         /// <param name="context"></param>
         /// <param name="dataService"></param>
-        public CraftingTableViewModel(CBHKDataContext context,DataService dataService)
+        public CraftingTableViewModel(CBHKDataContext context, DataService dataService)
         {
             _context = context;
             _dataService = dataService;
@@ -199,60 +199,6 @@ namespace CBHK.ViewModel.Component.Recipe
                 MaterialKeyList.Add("");
                 ObservableCollection<string> tags = [""];
                 MaterialTag.Add(i, tags);
-            }
-        }
-
-        /// <summary>
-        /// 多选材质视图
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void MultiMaterialViewer_Loaded(object sender, RoutedEventArgs e)
-        {
-            MultiMaterialViewer = sender as ListView;
-        }
-
-        /// <summary>
-        /// 载入多选材质面板
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void MultiMaterialGrid_Loaded(object sender, RoutedEventArgs e)
-        {
-            MultiMaterialGrid = sender as Grid;
-            CraftingTableView craftingTable = MultiMaterialGrid.FindParent<CraftingTableView>();
-            MultiMaterialSource = craftingTable.Resources["MultiModeItemViewSource"] as CollectionViewSource;
-            MultiMaterialSource.Filter += MultiMaterialSource_Filter;
-        }
-
-        /// <summary>
-        /// 载入材料面板
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void MaterialGrid_Loaded(object sender, RoutedEventArgs e)
-        {
-            MaterialGrid = sender as Grid;
-            foreach (var item in MaterialGrid.Children)
-            {
-                if (item is Image image)
-                {
-                    MaterialImageList.Add(image);
-                }
-            }
-            if (ImportMode)
-            {
-                await MaterialsLoaded();
-            }
-            else
-            {
-                foreach (var item in MaterialGrid.Children)
-                {
-                    if (item is Image image)
-                    {
-                        image.Source ??= emptyImage;
-                    }
-                }
             }
         }
 
@@ -284,7 +230,7 @@ namespace CBHK.ViewModel.Component.Recipe
                                 MaterialKeyList[i] = SevenToNine[i - 6];
                         }
                     }
-                    if (ExternalData.SelectToken("key") is JObject keyObj)
+                    if (ExternalData.SelectToken("Key") is JObject keyObj)
                     {
                         for (int i = 0; i < MaterialKeyList.Count; i++)
                         {
@@ -337,7 +283,7 @@ namespace CBHK.ViewModel.Component.Recipe
                         }
                     }
                     ExternalData.Remove("pattern");
-                    ExternalData.Remove("key");
+                    ExternalData.Remove("Key");
                 }
                 else
                 {
@@ -396,24 +342,6 @@ namespace CBHK.ViewModel.Component.Recipe
         }
 
         /// <summary>
-        /// 载入结果物品
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ResultItem_Loaded(object sender, RoutedEventArgs e)
-        {
-            ResultItem ??= sender as Image;
-            if (ImportMode)
-            {
-                ResultItemLoaded();
-            }
-            else
-            {
-                ResultItem.Source ??= emptyImage;
-            }
-        }
-
-        /// <summary>
         /// 异步载入外部结果数据
         /// </summary>
         /// <returns></returns>
@@ -437,6 +365,81 @@ namespace CBHK.ViewModel.Component.Recipe
                 if (itemCountObj != null)
                     Count = int.Parse(itemCountObj.ToString());
                 ExternalData.Remove("result");
+            }
+        }
+
+        #endregion
+
+        #region Event
+        /// <summary>
+        /// 多选材质视图
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void MultiMaterialViewer_Loaded(object sender, RoutedEventArgs e)
+        {
+            MultiMaterialViewer = sender as ListView;
+        }
+
+        /// <summary>
+        /// 载入多选材质面板
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void MultiMaterialGrid_Loaded(object sender, RoutedEventArgs e)
+        {
+            MultiMaterialGrid = sender as Grid;
+            CraftingTableView craftingTable = MultiMaterialGrid.FindParent<CraftingTableView>();
+            MultiMaterialSource = craftingTable.Resources["MultiModeItemViewSource"] as CollectionViewSource;
+            MultiMaterialSource.Filter += MultiMaterialSource_Filter;
+        }
+
+        /// <summary>
+        /// 载入材料面板
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void MaterialGrid_Loaded(object sender, RoutedEventArgs e)
+        {
+            MaterialGrid = sender as Grid;
+            foreach (var item in MaterialGrid.Children)
+            {
+                if (item is Image image)
+                {
+                    MaterialImageList.Add(image);
+                }
+            }
+            if (ImportMode)
+            {
+                await MaterialsLoaded();
+            }
+            else
+            {
+                foreach (var item in MaterialGrid.Children)
+                {
+                    if (item is Image image)
+                    {
+                        image.Source ??= emptyImage;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 载入结果物品
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ResultItem_Loaded(object sender, RoutedEventArgs e)
+        {
+            ResultItem ??= sender as Image;
+            if (ImportMode)
+            {
+                ResultItemLoaded();
+            }
+            else
+            {
+                ResultItem.Source ??= emptyImage;
             }
         }
 
@@ -539,7 +542,7 @@ namespace CBHK.ViewModel.Component.Recipe
                 #endregion
 
                 #region 合并Key代表的物品数据
-                keyData.Append("\"key\":{");
+                keyData.Append("\"Key\":{");
                 int index = 0;
                 foreach (KeyValuePair<int, ObservableCollection<ItemStructure>> material in MaterialMap)
                 {

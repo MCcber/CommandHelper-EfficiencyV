@@ -491,21 +491,11 @@
                         ItemsSource="{Binding Source={StaticResource OriginalItemView}, IsAsync=True}"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                        SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        SelectedItem="{Binding SelectedItem, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
                         Style="{DynamicResource ListBoxScrollViewerStyle}"
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.ScrollUnit="Pixel"
                         VirtualizingPanel.VirtualizationMode="Recycling">
-                        <ListView.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingWrapPanel:VirtualizingWrapPanel
-                                    Background="#555956"
-                                    VirtualizingPanel.CacheLength="200 200"
-                                    VirtualizingPanel.CacheLengthUnit="Pixel"
-                                    VirtualizingPanel.IsVirtualizing="True"
-                                    VirtualizingPanel.ScrollUnit="Pixel" />
-                            </ItemsPanelTemplate>
-                        </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel>
@@ -536,6 +526,17 @@
                                 </DockPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingWrapPanel:VirtualizingWrapPanel
+                                    Background="#555956"
+                                    VirtualizingPanel.CacheLengthUnit="Pixel"
+                                    VirtualizingPanel.IsContainerVirtualizable="True"
+                                    VirtualizingPanel.IsVirtualizing="True"
+                                    VirtualizingPanel.ScrollUnit="Pixel"
+                                    VirtualizingPanel.VirtualizationMode="Recycling" />
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="OriginalListView_Loaded" TargetObject="{Binding}" />
@@ -569,12 +570,13 @@
                         VirtualizingPanel.VirtualizationMode="Recycling">
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <VirtualizingWrapPanel:VirtualizingWrapPanelWithItemExpansion
+                                <VirtualizingWrapPanel:VirtualizingWrapPanel
                                     Background="#555956"
-                                    VirtualizingPanel.CacheLength="200 200"
                                     VirtualizingPanel.CacheLengthUnit="Pixel"
+                                    VirtualizingPanel.IsContainerVirtualizable="True"
                                     VirtualizingPanel.IsVirtualizing="True"
-                                    VirtualizingPanel.ScrollUnit="Pixel" />
+                                    VirtualizingPanel.ScrollUnit="Pixel"
+                                    VirtualizingPanel.VirtualizationMode="Recycling" />
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>

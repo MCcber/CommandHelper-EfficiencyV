@@ -426,7 +426,13 @@
                 BorderBrush="Black"
                 FontSize="20"
                 Foreground="White"
-                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
+                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="TextChanged">
+                        <behaviors:CallMethodAction MethodName="SearchTextBox_SelectionChanged" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </TextBox>
             <CustomControl:IconTextButtons
                 Grid.Row="0"
                 Grid.Column="2"

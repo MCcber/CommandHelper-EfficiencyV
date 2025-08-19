@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.FireworkRocket;
 using CBHK.View.Generator;
@@ -26,15 +26,7 @@ namespace CBHK.ViewModel.Generator
 {
     public partial class FireworkRocketViewModel : ObservableObject
     {
-        #region 是否展示生成结果
-        private bool showGeneratorResult = false;
-        public bool ShowGeneratorResult
-        {
-            get => showGeneratorResult;
-            set => SetProperty(ref showGeneratorResult,value);
-        }
-        #endregion
-
+        #region Field
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
@@ -45,19 +37,42 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private Window home = null;
 
+        /// <summary>
+        /// 原版颜色库面板
+        /// </summary>
+        public List<IconCheckBoxs> StructureColorList = [];
+        /// <summary>
+        /// 三维视图
+        /// </summary>
+        public Viewport3D View = null;
+        /// <summary>
+        /// 形状路径
+        /// </summary>
+        string shapePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Data\shapes.ini";
+        private IContainerProvider _container;
+        #endregion
+
+        #region Property
+        /// <summary>
+        /// 是否展示生成结果
+        /// </summary>
+        [ObservableProperty]
+        private bool _showGeneratorResult = false;
+
         #region 正方体侧面、上面和下面的纹理，烟花火箭纹理
         public BitmapImage GrassBlockSide { get; set; }
         public BitmapImage GrassBlockTop { get; set; }
         public BitmapImage GrassBlockBottom { get; set; }
         public BitmapImage FireworkImage { get; set; }
-
-        private IContainerProvider _container;
         #endregion
 
         /// <summary>
         /// 烟花火箭标签页
         /// </summary>
-        public ObservableCollection<RichTabItems> FireworkRocketPageList { get; set; } = [ new RichTabItems() { Header = "烟花",
+        [ObservableProperty]
+        public ObservableCollection<RichTabItems> _fireworkRocketPageList = 
+        [ 
+            new RichTabItems() { Header = "烟花",
                 IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
@@ -69,42 +84,30 @@ namespace CBHK.ViewModel.Generator
                 TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
                 SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush, } ];
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush, 
+            } 
+        ];
 
-        private RichTabItems selectedFireworkRocketPage;
-
-        public RichTabItems SelectedFireworkRocketPage
-        {
-            get => selectedFireworkRocketPage;
-            set => SetProperty(ref selectedFireworkRocketPage, value);
-        }
-
-        #region 版本数据源
-        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
-            new TextComboBoxItem() { Text = "1.20.2" },
-            new TextComboBoxItem() { Text = "1.12.0" }
-            ] ;
-        #endregion
-
-        /// <summary>
-        /// 原版颜色库面板
-        /// </summary>
-        public List<IconCheckBoxs> StructureColorList = [];
-        /// <summary>
-        /// 三维视图
-        /// </summary>
-        public Viewport3D View = null;
+        [ObservableProperty]
+        private RichTabItems _selectedFireworkRocketPage;
 
         /// <summary>
         /// 形状数据源
         /// </summary>
-        public ObservableCollection<TextComboBoxItem> ShapeList { get; set; } = [];
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _shapeList = [];
 
-        /// <summary>
-        /// 形状路径
-        /// </summary>
-        string shapePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Data\shapes.ini";
+        #region 版本数据源
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _versionSource = [
+            new TextComboBoxItem() { Text = "1.20.2" },
+            new TextComboBoxItem() { Text = "1.12.0" }
+            ];
+        #endregion
 
+        #endregion
+
+        #region Method
         public FireworkRocketViewModel(IContainerProvider container,MainView mainView)
         {
             #region 初始化数据
@@ -117,6 +120,7 @@ namespace CBHK.ViewModel.Generator
                 }
             }
             #endregion
+
             #region 初始化成员
             _container = container;
             home = mainView;
@@ -131,6 +135,78 @@ namespace CBHK.ViewModel.Generator
             #endregion
         }
 
+        /// <summary>
+        /// 斐波那契网格采样算法，用于生成球状烟花爆炸粒子的坐标
+        /// </summary>
+        /// <param name="count">需要生成的坐标数量</param>
+        /// <param name="r">球体半径</param>
+        /// <returns></returns>
+        public List<Vector3D> GenerateFibonacciSphere(int count, double r)
+        {
+            List<Vector3D> points = [];
+            float phi = (float)(Math.PI * (3 - Math.Sqrt(5))); // 黄金角
+            float y;
+            float radius;
+            float theta;
+
+            for (int i = 0; i < count; i++)
+            {
+                y = 1 - (i / (float)(count - 1)) * 2; // y值在[-1, 1]之间
+                radius = (float)Math.Sqrt(1 - y * y); // 半径
+
+                theta = phi * i; // 角度
+
+                double x = (float)Math.Cos(theta) * radius * r;
+                double z = (float)Math.Sin(theta) * radius * r;
+
+                points.Add(new Vector3D(x, y * r, z));
+            }
+            return points;
+        }
+
+        /// <summary>
+        /// 五角星算法，生成三个相互之间夹角一致位置重叠的五角星
+        /// </summary>
+        /// <param name="numPoints"></param>
+        /// <param name="innerAngle"></param>
+        /// <param name="center"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public List<Vector3D> GenerateStars(int numPoints, double outerRadius, double innerRadius)
+        {
+            List<Vector3D> vertices = [];
+            float angleStep = (float)(Math.PI * 2 / numPoints);
+            float angle = (float)(-Math.PI / 2);
+
+            for (int i = 0; i < numPoints; i++)
+            {
+                // Outer vertex
+                vertices.Add(new Vector3D(outerRadius * Math.Cos(angle), outerRadius * Math.Sin(angle), 0));
+                angle += angleStep / 2;
+
+                // Inner vertex
+                vertices.Add(new Vector3D(innerRadius * Math.Cos(angle), innerRadius * Math.Sin(angle), 0));
+                angle += angleStep / 2;
+            }
+
+            return vertices;
+        }
+
+        /// <summary>
+        /// 生成苦力怕面部样式的表面坐标
+        /// </summary>
+        /// <param name="numPoints"></param>
+        /// <param name="radius"></param>
+        /// <returns></returns>
+        public List<Vector3D> GetCreeperFaceRandom(int numPoints, double radius)
+        {
+            List<Vector3D> result = [];
+
+            return result;
+        }
+        #endregion
+
+        #region Event
         public void FireworkRocket_Loaded(object sender,RoutedEventArgs e)
         {
 
@@ -339,75 +415,6 @@ namespace CBHK.ViewModel.Generator
                         File.WriteAllText(openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
             }
         }
-
-        /// <summary>
-        /// 斐波那契网格采样算法，用于生成球状烟花爆炸粒子的坐标
-        /// </summary>
-        /// <param name="count">需要生成的坐标数量</param>
-        /// <param name="r">球体半径</param>
-        /// <returns></returns>
-        public List<Vector3D> GenerateFibonacciSphere(int count, double r)
-        {
-            List<Vector3D> points = [];
-            float phi = (float)(Math.PI * (3 - Math.Sqrt(5))); // 黄金角
-            float y;
-            float radius;
-            float theta;
-
-            for (int i = 0; i < count; i++)
-            {
-                y = 1 - (i / (float)(count - 1)) * 2; // y值在[-1, 1]之间
-                radius = (float)Math.Sqrt(1 - y * y); // 半径
-
-                theta = phi * i; // 角度
-
-                double x = (float)Math.Cos(theta) * radius * r;
-                double z = (float)Math.Sin(theta) * radius * r;
-
-                points.Add(new Vector3D(x, y * r, z));
-            }
-            return points;
-        }
-
-        /// <summary>
-        /// 五角星算法，生成三个相互之间夹角一致位置重叠的五角星
-        /// </summary>
-        /// <param name="numPoints"></param>
-        /// <param name="innerAngle"></param>
-        /// <param name="center"></param>
-        /// <param name="size"></param>
-        /// <returns></returns>
-        public List<Vector3D> GenerateStars(int numPoints, double outerRadius, double innerRadius)
-        {
-            List<Vector3D> vertices = [];
-            float angleStep = (float)(Math.PI * 2 / numPoints);
-            float angle = (float)(-Math.PI / 2);
-
-            for (int i = 0; i < numPoints; i++)
-            {
-                // Outer vertex
-                vertices.Add(new Vector3D(outerRadius * Math.Cos(angle), outerRadius * Math.Sin(angle), 0));
-                angle += angleStep / 2;
-
-                // Inner vertex
-                vertices.Add(new Vector3D(innerRadius * Math.Cos(angle), innerRadius * Math.Sin(angle), 0));
-                angle += angleStep / 2;
-            }
-
-            return vertices;
-        }
-
-        /// <summary>
-        /// 生成苦力怕面部样式的表面坐标
-        /// </summary>
-        /// <param name="numPoints"></param>
-        /// <param name="radius"></param>
-        /// <returns></returns>
-        public List<Vector3D> GetCreeperFaceRandom(int numPoints, double radius)
-        {
-            List<Vector3D> result = [];
-
-            return result;
-        }
+        #endregion
     }
 }

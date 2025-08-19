@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Entity;
 using CBHK.ViewModel.Component.Entity;
@@ -14,7 +14,6 @@ using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -26,30 +25,35 @@ using System.Windows.Media;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class EntityViewModel : ObservableObject
+    public partial class EntityViewModel(IContainerProvider container,CBHKDataContext context, MainView mainView) : ObservableObject
     {
-        #region 是否展示生成结果
-        private bool showGeneratorResult = false;
-        public bool ShowGeneratorResult
-        {
-            get => showGeneratorResult;
-            set => SetProperty(ref showGeneratorResult, value);
-        }
-        #endregion
-
-        #region 字段与引用
+        #region Field
+        private IContainerProvider _container = container;
+        private CBHKDataContext _context = context;
         /// <summary>
         /// 主页引用
         /// </summary>
-        private MainView home = null;
+        private MainView home = mainView;
         //本生成器的图标路径
-        string icon_path = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
         private string ModifierOperationTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\AttributeModifierOperationType.ini";
         string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
         public ObservableCollection<string> ModifierOperationTypeSource = [];
         public JArray SpecialArray = null;
-        //实体标签页的数据源
-        public ObservableCollection<RichTabItems> EntityPageList { get; set; } = [
+        #endregion
+
+        #region Property
+        /// <summary>
+        /// 是否展示生成结果
+        /// </summary>
+        [ObservableProperty]
+        private bool _showGeneratorResult = false;
+
+        /// <summary>
+        /// 实体标签页的数据源
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<RichTabItems> _entityPageList = [
             new RichTabItems()
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
@@ -67,16 +71,17 @@ namespace CBHK.ViewModel.Generator
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
             } ];
 
-        private RichTabItems selectedEntityPage;
+        /// <summary>
+        /// 已选中的实体页
+        /// </summary>
+        [ObservableProperty]
+        private RichTabItems _selectedEntityPage;
 
-        public RichTabItems SelectedEntityPage
-        {
-            get => selectedEntityPage;
-            set => SetProperty(ref selectedEntityPage, value);
-        }
-
-        #region 版本数据源
-        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+        /// <summary>
+        /// 版本数据源
+        /// </summary>
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _versionSource = [
             new TextComboBoxItem() { Text = "1.20.5" },
             new TextComboBoxItem() { Text = "1.20.2" },
             new TextComboBoxItem() { Text = "1.20.1" },
@@ -90,41 +95,72 @@ namespace CBHK.ViewModel.Generator
             new TextComboBoxItem() { Text = "1.13.0" },
             new TextComboBoxItem() { Text = "1.12.0" }
         ];
+
+        /// <summary>
+        /// 能否关闭标签页
+        /// </summary>
+        [ObservableProperty]
+        private bool _isCloseable = true;
         #endregion
 
-        #region 能否关闭标签页
-        private bool isCloseable = true;
-
-        public bool IsCloseable
+        #region Method
+        /// <summary>
+        /// 生成并保存所有实体到本地文件
+        /// </summary>
+        /// <returns></returns>
+        private async Task GeneratorAndSaveAllEntites()
         {
-            get => isCloseable;
-            set => SetProperty(ref isCloseable, value);
-        }
-        #endregion
+            List<string> Result = [];
+            List<string> FileNameList = [];
 
-        //实体标签页数量,用于为共通标签提供数据
-        private int passengerMaxIndex = 0;
-        public int PassengerMaxIndex
-        {
-            get => passengerMaxIndex;
-            set
+            foreach (var entityPage in EntityPageList)
             {
-                passengerMaxIndex = EntityPageList.Count - 1;
-                OnPropertyChanged();
+                await entityPage.Dispatcher.InvokeAsync(() =>
+                {
+                    EntityPageView entityPages = entityPage.Content as EntityPageView;
+                    EntityPageViewModel pageContext = entityPages.DataContext as EntityPageViewModel;
+                    string result = pageContext.Run(false);
+                    string nbt = "";
+                    if (result.Contains('{'))
+                    {
+                        nbt = result[result.IndexOf('{')..(result.IndexOf('}') + 1)];
+                        //补齐缺失双引号对的key
+                        nbt = Regex.Replace(nbt, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
+                        //清除数值型数据的单位
+                        nbt = Regex.Replace(nbt, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
+                    }
+                    if (nbt.Length == 0) return;
+                    JObject resultJSON = JObject.Parse(nbt);
+                    string entityIDPath = "";
+                    if (result.StartsWith("give"))
+                        entityIDPath = "EntityTag.CustomName";
+                    else
+                        if (nbt.Length > 0)
+                        entityIDPath = "CustomName";
+                    JToken name = resultJSON.SelectToken(entityIDPath);
+                    FileNameList.Add(pageContext.SelectedEntityId.ComboBoxItemId + (name != null ? "-" + name.ToString() : ""));
+                    Result.Add(result);
+                });
+            }
+            OpenFolderDialog openFolderDialog = new()
+            {
+                Title = "请选择要保存的目录",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
+                ShowHiddenItems = true
+            };
+            if (openFolderDialog.ShowDialog().Value)
+            {
+                for (int i = 0; i < Result.Count; i++)
+                {
+                    if (Directory.Exists(openFolderDialog.FolderName))
+                        _ = File.WriteAllTextAsync(openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
+                    _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\EntityView\\" + openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
+                }
             }
         }
-
-
-        private IContainerProvider _container;
-        private CBHKDataContext _context = null;
         #endregion
 
-        public EntityViewModel(IContainerProvider container,MainView mainView)
-        {
-            _container = container;
-            home = mainView;
-        }
-
+        #region Event
         /// <summary>
         /// 实体载入
         /// </summary>
@@ -164,13 +200,15 @@ namespace CBHK.ViewModel.Generator
         {
             EntityPageView entityPages = SelectedEntityPage.Content as EntityPageView;
             EntityPageViewModel entityPagesDataContext = entityPages.DataContext as EntityPageViewModel;
-            Grid currentGrid = entityPagesDataContext.SpecialDataDictionary[entityPagesDataContext.SelectedEntityIDString];
+            Grid currentGrid = entityPagesDataContext.SpecialDataDictionary[entityPagesDataContext.SelectedEntityId.ComboBoxItemId];
             entityPagesDataContext.SpecialDataDictionary.Clear();
-            entityPagesDataContext.SpecialDataDictionary.Add(entityPagesDataContext.SelectedEntityIDString, currentGrid);
+            entityPagesDataContext.SpecialDataDictionary.Add(entityPagesDataContext.SelectedEntityId.ComboBoxItemId, currentGrid);
             foreach (var item in entityPagesDataContext.SpecialTagsResult)
             {
-                if (item.Key != entityPagesDataContext.SelectedEntityIDString)
+                if (item.Key != entityPagesDataContext.SelectedEntityId.ComboBoxItemId)
+                {
                     item.Value.Clear();
+                }
             }
         }
 
@@ -180,7 +218,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportEntityFromFile()
         {
-            Microsoft.Win32.OpenFileDialog dialog = new()
+            OpenFileDialog dialog = new()
             {
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
                 RestoreDirectory = true,
@@ -188,12 +226,11 @@ namespace CBHK.ViewModel.Generator
                 Multiselect = false,
                 Title = "请选择一个Minecraft实体数据文件"
             };
-            if (dialog.ShowDialog().Value)
-                if (File.Exists(dialog.FileName))
-                {
-                    ObservableCollection<RichTabItems> result = EntityPageList;
-                    ExternalDataImportManager.ImportEntityDataHandler(dialog.FileName, ref result);
-                }
+            if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
+            {
+                ObservableCollection<RichTabItems> result = EntityPageList;
+                ExternalDataImportManager.ImportEntityDataHandler(dialog.FileName, ref result);
+            }
         }
 
         [RelayCommand]
@@ -213,7 +250,9 @@ namespace CBHK.ViewModel.Generator
         private void ClearEntity()
         {
             if (IsCloseable)
+            {
                 EntityPageList.Clear();
+            }
         }
 
         [RelayCommand]
@@ -295,7 +334,7 @@ namespace CBHK.ViewModel.Generator
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
-                    displayerViewModel.GeneratorResult(Result.ToString(), "实体", icon_path);
+                    displayerViewModel.GeneratorResult(Result.ToString(), "实体", iconPath);
                 }
             }
             else
@@ -313,60 +352,6 @@ namespace CBHK.ViewModel.Generator
         {
             await GeneratorAndSaveAllEntites();
         }
-
-        /// <summary>
-        /// 生成并保存所有实体到本地文件
-        /// </summary>
-        /// <returns></returns>
-        private async Task GeneratorAndSaveAllEntites()
-        {
-            List<string> Result = [];
-            List<string> FileNameList = [];
-
-            foreach (var entityPage in EntityPageList)
-            {
-                await entityPage.Dispatcher.InvokeAsync(() =>
-                {
-                    EntityPageView entityPages = entityPage.Content as EntityPageView;
-                    EntityPageViewModel pageContext = entityPages.DataContext as EntityPageViewModel;
-                    string result = pageContext.Run(false);
-                    string nbt = "";
-                    if (result.Contains('{'))
-                    {
-                        nbt = result[result.IndexOf('{')..(result.IndexOf('}') + 1)];
-                        //补齐缺失双引号对的key
-                        nbt = Regex.Replace(nbt, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
-                        //清除数值型数据的单位
-                        nbt = Regex.Replace(nbt, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
-                    }
-                    if (nbt.Length == 0) return;
-                    JObject resultJSON = JObject.Parse(nbt);
-                    string entityIDPath = "";
-                    if (result.StartsWith("give"))
-                        entityIDPath = "EntityTag.CustomName";
-                    else
-                        if(nbt.Length > 0)
-                        entityIDPath = "CustomName";
-                    JToken name = resultJSON.SelectToken(entityIDPath);
-                    FileNameList.Add(pageContext.SelectedEntityIDString + (name != null?"-" + name.ToString():""));
-                    Result.Add(result);
-                });
-            }
-            OpenFolderDialog openFolderDialog = new()
-            {
-                Title = "请选择要保存的目录",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                ShowHiddenItems = true
-            };
-            if(openFolderDialog.ShowDialog().Value)
-            {
-                for (int i = 0; i < Result.Count; i++)
-                {
-                    if (Directory.Exists(openFolderDialog.FolderName))
-                        _ = File.WriteAllTextAsync(openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
-                    _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\EntityView\\" + openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
-                }
-            }
-        }
+        #endregion
     }
 }

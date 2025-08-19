@@ -15,7 +15,7 @@
     mc:Ignorable="d">
 
     <UserControl.InputBindings>
-        <KeyBinding Key="F5" Command="{Binding Run}" />
+        <KeyBinding Key="F5" Command="{Binding RunCommand}" />
     </UserControl.InputBindings>
 
     <UserControl.Resources>

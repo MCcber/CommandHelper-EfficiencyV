@@ -1,7 +1,7 @@
 ﻿using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows;
-using CBHK.GeneralTool;
+using CBHK.Utility.Common;
 
 namespace CBHK.ControlDataContext
 {

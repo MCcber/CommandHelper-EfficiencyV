@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.Interfaces;
 using CBHK.Domain;
-using CBHK.GeneralTool;
+using CBHK.Interface;
+using CBHK.Utility.Common;
 using CBHK.ViewModel.Component.Entity;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -41,8 +41,8 @@ namespace CBHK.View.Component.Entity
                 Mode = BindingMode.OneWayToSource,
                 Converter = new TagToString()
             };
-            if (!context.SpecialTagsResult.ContainsKey(context.SelectedEntityIDString))
-                context.SpecialTagsResult.Add(context.SelectedEntityIDString, []);
+            if (!context.SpecialTagsResult.ContainsKey(context.SelectedEntityId.ComboBoxItemId))
+                context.SpecialTagsResult.Add(context.SelectedEntityId.ComboBoxItemId, []);
             #endregion
 
             #region 是否为标签集合
@@ -182,9 +182,9 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedEntityIDString + "][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedEntityId.ComboBoxItemId + "][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -212,9 +212,9 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
-                    string selectedEntityIdString = context.SelectedEntityIDString;
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
+                    string selectedEntityIdString = context.SelectedEntityId.ComboBoxItemId;
                     propertyPath = new PropertyPath("SpecialTagsResult[" + selectedEntityIdString + "][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
@@ -243,9 +243,9 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedEntityIDString + "][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedEntityId.ComboBoxItemId + "][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = areaEffectCloudEffectsAccordion.Tag;
@@ -293,10 +293,10 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
                     accordion.Uid = currentIndex.ToString();
-                    propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedEntityIDString + "][" + currentIndex + "]");
+                    propertyPath = new PropertyPath("SpecialTagsResult[" + context.SelectedEntityId.ComboBoxItemId + "][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -312,10 +312,10 @@ namespace CBHK.View.Component.Entity
                 NBTDataStructure dataStructure = suspectsEntities.Tag as NBTDataStructure;
                 suspectsEntities.GotFocus -= ValueChangedHandler;
                 suspectsEntities.LostFocus += SuspectsEntities_LostFocus;
-                context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
                 suspectsEntities.Uid = currentIndex.ToString();
-                propertyPath = new("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
+                propertyPath = new("SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = suspectsEntities.Tag;
@@ -331,10 +331,10 @@ namespace CBHK.View.Component.Entity
                 vibrationMonitors.GotFocus -= ValueChangedHandler;
                 NBTDataStructure dataStructure = vibrationMonitors.Tag as NBTDataStructure;
                 vibrationMonitors.LostFocus += VibrationMonitors_LostFocus;
-                context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
                 vibrationMonitors.Uid = currentIndex.ToString();
-                propertyPath = new("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
+                propertyPath = new("SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId][" + currentIndex + "]");
 
                 valueBinder.Path = propertyPath;
                 var currentTag = vibrationMonitors.Tag;
@@ -361,10 +361,10 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
                     accordion.Uid = currentIndex.ToString();
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = accordion.Tag;
@@ -391,10 +391,10 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
                     uUIDOrPosGroup.Uid = currentIndex.ToString();
-                    propertyPath = new("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
+                    propertyPath = new("SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = uUIDOrPosGroup.Tag;
@@ -419,10 +419,10 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
                     blockState.Uid = currentIndex.ToString();
-                    propertyPath = new("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
+                    propertyPath = new("SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = blockState.Tag;
@@ -460,9 +460,9 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = grid.Tag;
@@ -486,9 +486,9 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = slider.Tag;
@@ -519,9 +519,9 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(textBox.Tag as NBTDataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(textBox.Tag as NBTDataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId][" + currentIndex + "]");
                 }
 
                 valueBinder.Path = propertyPath;
@@ -548,9 +548,9 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId][" + currentIndex + "]");
                 }
 
                 valueBinder.Path = propertyPath;
@@ -576,10 +576,10 @@ namespace CBHK.View.Component.Entity
                 }
                 else
                 {
-                    context.SpecialTagsResult[context.SelectedEntityIDString].Add(dataStructure);
-                    currentIndex = context.SpecialTagsResult[context.SelectedEntityIDString].Count - 1;
+                    context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Add(dataStructure);
+                    currentIndex = context.SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId].Count - 1;
                     comboBox.Uid = currentIndex.ToString();
-                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityIDString][" + currentIndex + "]");
+                    propertyPath = new PropertyPath("SpecialTagsResult[context.SelectedEntityId.ComboBoxItemId][" + currentIndex + "]");
                 }
                 valueBinder.Path = propertyPath;
                 var currentTag = comboBox.Tag;

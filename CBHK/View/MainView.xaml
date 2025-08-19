@@ -814,11 +814,6 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <behaviors:Interaction.Triggers>
-                        <behaviors:EventTrigger EventName="Loaded">
-                            <behaviors:CallMethodAction MethodName="UserGrid_Loaded" TargetObject="{Binding}" />
-                        </behaviors:EventTrigger>
-                    </behaviors:Interaction.Triggers>
                     <Image
                         Grid.Row="0"
                         Grid.Column="0"

@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility.Common
 {
     public class BoolVisibilityConverter : IValueConverter
     {

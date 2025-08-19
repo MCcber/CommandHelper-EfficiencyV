@@ -12,7 +12,6 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -25,11 +24,17 @@ namespace CBHK.ViewModel.Generator
         /// 主页
         /// </summary>
         private Window home = null;
+        private ImageSource icon = new BitmapImage();
+        private IContainerProvider _container;
+        string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\SignView\images\icon.png";
+        #endregion
 
+        #region Property
         /// <summary>
         /// 告示牌数据源
         /// </summary>
-        public ObservableCollection<RichTabItems> Signs { get; set; } = [
+        [ObservableProperty]
+        public ObservableCollection<RichTabItems> _signList = [
             new RichTabItems()
             {
                 Header = "acacia",
@@ -51,22 +56,14 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 已选中的告示牌
         /// </summary>
-        public RichTabItems SelectedItem { get; set; }
+        [ObservableProperty]
+        public RichTabItems _selectedItem;
 
-        ImageSource icon = new BitmapImage();
+        [ObservableProperty]
+        private bool _showResult;
 
-        string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\SignView\images\icon.png";
-
-        private bool showResult;
-        private IContainerProvider _container;
-
-        public bool ShowResult
-        {
-            get => showResult;
-            set => SetProperty(ref showResult, value);
-        }
-
-        public ObservableCollection<TextComboBoxItem> VersionSource { get; set; } = [
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> _versionSource = [
             new TextComboBoxItem() { Text = "1.20.0" },
             new TextComboBoxItem() { Text = "1.19.4" },
             new TextComboBoxItem() { Text = "1.19.3" },
@@ -77,24 +74,29 @@ namespace CBHK.ViewModel.Generator
         ];
         #endregion
 
+        #region Method
         public SignViewModel(IContainerProvider container,MainView mainView)
         {
+            _container = container;
+            home = mainView;
             Task.Run(async () =>
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     SignPageView signPageView = _container.Resolve<SignPageView>();
-                    Signs[0].Content = signPageView;
+                    SignList[0].Content = signPageView;
                     signPageView.DataContext = _container.Resolve<SignPageViewModel>();
-                    Signs[0].FontWeight = FontWeights.Normal;
+                    SignList[0].FontWeight = FontWeights.Normal;
                 });
             });
             if (File.Exists(iconPath))
+            {
                 icon = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
-            _container = container;
-            home = mainView;
+            }
         }
+        #endregion
 
+        #region Event
         [RelayCommand]
         /// <summary>
         /// 返回主页
@@ -123,7 +125,7 @@ namespace CBHK.ViewModel.Generator
                 {
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        foreach (var item in Signs)
+                        foreach (var item in SignList)
                         {
                             SignPageView signPage = item.Content as SignPageView;
                             SignPageViewModel signPageDataContext = signPage.DataContext as SignPageViewModel;
@@ -168,14 +170,14 @@ namespace CBHK.ViewModel.Generator
                 SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
             };
-            Signs.Add(richTabItems);
+            SignList.Add(richTabItems);
         }
 
         [RelayCommand]
         /// <summary>
         /// 清空告示牌
         /// </summary>
-        private void ClearSigns() => Signs.Clear();
+        private void ClearSigns() => SignList.Clear();
 
         [RelayCommand]
         /// <summary>
@@ -203,22 +205,6 @@ namespace CBHK.ViewModel.Generator
         {
 
         }
-
-        /// <summary>
-        /// 添加告示牌操作图标
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void AddSignMenuIconLoaded(object sender,RoutedEventArgs e)
-        {
-            MenuItem item = sender as MenuItem;
-            string path = item.Parent is not MenuItem ?"oak_sign.png":item.Uid + "_sign.png";
-            BitmapImage bitmapImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\"+ path, UriKind.Absolute));
-            Image image = new()
-            {
-                Source = bitmapImage
-            };
-            item.Icon = image;
-        }
+        #endregion
     }
 }

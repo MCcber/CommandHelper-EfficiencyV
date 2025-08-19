@@ -1,8 +1,8 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
 using CBHK.Model.Common;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Recipe;
 using CBHK.ViewModel.Component.Recipe;
@@ -99,32 +99,6 @@ namespace CBHK.ViewModel.Generator
         [ObservableProperty]
         private ItemStructure _selectedItem = null;
 
-        #region 已选择的版本
-        private TextComboBoxItem selectedVersion;
-        public TextComboBoxItem SelectedVersion
-        {
-            get => selectedVersion;
-            set
-            {
-                SetProperty(ref selectedVersion, value);
-                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
-            }
-        }
-
-        public int CurrentMinVersion = 1202;
-        #endregion
-
-        #region 版本数据源
-        [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionSource = 
-            [ 
-                new TextComboBoxItem() 
-                {
-                    Text = "1.20.4"
-                }
-            ];
-        #endregion
-
         /// <summary>
         /// 已选中的物品库索引
         /// </summary>
@@ -160,8 +134,36 @@ namespace CBHK.ViewModel.Generator
                     SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
                 }
             ];
+
+        #region 已选择的版本
+        private TextComboBoxItem selectedVersion;
+        public TextComboBoxItem SelectedVersion
+        {
+            get => selectedVersion;
+            set
+            {
+                SetProperty(ref selectedVersion, value);
+                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
+            }
+        }
+
+        public int CurrentMinVersion = 1202;
         #endregion
 
+        #region 版本数据源
+        [ObservableProperty]
+        private ObservableCollection<TextComboBoxItem> _versionSource =
+            [
+                new TextComboBoxItem()
+                {
+                    Text = "1.20.4"
+                }
+            ];
+        #endregion
+
+        #endregion
+
+        #region Method
         public RecipeViewModel(IContainerProvider container,DataService dataService,MainView mainView,CBHKDataContext context)
         {
             _context = context;
@@ -215,6 +217,161 @@ namespace CBHK.ViewModel.Generator
         }
 
         /// <summary>
+        /// 初始化物品ID与版本物品ID列表
+        /// </summary>
+        private async Task InitOriginItemList()
+        {
+            OriginalItemList.Clear();
+
+            ParallelOptions parallelOptions = new();
+            await Parallel.ForAsync(0, ItemKeyList.Count, parallelOptions, (i, cancellationToken) =>
+            {
+                AddOriginalItemProgress.Report(new());
+                return new ValueTask();
+            });
+
+            Parallel.For(0, ItemKeyList.Count, (i) =>
+            {
+                string currentKey = ItemKeyList[i];
+                string imagePath = "";
+                if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
+                {
+                    imagePath = ImageSetFolderPath + currentKey + ".png";
+                }
+                else
+                if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
+                {
+                    imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
+                }
+
+                if (imagePath.Length > 0)
+                {
+                    SetOriginalItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath));
+                }
+            });
+        }
+
+        /// <summary>
+        /// 初始化自定义物品列表
+        /// </summary>
+        private async Task InitCustomItemList()
+        {
+            CustomItemList.Clear();
+            string[] itemFileList = Directory.GetFiles(ItemSaveFolderPath);
+            ParallelOptions parallelOptions = new();
+            await Parallel.ForAsync(0, itemFileList.Length, parallelOptions, (i, cancellationToken) =>
+            {
+                if (File.Exists(ImageSetFolderPath + ItemKeyList[i] + ".png") || File.Exists(ImageSetFolderPath + ItemKeyList[i] + "_spawn_egg.png"))
+                {
+                    AddCustomItemProgress.Report(new ItemStructure());
+                }
+                return new ValueTask();
+            });
+
+            Parallel.For(0, itemFileList.Length, (i) =>
+            {
+                if (File.Exists(itemFileList[i]))
+                {
+                    string nbt = ExternalDataImportManager.GetItemDataHandler(itemFileList[i], true);
+                    string currentKey = "";
+                    if (JObject.Parse(nbt)["id"] is JToken IDToken)
+                    {
+                        currentKey = IDToken.Value<string>().Replace("minecraft:", "");
+                    }
+                    string imagePath = "";
+                    if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
+                    {
+                        imagePath = ImageSetFolderPath + currentKey + ".png";
+                    }
+                    else
+                    if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
+                    {
+                        imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
+                    }
+
+                    if (imagePath.Length > 0)
+                    {
+                        SetCustomItemProgress.Report(new ValueTuple<int, string, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath, nbt));
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// 外部添加配方
+        /// </summary>
+        public object AddExternRecipe(RecipeType recipeType)
+        {
+            object result = "";
+            RichTabItems richTabItems = new()
+            {
+                IsContentSaved = true,
+                BorderThickness = new(4, 4, 4, 0),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                Foreground = new SolidColorBrush(Colors.White),
+                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
+                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
+                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
+                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
+                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
+                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
+                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+            };
+            RecipeList.Add(richTabItems);
+            richTabItems.FindParent<TabControl>().SelectedItem = richTabItems;
+            switch (recipeType)
+            {
+                case RecipeType.CraftingTable:
+                    CraftingTableView craftingTable = new() { FontWeight = FontWeights.Normal };
+                    result = craftingTable;
+                    richTabItems.Header = "工作台";
+                    richTabItems.Content = craftingTable;
+                    break;
+                case RecipeType.Furnace:
+                    FurnaceView furnace = new() { FontWeight = FontWeights.Normal };
+                    result = furnace;
+                    richTabItems.Header = "熔炉";
+                    richTabItems.Content = furnace;
+                    break;
+                case RecipeType.BlastFurnace:
+                    BlastFurnaceView blastFurnace = new() { FontWeight = FontWeights.Normal };
+                    result = blastFurnace;
+                    richTabItems.Header = "高炉";
+                    richTabItems.Content = blastFurnace;
+                    break;
+                case RecipeType.Campfire:
+                    CampfireView campfire = new() { FontWeight = FontWeights.Normal };
+                    result = campfire;
+                    richTabItems.Header = "篝火";
+                    richTabItems.Content = campfire;
+                    break;
+                case RecipeType.SmithingTable:
+                    SmithingTableView smithingTable = new() { FontWeight = FontWeights.Normal };
+                    result = smithingTable;
+                    richTabItems.Header = "锻造台";
+                    richTabItems.Content = smithingTable;
+                    break;
+                case RecipeType.Smoker:
+                    SmokerView smoker = new() { FontWeight = FontWeights.Normal };
+                    result = smoker;
+                    richTabItems.Header = "烟熏炉";
+                    richTabItems.Content = smoker;
+                    break;
+                case RecipeType.Stonecutter:
+                    StonecutterView stonecutter = new() { FontWeight = FontWeights.Normal };
+                    result = stonecutter;
+                    richTabItems.Header = "切石机";
+                    richTabItems.Content = stonecutter;
+                    break;
+            }
+            return result;
+        }
+
+        #endregion
+
+        #region Event
+        /// <summary>
         /// 订阅原版物品库过滤事件
         /// </summary>
         /// <param name="sender"></param>
@@ -249,94 +406,11 @@ namespace CBHK.ViewModel.Generator
         }
 
         /// <summary>
-        /// 初始化物品ID与版本物品ID列表
-        /// </summary>
-        private async Task InitOriginItemList()
-        {
-            OriginalItemList.Clear();
-
-            ParallelOptions parallelOptions = new();
-            await Parallel.ForAsync(0, ItemKeyList.Count, parallelOptions, (i, cancellationToken) =>
-            {
-                AddOriginalItemProgress.Report(new());
-                return new ValueTask();
-            });
-
-            Parallel.For(0, ItemKeyList.Count, (i) =>
-            {
-                string currentKey = ItemKeyList[i];
-                string imagePath = "";
-                if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
-                {
-                    imagePath = ImageSetFolderPath + currentKey + ".png";
-                }
-                else
-                if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
-                {
-                    imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
-                }
-
-                if (imagePath.Length > 0)
-                {
-                    SetOriginalItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath));
-                }
-            });
-
-
-        }
-
-        /// <summary>
-        /// 初始化自定义物品列表
-        /// </summary>
-        private async Task InitCustomItemList()
-        {
-            CustomItemList.Clear();
-            string[] itemFileList = Directory.GetFiles(ItemSaveFolderPath);
-            ParallelOptions parallelOptions = new();
-            await Parallel.ForAsync(0, itemFileList.Length, parallelOptions, (i, cancellationToken) =>
-            {
-                if (File.Exists(ImageSetFolderPath + ItemKeyList[i] + ".png") || File.Exists(ImageSetFolderPath + ItemKeyList[i] + "_spawn_egg.png"))
-                {
-                    AddCustomItemProgress.Report(new ItemStructure());
-                }
-                return new ValueTask();
-            });
-
-            Parallel.For(0, itemFileList.Length, (i) =>
-            {
-                if (File.Exists(itemFileList[i]))
-                {
-                    string nbt = ExternalDataImportManager.GetItemDataHandler(itemFileList[i], true);
-                    string currentKey = "";
-                    if(JObject.Parse(nbt)["id"] is JToken IDToken)
-                    {
-                        currentKey = IDToken.Value<string>().Replace("minecraft:", "");
-                    }
-                    string imagePath = "";
-                    if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
-                    {
-                        imagePath = ImageSetFolderPath + currentKey + ".png";
-                    }
-                    else
-                    if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
-                    {
-                        imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
-                    }
-
-                    if (imagePath.Length > 0)
-                    {
-                        SetCustomItemProgress.Report(new ValueTuple<int, string, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath, nbt));
-                    }
-                }
-            });
-        }
-
-        /// <summary>
         /// 搜索文本更新
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void SearchTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        public void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (SelectedItemListIndex == 0)
             {
@@ -400,77 +474,6 @@ namespace CBHK.ViewModel.Generator
                     richTabItems.Content = new StonecutterView() { FontWeight = FontWeights.Normal };
                     break;
             }
-        }
-
-        /// <summary>
-        /// 外部添加配方
-        /// </summary>
-        public object AddExternRecipe(RecipeType recipeType)
-        {
-            object result = "";
-            RichTabItems richTabItems = new()
-            {
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
-            };
-            RecipeList.Add(richTabItems);
-            richTabItems.FindParent<TabControl>().SelectedItem = richTabItems;
-            switch (recipeType)
-            {
-                case RecipeType.CraftingTable:
-                    CraftingTableView craftingTable = new() { FontWeight = FontWeights.Normal };
-                    result = craftingTable;
-                    richTabItems.Header = "工作台";
-                    richTabItems.Content = craftingTable;
-                    break;
-                case RecipeType.Furnace:
-                    FurnaceView furnace = new() { FontWeight = FontWeights.Normal };
-                    result = furnace;
-                    richTabItems.Header = "熔炉";
-                    richTabItems.Content = furnace;
-                    break;
-                case RecipeType.BlastFurnace:
-                    BlastFurnaceView blastFurnace = new() { FontWeight = FontWeights.Normal };
-                    result = blastFurnace;
-                    richTabItems.Header = "高炉";
-                    richTabItems.Content = blastFurnace;
-                    break;
-                case RecipeType.Campfire:
-                    CampfireView campfire = new() { FontWeight = FontWeights.Normal};
-                    result = campfire;
-                    richTabItems.Header = "篝火";
-                    richTabItems.Content = campfire;
-                    break;
-                case RecipeType.SmithingTable:
-                    SmithingTableView smithingTable = new() { FontWeight = FontWeights.Normal };
-                    result = smithingTable;
-                    richTabItems.Header = "锻造台";
-                    richTabItems.Content = smithingTable;
-                    break;
-                case RecipeType.Smoker:
-                    SmokerView smoker = new() { FontWeight = FontWeights.Normal };
-                    result = smoker;
-                    richTabItems.Header = "烟熏炉";
-                    richTabItems.Content = smoker;
-                    break;
-                case RecipeType.Stonecutter:
-                    StonecutterView stonecutter = new() { FontWeight = FontWeights.Normal };
-                    result = stonecutter;
-                    richTabItems.Header = "切石机";
-                    richTabItems.Content = stonecutter;
-                    break;
-            }
-            return result;
         }
 
         [RelayCommand]
@@ -814,5 +817,6 @@ namespace CBHK.ViewModel.Generator
                 }
             }
         }
+        #endregion
     }
 }

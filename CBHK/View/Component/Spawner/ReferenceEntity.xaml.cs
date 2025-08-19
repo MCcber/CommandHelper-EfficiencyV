@@ -1,5 +1,5 @@
-﻿using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
+﻿using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View.Component.Entity;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Component.Entity;

@@ -1,7 +1,7 @@
 ﻿using System.Windows.Media;
 using System.Windows;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility.Common
 {
     public static class FindSomeThingByType
     {
@@ -19,7 +19,7 @@ namespace CBHK.GeneralTool
             {
                 var child = VisualTreeHelper.GetChild(depObj, i);
 
-                var result = (child as T) ?? FindChild<T>(child, targetUid);
+                var result = child as T ?? child.FindChild<T>(targetUid);
                 if (result != null && (targetUid.Length == 0 || (result as FrameworkElement).Uid == targetUid)) return result;
             }
             return null;
@@ -42,7 +42,7 @@ namespace CBHK.GeneralTool
                 }
                 else
                 {
-                    parent = FindParent<T>(parent, targetUid);
+                    parent = parent.FindParent<T>(targetUid);
                     if (parent is not null and T && (targetUid.Length == 0 || (parent as FrameworkElement).Uid == targetUid))
                     {
                         return (T)parent;

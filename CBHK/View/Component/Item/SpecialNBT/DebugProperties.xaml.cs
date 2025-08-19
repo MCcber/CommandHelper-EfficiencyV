@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
-using CBHK.GeneralTool;
+using CBHK.Utility.Common;
 using CBHK.ViewModel.Generator;
 using Newtonsoft.Json.Linq;
 using SQLitePCL;

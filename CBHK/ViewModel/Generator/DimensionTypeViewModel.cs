@@ -1,5 +1,4 @@
 ﻿using CBHK.CustomControl.JsonTreeViewComponents;
-using CBHK.GeneralTool.TreeViewComponentsHelper;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
@@ -16,6 +15,7 @@ using CBHK.Model.Common;
 using CBHK.CustomControl;
 using CBHK.ViewModel.Common;
 using CBHK.Domain;
+using CBHK.Common.Utility;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -67,7 +67,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public DimensionTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context) :base(container, mainView,context)
+        public DimensionTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context,RegexService regexService) :base(container, mainView,context,regexService)
         {
         }
         #endregion

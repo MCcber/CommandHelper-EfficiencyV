@@ -65,5 +65,14 @@
             Smoker,
             Stonecutter
         }
+
+        public enum PackDescriptionType
+        {
+            StringType,
+            BoolType,
+            IntType,
+            ObjectType,
+            ArrayType
+        };
     }
 }

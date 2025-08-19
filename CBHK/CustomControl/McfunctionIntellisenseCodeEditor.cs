@@ -1,4 +1,5 @@
 ﻿using CBHK.Common.Model;
+using CBHK.Common.Utility;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.ViewModel.Component.Datapack.EditPage;
 using CBHK.ViewModel.Generator;
@@ -8,7 +9,6 @@ using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using SharpNBT;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -31,13 +31,14 @@ namespace CBHK.CustomControl
 {
     public partial class McfunctionIntellisenseCodeEditor:TextEditor
     {
-        #region 字段
+        #region Field
         /// <summary>
         /// 数据上下文
         /// </summary>
         McfunctionIntellisenseDataContext dataContext = new();
         private CancellationTokenSource communiteTokenSource = new();
         private CancellationTokenSource ShortKeyToken = new();
+        private RegexService _regexService;
         FoldingManager foldingManager = null;
         private Socket client = null;
         double singleQuotation;
@@ -156,21 +157,7 @@ namespace CBHK.CustomControl
         ImageSource MacrosIcon = Application.Current.Resources["MacrosIcon"] as ImageSource;
         #endregion
 
-        #region 正则属性
-        [GeneratedRegex(@"executeOptions")]
-        private static partial Regex executeOptionsCount();
-
-        [GeneratedRegex(@"(?<={)[a-zA-Z]+(?=})")]
-        private static partial Regex ScoreboardInlineType();
-
-        [GeneratedRegex(@"[a-zA-Z{}0-9$*]+")]
-        private static partial Regex InputContent();
-
-        [GeneratedRegex(@"[a-zA-Z0-9\:\._\-+]")]
-        private static partial Regex IsWord();
-        #endregion
-
-        public McfunctionIntellisenseCodeEditor(EditPageView editPageView)
+        public McfunctionIntellisenseCodeEditor(EditPageView editPageView,RegexService regexService)
         {
             #region 设置属性、订阅事件
             AllowDrop = true;
@@ -203,6 +190,8 @@ namespace CBHK.CustomControl
             //记录选中内容的起始和末尾偏移量
             PreviewKeyUp += TextEditor_PreviewKeyUp;
             #endregion
+
+            _regexService = regexService;
 
             editPageDataContext = editPageView.DataContext as EditPageViewModel;
 
@@ -2305,7 +2294,7 @@ namespace CBHK.CustomControl
                     {
                         while (LeftIndex > 0 &&
                                !DonotMatches.Contains(LeftString) &&
-                              (IsWord().IsMatch(LeftString) ||
+                              (_regexService.IsWord().IsMatch(LeftString) ||
                               Matches.Contains(LeftString) ||
                               Regex.IsMatch(Document.GetText(LeftIndex - 1, 1), @"~|\^") || ("#region".StartsWith(dataContext.CurrentCode.Trim()) && dataContext.CurrentCode.Trim().Length < 8)))
                         {

@@ -1,6 +1,5 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
-using CBHK.GeneralTool.TreeViewComponentsHelper;
 using CBHK.Model.Common;
 using CBHK.View;
 using CBHK.ViewModel.Common;
@@ -16,6 +15,7 @@ using System.Windows;
 using ICSharpCode.AvalonEdit.Highlighting;
 using System.Xml;
 using CBHK.Domain;
+using CBHK.Common.Utility;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -60,7 +60,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public DamageTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context) : base(container, mainView,context)
+        public DamageTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context,RegexService regexService) : base(container, mainView,context,regexService)
         {
         }
         #endregion

@@ -1,5 +1,4 @@
 ﻿using CBHK.CustomControl.JsonTreeViewComponents;
-using CBHK.GeneralTool.TreeViewComponentsHelper;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
@@ -19,30 +18,24 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using CBHK.ViewModel.Common;
 using CBHK.Domain;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CBHK.Common.Utility;
 
 namespace CBHK.ViewModel.Generator
 {
     public partial class AdvancementViewModel : BaseCustomWorldUnifiedPlan
     {
         #region Property
-        private CBHKDataContext context { get; set; }
-        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\";
-        public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
-
-        private TextComboBoxItem _currentVersion = new();
-        public override TextComboBoxItem CurrentVersion
-        {
-            get => _currentVersion;
-            set => SetProperty(ref _currentVersion, value);
-        }
+        [ObservableProperty]
+        private TextComboBoxItem _currentVersion;
 
         public override ObservableCollection<TextComboBoxItem> VersionList { get; set; } =
-            [
-                new TextComboBoxItem()
-                {
-                    Text = "1.20.3-1.20.4"
-                }
-            ];
+        [
+            new TextComboBoxItem()
+            {
+                Text = "1.20.3-1.20.4"
+            }
+        ];
 
         private ObservableCollection<JsonTreeViewItem> _treeViewItemList;
         public override ObservableCollection<JsonTreeViewItem> TreeViewItemList
@@ -51,6 +44,10 @@ namespace CBHK.ViewModel.Generator
             set => SetProperty(ref _treeViewItemList, value);
         }
 
+        public override JsonTreeViewItem VisualLastItem { get; set; }
+
+        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\";
+        public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
         protected override TextEditor TextEditor { get; set; }
 
         public override Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
@@ -63,11 +60,10 @@ namespace CBHK.ViewModel.Generator
         public override Dictionary<string, string> TranslateDefaultDictionary { get; set; } = [];
         public override List<string> DependencyFileList { get; set; }
         public override List<string> DependencyDirectoryList { get; set; }
-        public override JsonTreeViewItem VisualLastItem { get; set; }
         #endregion
 
         #region Method
-        public AdvancementViewModel(IContainerProvider container, MainView mainView, CBHKDataContext context) : base(container, mainView, context)
+        public AdvancementViewModel(IContainerProvider container, MainView mainView, CBHKDataContext context,RegexService regexService) : base(container, mainView, context,regexService)
         {
             #region 添加数据上下文所需的枚举集合与转换字典数据
             EnumIDDictionary.Add("流体ID", ["minecraft:water", "minecraft:lava"]);

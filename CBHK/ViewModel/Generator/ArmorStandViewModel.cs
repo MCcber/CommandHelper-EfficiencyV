@@ -1,7 +1,5 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.AnimationComponents;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
 using CBHK.View;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,7 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +26,8 @@ using System.Windows.Media.Media3D;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Component.Item;
 using CBHK.View.Component.Item;
+using CBHK.Utility.MessageTip;
+using CBHK.Utility.Common;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -101,8 +100,8 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         StackPanel NBTList = null;
 
-        #region 引用
         private readonly IContainerProvider _container;
+
         /// <summary>
         /// 样式化文本框引用
         /// </summary>
@@ -111,6 +110,22 @@ namespace CBHK.ViewModel.Generator
         /// 标签文本框
         /// </summary>
         TagRichTextBox tagRichTextBox = null;
+
+        private Uri stoneUri = new(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\smooth_stone.png");
+        private Uri stoneSideUri = new(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\stoneSide.png");
+        public BitmapImage axisRed = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\axisRed.png"));
+        public BitmapImage axisGreen = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\axisGreen.png"));
+        public BitmapImage axisBlue = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\axisBlue.png"));
+        public BitmapImage axisGray = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\axisGray.png"));
+
+        //版本切换锁,防止属性之间无休止更新
+        private bool permission_switch_lock = false;
+
+        #region 重置动作的按钮前景颜色对象
+        //灰色
+        private SolidColorBrush GrayBrush = new((Color)ColorConverter.ConvertFromString("#8F8F8F"));
+        //白色
+        private SolidColorBrush BlackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
         #endregion
 
         #region 所有3D视图对象
@@ -134,23 +149,73 @@ namespace CBHK.ViewModel.Generator
         private double deltaMoveY;
         #endregion
 
+        /// <summary>
+        /// 记录上一次的鼠标位置
+        /// </summary>
+        private Point LastCursorPosition;
+
+        #region 控制右侧预览视图的双向旋转
+        private double horizontalAngleDelta = 0;
+        private double verticalAngleDelta = 0;
+        #endregion
+
+        #region 三轴合一数据更新载体
+        TextBlock XAxis = new();
+        TextBlock YAxis = new();
+        TextBlock ZAxis = new();
+
+        //用于自增和自减
+        float XAxisValue = 0f;
+        float YAxisValue = 0f;
+        float ZAxisValue = 0f;
+        #endregion
+
         #endregion
 
         #region Property
-
-        #region 生成器标题
+        /// <summary>
+        /// 生成器标题
+        /// </summary>
         [ObservableProperty]
         public string _title = "盔甲架生成器";
-        #endregion
 
-        #region 预览文本
+        /// <summary>
+        /// 预览文本
+        /// </summary>
         [ObservableProperty]
         public string _previewModeText = "预览";
-        #endregion
+
+        /// <summary>
+        /// 预览功能菜单可见性
+        /// </summary>
+        [ObservableProperty]
+        private Visibility _previewMenuVisibility = Visibility.Visible;
+
+        /// <summary>
+        /// 显示结果
+        /// </summary>
+        [ObservableProperty]
+        private bool _showGeneratorResult = false;
+
+        /// <summary>
+        /// 名称
+        /// </summary>
+        [ObservableProperty]
+        private string _customName = "";
+
+        /// <summary>
+        /// 标签列表
+        /// </summary>
+        [ObservableProperty]
+        private string _tagList = "";
+
+        /// <summary>
+        /// 整体水平旋转
+        /// </summary>
+        [ObservableProperty]
+        private float _rotationX = 0f;
 
         #region 是否拥有副手权限
-        //版本切换锁,防止属性之间无休止更新
-        private bool permission_switch_lock = false;
         private Visibility haveOffHandPermission = Visibility.Visible;
         public Visibility HaveOffHandPermission
         {
@@ -189,70 +254,25 @@ namespace CBHK.ViewModel.Generator
         #region 为盔甲架和坐标轴映射纹理
         [ObservableProperty]
         public BitmapImage _armImage = null;
-        public BitmapImage woodenImage { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\oak_planks.png"));
-        public BitmapImage horizontalImage { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\HorizontalPlanks.png"));
-        private Uri stoneUri = new(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\smooth_stone.png");
-        private Uri stoneSideUri = new(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\stoneSide.png");
+        /// <summary>
+        /// 木头纹理
+        /// </summary>
+        [ObservableProperty]
+        public BitmapImage _woodenImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\oak_planks.png"));
+        [ObservableProperty]
+        public BitmapImage _horizontalImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\HorizontalPlanks.png"));
         [ObservableProperty]
         public BitmapImage _stone = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\smooth_stone.png"));
         [ObservableProperty]
         public BitmapImage _stoneSide = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\stoneSide.png"));
-        public BitmapImage axisRed { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\axisRed.png"));
-        public BitmapImage axisGreen { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\axisGreen.png"));
-        public BitmapImage axisBlue { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\axisBlue.png"));
-        public BitmapImage axisGray { get; set; } = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\axisGray.png"));
         #endregion
 
-        #region 预览功能菜单可见性
-        [ObservableProperty]
-        private Visibility _previewMenuVisibility = Visibility.Visible;
-        #endregion
-
-        #region 显示结果
-        [ObservableProperty]
-        private bool _showGeneratorResult = false;
-        #endregion
-
-        #region as名称
-        [ObservableProperty]
-        private string _customName = "";
-        #endregion
-
-        #region as名称可见性
+        #region 名称可见性
         [ObservableProperty]
         private bool _customNameVisible = false;
         private string CustomNameVisibleString
         {
             get => CustomNameVisible ? "CustomNameVisible:1b," : "";
-        }
-        #endregion
-
-        #region as的tag
-        private string tags = "";
-        public string Tags
-        {
-            get
-            {
-                //string[] tag_string = tags.Split(',');
-                //tags = "Tags:[";
-                //for (int i = 0; i < tag_string.Length; i++)
-                //{
-                //    if (tag_string[i].Trim().Length > 0)
-                //        tags += "\"" + tag_string[i] + "\",";
-                //}
-                //if (animationContainer.timeLine.HeadAnimationPointPanel.Items.Count == 0 &&
-                //    animationContainer.timeLine.BodyAnimationPointPanel.Items.Count == 0 &&
-                //    animationContainer.timeLine.LeftArmAnimationPointPanel.Items.Count == 0 &&
-                //    animationContainer.timeLine.RightArmAnimationPointPanel.Items.Count == 0 &&
-                //    animationContainer.timeLine.LeftLegAnimationPointPanel.Items.Count == 0 &&
-                //    animationContainer.timeLine.RightLegAnimationPointPanel.Items.Count == 0)
-                //    tags = tags.TrimEnd(',') + "],";
-                //else
-                //    tags = tags + @"""asdasdsd""" + "],";
-                //TagString = tags;
-                return tags;
-            }
-            set => SetProperty(ref tags, value);
         }
         #endregion
 
@@ -302,19 +322,13 @@ namespace CBHK.ViewModel.Generator
         }
         #endregion
 
-        #region 重置动作的按钮前景颜色对象
-        //灰色
-        static SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#8F8F8F"));
-        //白色
-        static SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
-        #endregion
-
         #region 摄像机初始坐标和朝向
         double initHorizontalAngle = 0;
         double initVerticalAngle = 0;
         #endregion
 
         #region 重置按钮属性
+
         #region 是否可以重置所有动作
         private bool canResetAllPose;
         public bool CanResetAllPose
@@ -323,175 +337,123 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetAllPose, value);
-                ResetAllPoseButtonForeground = CanResetAllPose ? blackBrush : grayBrush;
+                ResetAllPoseButtonForeground = CanResetAllPose ? BlackBrush : GrayBrush;
             }
         }
         #endregion
-        #region 重置所有动作的按钮前景
+
+        /// <summary>
+        /// 重置所有动作的按钮前景
+        /// </summary>
         [ObservableProperty]
-        private Brush _resetAllPoseButtonForeground = grayBrush;
-        #endregion
+        private Brush _resetAllPoseButtonForeground;
 
         #region 是否可以重置头部动作
-        private bool can_reset_head_pose;
+        private bool canResetHeadPose;
         public bool CanResetHeadPose
         {
-            get { return can_reset_head_pose; }
+            get => canResetHeadPose;
             set
             {
-                can_reset_head_pose = value;
-                ResetHeadPoseButtonForeground = CanResetHeadPose ? blackBrush : grayBrush;
-                OnPropertyChanged();
+                SetProperty(ref canResetHeadPose, value);
+                ResetHeadPoseButtonForeground = CanResetHeadPose ? BlackBrush : GrayBrush;
             }
         }
         #endregion
-        #region 重置头部动作的按钮前景
-        private Brush reset_head_pose_button_foreground = grayBrush;
-        public Brush ResetHeadPoseButtonForeground
-        {
-            get { return reset_head_pose_button_foreground; }
-            set
-            {
-                reset_head_pose_button_foreground = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
+        /// <summary>
+        /// 重置头部动作的按钮前景
+        /// </summary>
+        [ObservableProperty]
+        private Brush _resetHeadPoseButtonForeground;
 
         #region 是否可以重置身体动作
-        private bool can_reset_body_pose;
+        private bool canResetBodyPose;
         public bool CanResetBodyPose
         {
-            get { return can_reset_body_pose; }
+            get => canResetBodyPose;
             set
             {
-                can_reset_body_pose = value;
-                ResetBodyPoseButtonForeground = CanResetBodyPose ? blackBrush : grayBrush;
-                OnPropertyChanged();
+                SetProperty(ref canResetBodyPose, value);
+                ResetBodyPoseButtonForeground = CanResetBodyPose ? BlackBrush : GrayBrush;
             }
         }
         #endregion
         #region 重置身体动作的按钮前景
-        private Brush reset_body_pose_button_foreground = grayBrush;
-        public Brush ResetBodyPoseButtonForeground
-        {
-            get { return reset_body_pose_button_foreground; }
-            set
-            {
-                reset_body_pose_button_foreground = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        private Brush _resetBodyPoseButtonForeground;
         #endregion
 
         #region 是否可以重置左臂动作
-        private bool can_reset_larm_pose;
+        private bool canResetLarmPose;
         public bool CanResetLArmPose
         {
-            get { return can_reset_larm_pose; }
+            get => canResetLarmPose;
             set
             {
-                can_reset_larm_pose = value;
-                ResetLArmPoseButtonForeground = CanResetLArmPose ? blackBrush : grayBrush;
-                OnPropertyChanged();
+                SetProperty(ref canResetLarmPose, value);
+                ResetLArmPoseButtonForeground = CanResetLArmPose ? BlackBrush : GrayBrush;
             }
         }
         #endregion
-        #region 重置左臂动作的按钮前景
-        private Brush reset_larm_pose_button_foreground = grayBrush;
-        public Brush ResetLArmPoseButtonForeground
-        {
-            get { return reset_larm_pose_button_foreground; }
-            set
-            {
-                reset_larm_pose_button_foreground = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
+        /// <summary>
+        /// 重置左臂动作的按钮前景
+        /// </summary>
+        [ObservableProperty]
+        private Brush _resetLArmPoseButtonForeground;
 
         #region 是否可以重置右臂动作
-        private bool can_reset_rarm_pose;
+        private bool canResetRArmPose;
         public bool CanResetRArmPose
         {
-            get { return can_reset_rarm_pose; }
+            get => canResetRArmPose;
             set
             {
-                can_reset_rarm_pose = value;
-                ResetRArmPoseButtonForeground = CanResetRArmPose ? blackBrush : grayBrush;
-                OnPropertyChanged();
+                SetProperty(ref canResetRArmPose, value);
+                ResetRArmPoseButtonForeground = CanResetRArmPose ? BlackBrush : GrayBrush;
             }
         }
         #endregion
-        #region 重置右臂动作的按钮前景
-        private Brush reset_rarm_pose_button_foreground = grayBrush;
-        public Brush ResetRArmPoseButtonForeground
-        {
-            get { return reset_rarm_pose_button_foreground; }
-            set
-            {
-                reset_rarm_pose_button_foreground = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
+        /// <summary>
+        /// 重置右臂动作的按钮前景
+        /// </summary>
+        [ObservableProperty]
+        private Brush _resetRArmPoseButtonForeground;
 
         #region 是否可以重置左腿动作
-        private bool can_reset_lleg_pose;
+        private bool canResetLLegPose;
         public bool CanResetLLegPose
         {
-            get { return can_reset_lleg_pose; }
+            get => canResetLLegPose;
             set
             {
-                can_reset_lleg_pose = value;
-                ResetLLegPoseButtonForeground = CanResetLLegPose ? blackBrush : grayBrush;
-                OnPropertyChanged();
+                SetProperty(ref canResetLLegPose, value);
+                ResetLLegPoseButtonForeground = CanResetLLegPose ? BlackBrush : GrayBrush;
             }
         }
         #endregion
-        #region 重置左臂动作的按钮前景
-        private Brush reset_lleg_pose_button_foreground = grayBrush;
-        public Brush ResetLLegPoseButtonForeground
-        {
-            get { return reset_lleg_pose_button_foreground; }
-            set
-            {
-                reset_lleg_pose_button_foreground = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
+        /// <summary>
+        /// 重置左臂动作的按钮前景
+        /// </summary>
+        [ObservableProperty]
+        private Brush _resetLLegPoseButtonForeground;
 
         #region 是否可以重置右腿动作
-        private bool can_reset_rleg_pose;
+        private bool canResetRLegPose;
         public bool CanResetRLegPose
         {
-            get { return can_reset_rleg_pose; }
+            get => canResetRLegPose;
             set
             {
-                can_reset_rleg_pose = value;
-                ResetRLegPoseButtonForeground = CanResetRLegPose ? blackBrush : grayBrush;
-                OnPropertyChanged();
+                SetProperty(ref canResetRLegPose, value);
+                ResetRLegPoseButtonForeground = CanResetRLegPose ? BlackBrush : GrayBrush;
             }
         }
         #endregion
-        #region 重置右臂动作的按钮前景
-        private Brush reset_rleg_pose_button_foreground = grayBrush;
-        public Brush ResetRLegPoseButtonForeground
-        {
-            get { return reset_rleg_pose_button_foreground; }
-            set
-            {
-                reset_rleg_pose_button_foreground = value;
-                OnPropertyChanged();
-            }
-        }
-        #endregion
-        #endregion
-
-        #region 整体水平旋转
+        /// <summary>
+        /// 重置右臂动作的按钮前景
+        /// </summary>
         [ObservableProperty]
-        private float _rotationX = 0f;
+        private Brush _resetRLegPoseButtonForeground;
         #endregion
 
         #region 头部XYZ
@@ -738,61 +700,49 @@ namespace CBHK.ViewModel.Generator
         }
         #endregion
 
-        #region Head
+        /// <summary>
+        /// Head
+        /// </summary>
         [ObservableProperty]
         private string _headItem = "";
-        #endregion
 
-        #region Body
+        /// <summary>
+        /// Body
+        /// </summary>
         [ObservableProperty]
         private string _bodyItem = "";
-        #endregion
 
-        #region LeftHand
+        /// <summary>
+        /// LeftHand
+        /// </summary>
         [ObservableProperty]
         private string _leftHandItem = "";
-        #endregion
 
-        #region RightHand
+        /// <summary>
+        /// RightHand
+        /// </summary>
         [ObservableProperty]
         private string _rightHandItem = "";
-        #endregion
 
-        #region Legs
+        /// <summary>
+        /// Legs
+        /// </summary>
         [ObservableProperty]
         private string _legItem = "";
-        #endregion
 
-        #region Boots
+        /// <summary>
+        /// Boots
+        /// </summary>
         [ObservableProperty]
         private string _feetItem = "";
-        #endregion
 
         #endregion
 
-        #region 控制右侧预览视图的双向旋转
-        private double horizontalAngleDelta = 0;
-        private double verticalAngleDelta = 0;
+        #region 控制注视旋转的旋转角度
         [ObservableProperty]
         private double _horizontalAngle = 0;
         [ObservableProperty]
         private double _verticalAngle = 0;
-        #endregion
-
-        #region 记录上一次的鼠标位置
-        [ObservableProperty]
-        private Point _lastCursorPosition;
-        #endregion
-
-        #region 三轴合一数据更新载体
-        TextBlock XAxis = new();
-        TextBlock YAxis = new();
-        TextBlock ZAxis = new();
-
-        //用于自增和自减
-        float XAxisValue = 0f;
-        float YAxisValue = 0f;
-        float ZAxisValue = 0f;
         #endregion
 
         #region 各部位装备图像源
@@ -1052,6 +1002,185 @@ namespace CBHK.ViewModel.Generator
 
         #endregion
 
+        #region Method
+        public ArmorStandViewModel(IContainerProvider container,MainView mainView)
+        {
+            //连接三个轴的上下文
+            XAxis.DataContext = this;
+            YAxis.DataContext = this;
+            ZAxis.DataContext = this;
+
+            _container = container;
+            home = mainView;
+
+            ResetAllPoseButtonForeground = ResetHeadPoseButtonForeground = ResetLArmPoseButtonForeground = ResetRArmPoseButtonForeground = ResetBodyPoseButtonForeground = ResetLLegPoseButtonForeground = ResetRLegPoseButtonForeground = GrayBrush;
+        }
+
+        private ImageSource CreateColoredImage(BitmapImage originalImage, Color overlayColor)
+        {
+            // 创建一个新的 DrawingVisual
+            DrawingVisual drawingVisual = new DrawingVisual();
+            using (DrawingContext drawingContext = drawingVisual.RenderOpen())
+            {
+                // 绘制原始图像
+                drawingContext.DrawImage(originalImage, new Rect(0, 0, originalImage.PixelWidth, originalImage.PixelHeight));
+
+                // 创建带颜色的填充
+                SolidColorBrush colorBrush = new SolidColorBrush(overlayColor);
+                colorBrush.Opacity = 0.5; // 设定透明度
+
+                // 绘制覆盖颜色
+                drawingContext.DrawRectangle(colorBrush, null, new Rect(0, 0, originalImage.PixelWidth, originalImage.PixelHeight));
+            }
+
+            // 创建一个 RenderTargetBitmap 用于将 DrawingVisual 转换为 BitmapImage
+            RenderTargetBitmap renderBitmap = new RenderTargetBitmap(originalImage.PixelWidth, originalImage.PixelHeight, 96d, 96d, PixelFormats.Pbgra32);
+            renderBitmap.Render(drawingVisual);
+
+            return renderBitmap;
+        }
+
+        private DependencyObject GetHitObject(Point mousePosition, Viewport3D visual3D)
+        {
+            // 获取鼠标点击的东东视口坐标
+            PointHitTestParameters hitParams = new(mousePosition);
+            HitTestResult hitResult = VisualTreeHelper.HitTest(visual3D, mousePosition);
+
+            if (hitResult is not null && hitResult.VisualHit is not null)
+            {
+                return hitResult.VisualHit;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 移动摄像机与模型之间的相对距离
+        /// </summary>
+        /// <param name="d"></param>
+        public void Move(double d)
+        {
+            double scale = 0.05;
+            Vector3D lookDirection = MainCamera.LookDirection;
+            Point3D position = MainCamera.Position;
+            lookDirection.Normalize();
+            position += scale * lookDirection * d;
+            MainCamera.Position = position;
+        }
+
+        /// <summary>
+        /// 旋转模型
+        /// </summary>
+        /// <param name="center">旋转中心点</param>
+        /// <param name="model">旋转对象</param>
+        /// <param name="seconds">旋转持续时间</param>
+        /// <param name="axis">旋转轴</param>
+        /// <param name="X">x轴旋转角度</param>
+        /// <param name="Y">y轴旋转角度</param>
+        /// <param name="Z">z轴旋转角度</param>
+        public void TurnModel(Point3D center, GeometryModel3D model, double seconds, bool axis, float X, float Y, float Z)
+        {
+            Vector3D vector5 = new(0.0, 1.0, 0.0);
+            Vector3D vector4 = new(1.0, 0.0, 0.0);
+            Vector3D vector3 = new(0.0, 0.0, 1.0);
+            AxisAngleRotation3D rotation5 = new(vector5, 0.0);
+            AxisAngleRotation3D rotation4 = new(vector4, 0.0);
+            AxisAngleRotation3D rotation3 = new(vector3, 0.0);
+            RotateTransform3D rotateTransform5 = new(rotation5, center);
+            RotateTransform3D rotateTransform4 = new(rotation4, center);
+            RotateTransform3D rotateTransform3 = new(rotation3, center);
+            Transform3DGroup transformGroup = new();
+            transformGroup.Children.Add(rotateTransform5);
+            transformGroup.Children.Add(rotateTransform4);
+            transformGroup.Children.Add(rotateTransform3);
+            model.Transform = transformGroup;
+            if (axis)
+            {
+                DoubleAnimation doubleAnimation5 = new(double.Parse(Y.ToString()), double.Parse(Y.ToString()), DurationTS(seconds))
+                {
+                    BeginTime = DurationTS(0.0)
+                };
+                rotation5.BeginAnimation(AxisAngleRotation3D.AngleProperty, doubleAnimation5);
+                DoubleAnimation doubleAnimation4 = new(double.Parse(X.ToString()), double.Parse(X.ToString()), DurationTS(seconds))
+                {
+                    BeginTime = DurationTS(0.0)
+                };
+                rotation4.BeginAnimation(AxisAngleRotation3D.AngleProperty, doubleAnimation4);
+                DoubleAnimation doubleAnimation3 = new(double.Parse(Z.ToString()), double.Parse(Z.ToString()), DurationTS(seconds))
+                {
+                    BeginTime = DurationTS(0.0)
+                };
+                rotation3.BeginAnimation(AxisAngleRotation3D.AngleProperty, doubleAnimation3);
+            }
+        }
+
+        private int DurationM(double seconds)
+        {
+            return (int)(seconds * 1000.0);
+        }
+
+        public TimeSpan DurationTS(double seconds)
+        {
+            return new TimeSpan(0, 0, 0, 0, DurationM(seconds));
+        }
+
+        public void WatchMode()
+        {
+            initHorizontalAngle = initVerticalAngle = 0;
+            ArmorStandViewer.Cursor = Cursors.Arrow;
+            ResetCameraState();
+        }
+
+        public void FreeMode()
+        {
+            initHorizontalAngle = initVerticalAngle = 0;
+            ArmorStandViewer.Cursor = Cursors.Arrow;
+            ResetCameraState();
+        }
+
+        public void ThirdPersonMode()
+        {
+            initHorizontalAngle = initVerticalAngle = 0;
+            ArmorStandViewer.Cursor = Cursors.Arrow;
+            ResetCameraState();
+        }
+
+        public void OverTheShoulder()
+        {
+            initHorizontalAngle = initVerticalAngle = 0;
+            ArmorStandViewer.Cursor = Cursors.Arrow;
+            ResetCameraState();
+        }
+
+        /// <summary>
+        /// 获取摄像机视线朝向
+        /// </summary>
+        /// <param name="pitch"></param>
+        /// <param name="yaw"></param>
+        /// <returns></returns>
+        private Vector3D GetLookDirection(double pitch, double yaw)
+        {
+            // 将角度转换为弧度
+            double pitchRadians = pitch * (Math.PI / 180.0);
+            double yawRadians = yaw * (Math.PI / 180.0);
+
+            // 计算朝向向量
+            double x = Math.Cos(pitchRadians) * Math.Cos(yawRadians);
+            double y = Math.Sin(pitchRadians);
+            double z = Math.Cos(pitchRadians) * Math.Sin(yawRadians);
+
+            return new Vector3D(x, y, z);
+        }
+
+        /// <summary>   
+        /// 设置鼠标的坐标   
+        /// </summary>   
+        /// <param name="x">横坐标</param>   
+        /// <param name="y">纵坐标</param>   
+        [DllImport("User32")]
+        public extern static void SetCursorPos(int x, int y);
+
+        #endregion
+
         #region Event
 
         /// <summary>
@@ -1200,7 +1329,10 @@ namespace CBHK.ViewModel.Generator
 
         public void AnimationContainer_Loaded(object sender, RoutedEventArgs e) => animationContainer = sender as AnimationContainer;
 
-        #region 切换运镜模式
+        /// <summary>
+        /// 切换运镜模式
+        /// </summary>
+        /// <param name="type"></param>
         [RelayCommand]
         public void UpdateCameraMovementType(ArmorStandCameraMovementType type)
         {
@@ -1216,35 +1348,6 @@ namespace CBHK.ViewModel.Generator
             PreviewModeText = "预览-" + type.ToString();
             action?.Invoke();
         }
-
-        public void WatchMode()
-        {
-            initHorizontalAngle = initVerticalAngle = 0;
-            ArmorStandViewer.Cursor = Cursors.Arrow;
-            ResetCameraState();
-        }
-
-        public void FreeMode()
-        {
-            initHorizontalAngle = initVerticalAngle = 0;
-            ArmorStandViewer.Cursor = Cursors.Arrow;
-            ResetCameraState();
-        }
-
-        public void ThirdPersonMode()
-        {
-            initHorizontalAngle = initVerticalAngle = 0;
-            ArmorStandViewer.Cursor = Cursors.Arrow;
-            ResetCameraState();
-        }
-
-        public void OverTheShoulder()
-        {
-            initHorizontalAngle = initVerticalAngle = 0;
-            ArmorStandViewer.Cursor = Cursors.Arrow;
-            ResetCameraState();
-        }
-        #endregion
 
         /// <summary>
         /// 载入名称文本框
@@ -1262,6 +1365,57 @@ namespace CBHK.ViewModel.Generator
         /// <param name="sender"></param>
         /// <param name="e"></param>
         public void TagRichTextBox_Loaded(object sender, RoutedEventArgs e) => tagRichTextBox = sender as TagRichTextBox;
+
+        /// <summary>
+        /// 载入基础NBT列表
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void NBTCheckboxList_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Data\base_nbt.ini"))
+            {
+                ArmorStandNBTList = [.. File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Data\base_nbt.ini", Encoding.UTF8)];
+            }
+            NBTList = sender as StackPanel;
+
+            if (ArmorStandNBTList.Count > 0)
+            {
+                foreach (string item in ArmorStandNBTList)
+                {
+                    TextCheckBoxs textCheckBox = new()
+                    {
+                        Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                        Margin = new Thickness(0, 0, 0, 10),
+                        HeaderText = item,
+                        HeaderHeight = 20,
+                        FontSize = 15,
+                        HeaderWidth = 20,
+                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Style = Application.Current.Resources["TextCheckBox"] as Style
+                    };
+                    NBTList.Children.Add(textCheckBox);
+                    textCheckBox.Checked += NBTChecked;
+                    textCheckBox.Unchecked += NBTUnchecked;
+                    switch (item)
+                    {
+                        case "ShowArms":
+                            {
+                                textCheckBox.Checked += ShowArmsInModel;
+                                textCheckBox.Unchecked += HideArmsInModel;
+                                break;
+                            }
+                        case "NoBasePlate":
+                            {
+                                textCheckBox.Checked += NoBasePlateInModel;
+                                textCheckBox.Unchecked += HaveBasePlateInModel;
+                                break;
+                            }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 版本更新事件
@@ -1543,7 +1697,7 @@ namespace CBHK.ViewModel.Generator
             #endregion
 
             #region Result
-            string nbt = CustomName + BoolNBTList + EquipmentList + DisabledValue + CustomNameVisibleString + Tags + PoseString;
+            string nbt = CustomName + BoolNBTList + EquipmentList + DisabledValue + CustomNameVisibleString + TagList + PoseString;
             nbt = nbt.TrimEnd(',');
             if (CurrentMinVersion >= 1130)
                 result = "summon armor_stand ~ ~ ~" + (nbt != "" ? " {" + nbt + "}" : "");
@@ -1899,63 +2053,6 @@ namespace CBHK.ViewModel.Generator
             }
         }
 
-        /// <summary>
-        /// 载入基础NBT列表
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void NBTCheckboxListLoaded(object sender, RoutedEventArgs e)
-        {
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Data\base_nbt.ini"))
-                ArmorStandNBTList = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Data\base_nbt.ini", Encoding.UTF8).ToList();
-            NBTList = sender as StackPanel;
-
-            if (ArmorStandNBTList.Count > 0)
-            {
-                foreach (string item in ArmorStandNBTList)
-                {
-                    TextCheckBoxs textCheckBox = new()
-                    {
-                        Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-                        Margin = new Thickness(0, 0, 0, 10),
-                        HeaderText = item,
-                        HeaderHeight = 20,
-                        FontSize = 15,
-                        HeaderWidth = 20,
-                        HorizontalAlignment = HorizontalAlignment.Stretch,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        Style = Application.Current.Resources["TextCheckBox"] as Style
-                    };
-                    NBTList.Children.Add(textCheckBox);
-                    textCheckBox.Checked += NBTChecked;
-                    textCheckBox.Unchecked += NBTUnchecked;
-                    switch (item)
-                    {
-                        case "ShowArms":
-                            {
-                                textCheckBox.Checked += ShowArmsInModel;
-                                textCheckBox.Unchecked += HideArmsInModel;
-                                break;
-                            }
-                        case "NoBasePlate":
-                            {
-                                textCheckBox.Checked += NoBasePlateInModel;
-                                textCheckBox.Unchecked += HaveBasePlateInModel;
-                                break;
-                            }
-                    }
-                }
-            }
-        }
-
-        /// <summary>   
-        /// 设置鼠标的坐标   
-        /// </summary>   
-        /// <param name="x">横坐标</param>   
-        /// <param name="y">纵坐标</param>   
-        [DllImport("User32")]
-        public extern static void SetCursorPos(int x, int y);
-
         public void ThreeAxisMouseMove(object sender, MouseEventArgs e)
         {
             if (UsingThreeAxis)
@@ -2028,7 +2125,7 @@ namespace CBHK.ViewModel.Generator
         public void ShowArmsInModel(object sender, RoutedEventArgs e)
         {
             //把纹理设置回来
-            ArmImage = woodenImage;
+            ArmImage = WoodenImage;
         }
 
         /// <summary>
@@ -2201,20 +2298,6 @@ namespace CBHK.ViewModel.Generator
             }
         }
 
-        private Vector3D GetLookDirection(double pitch, double yaw)
-        {
-            // 将角度转换为弧度
-            double pitchRadians = pitch * (Math.PI / 180.0);
-            double yawRadians = yaw * (Math.PI / 180.0);
-
-            // 计算朝向向量
-            double x = Math.Cos(pitchRadians) * Math.Cos(yawRadians);
-            double y = Math.Sin(pitchRadians);
-            double z = Math.Cos(pitchRadians) * Math.Sin(yawRadians);
-
-            return new Vector3D(x, y, z);
-        }
-
         /// <summary>
         /// 处理模型视图中鼠标滚轮的滚动
         /// </summary>
@@ -2233,126 +2316,6 @@ namespace CBHK.ViewModel.Generator
         }
         #endregion
 
-        #endregion
-
-        #region Method
-        public ArmorStandViewModel(IContainerProvider container,MainView mainView)
-        {
-            //连接三个轴的上下文
-            XAxis.DataContext = this;
-            YAxis.DataContext = this;
-            ZAxis.DataContext = this;
-
-            _container = container;
-            home = mainView;
-        }
-
-        private ImageSource CreateColoredImage(BitmapImage originalImage, Color overlayColor)
-        {
-            // 创建一个新的 DrawingVisual
-            DrawingVisual drawingVisual = new DrawingVisual();
-            using (DrawingContext drawingContext = drawingVisual.RenderOpen())
-            {
-                // 绘制原始图像
-                drawingContext.DrawImage(originalImage, new Rect(0, 0, originalImage.PixelWidth, originalImage.PixelHeight));
-
-                // 创建带颜色的填充
-                SolidColorBrush colorBrush = new SolidColorBrush(overlayColor);
-                colorBrush.Opacity = 0.5; // 设定透明度
-
-                // 绘制覆盖颜色
-                drawingContext.DrawRectangle(colorBrush, null, new Rect(0, 0, originalImage.PixelWidth, originalImage.PixelHeight));
-            }
-
-            // 创建一个 RenderTargetBitmap 用于将 DrawingVisual 转换为 BitmapImage
-            RenderTargetBitmap renderBitmap = new RenderTargetBitmap(originalImage.PixelWidth, originalImage.PixelHeight, 96d, 96d, PixelFormats.Pbgra32);
-            renderBitmap.Render(drawingVisual);
-
-            return renderBitmap;
-        }
-
-        private DependencyObject GetHitObject(Point mousePosition, Viewport3D visual3D)
-        {
-            // 获取鼠标点击的东东视口坐标
-            PointHitTestParameters hitParams = new(mousePosition);
-            HitTestResult hitResult = VisualTreeHelper.HitTest(visual3D, mousePosition);
-
-            if (hitResult is not null && hitResult.VisualHit is not null)
-            {
-                return hitResult.VisualHit;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// 移动摄像机与模型之间的相对距离
-        /// </summary>
-        /// <param name="d"></param>
-        public void Move(double d)
-        {
-            double scale = 0.05;
-            Vector3D lookDirection = MainCamera.LookDirection;
-            Point3D position = MainCamera.Position;
-            lookDirection.Normalize();
-            position += scale * lookDirection * d;
-            MainCamera.Position = position;
-        }
-
-        /// <summary>
-        /// 旋转模型
-        /// </summary>
-        /// <param name="center">旋转中心点</param>
-        /// <param name="model">旋转对象</param>
-        /// <param name="seconds">旋转持续时间</param>
-        /// <param name="axis">旋转轴</param>
-        /// <param name="X">x轴旋转角度</param>
-        /// <param name="Y">y轴旋转角度</param>
-        /// <param name="Z">z轴旋转角度</param>
-        public void TurnModel(Point3D center, GeometryModel3D model, double seconds, bool axis, float X, float Y, float Z)
-        {
-            Vector3D vector5 = new(0.0, 1.0, 0.0);
-            Vector3D vector4 = new(1.0, 0.0, 0.0);
-            Vector3D vector3 = new(0.0, 0.0, 1.0);
-            AxisAngleRotation3D rotation5 = new(vector5, 0.0);
-            AxisAngleRotation3D rotation4 = new(vector4, 0.0);
-            AxisAngleRotation3D rotation3 = new(vector3, 0.0);
-            RotateTransform3D rotateTransform5 = new(rotation5, center);
-            RotateTransform3D rotateTransform4 = new(rotation4, center);
-            RotateTransform3D rotateTransform3 = new(rotation3, center);
-            Transform3DGroup transformGroup = new();
-            transformGroup.Children.Add(rotateTransform5);
-            transformGroup.Children.Add(rotateTransform4);
-            transformGroup.Children.Add(rotateTransform3);
-            model.Transform = transformGroup;
-            if (axis)
-            {
-                DoubleAnimation doubleAnimation5 = new(double.Parse(Y.ToString()), double.Parse(Y.ToString()), DurationTS(seconds))
-                {
-                    BeginTime = DurationTS(0.0)
-                };
-                rotation5.BeginAnimation(AxisAngleRotation3D.AngleProperty, doubleAnimation5);
-                DoubleAnimation doubleAnimation4 = new(double.Parse(X.ToString()), double.Parse(X.ToString()), DurationTS(seconds))
-                {
-                    BeginTime = DurationTS(0.0)
-                };
-                rotation4.BeginAnimation(AxisAngleRotation3D.AngleProperty, doubleAnimation4);
-                DoubleAnimation doubleAnimation3 = new(double.Parse(Z.ToString()), double.Parse(Z.ToString()), DurationTS(seconds))
-                {
-                    BeginTime = DurationTS(0.0)
-                };
-                rotation3.BeginAnimation(AxisAngleRotation3D.AngleProperty, doubleAnimation3);
-            }
-        }
-
-        private int DurationM(double seconds)
-        {
-            return (int)(seconds * 1000.0);
-        }
-
-        public TimeSpan DurationTS(double seconds)
-        {
-            return new TimeSpan(0, 0, 0, 0, DurationM(seconds));
-        }
         #endregion
     }
 }

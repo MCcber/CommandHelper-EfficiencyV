@@ -9,10 +9,10 @@ namespace CBHK.WindowDictionaries
     {
         /// <summary>
         /// This method tries to get the named VisualStateGroup for the 
-        /// dependency object. The provided object's ImplementationRoot will be 
+        /// Dependency object. The provided object's ImplementationRoot will be 
         /// looked up in this call.
         /// </summary>
-        /// <param name="dependencyObject">The dependency object.</param>
+        /// <param name="dependencyObject">The Dependency object.</param>
         /// <param name="groupName">The visual state group's name.</param>
         /// <returns>Returns null or the VisualStateGroup object.</returns>
         public static VisualStateGroup TryGetVisualStateGroup(DependencyObject dependencyObject, string groupName)

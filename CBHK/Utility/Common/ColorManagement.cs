@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Windows.Media;
 
-namespace CBHK.GeneralTool
+namespace CBHK.Utility.Common
 {
     public static class ColorManagement
     {

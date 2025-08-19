@@ -1,9 +1,9 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.Interfaces;
 using CBHK.Domain;
 using CBHK.Domain.Model;
-using CBHK.GeneralTool;
-using CBHK.GeneralTool.MessageTip;
+using CBHK.Interface;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Item;
 using CBHK.View.Component.Item.SpecialNBT;
@@ -222,6 +222,7 @@ namespace CBHK.ViewModel.Component.Item
 
         #endregion
 
+        #region Method
         public ItemPageViewModel(IContainerProvider container,CBHKDataContext context, DataService dataService)
         {
             #region 初始化数据
@@ -254,27 +255,11 @@ namespace CBHK.ViewModel.Component.Item
         }
 
         /// <summary>
-        /// 载入物品页
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ItemPages_Loaded(object sender, RoutedEventArgs e)
-        {
-            currentItemPages ??= (sender as ItemPageView).Parent as RichTabItems;
-            itemDataContext ??= Window.GetWindow(sender as ItemPageView).DataContext as ItemViewModel;
-            if (VersionSource.Count == 0)
-            {
-                VersionSource = itemDataContext.VersionList;
-                SelectedVersion = VersionSource[0];
-            }
-        }
-
-        /// <summary>
         /// 初始化物品ID与版本物品ID列表
         /// </summary>
         private async void InitItemList()
         {
-            if(!IsVersionUpdating)
+            if (!IsVersionUpdating)
             {
                 return;
             }
@@ -327,7 +312,7 @@ namespace CBHK.ViewModel.Component.Item
             EffectItemList.Clear();
             foreach (var item in _context.MobEffectSet)
             {
-                if(item.Version is not null && int.Parse(item.Version.Replace(".", "")) > CurrentMinVersion)
+                if (item.Version is not null && int.Parse(item.Version.Replace(".", "")) > CurrentMinVersion)
                 {
                     continue;
                 }
@@ -437,200 +422,6 @@ namespace CBHK.ViewModel.Component.Item
             }
         }
 
-        /// <summary>
-        /// 载入标签页
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SpecialTagsPanelLoaded(object sender, RoutedEventArgs e)
-        {
-            TabControl tabControl = sender as TabControl;
-            ItemView window = Window.GetWindow(tabControl) as ItemView;
-            ItemViewModel datacontext = window.DataContext as ItemViewModel;
-            foreach (TabItem item in tabControl.Items)
-            {
-                if (item.Uid == "Common")
-                {
-                    common = new(_context);
-                    VersionComponents.Add(common);
-                    (item.Content as ScrollViewer).Content = common;
-                }
-                if (item.Uid == "Data")
-                {
-                    data = new(_dataService,_context);
-                    (item.Content as ScrollViewer).Content = data;
-                }
-                if (item.Uid == "Function")
-                {
-                    function = new(_context,this);
-                    VersionComponents.Add(function);
-                    (item.Content as ScrollViewer).Content = function;
-                }
-                item.DataContext = this;
-            }
-            SpecialViewer = (tabControl.Items[0] as TabItem).Content as ScrollViewer;
-        }
-
-        /// <summary>
-        /// 切换后载入共通标签数据
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            TabControl tabControl = sender as TabControl;
-            JObject externData = ExternallyReadEntityData;
-            if (ImportMode && ExternallyReadEntityData != null)
-            {
-                if (tabControl.SelectedIndex == 1)
-                    common.GetExternData(ref externData);
-                if (tabControl.SelectedIndex == 2)
-                    function.GetExternData(ref externData);
-                if (tabControl.SelectedIndex == 3)
-                    data.GetExternData(ref externData);
-            }
-        }
-
-        /// <summary>
-        /// 版本更新事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ComboBox comboBox = sender as ComboBox;
-            ItemViewModel itemDataContext = Window.GetWindow(comboBox).DataContext as ItemViewModel;
-            CancellationTokenSource cancellationTokenSource = new();
-            function.Trim.Visibility = Visibility.Collapsed;
-            if (CurrentMinVersion > 1194)
-            {
-                function.Trim.Visibility = Visibility.Visible;
-            }
-
-            IsVersionUpdating = true;
-            InitItemList();
-            InitEffectList();
-            InitAttributeIDAndValueTypeAndSlotList();
-            InitEnchantmentList();
-            IsVersionUpdating = false;
-
-            #region 更新子控件的版本以及执行数据更新事件
-            await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
-            {
-                if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 1130)
-                {
-                    StylizedTextBox stylizedTextBox = VersionComponents[i] as StylizedTextBox;
-                    if (stylizedTextBox.richTextBox.Document.Blocks.Count > 0)
-                    {
-                        Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
-                        if (paragraph.Inlines.Count > 0)
-                        {
-                            RichRun richRun = paragraph.Inlines.FirstInline as RichRun;
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                IsNoStyleText = richRun.Text.Trim().Length > 0;
-                            });
-                        }
-                        else
-                            IsNoStyleText = false;
-                    }
-                    else
-                        IsNoStyleText = false;
-                }
-                else
-                    IsNoStyleText = true;
-                //更新版本控件的版本
-                await VersionComponents[i].Upgrade(CurrentMinVersion);
-            });
-            await Parallel.ForEachAsync(VersionNBTList, async (item, cancellationToken) =>
-            {
-                await Task.Delay(0, cancellationToken);
-                item.Value.Invoke(item.Key, null);
-            });
-            #endregion
-        }
-
-        /// <summary>
-        /// 物品ID更新事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ItemID_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if(!IsVersionUpdating)
-            {
-                UpdateItemDamageAndID();
-            }
-        }
-
-        /// <summary>
-        /// 低版本时更新数据值和ID
-        /// </summary>
-        private void UpdateItemDamageAndID()
-        {
-            string currentHighVersionID = SelectedItem.ComboBoxItemId;
-            List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == currentHighVersionID)];
-            LowVersionId = "";
-            if (matchVersionIDList.Count > 0)
-            {
-                data.ItemDamage.Value = matchVersionIDList[0].Damage;
-                LowVersionId = matchVersionIDList[0].LowVersionID;
-            }
-        }
-
-        /// <summary>
-        /// 最终结算
-        /// </summary>
-        /// <param name="MultipleMode"></param>
-        private async Task FinalSettlement(object MultipleOrExtern)
-        {
-            StringBuilder nbt = new();
-            if (SpecialTagsResult.Count > 0)
-            {
-                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.ComboBoxItemId];
-                nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
-            }
-            string commonResult = await common.Result();
-            string functionResult = await (function as IVersionUpgrader).Result();
-            string dataResult = await data.Result();
-            nbt.Append(commonResult + functionResult + dataResult);
-            if (nbt.ToString().EndsWith(','))
-                nbt.Remove(nbt.ToString().Length - 1, 1);
-
-            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItem.ComboBoxItemId;
-
-            if (!Summon)
-            {
-                nbt.Insert(0, "id:\"minecraft:" + CurrentItemID + "\",tag:{");
-                nbt.Append("},Count:" + data.ItemCount.Value + "b");
-            }
-
-            if (nbt.ToString().Length > 0)
-            {
-                nbt.Insert(0, '{');
-                nbt.Append('}');
-            }
-
-            if (!Summon)
-            {
-                if (CurrentMinVersion < 1130)
-                    Result = "give @p " + CurrentItemID + " " + data.ItemCount.Value + " " + data.ItemDamage.Value + " " + nbt;
-                else
-                    Result = "give @p " + CurrentItemID + nbt + " " + data.ItemCount.Value;
-            }
-            else
-                Result = "summon item" + " ~ ~ ~ {ItemView:" + nbt + "}";
-
-            if (bool.Parse(MultipleOrExtern.ToString()))
-            {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
-                if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
-                {
-                    displayerViewModel.GeneratorResult(Result, "实体", iconPath);
-                }
-            }
-        }
-
         [RelayCommand]
         /// <summary>
         /// 保存指令
@@ -734,6 +525,74 @@ namespace CBHK.ViewModel.Component.Item
             {
                 Clipboard.SetText(Result);
                 Message.PushMessage("物品生成成功!数据已进入剪切板", MessageBoxImage.Information);
+            }
+        }
+
+        /// <summary>
+        /// 低版本时更新数据值和ID
+        /// </summary>
+        private void UpdateItemDamageAndID()
+        {
+            string currentHighVersionID = SelectedItem.ComboBoxItemId;
+            List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == currentHighVersionID)];
+            LowVersionId = "";
+            if (matchVersionIDList.Count > 0)
+            {
+                data.ItemDamage.Value = matchVersionIDList[0].Damage;
+                LowVersionId = matchVersionIDList[0].LowVersionID;
+            }
+        }
+
+        /// <summary>
+        /// 最终结算
+        /// </summary>
+        /// <param name="MultipleMode"></param>
+        private async Task FinalSettlement(object MultipleOrExtern)
+        {
+            StringBuilder nbt = new();
+            if (SpecialTagsResult.Count > 0)
+            {
+                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.ComboBoxItemId];
+                nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
+            }
+            string commonResult = await common.Result();
+            string functionResult = await (function as IVersionUpgrader).Result();
+            string dataResult = await data.Result();
+            nbt.Append(commonResult + functionResult + dataResult);
+            if (nbt.ToString().EndsWith(','))
+                nbt.Remove(nbt.ToString().Length - 1, 1);
+
+            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItem.ComboBoxItemId;
+
+            if (!Summon)
+            {
+                nbt.Insert(0, "id:\"minecraft:" + CurrentItemID + "\",tag:{");
+                nbt.Append("},Count:" + data.ItemCount.Value + "b");
+            }
+
+            if (nbt.ToString().Length > 0)
+            {
+                nbt.Insert(0, '{');
+                nbt.Append('}');
+            }
+
+            if (!Summon)
+            {
+                if (CurrentMinVersion < 1130)
+                    Result = "give @p " + CurrentItemID + " " + data.ItemCount.Value + " " + data.ItemDamage.Value + " " + nbt;
+                else
+                    Result = "give @p " + CurrentItemID + nbt + " " + data.ItemCount.Value;
+            }
+            else
+                Result = "summon item" + " ~ ~ ~ {ItemView:" + nbt + "}";
+
+            if (bool.Parse(MultipleOrExtern.ToString()))
+            {
+                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
+                {
+                    displayerViewModel.GeneratorResult(Result, "实体", iconPath);
+                }
             }
         }
 
@@ -947,7 +806,7 @@ namespace CBHK.ViewModel.Component.Item
                                                 {
                                                     foreach (JObject item in data.Cast<JObject>())
                                                     {
-                                                        EnchantmentItem enchantment = new(_context,this);
+                                                        EnchantmentItem enchantment = new(_context, this);
                                                         JToken idObj = item["id"];
                                                         JToken lvlObj = item["lvl"];
                                                         if (idObj != null)
@@ -1419,7 +1278,7 @@ namespace CBHK.ViewModel.Component.Item
                                                     List<JProperty> properties = data.Properties().ToList();
                                                     for (int i = 0; i < properties.Count; i++)
                                                     {
-                                                        string currentId = _context.BlockSet.First(item=> item.ID == properties[i].Name).ID;
+                                                        string currentId = _context.BlockSet.First(item => item.ID == properties[i].Name).ID;
                                                         DebugProperties debugProperties = new(_context);
                                                         debugProperties.BlockId.SelectedValuePath = "ComboBoxItemId";
                                                         debugProperties.BlockId.SelectedValue = currentId;
@@ -1856,13 +1715,13 @@ namespace CBHK.ViewModel.Component.Item
             string tag = JArray.Parse(nbtStructure["tag"].ToString())[0].ToString();
             JToken resultObj = nbtStructure["resultType"];
             string result = resultObj != null ? resultObj.ToString() : "";
-            string key = nbtStructure["key"].ToString();
-            JToken children = nbtStructure["children"];
-            JToken descriptionObj = nbtStructure["description"];
+            string key = nbtStructure["Key"].ToString();
+            JToken children = nbtStructure["Children"];
+            JToken descriptionObj = nbtStructure["Description"];
             string description = descriptionObj != null ? descriptionObj.ToString() : "";
-            JToken toolTipObj = nbtStructure["toolTip"];
+            JToken toolTipObj = nbtStructure["ToolTip"];
             string toolTip = toolTipObj != null ? toolTipObj.ToString() : "";
-            JToken dependencyObj = nbtStructure["dependency"];
+            JToken dependencyObj = nbtStructure["Dependency"];
             string dependency = dependencyObj != null ? dependencyObj.ToString() : "";
             ComponentData componentData = new()
             {
@@ -1906,7 +1765,7 @@ namespace CBHK.ViewModel.Component.Item
                     #region 处理特指NBT
                     if (!specialDataDictionary.TryGetValue(SelectedItem.ComboBoxItemId, out Grid value))
                     {
-                        JArray children = JArray.Parse(targetObj["children"].ToString());
+                        JArray children = JArray.Parse(targetObj["Children"].ToString());
                         List<FrameworkElement> components = [];
                         Grid newGrid = null;
                         Application.Current.Dispatcher.Invoke(() =>
@@ -1971,6 +1830,154 @@ namespace CBHK.ViewModel.Component.Item
             else
                 SpecialViewer.Content = null;
         }
+
+        #endregion
+
+        #region Event
+
+        /// <summary>
+        /// 载入物品页
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ItemPages_Loaded(object sender, RoutedEventArgs e)
+        {
+            currentItemPages ??= (sender as ItemPageView).Parent as RichTabItems;
+            itemDataContext ??= Window.GetWindow(sender as ItemPageView).DataContext as ItemViewModel;
+            if (VersionSource.Count == 0)
+            {
+                VersionSource = itemDataContext.VersionList;
+                SelectedVersion = VersionSource[0];
+            }
+        }
+
+        /// <summary>
+        /// 载入标签页
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SpecialTagsPanelLoaded(object sender, RoutedEventArgs e)
+        {
+            TabControl tabControl = sender as TabControl;
+            ItemView window = Window.GetWindow(tabControl) as ItemView;
+            ItemViewModel datacontext = window.DataContext as ItemViewModel;
+            foreach (TabItem item in tabControl.Items)
+            {
+                if (item.Uid == "Common")
+                {
+                    common = new(_context);
+                    VersionComponents.Add(common);
+                    (item.Content as ScrollViewer).Content = common;
+                }
+                if (item.Uid == "Data")
+                {
+                    data = new(_dataService,_context);
+                    (item.Content as ScrollViewer).Content = data;
+                }
+                if (item.Uid == "Function")
+                {
+                    function = new(_context,this);
+                    VersionComponents.Add(function);
+                    (item.Content as ScrollViewer).Content = function;
+                }
+                item.DataContext = this;
+            }
+            SpecialViewer = (tabControl.Items[0] as TabItem).Content as ScrollViewer;
+        }
+
+        /// <summary>
+        /// 切换后载入共通标签数据
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            TabControl tabControl = sender as TabControl;
+            JObject externData = ExternallyReadEntityData;
+            if (ImportMode && ExternallyReadEntityData != null)
+            {
+                if (tabControl.SelectedIndex == 1)
+                    common.GetExternData(ref externData);
+                if (tabControl.SelectedIndex == 2)
+                    function.GetExternData(ref externData);
+                if (tabControl.SelectedIndex == 3)
+                    data.GetExternData(ref externData);
+            }
+        }
+
+        /// <summary>
+        /// 版本更新事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox comboBox = sender as ComboBox;
+            ItemViewModel itemDataContext = Window.GetWindow(comboBox).DataContext as ItemViewModel;
+            CancellationTokenSource cancellationTokenSource = new();
+            function.Trim.Visibility = Visibility.Collapsed;
+            if (CurrentMinVersion > 1194)
+            {
+                function.Trim.Visibility = Visibility.Visible;
+            }
+
+            IsVersionUpdating = true;
+            InitItemList();
+            InitEffectList();
+            InitAttributeIDAndValueTypeAndSlotList();
+            InitEnchantmentList();
+            IsVersionUpdating = false;
+
+            #region 更新子控件的版本以及执行数据更新事件
+            await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
+            {
+                if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 1130)
+                {
+                    StylizedTextBox stylizedTextBox = VersionComponents[i] as StylizedTextBox;
+                    if (stylizedTextBox.richTextBox.Document.Blocks.Count > 0)
+                    {
+                        Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
+                        if (paragraph.Inlines.Count > 0)
+                        {
+                            RichRun richRun = paragraph.Inlines.FirstInline as RichRun;
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                IsNoStyleText = richRun.Text.Trim().Length > 0;
+                            });
+                        }
+                        else
+                            IsNoStyleText = false;
+                    }
+                    else
+                        IsNoStyleText = false;
+                }
+                else
+                    IsNoStyleText = true;
+                //更新版本控件的版本
+                await VersionComponents[i].Upgrade(CurrentMinVersion);
+            });
+            await Parallel.ForEachAsync(VersionNBTList, async (item, cancellationToken) =>
+            {
+                await Task.Delay(0, cancellationToken);
+                item.Value.Invoke(item.Key, null);
+            });
+            #endregion
+        }
+
+        /// <summary>
+        /// 物品ID更新事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ItemID_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(!IsVersionUpdating)
+            {
+                UpdateItemDamageAndID();
+            }
+        }
+
+        #endregion
     }
 
     /// <summary>

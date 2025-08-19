@@ -15,7 +15,7 @@
     mc:Ignorable="d">
 
     <UserControl.InputBindings>
-        <KeyBinding Key="F5" Command="{Binding Run}" />
+        <KeyBinding Key="F5" Command="{Binding RunCommand}" />
     </UserControl.InputBindings>
 
     <UserControl.Resources>
@@ -68,7 +68,7 @@
                 </behaviors:EventTrigger>
             </behaviors:Interaction.Triggers>
         </Image>
-        <Grid
+        <!--<Grid
             Width="220"
             Height="270"
             Margin="2,45,0,0"
@@ -133,7 +133,8 @@
                 FontSize="20"
                 Foreground="White"
                 Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
-            <!--<CustomControl:IconTextButtons
+        -->
+        <!--<CustomControl:IconTextButtons
                 Grid.Row="0"
                 Grid.Column="2"
                 Width="25"
@@ -155,6 +156,7 @@
                         Foreground="White" />
                 </CustomControl:IconTextButtons.ToolTip>
             </CustomControl:IconTextButtons>-->
+        <!--
             <ScrollViewer
                 Grid.Row="2"
                 Grid.ColumnSpan="3"
@@ -213,7 +215,7 @@
                     </ListView.ItemTemplate>
                 </ListView>
             </ScrollViewer>
-        </Grid>
+        </Grid>-->
         <CustomControl:RadiusToggleButtons
             Margin="5,20,0,0"
             HorizontalAlignment="Left"
@@ -430,7 +432,13 @@
                 BorderBrush="Black"
                 FontSize="20"
                 Foreground="White"
-                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
+                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="TextChanged">
+                        <behaviors:CallMethodAction MethodName="SearchTextBox_TextChanged" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </TextBox>
             <CustomControl:IconTextButtons
                 Grid.Row="0"
                 Grid.Column="2"
