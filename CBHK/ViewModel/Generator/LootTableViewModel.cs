@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using CBHK.Domain;
 using CBHK.Common.Utility;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -28,27 +29,18 @@ namespace CBHK.ViewModel.Generator
         public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\LootTable\Data\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
+        [ObservableProperty]
         private TextComboBoxItem _currentVersion = new();
-        public override TextComboBoxItem CurrentVersion
-        {
-            get => _currentVersion;
-            set => SetProperty(ref _currentVersion, value);
-        }
 
         public override ObservableCollection<TextComboBoxItem> VersionList { get; set; } =
-            [
-                new TextComboBoxItem()
-                {
-                    Text = "1.20.3-1.20.4"
-                }
-            ];
+        [
+            new TextComboBoxItem()
+            {
+                Text = "1.20.3-1.20.4"
+            }
+        ];
 
-        private ObservableCollection<JsonTreeViewItem> _treeViewItemList;
-        public override ObservableCollection<JsonTreeViewItem> TreeViewItemList
-        {
-            get => _treeViewItemList;
-            set => SetProperty(ref _treeViewItemList, value);
-        }
+        public override ObservableCollection<JsonTreeViewItem> TreeViewItemList { get; set; } = [];
 
         public override Dictionary<string, JsonTreeViewItem> KeyValueContextDictionary { get; set; } = [];
         public override Dictionary<string, List<string>> DependencyItemList { get; set; } = [];

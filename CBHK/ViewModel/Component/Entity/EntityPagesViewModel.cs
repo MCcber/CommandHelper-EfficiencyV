@@ -569,7 +569,7 @@ namespace CBHK.ViewModel.Component.Entity
                         if (ImportMode)
                         {
                             string key = Request.Key;
-                            if (!!Give)
+                            if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
                             if (currentObj != null)
@@ -648,7 +648,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             JToken data = ExternallyReadEntityData.SelectToken(key);
                                             if (data != null)
@@ -708,7 +708,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray Effects)
                                             {
@@ -808,7 +808,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray AttributeArray)
                                             {
@@ -898,7 +898,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             JToken data = ExternallyReadEntityData.SelectToken(key);
                                             if (data != null)
@@ -964,7 +964,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray data)
                                             {
@@ -1019,7 +1019,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray data)
                                             {
@@ -1074,7 +1074,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray data)
                                             {
@@ -1127,7 +1127,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             if (ExternallyReadEntityData.SelectToken(key) is JArray data)
                                             {
@@ -1163,7 +1163,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag.";
                                             else
                                                 key = "";
@@ -1210,7 +1210,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             else
                                                 key = "";
@@ -1387,7 +1387,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             JToken data = ExternallyReadEntityData.SelectToken(key);
                                             if (data != null)
@@ -1447,7 +1447,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         if (ImportMode)
                                         {
                                             string key = Request.Key;
-                                            if (!!Give)
+                                            if (!Give)
                                                 key = "EntityTag." + key;
                                             JToken uuid = ExternallyReadEntityData.SelectToken(key + ".UUID");
                                             JToken x = ExternallyReadEntityData.SelectToken(key + ".X");
@@ -1501,7 +1501,7 @@ namespace CBHK.ViewModel.Component.Entity
                         if (ImportMode)
                         {
                             string key = Request.Key;
-                            if (!!Give)
+                            if (!Give)
                                 key = "EntityTag." + key;
                             JToken data = ExternallyReadEntityData.SelectToken(key);
                             if (data != null)
@@ -1586,7 +1586,7 @@ namespace CBHK.ViewModel.Component.Entity
                         if (ImportMode)
                         {
                             string key = Request.Key;
-                            if (!!Give)
+                            if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentToken = ExternallyReadEntityData.SelectToken(key);
                             if (currentToken != null)
@@ -1685,7 +1685,7 @@ namespace CBHK.ViewModel.Component.Entity
                             if (ImportMode)
                             {
                                 string key = Request.Key;
-                                if (!!Give)
+                                if (!Give)
                                     key = "EntityTag." + key;
                                 JToken currentObj = ExternallyReadEntityData.SelectToken(key);
                                 if (currentObj != null)
@@ -1719,7 +1719,7 @@ namespace CBHK.ViewModel.Component.Entity
                             if (ImportMode)
                             {
                                 string key = Request.Key;
-                                if (!!Give)
+                                if (!Give)
                                     key = "EntityTag." + key;
                                 JToken currentObj = ExternallyReadEntityData.SelectToken(key);
                                 if (currentObj != null)
@@ -1761,7 +1761,7 @@ namespace CBHK.ViewModel.Component.Entity
                         if (ImportMode)
                         {
                             string key = Request.Key;
-                            if (!!Give)
+                            if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
                             if (currentObj != null)
@@ -1816,7 +1816,7 @@ namespace CBHK.ViewModel.Component.Entity
                         if (ImportMode)
                         {
                             string key = Request.Key;
-                            if (!!Give)
+                            if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
                             if (currentObj != null)
@@ -1867,7 +1867,7 @@ namespace CBHK.ViewModel.Component.Entity
                         if (ImportMode)
                         {
                             string key = Request.Key;
-                            if (!!Give)
+                            if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
                             if (currentObj is JArray tags)
@@ -1959,7 +1959,7 @@ namespace CBHK.ViewModel.Component.Entity
                         if (ImportMode)
                         {
                             string key = Request.Key;
-                            if (!!Give)
+                            if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
                             if (currentObj != null)
@@ -1998,7 +1998,7 @@ namespace CBHK.ViewModel.Component.Entity
                         if (ImportMode)
                         {
                             string key = Request.Key;
-                            if (!!Give)
+                            if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
                             if (currentObj != null)

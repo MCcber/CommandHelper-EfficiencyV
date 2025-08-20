@@ -99,6 +99,7 @@ namespace CBHK.CustomControl
         public static readonly DependencyProperty RightLegItemProperty =
             DependencyProperty.Register("RightLegItem", typeof(string), typeof(AnimationTimePointItem), new PropertyMetadata(default(string)));
         #endregion
+
         #region Method
         public AnimationTimePointItem()
         {
