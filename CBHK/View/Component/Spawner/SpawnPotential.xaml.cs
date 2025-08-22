@@ -44,7 +44,7 @@ namespace CBHK.View.Component.Spawner
                 #endregion
 
                 string custom_spawn_rules = (BlockLight.Length + SkyLight.Length) > 0 ? "custom_spawn_rules:{" + (BlockLight + SkyLight).Trim(',')+ "}," : "";
-                string entityData = entity.Tag != null ?"entity:"+entity.Tag.ToString():"";
+                string entityData = entity.Tag is not null ?"entity:"+entity.Tag.ToString():"";
                 string data = "data:{"+ (custom_spawn_rules + entityData).Trim(',') + "},";
                 result = "{weight:" + (int.Parse(weight.Value.ToString()) + "," + data).TrimEnd(',') + "}";
                 return result;

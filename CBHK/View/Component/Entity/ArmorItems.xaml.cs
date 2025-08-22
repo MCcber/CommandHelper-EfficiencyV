@@ -24,7 +24,7 @@ namespace CBHK.View.Component.Entity
                 string result = "";
                 if (EnableButton.IsChecked.Value)
                 {
-                    string data = (boots.Tag != null? boots.Tag.ToString() : "") + "," + (legs.Tag != null? legs.Tag.ToString() : "") + "," + (chest.Tag != null? chest.Tag.ToString() : "") + "," + (helmet.Tag != null? helmet.Tag.ToString() : "");
+                    string data = (boots.Tag is not null? boots.Tag.ToString() : "") + "," + (legs.Tag is not null? legs.Tag.ToString() : "") + "," + (chest.Tag is not null? chest.Tag.ToString() : "") + "," + (helmet.Tag is not null? helmet.Tag.ToString() : "");
                     if(data.Trim(',').Length > 0)
                     result = "ArmorItems:[" + data.Trim(',') + "]";
                 }

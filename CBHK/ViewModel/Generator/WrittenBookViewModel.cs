@@ -527,7 +527,7 @@ namespace CBHK.ViewModel.Generator
             TextRange textRange = new TextRange(WrittenBookEditor.Selection.Start, WrittenBookEditor.Selection.End);
             TextDecorationCollection current_decorations = textRange.GetPropertyValue(TextBlock.TextDecorationsProperty) as TextDecorationCollection;
 
-            if(current_decorations != null)
+            if(current_decorations is not null)
             {
                 int underline_index = current_decorations.IndexOf(TextDecorations.Baseline.First());
                 if (!current_decorations.Contains(TextDecorations.Strikethrough.First()))

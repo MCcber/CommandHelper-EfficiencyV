@@ -1,7 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
 using CBHK.Model.Common;
-using CBHK.Utility.Common;
 using ICSharpCode.AvalonEdit.Document;
 using System;
 using System.Collections.Generic;

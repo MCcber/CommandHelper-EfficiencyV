@@ -138,7 +138,7 @@ namespace CBHK.ViewModel.Generator
                         if (nbt.Length > 0)
                         entityIDPath = "CustomName";
                     JToken name = resultJSON.SelectToken(entityIDPath);
-                    FileNameList.Add(pageContext.SelectedEntityId.ComboBoxItemId + (name != null ? "-" + name.ToString() : ""));
+                    FileNameList.Add(pageContext.SelectedEntityId.ComboBoxItemId + (name is not null ? "-" + name.ToString() : ""));
                     Result.Add(result);
                 });
             }
@@ -292,7 +292,7 @@ namespace CBHK.ViewModel.Generator
             if (EntityPageList.Count == 1)
             {
                 TabControl tabControl = richTabItems.FindParent<TabControl>();
-                if(tabControl != null)
+                if(tabControl is not null)
                 tabControl.SelectedIndex = 0;
             }
         }

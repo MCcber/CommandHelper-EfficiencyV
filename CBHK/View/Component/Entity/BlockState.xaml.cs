@@ -119,7 +119,7 @@ namespace CBHK.View.Component.Entity
                 #region 解析方块状态JSON文件,找到对应的属性集合
                 string blockId = (BlockIdBox.SelectedItem as IconComboBoxItem).ComboBoxItemId;
                 string properties = _context.BlockStateSet.First(item=>item.ID == blockId).Properties;
-                if (properties != null && properties.Length > 0)
+                if (properties is not null && properties.Length > 0)
                 {
                     JObject currentProperties = JObject.Parse(properties);
                     SelectedAttributeKeys.Clear();

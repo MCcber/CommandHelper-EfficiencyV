@@ -30,7 +30,7 @@ namespace CBHK.CustomControl.ColorPickerComponents.Media
         public RgbaColor(int r, int g, int b, int a = 255) { R = r; G = g; B = b; A = a; }
         public RgbaColor(Brush brush)
         {
-            if (brush != null)
+            if (brush is not null)
             {
                 R = ((SolidColorBrush)brush).Color.R;
                 G = ((SolidColorBrush)brush).Color.G;

@@ -26,7 +26,7 @@ namespace CBHK.View.Component.Entity
                 string result = "";
                 if (EnableButton.IsChecked.Value)
                 {
-                    string data = (mainhand.Tag != null? mainhand.Tag.ToString() : "") + "," + (offhand.Tag != null? offhand.Tag.ToString() : "");
+                    string data = (mainhand.Tag is not null? mainhand.Tag.ToString() : "") + "," + (offhand.Tag is not null? offhand.Tag.ToString() : "");
                     if(data.Trim(',').Length > 0)
                     result = "HandItems:["+data.Trim(',')+"]";
                 }

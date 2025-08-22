@@ -43,13 +43,13 @@ namespace CBHK.View.Component.Item.SpecialNBT
                 {
                     string itemData = ExternalDataImportManager.GetItemDataHandler(openFileDialog.FileName);
                     JToken itemTag = JObject.Parse(itemData)["ItemView"];
-                    if (itemTag != null)
+                    if (itemTag is not null)
                         itemData = itemTag.ToString();
                     else
                         itemTag = JObject.Parse(itemData);
                     JToken itemID = itemTag["id"];
                     DisplayItem.Tag = itemData;
-                    if (itemID != null)
+                    if (itemID is not null)
                         (DisplayItem.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID + ".png", UriKind.RelativeOrAbsolute));
                 }
             }
@@ -70,13 +70,13 @@ namespace CBHK.View.Component.Item.SpecialNBT
             itemData = Regex.Replace(itemData, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
             if (itemData.Trim().Length == 0) return;
             JToken itemTag = JObject.Parse(itemData)["ItemView"];
-            if (itemTag != null)
+            if (itemTag is not null)
                 itemData = itemTag.ToString();
             else
                 itemTag = JObject.Parse(itemData);
             JToken itemID = itemTag["id"];
             DisplayItem.Tag = itemData;
-            if (itemID != null)
+            if (itemID is not null)
                 (DisplayItem.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID + ".png", UriKind.RelativeOrAbsolute));
         }
 

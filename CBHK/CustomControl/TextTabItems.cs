@@ -129,7 +129,7 @@ namespace CBHK.CustomControl
 
         private void TabItem_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (select_item != null && current_item != null)
+            if (select_item is not null && current_item is not null)
             {
                 SolidColorBrush selectedItemBackground = select_item.Background as SolidColorBrush;
                 SolidColorBrush currentItemBackground = current_item.Background as SolidColorBrush;
@@ -145,7 +145,7 @@ namespace CBHK.CustomControl
                 if (select_index != current_index && select_index != -1 && current_index != -1 && current_index >=0)
                 {
                     TabControl current_parent = (sender as TextTabItems).Parent as TabControl;
-                    if (select_item != null && current_item != null && current_index != -1 && select_index != -1)
+                    if (select_item is not null && current_item is not null && current_index != -1 && select_index != -1)
                     {
                         TextTabItems new_select_item = new()
                         {

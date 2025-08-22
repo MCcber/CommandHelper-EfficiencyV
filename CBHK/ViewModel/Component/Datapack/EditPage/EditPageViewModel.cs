@@ -700,7 +700,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
                 if (IsCuted)
                 {
                     //移动被剪切的节点到当前节点的子级
-                    if(BeCopyOrCutNode != null && BeCopyOrCutNode.Parent != null)
+                    if(BeCopyOrCutNode is not null && BeCopyOrCutNode.Parent is not null)
                     {
                         #region 操作被剪切的节点
                         if (BeCopyOrCutNode.Parent is TreeViewItem beCutParent)
@@ -782,7 +782,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
                 }
             }
             #endregion
-            if (SolutionViewSelectedItem.Parent != null)
+            if (SolutionViewSelectedItem.Parent is not null)
             {
                 TreeViewItem parent = SolutionViewSelectedItem.Parent as TreeViewItem;
                 parent.Items.Remove(SolutionViewSelectedItem);

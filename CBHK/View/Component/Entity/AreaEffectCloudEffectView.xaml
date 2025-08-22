@@ -1,25 +1,32 @@
 ﻿<UserControl
-    x:Class="CBHK.View.Component.Entity.AreaEffectCloudEffects"
+    x:Class="CBHK.View.Component.Entity.AreaEffectCloudEffectView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Component.Entity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    Loaded="UserControl_Loaded"
     mc:Ignorable="d">
+
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="Loaded">
+            <behaviors:CallMethodAction MethodName="Component_Loaded" TargetObject="{Binding}" />
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
+
     <CustomControl:Accordion
-        x:Name="EffectAccordion"
         Title="状态效果"
         Background="#FFE5B663"
+        Fresh="{Binding DeleteCommand}"
         FreshForeground="Black"
         FreshName="删除"
         ModifyVisibility="Collapsed"
         Style="{DynamicResource AccordionStyle}"
         TitleForeground="Black">
-        <StackPanel x:Name="EffectListPanel" Background="#2F2F2F">
+        <StackPanel Background="#2F2F2F">
             <CustomControl:TextCheckBoxs
                 Uid="Ambient"
                 Grid.Row="0"
@@ -109,7 +116,9 @@
                     x:Name="ID"
                     Uid="Id"
                     Height="25"
+                    ItemsSource="{Binding EffectIDList}"
                     Loaded="EffectID_Loaded"
+                    SelectedItem="{Binding SelectedID}"
                     Style="{DynamicResource IconComboBoxStyle}" />
             </DockPanel>
             <CustomControl:Accordion
@@ -129,7 +138,7 @@
                     MaxHeight="200"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
-                    <Grid x:Name="FactorCalculationDataGrid" Background="#2F2F2F">
+                    <Grid Background="#2F2F2F">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="*" />

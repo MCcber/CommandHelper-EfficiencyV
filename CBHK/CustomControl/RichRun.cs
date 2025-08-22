@@ -166,7 +166,7 @@ namespace CBHK.CustomControl
             get
             {
                 Paragraph CurrentParagraph = Parent as RichParagraph;
-                if (CurrentParagraph != null)
+                if (CurrentParagraph is not null)
                 {
                     string result = "";
                     bool IsLastRun = Equals(CurrentParagraph.Inlines.LastInline, this);

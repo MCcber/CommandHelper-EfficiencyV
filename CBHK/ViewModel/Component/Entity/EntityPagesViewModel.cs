@@ -1,6 +1,8 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
 using CBHK.Interface;
+using CBHK.Model.Common;
+using CBHK.Model.Generator.Entity;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
@@ -10,6 +12,7 @@ using CBHK.ViewModel.Generator;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
+using Prism.Events;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
@@ -18,6 +21,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,13 +29,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Entity
 {
-    public partial class EntityPageViewModel : ObservableObject
+    public partial class EntityPageViewModel : ObservableObject,IGeneratorBuilder
     {
         #region Field
 
@@ -42,6 +45,7 @@ namespace CBHK.ViewModel.Component.Entity
         private string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonPressed.png";
         private ImageBrush buttonNormalBrush;
         private ImageBrush buttonPressedBrush;
+        private UpdateEntityComponentVersionEvent _versionUpdateEvent;
         private string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\";
         /// <summary>
         /// 需要适应版本变化的特指数据所属控件的事件
@@ -70,6 +74,7 @@ namespace CBHK.ViewModel.Component.Entity
         /// </summary>
         SolidColorBrush orangeBrush = new((Color)ColorConverter.ConvertFromString("#FFE5B663"));
         private IContainerProvider _container;
+        private IEventAggregator _eventAggregator;
         private CBHKDataContext _context = null;
         /// <summary>
         /// 当前实体页引用
@@ -104,15 +109,14 @@ namespace CBHK.ViewModel.Component.Entity
         /// 特殊标签面板
         /// </summary>
         ScrollViewer SpecialViewer = null;
-        /// <summary>
-        /// 存储最终的结果
-        /// </summary>
-        public string Result = "";
 
         #endregion
 
         #region Property
-
+        /// <summary>
+        /// 存储最终的结果
+        /// </summary>
+        public StringBuilder Result { get; private set; }
         /// <summary>
         /// 指示是否需要展示生成结果
         /// </summary>
@@ -298,16 +302,19 @@ namespace CBHK.ViewModel.Component.Entity
         #region 是否同步到文件
         public bool SyncToFile { get; set; }
         public string ExternFilePath { get; set; }
+        public IEventAggregator EventAggregator { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        string IGeneratorBuilder.SelectedVersion { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public JToken ExternallyData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         #endregion
 
         #endregion
 
         #region Method
-        public EntityPageViewModel(IContainerProvider container,CBHKDataContext context)
+        public EntityPageViewModel(IContainerProvider container,CBHKDataContext context,IEventAggregator eventAggregator)
         {
-            #region 初始化字段
             _context = context;
             _container = container;
+            _eventAggregator = eventAggregator;
             buttonNormalBrush = new ImageBrush(new BitmapImage(new Uri(buttonNormalImage, UriKind.RelativeOrAbsolute)));
             Grid contentGrid = new();
             Binding widthBinding = new()
@@ -335,7 +342,8 @@ namespace CBHK.ViewModel.Component.Entity
             contentGrid.Children.Add(emptyTip);
             emptyDataTip.Visual = contentGrid;
             buttonPressedBrush = new ImageBrush(new BitmapImage(new Uri(buttonPressedImage, UriKind.RelativeOrAbsolute)));
-            #endregion
+
+            _versionUpdateEvent = _eventAggregator.GetEvent<UpdateEntityComponentVersionEvent>();
         }
 
         /// <summary>
@@ -345,16 +353,16 @@ namespace CBHK.ViewModel.Component.Entity
         /// <param name="nbtStructure"></param>
         private List<FrameworkElement> JsonToComponentConverter(JObject nbtStructure, string NBTType = "")
         {
-            string tag = JArray.Parse(nbtStructure["tag"].ToString())[0].ToString();
+            string tag = JArray.Parse(nbtStructure["Tag"].ToString())[0].ToString();
             string key = nbtStructure["Key"].ToString();
             JToken children = nbtStructure["Children"];
             JToken descriptionObj = nbtStructure["Description"];
-            string description = descriptionObj != null ? descriptionObj.ToString() : "";
+            string description = descriptionObj is not null ? descriptionObj.ToString() : "";
             JToken toolTipObj = nbtStructure["ToolTip"];
-            string toolTip = toolTipObj != null ? toolTipObj.ToString() : "";
+            string toolTip = toolTipObj is not null ? toolTipObj.ToString() : "";
             JToken dependencyObj = nbtStructure["Dependency"];
-            string dependency = dependencyObj != null ? dependencyObj.ToString() : "";
-            ComponentData componentData = new()
+            string dependency = dependencyObj is not null ? dependencyObj.ToString() : "";
+            EntityComponentData componentData = new()
             {
                 DataType = tag,
                 Key = key,
@@ -363,7 +371,7 @@ namespace CBHK.ViewModel.Component.Entity
                 Dependency = dependency,
                 NBTType = NBTType
             };
-            if (children != null)
+            if (children is not null)
                 componentData.Children = children.ToString();
             List<FrameworkElement> componentGroup = ComponentsGenerator(componentData);
             return componentGroup;
@@ -377,13 +385,13 @@ namespace CBHK.ViewModel.Component.Entity
             #region 搜索当前实体ID对应的JSON对象
             string data = File.ReadAllText(SpecialNBTStructureFilePath);
             JArray array = JArray.Parse(data);
-            List<JToken> result = array.Where(item =>
+            List<JToken> result = [.. array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityId.ComboBoxItemId)
+                if (currentObj["Type"].ToString() == SelectedEntityId.ComboBoxItemId)
                     return true;
                 return false;
-            }).ToList();
+            })];
             if (result.Count == 0)
             {
                 return;
@@ -392,7 +400,7 @@ namespace CBHK.ViewModel.Component.Entity
             #endregion
 
             CurrentCommonTags.Clear();
-            CurrentCommonTags = JArray.Parse(targetObj["common"].ToString()).ToList().ConvertAll(item => item.ToString());
+            CurrentCommonTags = JArray.Parse(targetObj["Common"].ToString()).ToList().ConvertAll(item => item.ToString());
         }
 
         /// <summary>
@@ -402,9 +410,10 @@ namespace CBHK.ViewModel.Component.Entity
         private void FinalSettlement(object MultipleOrExtern)
         {
             CollectionCommonTagsMark();
-            Result = string.Join(",", SpecialTagsResult[SelectedEntityId.ComboBoxItemId].Select(item =>
+            Result.Clear();
+            Result.Append(string.Join(",", SpecialTagsResult[SelectedEntityId.ComboBoxItemId].Select(item =>
             {
-                if (item != null && item.Result.Length > 0)
+                if (item is not null && item.Result.Length > 0)
                     return item.Result;
                 return "";
             })) + "," + string.Join(",", CommonResult.Select(item =>
@@ -413,21 +422,32 @@ namespace CBHK.ViewModel.Component.Entity
                     return item.Result;
                 else
                     return "";
-            }));
-            Result = Result.Trim(',');
+            })));
+            if (Result.Length > 0 && (Result[^1] == ' ' || Result[^1] == ','))
+            {
+                Result.Length--;
+            }
             if (!Give)
             {
                 if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}";
+                {
+                    Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Length > 0 ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}");
+                }
                 else
-                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~";
+                {
+                    Result = new(Result.Length > 0 ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~");
+                }
             }
             else
             {
                 if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
+                {
+                    Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}");
+                }
                 else
-                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
+                {
+                    Result = new("give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1");
+                }
             }
 
             if (bool.Parse(MultipleOrExtern.ToString()))
@@ -435,7 +455,7 @@ namespace CBHK.ViewModel.Component.Entity
                 DisplayerView displayer = _container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
-                    displayerViewModel.GeneratorResult(Result, "实体", iconPath);
+                    displayerViewModel.GeneratorResult(Result.ToString(), "实体", iconPath);
                 }
             }
         }
@@ -458,15 +478,15 @@ namespace CBHK.ViewModel.Component.Entity
         public string Run(bool showResult)
         {
             CollectionCommonTagsMark();
-            Result = "";
+            Result.Clear();
             string AttributesData = AttributeResult.Count > 0 ? "Attributes:[" + string.Join(",", AttributeResult.Select(item => item.Result)).Trim(',') + "]" : "";
             AttributesData = AttributesData == "Attributes:[]" ? "" : AttributesData;
             string PassengersData = PassengerResult.Count > 0 ? "Passengers:[" + string.Join(",", PassengerResult.Select(item => item.Result)).Trim(',') + "]" : "";
             PassengersData = PassengersData == "Passengers:[]" ? "" : PassengersData;
 
-            Result = (SpecialTagsResult.TryGetValue(SelectedEntityId.ComboBoxItemId, out ObservableCollection<NBTDataStructure> value) && value.Count > 0 ? string.Join(",", value.Select(item =>
+            Result = new((SpecialTagsResult.TryGetValue(SelectedEntityId.ComboBoxItemId, out ObservableCollection<NBTDataStructure> value) && value.Count > 0 ? string.Join(",", value.Select(item =>
             {
-                if (item != null && item.Result.Length > 0)
+                if (item is not null && item.Result.Length > 0)
                     return item.Result;
                 return "";
             })) : "") + (CommonResult.Count > 0 ? "," + string.Join(",", CommonResult.Select(item =>
@@ -475,32 +495,46 @@ namespace CBHK.ViewModel.Component.Entity
                     return item.Result;
                 else
                     return "";
-            })) : "") + "," + AttributesData + "," + PassengersData;
-            Result = Regex.Replace(Result.Trim(','), @",{2,}", ",");
+            })) : "") + "," + AttributesData + "," + PassengersData);
+
+            if (Result.Length > 0 && (Result[^1] == ' ' || Result[^1] == ','))
+            {
+                Result.Length--;
+            }
 
             if (UseForReference)
             {
-                Result = "{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}";
+                Result = new("{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}");
                 EntityView entity = Window.GetWindow(currentEntityPage) as EntityView;
-                return Result;
+                return Result.ToString();
             }
 
             if (!Give)
             {
                 if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}";
+                {
+                    Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Length > 0 ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}");
+                }
                 else
-                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~";
+                {
+                    Result = new(Result.Length > 0 ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~");
+                }
             }
             else
             {
                 if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
+                {
+                    Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}");
+                }
                 else
                 if (CurrentMinVersion < 1130)
-                    Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
+                {
+                    Result = new("give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}");
+                }
                 else
-                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
+                {
+                    Result = new("give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1");
+                }
             }
 
             if (showResult)
@@ -508,12 +542,12 @@ namespace CBHK.ViewModel.Component.Entity
                 DisplayerView displayer = _container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
-                    displayerViewModel.GeneratorResult(Result, "实体", iconPath);
+                    displayerViewModel.GeneratorResult(Result.ToString(), "实体", iconPath);
                 }
             }
             else
-                Clipboard.SetText(Result);
-            return Result;
+                Clipboard.SetText(Result.ToString());
+            return Result.ToString();
         }
 
         /// <summary>
@@ -521,7 +555,7 @@ namespace CBHK.ViewModel.Component.Entity
         /// </summary>
         /// <param name="Request"></param>
         /// <returns></returns>
-        private List<FrameworkElement> ComponentsGenerator(ComponentData Request)
+        private List<FrameworkElement> ComponentsGenerator(EntityComponentData Request)
         {
             List<FrameworkElement> result = [];
             TextBlock displayText = new()
@@ -572,16 +606,16 @@ namespace CBHK.ViewModel.Component.Entity
                             if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                            if (currentObj != null)
+                            if (currentObj is not null)
                             {
                                 JToken BlockID = currentObj["Name"];
-                                if (BlockID != null)
+                                if (BlockID is not null)
                                 {
                                     string BlockIDString = BlockID.ToString();
                                     JToken BlockProperties = currentObj["Properties"];
                                     blockState.BlockIdBox.SelectedValuePath = "ComboBoxItemId";
                                     blockState.BlockIdBox.SelectedValue = BlockIDString;
-                                    if (BlockProperties != null)
+                                    if (BlockProperties is not null)
                                     {
                                         List<JProperty> properties = (BlockProperties as JObject).Properties().ToList();
                                         int PropertyCount = properties.Count;
@@ -602,7 +636,7 @@ namespace CBHK.ViewModel.Component.Entity
                     break;
                 case "TAG_List":
                     {
-                        if (Request.Dependency != null && Request.Dependency.Length > 0)
+                        if (Request.Dependency is not null && Request.Dependency.Length > 0)
                         {
                             switch (Request.Dependency)
                             {
@@ -651,7 +685,7 @@ namespace CBHK.ViewModel.Component.Entity
                                             if (!Give)
                                                 key = "EntityTag." + key;
                                             JToken data = ExternallyReadEntityData.SelectToken(key);
-                                            if (data != null)
+                                            if (data is not null)
                                             {
                                                 JArray Items = JArray.Parse(data.ToString());
                                                 string imagePath = "";
@@ -672,7 +706,7 @@ namespace CBHK.ViewModel.Component.Entity
                                         #endregion
                                     }
                                     break;
-                                case "AreaEffectCloudEffects":
+                                case "AreaEffectCloudEffectView":
                                     {
                                         Accordion areaEffectCloudEffectsAccordion = new()
                                         {
@@ -715,7 +749,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 for (int i = 0; i < Effects.Count; i++)
                                                 {
                                                     componentEvents.AddAreaEffectCloudCommand(areaEffectCloudEffectsAccordion);
-                                                    StackPanel contentPanel = (itemPanel.Children[i] as AreaEffectCloudEffects).EffectListPanel;
+                                                    StackPanel contentPanel = (itemPanel.Children[i] as AreaEffectCloudEffectView).EffectListPanel;
                                                     #region 提取数据
                                                     JToken Ambient = Effects[i]["Ambient"];
                                                     JToken Amplifier = Effects[i]["Amplifier"];
@@ -732,37 +766,37 @@ namespace CBHK.ViewModel.Component.Entity
                                                     JToken padding_duration = Effects[i].SelectToken("FactorCalculationData.padding_duration");
                                                     #endregion
                                                     #region 应用数据
-                                                    if (Ambient != null)
+                                                    if (Ambient is not null)
                                                         contentPanel.FindChild<TextCheckBoxs>("Ambient").IsChecked = Ambient.ToString() == "1";
-                                                    if (Amplifier != null)
+                                                    if (Amplifier is not null)
                                                         contentPanel.FindChild<Slider>("Amplifier").Value = byte.Parse(Amplifier.ToString());
-                                                    if (Duration != null)
+                                                    if (Duration is not null)
                                                         contentPanel.FindChild<Slider>("Duration").Value = int.Parse(Duration.ToString());
-                                                    if (Id != null)
+                                                    if (Id is not null)
                                                     {
                                                         string id = Id.ToString().Replace("minecraft:", "");
                                                         ComboBox comboBox = contentPanel.FindChild<ComboBox>("Id");
                                                         comboBox.SelectedValuePath = "id";
                                                         comboBox.SelectedValue = id;
                                                     }
-                                                    if (ShowIcon != null)
+                                                    if (ShowIcon is not null)
                                                         contentPanel.FindChild<TextCheckBoxs>("ShowIcon").IsChecked = ShowIcon.ToString() == "1";
-                                                    if (ShowParticles != null)
+                                                    if (ShowParticles is not null)
                                                         contentPanel.FindChild<TextCheckBoxs>("ShowParticles").IsChecked = ShowParticles.ToString() == "1";
                                                     Grid grid = (contentPanel.FindChild<Accordion>().Content as ScrollViewer).Content as Grid;
-                                                    if (effect_changed_timestamp != null)
+                                                    if (effect_changed_timestamp is not null)
                                                         grid.FindChild<Slider>("effect_changed_timestamp").Value = int.Parse(effect_changed_timestamp.ToString());
-                                                    if (factor_current != null)
+                                                    if (factor_current is not null)
                                                         grid.FindChild<Slider>("factor_current").Value = int.Parse(factor_current.ToString());
-                                                    if (factor_previous_frame != null)
+                                                    if (factor_previous_frame is not null)
                                                         grid.FindChild<Slider>("factor_previous_frame").Value = int.Parse(factor_previous_frame.ToString());
-                                                    if (factor_start != null)
+                                                    if (factor_start is not null)
                                                         grid.FindChild<Slider>("factor_start").Value = int.Parse(factor_start.ToString());
-                                                    if (factor_target != null)
+                                                    if (factor_target is not null)
                                                         grid.FindChild<Slider>("factor_target").Value = int.Parse(factor_target.ToString());
-                                                    if (had_effect_last_tick != null)
+                                                    if (had_effect_last_tick is not null)
                                                         grid.FindChild<TextCheckBoxs>("had_effect_last_tick").IsChecked = had_effect_last_tick.ToString() == "1";
-                                                    if (padding_duration != null)
+                                                    if (padding_duration is not null)
                                                         grid.FindChild<Slider>("padding_duration").Value = int.Parse(padding_duration.ToString());
                                                     #endregion
                                                 }
@@ -831,11 +865,11 @@ namespace CBHK.ViewModel.Component.Entity
                                                             JToken amountObj = item.SelectToken("Amount");
                                                             JToken nameObj = item.SelectToken("Name");
                                                             JToken operationObj = item.SelectToken("Operation");
-                                                            if (amountObj != null)
+                                                            if (amountObj is not null)
                                                                 attributes.AttributeModifiersSource[^1].Amount.Value = double.Parse(amountObj.ToString());
-                                                            if (nameObj != null)
+                                                            if (nameObj is not null)
                                                                 attributes.AttributeModifiersSource[^1].ModifierName.Text = nameObj.ToString();
-                                                            if (operationObj != null)
+                                                            if (operationObj is not null)
                                                                 attributes.AttributeModifiersSource[^1].Operation.SelectedIndex = int.Parse(operationObj.ToString());
                                                             if (item.SelectToken("UUID") is JArray uuidArray)
                                                             {
@@ -901,7 +935,7 @@ namespace CBHK.ViewModel.Component.Entity
                                             if (!Give)
                                                 key = "EntityTag." + key;
                                             JToken data = ExternallyReadEntityData.SelectToken(key);
-                                            if (data != null)
+                                            if (data is not null)
                                             {
                                                 JArray Entities = JArray.Parse(data.ToString());
                                                 string imagePath = "";
@@ -1144,7 +1178,7 @@ namespace CBHK.ViewModel.Component.Entity
                     break;
                 case "TAG_Compound":
                     {
-                        if (Request.Dependency != null && Request.Dependency.Length > 0)
+                        if (Request.Dependency is not null && Request.Dependency.Length > 0)
                         {
                             switch (Request.Dependency)
                             {
@@ -1177,9 +1211,9 @@ namespace CBHK.ViewModel.Component.Entity
                                                 StackPanel contentPanel = stackPanel.Children[^1] as StackPanel;
                                                 JToken anger = ExternallyReadEntityData.SelectToken(key + "anger.suspects[" + i + "].anger");
                                                 JToken uuid = ExternallyReadEntityData.SelectToken(key + "anger.suspects[" + i + "].uuid").ToString();
-                                                if (anger != null)
+                                                if (anger is not null)
                                                     (contentPanel.Children[0] as Slider).Value = int.Parse(anger.ToString());
-                                                if (uuid != null)
+                                                if (uuid is not null)
                                                 {
                                                     JArray uuids = JArray.Parse(uuid.ToString());
                                                     UUIDOrPosGroup uUIDOrPosGroup = contentPanel.Children[0] as UUIDOrPosGroup;
@@ -1214,7 +1248,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 key = "EntityTag." + key;
                                             else
                                                 key = "";
-                                            vibrationMonitors.VibrationMonitorsEnableButton.IsChecked = ExternallyReadEntityData.SelectToken(key + "listener") != null;
+                                            vibrationMonitors.VibrationMonitorsEnableButton.IsChecked = ExternallyReadEntityData.SelectToken(key + "listener") is not null;
                                             #region 游戏事件
                                             JToken gameEvent = ExternallyReadEntityData.SelectToken(key + "listener.event.game_event");
                                             JToken distance = ExternallyReadEntityData.SelectToken(key + "listener.event.distance");
@@ -1229,9 +1263,9 @@ namespace CBHK.ViewModel.Component.Entity
                                             JToken event_delay = ExternallyReadEntityData.SelectToken(key + "listener.event_delay");
                                             JToken source_type = ExternallyReadEntityData.SelectToken(key + "listener.source.type");
                                             //振动监听器正在监听的游戏事件
-                                            if (gameEvent != null)
+                                            if (gameEvent is not null)
                                                 vibrationMonitors.game_event.Text = gameEvent.ToString();
-                                            if (distance != null)
+                                            if (distance is not null)
                                                 vibrationMonitors.distance.Value = float.Parse(distance.ToString());
                                             if (ExternallyReadEntityData.SelectToken(key + "listener.event.pos") is JArray event_pos)
                                             {
@@ -1257,16 +1291,16 @@ namespace CBHK.ViewModel.Component.Entity
                                                 vibrationMonitors.ProjectileUUID.number2.Value = int.Parse(projectile_owner[2].ToString());
                                                 vibrationMonitors.ProjectileUUID.number3.Value = int.Parse(projectile_owner[3].ToString());
                                             }
-                                            if (event_delay != null)
+                                            if (event_delay is not null)
                                                 vibrationMonitors.EventDelay.Value = int.Parse(event_delay.ToString());
-                                            if (range != null)
+                                            if (range is not null)
                                                 vibrationMonitors.Range.Value = int.Parse(range.ToString());
                                             //振动选择器
-                                            if (selector_tick != null)
+                                            if (selector_tick is not null)
                                                 vibrationMonitors.tick.Value = int.Parse(selector_tick.ToString());
-                                            if (gameEventC != null)
+                                            if (gameEventC is not null)
                                                 vibrationMonitors.game_eventC.Text = gameEventC.ToString();
-                                            if (distanceC != null)
+                                            if (distanceC is not null)
                                                 vibrationMonitors.distanceC.Value = float.Parse(distanceC.ToString());
                                             if (ExternallyReadEntityData.SelectToken(key + "listener.selector.event.pos") is JArray event_posC)
                                             {
@@ -1293,7 +1327,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 vibrationMonitors.ProjectileUUIDC.number3.Value = int.Parse(projectile_ownerC[3].ToString());
                                             }
                                             //振动监听器的位置数据
-                                            if (source_type != null)
+                                            if (source_type is not null)
                                             {
                                                 if (source_type.ToString() == "block")
                                                     vibrationMonitors.VibrationMonitorTypeBox.SelectedIndex = 0;
@@ -1313,7 +1347,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                 }
                                                 else
                                                 {
-                                                    if (listenerSourceSourceEntity != null)
+                                                    if (listenerSourceSourceEntity is not null)
                                                     {
                                                         if (listenerSourceSourceEntity is JArray)
                                                         {
@@ -1328,7 +1362,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                             if (listenerSourceSourceEntity is JObject)
                                                         {
                                                             JToken entityID = ExternallyReadEntityData.SelectToken(key + "listener.source.source_entity.id");
-                                                            if (entityID != null)
+                                                            if (entityID is not null)
                                                             {
                                                                 vibrationMonitors.sourceEntityDisplayer.Tag = entityID.ToString();
                                                                 (vibrationMonitors.sourceEntityDisplayer.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\entityImages\\" + entityID.ToString() + ".png"));
@@ -1337,7 +1371,7 @@ namespace CBHK.ViewModel.Component.Entity
                                                                 vibrationMonitors.source_entityValue.Value = int.Parse(listenerSourceSourceEntity.ToString());
                                                         }
                                                     }
-                                                    if (yOffset != null)
+                                                    if (yOffset is not null)
                                                         vibrationMonitors.y_offset.Value = double.Parse(yOffset.ToString());
                                                 }
                                             }
@@ -1390,7 +1424,7 @@ namespace CBHK.ViewModel.Component.Entity
                                             if (!Give)
                                                 key = "EntityTag." + key;
                                             JToken data = ExternallyReadEntityData.SelectToken(key);
-                                            if (data != null)
+                                            if (data is not null)
                                             {
                                                 JArray Items = JArray.Parse(data.ToString());
                                                 string imagePath = "";
@@ -1453,15 +1487,15 @@ namespace CBHK.ViewModel.Component.Entity
                                             JToken x = ExternallyReadEntityData.SelectToken(key + ".X");
                                             JToken y = ExternallyReadEntityData.SelectToken(key + ".Y");
                                             JToken z = ExternallyReadEntityData.SelectToken(key + ".Z");
-                                            leashData.Tied.IsChecked = uuid != null || x != null || y != null || z != null;
-                                            if (uuid != null)
+                                            leashData.Tied.IsChecked = uuid is not null || x is not null || y is not null || z is not null;
+                                            if (uuid is not null)
                                             {
                                                 JArray uuidArray = JArray.Parse(uuid.ToString());
                                                 leashData.TiedByEntity.IsChecked = true;
                                                 leashData.BeingLed_Click(leashData.TiedByEntity, null);
                                             }
                                             else
-                                            if (x != null && y != null && z != null)
+                                            if (x is not null && y is not null && z is not null)
                                             {
                                                 leashData.TiedByFence.IsChecked = true;
                                                 leashData.fence.EnableButton.IsChecked = true;
@@ -1504,13 +1538,13 @@ namespace CBHK.ViewModel.Component.Entity
                             if (!Give)
                                 key = "EntityTag." + key;
                             JToken data = ExternallyReadEntityData.SelectToken(key);
-                            if (data != null)
+                            if (data is not null)
                             {
                                 JArray uuidArray = JArray.Parse(data.ToString().Replace("I;", ""));
                                 for (int i = 0; i < uuidArray.Count; i++)
                                 {
                                     JArray idToken = JArray.Parse(uuidArray[i].ToString());
-                                    if (idToken != null)
+                                    if (idToken is not null)
                                     {
                                         string itemID = idToken[i].ToString();
                                     }
@@ -1544,7 +1578,7 @@ namespace CBHK.ViewModel.Component.Entity
                             string toolTip = child["ToolTip"].ToString();
                             float minValue = float.MinValue;
                             float maxValue = float.MaxValue;
-                            if (range != null)
+                            if (range is not null)
                             {
                                 minValue = float.Parse(range[0].ToString());
                                 maxValue = float.Parse(range[1].ToString());
@@ -1589,7 +1623,7 @@ namespace CBHK.ViewModel.Component.Entity
                             if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentToken = ExternallyReadEntityData.SelectToken(key);
-                            if (currentToken != null)
+                            if (currentToken is not null)
                             {
                                 JArray floatArray = JArray.Parse(currentToken.ToString());
                                 float number0 = float.Parse(floatArray[0].ToString());
@@ -1688,7 +1722,7 @@ namespace CBHK.ViewModel.Component.Entity
                                 if (!Give)
                                     key = "EntityTag." + key;
                                 JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if (currentObj != null)
+                                if (currentObj is not null)
                                 {
                                     JArray dataArray = JArray.Parse(currentObj.ToString());
                                     uUIDOrPosGroup.number0.Value = int.Parse(dataArray[0].ToString());
@@ -1722,7 +1756,7 @@ namespace CBHK.ViewModel.Component.Entity
                                 if (!Give)
                                     key = "EntityTag." + key;
                                 JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if (currentObj != null)
+                                if (currentObj is not null)
                                 {
                                     numberBox1.Value = int.Parse(currentObj.ToString());
                                 }
@@ -1764,7 +1798,7 @@ namespace CBHK.ViewModel.Component.Entity
                             if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                            if (currentObj != null)
+                            if (currentObj is not null)
                             {
                                 stringBox.Text = currentObj.ToString().Replace("\"", "");
                             }
@@ -1819,7 +1853,7 @@ namespace CBHK.ViewModel.Component.Entity
                             if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                            if (currentObj != null)
+                            if (currentObj is not null)
                             {
                                 RichParagraph richParagraph = new();
                                 RichRun richRun = richParagraph.Inlines.FirstInline as RichRun;
@@ -1962,7 +1996,7 @@ namespace CBHK.ViewModel.Component.Entity
                             if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                            if (currentObj != null)
+                            if (currentObj is not null)
                                 textCheckBoxs.IsChecked = currentObj.ToString() == "1" || currentObj.ToString() == "true";
                             textCheckBoxs.Focus();
                         }
@@ -2001,7 +2035,7 @@ namespace CBHK.ViewModel.Component.Entity
                             if (!Give)
                                 key = "EntityTag." + key;
                             JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                            if (currentObj != null)
+                            if (currentObj is not null)
                             {
                                 comboBox.SelectedIndex = enumValueList.IndexOf(currentObj.ToString());
                             }
@@ -2015,7 +2049,7 @@ namespace CBHK.ViewModel.Component.Entity
             #region 删除已读取的键
             if (ImportMode)
                 ExternallyReadEntityData.Remove(Request.Key);
-            if (ExternallyReadEntityData != null)
+            if (ExternallyReadEntityData is not null)
             {
                 string RemainData = ExternallyReadEntityData.ToString();
                 if (RemainData == "[]" || RemainData == "{}")
@@ -2042,19 +2076,19 @@ namespace CBHK.ViewModel.Component.Entity
                 currentTab.Header = SelectedEntityId.ComboBoxItemId + ":" + SelectedEntityId.ComboBoxItemText;
 
             #region 搜索当前实体ID对应的JSON对象
-            List<JToken> targetList = array.Where(item =>
+            List<JToken> targetList = [.. array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityId.ComboBoxItemId)
+                if (currentObj["Type"].ToString() == SelectedEntityId.ComboBoxItemId)
                     return true;
                 return false;
-            }).ToList();
+            })];
             #endregion
 
             if (targetList.Count > 0)
             {
                 JObject targetObj = targetList.First() as JObject;
-                JArray commonTags = JArray.Parse(targetObj["common"].ToString());
+                JArray commonTags = JArray.Parse(targetObj["Common"].ToString());
                 List<string> commonTagList = commonTags.ToList().ConvertAll(item => item.ToString());
                 //计算本次与上次共通标签的差集,关闭指定菜单，而不是全部关闭再依次判断打开
                 List<string> closedCommonTagList = specialEntityCommonTagList.Except(commonTagList).ToList();
@@ -2125,13 +2159,13 @@ namespace CBHK.ViewModel.Component.Entity
                 foreach (var item in closedCommonTagList)
                 {
                     PropertyInfo visibilityPropertyInfo = currentClassType.GetProperty(item + "Visibility");
-                    if (visibilityPropertyInfo != null)
+                    if (visibilityPropertyInfo is not null)
                     {
                         object visibility = Convert.ChangeType(Visibility.Collapsed, visibilityPropertyInfo.PropertyType);
                         currentClassType.GetProperty(item + "Visibility")?.SetValue(this, visibility, null);
                     }
                     PropertyInfo enabledPropertyInfo = currentClassType.GetProperty(item + "Enabled");
-                    if (enabledPropertyInfo != null)
+                    if (enabledPropertyInfo is not null)
                     {
                         object enable = Convert.ChangeType(false, enabledPropertyInfo.PropertyType);
                         currentClassType.GetProperty(item + "Enabled")?.SetValue(this, enable, null);
@@ -2148,14 +2182,14 @@ namespace CBHK.ViewModel.Component.Entity
                 foreach (var item in commonTagList)
                 {
                     PropertyInfo visibilityPropertyInfo = currentClassType.GetProperty(item + "Visibility");
-                    if (visibilityPropertyInfo != null)
+                    if (visibilityPropertyInfo is not null)
                     {
                         object visibility = Convert.ChangeType(Visibility.Visible, visibilityPropertyInfo.PropertyType);
                         if (currentClassType.GetProperty(item + "Visibility") is PropertyInfo propertyInfo)
                             propertyInfo.SetValue(this, visibility, null);
                     }
                     PropertyInfo enabledPropertyInfo = currentClassType.GetProperty(item + "Enabled");
-                    if (enabledPropertyInfo != null)
+                    if (enabledPropertyInfo is not null)
                     {
                         object enable = Convert.ChangeType(true, enabledPropertyInfo.PropertyType);
                         if (currentClassType.GetProperty(item + "Enabled") is PropertyInfo propertyInfo)
@@ -2173,7 +2207,6 @@ namespace CBHK.ViewModel.Component.Entity
                 #endregion
             }
         }
-
         #endregion
 
         #region Event
@@ -2306,9 +2339,9 @@ namespace CBHK.ViewModel.Component.Entity
             if (saveFileDialog.ShowDialog().Value)
             {
                 if (Directory.Exists(Path.GetDirectoryName(saveFileDialog.FileName)))
-                    _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
+                    _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result.ToString());
                 Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\EntityView\\");
-                _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\EntityView\\" + Path.GetFileName(saveFileDialog.FileName), Result);
+                _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\EntityView\\" + Path.GetFileName(saveFileDialog.FileName), Result.ToString());
             }
         }
 
@@ -2318,66 +2351,21 @@ namespace CBHK.ViewModel.Component.Entity
         /// </summary>
         private void Run()
         {
-            CollectionCommonTagsMark();
-
-            Result = (SpecialTagsResult.TryGetValue(SelectedEntityId.ComboBoxItemId, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
-            {
-                if (item != null && item.Result.Length > 0)
-                    return item.Result;
-                return "";
-            })) + ",":"") + string.Join(",", CommonResult.Select(item =>
-            {
-                if (CurrentCommonTags.Contains(item.NBTGroup) && item.Result.Length > 0)
-                    return item.Result;
-                else
-                    return "";
-            }));
-            Result = Regex.Replace(Result.Trim(','), @",{2,}", ",");
-
-            if (UseForTool)
-            {
-                Result = "{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result != null && Result.Length > 0 ? "," + Result : "") + "}";
-                EntityView entity = Window.GetWindow(currentEntityPage) as EntityView;
-                entity.DialogResult = true;
-                return;
-            }
-
-            if (!Give)
-            {
-                if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}";
-                else
-                    Result = Result.Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~";
-            }
-            else
-            {
-                if (CurrentMinVersion < 1130)
-                {
-                    if (!HaveCustomName)
-                        Result = "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}";
-                    else
-                        Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}";
-                }
-                else
-                    Result = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1";
-            }
-
-            if(SyncToFile && ExternFilePath.Length > 0 && File.Exists(ExternFilePath))
-                File.WriteAllText(ExternFilePath, Result);
-
+            Create();
+            CollectionData();
             if (ShowResult)
             {
                 DisplayerView displayer = _container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
-                    displayerViewModel.GeneratorResult(Result, "实体", iconPath);
+                    displayerViewModel.GeneratorResult(Result.ToString(), "实体", iconPath);
                 }
             }
             else
             {
-                Clipboard.SetText(Result);
-                Message.PushMessage("实体生成成功！数据已进入剪切板",MessageBoxImage.Information);
+                Clipboard.SetText(Result.ToString());
+                Message.PushMessage("实体生成成功！数据已复制",MessageBoxImage.Information);
             }
         }
 
@@ -2451,7 +2439,7 @@ namespace CBHK.ViewModel.Component.Entity
             List<JToken> result = array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityId.ComboBoxItemId)
+                if (currentObj["Type"].ToString() == SelectedEntityId.ComboBoxItemId)
                     return true;
                 return false;
             }).ToList();
@@ -2462,8 +2450,8 @@ namespace CBHK.ViewModel.Component.Entity
             JObject targetObj = result[0] as JObject;
             #endregion
 
-            string type = targetObj["type"].ToString();
-            string commonTagData = targetObj["common"].ToString();
+            string type = targetObj["Type"].ToString();
+            string commonTagData = targetObj["Common"].ToString();
             JArray commonTags = JArray.Parse(commonTagData);
             List<string> commonTagList = commonTags.ToList().ConvertAll(item => item.ToString());
 
@@ -2479,7 +2467,7 @@ namespace CBHK.ViewModel.Component.Entity
                 foreach (JObject commonItem in commonArray.Cast<JObject>())
                 {
                     //判断数据类型,筛选对应的网格容器
-                    string dataType = JArray.Parse(commonItem["tag"].ToString())[0].ToString();
+                    string dataType = JArray.Parse(commonItem["Tag"].ToString())[0].ToString();
                     string numberType = dataType.ToLower().Replace("tag_", "");
                     bool IsNumber = numberType == "pos" || numberType == "float_array" || numberType == "uuid" || numberType == "float" || numberType == "short" || numberType == "byte" || numberType == "int" || numberType == "long" || numberType == "double";
                     IsNumber = IsNumber && currentUID == "number";
@@ -2497,6 +2485,7 @@ namespace CBHK.ViewModel.Component.Entity
                 }
             }
             #endregion
+
             #region 应用控件集合
             bool LeftIndex = true;
             await textTabItem.Dispatcher.InvokeAsync(() =>
@@ -2526,98 +2515,6 @@ namespace CBHK.ViewModel.Component.Entity
                 }
                 tabContent.Content ??= subGrid;
             });
-            #endregion
-        }
-
-        /// <summary>
-        /// 展开数据类型,判断是否应该添加子级
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ContentAccordionExpanded(object sender, RoutedEventArgs e)
-        {
-            Accordion accordion = sender as Accordion;
-            string currentUID = accordion.Uid;
-            ScrollViewer tabContent = accordion.Content as ScrollViewer;
-            Grid subGrid = tabContent.Content as Grid;
-            Accordion parentAccordion = accordion.FindParent<Accordion>();
-            bool IsSubContainer = false;
-            //分辨当前是实体、生物还是活体,都不是则为其它共通标签
-            IsSubContainer = parentAccordion != null;
-            //检查实体、活体、生物三大共通标签是否都被添加
-            List<string> AddedCommonTags = [];
-            for (int i = 0; i < subGrid.Children.Count; i++)
-            {
-                FrameworkElement frameworkElement = subGrid.Children[i] as FrameworkElement;
-                if (frameworkElement.Tag is NBTDataStructure dataStructure && !AddedCommonTags.Contains(dataStructure.NBTGroup))
-                    AddedCommonTags.Add(dataStructure.NBTGroup);
-            }
-            if ((parentAccordion is null && AddedCommonTags.Count >= 3) || (parentAccordion != null && AddedCommonTags.Count > 0)) return;
-
-            #region 搜索当前实体ID对应的JSON对象
-            string data = File.ReadAllText(SpecialNBTStructureFilePath);
-            JArray array = JArray.Parse(data);
-            JObject targetObj = array.Where(item =>
-            {
-                JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedEntityId.ComboBoxItemId)
-                    return true;
-                return false;
-            }).First() as JObject;
-            #endregion
-
-            string type = targetObj["type"].ToString();
-            string commonTagData = targetObj["common"].ToString();
-            JArray commonTags = JArray.Parse(commonTagData);
-            List<string> commonTagList = commonTags.ToList().ConvertAll(item => item.ToString());
-
-            #region 处理共通标签
-            List<FrameworkElement> components = [];
-            var sortOrder = new List<string> { "EntityCommonTags", "LivingBodyCommonTags", "MobCommonTags" };
-            foreach (string commonString in commonTagList)
-            {
-                if ((IsSubContainer && commonString != parentAccordion.Uid) || AddedCommonTags.Contains(commonString)) continue;
-                string commonFilePath = NBTStructureFolderPath + commonString + ".json";
-                string commonContent = File.ReadAllText(commonFilePath);
-                JArray commonArray = JArray.Parse(commonContent);
-                foreach (JObject commonItem in commonArray.Cast<JObject>())
-                {
-                    //判断数据类型,筛选对应的网格容器
-                    string dataType = JArray.Parse(commonItem["tag"].ToString())[0].ToString();
-                    string numberType = dataType.ToLower().Replace("tag_", "");
-                    bool IsNumber = numberType == "pos" || numberType == "float_array" || numberType == "uuid" || numberType == "float" || numberType == "short" || numberType == "byte" || numberType == "int" || numberType == "long" || numberType == "double";
-                    IsNumber = IsNumber && currentUID == "number";
-                    string currentComponentType = dataType.ToLower().Replace("tag_", "");
-                    if (currentComponentType == currentUID || currentComponentType == (currentUID + "_list") || IsNumber)
-                    {
-                        List<FrameworkElement> result = JsonToComponentConverter(commonItem, commonString);
-                        result.Sort((x, y) => sortOrder.IndexOf(x.Uid).CompareTo(sortOrder.IndexOf(y.Uid)));
-                        components.AddRange(result);
-                    }
-                }
-            }
-            #endregion
-            #region 应用控件集合
-            bool LeftIndex = true;
-            foreach (FrameworkElement item in components)
-            {
-                if(LeftIndex || subGrid.RowDefinitions.Count == 0)
-                subGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Star) });
-                subGrid.Children.Add(item);
-                if (item is Accordion || item is TextCheckBoxs || item is SuspectsEntities || item is VibrationMonitors)
-                {
-                    Grid.SetRow(item, subGrid.RowDefinitions.Count - 1);
-                    Grid.SetColumn(item, 0);
-                    Grid.SetColumnSpan(item, 2);
-                    LeftIndex = true;
-                }
-                else
-                {
-                    Grid.SetRow(item, subGrid.RowDefinitions.Count - 1);
-                    Grid.SetColumn(item, LeftIndex ? 0 : 1);
-                    LeftIndex = !LeftIndex;
-                }
-            }
             #endregion
         }
 
@@ -2662,31 +2559,72 @@ namespace CBHK.ViewModel.Component.Entity
             }
         }
 
-        /// <summary>
-        /// 点击顶级菜单后父视图滚动到此
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void Accordion_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        public void Create()
         {
-            Accordion accordion = sender as Accordion;
-            ScrollViewer scrollViewer = accordion.FindParent<ScrollViewer>();
-            ScrollToSomeWhere.Scroll(accordion,scrollViewer);
+            Result = new();
+        }
+
+        public void CollectionData()
+        {
+            CollectionCommonTagsMark();
+
+            Result = new((SpecialTagsResult.TryGetValue(SelectedEntityId.ComboBoxItemId, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
+            {
+                if (item is not null && item.Result.Length > 0)
+                    return item.Result;
+                return "";
+            })) + "," : "") + string.Join(",", CommonResult.Select(item =>
+            {
+                if (CurrentCommonTags.Contains(item.NBTGroup) && item.Result.Length > 0)
+                    return item.Result;
+                else
+                    return "";
+            })));
+            if (Result.Length > 0 && (Result[^1] == ' ' || Result[^1] == ','))
+            {
+                Result.Length--;
+            }
+
+            if (UseForTool)
+            {
+                Result = new("{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result is not null && Result.Length > 0 ? "," + Result : "") + "}");
+                EntityView entity = Window.GetWindow(currentEntityPage) as EntityView;
+                entity.DialogResult = true;
+                return;
+            }
+
+            if (!Give)
+            {
+                if (CurrentMinVersion < 1130 && HaveCustomName)
+                    Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Length > 0 ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}");
+                else
+                    Result = new(Result.ToString().Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~");
+            }
+            else
+            {
+                if (CurrentMinVersion < 1130)
+                {
+                    if (!HaveCustomName)
+                    {
+                        Result = new("give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}");
+                    }
+                    else
+                    {
+                        Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}");
+                    }
+                }
+                else
+                    Result = new("give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1");
+            }
+
+            if (SyncToFile && ExternFilePath.Length > 0 && File.Exists(ExternFilePath))
+                File.WriteAllText(ExternFilePath, Result.ToString());
+        }
+
+        public string Build()
+        {
+            return Result.ToString();
         }
         #endregion
-    }
-
-    /// <summary>
-    /// 动态控件数据结构
-    /// </summary>
-    public class ComponentData
-    {
-        public string Children { get; set; }
-        public string DataType { get; set; }
-        public string NBTType { get; set; }
-        public string Key { get; set; }
-        public string Description { get; set; }
-        public string ToolTip { get; set; }
-        public string Dependency { get; set; }
     }
 }

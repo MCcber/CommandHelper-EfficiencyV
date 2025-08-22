@@ -131,7 +131,7 @@ namespace CBHK.CustomControl
                 {
                     pen.Thickness = borderThickness.Top;
                 }
-                if (borderBrush != null)
+                if (borderBrush is not null)
                 {
                     if (borderBrush.IsFrozen)
                     {
@@ -155,7 +155,7 @@ namespace CBHK.CustomControl
                 {
                     pen.Thickness = borderThickness.Bottom;
                 }
-                if (borderBrush != null)
+                if (borderBrush is not null)
                 {
                     if (borderBrush.IsFrozen)
                     {
@@ -179,7 +179,7 @@ namespace CBHK.CustomControl
                 {
                     pen.Thickness = borderThickness.Left;
                 }
-                if (borderBrush != null)
+                if (borderBrush is not null)
                 {
                     if (borderBrush.IsFrozen)
                     {
@@ -203,7 +203,7 @@ namespace CBHK.CustomControl
                 {
                     pen.Thickness = borderThickness.Right;
                 }
-                if (borderBrush != null)
+                if (borderBrush is not null)
                 {
                     if (borderBrush.IsFrozen)
                     {

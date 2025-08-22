@@ -57,13 +57,13 @@ namespace CBHK.View.Component.Entity
                 {
                     string entityData = ExternalDataImportManager.GetEntityDataHandler(openFileDialog.FileName);
                     JToken entityTag = JObject.Parse(entityData)["EntityTag"];
-                    if (entityTag != null)
+                    if (entityTag is not null)
                         entityData = entityTag.ToString();
                     else
                         entityTag = JObject.Parse(entityData);
                     JToken entityID = entityTag["id"];
                     DisplayEntity.Tag = entityData;
-                    if(entityID != null)
+                    if(entityID is not null)
                     (DisplayEntity.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\entityImages\\" + entityID + ".png", UriKind.RelativeOrAbsolute));
                 }
             }
@@ -84,13 +84,13 @@ namespace CBHK.View.Component.Entity
             entityData = Regex.Replace(entityData, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
             if (entityData.Trim().Length == 0) return;
             JToken entityTag = JObject.Parse(entityData)["EntityTag"];
-            if (entityTag != null)
+            if (entityTag is not null)
                 entityData = entityTag.ToString();
             else
                 entityTag = JObject.Parse(entityData);
             JToken entityID = entityTag["id"];
             DisplayEntity.Tag = entityData;
-            if(entityID != null)
+            if(entityID is not null)
             (DisplayEntity.Child as Image).Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\entityImages\\" + entityID + ".png", UriKind.RelativeOrAbsolute));
         }
 

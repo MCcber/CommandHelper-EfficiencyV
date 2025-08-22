@@ -20,7 +20,7 @@ namespace CBHK.Utility.Common
                 var child = VisualTreeHelper.GetChild(depObj, i);
 
                 var result = child as T ?? child.FindChild<T>(targetUid);
-                if (result != null && (targetUid.Length == 0 || (result as FrameworkElement).Uid == targetUid)) return result;
+                if (result is not null && (targetUid.Length == 0 || (result as FrameworkElement).Uid == targetUid)) return result;
             }
             return null;
         }
@@ -34,11 +34,11 @@ namespace CBHK.Utility.Common
         public static T FindParent<T>(this DependencyObject element, string targetUid = "") where T : DependencyObject
         {
             DependencyObject parent = VisualTreeHelper.GetParent(element);
-            if (parent != null)
+            if (parent is not null)
             {
-                if (parent is T)
+                if (parent is T type)
                 {
-                    return (T)parent;
+                    return type;
                 }
                 else
                 {

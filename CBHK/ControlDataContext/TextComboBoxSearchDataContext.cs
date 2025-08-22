@@ -24,7 +24,7 @@ namespace CBHK.ControlDataContext
                 pop.IsOpen = false;
                 return;
             }
-            if(box.TemplatedParent != null)
+            if(box.TemplatedParent is not null)
             {
                 current_box = box.TemplatedParent as ComboBox;
                 current_box.IsDropDownOpen = false;

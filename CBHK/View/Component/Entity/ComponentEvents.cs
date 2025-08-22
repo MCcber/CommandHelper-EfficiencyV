@@ -1,6 +1,7 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
 using CBHK.Interface;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.ViewModel.Component.Entity;
 using CommunityToolkit.Mvvm.Input;
@@ -763,7 +764,7 @@ namespace CBHK.View.Component.Entity
                 StringBuilder result = new();
                 foreach (PassengerItems passenger in stackPanel.Children)
                 {
-                    if (passenger.DisplayEntity.Tag != null)
+                    if (passenger.DisplayEntity.Tag is not null)
                         result.Append(passenger.DisplayEntity.Tag.ToString() + ',');
                 }
                 if (result.Length > 0)
@@ -788,7 +789,7 @@ namespace CBHK.View.Component.Entity
                 StackPanel stackPanel = (accordion.Content as ScrollViewer).Content as StackPanel;
                 NBTDataStructure dataStructure = accordion.Tag as NBTDataStructure;
                 StringBuilder result = new();
-                foreach (AreaEffectCloudEffects effect in stackPanel.Children)
+                foreach (AreaEffectCloudEffectView effect in stackPanel.Children)
                 {
                     string effectString = await (effect as IVersionUpgrader).Result();
                     result.Append(effectString + ',');
@@ -930,7 +931,7 @@ namespace CBHK.View.Component.Entity
         public void AddAreaEffectCloudCommand(FrameworkElement obj)
         {
             Accordion accordion = obj as Accordion;
-            AreaEffectCloudEffects areaEffectCloudEffects = new(_context);
+            AreaEffectCloudEffectView areaEffectCloudEffects = new(_context);
             ((accordion.Content as ScrollViewer).Content as StackPanel).Children.Add(areaEffectCloudEffects);
             EntityPageViewModel entityPagesDataContext = obj.FindParent<EntityPageView>().DataContext as EntityPageViewModel;
             entityPagesDataContext.VersionComponents.Add(areaEffectCloudEffects);
@@ -951,7 +952,7 @@ namespace CBHK.View.Component.Entity
                 if (stackPanel.Children.Count > 0)
                 {
                     StringBuilder result = new();
-                    foreach (AreaEffectCloudEffects item in stackPanel.Children)
+                    foreach (AreaEffectCloudEffectView item in stackPanel.Children)
                     {
                         string effectString = await (item as IVersionUpgrader).Result();
                         result.Append(effectString + ",");
@@ -988,7 +989,7 @@ namespace CBHK.View.Component.Entity
                 else
                 {
                     object obj = (stackPanel.Children[0] as EntityBag).ItemIcon.Tag;
-                    if (obj != null)
+                    if (obj is not null)
                         dataStructure.Result = accordion.Name + ":" + obj.ToString();
                     else
                         dataStructure.Result = "";
@@ -1053,7 +1054,7 @@ namespace CBHK.View.Component.Entity
                 string result = "";
                 foreach (StackPanel item in stackPanel.Children)
                 {
-                    if (item.Tag != null)
+                    if (item.Tag is not null)
                         result += item.Tag.ToString() + ",";
                 }
                 result = result.TrimEnd(',');
@@ -1079,7 +1080,7 @@ namespace CBHK.View.Component.Entity
                 for (int i = 0; i < tabControl.Items.Count; i++)
                 {
                     FrameworkElement control = tabControl.Items[i] as FrameworkElement;
-                    if (control.Tag != null)
+                    if (control.Tag is not null)
                         result.Append(control.Tag.ToString() + ",");
                 }
                 string eventResult = "event_delay:" + vibrationMonitors.EventDelay.Value + ",";
@@ -1132,7 +1133,7 @@ namespace CBHK.View.Component.Entity
             string currentValue = "";
             _ = blockState.SelectedAttributeKeys.All(item =>
             {
-                if (item != null && item.Length > 0 && blockState.SelectedAttributeValues.Count > 0 && index < blockState.SelectedAttributeValues.Count)
+                if (item is not null && item.Length > 0 && blockState.SelectedAttributeValues.Count > 0 && index < blockState.SelectedAttributeValues.Count)
                 {
                     currentValue = blockState.SelectedAttributeValues[index];
                     _ = bool.TryParse(currentValue, out bool IsBool);
@@ -1178,7 +1179,7 @@ namespace CBHK.View.Component.Entity
             #region 两个浮点数成员
             Slider subSlider0 = grid.FindChild<Slider>("0");
             Slider subSlider1 = grid.FindChild<Slider>("1");
-            if (subSlider0 != null && subSlider1 != null)
+            if (subSlider0 is not null && subSlider1 is not null)
             {
                 if (subSlider0.Value != 0 || subSlider1.Value != 0)
                     dataStructure.Result = grid.Name + ":[" + subSlider0.Value + "f," + subSlider1.Value + "f]";
@@ -1265,27 +1266,5 @@ namespace CBHK.View.Component.Entity
             NBTDataStructure dataStructure = textCheckBoxs.Tag as NBTDataStructure;
             dataStructure.Result = textCheckBoxs.Name + ":1b";
         }
-    }
-
-    /// <summary>
-    /// Tag转字符串
-    /// </summary>
-    public class TagToString : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => null;
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => (NBTDataStructure)value;
-    }
-
-    public class NBTDataStructure : FrameworkElement
-    {
-        public string Result { get; set; }
-
-        public string DataType { get; set; }
-
-        /// <summary>
-        /// 标记当前实例属于哪个共通标签
-        /// </summary>
-        public string NBTGroup { get; set; }
     }
 }

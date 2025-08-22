@@ -700,7 +700,7 @@ namespace CBHK.ViewModel.Component.Item
                 {
                     case "TAG_List":
                         {
-                            if (Request.dependency != null && Request.dependency.Length > 0)
+                            if (Request.dependency is not null && Request.dependency.Length > 0)
                             {
                                 switch (Request.dependency)
                                 {
@@ -742,7 +742,7 @@ namespace CBHK.ViewModel.Component.Item
                                                 if (!Summon)
                                                     key = "ItemView." + key;
                                                 JToken data = ExternallyReadEntityData.SelectToken(key);
-                                                if (data != null)
+                                                if (data is not null)
                                                 {
                                                     JArray Items = JArray.Parse(data.ToString());
                                                     string itemImageFilePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
@@ -809,7 +809,7 @@ namespace CBHK.ViewModel.Component.Item
                                                         EnchantmentItem enchantment = new(_context, this);
                                                         JToken idObj = item["id"];
                                                         JToken lvlObj = item["lvl"];
-                                                        if (idObj != null)
+                                                        if (idObj is not null)
                                                         {
                                                             string idString = idObj.ToString();
                                                             if (idString.Contains(':'))
@@ -817,7 +817,7 @@ namespace CBHK.ViewModel.Component.Item
                                                             string id = _context.BlockSet.First(item => item.ID == idString).ID;
                                                             enchantment.ID.SelectedValue = id;
                                                         }
-                                                        if (lvlObj != null)
+                                                        if (lvlObj is not null)
                                                             enchantment.Level.Value = double.Parse(lvlObj.ToString());
                                                         itemPanel.Children.Add(enchantment);
                                                     }
@@ -926,15 +926,15 @@ namespace CBHK.ViewModel.Component.Item
                                                         JToken xObj = item["x"];
                                                         JToken zObj = item["z"];
                                                         JToken rotObj = item["rot"];
-                                                        if (idObj != null)
+                                                        if (idObj is not null)
                                                             mapDecorations.Uid = idObj.ToString();
-                                                        if (typeObj != null)
+                                                        if (typeObj is not null)
                                                             mapDecorations.type.SelectedIndex = byte.Parse(typeObj.ToString());
-                                                        if (xObj != null)
+                                                        if (xObj is not null)
                                                             mapDecorations.pos.number0.Value = double.Parse(xObj.ToString());
-                                                        if (zObj != null)
+                                                        if (zObj is not null)
                                                             mapDecorations.pos.number2.Value = double.Parse(zObj.ToString());
-                                                        if (rotObj != null)
+                                                        if (rotObj is not null)
                                                             mapDecorations.rot.Value = double.Parse(rotObj.ToString());
                                                         itemPanel.Children.Add(mapDecorations);
                                                     }
@@ -1005,13 +1005,13 @@ namespace CBHK.ViewModel.Component.Item
                                                         JToken padding_duration = Effects[i].SelectToken("FactorCalculationData.padding_duration");
                                                         #endregion
                                                         #region 应用数据
-                                                        if (Ambient != null)
+                                                        if (Ambient is not null)
                                                             contentPanel.FindChild<TextCheckBoxs>("Ambient").IsChecked = Ambient.ToString() == "1";
-                                                        if (Amplifier != null)
+                                                        if (Amplifier is not null)
                                                             contentPanel.FindChild<Slider>("Amplifier").Value = byte.Parse(Amplifier.ToString());
-                                                        if (Duration != null)
+                                                        if (Duration is not null)
                                                             contentPanel.FindChild<Slider>("Duration").Value = int.Parse(Duration.ToString());
-                                                        if (Id != null)
+                                                        if (Id is not null)
                                                         {
                                                             string id = Id.ToString().Replace("minecraft:", "");
                                                             MobEffect mobEffect = _context.MobEffectSet.First(item => item.ID == id);
@@ -1021,24 +1021,24 @@ namespace CBHK.ViewModel.Component.Item
                                                             idBox.SelectedValuePath = "ComboBoxItemId";
                                                             idBox.SelectedValue = mobEffect.ID;
                                                         }
-                                                        if (ShowIcon != null)
+                                                        if (ShowIcon is not null)
                                                             contentPanel.FindChild<TextCheckBoxs>("ShowIcon").IsChecked = ShowIcon.ToString() == "1";
-                                                        if (ShowParticles != null)
+                                                        if (ShowParticles is not null)
                                                             contentPanel.FindChild<TextCheckBoxs>("ShowParticles").IsChecked = ShowParticles.ToString() == "1";
                                                         Grid grid = customPotionEffects.FactorCalculationDataGrid;
-                                                        if (effect_changed_timestamp != null)
+                                                        if (effect_changed_timestamp is not null)
                                                             grid.FindChild<Slider>("effect_changed_timestamp").Value = int.Parse(effect_changed_timestamp.ToString());
-                                                        if (factor_current != null)
+                                                        if (factor_current is not null)
                                                             grid.FindChild<Slider>("factor_current").Value = int.Parse(factor_current.ToString());
-                                                        if (factor_previous_frame != null)
+                                                        if (factor_previous_frame is not null)
                                                             grid.FindChild<Slider>("factor_previous_frame").Value = int.Parse(factor_previous_frame.ToString());
-                                                        if (factor_start != null)
+                                                        if (factor_start is not null)
                                                             grid.FindChild<Slider>("factor_start").Value = int.Parse(factor_start.ToString());
-                                                        if (factor_target != null)
+                                                        if (factor_target is not null)
                                                             grid.FindChild<Slider>("factor_target").Value = int.Parse(factor_target.ToString());
-                                                        if (had_effect_last_tick != null)
+                                                        if (had_effect_last_tick is not null)
                                                             grid.FindChild<TextCheckBoxs>("had_effect_last_tick").IsChecked = had_effect_last_tick.ToString() == "1";
-                                                        if (padding_duration != null)
+                                                        if (padding_duration is not null)
                                                             grid.FindChild<Slider>("padding_duration").Value = int.Parse(padding_duration.ToString());
                                                         #endregion
                                                     }
@@ -1097,9 +1097,9 @@ namespace CBHK.ViewModel.Component.Item
                                                         var currentID = _context.MobEffectSet.First(item => item.ID == id).ID;
                                                         SuspiciousStewEffect suspiciousStewEffects = new(_context);
                                                         itemPanel.Children.Add(suspiciousStewEffects);
-                                                        if (durationObj != null)
+                                                        if (durationObj is not null)
                                                             suspiciousStewEffects.EffectDuration.Value = int.Parse(durationObj.ToString());
-                                                        if (idObj != null)
+                                                        if (idObj is not null)
                                                         {
                                                             suspiciousStewEffects.EffectID.SelectedValuePath = "ComboBoxItemId";
                                                             suspiciousStewEffects.EffectID.SelectedValue = currentID;
@@ -1117,7 +1117,7 @@ namespace CBHK.ViewModel.Component.Item
                         break;
                     case "TAG_Compound":
                         {
-                            if (Request.dependency != null && Request.dependency.Length > 0)
+                            if (Request.dependency is not null && Request.dependency.Length > 0)
                             {
                                 switch (Request.dependency)
                                 {
@@ -1159,7 +1159,7 @@ namespace CBHK.ViewModel.Component.Item
                                                 if (!Summon)
                                                     key = "ItemView." + key;
                                                 JToken data = ExternallyReadEntityData.SelectToken(key);
-                                                if (data != null)
+                                                if (data is not null)
                                                 {
                                                     JArray Items = JArray.Parse(data.ToString());
                                                     string itemImageFilePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
@@ -1217,17 +1217,17 @@ namespace CBHK.ViewModel.Component.Item
                                                 if (!Summon)
                                                     key = "ItemView." + key;
                                                 JToken data = ExternallyReadEntityData.SelectToken(key);
-                                                if (data != null)
+                                                if (data is not null)
                                                 {
                                                     JToken x = data["X"];
                                                     JToken y = data["Y"];
                                                     JToken z = data["Z"];
                                                     uUIDOrPosGroup.EnableButton.IsChecked = true;
-                                                    if (x != null)
+                                                    if (x is not null)
                                                         uUIDOrPosGroup.number0.Value = int.Parse(x.ToString());
-                                                    if (y != null)
+                                                    if (y is not null)
                                                         uUIDOrPosGroup.number1.Value = int.Parse(y.ToString());
-                                                    if (z != null)
+                                                    if (z is not null)
                                                         uUIDOrPosGroup.number2.Value = int.Parse(z.ToString());
                                                     componentEvents.LodestonePos_LostFocus(itemAccordion, null);
                                                 }
@@ -1337,7 +1337,7 @@ namespace CBHK.ViewModel.Component.Item
                                                 if (ExternallyReadEntityData.SelectToken(key) is JObject data)
                                                 {
                                                     JToken colorObj = data["MapColor"];
-                                                    if (colorObj != null)
+                                                    if (colorObj is not null)
                                                     {
                                                         mapDisplay.color.Value = int.Parse(colorObj.ToString());
                                                         componentEvents.MapDisplay_LostFocus(itemAccordion, null);
@@ -1388,12 +1388,12 @@ namespace CBHK.ViewModel.Component.Item
                                                 if (ExternallyReadEntityData.SelectToken(key) is JObject data)
                                                 {
                                                     JToken baseObj = ExternallyReadEntityData.SelectToken("Base");
-                                                    if (baseObj != null)
+                                                    if (baseObj is not null)
                                                         shieldBlockEntityTag.Base.SelectedIndex = int.Parse(baseObj.ToString());
                                                     StackPanel bannerPanel = (shieldBlockEntityTag.BannerAccordion.Content as ScrollViewer).Content as StackPanel;
                                                     BannerBlockEntityTag bannerBlockEntityTag = new();
                                                     JToken customname = data["CustomName"];
-                                                    if (customname != null)
+                                                    if (customname is not null)
                                                     {
                                                         if (customname is JValue)
                                                         {
@@ -1413,9 +1413,9 @@ namespace CBHK.ViewModel.Component.Item
                                                             patternListPanel.Children.Add(bannerPatterns);
                                                             JToken color = Apattern["Color"];
                                                             JToken pattern = Apattern["Pattern"];
-                                                            if (color != null)
+                                                            if (color is not null)
                                                                 bannerPatterns.Color.SelectedIndex = int.Parse(color.ToString());
-                                                            if (pattern != null)
+                                                            if (pattern is not null)
                                                             {
                                                                 bannerPatterns.Pattern.SelectedValuePath = "ComboBoxItemText";
                                                                 bannerPatterns.Pattern.SelectedValue = pattern.ToString();
@@ -1491,7 +1491,7 @@ namespace CBHK.ViewModel.Component.Item
                                     if (!Summon)
                                         key = "ItemView." + key;
                                     JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                    if (currentObj != null)
+                                    if (currentObj is not null)
                                     {
                                         JArray dataArray = JArray.Parse(currentObj.ToString());
                                         uUIDOrPosGroup.number0.Value = int.Parse(dataArray[0].ToString());
@@ -1523,7 +1523,7 @@ namespace CBHK.ViewModel.Component.Item
                                     if (!Summon)
                                         key = "ItemView." + key;
                                     JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                    if (currentObj != null)
+                                    if (currentObj is not null)
                                     {
                                         numberBox1.Value = int.Parse(currentObj.ToString());
                                         componentEvents.NumberBoxValueChanged(numberBox1, null);
@@ -1552,7 +1552,7 @@ namespace CBHK.ViewModel.Component.Item
                                 if (!Summon)
                                     key = "ItemView." + key;
                                 JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if (currentObj != null)
+                                if (currentObj is not null)
                                 {
                                     stringBox.Text = currentObj.ToString().Replace("\"", "");
                                     if (Request.dataType == "TAG_String")
@@ -1595,7 +1595,7 @@ namespace CBHK.ViewModel.Component.Item
                                 if (!Summon)
                                     key = "ItemView." + key;
                                 JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if (currentObj != null)
+                                if (currentObj is not null)
                                 {
                                     stringBox.Text = currentObj.ToString().Replace("\"", "");
                                     componentEvents.NameSpaceReference_LostFocus(stringBox, null);
@@ -1637,7 +1637,7 @@ namespace CBHK.ViewModel.Component.Item
                                 if (!Summon)
                                     key = "ItemView." + key;
                                 JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if (currentObj != null)
+                                if (currentObj is not null)
                                 {
                                     textCheckBoxs.IsChecked = currentObj.ToString() == "1" || currentObj.ToString() == "true";
                                     componentEvents.CheckBox_Checked(textCheckBoxs, null);
@@ -1665,7 +1665,7 @@ namespace CBHK.ViewModel.Component.Item
                                 Style = Application.Current.Resources["TextComboBoxStyle"] as Style,
                                 Name = Request.key,
                                 SelectedIndex = 0,
-                                Tag = new NBTDataStructure() { resultType = Request.resultType, Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
+                                Tag = new NBTDataStructure() { ResultType = Request.resultType, Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
                             };
                             comboBox.GotFocus += componentEvents.ValueChangedHandler;
                             result.Add(comboBox);
@@ -1676,7 +1676,7 @@ namespace CBHK.ViewModel.Component.Item
                                 if (!Summon)
                                     key = "ItemView." + key;
                                 JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if (currentObj != null)
+                                if (currentObj is not null)
                                 {
                                     comboBox.SelectedIndex = enumValueList.IndexOf(currentObj.ToString());
                                     componentEvents.EnumBox_SelectionChanged(comboBox, null);
@@ -1691,7 +1691,7 @@ namespace CBHK.ViewModel.Component.Item
             #region 删除已读取的键
             if (ImportMode)
                 ExternallyReadEntityData.Remove(Request.key);
-            if (ExternallyReadEntityData != null)
+            if (ExternallyReadEntityData is not null)
             {
                 string RemainData = ExternallyReadEntityData.ToString();
                 if (RemainData == "[]" || RemainData == "{}")
@@ -1713,16 +1713,16 @@ namespace CBHK.ViewModel.Component.Item
         private List<FrameworkElement> JsonToComponentConverter(JObject nbtStructure, string NBTType = "")
         {
             string tag = JArray.Parse(nbtStructure["tag"].ToString())[0].ToString();
-            JToken resultObj = nbtStructure["resultType"];
-            string result = resultObj != null ? resultObj.ToString() : "";
+            JToken resultObj = nbtStructure["ResultType"];
+            string result = resultObj is not null ? resultObj.ToString() : "";
             string key = nbtStructure["Key"].ToString();
             JToken children = nbtStructure["Children"];
             JToken descriptionObj = nbtStructure["Description"];
-            string description = descriptionObj != null ? descriptionObj.ToString() : "";
+            string description = descriptionObj is not null ? descriptionObj.ToString() : "";
             JToken toolTipObj = nbtStructure["ToolTip"];
-            string toolTip = toolTipObj != null ? toolTipObj.ToString() : "";
+            string toolTip = toolTipObj is not null ? toolTipObj.ToString() : "";
             JToken dependencyObj = nbtStructure["Dependency"];
-            string dependency = dependencyObj != null ? dependencyObj.ToString() : "";
+            string dependency = dependencyObj is not null ? dependencyObj.ToString() : "";
             ComponentData componentData = new()
             {
                 dataType = tag,
@@ -1733,7 +1733,7 @@ namespace CBHK.ViewModel.Component.Item
                 dependency = dependency,
                 nbtType = NBTType
             };
-            if (children != null)
+            if (children is not null)
                 componentData.children = children.ToString();
             List<FrameworkElement> componentGroup = ComponentsGenerator(componentData);
             return componentGroup;
@@ -1894,7 +1894,7 @@ namespace CBHK.ViewModel.Component.Item
         {
             TabControl tabControl = sender as TabControl;
             JObject externData = ExternallyReadEntityData;
-            if (ImportMode && ExternallyReadEntityData != null)
+            if (ImportMode && ExternallyReadEntityData is not null)
             {
                 if (tabControl.SelectedIndex == 1)
                     common.GetExternData(ref externData);

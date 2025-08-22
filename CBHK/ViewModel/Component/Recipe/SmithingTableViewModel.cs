@@ -109,7 +109,7 @@ namespace CBHK.ViewModel.Component.Recipe
         public void Run()
         {
             #region 合成最终数据
-            Result = ResultItem.Tag != null && ((ResultItem.Tag as ItemStructure).ImagePath != new BitmapImage(emptyImage.UriSource)) ? "{\r\n  \"type\": \"minecraft:smithing_transform\"," : "{\r\n  \"type\": \"minecraft:smithing_trim\",";
+            Result = ResultItem.Tag is not null && ((ResultItem.Tag as ItemStructure).ImagePath != new BitmapImage(emptyImage.UriSource)) ? "{\r\n  \"type\": \"minecraft:smithing_transform\"," : "{\r\n  \"type\": \"minecraft:smithing_trim\",";
             #region 合并模板数据
             string templateItemID;
             string templateData = "";
@@ -188,7 +188,7 @@ namespace CBHK.ViewModel.Component.Recipe
                 {
                     JToken itemIDObj = ingredient.SelectToken("item");
                     JToken itemTagObj = ingredient.SelectToken("tag");
-                    if (itemIDObj != null)
+                    if (itemIDObj is not null)
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png");
@@ -199,7 +199,7 @@ namespace CBHK.ViewModel.Component.Recipe
                             ImagePath = new BitmapImage(iconUri),
                             IDAndName = itemID + ":" + itemName
                         };
-                        if (itemTagObj != null)
+                        if (itemTagObj is not null)
                             TemplateTag = itemTagObj.ToString();
                     }
                 }
@@ -221,7 +221,7 @@ namespace CBHK.ViewModel.Component.Recipe
                 {
                     JToken itemIDObj = ingredient.SelectToken("item");
                     JToken itemTagObj = ingredient.SelectToken("tag");
-                    if (itemIDObj != null)
+                    if (itemIDObj is not null)
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
@@ -232,7 +232,7 @@ namespace CBHK.ViewModel.Component.Recipe
                             ImagePath = new BitmapImage(iconUri),
                             IDAndName = itemID + ":" + itemName
                         };
-                        if (itemTagObj != null)
+                        if (itemTagObj is not null)
                             BaseTag = itemTagObj.ToString();
                     }
                 }
@@ -254,7 +254,7 @@ namespace CBHK.ViewModel.Component.Recipe
                 {
                     JToken itemIDObj = ingredient.SelectToken("item");
                     JToken itemTagObj = ingredient.SelectToken("tag");
-                    if (itemIDObj != null)
+                    if (itemIDObj is not null)
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
@@ -265,7 +265,7 @@ namespace CBHK.ViewModel.Component.Recipe
                             ImagePath = new BitmapImage(iconUri),
                             IDAndName = itemID + ":" + itemName
                         };
-                        if (itemTagObj != null)
+                        if (itemTagObj is not null)
                             AdditionTag = itemTagObj.ToString();
                     }
                 }
@@ -297,7 +297,7 @@ namespace CBHK.ViewModel.Component.Recipe
                             ImagePath = new BitmapImage(iconUri),
                             IDAndName = itemID + ":" + itemName
                         };
-                        if (itemCountObj != null)
+                        if (itemCountObj is not null)
                             Count = int.Parse(itemCountObj.ToString());
                     }
                 }
@@ -339,7 +339,7 @@ namespace CBHK.ViewModel.Component.Recipe
         /// <param name="e"></param>
         public void SetSlotData_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (CurrentItem != null && !Equals(CurrentItem, sender))
+            if (CurrentItem is not null && !Equals(CurrentItem, sender))
                 (CurrentItem.Parent as Border).BorderBrush = transparentBrush;
             if (!Equals(CurrentItem, sender))
             {

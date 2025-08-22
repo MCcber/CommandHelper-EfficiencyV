@@ -127,14 +127,14 @@ namespace CBHK.WindowDictionaries
             set
             {
                 // decouple event
-                if (_currentTransition != null)
+                if (_currentTransition is not null)
                 {
                     _currentTransition.Completed -= OnTransitionCompleted;
                 }
 
                 _currentTransition = value;
 
-                if (_currentTransition != null)
+                if (_currentTransition is not null)
                 {
                     _currentTransition.Completed += OnTransitionCompleted;
                 }
@@ -278,7 +278,7 @@ namespace CBHK.WindowDictionaries
             PreviousContentPresentationSite = GetTemplateChild(PreviousContentPresentationSitePartName) as ContentPresenter;
             CurrentContentPresentationSite = GetTemplateChild(CurrentContentPresentationSitePartName) as ContentPresenter;
 
-            if (CurrentContentPresentationSite != null)
+            if (CurrentContentPresentationSite is not null)
             {
                 CurrentContentPresentationSite.Content = Content;
             }
@@ -321,7 +321,7 @@ namespace CBHK.WindowDictionaries
         private void StartTransition(object oldContent, object newContent)
         {
             // both presenters must be available, otherwise a transition is useless.
-            if (CurrentContentPresentationSite != null && PreviousContentPresentationSite != null)
+            if (CurrentContentPresentationSite is not null && PreviousContentPresentationSite is not null)
             {
                 CurrentContentPresentationSite.Content = newContent;
 
@@ -347,7 +347,7 @@ namespace CBHK.WindowDictionaries
             AbortTransition();
 
             RoutedEventHandler handler = TransitionCompleted;
-            if (handler != null)
+            if (handler is not null)
             {
                 handler(this, new RoutedEventArgs());
             }
@@ -361,7 +361,7 @@ namespace CBHK.WindowDictionaries
             // go to normal state and release our hold on the old content.
             VisualStateManager.GoToState(this, NormalState, false);
             IsTransitioning = false;
-            if (PreviousContentPresentationSite != null)
+            if (PreviousContentPresentationSite is not null)
             {
                 PreviousContentPresentationSite.Content = null;
             }
@@ -376,7 +376,7 @@ namespace CBHK.WindowDictionaries
         {
             VisualStateGroup presentationGroup = VisualStates.TryGetVisualStateGroup(this, PresentationGroup);
             Storyboard newStoryboard = null;
-            if (presentationGroup != null)
+            if (presentationGroup is not null)
             {
                 newStoryboard = presentationGroup.States
                     .OfType<VisualState>()

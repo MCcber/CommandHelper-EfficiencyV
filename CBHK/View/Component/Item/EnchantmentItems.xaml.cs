@@ -14,7 +14,7 @@ namespace CBHK.View.Component.Item
     /// <summary>
     /// EnchantmentItem.xaml 的交互逻辑
     /// </summary>
-    public partial class EnchantmentItem : UserControl, IVersionUpgrader
+    public partial class EnchantmentItem : UserControl
     {
         private CBHKDataContext _context = null;
         private ItemPageViewModel _viewModel = null;

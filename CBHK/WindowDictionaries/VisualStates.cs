@@ -39,7 +39,7 @@ namespace CBHK.WindowDictionaries
         /// <returns>Returns the implementation root or null.</returns>
         public static FrameworkElement GetImplementationRoot(DependencyObject dependencyObject)
         {
-            Debug.Assert(dependencyObject != null, "DependencyObject should not be null.");
+            Debug.Assert(dependencyObject is not null, "DependencyObject should not be null.");
             return (1 == VisualTreeHelper.GetChildrenCount(dependencyObject)) ?
                 VisualTreeHelper.GetChild(dependencyObject, 0) as FrameworkElement :
                 null;

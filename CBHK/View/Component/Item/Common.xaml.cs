@@ -133,32 +133,32 @@ namespace CBHK.View.Component.Item
             JToken RepairCostObj = ExternData.SelectToken("tag.RepairCost");
             RepairCostObj ??= ExternData.SelectToken("RepairCost");
 
-            if (unbreakble != null)
+            if (unbreakble is not null)
             {
                 Unbreakable.IsChecked = unbreakble.ToString().ToLower() == "true" || unbreakble.ToString().ToLower() == "1";
                 ExternData.Remove("tag.Unbreakable");
                 ExternData.Remove("Unbreakable");
             }
-            if (customCreativeLock != null)
+            if (customCreativeLock is not null)
             {
                 CustomCreativeLock.IsChecked = customCreativeLock.ToString().ToLower() == "true" || customCreativeLock.ToString().ToLower() == "1";
                 ExternData.Remove("tag.CustomCreativeLock");
                 ExternData.Remove("CustomCreativeLock");
             }
-            if (name != null)
+            if (name is not null)
             {
                 ((ItemName.richTextBox.Document.Blocks.FirstBlock as Paragraph).Inlines.FirstInline as RichRun).Text = JObject.Parse(name.ToString())["text"].ToString();
                 ExternData.Remove("tag.display.Name");
                 ExternData.Remove("display.Name");
             }
-            if (lore != null)
+            if (lore is not null)
             {
                 JArray loreArray = JArray.Parse(lore.ToString());
                 ((ItemLore.richTextBox.Document.Blocks.FirstBlock as Paragraph).Inlines.FirstInline as RichRun).Text = string.Join("",loreArray).Replace("\"", "").Trim('[').Trim(']');
                 ExternData.Remove("tag.display.Lore");
                 ExternData.Remove("display.Lore");
             }
-            if (HideFlags != null)
+            if (HideFlags is not null)
             {
                 string selectedItem = HideFlagsBox.SelectedValue.ToString();
                 string value = _context.HideInformationSet.First(item => item.Name == selectedItem).Name;
@@ -166,13 +166,13 @@ namespace CBHK.View.Component.Item
                 ExternData.Remove("tag.HideFlags");
                 ExternData.Remove("HideFlags");
             }
-            if (CustomModelDataObj != null)
+            if (CustomModelDataObj is not null)
             {
                 CustomModelData.Value = int.Parse(CustomModelDataObj.ToString());
                 ExternData.Remove("tag.CustomModelData");
                 ExternData.Remove("CustomModelData");
             }
-            if (RepairCostObj != null)
+            if (RepairCostObj is not null)
             {
                 RepairCost.Value = int.Parse(RepairCostObj.ToString());
                 ExternData.Remove("tag.RepairCost");

@@ -210,7 +210,7 @@ namespace CBHK.View.Component.Entity
                     if (VibrationMonitorsSourceType.SelectedItem.ToString() == "UUID" && source_entityUUID.EnableButton.IsChecked.Value)
                     results[1] = "source_entity:[I;" + TargetUUIDC.number0.Value + "," + TargetUUIDC.number1.Value + "," + TargetUUIDC.number2.Value + "," + TargetUUIDC.number3.Value + "]" + yOffset;
                 else
-                    if (VibrationMonitorsSourceType.SelectedItem.ToString() == "Data" && sourceEntityDisplayer.Tag != null)
+                    if (VibrationMonitorsSourceType.SelectedItem.ToString() == "Data" && sourceEntityDisplayer.Tag is not null)
                     results[1] = "source_entity:" + sourceEntityDisplayer.Tag.ToString() + yOffset;
                 else
                     results[1] = "";

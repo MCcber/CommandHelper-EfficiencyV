@@ -45,7 +45,7 @@ namespace CBHK.ControlDataContext
             try
             {
                 this_grid = e.Source as Grid;
-                if (e.LeftButton == MouseButtonState.Pressed && this_grid != null)
+                if (e.LeftButton == MouseButtonState.Pressed && this_grid is not null)
                 {
                     Point point = e.GetPosition(null);
                     var xDiff = point.X - prevPoint.X;

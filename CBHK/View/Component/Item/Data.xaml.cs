@@ -96,12 +96,12 @@ namespace CBHK.View.Component.Item
             JToken Damage = ExternData.SelectToken("tag.Damage");
             Damage ??= ExternData.SelectToken("Damage");
 
-            if (count != null)
+            if (count is not null)
             {
                 ItemCount.Value = int.Parse(count.ToString());
                 ExternData.Remove("Count");
             }
-            if (Damage != null)
+            if (Damage is not null)
             {
                 ItemDamage.Value = int.Parse(Damage.ToString());
                 ExternData.Remove("tag.Damage");
@@ -121,18 +121,18 @@ namespace CBHK.View.Component.Item
                     JToken slot = attribute.SelectToken("Slot");
                     AttributeItems attributeItem = AttributeSource[^1];
 
-                    if (attributeId != null)
+                    if (attributeId is not null)
                     {
                         string attributeIDString = attributeId.ToString();
                         attributeItem.AttributeNameBox.SelectedValue = _context.MobAttributeSet.First(item => item.ID == attributeIDString).ID;
                     }
-                    if (name != null)
+                    if (name is not null)
                         attributeItem.NameBox.Text = name.ToString();
-                    if (amount != null)
+                    if (amount is not null)
                         attributeItem.Amount.Value = int.Parse(amount.ToString());
-                    if (operation != null)
+                    if (operation is not null)
                         attributeItem.Operations.SelectedIndex = int.Parse(operation.ToString());
-                    if (slot != null)
+                    if (slot is not null)
                     {
                         string slotString = slot.ToString();
                         attributeItem.Slot.SelectedValue = _context.AttributeSlotSet.First(item => item.ID == slotString).Value;

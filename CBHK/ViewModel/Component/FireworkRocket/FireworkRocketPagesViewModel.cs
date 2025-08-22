@@ -483,7 +483,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 Give = ExternallyReadEntityData["ItemView"] is null;
                 JObject Explosion = ExternallyReadEntityData.SelectToken("ItemView.tag.Explosion") as JObject;
                 JArray Explosions = ExternallyReadEntityData.SelectToken("ItemView.tag.Fireworks.Explosions") as JArray;
-                GeneratorFireStar = Explosion != null;
+                GeneratorFireStar = Explosion is not null;
 
                 if (Give)
                 {
@@ -518,7 +518,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 FireworkRocketPageView page = sender as FireworkRocketPageView;
                 page.Dispatcher.InvokeAsync(() =>
                 {
-                    if (colors != null)
+                    if (colors is not null)
                         foreach (JValue item in colors.Cast<JValue>())
                         {
                             string colorString = item.Value<long>().ToString("X");
@@ -529,7 +529,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                             };
                             MainColorList.Add(border);
                         }
-                    if (fadeColors != null)
+                    if (fadeColors is not null)
                         foreach (JValue item in fadeColors.Cast<JValue>())
                         {
                             string colorString = item.Value<long>().ToString("X");
@@ -543,22 +543,22 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 });
                 #endregion
                 #region 设置剩余数据
-                if (flight != null)
+                if (flight is not null)
                     Duration = double.Parse(flight.ToString());
-                if (flicker != null)
+                if (flicker is not null)
                     Flicker = flicker.ToString() == "1" || flicker.ToString().Equals("true", StringComparison.CurrentCultureIgnoreCase);
-                if (trail != null)
+                if (trail is not null)
                     Trail = trail.ToString() == "1" || trail.ToString().Equals("true", StringComparison.CurrentCultureIgnoreCase);
-                if (type != null)
+                if (type is not null)
                     SelectedShape = int.Parse(type.ToString());
 
                 if (!Give)
                 {
-                    if (life != null)
+                    if (life is not null)
                         Life = double.Parse(life.ToString());
-                    if (lifeTime != null)
+                    if (lifeTime is not null)
                         LifeTime = double.Parse(lifeTime.ToString());
-                    if (shotAtAngle != null)
+                    if (shotAtAngle is not null)
                         FlyAngle = shotAtAngle.ToString() == "1" || shotAtAngle.ToString().Equals("true", StringComparison.CurrentCultureIgnoreCase);
                 }
                 #endregion

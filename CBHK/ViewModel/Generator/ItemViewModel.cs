@@ -253,7 +253,7 @@ namespace CBHK.ViewModel.Generator
                         if (nbt.Length > 0)
                         entityIDPath = "CustomName";
                     JToken name = resultJSON.SelectToken(entityIDPath);
-                    FileNameList.Add(context.SelectedItem.ComboBoxItemId + (name != null ? "-" + name.ToString() : ""));
+                    FileNameList.Add(context.SelectedItem.ComboBoxItemId + (name is not null ? "-" + name.ToString() : ""));
                     Result.Add(result);
                 });
             }

@@ -30,7 +30,7 @@ namespace CBHK.View.Component.Item.SpecialNBT
         {
             get
             {
-                string result = "{Color:" + Color.SelectedIndex + (Pattern.SelectedItem != null ? ",Pattern:\"" + (Pattern.SelectedItem as IconComboBoxItem).ComboBoxItemText : "") + "\"}";
+                string result = "{Color:" + Color.SelectedIndex + (Pattern.SelectedItem is not null ? ",Pattern:\"" + (Pattern.SelectedItem as IconComboBoxItem).ComboBoxItemText : "") + "\"}";
                 return result;
             }
         }

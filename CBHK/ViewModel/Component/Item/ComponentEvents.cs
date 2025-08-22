@@ -1,6 +1,7 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
 using CBHK.Interface;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.View.Component.Item;
 using CBHK.View.Component.Item.SpecialNBT;
@@ -761,7 +762,7 @@ namespace CBHK.ViewModel.Component.Item
                 else
                 {
                     object obj = (itemPanel.Children[0] as FrameworkElement).Tag;
-                    if (obj != null)
+                    if (obj is not null)
                         dataStructure.Result = accordion.Name + ":" + obj.ToString();
                     else
                         dataStructure.Result = "";
@@ -875,49 +876,17 @@ namespace CBHK.ViewModel.Component.Item
         {
             ComboBox comboBox = sender as ComboBox;
             NBTDataStructure dataStructure = comboBox.Tag as NBTDataStructure;
-            if (dataStructure.resultType == "String")
+            if (dataStructure.ResultType == "String")
                 dataStructure.Result = comboBox.Name + ":\"" + comboBox.SelectedItem.ToString() + "\"";
             else
-            if (dataStructure.resultType == "Number")
+            if (dataStructure.ResultType == "Number")
                 dataStructure.Result = comboBox.Name + ":" + double.Parse(comboBox.SelectedItem.ToString());
             else
-            if (dataStructure.resultType == "Boolean")
+            if (dataStructure.ResultType == "Boolean")
                 dataStructure.Result = comboBox.Name + ":" + bool.Parse(comboBox.SelectedItem.ToString());
             else
-            if (dataStructure.resultType == "Index")
+            if (dataStructure.ResultType == "Index")
                 dataStructure.Result = comboBox.Name + ":" + comboBox.SelectedIndex;
         }
-    }
-
-    /// <summary>
-    /// Tag转字符串
-    /// </summary>
-    public class TagToString : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return null;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return (NBTDataStructure)value;
-        }
-    }
-
-    public class NBTDataStructure : FrameworkElement
-    {
-        /// <summary>
-        /// 结果
-        /// </summary>
-        public string Result { get; set; }
-
-        public string DataType { get; set; }
-        public string resultType { get; set; }
-
-        /// <summary>
-        /// 标记当前实例属于哪个共通标签
-        /// </summary>
-        public string NBTGroup { get; set; }
     }
 }

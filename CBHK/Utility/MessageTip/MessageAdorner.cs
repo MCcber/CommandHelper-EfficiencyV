@@ -83,7 +83,7 @@ namespace CBHK.Utility.MessageTip
         {
             get
             {
-                return _child != null ? 1 : 0;
+                return _child is not null ? 1 : 0;
             }
         }
 
@@ -96,7 +96,7 @@ namespace CBHK.Utility.MessageTip
 
         protected override Visual GetVisualChild(int index)
         {
-            if (index == 0 && _child != null) return _child;
+            if (index == 0 && _child is not null) return _child;
             return base.GetVisualChild(index);
         }
     }

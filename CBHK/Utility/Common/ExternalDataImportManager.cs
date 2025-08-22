@@ -463,7 +463,7 @@ namespace CBHK.Utility.Common
                         if (File.Exists(iconPath))
                             transactionItemsViewModel.Buy.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
-                        if (buyCountObj != null)
+                        if (buyCountObj is not null)
                         {
                             transactionItemsViewModel.BuyCountDisplayText = "x" + int.Parse(buyCountObj.ToString());
                         }
@@ -490,7 +490,7 @@ namespace CBHK.Utility.Common
                             if (File.Exists(iconPath))
                                 transactionItemsViewModel.BuyB.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
-                            if (buyBCountObj != null)
+                            if (buyBCountObj is not null)
                             {
                                 transactionItemsViewModel.BuyBCountDisplayText = "x" + int.Parse(buyCountObj.ToString());
                             }
@@ -518,7 +518,7 @@ namespace CBHK.Utility.Common
                             if (File.Exists(iconPath))
                                 transactionItemsViewModel.Sell.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
-                            if (sellCountObj != null)
+                            if (sellCountObj is not null)
                             {
                                 transactionItemsViewModel.SellCountDisplayText = "x" + int.Parse(sellCountObj.ToString());
                             }
@@ -564,7 +564,7 @@ namespace CBHK.Utility.Common
                         gossipsItemsViewModel.TargetText = targetUID[0].ToString() + "," + targetUID[1].ToString() + "," + targetUID[2].ToString() + "," + targetUID[3].ToString();
                     if (gossip.SelectToken("Type") is JObject type)
                         gossipsItemsViewModel.SelectedTypeItemPath = type.ToString();
-                    if (value != null)
+                    if (value is not null)
                         gossipsItemsViewModel.GossipValue = int.Parse(value.ToString());
                 }
             }
@@ -576,14 +576,14 @@ namespace CBHK.Utility.Common
                 JToken level = VillagerData.SelectToken("level");
                 JToken profession = VillagerData.SelectToken("profession");
                 JToken type = VillagerData.SelectToken("type");
-                if(level != null)
+                if(level is not null)
                 context.VillagerLevel = context.VillagerLevelSource.Where(item=>item.Text == level.ToString()).First();
-                if(profession != null)
+                if(profession is not null)
                 {
                     string professionType = context.VillagerProfessionTypeDataBase.Where(item => item.Key == profession.ToString().Replace("minecraft:", "")).First().Value;
                     context.VillagerProfessionType = context.VillagerProfessionTypeSource.Where(item => item.Text == professionType).First();
                 }
-                if(type != null)
+                if(type is not null)
                 {
                     string villagerType = context.VillagerTypeDataBase.Where(item => item.Key == type.ToString().Replace("minecraft:", "")).First().Value;
                     context.VillagerType = context.VillagerTypeSource.Where(item => item.Text == villagerType).First();
@@ -658,7 +658,7 @@ namespace CBHK.Utility.Common
             try
             {
                 JToken entityTagID = JObject.Parse(nbtData).SelectToken("EntityTag.id");
-                if (entityTagID != null && entityID.Length == 0)
+                if (entityTagID is not null && entityID.Length == 0)
                     entityID = entityTagID.ToString();
                 //过滤掉命名空间
                 entityID = Regex.Replace(entityID, @"[\w\\/\.]+:", "").Trim();
@@ -675,7 +675,7 @@ namespace CBHK.Utility.Common
                 JObject nbtObj = JObject.Parse(nbtData);
                 //启用外部导入模式
                 DataRow result = EntityTable.Select("id='minecraft:"+ entityID + "'").First();
-                if (result != null)
+                if (result is not null)
                 {
                     entityID = result["id"].ToString();
                     //添加实体命令
@@ -710,7 +710,7 @@ namespace CBHK.Utility.Common
                 SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
             };
             EntityPageView entityPages = new() { FontWeight = FontWeights.Normal };
-            if (externData != null)
+            if (externData is not null)
             {
                 EntityPageViewModel context = entityPages.DataContext as EntityPageViewModel;
                 context.Give = mode != "Summon";
@@ -819,7 +819,7 @@ namespace CBHK.Utility.Common
             {
                 JToken itemTagID = JObject.Parse(nbtData).SelectToken("ItemView.id");
                 itemTagID ??= JObject.Parse(nbtData).SelectToken("id");
-                if (itemTagID != null && itemID.Length == 0)
+                if (itemTagID is not null && itemID.Length == 0)
                     itemID = itemTagID.ToString();
                 //过滤掉命名空间
                 itemID = Regex.Replace(itemID, @"[\w\\/\.]+:", "").Trim();
@@ -876,7 +876,7 @@ namespace CBHK.Utility.Common
             context.Summon = mode == "Summon";
             if (filePath.Length > 0 && File.Exists(filePath))
                 context.ExternFilePath = filePath;
-            if (externData != null)
+            if (externData is not null)
             {
                 context.ImportMode = true;
                 context.ExternallyReadEntityData = externData;
@@ -982,7 +982,7 @@ namespace CBHK.Utility.Common
             };
             FireworkRocketPageView itemPages = new() { FontWeight = FontWeights.Normal };
             FireworkRocketPageViewModel context = itemPages.DataContext as FireworkRocketPageViewModel;
-            if (externData != null)
+            if (externData is not null)
             {
                 context.Give = mode != "Summon";
                 context.ImportMode = true;

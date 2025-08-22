@@ -421,7 +421,7 @@ namespace CBHK.ViewModel.Generator
             else
                 if(SelectedItem is null && LastSelectedIndex > 0 && LastSelectedIndex < TagZone.Items.Count)
                 SelectedItem = TagZone.Items[LastSelectedIndex] as TagItemTemplate;
-            if (SelectedItem != null)
+            if (SelectedItem is not null)
                 ReverseValue(SelectedItem);
         }
 

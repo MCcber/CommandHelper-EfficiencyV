@@ -29,7 +29,7 @@ namespace CBHK.WindowDictionaries
             base.OnMouseLeftButtonDown(e);
             ApplyTemplate();
             Grid TitleStack = Template.FindName("TitleStack",this) as Grid;
-            if (TitleStack != null)
+            if (TitleStack is not null)
             {
                 Point title_range = e.GetPosition(TitleStack);
                 if (title_range.X >= 0 && title_range.X < TitleStack.ActualWidth && title_range.Y >= 0 && title_range.Y < TitleStack.ActualHeight && e.LeftButton == MouseButtonState.Pressed)

@@ -7,7 +7,7 @@ namespace CBHK.Utility.Common
     {
         public static bool IsEndOfBlock(this TextPointer position)
         {
-            for (; position != null; position = position.GetNextContextPosition(LogicalDirection.Forward))
+            for (; position is not null; position = position.GetNextContextPosition(LogicalDirection.Forward))
             {
                 switch (position.GetPointerContext(LogicalDirection.Forward))
                 {

@@ -1542,7 +1542,7 @@ namespace CBHK.ViewModel.Generator
                 //switch (iconTextButtons.Uid)
                 //{
                 //    case "Head":
-                //        if (HeadItem != null && HeadItem.Length > 0)
+                //        if (HeadItem is not null && HeadItem.Length > 0)
                 //        {
                 //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(HeadItem, ref richTabItems, false);
@@ -1552,7 +1552,7 @@ namespace CBHK.ViewModel.Generator
                 //        }
                 //        break;
                 //    case "Body":
-                //        if (BodyItem != null && BodyItem.Length > 0)
+                //        if (BodyItem is not null && BodyItem.Length > 0)
                 //        {
                 //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(BodyItem, ref richTabItems, false);
@@ -1562,7 +1562,7 @@ namespace CBHK.ViewModel.Generator
                 //        }
                 //        break;
                 //    case "LeftHand":
-                //        if (LeftHandItem != null && LeftHandItem.Length > 0)
+                //        if (LeftHandItem is not null && LeftHandItem.Length > 0)
                 //        {
                 //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(LeftHandItem, ref richTabItems, false);
@@ -1572,7 +1572,7 @@ namespace CBHK.ViewModel.Generator
                 //        }
                 //        break;
                 //    case "RightHand":
-                //        if (RightHandItem != null && RightHandItem.Length > 0)
+                //        if (RightHandItem is not null && RightHandItem.Length > 0)
                 //        {
                 //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(RightHandItem, ref richTabItems, false);
@@ -1582,7 +1582,7 @@ namespace CBHK.ViewModel.Generator
                 //        }
                 //        break;
                 //    case "Legs":
-                //        if (LegsItem != null && LegsItem.Length > 0)
+                //        if (LegsItem is not null && LegsItem.Length > 0)
                 //        {
                 //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(LegsItem, ref richTabItems, false);
@@ -1592,7 +1592,7 @@ namespace CBHK.ViewModel.Generator
                 //        }
                 //        break;
                 //    case "Feet":
-                //        if (FeetItem != null && FeetItem.Length > 0)
+                //        if (FeetItem is not null && FeetItem.Length > 0)
                 //        {
                 //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(FeetItem, ref richTabItems, false);

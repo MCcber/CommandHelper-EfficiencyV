@@ -239,13 +239,13 @@ namespace CBHK.View.Component.Item
             JToken trim = ExternData.SelectToken("tag.Trim");
             trim ??= ExternData.SelectToken("Trim");
 
-            if (materialObj != null)
+            if (materialObj is not null)
             {
                 material.Text = materialObj.ToString();
                 ExternData.Remove("tag.material");
                 ExternData.Remove("material");
             }
-            if (trim != null)
+            if (trim is not null)
             {
                 pattern.Text = trim.ToString();
                 ExternData.Remove("tag.Trim");

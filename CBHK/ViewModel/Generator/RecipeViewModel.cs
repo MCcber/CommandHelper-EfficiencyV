@@ -738,7 +738,7 @@ namespace CBHK.ViewModel.Generator
             {
                 IsGrabingItem = true;
                 DependencyObject obj = (DependencyObject)e.OriginalSource;
-                while (obj != null && obj is not ListViewItem)
+                while (obj is not null && obj is not ListViewItem)
                 {
                     obj = VisualTreeHelper.GetParent(obj);
                 }
@@ -752,10 +752,10 @@ namespace CBHK.ViewModel.Generator
                 };
                 GrabedImage = drag_source;
 
-                if (IsGrabingItem && drag_source != null)
+                if (IsGrabingItem && drag_source is not null)
                 {
                     DataObject dataObject = new(typeof(Image), GrabedImage);
-                    if (dataObject != null)
+                    if (dataObject is not null)
                         DragDrop.DoDragDrop(drag_source, dataObject, DragDropEffects.Move);
                     IsGrabingItem = false;
                 }
@@ -780,10 +780,10 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         private void SelectItemMove(object sender, MouseEventArgs e)
         {
-            if (IsGrabingItem && drag_source != null && GrabedImage != null)
+            if (IsGrabingItem && drag_source is not null && GrabedImage is not null)
             {
                 DataObject dataObject = new(typeof(Image), GrabedImage);
-                if(dataObject != null)
+                if(dataObject is not null)
                 DragDrop.DoDragDrop(drag_source, dataObject, DragDropEffects.Move);
             }
         }
@@ -803,13 +803,13 @@ namespace CBHK.ViewModel.Generator
         {
             ListView listView = sender as ListView;
             HitTestResult hitTestResult = VisualTreeHelper.HitTest(listView, Mouse.GetPosition(listView));
-            if(hitTestResult != null)
+            if(hitTestResult is not null)
             {
                 var item = hitTestResult.VisualHit;
-                while (item != null && item is not ListViewItem)
+                while (item is not null && item is not ListViewItem)
                     item = VisualTreeHelper.GetParent(item);
 
-                if (item != null)
+                if (item is not null)
                 {
                     int i = listView.Items.IndexOf(((ListViewItem)item).DataContext);
                     if (i >= 0 && i < listView.Items.Count)

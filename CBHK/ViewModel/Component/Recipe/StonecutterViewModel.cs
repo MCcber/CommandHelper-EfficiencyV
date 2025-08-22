@@ -135,7 +135,7 @@ namespace CBHK.ViewModel.Component.Recipe
                 {
                     JToken itemIDObj = ExternalData.SelectToken("ingredient.item");
                     JToken itemTagObj = ExternalData.SelectToken("ingredient.tag");
-                    if (itemIDObj != null)
+                    if (itemIDObj is not null)
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
@@ -145,7 +145,7 @@ namespace CBHK.ViewModel.Component.Recipe
                             ImagePath = new BitmapImage(iconUri),
                             IDAndName = itemID + ":" + itemName
                         });
-                        if (itemTagObj != null)
+                        if (itemTagObj is not null)
                             MaterialTag.Add(itemTagObj.ToString());
                     }
                 }
@@ -156,7 +156,7 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         JToken itemIDObj = item.SelectToken("item");
                         JToken itemTagObj = item.SelectToken("tag");
-                        if (itemIDObj != null)
+                        if (itemIDObj is not null)
                         {
                             string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                             Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
@@ -166,7 +166,7 @@ namespace CBHK.ViewModel.Component.Recipe
                                 ImagePath = new BitmapImage(iconUri),
                                 IDAndName = itemID + ":" + itemName
                             });
-                            if (itemTagObj != null)
+                            if (itemTagObj is not null)
                                 MaterialTag.Add(itemTagObj.ToString());
                         }
                     }
@@ -447,7 +447,7 @@ namespace CBHK.ViewModel.Component.Recipe
             var element = e.OriginalSource as DependencyObject;
 
             // 遍历可视化树，直到找到ListView的子项
-            while (element != null && element is not ListViewItem)
+            while (element is not null && element is not ListViewItem)
                 element = VisualTreeHelper.GetParent(element);
 
             // 获取子项
@@ -478,7 +478,7 @@ namespace CBHK.ViewModel.Component.Recipe
             var element = e.OriginalSource as DependencyObject;
 
             // 遍历可视化树，直到找到ListView的子项
-            while (element != null && element is not ListViewItem)
+            while (element is not null && element is not ListViewItem)
                 element = VisualTreeHelper.GetParent(element);
 
             // 获取子项

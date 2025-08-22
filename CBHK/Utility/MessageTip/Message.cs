@@ -26,10 +26,10 @@ namespace CBHK.Utility.MessageTip
         static AdornerLayer GetAdornerLayer(Visual visual)
         {
             var decorator = visual as AdornerDecorator;
-            if (decorator != null)
+            if (decorator is not null)
                 return decorator.AdornerLayer;
             var presenter = visual as ScrollContentPresenter;
-            if (presenter != null)
+            if (presenter is not null)
                 return presenter.AdornerLayer;
             var visualContent = (visual as Window)?.Content as Visual;
             AdornerLayer result = AdornerLayer.GetAdornerLayer(visualContent ?? visual);

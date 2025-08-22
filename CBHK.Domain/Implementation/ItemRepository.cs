@@ -26,14 +26,14 @@ namespace CBHK.Domain.Implementation
             IQueryable<Item> query = DbSet;
 
             // 条件筛选
-            if (predicate != null)
+            if (predicate is not null)
                 query = query.Where(predicate);
 
             // 获取总数
             int totalCount = await query.CountAsync();
 
             // 排序
-            if (orderBy != null)
+            if (orderBy is not null)
                 query = ascending ?
                     query.OrderBy(orderBy) :
                     query.OrderByDescending(orderBy);

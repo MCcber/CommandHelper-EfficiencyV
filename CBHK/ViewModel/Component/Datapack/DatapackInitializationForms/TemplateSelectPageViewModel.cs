@@ -227,7 +227,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                         SolutionTemplateArray.Add(BlankSolutions[i]);
                     if (solutionTemplateContent.Length > 0)
                         SolutionTemplateArray = JArray.Parse(solutionTemplateContent);
-                    if (SolutionTemplateArray != null)
+                    if (SolutionTemplateArray is not null)
                     {
                         //读取空白解决方案
                         foreach (var item in SolutionTemplateArray.Cast<JValue>())
@@ -248,7 +248,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                                     Uri iconUri = new(iconPath, UriKind.Absolute);
                                     solutionTemplateItems.Icon.Source = new BitmapImage(iconUri);
                                 }
-                                if (data != null)
+                                if (data is not null)
                                 {
                                     if (data.SelectToken("Name") is JToken name)
                                         solutionTemplateItems.SolutionName.Text = name.ToString();

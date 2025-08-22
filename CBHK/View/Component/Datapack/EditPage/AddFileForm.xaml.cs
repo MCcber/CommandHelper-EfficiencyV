@@ -39,7 +39,7 @@ namespace CBHK.View.Component.Datapack.EditPage
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value != null)
+            if (value is not null)
                 return (double)value - 25;
             return null;
         }
@@ -78,7 +78,7 @@ namespace CBHK.View.Component.Datapack.EditPage
             set
             {
                 SetProperty(ref selectedNewFile, value);
-                if (SelectedNewFile != null)
+                if (SelectedNewFile is not null)
                 {
                     SelectedTypeText = SelectedNewFile.TypeName;
                     SelectedDescriptionText = SelectedNewFile.Description;
@@ -223,7 +223,7 @@ namespace CBHK.View.Component.Datapack.EditPage
         private void NewItemStyleSource_Filter(object sender, FilterEventArgs e)
         {
             NewItemStyle newItemStyle = e.Item as NewItemStyle;
-            if(CurrentFileType != null)
+            if(CurrentFileType is not null)
             {
                 if(!CurrentFileType.Uid.Contains('\\') && newItemStyle.NameSpace.Contains('\\'))
                     e.Accepted = (newItemStyle.NameSpace.StartsWith(CurrentFileType.Uid) || CurrentFileType.Uid.Length == 0) && (SearchText.Length == 0 || newItemStyle.FunctionName.Contains(SearchText));

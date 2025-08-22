@@ -254,7 +254,7 @@ namespace CBHK.ViewModel.Component.Datapack
                             {
                                 headerItems.HeadText.Text = Path.GetFileName(item);
                                 fileResult.Add(richTreeViewItems);
-                                if (editContext != null)
+                                if (editContext is not null)
                                     richTreeViewItems.MouseDoubleClick += editContext.DoubleClickAnalysisAndOpenAsync;
                             }
                             richTreeViewItems.Header = headerItems;
@@ -307,7 +307,7 @@ namespace CBHK.ViewModel.Component.Datapack
             List<TreeViewItem> folderResult = [];
             List<TreeViewItem> fileResult = [];
             //退订，返回
-            if (currentItem.Items.Count > 0 && (currentItem.Items[0] as TreeViewItem).Header != null)
+            if (currentItem.Items.Count > 0 && (currentItem.Items[0] as TreeViewItem).Header is not null)
             {
                 currentItem.Expanded -= DatapackTreeItems_Expanded;
                 return;
