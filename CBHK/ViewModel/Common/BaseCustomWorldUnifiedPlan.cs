@@ -29,7 +29,7 @@ namespace CBHK.ViewModel.Common
     {
         #region Property
         protected virtual RegexService BaseRegexService { get; set; }
-        protected CBHKDataContext Context { get; set; }
+        protected CBHKDataContext BaseContext { get; set; }
         protected virtual HtmlHelper htmlHelper { get; set; }
         protected virtual Window Home { get; set; }
         public virtual string ConfigDirectoryPath { get; set; }
@@ -58,12 +58,12 @@ namespace CBHK.ViewModel.Common
         public virtual JsonTreeViewItem VisualLastItem { get; set; }
         #endregion
 
-        public BaseCustomWorldUnifiedPlan(IContainerProvider container, MainView mainView, CBHKDataContext context,RegexService regexService)
+        public BaseCustomWorldUnifiedPlan(IContainerProvider container, MainView mainView, CBHKDataContext Context,RegexService RegexService)
         {
-            Context = context;
+            BaseContext = Context;
             Container = container;
             Home = mainView;
-            BaseRegexService = regexService;
+            BaseRegexService = RegexService;
             htmlHelper = new(Container,BaseRegexService)
             {
                 plan = this,

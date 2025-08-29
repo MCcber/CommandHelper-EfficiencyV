@@ -80,10 +80,10 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
         private SolidColorBrush darkGrayBrush = new((Color)ColorConverter.ConvertFromString("#1E1E1E"));
-        private CBHKDataContext _context = null;
-        private RegexService _regexService;
+        private CBHKDataContext context = null;
+        private RegexService regexService;
         private DataService _dataService = null;
-        private IContainerProvider _container;
+        private IContainerProvider container;
         private MainView home;
         /// <summary>
         /// 记录剪切状态
@@ -103,7 +103,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         public readonly Socket client = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         #endregion
         #region 补全数据中的常量
-        public Dictionary<string, string> CodeSnippetList = new() { { "dataModifyStorageFromSelf", "data modify storage id path set from entity @s path" },
+        public Dictionary<string, string> CodeSnippetList = new() { { "dataModifyStorageFromSelf", "data modify storage oldID path set from entity @s path" },
             { "executeIfScoreSet","execute if score score_holder objective = score_holder objective" },
             { "scoreboardPlayersOperation","scoreboard players operation target_score_holder target_objective += source_score_holder source_objective" },
             { "scoreboardPlayersSet","scoreboard players set score_holder objective 0"},
@@ -184,16 +184,16 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         #endregion
 
         #region Method
-        public EditPageViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context,DataService dataService,RegexService regexService)
+        public EditPageViewModel(IContainerProvider container,MainView mainView,CBHKDataContext Context,DataService dataService,RegexService RegexService)
         {
             #region 客户端连接语言服务器
             client.Connect(new IPEndPoint(IPAddress.Parse(ipString), port));
             #endregion
 
-            _regexService = regexService;
+            regexService = regexService;
             _dataService = dataService;
-            _context = context;
-            _container = container;
+            context = context;
+            container = container;
             home = mainView;
         }
 
@@ -864,8 +864,8 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
                         SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
                     };
 
-                    EditPageView editPageView = _container.Resolve<EditPageView>();
-                    McfunctionIntellisenseCodeEditor textEditor = new(editPageView,_regexService)
+                    EditPageView editPageView = container.Resolve<EditPageView>();
+                    McfunctionIntellisenseCodeEditor textEditor = new(editPageView,regexService)
                     {
                         ShowLineNumbers = true,
                         Background = transparentBrush,

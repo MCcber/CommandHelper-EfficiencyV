@@ -78,7 +78,6 @@ namespace CBHK
             });
 
             containerRegistry.RegisterSingleton<DataService>();
-            containerRegistry.RegisterSingleton<MainViewProperties>();
             containerRegistry.RegisterSingleton<RegexService>();
         }
 

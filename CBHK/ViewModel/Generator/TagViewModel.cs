@@ -29,8 +29,8 @@ namespace CBHK.ViewModel.Generator
         #region Field
         ListView TagZone = null;
         SolidColorBrush LightOrangeBrush = new((Color)ColorConverter.ConvertFromString("#F0D08C"));
-        private IContainerProvider _container = null;
-        private CBHKDataContext _context = null;
+        private IContainerProvider container = null;
+        private CBHKDataContext context = null;
         private DataService _dataService;
         private IProgress<TagItemTemplate> AddItemProgress = null;
         private IProgress<(int, string, string, string, string, bool)> SetItemProgress = null;
@@ -109,12 +109,12 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public TagViewModel(IContainerProvider container,DataService dataService, CBHKDataContext context, MainView mainView)
+        public TagViewModel(IContainerProvider Container,DataService DataService, CBHKDataContext Context, MainView mainView)
         {
             home = mainView;
-            _container = container;
-            _context = context;
-            _dataService = dataService;
+            container = Container;
+            context = Context;
+            _dataService = DataService;
 
             InitSelectedTypeItemProgress = new Progress<bool>(item =>
             {
@@ -148,8 +148,8 @@ namespace CBHK.ViewModel.Generator
         private void ReverseValue(TagItemTemplate CurrentItem)
         {
             int index = TagItemList.IndexOf(CurrentItem);
-            int itemCount = _context.ItemSet.Count();
-            int entityCount = _context.EntitySet.Count();
+            int itemCount = context.ItemSet.Count();
+            int entityCount = context.EntitySet.Count();
             string itemString = CurrentItem.DisplayId;
             if (itemString.Trim().Length > 0)
             {
@@ -278,13 +278,52 @@ namespace CBHK.ViewModel.Generator
             #endregion
 
             #region 启动异步载入标签成员任务
+            
             SelectedVersion = VersionList[0];
             int ItemIDCount = _dataService.GetItemIDList().Count;
-            List<string> BlockIDList = [.._context.BlockSet.Select(item => item.ID)];
+            List<string> BlockIDList = [.. context.BlockSet.SelectMany(item =>
+            {
+                if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
+                {
+                    return item.Value;
+                }
+                return [];
+            })];
             int EntityIDCount = _dataService.GetEntityIDList().Count;
-            int BiomeIDCount = _context.BiomeIDSet.Count();
-            int GameEventValueCount = _context.GameEventTagSet.Count();
-            List<string> IDOrValueList = [.. _context.ItemSet.Select(item => item.ID), .. _context.EntitySet.Select(item => item.ID), .. _context.BiomeIDSet.Select(item => item.ID), .. _context.GameEventTagSet.Select(item => item.Value)];
+            int BiomeIDCount = context.BiomeIDSet.Count();
+            int GameEventValueCount = context.GameEventTagSet.Count();
+            List<string> IDOrValueList = [.. context.ItemSet.SelectMany(item =>
+            {
+                if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
+                {
+                    return item.Value;
+                }
+                return [];
+            }),
+                .. context.EntitySet.SelectMany(item =>
+            {
+                if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
+                {
+                    return item.Value;
+                }
+                return [];
+            }),
+                .. context.BiomeIDSet.SelectMany(item =>
+            {
+                if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
+                {
+                    return item.Value;
+                }
+                return [];
+            }),
+                .. context.GameEventTagSet.SelectMany(item =>
+            {
+                if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
+                {
+                    return item.Value;
+                }
+                return [];
+            })];
 
             Task.Run(async () =>
             {
@@ -308,7 +347,7 @@ namespace CBHK.ViewModel.Generator
                 List<string> ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
                 ItemKeyList.Sort();
 
-                Parallel.For(0, _context.ItemSet.Count(), i =>
+                Parallel.For(0, context.ItemSet.Count(), i =>
                 {
                     SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, currentPath + IDOrValueList[i], IDOrValueList[i], ItemIDAndNameMap[IDOrValueList[i]], BlockIDList.Contains(IDOrValueList[i]) ? "Block&ItemView" : "ItemView", false));
                 });
@@ -337,7 +376,6 @@ namespace CBHK.ViewModel.Generator
                 #endregion
 
                 #region 游戏事件
-                List<string> GameEventValueList = [.. _context.GameEventTagSet.Select(item => item.Value)];
                 Parallel.For(ItemIDCount + EntityIDCount + BiomeIDCount, ItemIDCount + EntityIDCount + BiomeIDCount + GameEventValueCount, (i) =>
                 {
                     SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, null, IDOrValueList[i], "", "GameEvent", false));

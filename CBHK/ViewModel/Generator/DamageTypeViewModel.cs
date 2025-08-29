@@ -60,7 +60,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public DamageTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context,RegexService regexService) : base(container, mainView,context,regexService)
+        public DamageTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext Context,RegexService RegexService) : base(container, mainView,Context,RegexService)
         {
         }
         #endregion

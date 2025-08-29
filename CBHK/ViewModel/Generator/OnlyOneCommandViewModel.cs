@@ -23,15 +23,15 @@ using CBHK.Common.Utility;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class OnlyOneCommandViewModel(IContainerProvider container, MainView mainView,RegexService regexService) : ObservableObject
+    public partial class OnlyOneCommandViewModel(IContainerProvider container, MainView mainView,RegexService RegexService) : ObservableObject
     {
         #region Field
         /// <summary>
         /// 主页引用
         /// </summary>
         public Window home = mainView;
-        private IContainerProvider _container = container;
-        private RegexService _regexService = regexService;
+        private IContainerProvider container = container;
+        private RegexService regexService = RegexService;
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
@@ -118,7 +118,7 @@ namespace CBHK.ViewModel.Generator
                             if (block.ContainsKey("nbt"))
                             {
                                 CompoundTag blockNBT = block["nbt"] as CompoundTag;
-                                if (targetBlockId.Contains(blockNBT["id"].ToString()))
+                                if (targetBlockId.Contains(blockNBT["oldID"].ToString()))
                                 {
                                     string commandContent = blockNBT["Command"].ToString();
                                     if (commandContent.Trim().Length > 0)
@@ -223,8 +223,8 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void Run()
         {
-            string resultStartpart = "summon falling_block ~ ~1.5 ~ {Time:1,Block:\"minecraft:redstone_block\",Motion:[0d,-1d,0d],Passengers:[{id:falling_block,Time:1,Block:\"minecraft:activator_rail\",Passengers:[{id:commandblock_minecart,Command:\"blockdata ~ ~-2 ~ {auto:0b,Command:\\\"\\\"}\"},{id:commandblock_minecart,Command:\"setblock ~1 ~-2 ~ repeating_command_block 5 replace {Command:\\\"\\\",auto:1b}\"},";
-            string resultEndPart = "{id:commandblock_minecart,Command:\"setblock ~ ~1 ~ command_block 0 replace {auto:1b,Command:\\\"fill ~ ~ ~ ~ ~-2 ~ air\\\"}\"},{id:commandblock_minecart,Command:\"kill @e[type=commandblock_minecart,r=1]\"}]}]}";
+            string resultStartpart = "summon falling_block ~ ~1.5 ~ {Time:1,Block:\"minecraft:redstone_block\",Motion:[0d,-1d,0d],Passengers:[{oldID:falling_block,Time:1,Block:\"minecraft:activator_rail\",Passengers:[{oldID:commandblock_minecart,Command:\"blockdata ~ ~-2 ~ {auto:0b,Command:\\\"\\\"}\"},{oldID:commandblock_minecart,Command:\"setblock ~1 ~-2 ~ repeating_command_block 5 replace {Command:\\\"\\\",auto:1b}\"},";
+            string resultEndPart = "{oldID:commandblock_minecart,Command:\"setblock ~ ~1 ~ command_block 0 replace {auto:1b,Command:\\\"fill ~ ~ ~ ~ ~-2 ~ air\\\"}\"},{oldID:commandblock_minecart,Command:\"kill @e[type=commandblock_minecart,r=1]\"}]}]}";
             StringBuilder resultContent = new();
 
             int Offset = 2;
@@ -236,7 +236,7 @@ namespace CBHK.ViewModel.Generator
                     for (int i = 0; i < editControl.Document.LineCount; i++)
                     {
                         string lineContent = editControl.Document.GetText(editControl.Document.Lines[i]);
-                        resultContent.Append("{id:commandblock_minecart,Command:\"setblock ~" + Offset + " ~-2 ~ chain_command_block 5 replace {Command:\\\"" + lineContent + "\\\",auto:1b}\"},");
+                        resultContent.Append("{oldID:commandblock_minecart,Command:\"setblock ~" + Offset + " ~-2 ~ chain_command_block 5 replace {Command:\\\"" + lineContent + "\\\",auto:1b}\"},");
                         Offset++;
                     }
                 }
@@ -244,7 +244,7 @@ namespace CBHK.ViewModel.Generator
             string Result = resultStartpart + resultContent.ToString() + resultEndPart;
             if(ShowGeneratorResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();

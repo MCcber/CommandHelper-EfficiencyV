@@ -1,4 +1,5 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Model.Common;
+using CBHK.Utility.Common;
 using CBHK.View.Component.Entity;
 using System.Windows;
 using System.Windows.Controls;

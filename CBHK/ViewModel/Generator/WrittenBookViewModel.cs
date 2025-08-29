@@ -53,7 +53,7 @@ namespace CBHK.ViewModel.Generator
         Frame PageFrame = new() { NavigationUIVisibility = NavigationUIVisibility.Hidden };
         EditPage editPage = new();
         SignaturePage signaturePage = new();
-        private IContainerProvider _container = container;
+        private IContainerProvider container = container;
 
         //成书背景文件路径
         string backgroundFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Image\written_book_background.png";
@@ -369,7 +369,10 @@ namespace CBHK.ViewModel.Generator
         /// <returns></returns>
         private async Task<string> GetTitle()
         {
-            string result = await signaturePage.title.Result();
+            StringBuilder Title = signaturePage.title.Create();
+            signaturePage.title.CollectionData(Title);
+            signaturePage.title.Build(Title);
+            string result = Title.ToString();
             string quotation = CurrentMinVersion < 113 ? "\"" : "'";
             return "title:" + quotation + result.TrimEnd(',') + quotation + ",";
         }
@@ -380,7 +383,10 @@ namespace CBHK.ViewModel.Generator
         /// <returns></returns>
         private async Task<string> GetAuthor()
         {
-            string result = await signaturePage.author.Result();
+            StringBuilder Author = signaturePage.author.Create();
+            signaturePage.author.CollectionData(Author);
+            signaturePage.author.Build(Author);
+            string result = Author.ToString();
             string quotation = CurrentMinVersion < 113 ? "\"" : "'";
             return "author:" + quotation + result.TrimEnd(',') + quotation + ",";
         }
@@ -428,8 +434,8 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            await signaturePage.title.Upgrade(CurrentMinVersion);
-            await signaturePage.author.Upgrade(CurrentMinVersion);
+            //await signaturePage.title.Upgrade(CurrentMinVersion);
+            //await signaturePage.author.Upgrade(CurrentMinVersion);
         }
 
         [RelayCommand]
@@ -673,7 +679,7 @@ namespace CBHK.ViewModel.Generator
 
                 if (ShowGeneratorResult)
                 {
-                    DisplayerView displayer = _container.Resolve<DisplayerView>();
+                    DisplayerView displayer = container.Resolve<DisplayerView>();
                     if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                     {
                         displayer.Show();

@@ -27,7 +27,7 @@ namespace CBHK.ViewModel.Component.Recipe
         #region Field
         private DataService _dataService = null;
         private Dictionary<string, string> ItemIDAndNameMap;
-        private CBHKDataContext _context = null;
+        private CBHKDataContext context = null;
         BitmapImage emptyImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Recipe\Image\Empty.png"));
         SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#484848"));
@@ -128,10 +128,10 @@ namespace CBHK.ViewModel.Component.Recipe
         #endregion
 
         #region Method
-        public FurnaceViewModel(CBHKDataContext context,DataService dataService)
+        public FurnaceViewModel(CBHKDataContext Context,DataService dataService)
         {
             MaterialTag.Add("");
-            _context = context;
+            context = context;
             _dataService = dataService;
             ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
         }

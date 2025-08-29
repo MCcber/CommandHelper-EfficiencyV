@@ -35,7 +35,7 @@ namespace CBHK.ControlDataContext
                 #region 打开下拉框
                 ObservableCollection<IconComboBoxItem> dataGroup = current_box.ItemsSource as ObservableCollection<IconComboBoxItem>;
                 string itemName = Regex.Match(box.Text, @"(?<=name:)\w+").ToString();
-                string itemId = Regex.Match(box.Text, @"(?<=id:)[a-zA-Z0-9_\-]+").ToString();
+                string itemId = Regex.Match(box.Text, @"(?<=oldID:)[a-zA-Z0-9_\-]+").ToString();
                 bool HaveIDAndName = itemName.Length > 0 && itemId.Length > 0;
                 IEnumerable<IconComboBoxItem> targetDataGroups = [];
 

@@ -36,7 +36,7 @@ namespace CBHK.ViewModel.Generator
         /// 本生成器的图标路径
         /// </summary>
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
-        private IContainerProvider _container;
+        private IContainerProvider container;
         #endregion
 
         #region Property
@@ -89,8 +89,8 @@ namespace CBHK.ViewModel.Generator
         #region Method
         public SpawnerViewModel(IContainerProvider container, MainView mainView)
         {
-            _container = container;
-            SpawnerPageView spawnerPageView = _container.Resolve<SpawnerPageView>();
+            container = container;
+            SpawnerPageView spawnerPageView = container.Resolve<SpawnerPageView>();
             spawnerPageView.FontWeight = FontWeights.Normal;
             SpawnerPageList[0].Content = spawnerPageView;
             SelectedItem = SpawnerPageList[0];
@@ -108,7 +108,7 @@ namespace CBHK.ViewModel.Generator
             RichTabItems richTabItems = new()
             {
                 Header = "刷怪笼",
-                Content = _container.Resolve<SpawnerPageView>(),
+                Content = container.Resolve<SpawnerPageView>(),
                 IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
@@ -202,7 +202,7 @@ namespace CBHK.ViewModel.Generator
             #region 显示生成结果
             if (ShowResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayerViewModel.GeneratorResult(Result.ToString().Trim(','), "刷怪笼", iconPath);
@@ -251,7 +251,7 @@ namespace CBHK.ViewModel.Generator
                         string entityID = "";
                         if (item.Contains('{'))
                         {
-                            if (JObject.Parse(item).SelectToken("SpawnData.entity.id") is JToken id)
+                            if (JObject.Parse(item).SelectToken("SpawnData.entity.oldID") is JToken id)
                                 entityID = id.ToString().Replace("minecraft:", "");
                         }
                         File.WriteAllTextAsync(openFolderDialog.FolderName + "spawner" + entityID + index + ".command", item);

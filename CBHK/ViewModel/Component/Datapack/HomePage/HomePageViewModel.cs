@@ -30,7 +30,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
     public partial class HomePageViewModel(IContainerProvider container) : ObservableObject
     {
         #region Field
-        private IContainerProvider _container = container;
+        private IContainerProvider container = container;
         /// <summary>
         /// 白色
         /// </summary>
@@ -291,7 +291,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
             FileInfo fileInfo = new(treeViewItem.Uid);
             if (File.Exists(treeViewItem.Uid) && fileInfo.Length > 0)
             {
-                List<TreeViewItem> result = ContentReader.ReadTheContentOfTheSpecifiedPath(treeViewItem.Uid, _container.Resolve<EditPageView>().DataContext as EditPageViewModel);
+                List<TreeViewItem> result = ContentReader.ReadTheContentOfTheSpecifiedPath(treeViewItem.Uid, container.Resolve<EditPageView>().DataContext as EditPageViewModel);
                 if (result.Count > 0)
                 {
                     NavigationToEditPage();

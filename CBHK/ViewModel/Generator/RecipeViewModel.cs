@@ -66,8 +66,8 @@ namespace CBHK.ViewModel.Generator
         private Dictionary<string, string> ItemIDAndNameMap = [];
         private List<string> ItemKeyList = [];
 
-        private CBHKDataContext _context = null;
-        private IContainerProvider _container = null;
+        private CBHKDataContext context = null;
+        private IContainerProvider container = null;
         private DataService _dataService = null;
 
         private IProgress<ItemStructure> AddOriginalItemProgress = null;
@@ -166,8 +166,8 @@ namespace CBHK.ViewModel.Generator
         #region Method
         public RecipeViewModel(IContainerProvider container,DataService dataService,MainView mainView,CBHKDataContext context)
         {
-            _context = context;
-            _container = container;
+            context = context;
+            container = container;
             _dataService = dataService;
 
             home = mainView;
@@ -274,7 +274,7 @@ namespace CBHK.ViewModel.Generator
                 {
                     string nbt = ExternalDataImportManager.GetItemDataHandler(itemFileList[i], true);
                     string currentKey = "";
-                    if (JObject.Parse(nbt)["id"] is JToken IDToken)
+                    if (JObject.Parse(nbt)["oldID"] is JToken IDToken)
                     {
                         currentKey = IDToken.Value<string>().Replace("minecraft:", "");
                     }

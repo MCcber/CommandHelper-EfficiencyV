@@ -27,7 +27,7 @@ namespace CBHK.ViewModel.Component.Recipe
     {
         #region Field
         private DataService _dataService = null;
-        private CBHKDataContext _context = null;
+        private CBHKDataContext context = null;
         private Dictionary<string, string> ItemIDAndNameMap = [];
         /// <summary>
         /// 存储最终结果
@@ -128,7 +128,7 @@ namespace CBHK.ViewModel.Component.Recipe
         #region Method
         public BlastFurnaceViewModel(DataService dataService,CBHKDataContext context)
         {
-            _context = context;
+            context = context;
             _dataService = dataService;
             MaterialTag.Add("");
             ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();

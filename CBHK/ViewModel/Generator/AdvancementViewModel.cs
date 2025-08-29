@@ -63,7 +63,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public AdvancementViewModel(IContainerProvider container, MainView mainView, CBHKDataContext context,RegexService regexService) : base(container, mainView, context,regexService)
+        public AdvancementViewModel(IContainerProvider container, MainView mainView, CBHKDataContext Context,RegexService RegexService) : base(container, mainView, Context,RegexService)
         {
             #region 添加数据上下文所需的枚举集合与转换字典数据
             EnumIDDictionary.Add("流体ID", ["minecraft:water", "minecraft:lava"]);

@@ -38,7 +38,7 @@ namespace CBHK.CustomControl
         McfunctionIntellisenseDataContext dataContext = new();
         private CancellationTokenSource communiteTokenSource = new();
         private CancellationTokenSource ShortKeyToken = new();
-        private RegexService _regexService;
+        private RegexService regexService;
         FoldingManager foldingManager = null;
         private Socket client = null;
         double singleQuotation;
@@ -157,7 +157,7 @@ namespace CBHK.CustomControl
         ImageSource MacrosIcon = Application.Current.Resources["MacrosIcon"] as ImageSource;
         #endregion
 
-        public McfunctionIntellisenseCodeEditor(EditPageView editPageView,RegexService regexService)
+        public McfunctionIntellisenseCodeEditor(EditPageView editPageView,RegexService RegexService)
         {
             #region 设置属性、订阅事件
             AllowDrop = true;
@@ -191,7 +191,7 @@ namespace CBHK.CustomControl
             PreviewKeyUp += TextEditor_PreviewKeyUp;
             #endregion
 
-            _regexService = regexService;
+            regexService = regexService;
 
             editPageDataContext = editPageView.DataContext as EditPageViewModel;
 
@@ -2294,7 +2294,7 @@ namespace CBHK.CustomControl
                     {
                         while (LeftIndex > 0 &&
                                !DonotMatches.Contains(LeftString) &&
-                              (_regexService.IsWord().IsMatch(LeftString) ||
+                              (regexService.IsWord().IsMatch(LeftString) ||
                               Matches.Contains(LeftString) ||
                               Regex.IsMatch(Document.GetText(LeftIndex - 1, 1), @"~|\^") || ("#region".StartsWith(dataContext.CurrentCode.Trim()) && dataContext.CurrentCode.Trim().Length < 8)))
                         {

@@ -64,7 +64,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public ChatTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext context,RegexService regexService):base(container, mainView,context,regexService)
+        public ChatTypeViewModel(IContainerProvider container, MainView mainView,CBHKDataContext Context,RegexService RegexService):base(container, mainView,Context,RegexService)
         {
         }
         #endregion

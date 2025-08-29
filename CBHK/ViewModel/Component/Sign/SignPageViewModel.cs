@@ -33,18 +33,14 @@ namespace CBHK.ViewModel.Component.Sign
     {
         #region Field
         public string Result = "";
-        private IContainerProvider _container;
-        private CBHKDataContext _context = null;
+        private IContainerProvider container;
+        private CBHKDataContext context = null;
         private string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Sign\Image\icon.png";
         private int CurrentMinVersion = 1202;
         /// <summary>
         /// 需要适应版本变化的特指数据所属控件的事件
         /// </summary>
         public Dictionary<FrameworkElement, Action<FrameworkElement, RoutedEventArgs>> VersionNBTList = [];
-        /// <summary>
-        /// 版本控件
-        /// </summary>
-        public List<IVersionUpgrader> VersionComponents = [];
         /// <summary>
         /// 告示牌编辑器
         /// </summary>
@@ -190,8 +186,8 @@ namespace CBHK.ViewModel.Component.Sign
         #region Method
         public SignPageViewModel(IContainerProvider container,CBHKDataContext context)
         {
-            _context = context;
-            _container = container;
+            context = context;
+            container = container;
 
             #region 处理正反面文档
             SignPanelSource = new()
@@ -437,7 +433,7 @@ namespace CBHK.ViewModel.Component.Sign
             {
                 string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
                 List<string> typeSource = [];
-                foreach (var item in _context.SignTypeSet)
+                foreach (var item in context.SignTypeSet)
                 {
                     string id = item.ID;
                     string version = item.Version;
@@ -511,42 +507,42 @@ namespace CBHK.ViewModel.Component.Sign
             CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
             VersionMask();
             CancellationTokenSource cancellationTokenSource = new();
-            await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
-            {
-                if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 1130)
-                {
-                    StylizedTextBox stylizedTextBox = VersionComponents[i] as StylizedTextBox;
-                    if (stylizedTextBox.richTextBox.Document.Blocks.Count > 0)
-                    {
-                        Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
-                        if (paragraph.Inlines.Count > 0)
-                        {
-                            RichRun richRun = paragraph.Inlines.FirstInline as RichRun;
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                IsNoStyleText = richRun.Text.Trim().Length > 0;
-                                if (!IsNoStyleText)
-                                {
-                                    Setblock = false;
-                                }
-                            });
-                        }
-                        else
-                        {
-                            IsNoStyleText = false;
-                        }
-                    }
-                    else
-                    {
-                        IsNoStyleText = false;
-                    }
-                }
-                else
-                {
-                    IsNoStyleText = true;
-                }
-                await VersionComponents[i].Upgrade(CurrentMinVersion);
-            });
+            //await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
+            //{
+            //    if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 1130)
+            //    {
+            //        StylizedTextBox stylizedTextBox = VersionComponents[i] as StylizedTextBox;
+            //        if (stylizedTextBox.richTextBox.Document.Blocks.Count > 0)
+            //        {
+            //            Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
+            //            if (paragraph.Inlines.Count > 0)
+            //            {
+            //                RichRun richRun = paragraph.Inlines.FirstInline as RichRun;
+            //                Application.Current.Dispatcher.Invoke(() =>
+            //                {
+            //                    IsNoStyleText = richRun.Text.Trim().Length > 0;
+            //                    if (!IsNoStyleText)
+            //                    {
+            //                        Setblock = false;
+            //                    }
+            //                });
+            //            }
+            //            else
+            //            {
+            //                IsNoStyleText = false;
+            //            }
+            //        }
+            //        else
+            //        {
+            //            IsNoStyleText = false;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        IsNoStyleText = true;
+            //    }
+            //    await VersionComponents[i].Upgrade(CurrentMinVersion);
+            //});
             await Parallel.ForEachAsync(VersionNBTList, async (item, cancellationToken) =>
             {
                 await Task.Delay(0, cancellationToken);
@@ -989,7 +985,7 @@ namespace CBHK.ViewModel.Component.Sign
             }
             if(ShowResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();

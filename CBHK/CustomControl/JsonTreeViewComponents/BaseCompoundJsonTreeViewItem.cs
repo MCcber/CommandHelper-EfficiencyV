@@ -23,8 +23,8 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
     public partial class BaseCompoundJsonTreeViewItem : JsonTreeViewItem
     {
         #region Field
-        private IContainerProvider _container;
-        private RegexService _regexService;
+        private IContainerProvider container;
+        private RegexService regexService;
         public TreeViewItem currentItemReference = null;
         #endregion
 
@@ -203,12 +203,12 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         #endregion
 
         #region Method
-        public BaseCompoundJsonTreeViewItem(ICustomWorldUnifiedPlan plan, IJsonItemTool jsonItemTool, IContainerProvider containerProvider,RegexService regexService)
+        public BaseCompoundJsonTreeViewItem(ICustomWorldUnifiedPlan plan, IJsonItemTool jsonItemTool, IContainerProvider containerProvider,RegexService RegexService)
         {
             Plan = plan;
             JsonItemTool = jsonItemTool;
-            _container = containerProvider;
-            _regexService = regexService;
+            container = containerProvider;
+            regexService = RegexService;
         }
 
         /// <summary>
@@ -1113,7 +1113,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     startLineText = Plan.GetRangeText(StartLine.Offset, StartLine.Length);
                 }
                 bool isCompoundType = currentValueTypeString == "compound" || currentValueTypeString == "list" || currentValueTypeString.Contains("array");
-                HtmlHelper htmlHelper = new(_container,_regexService)
+                HtmlHelper htmlHelper = new(container,regexService)
                 {
                     plan = Plan,
                     jsonTool = JsonItemTool
@@ -1357,7 +1357,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     case "bool":
                     case "boolean":
                         {
-                            Match defaultBoolMatch = _regexService.GetDefaultBoolValue().Match(InfoTipText);
+                            Match defaultBoolMatch = regexService.GetDefaultBoolValue().Match(InfoTipText);
                             if (defaultBoolMatch.Success)
                             {
                                 Value = bool.Parse(defaultBoolMatch.Groups[1].Value);
@@ -1386,9 +1386,9 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                             if (currentValueTypeString == "string")
                             {
                                 DataType = DataType.String;
-                                MatchCollection enumModeMatch1 = _regexService.GetEnumValueMode1().Matches(InfoTipText);
-                                MatchCollection enumModeMatch2 = _regexService.GetEnumValueMode2().Matches(InfoTipText);
-                                Match contextMatch = _regexService.GetContextKey().Match(InfoTipText);
+                                MatchCollection enumModeMatch1 = regexService.GetEnumValueMode1().Matches(InfoTipText);
+                                MatchCollection enumModeMatch2 = regexService.GetEnumValueMode2().Matches(InfoTipText);
+                                Match contextMatch = regexService.GetContextKey().Match(InfoTipText);
                                 if (enumModeMatch1.Count > 0)
                                 {
                                     EnumItemsSource.AddRange(enumModeMatch1.Select(item => new TextComboBoxItem() { Text = item.Groups[1].Value }));
@@ -1440,7 +1440,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                             else
                             {
                                 DataType = DataType.Number;
-                                Match defaultNumberMatch = _regexService.GetDefaultNumberValue().Match(InfoTipText);
+                                Match defaultNumberMatch = regexService.GetDefaultNumberValue().Match(InfoTipText);
                                 if (defaultNumberMatch.Success)
                                 {
                                     Value = decimal.Parse(defaultNumberMatch.Groups[1].Value);
@@ -1558,7 +1558,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     else//把复合状态下的子节点移给列表在状态下
                     if (cacheItemList is not null && cacheItemList.Count > 0 && !(CompoundChildrenStringList.Count > 0 && ListChildrenStringList.Count > 0) && !isPartialData && !isSubItemSameDataType)
                     {
-                        BaseCompoundJsonTreeViewItem addToBottom = new(Plan, JsonItemTool, _container,_regexService)
+                        BaseCompoundJsonTreeViewItem addToBottom = new(Plan, JsonItemTool, container,regexService)
                         {
                             DataType = DataType.None,
                             RemoveElementButtonVisibility = Visibility.Collapsed,
@@ -1566,7 +1566,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                             ElementButtonTip = "添加到尾部",
                             Parent = this
                         };
-                        BaseCompoundJsonTreeViewItem entry = new(Plan, JsonItemTool, _container, _regexService)
+                        BaseCompoundJsonTreeViewItem entry = new(Plan, JsonItemTool, container, regexService)
                         {
                             ItemType = ItemType.Compound,
                             RemoveElementButtonVisibility = Visibility.Visible,
@@ -1769,7 +1769,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
             }
             bool skipCode = false;
             int index = 0;
-            HtmlHelper htmlHelper = new(_container,_regexService)
+            HtmlHelper htmlHelper = new(container,regexService)
             {
                 plan = Plan,
                 jsonTool = JsonItemTool
@@ -2000,7 +2000,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                 {
                     RemoveLastEnumBranch();
 
-                    Match firstKeyWordMatch = _regexService.GetEnumValueMode1().Match(targetRawList[0]);
+                    Match firstKeyWordMatch = regexService.GetEnumValueMode1().Match(targetRawList[0]);
                     List<string> targetRawListTemp = [.. targetRawList];
                     if(firstKeyWordMatch.Success && firstKeyWordMatch.Groups[1].Value == SelectedEnumItem.Text)
                     {
@@ -2085,8 +2085,8 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                     #region 提取目标分支源码
                     for (int i = 0; i < CompoundChildrenStringList.Count; i++)
                     {
-                        Match targetmatch = _regexService.GetEnumRawKey().Match(CompoundChildrenStringList[i]);
-                        Match starMatch = _regexService.GetLineStarCount().Match(CompoundChildrenStringList[i]);
+                        Match targetmatch = regexService.GetEnumRawKey().Match(CompoundChildrenStringList[i]);
+                        Match starMatch = regexService.GetLineStarCount().Match(CompoundChildrenStringList[i]);
                         startStarCount = starMatch.Value.Trim().Length;
                         if (targetmatch.Success && CompoundChildrenStringList[i].Contains(SelectedEnumItem.Text) && !haveCurrentEnum)
                         {
@@ -2096,7 +2096,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                             continue;
                         }
 
-                        if (haveCurrentEnum && _regexService.GetEnumRawKey().Match(CompoundChildrenStringList[i]).Success && startStarCount == currentStarCount)
+                        if (haveCurrentEnum && regexService.GetEnumRawKey().Match(CompoundChildrenStringList[i]).Success && startStarCount == currentStarCount)
                         {
                             endIndex = i;
                             break;

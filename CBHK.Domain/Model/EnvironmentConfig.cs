@@ -7,8 +7,8 @@ namespace CBHK.Domain.Model
     {
         [Key]
         public int ID { get; set; } = 1;
-        public string Visibility { get; set; }
-        public string CloseToTray { get; set; }
-        public string ShowNotice { get; set; }
+        public string? Visibility { get; set; }
+        public string? CloseToTray { get; set; }
+        public string? ShowNotice { get; set; }
     }
 }

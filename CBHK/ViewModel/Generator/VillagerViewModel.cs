@@ -31,7 +31,7 @@ namespace CBHK.ViewModel.Generator
     {
         #region Field
 
-        private CBHKDataContext _context = null;
+        private CBHKDataContext context = null;
         int CurrentMinVersion = 0;
         /// <summary>
         /// 存储生成结果
@@ -65,8 +65,8 @@ namespace CBHK.ViewModel.Generator
         private IProgress<ItemStructure> AddCustomItemProgress = null;
         private IProgress<(int, string, string, string, string)> SetCustomItemProgress = null;
 
-        private DataService _dataService = null;
-        private IContainerProvider _container;
+        private DataService dataService = null;
+        private IContainerProvider container;
 
         private string ImageSetFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
         /// <summary>
@@ -556,11 +556,11 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public VillagerViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context,DataService dataService)
+        public VillagerViewModel(IContainerProvider Container,MainView mainView,CBHKDataContext Context,DataService DataService)
         {
-            _dataService = dataService;
-            _context = context;
-            _container = container;
+            dataService = DataService;
+            context = Context;
+            container = Container;
             home = mainView;
 
             #region 初始化主、副、结果空图像
@@ -657,7 +657,7 @@ namespace CBHK.ViewModel.Generator
                 }
             });
 
-            ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+            ItemIDAndNameMap = dataService.ItemGroupByVersionDicionary
             .Where(pair => pair.Key <= CurrentMinVersion)
             .SelectMany(pair => pair.Value)
             .ToDictionary(
@@ -743,7 +743,7 @@ namespace CBHK.ViewModel.Generator
                     {
                         string nbt = ExternalDataImportManager.GetItemDataHandler(itemFileList[i], true);
                         string currentKey = "";
-                        if (JObject.Parse(nbt)["id"] is JToken IDToken)
+                        if (JObject.Parse(nbt)["oldID"] is JToken IDToken)
                         {
                             currentKey = IDToken.Value<string>().Replace("minecraft:", "");
                         }
@@ -778,7 +778,7 @@ namespace CBHK.ViewModel.Generator
 
             if (showResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayerViewModel.GeneratorResult(Result, "村民", iconPath);
@@ -1014,7 +1014,7 @@ namespace CBHK.ViewModel.Generator
 
             if (ShowResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();

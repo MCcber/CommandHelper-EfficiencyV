@@ -6,18 +6,19 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Input;
-using System.Threading.Tasks;
 using System.Text;
-using System.Threading;
 using CBHK.Utility.Common;
 using CBHK.Interface;
+using Prism.Events;
+using CBHK.Model.Common;
+using Newtonsoft.Json.Linq;
 
 namespace CBHK.CustomControl
 {
     /// <summary>
     /// StylizedTextBox.xaml 的交互逻辑
     /// </summary>
-    public partial class StylizedTextBox : UserControl,IVersionUpgrader
+    public partial class StylizedTextBox : UserControl,IComponentBuilder
     {
         private int currentVersion = 1202;
         public int CurrentVersion
@@ -42,6 +43,16 @@ namespace CBHK.CustomControl
                 colorPicker.IsPresetColorMode = IsPresetMode;
             }
         }
+
+        private List<RichRun> RichRunList = [];
+
+        public IEventAggregator EventAggregator { get;set; }
+
+        public RemoveComponentEvent RemoveComponentEvent { get;set; }
+
+        public string ExternFilePath { get; set; }
+        public JToken ExternallyData { get; set; }
+        public bool ImportMode { get; set; }
 
         public static readonly DependencyProperty IsPresetModeProperty =
             DependencyProperty.Register("IsPresetMode", typeof(bool), typeof(StylizedTextBox), new PropertyMetadata(default(bool)));
@@ -225,61 +236,64 @@ namespace CBHK.CustomControl
 
         private void CannotPressKey_KeyDown(object sender, KeyEventArgs e) => e.Handled = e.Key == Key.Enter && !IsMultiLine;
 
-        public async Task Upgrade(int version)
+        public void UpdateVersion(string SelectedVersion)
         {
-            await Task.Delay(0);
-            CurrentVersion = version;
         }
 
-        public Task<string> Result()
+        public StringBuilder Create()
         {
-            TaskCompletionSource<string> tcs = new();
-            Thread thread = new(async () =>
+            StringBuilder Result = new();
+            return Result;
+        }
+
+        public void CollectionData(StringBuilder Result)
+        {
+            Paragraph paragraph = richTextBox.Document.Blocks.FirstBlock as Paragraph;
+            if (IsMultiLine)
             {
-                await Task.Run(async () =>
+                foreach (var item in richTextBox.Document.Blocks.Cast<Paragraph>())
                 {
-                    StringBuilder runResultList = new();
-                    Paragraph paragraph = richTextBox.Document.Blocks.FirstBlock as Paragraph;
-                    List<RichRun> richRuns = [];
-                    if (IsMultiLine)
-                    {
-                        foreach (var item in richTextBox.Document.Blocks.Cast<Paragraph>())
-                        {
-                            richRuns.AddRange(item.Inlines.Cast<RichRun>().ToList());
-                        }
-                    }
-                    else
-                        richRuns = paragraph.Inlines.Cast<RichRun>().ToList();
-                    await Application.Current.Dispatcher.InvokeAsync(async () =>
-                    {
-                        await Task.Delay(0);
-                        if (Name == "ItemLore" && CurrentVersion >= 1130)
-                            runResultList.Append("'[");
-                        foreach (var item in richRuns)
-                        {
-                            item.CurrentVersion = CurrentVersion;
-                            string currentResult = item.Result;
-                            int commaIndex = currentResult.IndexOf(',');
-                            if (commaIndex > -1 && currentResult[(commaIndex - 4)..(commaIndex - 1)] == @"\\n" && Name == "ItemLore" && CurrentVersion >= 1130)
-                                runResultList.Append(currentResult.TrimEnd(',').Remove(commaIndex - 4, 3) + "]','[");
-                            else
-                                runResultList.Append(currentResult.TrimEnd('\n'));
-                        }
-                        if (Name == "ItemLore" && CurrentVersion >= 1130)
-                            runResultList.Append("]'");
-                    });
-                    if (runResultList.ToString().EndsWith(",'[]'"))
-                        runResultList.Remove(runResultList.Length - 5, 5);
-                    if (runResultList.ToString() == "'[]'")
-                        runResultList.Clear();
-                    tcs.SetResult(runResultList.ToString());
-                    //result = runResultList.ToString();
-                });
-            });
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-            return tcs.Task;
-            //return result.TrimEnd(',');
+                    RichRunList.AddRange(item.Inlines.Cast<RichRun>().ToList());
+                }
+            }
+            else
+            {
+                RichRunList = paragraph.Inlines.Cast<RichRun>().ToList();
+            }
+        }
+
+        public void Build(StringBuilder Result)
+        {
+            if (Name == "ItemLore" && CurrentVersion >= 1130)
+            {
+                Result.Append("'[");
+            }
+            foreach (var item in RichRunList)
+            {
+                item.CurrentVersion = CurrentVersion;
+                string currentResult = item.Result;
+                int commaIndex = currentResult.IndexOf(',');
+                if (commaIndex > -1 && currentResult[(commaIndex - 4)..(commaIndex - 1)] == @"\\n" && Name == "ItemLore" && CurrentVersion >= 1130)
+                    Result.Append(currentResult.TrimEnd(',').Remove(commaIndex - 4, 3) + "]','[");
+                else
+                    Result.Append(currentResult.TrimEnd('\n'));
+            }
+            if (Name == "ItemLore" && CurrentVersion >= 1130)
+            {
+                Result.Append("]'");
+            }
+            if (Result.ToString().EndsWith(",'[]'"))
+            {
+                Result.Remove(Result.Length - 5, 5);
+            }
+            if (Result.ToString() == "'[]'")
+            {
+                Result.Clear();
+            }
+            if (Result.Length > 0 && Result[^1] == ',')
+            {
+                Result.Length--;
+            }
         }
     }
 }

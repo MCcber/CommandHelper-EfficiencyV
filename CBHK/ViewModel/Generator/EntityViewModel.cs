@@ -25,11 +25,11 @@ using System.Windows.Media;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class EntityViewModel(IContainerProvider container,CBHKDataContext context, MainView mainView) : ObservableObject
+    public partial class EntityViewModel(IContainerProvider container,CBHKDataContext Context, MainView mainView) : ObservableObject
     {
         #region Field
-        private IContainerProvider _container = container;
-        private CBHKDataContext _context = context;
+        private IContainerProvider container = container;
+        private CBHKDataContext context = Context;
         /// <summary>
         /// 主页引用
         /// </summary>
@@ -119,8 +119,11 @@ namespace CBHK.ViewModel.Generator
                 {
                     EntityPageView entityPages = entityPage.Content as EntityPageView;
                     EntityPageViewModel pageContext = entityPages.DataContext as EntityPageViewModel;
-                    string result = pageContext.Run(false);
+                    StringBuilder currentResult = pageContext.Create();
+                    pageContext.CollectionData(currentResult);
+                    pageContext.Build(currentResult);
                     string nbt = "";
+                    string result = currentResult.ToString();
                     if (result.Contains('{'))
                     {
                         nbt = result[result.IndexOf('{')..(result.IndexOf('}') + 1)];
@@ -183,7 +186,7 @@ namespace CBHK.ViewModel.Generator
                 SpecialArray = JArray.Parse(SpecialData);
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    EntityPageView entityPages = _container.Resolve<EntityPageView>();
+                    EntityPageView entityPages = container.Resolve<EntityPageView>();
                     EntityPageViewModel entityPagesDataContext = entityPages.DataContext as EntityPageViewModel;
                     entityPagesDataContext.UseForTool = !IsCloseable;
                     EntityPageList[0].Content = entityPages;
@@ -315,22 +318,22 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 全部生成
         /// </summary>
-        private async Task Run()
+        private void Run()
         {
             StringBuilder Result = new();
             foreach (var entityPage in EntityPageList)
             {
-                await entityPage.Dispatcher.InvokeAsync(() =>
-                {
-                    EntityPageView entityPages = entityPage.Content as EntityPageView;
-                    EntityPageViewModel pageContext = entityPages.DataContext as EntityPageViewModel;
-                    string result = pageContext.Run(false) + "\r\n";
-                    Result.Append(result);
-                });
+                EntityPageView entityPages = entityPage.Content as EntityPageView;
+                EntityPageViewModel pageContext = entityPages.DataContext as EntityPageViewModel;
+                StringBuilder currentResult = pageContext.Create();
+                pageContext.CollectionData(currentResult);
+                pageContext.Build(currentResult);
+                string result = currentResult.ToString();
+                Result.AppendLine(result);
             }
             if (ShowGeneratorResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();

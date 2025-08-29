@@ -19,7 +19,7 @@ namespace CBHK.ViewModel.Component.Recipe
     public partial class SmithingTableViewModel(CBHKDataContext context) : ObservableObject
     {
         #region Field
-        private CBHKDataContext _context = context;
+        private CBHKDataContext context = context;
         /// <summary>
         /// 存储最终结果
         /// </summary>
@@ -192,7 +192,8 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png");
-                        string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
+
+                        string itemName = "";
                         TemplateItem.Source = new BitmapImage(iconUri);
                         TemplateItem.Tag = new ItemStructure()
                         {
@@ -225,7 +226,7 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
+                        string itemName = "";
                         BaseItem.Source = new BitmapImage(iconUri);
                         BaseItem.Tag = new ItemStructure()
                         {
@@ -258,7 +259,7 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = _context.ItemSet.First(item=>item.ID == itemID).Name;
+                        string itemName = "";
                         AdditionItem.Source = new BitmapImage(iconUri);
                         AdditionItem.Tag = new ItemStructure()
                         {
@@ -290,7 +291,7 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
+                        string itemName = "";
                         ResultItem.Source = new BitmapImage(iconUri);
                         TemplateItem.Tag = new ItemStructure()
                         {

@@ -25,7 +25,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private Window home = null;
         private ImageSource icon = new BitmapImage();
-        private IContainerProvider _container;
+        private IContainerProvider container;
         string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\SignView\images\icon.png";
         #endregion
 
@@ -77,15 +77,15 @@ namespace CBHK.ViewModel.Generator
         #region Method
         public SignViewModel(IContainerProvider container,MainView mainView)
         {
-            _container = container;
+            container = container;
             home = mainView;
             Task.Run(async () =>
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    SignPageView signPageView = _container.Resolve<SignPageView>();
+                    SignPageView signPageView = container.Resolve<SignPageView>();
                     SignList[0].Content = signPageView;
-                    signPageView.DataContext = _container.Resolve<SignPageViewModel>();
+                    signPageView.DataContext = container.Resolve<SignPageViewModel>();
                     SignList[0].FontWeight = FontWeights.Normal;
                 });
             });
@@ -117,7 +117,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private async Task Run()
         {
-            DisplayerView displayer = _container.Resolve<DisplayerView>();
+            DisplayerView displayer = container.Resolve<DisplayerView>();
             if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
             {
                 StringBuilder result = new();
@@ -151,7 +151,7 @@ namespace CBHK.ViewModel.Generator
         private void AddSign()
         {
             string signPanelPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\acaciaSignPanel.png";
-            SignPageView signPage = _container.Resolve<SignPageView>();
+            SignPageView signPage = container.Resolve<SignPageView>();
             SignPageViewModel pageContext = signPage.DataContext as SignPageViewModel;
             pageContext.SignPanelSource = new BitmapImage(new Uri(signPanelPath, UriKind.Absolute));
             RichTabItems richTabItems = new()

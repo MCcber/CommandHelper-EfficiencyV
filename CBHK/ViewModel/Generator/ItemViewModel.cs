@@ -30,7 +30,7 @@ namespace CBHK.ViewModel.Generator
         /// 主页引用
         /// </summary>
         private Window home = mainView;
-        private IContainerProvider _container = container;
+        private IContainerProvider container = container;
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
@@ -305,7 +305,7 @@ namespace CBHK.ViewModel.Generator
             }
             if (ShowGeneratorResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();

@@ -25,7 +25,7 @@ namespace CBHK.ViewModel.Component.Recipe
     public partial class SmokerViewModel : ObservableObject
     {
         #region Field
-        private CBHKDataContext _context;
+        private CBHKDataContext context;
         /// <summary>
         /// 存储最终结果
         /// </summary>
@@ -125,7 +125,7 @@ namespace CBHK.ViewModel.Component.Recipe
         #region Method
         public SmokerViewModel(CBHKDataContext context)
         {
-            _context = context;
+            context = context;
             MaterialTag.Add("");
         }
 
@@ -146,7 +146,7 @@ namespace CBHK.ViewModel.Component.Recipe
                     {
                         string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                         Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
+                        string itemName = "";
                         MaterialList.Add(new()
                         {
                             ImagePath = new BitmapImage(iconUri),
@@ -167,7 +167,7 @@ namespace CBHK.ViewModel.Component.Recipe
                         {
                             string itemID = itemIDObj.ToString().Replace("minecraft:", "");
                             Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
-                            string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
+                            string itemName = "";
                             MaterialList.Add(new()
                             {
                                 ImagePath = new BitmapImage(iconUri),
@@ -192,7 +192,7 @@ namespace CBHK.ViewModel.Component.Recipe
             {
                 string itemID = recipeResult.ToString().Replace("minecraft:", "");
                 Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                string itemName = _context.ItemSet.First(item => item.ID == itemID).Name;
+                string itemName = "";
                 ResultItem.Source = new BitmapImage(iconUri);
                 ResultItem.Tag = new ItemStructure()
                 {

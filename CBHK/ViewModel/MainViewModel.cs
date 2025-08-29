@@ -22,8 +22,8 @@ namespace CBHK.ViewModel
     public partial class MainViewModel(IContainerProvider container,CBHKDataContext context) : ObservableObject
     {
         #region Field
-        private IContainerProvider _container = container;
-        private readonly CBHKDataContext _context = context;
+        private IContainerProvider container = container;
+        private readonly CBHKDataContext context = context;
         /// <summary>
         /// 主页可见性
         /// </summary>
@@ -56,7 +56,7 @@ namespace CBHK.ViewModel
         {
             SetGeneratorButtonProgress = new Progress<byte>((state) =>
             {
-                DistributorGenerator generatorFunction = _container.Resolve<DistributorGenerator>();
+                DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
                 string baseImagePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
                 int rowIndex = 0;
                 int columnIndex = 0;
@@ -67,7 +67,7 @@ namespace CBHK.ViewModel
                 GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
                 GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
-                foreach (var data in _context.GeneratorSet)
+                foreach (var data in context.GeneratorSet)
                 {
                     GeneratorButtons button = new()
                     {
@@ -127,7 +127,7 @@ namespace CBHK.ViewModel
                 StopSkeletonScreen(Task.CompletedTask);
             });
 
-            _config = _context.EnvironmentConfigSet.FirstOrDefault();
+            _config = context.EnvironmentConfigSet.FirstOrDefault();
             ReadDataSource();
         }
 
@@ -149,7 +149,7 @@ namespace CBHK.ViewModel
         public async void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = bool.Parse(_config.CloseToTray);
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
             if (e.Cancel)
             {
                 WindowState = WindowState.Minimized;
@@ -203,7 +203,7 @@ namespace CBHK.ViewModel
             GeneratorTable.Visibility = Visibility.Visible;
             if (bool.TryParse(_config.ShowNotice,out bool showNotice) && showNotice)
             {
-                NoticeToUsersView noticeToUsers = _container.Resolve<NoticeToUsersView>();
+                NoticeToUsersView noticeToUsers = container.Resolve<NoticeToUsersView>();
                 noticeToUsers.Topmost = true;
                 NoticeToUsersViewModel notichViewModel = noticeToUsers.DataContext as NoticeToUsersViewModel;
                 if (noticeToUsers.ShowDialog().Value)
@@ -218,7 +218,7 @@ namespace CBHK.ViewModel
         /// </summary>
         private void ReadDataSource()
         {
-            _config = _context.EnvironmentConfigSet.FirstOrDefault();
+            _config = context.EnvironmentConfigSet.FirstOrDefault();
 
             InitUIDataProgress.Report(0);
         }

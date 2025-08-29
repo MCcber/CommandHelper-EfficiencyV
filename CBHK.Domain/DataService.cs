@@ -1,13 +1,14 @@
 ﻿using CBHK.Common.Model;
 using CBHK.Common.Utility;
+using Microsoft.EntityFrameworkCore;
 
 namespace CBHK.Domain
 {
     public partial class DataService
     {
         #region Field
-        private CBHKDataContext _context = null;
-        private RegexService _regexService = null;
+        private CBHKDataContext context;
+        private RegexService regexService = null;
         private List<string> ItemSlotList = [];
         private List<string> Enchantments = [];
         private List<string> DamageTypeList = [];
@@ -25,10 +26,10 @@ namespace CBHK.Domain
         private Dictionary<string, string> SoundDictionary = [];
         private List<string> MobAttributeList = [];
         private List<string> EffectIDList = [];
-        private List<string> AdvancementValueList = [];
         private List<string> LootToolList = [];
         private List<string> ScoreboardTypeList = [];
         private List<string> ScoreboardCustomIDList = [];
+        private List<string> AdvancementValueList = [];
         #endregion
 
         #region DataStructure
@@ -38,114 +39,117 @@ namespace CBHK.Domain
         public Dictionary<int, Dictionary<string, string>> EntityGroupByVersionDictionary = [];
         #endregion
 
-        public DataService(CBHKDataContext context,RegexService regexService)
+        public DataService(CBHKDataContext Context,RegexService RegexService)
         {
-            _context = context;
-            _regexService = regexService;
+            context = Context;
+            regexService = RegexService;
 
             #region 根据版本分类所有物品ID
-            if (ItemGroupByVersionDicionary.Count == 0 && _context.ItemSet is not null)
+            if (ItemGroupByVersionDicionary.Count == 0)
             {
-                foreach (var item in _context.ItemSet)
-                {
-                    if (item.ID is not null && item.ID.Length > 0)
-                    {
-                        _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
-                        if (!ItemGroupByVersionDicionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
-                        {
-                            ItemGroupByVersionDicionary[version].Add(item.ID, item.Name);
-                        }
-                    }
-                }
+                //foreach (var item in context.ItemSet)
+                //{
+                //    if (item.ID is not null && item.ID.Length > 0)
+                //    {
+                //        _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
+                //        if (!ItemGroupByVersionDicionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
+                //        {
+                //            ItemGroupByVersionDicionary[version].Add(item.ID, item.Name);
+                //        }
+                //    }
+                //}
             }
             #endregion
 
             #region 根据版本分类所有附魔ID
-            if (EnchantmentGroupByVersionDicionary.Count == 0 && _context.EnchantmentSet is not null)
+            if (EnchantmentGroupByVersionDicionary.Count == 0)
             {
-                foreach (var item in _context.EnchantmentSet)
-                {
-                    if (item.ID is not null && item.ID.Length > 0)
-                    {
-                        _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
-                        if (!EnchantmentGroupByVersionDicionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
-                        {
-                            EnchantmentGroupByVersionDicionary[version].Add(item.ID, item.Name);
-                        }
-                    }
-                }
+                //foreach (var item in context.EnchantmentSet)
+                //{
+                //    if (item.ID is not null && item.ID.Length > 0)
+                //    {
+                //        _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
+                //        if (!EnchantmentGroupByVersionDicionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
+                //        {
+                //            EnchantmentGroupByVersionDicionary[version].Add(item.ID, item.Name);
+                //        }
+                //    }
+                //}
             }
             #endregion
 
             #region 根据方块ID为方块数据分组
             if (BlockIDAndName.Count == 0)
             {
-                foreach (var item in _context.BlockSet)
-                {
-                    if (item.ID is not null && item.ID.Length > 0)
-                    {
-                        if (!BlockIDAndName.TryAdd(item.ID, new Tuple<string, string?>(item.Name, item.LowVersionID)))
-                        {
-                        }
-                    }
-                }
+                //foreach (var item in context.BlockSet)
+                //{
+                //    if (item.ID is not null && item.ID.Length > 0)
+                //    {
+                //        if (!BlockIDAndName.TryAdd(item.ID, new Tuple<string, string?>(item.Name, item.LowVersionID)))
+                //        {
+                //        }
+                //    }
+                //}
             }
             #endregion
 
             #region 根据实体ID为实体数据分组
             if (EntityGroupByVersionDictionary.Count == 0)
             {
-                foreach (var item in _context.EntitySet)
-                {
-                    if (item.ID is not null && item.ID.Length > 0)
-                    {
-                        _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
-                        if (!EntityGroupByVersionDictionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
-                        {
-                            EntityGroupByVersionDictionary[version].Add(item.ID, item.Name);
-                        }
-                    }
-                }
+                //foreach (var item in context.EntitySet)
+                //{
+                //    if (item.ID is not null && item.ID.Length > 0)
+                //    {
+                //        _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
+                //        if (!EntityGroupByVersionDictionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
+                //        {
+                //            EntityGroupByVersionDictionary[version].Add(item.ID, item.Name);
+                //        }
+                //    }
+                //}
             }
+            #endregion
+
+            #region 添加进度
             #endregion
 
             #region 添加物品Id
-            if (_context.ItemSet is not null)
-            {
-                foreach (var item in _context.ItemSet)
-                {
-                    if (item.ID is not null)
-                        ItemIDList.Add(item.ID);
-                }
-            }
+            //if (context.ItemSet is not null)
+            //{
+            //    foreach (var item in context.ItemSet)
+            //    {
+            //        if (item.ID is not null)
+            //            ItemIDList.Add(item.ID);
+            //    }
+            //}
             #endregion
 
             #region 添加方块Id
-            foreach (var item in _context.BlockSet)
-            {
-                if (item.ID is not null)
-                    BlockIDList.Add(item.ID);
-            }
+            //foreach (var item in context.BlockSet)
+            //{
+            //    if (item.ID is not null)
+            //        BlockIDList.Add(item.ID);
+            //}
             #endregion
 
             #region 添加附魔ID
-            if (_context.EnchantmentSet is not null)
-            {
-                foreach (var item in _context.EnchantmentSet)
-                {
-                    if (item.ID is not null)
-                        Enchantments.Add(item.ID);
-                }
-            }
+            //if (context.EnchantmentSet is not null)
+            //{
+            //    foreach (var item in context.EnchantmentSet)
+            //    {
+            //        if (item.ID is not null)
+            //            Enchantments.Add(item.ID);
+            //    }
+            //}
             #endregion
 
             #region 添加物品槽位编号
-            foreach (var item in _context.ItemSlotSet)
+            foreach (var item in context.ItemSlotSet)
             {
                 if (item.Value is not null)
                 {
                     string value = item.Value;
-                    string subContent = _regexService.ItemSlotMatcher().Match(value).ToString();
+                    string subContent = regexService.ItemSlotMatcher().Match(value).ToString();
                     if (subContent is not null && subContent.Length > 0)
                     {
                         #region 处理区间,与后面引用的数据拼接成完整的数据
@@ -164,11 +168,11 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加伤害类型
-            foreach (var item in _context.DamageTypeSet)
-            {
-                if (item.Value is not null)
-                    DamageTypeList.Add(item.Value);
-            }
+            //foreach (var item in context.DamageTypeSet)
+            //{
+            //    if (item.Value is not null)
+            //        DamageTypeList.Add(item.Value);
+            //}
             #endregion
 
             #region 添加维度
@@ -178,7 +182,7 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加选择器参数
-            foreach (var item in _context.SelectorParameterSet)
+            foreach (var item in context.SelectorParameterSet)
             {
                 if (item.Value is not null)
                     SelectorParameterList.Add(item.Value);
@@ -186,7 +190,7 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加选择器参数值
-            foreach (var item in _context.SelectorParameterValueSet)
+            foreach (var item in context.SelectorParameterValueSet)
             {
                 if (item.Name is not null && item.Value is not null)
                     SelectorParameterValueList.Add(item.Name, item.Value);
@@ -194,7 +198,7 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加游戏规则名称
-            foreach (var item in _context.GameRuleSet)
+            foreach (var item in context.GameRuleSet)
             {
                 if (item.Name is not null)
                 {
@@ -211,7 +215,7 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加队伍颜色
-            foreach (var item in _context.TeamColorSet)
+            foreach (var item in context.TeamColorSet)
             {
                 if (item.Value is not null)
                     TeamColorList.Add(item.Value);
@@ -219,7 +223,7 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加bossbar颜色
-            foreach (var item in _context.BossbarColorSet)
+            foreach (var item in context.BossbarColorSet)
             {
                 if (item.Value is not null)
                     BossbarColorList.Add(item.Value);
@@ -227,7 +231,7 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加bossbar样式
-            foreach (var item in _context.BossbarStyleSet)
+            foreach (var item in context.BossbarStyleSet)
             {
                 if (item.Value is not null)
                     BossbarStyleList.Add(item.Value);
@@ -235,31 +239,31 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加实体Id
-            foreach (var item in _context.EntitySet)
-            {
-                if (item.ID is not null)
-                    EntityIDList.Add(item.ID);
-            }
+            //foreach (var item in context.EntitySet)
+            //{
+            //    if (item.ID is not null)
+            //        EntityIDList.Add(item.ID);
+            //}
             #endregion
 
             #region 添加粒子路径
-            foreach (var item in _context.ParticleSet)
-            {
-                if (item.Value is not null)
-                    ParticleIDList.Add(item.Value);
-            }
+            //foreach (var item in context.ParticleSet)
+            //{
+            //    if (item.Value is not null)
+            //        ParticleIDList.Add(item.Value);
+            //}
             #endregion
 
             #region 添加音效路径
-            foreach (var item in _context.SoundSet)
-            {
-                if (item.ID is not null)
-                    SoundDictionary.Add(item.ID, item.Name);
-            }
+            //foreach (var item in context.SoundSet)
+            //{
+            //    if (item.ID is not null)
+            //        SoundDictionary.Add(item.ID, item.Name);
+            //}
             #endregion
 
             #region 添加生物属性
-            foreach (var item in _context.MobAttributeSet)
+            foreach (var item in context.MobAttributeSet)
             {
                 if (item.ID is not null)
                     MobAttributeList.Add(item.ID);
@@ -267,18 +271,9 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加药水id/生物状态
-            foreach (var item in _context.MobEffectSet)
+            foreach (var item in context.MobEffectSet)
             {
-                if (item.ID is not null)
-                    EffectIDList.Add(item.ID);
-            }
-            #endregion
-
-            #region 添加进度列表
-            foreach (var item in _context.AdvancementSet)
-            {
-                if (item.Value is not null)
-                    AdvancementValueList.Add("minecraft:" + item.Value);
+                EffectIDList.AddRange(item.Value);
             }
             #endregion
 
@@ -289,7 +284,7 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加记分板准则
-            foreach (var item in _context.ScoreboardTypeSet)
+            foreach (var item in context.ScoreboardTypeSet)
             {
                 if (item.Value is not null)
                     ScoreboardTypeList.Add(item.Value);
@@ -297,7 +292,7 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加custom命令空间下的ID
-            foreach (var item in _context.ScoreboardCustomIDSet)
+            foreach (var item in context.ScoreboardCustomIDSet)
             {
                 if (item.Value is not null)
                     ScoreboardCustomIDList.Add(item.Value);

@@ -9,14 +9,12 @@ namespace CBHK.Interface
     {
         public IEventAggregator EventAggregator { get; }
         public RemoveComponentEvent RemoveComponentEvent { get; }
-        public void UpdateVersion();
-        public string SelectedVersion { get; }
-        public StringBuilder Result { get; }
+        public void UpdateVersion(string SelectedVersion);
         public string ExternFilePath { get; set; }
         public JToken ExternallyData { get; set; }
         public bool ImportMode { get; set; }
-        public void Create();
-        public void CollectionData();
-        public StringBuilder Build();
+        public StringBuilder Create();
+        public void CollectionData(StringBuilder Result);
+        public void Build(StringBuilder Result);
     }
 }

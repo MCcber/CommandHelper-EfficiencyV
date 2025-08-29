@@ -4,10 +4,8 @@ using CBHK.Domain;
 using CBHK.View.Component.Datapack.TemplateSelectPage;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Generator;
-using CBHKShared.ContextModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -26,7 +24,7 @@ using System.Windows.Navigation;
 
 namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
 {
-    public partial class TemplateSelectPageViewModel(CBHKDataContext context,RegexService regexService): ObservableObject
+    public partial class TemplateSelectPageViewModel(CBHKDataContext Context,RegexService RegexService): ObservableObject
     {
         #region Field
         /// <summary>
@@ -53,8 +51,8 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// 数据库文件路径
         /// </summary>
         private string databaseFilePath = AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db";
-        private CBHKDataContext _context = context;
-        private RegexService _regexService = regexService;
+        private CBHKDataContext context = Context;
+        private RegexService regexService = RegexService;
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
         private SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#3D3D3D"));
@@ -195,8 +193,8 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             {
                 dataPack.Dispatcher.InvokeAsync(async () =>
                 {
-                    DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
-                    SolutionTemplateSource = context.TemplateSelectPage.FindResource("SolutionTemplateSource") as CollectionViewSource;
+                    DatapackViewModel viewModel = dataPack.DataContext as DatapackViewModel;
+                    SolutionTemplateSource = viewModel.TemplateSelectPage.FindResource("SolutionTemplateSource") as CollectionViewSource;
 
                     #region 清除数据
                     VersionList.Clear();
@@ -211,10 +209,10 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                     #region 载入版本
                     if (File.Exists(databaseFilePath))
                     {
-                        DbSet<DatapackVersion> versionList = _context.DatapackVersionSet;
+                        List<string> versionList = [];
                         foreach (var item in versionList)
                         {
-                            VersionList.Add(new TextComboBoxItem() { Text = item.Value });
+                            VersionList.Add(new TextComboBoxItem() { Text = item });
                         }
                     }
                     #endregion
@@ -407,7 +405,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                 description = solutionTemplateItems.Description.Text.StartsWith(SearchText) || solutionTemplateItems.Description.Text.Contains(SearchText);
             }
             //if(solutionTemplateItems.CurrentType == SolutionTemplateItems.ItemTypes.DatapackView)
-            version = versionValue == _regexService.PackVersionComparer().Match(currentVersion).ToString() || SelectedVersion.Text == "全部";
+            version = versionValue == regexService.PackVersionComparer().Match(currentVersion).ToString() || SelectedVersion.Text == "全部";
             string developerValue = solutionTemplateItems.Developer.Text;
             List<string> typeValue = [];
             foreach (Border item in solutionTemplateItems.TypePanel.Children)

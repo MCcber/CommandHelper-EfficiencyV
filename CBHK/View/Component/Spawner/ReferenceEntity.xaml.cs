@@ -7,6 +7,7 @@ using CBHK.ViewModel.Generator;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -125,8 +126,11 @@ namespace CBHK.View.Component.Spawner
             if (entity.ShowDialog().Value)
             {
                 EntityPageViewModel entityPagesDataContext = (context.EntityPageList[0].Content as EntityPageView).DataContext as EntityPageViewModel;
-                string data = ExternalDataImportManager.GetEntityDataHandler(entityPagesDataContext.Result, false);
-                Tag = entityPagesDataContext.Result;
+                StringBuilder Result = entityPagesDataContext.Create();
+                entityPagesDataContext.CollectionData(Result);
+                entityPagesDataContext.Build(Result);
+                string data = ExternalDataImportManager.GetEntityDataHandler(Result.ToString(), false);
+                Tag = data;
                 string entityID = "";
                 JObject json = JObject.Parse(data);
                 if (json.SelectToken("id") is JToken entityIDToken)

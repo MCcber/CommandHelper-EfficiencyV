@@ -26,7 +26,7 @@ namespace CBHK.ViewModel.Component.Recipe
     {
         #region Field
         private DataService _dataService = null;
-        private CBHKDataContext _context = null;
+        private CBHKDataContext context = null;
         private Dictionary<string, string> ItemIDAndNameMap;
         /// <summary>
         /// 存储最终结果
@@ -127,10 +127,10 @@ namespace CBHK.ViewModel.Component.Recipe
         #endregion
 
         #region Method
-        public CampfireViewModel(CBHKDataContext context,DataService dataService)
+        public CampfireViewModel(CBHKDataContext Context,DataService dataService)
         {
             _dataService = dataService;
-            _context = context;
+            context = context;
             MaterialTag.Add("");
             ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
         }

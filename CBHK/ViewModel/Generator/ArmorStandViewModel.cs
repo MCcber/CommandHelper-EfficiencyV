@@ -100,7 +100,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         StackPanel NBTList = null;
 
-        private readonly IContainerProvider _container;
+        private readonly IContainerProvider container;
 
         /// <summary>
         /// 样式化文本框引用
@@ -1010,7 +1010,7 @@ namespace CBHK.ViewModel.Generator
             YAxis.DataContext = this;
             ZAxis.DataContext = this;
 
-            _container = container;
+            container = container;
             home = mainView;
 
             ResetAllPoseButtonForeground = ResetHeadPoseButtonForeground = ResetLArmPoseButtonForeground = ResetRArmPoseButtonForeground = ResetBodyPoseButtonForeground = ResetLLegPoseButtonForeground = ResetRLegPoseButtonForeground = GrayBrush;
@@ -1422,7 +1422,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void Version_SelectionChanged(object sender, RoutedEventArgs e) => await stylizedTextBox.Upgrade(CurrentMinVersion);
+        public async void Version_SelectionChanged(object sender, RoutedEventArgs e) { }
 
         /// <summary>
         /// 检测名称文本框内容为空
@@ -1608,7 +1608,7 @@ namespace CBHK.ViewModel.Generator
                 string nbt = ExternalDataImportManager.GetItemDataHandler(Result, false);
                 if (nbt.Length == 0) return;
                 JObject data = JObject.Parse(nbt);
-                string itemID = data.SelectToken("id").ToString().Replace("minecraft:", "");
+                string itemID = data.SelectToken("oldID").ToString().Replace("minecraft:", "");
                 string filePath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID + ".png";
                 switch (iconTextButtons.Uid)
                 {
@@ -1679,11 +1679,14 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private async Task Run()
         {
-            string result;
+            StringBuilder Result = new();
             CustomName = "";
-            await stylizedTextBox.Upgrade(CurrentMinVersion);
+            //await stylizedTextBox.Upgrade(CurrentMinVersion);
             await tagRichTextBox.GetResult();
-            string CustomNameValue = await stylizedTextBox.Result();
+            StringBuilder customnameResult = stylizedTextBox.Create();
+            stylizedTextBox.CollectionData(customnameResult);
+            stylizedTextBox.Build(customnameResult);
+            string CustomNameValue = customnameResult.ToString();
             if (CustomNameValue.Trim().Length > 0)
             {
                 CustomName = "CustomName:" + (CurrentMinVersion >= 1130 ? "'[" : @"\\\\\\\""") + CustomNameValue.TrimEnd(',') + (CurrentMinVersion >= 1130 ? "]'" : @"\\\\\\\""") + ",";
@@ -1700,9 +1703,9 @@ namespace CBHK.ViewModel.Generator
             string nbt = CustomName + BoolNBTList + EquipmentList + DisabledValue + CustomNameVisibleString + TagList + PoseString;
             nbt = nbt.TrimEnd(',');
             if (CurrentMinVersion >= 1130)
-                result = "summon armor_stand ~ ~ ~" + (nbt != "" ? " {" + nbt + "}" : "");
+                Result = new("summon armor_stand ~ ~ ~" + (nbt != "" ? " {" + nbt + "}" : ""));
             else
-                result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""summon armor_stand ~ ~ ~ {" + nbt + @"}\\\""}\""}}""}}";
+                Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""summon armor_stand ~ ~ ~ {" + nbt + @"}\\\""}\""}}""}}");
             #endregion
 
             #endregion
@@ -1710,16 +1713,16 @@ namespace CBHK.ViewModel.Generator
             #region 生成结果
             if (ShowGeneratorResult)
             {
-                DisplayerView displayerView = _container.Resolve<DisplayerView>();
+                DisplayerView displayerView = container.Resolve<DisplayerView>();
                 if (displayerView is not null && displayerView.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayerView.Show();
-                    displayerViewModel.GeneratorResult(result, "盔甲架", iconPath);
+                    displayerViewModel.GeneratorResult(Result.ToString(), "盔甲架", iconPath);
                 }
             }
             else
             {
-                Clipboard.SetText(result);
+                Clipboard.SetText(Result.ToString());
                 Message.PushMessage("盔甲架生成成功！数据已进入剪切板", MessageBoxImage.Information);
             }
             #endregion

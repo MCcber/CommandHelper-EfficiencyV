@@ -31,7 +31,7 @@ namespace CBHK.ViewModel.Component.Villager
         /// </summary>
         string emptyIcon = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/empty.png";
 
-        private CBHKDataContext _context = null;
+        private CBHKDataContext context = null;
         private DataService _dataService = null;
         #endregion
 
@@ -102,9 +102,9 @@ namespace CBHK.ViewModel.Component.Villager
 
                 #region 购入物品AB与卖出物品数据
                 //补齐双引号对
-                string buyData = "{id:\"minecraft:stick\"}";
+                string buyData = "{oldID:\"minecraft:stick\"}";
                 string buyBData = "{}";
-                string sellData = "{id:\"minecraft:stick\"}";
+                string sellData = "{oldID:\"minecraft:stick\"}";
 
                 if (Buy.Tag is ItemStructure buyItemData)
                 {
@@ -114,7 +114,7 @@ namespace CBHK.ViewModel.Component.Villager
                     }
                     else
                     {
-                        buyData = "{id:\"minecraft:" + buyItemData.IDAndName.Split(':')[0] + "\"}";
+                        buyData = "{oldID:\"minecraft:" + buyItemData.IDAndName.Split(':')[0] + "\"}";
                     }
                 }
 
@@ -126,7 +126,7 @@ namespace CBHK.ViewModel.Component.Villager
                     }
                     else
                     {
-                        buyBData = "{id:\"minecraft:" + buybItemData.IDAndName.Split(':')[0] + "\"}";
+                        buyBData = "{oldID:\"minecraft:" + buybItemData.IDAndName.Split(':')[0] + "\"}";
                     }
                 }
 
@@ -138,7 +138,7 @@ namespace CBHK.ViewModel.Component.Villager
                     }
                     else
                     {
-                        sellData = "{id:\"minecraft:" + sellItemData.IDAndName.Split(':')[0] + "\"}";
+                        sellData = "{oldID:\"minecraft:" + sellItemData.IDAndName.Split(':')[0] + "\"}";
                     }
                 }
 
@@ -191,9 +191,9 @@ namespace CBHK.ViewModel.Component.Villager
         #endregion
 
         #region Method
-        public TransactionItemViewModel(CBHKDataContext context, DataService dataService)
+        public TransactionItemViewModel(CBHKDataContext Context, DataService dataService)
         {
-            _context = context;
+            context = context;
             _dataService = dataService;
             ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
         }

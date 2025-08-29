@@ -16,18 +16,18 @@ namespace CBHK.Utility
     {
         #region Field
         private MainViewModel CBHK;
-        private readonly IContainerProvider _container;
-        private readonly CBHKDataContext _context;
-        private readonly EnvironmentConfig _config;
+        private readonly IContainerProvider container;
+        private readonly CBHKDataContext context;
+        private readonly EnvironmentConfig config;
         #endregion
 
         #region Method
-        public DistributorGenerator(IContainerProvider container,CBHKDataContext context)
+        public DistributorGenerator(IContainerProvider Container,CBHKDataContext Context)
         {
-            _container = container;
-            _context = context;
-            _config = _context.EnvironmentConfigSet.First();
-            MainView mainWindow = _container.Resolve<MainView>();
+            container = Container;
+            context = Context;
+            config = context.EnvironmentConfigSet.First();
+            MainView mainWindow = container.Resolve<MainView>();
             if (mainWindow is not null && mainWindow.DataContext is MainViewModel viewModel)
             {
                 CBHK = viewModel;
@@ -39,11 +39,11 @@ namespace CBHK.Utility
         /// </summary>
         private void SetCBHKState()
         {
-            if (_config.Visibility == "关闭")
+            if (config.Visibility == "关闭")
             {
                 CBHK.ShowInTaskBar = false;
             }
-            CBHK.WindowState = _config.Visibility switch
+            CBHK.WindowState = config.Visibility switch
             {
                 "最小化" or "关闭" => WindowState.Minimized,
                 _ => WindowState.Normal
@@ -56,7 +56,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartAdvancementGenerator()
         {
-            AdvancementView advancementView = _container.Resolve<AdvancementView>();
+            AdvancementView advancementView = container.Resolve<AdvancementView>();
             SetCBHKState();
             advancementView.Show();
             advancementView.Focus();
@@ -68,7 +68,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartArmorStandGenerator()
         {
-            ArmorStandView armorStand = _container.Resolve<ArmorStandView>();
+            ArmorStandView armorStand = container.Resolve<ArmorStandView>();
             armorStand.Show();
             armorStand.Focus();
             SetCBHKState();
@@ -80,7 +80,7 @@ namespace CBHK.Utility
         [RelayCommand]
         private void StartDamageTypeGenerator()
         {
-            DamageTypeView damageTypeView = _container.Resolve<DamageTypeView>();
+            DamageTypeView damageTypeView = container.Resolve<DamageTypeView>();
             SetCBHKState();
             damageTypeView.Show();
             damageTypeView.Focus();
@@ -92,7 +92,7 @@ namespace CBHK.Utility
         [RelayCommand]
         private void StartDimensionGenerator()
         {
-            DimensionView dimensionView = _container.Resolve<DimensionView>();
+            DimensionView dimensionView = container.Resolve<DimensionView>();
             SetCBHKState();
             dimensionView.Show();
             dimensionView.Focus();
@@ -104,7 +104,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartChatTpyeGenerator()
         {
-            ChatTypeView chatTypeView = _container.Resolve<ChatTypeView>();
+            ChatTypeView chatTypeView = container.Resolve<ChatTypeView>();
             chatTypeView.Show();
             chatTypeView.Focus();
             SetCBHKState();
@@ -116,7 +116,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartCustomWorldGeneratorGenerator()
         {
-            CustomWorldGeneratorView customWorldGeneratorView = _container.Resolve<CustomWorldGeneratorView>();
+            CustomWorldGeneratorView customWorldGeneratorView = container.Resolve<CustomWorldGeneratorView>();
             customWorldGeneratorView.Show();
             customWorldGeneratorView.Focus();
             SetCBHKState();
@@ -128,7 +128,7 @@ namespace CBHK.Utility
         /// </summary>
         public void StartOnlyOneCommandGenerator()
         {
-            OnlyOneCommandView onlyOneCommandView = _container.Resolve<OnlyOneCommandView>();
+            OnlyOneCommandView onlyOneCommandView = container.Resolve<OnlyOneCommandView>();
             onlyOneCommandView.Show();
             onlyOneCommandView.Focus();
             SetCBHKState();
@@ -140,7 +140,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartSpawnerGenerator()
         {
-            SpawnerView spawner = _container.Resolve<SpawnerView>();
+            SpawnerView spawner = container.Resolve<SpawnerView>();
             spawner.Show();
             spawner.Focus();
             SetCBHKState();
@@ -152,7 +152,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartTagsGenerator()
         {
-            TagView tag = _container.Resolve<TagView>();
+            TagView tag = container.Resolve<TagView>();
             tag.Show();
             tag.Focus();
             SetCBHKState();
@@ -164,7 +164,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartItemsGenerator()
         {
-            ItemView item = _container.Resolve<ItemView>();
+            ItemView item = container.Resolve<ItemView>();
             item.Show();
             item.Focus();
             SetCBHKState();
@@ -176,7 +176,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartItemModifierGenerator()
         {
-            ItemModifierView itemModifierView = _container.Resolve<ItemModifierView>();
+            ItemModifierView itemModifierView = container.Resolve<ItemModifierView>();
             itemModifierView.Show();
             itemModifierView.Focus();
             SetCBHKState();
@@ -188,7 +188,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartLootTableGenerator()
         {
-            LootTableView lootTableView = _container.Resolve<LootTableView>();
+            LootTableView lootTableView = container.Resolve<LootTableView>();
             lootTableView.Show();
             lootTableView.Focus();
             SetCBHKState();
@@ -200,7 +200,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartPredicateGenerator()
         {
-            PredicateView predicate = _container.Resolve<PredicateView>();
+            PredicateView predicate = container.Resolve<PredicateView>();
             predicate.Show();
             predicate.Focus();
             SetCBHKState();
@@ -212,7 +212,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartEntitiesGenerator()
         {
-            EntityView entity = _container.Resolve<EntityView>();
+            EntityView entity = container.Resolve<EntityView>();
             entity.Show();
             entity.Focus();
             SetCBHKState();
@@ -224,7 +224,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartFireworksGenerator()
         {
-            FireworkRocketView fireworkRocket = _container.Resolve<FireworkRocketView>();
+            FireworkRocketView fireworkRocket = container.Resolve<FireworkRocketView>();
             fireworkRocket.Show();
             fireworkRocket.Focus();
             SetCBHKState();
@@ -236,7 +236,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartRecipesGenerator()
         {
-            RecipeView recipe = _container.Resolve<RecipeView>();
+            RecipeView recipe = container.Resolve<RecipeView>();
             recipe.Show();
             recipe.Focus();
             SetCBHKState();
@@ -248,7 +248,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartVillagersGenerator()
         {
-            VillagerView villager = _container.Resolve<VillagerView>();
+            VillagerView villager = container.Resolve<VillagerView>();
             villager.Show();
             villager.Focus();
             SetCBHKState();
@@ -260,7 +260,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartWrittenBooksGenerator()
         {
-            WrittenBookView writtenBook = _container.Resolve<WrittenBookView>();
+            WrittenBookView writtenBook = container.Resolve<WrittenBookView>();
             writtenBook.Show();
             writtenBook.Focus();
             SetCBHKState();
@@ -272,7 +272,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartDatapacksGenerator()
         {
-            DatapackView dataPack = _container.Resolve<DatapackView>();
+            DatapackView dataPack = container.Resolve<DatapackView>();
             dataPack.Show();
             dataPack.Focus();
             SetCBHKState();
@@ -284,7 +284,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartSign()
         {
-            SignView sign = _container.Resolve<SignView>();
+            SignView sign = container.Resolve<SignView>();
             sign.Show();
             sign.Focus();
             SetCBHKState();
@@ -296,7 +296,7 @@ namespace CBHK.Utility
         /// </summary>
         private void StartDimensionTypeGenerator()
         {
-            DimensionTypeView dimensionType = _container.Resolve<DimensionTypeView>();
+            DimensionTypeView dimensionType = container.Resolve<DimensionTypeView>();
             dimensionType.Show();
             dimensionType.Focus();
             SetCBHKState();

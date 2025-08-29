@@ -17,7 +17,7 @@ namespace CBHK.ViewModel.Common
     {
         #region Field
         private InstalledFontCollection SystemFonts = new();
-        private CBHKDataContext _context;
+        private CBHKDataContext context;
         private EnvironmentConfig _config = null;
         string fontListDirectory = AppDomain.CurrentDomain.BaseDirectory + "Resource\\Fonts";
         #endregion
@@ -59,10 +59,11 @@ namespace CBHK.ViewModel.Common
 
         #endregion
 
-        public SettingsViewModel(CBHKDataContext context)
+        #region Method
+        public SettingsViewModel(CBHKDataContext Context)
         {
-            _context = context;
-            _config = _context.EnvironmentConfigSet.First();
+            context = Context;
+            _config = context.EnvironmentConfigSet.First();
             TextComboBoxItem visibilityItem = StateList.Where(item=>item.Text == _config.Visibility).First();
             if(visibilityItem is not null)
             {
@@ -107,7 +108,9 @@ namespace CBHK.ViewModel.Common
             SelectedFontFamilyItem = CurrentFontFamilyNameList[0];
             #endregion
         }
+        #endregion
 
+        #region Event
         public void ViewState_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _config.Visibility = SelectVisibleItem.Text;
@@ -117,5 +120,6 @@ namespace CBHK.ViewModel.Common
         {
             SelectedFontFamily = CurrentFontFamilyList[SelectFontIndex];
         }
+        #endregion
     }
 }

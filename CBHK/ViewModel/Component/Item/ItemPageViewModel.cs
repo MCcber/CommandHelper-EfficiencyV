@@ -1,12 +1,11 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
 using CBHK.Domain.Model;
-using CBHK.Interface;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Item;
-using CBHK.View.Component.Item.SpecialNBT;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Generator;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,7 +26,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -39,9 +37,9 @@ namespace CBHK.ViewModel.Component.Item
         private object obj = new();
         string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Item\Data\SpecialTags.json";
         JArray SpecialArray = null;
-        private IContainerProvider _container;
-        private CBHKDataContext _context;
-        private DataService _dataService = null;
+        private IContainerProvider container;
+        private CBHKDataContext context;
+        private DataService dataService = null;
 
         private IProgress<IconComboBoxItem> AddItemProgress = null;
         private IProgress<(int, string, string, string)> SetItemProgress = null;
@@ -49,10 +47,6 @@ namespace CBHK.ViewModel.Component.Item
         /// 需要适应版本变化的特指数据所属控件的事件
         /// </summary>
         public Dictionary<FrameworkElement, Action<FrameworkElement, RoutedEventArgs>> VersionNBTList = [];
-        /// <summary>
-        /// 版本控件
-        /// </summary>
-        public List<IVersionUpgrader> VersionComponents { get; set; } = [];
         //特殊实体特指标签字典,用于动态切换内容
         public Dictionary<string, Grid> specialDataDictionary = [];
         //白色画刷
@@ -76,11 +70,11 @@ namespace CBHK.ViewModel.Component.Item
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItems.png";
         private string ImageSetFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
         //Data页
-        public Data data = null;
+        //public Data data = null;
         //Function页
-        public Function function = null;
+        //public Function function = null;
         //Common页
-        public View.Component.Item.Common common = null;
+        //public View.Component.Item.Common common = null;
         //特指标签页视图容器
         ScrollViewer SpecialViewer = null;
         /// <summary>
@@ -223,12 +217,12 @@ namespace CBHK.ViewModel.Component.Item
         #endregion
 
         #region Method
-        public ItemPageViewModel(IContainerProvider container,CBHKDataContext context, DataService dataService)
+        public ItemPageViewModel(IContainerProvider Container,CBHKDataContext Context, DataService DataService)
         {
             #region 初始化数据
-            _container = container;
-            _context = context;
-            _dataService = dataService;
+            container = Container;
+            context = Context;
+            dataService = DataService;
             buttonNormalBrush = new ImageBrush(new BitmapImage(new Uri(buttonNormalImage, UriKind.RelativeOrAbsolute)));
             buttonPressedBrush = new ImageBrush(new BitmapImage(new Uri(buttonPressedImage, UriKind.RelativeOrAbsolute)));
             string SpecialData = File.ReadAllText(SpecialNBTStructureFilePath);
@@ -244,12 +238,6 @@ namespace CBHK.ViewModel.Component.Item
                 if (item.Item1 == 0)
                 {
                     SelectedItem = ItemList[0];
-
-                    data.ItemDamage.IsEnabled = CurrentMinVersion >= 1130;
-                    if (!data.ItemDamage.IsEnabled && SelectedItem is not null)
-                    {
-                        UpdateItemDamageAndID();
-                    }
                 }
             });
         }
@@ -265,7 +253,7 @@ namespace CBHK.ViewModel.Component.Item
             }
 
             ItemList.Clear();
-            Dictionary<string, string> ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+            Dictionary<string, string> ItemIDAndNameMap = dataService.ItemGroupByVersionDicionary
             .Where(pair => pair.Key <= CurrentMinVersion)
             .SelectMany(pair => pair.Value)
             .ToDictionary(
@@ -310,26 +298,28 @@ namespace CBHK.ViewModel.Component.Item
                 return;
             }
             EffectItemList.Clear();
-            foreach (var item in _context.MobEffectSet)
+
+            List<string> currentEffectIDList = [..context.MobEffectSet.SelectMany(item =>
             {
-                if (item.Version is not null && int.Parse(item.Version.Replace(".", "")) > CurrentMinVersion)
+                if(VersionComparer.IsInRange(item.Key, CurrentMinVersion.ToString()))
                 {
-                    continue;
+                    return item.Value;
                 }
-                string imagePath = ImageSetFolderPath + item.ID + ".png";
-                if (item.ID is not null)
+                return [];
+            })];
+            foreach (var item in currentEffectIDList)
+            {
+                string imagePath = ImageSetFolderPath + item + ".png";
+                if (item is not null && File.Exists(imagePath))
                 {
-                    if (File.Exists(imagePath))
+                    imagePath = ImageSetFolderPath + item + ".png";
+                    IconComboBoxItem iconComboBoxItem = new()
                     {
-                        imagePath = ImageSetFolderPath + item.ID + ".png";
-                        IconComboBoxItem iconComboBoxItem = new()
-                        {
-                            ComboBoxItemId = item.ID,
-                            ComboBoxItemText = item.Name,
-                            ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
-                        };
-                        EffectItemList.Add(iconComboBoxItem);
-                    }
+                        ComboBoxItemId = item,
+                        ComboBoxItemText = item,
+                        ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
+                    };
+                    EffectItemList.Add(iconComboBoxItem);
                 }
             }
         }
@@ -344,26 +334,29 @@ namespace CBHK.ViewModel.Component.Item
                 return;
             }
             EnchantmentIDList.Clear();
-            foreach (var item in _context.EnchantmentSet)
+
+            List<string> currentEnchantmentIDList = [..context.MobEffectSet.SelectMany(item =>
             {
-                if (item.Version is not null && int.Parse(item.Version.Replace(".", "")) > CurrentMinVersion)
+                if(VersionComparer.IsInRange(item.Key, CurrentMinVersion.ToString()))
                 {
-                    continue;
+                    return item.Value;
                 }
-                string imagePath = ImageSetFolderPath + item.ID + ".png";
-                if (item.ID is not null)
+                return [];
+            })];
+
+            foreach (var item in currentEnchantmentIDList)
+            {
+                string imagePath = ImageSetFolderPath + item + ".png";
+                if (item is not null && File.Exists(imagePath))
                 {
-                    if (File.Exists(imagePath))
+                    imagePath = ImageSetFolderPath + item + ".png";
+                    IconComboBoxItem iconComboBoxItem = new()
                     {
-                        imagePath = ImageSetFolderPath + item.ID + ".png";
-                        IconComboBoxItem iconComboBoxItem = new()
-                        {
-                            ComboBoxItemId = item.ID,
-                            ComboBoxItemText = item.Name,
-                            ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
-                        };
-                        EnchantmentIDList.Add(iconComboBoxItem);
-                    }
+                        ComboBoxItemId = item,
+                        ComboBoxItemText = item,
+                        ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
+                    };
+                    EnchantmentIDList.Add(iconComboBoxItem);
                 }
             }
         }
@@ -379,7 +372,7 @@ namespace CBHK.ViewModel.Component.Item
             }
             AttributeIDList.Clear();
 
-            foreach (var item in _context.MobAttributeSet)
+            foreach (var item in context.MobAttributeSet)
             {
                 if (item.Version is not null && int.Parse(item.Version.Replace(".", "")) > CurrentMinVersion)
                 {
@@ -397,7 +390,7 @@ namespace CBHK.ViewModel.Component.Item
 
             AttributeSlotList.Clear();
 
-            foreach (var item in _context.AttributeSlotSet)
+            foreach (var item in context.AttributeSlotSet)
             {
                 if (item.Value is not null && item.Value.Length > 0)
                 {
@@ -410,7 +403,7 @@ namespace CBHK.ViewModel.Component.Item
 
             AttributeValueTypeList.Clear();
 
-            foreach (var item in _context.AttributeSlotSet)
+            foreach (var item in context.AttributeSlotSet)
             {
                 if (item.Value is not null)
                 {
@@ -429,7 +422,7 @@ namespace CBHK.ViewModel.Component.Item
         private async Task Save()
         {
             //执行生成
-            await FinalSettlement(false);
+
             Microsoft.Win32.SaveFileDialog saveFileDialog = new()
             {
                 AddExtension = true,
@@ -457,11 +450,6 @@ namespace CBHK.ViewModel.Component.Item
         {
             StringBuilder nbt = new();
 
-            string commonData = await common.Result();
-            string functionData = await (function as IVersionUpgrader).Result();
-            string dataResult = await data.Result();
-            nbt.Append(commonData + functionData + dataResult + (!Summon && CurrentMinVersion >= 1130 && data?.ItemDamage.Value > 0 ? "Damage:" + data?.ItemDamage.Value : ""));
-
             if (SpecialTagsResult.Count > 0)
             {
                 ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.ComboBoxItemId];
@@ -483,12 +471,11 @@ namespace CBHK.ViewModel.Component.Item
                     nbt.Insert(appendId.Length, "tag:{");
                     nbt.Append("},");
                 }
-                nbt.Append("Count:" + data?.ItemCount.Value + "b");
             }
 
             if (UseForTool)
             {
-                Result = "{id:\"minecraft:" + CurrentItemID + "\",Count:" + data?.ItemCount.Value + "b" + (nbt.ToString().Trim(',').Length > 0 ? ",tag:{" + nbt.ToString().Trim(',') + "}" : "") + "}";
+                //Result = "{id:\"minecraft:" + CurrentItemID + "\",Count:" + data?.ItemCount.Value + "b" + (nbt.ToString().Trim(',').Length > 0 ? ",tag:{" + nbt.ToString().Trim(',') + "}" : "") + "}";
                 ItemView item = Window.GetWindow(SpecialViewer) as ItemView;
                 item.DialogResult = true;
                 return;
@@ -501,20 +488,20 @@ namespace CBHK.ViewModel.Component.Item
             }
             if (!Summon)
             {
-                if (CurrentMinVersion < 1130)
-                    Result = "give @p " + CurrentItemID + " " + data?.ItemCount.Value + " " + data?.ItemDamage.Value + " " + nbt;
-                else
-                    Result = "give @p " + CurrentItemID + nbt + " " + data?.ItemCount.Value;
+                //if (CurrentMinVersion < 1130)
+                //    Result = "give @p " + CurrentItemID + " " + data?.ItemCount.Value + " " + data?.ItemDamage.Value + " " + nbt;
+                //else
+                //    Result = "give @p " + CurrentItemID + nbt + " " + data?.ItemCount.Value;
             }
             else
                 Result = "summon item" + " ~ ~ ~ {ItemView:" + nbt + "}";
 
-            if (CurrentMinVersion < 1130 && (common.ItemNameValue.Length > 0 || common.ItemLoreValue.Length > 0))
+            if (CurrentMinVersion < 1130 /*&& (common.ItemNameValue.Length > 0 || common.ItemLoreValue.Length > 0)*/)
                 Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + Result + @"\\\""}\""}}""}}";
 
             if (ShowGeneratorResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
@@ -528,1181 +515,9 @@ namespace CBHK.ViewModel.Component.Item
             }
         }
 
-        /// <summary>
-        /// 低版本时更新数据值和ID
-        /// </summary>
-        private void UpdateItemDamageAndID()
-        {
-            string currentHighVersionID = SelectedItem.ComboBoxItemId;
-            List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == currentHighVersionID)];
-            LowVersionId = "";
-            if (matchVersionIDList.Count > 0)
-            {
-                data.ItemDamage.Value = matchVersionIDList[0].Damage;
-                LowVersionId = matchVersionIDList[0].LowVersionID;
-            }
-        }
-
-        /// <summary>
-        /// 最终结算
-        /// </summary>
-        /// <param name="MultipleMode"></param>
-        private async Task FinalSettlement(object MultipleOrExtern)
-        {
-            StringBuilder nbt = new();
-            if (SpecialTagsResult.Count > 0)
-            {
-                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.ComboBoxItemId];
-                nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
-            }
-            string commonResult = await common.Result();
-            string functionResult = await (function as IVersionUpgrader).Result();
-            string dataResult = await data.Result();
-            nbt.Append(commonResult + functionResult + dataResult);
-            if (nbt.ToString().EndsWith(','))
-                nbt.Remove(nbt.ToString().Length - 1, 1);
-
-            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItem.ComboBoxItemId;
-
-            if (!Summon)
-            {
-                nbt.Insert(0, "id:\"minecraft:" + CurrentItemID + "\",tag:{");
-                nbt.Append("},Count:" + data.ItemCount.Value + "b");
-            }
-
-            if (nbt.ToString().Length > 0)
-            {
-                nbt.Insert(0, '{');
-                nbt.Append('}');
-            }
-
-            if (!Summon)
-            {
-                if (CurrentMinVersion < 1130)
-                    Result = "give @p " + CurrentItemID + " " + data.ItemCount.Value + " " + data.ItemDamage.Value + " " + nbt;
-                else
-                    Result = "give @p " + CurrentItemID + nbt + " " + data.ItemCount.Value;
-            }
-            else
-                Result = "summon item" + " ~ ~ ~ {ItemView:" + nbt + "}";
-
-            if (bool.Parse(MultipleOrExtern.ToString()))
-            {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
-                if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
-                {
-                    displayerViewModel.GeneratorResult(Result, "实体", iconPath);
-                }
-            }
-        }
-
         public async Task<string> Run(bool showResult)
         {
-            StringBuilder nbt = new();
-            if (SpecialTagsResult.Count > 0)
-            {
-                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.ComboBoxItemId];
-                nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
-            }
-            string CommonResult = await common.Result();
-            string FunctionResult = await (function as IVersionUpgrader).Result();
-            string dataResult = await data.Result();
-            nbt.Append(CommonResult + FunctionResult + dataResult + (!Summon && SelectedVersion.Text == "1.13+" && data.ItemDamage.Value > 0 ? "Damage:" + data.ItemDamage.Value : ""));
-            if (nbt.ToString().EndsWith(','))
-                nbt.Remove(nbt.ToString().Length - 1, 1);
-
-            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItem.ComboBoxItemId;
-
-            if (Summon)
-            {
-                nbt.Insert(0, "id:\"minecraft:" + CurrentItemID + "\",tag:{");
-                nbt.Append("},Count:" + data.ItemCount.Value + "b");
-            }
-            if (nbt.ToString().Length > 0)
-            {
-                nbt.Insert(0, '{');
-                nbt.Append('}');
-            }
-
-            if (UseForReference)
-            {
-                Result = "";
-                Result = "{id:\"minecraft:" + CurrentItemID + "\"" + (Result.Length > 0 ? ",tag:{" + Result + ",Count:" + data.ItemCount.Value + "b" + "}" : "") + "}";
-                return Result;
-            }
-
-            if (!Summon)
-            {
-                if (CurrentMinVersion < 1130)
-                    Result = "give @p " + CurrentItemID + " " + data.ItemCount.Value + " " + data.ItemDamage.Value + " " + nbt;
-                else
-                    Result = "give @p " + CurrentItemID + nbt + " " + data.ItemCount.Value;
-            }
-            else
-                Result = "summon item" + " ~ ~ ~ {ItemView:" + nbt + "}";
-
-            if (showResult)
-            {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
-                if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
-                {
-                    displayerViewModel.GeneratorResult(Result, "物品", iconPath);
-                }
-            }
-            else
-                Clipboard.SetText(Result);
-            return Result;
-        }
-
-        /// <summary>
-        /// 根据需求构造控件
-        /// </summary>
-        /// <param name="Request"></param>
-        /// <returns></returns>
-        private List<FrameworkElement> ComponentsGenerator(ComponentData Request)
-        {
-            List<FrameworkElement> result = [];
-            TextBlock displayText = null;
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                displayText = new()
-                {
-                    Uid = Request.nbtType,
-                    Text = Request.description.TrimEnd('。').TrimEnd('.'),
-                    Foreground = whiteBrush,
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-            });
-
-            if (Request.toolTip.Length > 0)
-            {
-                ToolTip toolTip = null;
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    toolTip = new()
-                    {
-                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
-                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent")),
-                        Content = Request.toolTip
-                    };
-                    displayText.ToolTip = toolTip;
-                    ToolTipService.SetInitialShowDelay(displayText, 0);
-                    ToolTipService.SetBetweenShowDelay(displayText, 0);
-                });
-            }
-
-            result.Add(displayText);
-            ComponentEvents componentEvents = new(_context);
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                switch (Request.dataType)
-                {
-                    case "TAG_List":
-                        {
-                            if (Request.dependency is not null && Request.dependency.Length > 0)
-                            {
-                                switch (Request.dependency)
-                                {
-                                    case "InlineItem":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = "Items",
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                Margin = new Thickness(10, 2, 10, 0),
-                                                TitleForeground = blackBrush,
-                                                ModifyName = "添加",
-                                                FreshName = "清空",
-                                                ModifyForeground = blackBrush,
-                                                FreshForeground = blackBrush,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            StackPanel itemPanel = new() { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")) };
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Content = itemPanel,
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                JToken data = ExternallyReadEntityData.SelectToken(key);
-                                                if (data is not null)
-                                                {
-                                                    JArray Items = JArray.Parse(data.ToString());
-                                                    string itemImageFilePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                                                    string imagePath = "";
-                                                    for (int i = 0; i < Items.Count; i++)
-                                                    {
-                                                        string itemID = JObject.Parse(Items[i].ToString())["id"].ToString();
-                                                        Image image = new() { Tag = new NBTDataStructure() { Result = Items[i].ToString(), Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
-                                                        imagePath = itemImageFilePath + itemID + ".png";
-                                                        if (File.Exists(imagePath))
-                                                            image.Source = new BitmapImage(new Uri(imagePath, UriKind.RelativeOrAbsolute));
-                                                        InlineItem itemBag = new();
-                                                        (itemBag.DisplayItem.Child as Image).Source = image.Source;
-                                                        itemPanel.Children.Add(itemBag);
-                                                    }
-                                                    itemAccordion.Focus();
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                    case "StoredEnchantments":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = Request.dependency,
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                Margin = new Thickness(2, 2, 2, 0),
-                                                TitleForeground = blackBrush,
-                                                ModifyName = "添加",
-                                                FreshName = "清空",
-                                                ModifyForeground = blackBrush,
-                                                FreshForeground = blackBrush,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            StackPanel itemPanel = new();
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")),
-                                                Content = itemPanel,
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                if (ExternallyReadEntityData.SelectToken(key) is JArray data)
-                                                {
-                                                    foreach (JObject item in data.Cast<JObject>())
-                                                    {
-                                                        EnchantmentItem enchantment = new(_context, this);
-                                                        JToken idObj = item["id"];
-                                                        JToken lvlObj = item["lvl"];
-                                                        if (idObj is not null)
-                                                        {
-                                                            string idString = idObj.ToString();
-                                                            if (idString.Contains(':'))
-                                                                idString = idString[(idString.IndexOf(':') + 1)..];
-                                                            string id = _context.BlockSet.First(item => item.ID == idString).ID;
-                                                            enchantment.ID.SelectedValue = id;
-                                                        }
-                                                        if (lvlObj is not null)
-                                                            enchantment.Level.Value = double.Parse(lvlObj.ToString());
-                                                        itemPanel.Children.Add(enchantment);
-                                                    }
-                                                    componentEvents.StoredEnchantments_LostFocus(itemAccordion, null);
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                    case "NameSpaceReference":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = Request.dependency,
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                Margin = new Thickness(10, 2, 10, 0),
-                                                TitleForeground = blackBrush,
-                                                ModifyName = "添加",
-                                                FreshName = "清空",
-                                                ModifyForeground = blackBrush,
-                                                FreshForeground = blackBrush,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            StackPanel itemPanel = new() { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")) };
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Content = itemPanel,
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                if (ExternallyReadEntityData.SelectToken(key) is JArray data)
-                                                {
-                                                    foreach (JValue item in data.Cast<JValue>())
-                                                    {
-                                                        NameSpaceReference nameSpaceReference = new();
-                                                        nameSpaceReference.ReferenceBox.Text = item.Value<string>();
-                                                        itemPanel.Children.Add(nameSpaceReference);
-                                                    }
-                                                    componentEvents.NameSpaceReference_LostFocus(itemAccordion, null);
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                    case "MapDecorations":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = Request.dependency,
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                Margin = new Thickness(2, 2, 2, 0),
-                                                TitleForeground = blackBrush,
-                                                ModifyName = "添加",
-                                                FreshName = "清空",
-                                                ModifyForeground = blackBrush,
-                                                FreshForeground = blackBrush,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            StackPanel itemPanel = new();
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")),
-                                                Content = itemPanel,
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                if (ExternallyReadEntityData.SelectToken(key) is JArray data)
-                                                {
-                                                    foreach (JObject item in data.Cast<JObject>())
-                                                    {
-                                                        MapDecorations mapDecorations = new();
-                                                        JToken idObj = item["id"];
-                                                        JToken typeObj = item["type"];
-                                                        JToken xObj = item["x"];
-                                                        JToken zObj = item["z"];
-                                                        JToken rotObj = item["rot"];
-                                                        if (idObj is not null)
-                                                            mapDecorations.Uid = idObj.ToString();
-                                                        if (typeObj is not null)
-                                                            mapDecorations.type.SelectedIndex = byte.Parse(typeObj.ToString());
-                                                        if (xObj is not null)
-                                                            mapDecorations.pos.number0.Value = double.Parse(xObj.ToString());
-                                                        if (zObj is not null)
-                                                            mapDecorations.pos.number2.Value = double.Parse(zObj.ToString());
-                                                        if (rotObj is not null)
-                                                            mapDecorations.rot.Value = double.Parse(rotObj.ToString());
-                                                        itemPanel.Children.Add(mapDecorations);
-                                                    }
-                                                    componentEvents.MapDecorations_LostFocus(itemAccordion, null);
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                    case "CustomPotionEffectList":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = Request.dependency,
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                Margin = new Thickness(2, 2, 2, 0),
-                                                TitleForeground = blackBrush,
-                                                ModifyName = "添加",
-                                                FreshName = "清空",
-                                                ModifyForeground = blackBrush,
-                                                FreshForeground = blackBrush,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            StackPanel itemPanel = new();
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Content = itemPanel,
-                                                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")),
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                if (ExternallyReadEntityData.SelectToken(key) is JArray Effects)
-                                                {
-                                                    for (int i = 0; i < Effects.Count; i++)
-                                                    {
-                                                        componentEvents.AddCustomPotionEffectCommand(itemAccordion);
-                                                        CustomPotionEffects customPotionEffects = itemPanel.Children[i] as CustomPotionEffects;
-                                                        StackPanel contentPanel = customPotionEffects.EffectListPanel;
-                                                        #region 提取数据
-                                                        JToken Ambient = Effects[i]["Ambient"];
-                                                        JToken Amplifier = Effects[i]["Amplifier"];
-                                                        JToken Duration = Effects[i]["Duration"];
-                                                        JToken Id = Effects[i]["Id"];
-                                                        JToken ShowIcon = Effects[i]["ShowIcon"];
-                                                        JToken ShowParticles = Effects[i]["ShowParticles"];
-                                                        JToken effect_changed_timestamp = Effects[i].SelectToken("FactorCalculationData.effect_changed_timestamp");
-                                                        JToken factor_current = Effects[i].SelectToken("FactorCalculationData.factor_current");
-                                                        JToken factor_previous_frame = Effects[i].SelectToken("FactorCalculationData.factor_previous_frame");
-                                                        JToken factor_start = Effects[i].SelectToken("FactorCalculationData.factor_start");
-                                                        JToken factor_target = Effects[i].SelectToken("FactorCalculationData.factor_target");
-                                                        JToken had_effect_last_tick = Effects[i].SelectToken("FactorCalculationData.had_effect_last_tick");
-                                                        JToken padding_duration = Effects[i].SelectToken("FactorCalculationData.padding_duration");
-                                                        #endregion
-                                                        #region 应用数据
-                                                        if (Ambient is not null)
-                                                            contentPanel.FindChild<TextCheckBoxs>("Ambient").IsChecked = Ambient.ToString() == "1";
-                                                        if (Amplifier is not null)
-                                                            contentPanel.FindChild<Slider>("Amplifier").Value = byte.Parse(Amplifier.ToString());
-                                                        if (Duration is not null)
-                                                            contentPanel.FindChild<Slider>("Duration").Value = int.Parse(Duration.ToString());
-                                                        if (Id is not null)
-                                                        {
-                                                            string id = Id.ToString().Replace("minecraft:", "");
-                                                            MobEffect mobEffect = _context.MobEffectSet.First(item => item.ID == id);
-                                                            string currentID = mobEffect.Name;
-                                                            ComboBox idBox = contentPanel.FindChild<ComboBox>("Id");
-                                                            idBox.ItemsSource = EffectItemList;
-                                                            idBox.SelectedValuePath = "ComboBoxItemId";
-                                                            idBox.SelectedValue = mobEffect.ID;
-                                                        }
-                                                        if (ShowIcon is not null)
-                                                            contentPanel.FindChild<TextCheckBoxs>("ShowIcon").IsChecked = ShowIcon.ToString() == "1";
-                                                        if (ShowParticles is not null)
-                                                            contentPanel.FindChild<TextCheckBoxs>("ShowParticles").IsChecked = ShowParticles.ToString() == "1";
-                                                        Grid grid = customPotionEffects.FactorCalculationDataGrid;
-                                                        if (effect_changed_timestamp is not null)
-                                                            grid.FindChild<Slider>("effect_changed_timestamp").Value = int.Parse(effect_changed_timestamp.ToString());
-                                                        if (factor_current is not null)
-                                                            grid.FindChild<Slider>("factor_current").Value = int.Parse(factor_current.ToString());
-                                                        if (factor_previous_frame is not null)
-                                                            grid.FindChild<Slider>("factor_previous_frame").Value = int.Parse(factor_previous_frame.ToString());
-                                                        if (factor_start is not null)
-                                                            grid.FindChild<Slider>("factor_start").Value = int.Parse(factor_start.ToString());
-                                                        if (factor_target is not null)
-                                                            grid.FindChild<Slider>("factor_target").Value = int.Parse(factor_target.ToString());
-                                                        if (had_effect_last_tick is not null)
-                                                            grid.FindChild<TextCheckBoxs>("had_effect_last_tick").IsChecked = had_effect_last_tick.ToString() == "1";
-                                                        if (padding_duration is not null)
-                                                            grid.FindChild<Slider>("padding_duration").Value = int.Parse(padding_duration.ToString());
-                                                        #endregion
-                                                    }
-                                                    componentEvents.CustomPotionEffects_LostFocus(itemAccordion, null);
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                    case "StewEffectList":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = Request.dependency,
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                Margin = new Thickness(10, 2, 10, 0),
-                                                TitleForeground = blackBrush,
-                                                ModifyName = "添加",
-                                                FreshName = "清空",
-                                                ModifyForeground = blackBrush,
-                                                FreshForeground = blackBrush,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            StackPanel itemPanel = new();
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Content = itemPanel,
-                                                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")),
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                if (ExternallyReadEntityData.SelectToken(key) is JArray data)
-                                                {
-                                                    foreach (JObject item in data.Cast<JObject>())
-                                                    {
-                                                        JToken durationObj = item["EffectDuration"];
-                                                        JToken idObj = item["EffectId"];
-
-                                                        string id = idObj.ToString();
-                                                        var currentID = _context.MobEffectSet.First(item => item.ID == id).ID;
-                                                        SuspiciousStewEffect suspiciousStewEffects = new(_context);
-                                                        itemPanel.Children.Add(suspiciousStewEffects);
-                                                        if (durationObj is not null)
-                                                            suspiciousStewEffects.EffectDuration.Value = int.Parse(durationObj.ToString());
-                                                        if (idObj is not null)
-                                                        {
-                                                            suspiciousStewEffects.EffectID.SelectedValuePath = "ComboBoxItemId";
-                                                            suspiciousStewEffects.EffectID.SelectedValue = currentID;
-                                                        }
-                                                    }
-                                                    componentEvents.StewEffectList_LostFocus(itemAccordion, null);
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                }
-                            }
-                        }
-                        break;
-                    case "TAG_Compound":
-                        {
-                            if (Request.dependency is not null && Request.dependency.Length > 0)
-                            {
-                                switch (Request.dependency)
-                                {
-                                    case "InlineItem":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = "Items",
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                Margin = new Thickness(0, 0, 0, 2),
-                                                TitleForeground = blackBrush,
-                                                ModifyName = "添加",
-                                                FreshName = "清空",
-                                                ModifyForeground = blackBrush,
-                                                FreshForeground = blackBrush,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            StackPanel itemPanel = new() { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")) };
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Content = itemPanel,
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                JToken data = ExternallyReadEntityData.SelectToken(key);
-                                                if (data is not null)
-                                                {
-                                                    JArray Items = JArray.Parse(data.ToString());
-                                                    string itemImageFilePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                                                    string imagePath = "";
-                                                    for (int i = 0; i < Items.Count; i++)
-                                                    {
-                                                        string itemID = JObject.Parse(Items[i].ToString())["id"].ToString();
-                                                        Image image = new() { Tag = new NBTDataStructure() { Result = Items[i].ToString(), Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
-                                                        imagePath = itemImageFilePath + itemID + ".png";
-                                                        if (File.Exists(imagePath))
-                                                            image.Source = new BitmapImage(new Uri(imagePath, UriKind.RelativeOrAbsolute));
-                                                        InlineItem itemBag = new();
-                                                        (itemBag.DisplayItem.Child as Image).Source = image.Source;
-                                                        itemPanel.Children.Add(itemBag);
-                                                    }
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                    case "LodestonePos":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = Request.dependency,
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                Margin = new Thickness(2, 2, 2, 0),
-                                                TitleForeground = blackBrush,
-                                                ModifyVisibility = Visibility.Collapsed,
-                                                FreshVisibility = Visibility.Collapsed,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            UUIDOrPosGroup uUIDOrPosGroup = new() { IsUUID = false };
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")),
-                                                Content = uUIDOrPosGroup,
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                JToken data = ExternallyReadEntityData.SelectToken(key);
-                                                if (data is not null)
-                                                {
-                                                    JToken x = data["X"];
-                                                    JToken y = data["Y"];
-                                                    JToken z = data["Z"];
-                                                    uUIDOrPosGroup.EnableButton.IsChecked = true;
-                                                    if (x is not null)
-                                                        uUIDOrPosGroup.number0.Value = int.Parse(x.ToString());
-                                                    if (y is not null)
-                                                        uUIDOrPosGroup.number1.Value = int.Parse(y.ToString());
-                                                    if (z is not null)
-                                                        uUIDOrPosGroup.number2.Value = int.Parse(z.ToString());
-                                                    componentEvents.LodestonePos_LostFocus(itemAccordion, null);
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                    case "DebugProperty":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = Request.dependency,
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                ModifyName = "添加",
-                                                FreshName = "清空",
-                                                ModifyForeground = blackBrush,
-                                                FreshForeground = blackBrush,
-                                                Margin = new Thickness(2, 2, 2, 0),
-                                                TitleForeground = blackBrush,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            StackPanel stackPanel = new();
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")),
-                                                Content = stackPanel,
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                if (ExternallyReadEntityData.SelectToken(key) is JObject data)
-                                                {
-                                                    List<JProperty> properties = data.Properties().ToList();
-                                                    for (int i = 0; i < properties.Count; i++)
-                                                    {
-                                                        string currentId = _context.BlockSet.First(item => item.ID == properties[i].Name).ID;
-                                                        DebugProperties debugProperties = new(_context);
-                                                        debugProperties.BlockId.SelectedValuePath = "ComboBoxItemId";
-                                                        debugProperties.BlockId.SelectedValue = currentId;
-                                                        debugProperties.BlockProperty.SelectedValue = properties[i].Value.ToString();
-                                                        stackPanel.Children.Add(debugProperties);
-                                                    }
-                                                    componentEvents.DebugProperties_LostFocus(itemAccordion, null);
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                    case "MapDisplay":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = Request.dependency,
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                Margin = new Thickness(2, 2, 2, 0),
-                                                TitleForeground = blackBrush,
-                                                ModifyName = "添加",
-                                                FreshName = "清空",
-                                                ModifyVisibility = Visibility.Collapsed,
-                                                FreshVisibility = Visibility.Collapsed,
-                                                ModifyForeground = blackBrush,
-                                                FreshForeground = blackBrush,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            StackPanel itemPanel = new();
-                                            MapDisplay mapDisplay = new();
-                                            mapDisplay.EnableButton.IsChecked = true;
-                                            itemPanel.Children.Add(mapDisplay);
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Content = itemPanel,
-                                                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")),
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                if (ExternallyReadEntityData.SelectToken(key) is JObject data)
-                                                {
-                                                    JToken colorObj = data["MapColor"];
-                                                    if (colorObj is not null)
-                                                    {
-                                                        mapDisplay.color.Value = int.Parse(colorObj.ToString());
-                                                        componentEvents.MapDisplay_LostFocus(itemAccordion, null);
-                                                    }
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                    case "BannerBlockEntityTag":
-                                        {
-                                            Accordion itemAccordion = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Uid = Request.dependency,
-                                                Name = Request.key,
-                                                Style = Application.Current.Resources["AccordionStyle"] as Style,
-                                                Background = orangeBrush,
-                                                Title = Request.description,
-                                                BorderThickness = new Thickness(0),
-                                                ModifyVisibility = Visibility.Collapsed,
-                                                FreshVisibility = Visibility.Collapsed,
-                                                Margin = new Thickness(2, 2, 2, 0),
-                                                TitleForeground = blackBrush,
-                                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                            };
-                                            StackPanel stackPanel = new();
-                                            ShieldBlockEntityTag shieldBlockEntityTag = new();
-                                            stackPanel.Children.Add(shieldBlockEntityTag);
-                                            ScrollViewer scrollViewer = new()
-                                            {
-                                                MaxHeight = 200,
-                                                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2F2F2F")),
-                                                Content = stackPanel,
-                                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                                                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                                            };
-                                            itemAccordion.Content = scrollViewer;
-                                            itemAccordion.GotFocus += componentEvents.ValueChangedHandler;
-                                            result.Add(itemAccordion);
-                                            result.Remove(displayText);
-                                            #region 分析是否需要代入导入的数据
-                                            if (ImportMode)
-                                            {
-                                                string key = Request.key;
-                                                if (!Summon)
-                                                    key = "ItemView." + key;
-                                                if (ExternallyReadEntityData.SelectToken(key) is JObject data)
-                                                {
-                                                    JToken baseObj = ExternallyReadEntityData.SelectToken("Base");
-                                                    if (baseObj is not null)
-                                                        shieldBlockEntityTag.Base.SelectedIndex = int.Parse(baseObj.ToString());
-                                                    StackPanel bannerPanel = (shieldBlockEntityTag.BannerAccordion.Content as ScrollViewer).Content as StackPanel;
-                                                    BannerBlockEntityTag bannerBlockEntityTag = new();
-                                                    JToken customname = data["CustomName"];
-                                                    if (customname is not null)
-                                                    {
-                                                        if (customname is JValue)
-                                                        {
-                                                            JObject customNameObj = JObject.Parse((customname as JValue).Value<string>());
-                                                            bannerBlockEntityTag.CustomName.Text = customNameObj["text"].ToString();
-                                                        }
-                                                        else
-                                                            bannerBlockEntityTag.CustomName.Text = Regex.Match(customname.ToString(), @"[a-zA-Z_]+").ToString();
-                                                    }
-
-                                                    if (data["Patterns"] is JArray PatternList)
-                                                    {
-                                                        StackPanel patternListPanel = (bannerBlockEntityTag.BannerPatternAccordion.Content as ScrollViewer).Content as StackPanel;
-                                                        foreach (JObject Apattern in PatternList.Cast<JObject>())
-                                                        {
-                                                            BannerPatterns bannerPatterns = new();
-                                                            patternListPanel.Children.Add(bannerPatterns);
-                                                            JToken color = Apattern["Color"];
-                                                            JToken pattern = Apattern["Pattern"];
-                                                            if (color is not null)
-                                                                bannerPatterns.Color.SelectedIndex = int.Parse(color.ToString());
-                                                            if (pattern is not null)
-                                                            {
-                                                                bannerPatterns.Pattern.SelectedValuePath = "ComboBoxItemText";
-                                                                bannerPatterns.Pattern.SelectedValue = pattern.ToString();
-                                                            }
-                                                        }
-                                                    }
-                                                    bannerPanel.Children.Add(bannerBlockEntityTag);
-                                                    componentEvents.ShieldBlockEntityTag_LostFocus(itemAccordion, null);
-                                                }
-                                            }
-                                            #endregion
-                                        }
-                                        break;
-                                }
-                            }
-                        }
-                        break;
-                    case "TAG_Byte":
-                    case "TAG_Int":
-                    case "TAG_Float":
-                    case "TAG_Double":
-                    case "TAG_Short":
-                    case "TAG_Pos":
-                    case "TAG_UUID":
-                        {
-                            double minValue = 0;
-                            double maxValue = 0;
-                            if (Request.dataType == "TAG_Byte")
-                            {
-                                minValue = byte.MinValue;
-                                maxValue = byte.MaxValue;
-                            }
-                            else
-                                if (Request.dataType == "TAG_Int" || Request.dataType == "TAG_UUID")
-                            {
-                                minValue = int.MinValue;
-                                maxValue = int.MaxValue;
-                            }
-                            else
-                                if (Request.dataType == "TAG_Float")
-                            {
-                                minValue = float.MinValue;
-                                maxValue = float.MaxValue;
-                            }
-                            else
-                                if (Request.dataType == "TAG_Double" || Request.dataType == "TAG_Pos")
-                            {
-                                minValue = double.MinValue;
-                                maxValue = double.MaxValue;
-                            }
-                            else
-                                if (Request.dataType == "TAG_Short")
-                            {
-                                minValue = short.MinValue;
-                                maxValue = short.MaxValue;
-                            }
-
-                            if (Request.dataType == "TAG_Pos" || Request.dataType == "TAG_UUID")
-                            {
-                                UUIDOrPosGroup uUIDOrPosGroup = new()
-                                {
-                                    Uid = Request.nbtType,
-                                    Name = Request.key,
-                                    IsUUID = Request.dataType == "TAG_UUID",
-                                    Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                };
-                                result.Add(uUIDOrPosGroup);
-                                uUIDOrPosGroup.GotFocus += componentEvents.ValueChangedHandler;
-                                #region 分析是否需要代入导入的数据
-                                if (ImportMode)
-                                {
-                                    string key = Request.key;
-                                    if (!Summon)
-                                        key = "ItemView." + key;
-                                    JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                    if (currentObj is not null)
-                                    {
-                                        JArray dataArray = JArray.Parse(currentObj.ToString());
-                                        uUIDOrPosGroup.number0.Value = int.Parse(dataArray[0].ToString());
-                                        uUIDOrPosGroup.number1.Value = int.Parse(dataArray[1].ToString());
-                                        uUIDOrPosGroup.number2.Value = int.Parse(dataArray[2].ToString());
-                                        uUIDOrPosGroup.number3.Value = int.Parse(dataArray[3].ToString());
-                                    }
-                                }
-                                #endregion
-                            }
-                            else
-                            {
-                                Slider numberBox1 = new()
-                                {
-                                    Name = Request.key,
-                                    Uid = Request.nbtType,
-                                    Minimum = minValue,
-                                    Maximum = maxValue,
-                                    Value = 0,
-                                    Style = Application.Current.Resources["NumberBoxStyle"] as Style,
-                                    Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                                };
-                                numberBox1.GotFocus += componentEvents.ValueChangedHandler;
-                                result.Add(numberBox1);
-                                #region 分析是否需要代入导入的数据
-                                if (ImportMode)
-                                {
-                                    string key = Request.key;
-                                    if (!Summon)
-                                        key = "ItemView." + key;
-                                    JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                    if (currentObj is not null)
-                                    {
-                                        numberBox1.Value = int.Parse(currentObj.ToString());
-                                        componentEvents.NumberBoxValueChanged(numberBox1, null);
-                                    }
-                                }
-                                #endregion
-                            }
-                        }
-                        break;
-                    case "TAG_String_List":
-                    case "TAG_String":
-                    case "TAG_Long":
-                        {
-                            TextBox stringBox = new() { BorderBrush = blackBrush, Foreground = whiteBrush, Uid = Request.nbtType, Name = Request.key, Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
-                            stringBox.GotFocus += componentEvents.ValueChangedHandler;
-                            if (Request.dataType == "TAG_String_List")
-                            {
-                                string NewToolTip = Request.toolTip + "(以,分割成员,请遵守NBT语法)";
-                                displayText.ToolTip = NewToolTip;
-                            }
-                            result.Add(stringBox);
-                            #region 分析是否需要代入导入的数据
-                            if (ImportMode)
-                            {
-                                string key = Request.key;
-                                if (!Summon)
-                                    key = "ItemView." + key;
-                                JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if (currentObj is not null)
-                                {
-                                    stringBox.Text = currentObj.ToString().Replace("\"", "");
-                                    if (Request.dataType == "TAG_String")
-                                        componentEvents.StringBox_LostFocus(stringBox, null);
-                                    else
-                                    if (Request.dataType == "TAG_String_List")
-                                        componentEvents.StringListBox_LostFocus(stringBox, null);
-                                    else
-                                    if (Request.dataType == "TAG_Long")
-                                        componentEvents.LongNumberBox_LostFocus(stringBox, null);
-                                }
-                            }
-                            #endregion
-                        }
-                        break;
-                    case "TAG_NameSpaceReference":
-                        {
-                            Grid grid = new() { Uid = Request.nbtType, Name = Request.key, Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType } };
-                            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(5, GridUnitType.Star) });
-                            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
-                            TextBox stringBox = new() { IsReadOnly = true, CaretBrush = whiteBrush, BorderBrush = blackBrush, Foreground = whiteBrush };
-                            IconTextButtons textButtons = new()
-                            {
-                                Style = Application.Current.Resources["IconTextButton"] as Style,
-                                Background = buttonNormalBrush,
-                                PressedBackground = buttonPressedBrush,
-                                Content = "设置引用",
-                                Padding = new Thickness(5, 2, 5, 2)
-                            };
-                            grid.Children.Add(stringBox);
-                            grid.Children.Add(textButtons);
-                            Grid.SetColumn(stringBox, 0);
-                            Grid.SetColumn(textButtons, 1);
-                            grid.GotFocus += componentEvents.ValueChangedHandler;
-                            result.Add(grid);
-                            #region 分析是否需要代入导入的数据
-                            if (ImportMode)
-                            {
-                                string key = Request.key;
-                                if (!Summon)
-                                    key = "ItemView." + key;
-                                JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if (currentObj is not null)
-                                {
-                                    stringBox.Text = currentObj.ToString().Replace("\"", "");
-                                    componentEvents.NameSpaceReference_LostFocus(stringBox, null);
-                                }
-                            }
-                            #endregion
-                        }
-                        break;
-                    case "TAG_Boolean":
-                        {
-                            TextCheckBoxs textCheckBoxs = new()
-                            {
-                                Uid = Request.nbtType,
-                                Name = Request.key,
-                                Foreground = whiteBrush,
-                                VerticalContentAlignment = VerticalAlignment.Center,
-                                VerticalAlignment = VerticalAlignment.Center,
-                                HorizontalAlignment = HorizontalAlignment.Stretch,
-                                HeaderWidth = 20,
-                                HeaderHeight = 20,
-                                Style = Application.Current.Resources["TextCheckBox"] as Style,
-                                Content = Request.description,
-                                Tag = new NBTDataStructure() { Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                            };
-                            Grid.SetColumnSpan(textCheckBoxs, 2);
-                            if (Request.toolTip.Length > 0)
-                            {
-                                textCheckBoxs.ToolTip = Request.toolTip;
-                                ToolTipService.SetBetweenShowDelay(textCheckBoxs, 0);
-                                ToolTipService.SetInitialShowDelay(textCheckBoxs, 0);
-                            }
-                            result.Remove(displayText);
-                            textCheckBoxs.GotFocus += componentEvents.ValueChangedHandler;
-                            result.Add(textCheckBoxs);
-                            #region 分析是否需要代入导入的数据
-                            if (ImportMode)
-                            {
-                                string key = Request.key;
-                                if (!Summon)
-                                    key = "ItemView." + key;
-                                JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if (currentObj is not null)
-                                {
-                                    textCheckBoxs.IsChecked = currentObj.ToString() == "1" || currentObj.ToString() == "true";
-                                    componentEvents.CheckBox_Checked(textCheckBoxs, null);
-                                }
-                            }
-                            #endregion
-                        }
-                        break;
-                    case "TAG_Enum":
-                        {
-                            MatchCollection matchCollection = Regex.Matches(Request.toolTip, @"[a-zA-Z_]+");
-                            List<string> enumValueList = matchCollection.ToList().ConvertAll(item => item.ToString());
-                            if (enumValueList.Count == 0)
-                                enumValueList =
-                                [
-                                    .. File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + "resources\\configs\\ItemView\\data\\" + Request.dependency + ".ini"),
-                                ];
-                            ComboBox comboBox = new()
-                            {
-                                ItemsSource = enumValueList,
-                                Height = 25,
-                                Uid = Request.nbtType,
-                                Foreground = whiteBrush,
-                                VerticalContentAlignment = VerticalAlignment.Center,
-                                Style = Application.Current.Resources["TextComboBoxStyle"] as Style,
-                                Name = Request.key,
-                                SelectedIndex = 0,
-                                Tag = new NBTDataStructure() { ResultType = Request.resultType, Result = "", Visibility = Visibility.Collapsed, DataType = Request.dataType, NBTGroup = Request.nbtType }
-                            };
-                            comboBox.GotFocus += componentEvents.ValueChangedHandler;
-                            result.Add(comboBox);
-                            #region 分析是否需要代入导入的数据
-                            if (ImportMode)
-                            {
-                                string key = Request.key;
-                                if (!Summon)
-                                    key = "ItemView." + key;
-                                JToken currentObj = ExternallyReadEntityData.SelectToken(key);
-                                if (currentObj is not null)
-                                {
-                                    comboBox.SelectedIndex = enumValueList.IndexOf(currentObj.ToString());
-                                    componentEvents.EnumBox_SelectionChanged(comboBox, null);
-                                }
-                            }
-                            #endregion
-                        }
-                        break;
-                }
-            });
-
-            #region 删除已读取的键
-            if (ImportMode)
-                ExternallyReadEntityData.Remove(Request.key);
-            if (ExternallyReadEntityData is not null)
-            {
-                string RemainData = ExternallyReadEntityData.ToString();
-                if (RemainData == "[]" || RemainData == "{}")
-                {
-                    ExternallyReadEntityData = null;
-                    ImportMode = false;
-                }
-            }
-            #endregion
-
-            return result;
+            return "";
         }
 
         /// <summary>
@@ -1735,7 +550,7 @@ namespace CBHK.ViewModel.Component.Item
             };
             if (children is not null)
                 componentData.children = children.ToString();
-            List<FrameworkElement> componentGroup = ComponentsGenerator(componentData);
+            List<FrameworkElement> componentGroup = [];
             return componentGroup;
         }
 
@@ -1831,6 +646,10 @@ namespace CBHK.ViewModel.Component.Item
                 SpecialViewer.Content = null;
         }
 
+        private void UpdateItemDamageAndID()
+        {
+        }
+
         #endregion
 
         #region Event
@@ -1863,23 +682,6 @@ namespace CBHK.ViewModel.Component.Item
             ItemViewModel datacontext = window.DataContext as ItemViewModel;
             foreach (TabItem item in tabControl.Items)
             {
-                if (item.Uid == "Common")
-                {
-                    common = new(_context);
-                    VersionComponents.Add(common);
-                    (item.Content as ScrollViewer).Content = common;
-                }
-                if (item.Uid == "Data")
-                {
-                    data = new(_dataService,_context);
-                    (item.Content as ScrollViewer).Content = data;
-                }
-                if (item.Uid == "Function")
-                {
-                    function = new(_context,this);
-                    VersionComponents.Add(function);
-                    (item.Content as ScrollViewer).Content = function;
-                }
                 item.DataContext = this;
             }
             SpecialViewer = (tabControl.Items[0] as TabItem).Content as ScrollViewer;
@@ -1896,12 +698,6 @@ namespace CBHK.ViewModel.Component.Item
             JObject externData = ExternallyReadEntityData;
             if (ImportMode && ExternallyReadEntityData is not null)
             {
-                if (tabControl.SelectedIndex == 1)
-                    common.GetExternData(ref externData);
-                if (tabControl.SelectedIndex == 2)
-                    function.GetExternData(ref externData);
-                if (tabControl.SelectedIndex == 3)
-                    data.GetExternData(ref externData);
             }
         }
 
@@ -1915,11 +711,6 @@ namespace CBHK.ViewModel.Component.Item
             ComboBox comboBox = sender as ComboBox;
             ItemViewModel itemDataContext = Window.GetWindow(comboBox).DataContext as ItemViewModel;
             CancellationTokenSource cancellationTokenSource = new();
-            function.Trim.Visibility = Visibility.Collapsed;
-            if (CurrentMinVersion > 1194)
-            {
-                function.Trim.Visibility = Visibility.Visible;
-            }
 
             IsVersionUpdating = true;
             InitItemList();
@@ -1929,32 +720,32 @@ namespace CBHK.ViewModel.Component.Item
             IsVersionUpdating = false;
 
             #region 更新子控件的版本以及执行数据更新事件
-            await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
+            await Parallel.ForAsync(0, /*VersionComponents.Count*/1, async (i, cancellationTokenSource) =>
             {
-                if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 1130)
-                {
-                    StylizedTextBox stylizedTextBox = VersionComponents[i] as StylizedTextBox;
-                    if (stylizedTextBox.richTextBox.Document.Blocks.Count > 0)
-                    {
-                        Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
-                        if (paragraph.Inlines.Count > 0)
-                        {
-                            RichRun richRun = paragraph.Inlines.FirstInline as RichRun;
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                IsNoStyleText = richRun.Text.Trim().Length > 0;
-                            });
-                        }
-                        else
-                            IsNoStyleText = false;
-                    }
-                    else
-                        IsNoStyleText = false;
-                }
-                else
-                    IsNoStyleText = true;
+                //if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 1130)
+                //{
+                //    StylizedTextBox stylizedTextBox = VersionComponents[i] as StylizedTextBox;
+                //    if (stylizedTextBox.richTextBox.Document.Blocks.Count > 0)
+                //    {
+                //        Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
+                //        if (paragraph.Inlines.Count > 0)
+                //        {
+                //            RichRun richRun = paragraph.Inlines.FirstInline as RichRun;
+                //            Application.Current.Dispatcher.Invoke(() =>
+                //            {
+                //                IsNoStyleText = richRun.Text.Trim().Length > 0;
+                //            });
+                //        }
+                //        else
+                //            IsNoStyleText = false;
+                //    }
+                //    else
+                //        IsNoStyleText = false;
+                //}
+                //else
+                //    IsNoStyleText = true;
                 //更新版本控件的版本
-                await VersionComponents[i].Upgrade(CurrentMinVersion);
+                //await VersionComponents[i].Upgrade(CurrentMinVersion);
             });
             await Parallel.ForEachAsync(VersionNBTList, async (item, cancellationToken) =>
             {

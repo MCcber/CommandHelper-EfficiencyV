@@ -3,7 +3,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
-    xmlns:Special="clr-namespace:CBHK.View.Component.Item.SpecialNBT"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Component.Item"
@@ -145,11 +144,10 @@
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
             <CustomControl:TextTabItems
-                Uid="Special"
                 Background="#48382C"
                 BorderThickness="4,4,4,0"
                 Foreground="White"
-                Header="特指"
+                Header="专属NBT"
                 LeftBorderTexture="{StaticResource TabItemLeft}"
                 RightBorderTexture="{StaticResource TabItemRight}"
                 SelectedBackground="#CC6B23"
@@ -194,51 +192,10 @@
                 </ScrollViewer>
             </CustomControl:TextTabItems>
             <CustomControl:TextTabItems
-                Uid="Common"
                 Background="#48382C"
                 BorderThickness="4,4,4,0"
                 Foreground="White"
-                Header="常用"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}">
-                <ScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto" />
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
-                Uid="Function"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
-                Foreground="White"
-                Header="功能"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}">
-                <ScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto" />
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
-                Uid="Data"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
-                Foreground="White"
-                Header="数据"
+                Header="物品共通标签"
                 LeftBorderTexture="{StaticResource TabItemLeft}"
                 RightBorderTexture="{StaticResource TabItemRight}"
                 SelectedBackground="#CC6B23"

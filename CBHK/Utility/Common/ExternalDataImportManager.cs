@@ -317,7 +317,7 @@ namespace CBHK.Utility.Common
                         ImageBrush imageBrush = null;
                         string data = entity.ToString();
                         spawnPotentialInstance.entity.Tag = data;
-                        string entityID = JObject.Parse(data)["id"].ToString().Replace("minecraft:","");
+                        string entityID = JObject.Parse(data)["oldID"].ToString().Replace("minecraft:","");
                         string rootPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\entityImages\\";
                         string iconPath = rootPath + entityID + ".png";
                         if (!File.Exists(iconPath))
@@ -366,10 +366,10 @@ namespace CBHK.Utility.Common
                 try
                 {
                     JObject resultObj = JObject.Parse(result);
-                    JToken idObj = resultObj.SelectToken("id");
-                    idObj ??= resultObj.SelectToken("EntityTag.id");
+                    JToken idObj = resultObj.SelectToken("oldID");
+                    idObj ??= resultObj.SelectToken("EntityTag.oldID");
                     if (idObj is null)
-                        resultObj.Add("id", "\"minecraft:" + entityID + "\"");
+                        resultObj.Add("oldID", "\"minecraft:" + entityID + "\"");
                     result = resultObj.ToString();
                 }
                 catch
@@ -451,7 +451,7 @@ namespace CBHK.Utility.Common
 
                     #region 应用数据
                     #region buy
-                    if (recipe.SelectToken("buy.id") is JToken buyIDObj)
+                    if (recipe.SelectToken("buy.oldID") is JToken buyIDObj)
                         buyID = buyIDObj.ToString().Replace("minecraft:", "");
                     bool ExistItem = false;
                     if (buyID.Length > 0)
@@ -481,7 +481,7 @@ namespace CBHK.Utility.Common
                     #region buyB
                     if(ExistItem)
                     {
-                        if (recipe.SelectToken("buyB.id") is JToken buyBIDObj)
+                        if (recipe.SelectToken("buyB.oldID") is JToken buyBIDObj)
                             buyBID = buyBIDObj.ToString().Replace("minecraft:", "");
                         if (buyBID.Length > 0)
                         {
@@ -509,7 +509,7 @@ namespace CBHK.Utility.Common
                     #region sell
                     if (ExistItem)
                     {
-                        if (recipe.SelectToken("sell.id") is JToken sellIDObj)
+                        if (recipe.SelectToken("sell.oldID") is JToken sellIDObj)
                             sellID = sellIDObj.ToString().Replace("minecraft:", "");
                         if (sellID.Length > 0)
                         {
@@ -657,7 +657,7 @@ namespace CBHK.Utility.Common
 
             try
             {
-                JToken entityTagID = JObject.Parse(nbtData).SelectToken("EntityTag.id");
+                JToken entityTagID = JObject.Parse(nbtData).SelectToken("EntityTag.oldID");
                 if (entityTagID is not null && entityID.Length == 0)
                     entityID = entityTagID.ToString();
                 //过滤掉命名空间
@@ -674,10 +674,10 @@ namespace CBHK.Utility.Common
             {
                 JObject nbtObj = JObject.Parse(nbtData);
                 //启用外部导入模式
-                DataRow result = EntityTable.Select("id='minecraft:"+ entityID + "'").First();
+                DataRow result = EntityTable.Select("oldID='minecraft:"+ entityID + "'").First();
                 if (result is not null)
                 {
-                    entityID = result["id"].ToString();
+                    entityID = result["oldID"].ToString();
                     //添加实体命令
                     AddEntityCommand(nbtObj, entityID, version1_12, GeneratorMode, IsPath ? filePathOrData : "",ref itemPageList);
                 }
@@ -764,7 +764,7 @@ namespace CBHK.Utility.Common
                     {
                         int itemCount = int.Parse(Regex.Match(data, @"\d+$").ToString());
                         resultObj = JObject.Parse("{Count:" + itemCount + ",tag:" + result.Replace("\n", "").Replace("\r", "") + "}");
-                        resultObj.Add("id", "minecraft:" + itemID);
+                        resultObj.Add("oldID", "minecraft:" + itemID);
                     }
                 }
                 else
@@ -817,8 +817,8 @@ namespace CBHK.Utility.Common
 
             try
             {
-                JToken itemTagID = JObject.Parse(nbtData).SelectToken("ItemView.id");
-                itemTagID ??= JObject.Parse(nbtData).SelectToken("id");
+                JToken itemTagID = JObject.Parse(nbtData).SelectToken("ItemView.oldID");
+                itemTagID ??= JObject.Parse(nbtData).SelectToken("oldID");
                 if (itemTagID is not null && itemID.Length == 0)
                     itemID = itemTagID.ToString();
                 //过滤掉命名空间
@@ -835,10 +835,10 @@ namespace CBHK.Utility.Common
             {
                 JObject nbtObj = JObject.Parse(nbtData);
                 //启用外部导入模式
-                DataRow[] results = ItemTable.Select("id='"+itemID+"'");
+                DataRow[] results = ItemTable.Select("oldID='"+itemID+"'");
                 if (results.Length > 0)
                 {
-                    itemID = results[0]["id"].ToString();
+                    itemID = results[0]["oldID"].ToString();
                     //添加实体命令
                     if(!ReferenceMode)
                     AddItemCommand(nbtObj, itemID, version1_12, GeneratorMode, IsPath ? filePathOrData : "", ref itemPageList);
@@ -938,7 +938,7 @@ namespace CBHK.Utility.Common
 
             try
             {
-                JToken itemTagID = JObject.Parse(nbtData).SelectToken("ItemView.id");
+                JToken itemTagID = JObject.Parse(nbtData).SelectToken("ItemView.oldID");
             }
             catch
             {

@@ -28,7 +28,7 @@ namespace CBHK.ViewModel.Component.Recipe
         #region Field
         private DataService _dataService = null;
         private Dictionary<string, string> ItemIDAndNameMap;
-        private CBHKDataContext _context = null;
+        private CBHKDataContext context = null;
         private List<Image> MaterialImageList = [];
         BitmapImage emptyImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Recipe\Image\Empty.png"));
         SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
@@ -188,9 +188,9 @@ namespace CBHK.ViewModel.Component.Recipe
         /// </summary>
         /// <param name="context"></param>
         /// <param name="dataService"></param>
-        public CraftingTableViewModel(CBHKDataContext context, DataService dataService)
+        public CraftingTableViewModel(CBHKDataContext Context, DataService dataService)
         {
-            _context = context;
+            context = context;
             _dataService = dataService;
             ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
             for (int i = 0; i < 9; i++)

@@ -225,7 +225,7 @@
                 Uid="SpecialTags"
                 Background="{StaticResource TabBack}"
                 Foreground="White"
-                Header="特指"
+                Header="专属NBT"
                 SelectedBackground="{StaticResource TabFront}"
                 Style="{DynamicResource TextTabItemStyle}">
                 <ScrollViewer

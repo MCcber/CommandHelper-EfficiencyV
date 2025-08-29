@@ -12,7 +12,7 @@ namespace CBHK.ViewModel.Common
     public partial class NoticeToUsersViewModel: ObservableObject
     {
         #region Field
-        private CBHKDataContext _context = null;
+        private CBHKDataContext context = null;
         private EnvironmentConfig _config = null;
         private int browseTime = 5;
         DispatcherTimer timer = new()
@@ -47,8 +47,8 @@ namespace CBHK.ViewModel.Common
         #region Method
         public NoticeToUsersViewModel(CBHKDataContext context)
         {
-            _context = context;
-            _config = _context.EnvironmentConfigSet.First();
+            context = context;
+            _config = context.EnvironmentConfigSet.First();
             timer.Tick += Readed_Tick;
         }
         #endregion

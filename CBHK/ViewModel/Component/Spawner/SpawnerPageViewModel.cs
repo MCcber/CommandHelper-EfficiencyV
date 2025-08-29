@@ -21,7 +21,7 @@ namespace CBHK.ViewModel.Component.Spawner
     public partial class SpawnerPageViewModel(IContainerProvider container) : ObservableObject
     {
         #region Field
-        private IContainerProvider _container = container;
+        private IContainerProvider container = container;
         private int CurrentMinVersion = 1205;
         /// <summary>
         /// 存储结果
@@ -242,7 +242,7 @@ namespace CBHK.ViewModel.Component.Spawner
             #region 显示生成结果
             if (ShowResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
@@ -275,7 +275,7 @@ namespace CBHK.ViewModel.Component.Spawner
             {
                 string entityID = "";
                 string data = ExternalDataImportManager.GetSpawnerDataHandler(Result, false);
-                if (JObject.Parse(data).SelectToken("SpawnData.entity.id") is JToken id)
+                if (JObject.Parse(data).SelectToken("SpawnData.entity.oldID") is JToken id)
                     entityID = id.ToString().Replace("minecraft:", "");
                 File.WriteAllTextAsync(openFolderDialog.FolderName + entityID + "SpawnerPageView" + ".command", Result);
             }

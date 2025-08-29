@@ -49,7 +49,7 @@ namespace CBHK.ViewModel.Generator
         /// 形状路径
         /// </summary>
         string shapePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Data\shapes.ini";
-        private IContainerProvider _container;
+        private IContainerProvider container;
         #endregion
 
         #region Property
@@ -122,11 +122,11 @@ namespace CBHK.ViewModel.Generator
             #endregion
 
             #region 初始化成员
-            _container = container;
+            container = container;
             home = mainView;
-            FireworkRocketPageView fireworkRocketPages = _container.Resolve<FireworkRocketPageView>();
+            FireworkRocketPageView fireworkRocketPages = container.Resolve<FireworkRocketPageView>();
             FireworkRocketPageList[0].Content = fireworkRocketPages;
-            fireworkRocketPages.DataContext = _container.Resolve<FireworkRocketPageViewModel>();
+            fireworkRocketPages.DataContext = container.Resolve<FireworkRocketPageViewModel>();
             FireworkRocketPageList[0].FontWeight = FontWeights.Normal;
             GrassBlockSide = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Image\grass_block_side.png", UriKind.Absolute));
             GrassBlockTop = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Image\grass_block_top.png", UriKind.Absolute));
@@ -369,7 +369,7 @@ namespace CBHK.ViewModel.Generator
             }
             if (ShowGeneratorResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();

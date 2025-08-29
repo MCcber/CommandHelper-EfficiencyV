@@ -80,7 +80,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// 原版颜色映射库
         /// </summary>
         private Dictionary<string, string> OriginColorDictionary = [];
-        private IContainerProvider _container = container;
+        private IContainerProvider container = container;
 
         #region 淡入淡出滚动视图引用
         ScrollViewer mainScrollViewer = null;
@@ -961,19 +961,19 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 Result = Result.Trim(',');
                 if (!GeneratorFireStar)
                 {
-                    Result = "id:\"minecraft:firework_rocket\",Count:1b,tag:{Fireworks:{" + Result + "}},";
+                    Result = "oldID:\"minecraft:firework_rocket\",Count:1b,tag:{Fireworks:{" + Result + "}},";
                     Result = "summon item ~ ~ ~ {ItemView:{" + (LifeTimeString + LifeString + FlyAngleString + Result + FireworkDurationString).Trim(',') + "}}";
                 }
                 else
                 {
-                    Result = "id:\"minecraft:firework_star\",Count:1b,tag:{" + Result + "},";
+                    Result = "oldID:\"minecraft:firework_star\",Count:1b,tag:{" + Result + "},";
                     Result = "summon item ~ ~ ~ {ItemView:{" + Result + "}}";
                 }
             }
 
             if (ShowGeneratorResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
@@ -1026,19 +1026,19 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 Result = Result.Trim(',');
                 if (!GeneratorFireStar)
                 {
-                    Result = "id:\"minecraft:firework_rocket\",Count:1b,tag:{Fireworks:{" + Result + "}},";
+                    Result = "oldID:\"minecraft:firework_rocket\",Count:1b,tag:{Fireworks:{" + Result + "}},";
                     Result = "summon item ~ ~ ~ {ItemView:{" + (LifeTimeString + LifeString + FlyAngleString + Result + FireworkDurationString).Trim(',') + "}}";
                 }
                 else
                 {
-                    Result = "id:\"minecraft:firework_star\",Count:1b,tag:{" + Result + "},";
+                    Result = "oldID:\"minecraft:firework_star\",Count:1b,tag:{" + Result + "},";
                     Result = "summon item ~ ~ ~ {ItemView:{" + Result + "}}";
                 }
             }
 
             if (showResult)
             {
-                DisplayerView displayer = _container.Resolve<DisplayerView>();
+                DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayerViewModel.GeneratorResult(Result, "烟花火箭", iconPath);
