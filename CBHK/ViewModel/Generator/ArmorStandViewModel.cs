@@ -28,10 +28,12 @@ using CBHK.ViewModel.Component.Item;
 using CBHK.View.Component.Item;
 using CBHK.Utility.MessageTip;
 using CBHK.Utility.Common;
+using CBHK.Interface;
+using Prism.Events;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class ArmorStandViewModel : ObservableObject
+    public partial class ArmorStandViewModel : ObservableObject,IGeneratorBuilder
     {
         #region Field
         /// <summary>
@@ -998,6 +1000,13 @@ namespace CBHK.ViewModel.Generator
             get => currentMinVersion;
             set => currentMinVersion = value;
         }
+        public IEventAggregator EventAggregator { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool ShowResult { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        string IGeneratorBuilder.SelectedVersion { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool SyncToFile { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public string ExternFilePath { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public JToken ExternallyData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool ImportMode { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         #endregion
 
         #endregion
@@ -1169,6 +1178,19 @@ namespace CBHK.ViewModel.Generator
             double z = Math.Cos(pitchRadians) * Math.Sin(yawRadians);
 
             return new Vector3D(x, y, z);
+        }
+
+        public StringBuilder Create()
+        {
+            return new();
+        }
+
+        public void CollectionData(StringBuilder Result)
+        {
+        }
+
+        public void Build(StringBuilder Result)
+        {
         }
 
         /// <summary>   

@@ -20,6 +20,9 @@ using CBHK.ViewModel.Common;
 using CBHK.Domain;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CBHK.Common.Utility;
+using CBHK.Interface;
+using Prism.Events;
+using System.Text;
 
 namespace CBHK.ViewModel.Generator
 {
