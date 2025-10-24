@@ -1,8 +1,9 @@
 ﻿using MinecraftLanguageModelLibrary.Model.MCDocument;
 using MinecraftLanguageModelLibrary.Model.MCDocument.EnumContent;
+using MinecraftLanguageModelLibrary.Model.MCDocument.InjectionContent;
 using System.Windows;
 
-namespace CBHK.Domain.Service
+namespace CBHK.Domain.Interface
 {
     public interface INBTComponentBuilder
     {
@@ -17,12 +18,9 @@ namespace CBHK.Domain.Service
 
         #region 获取中层数据
         public List<StructField> GetStructFieldList();
-
         public List<EnumField> GetEnumField();
-        #endregion
-
-        #region 处理版本差异
-        public bool IsVersionSupported(string version);
+        public List<EnumInjection> GetEnumInjectionList();
+        public List<StructInjection> GetStructInjectionList();
         #endregion
 
         #region 生成有意义的NBT组件

@@ -33,7 +33,7 @@ using Prism.Events;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class ArmorStandViewModel : ObservableObject,IGeneratorBuilder
+    public partial class ArmorStandViewModel : ObservableObject,IGenerator
     {
         #region Field
         /// <summary>
@@ -1002,7 +1002,7 @@ namespace CBHK.ViewModel.Generator
         }
         public IEventAggregator EventAggregator { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public bool ShowResult { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        string IGeneratorBuilder.SelectedVersion { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        string IGenerator.SelectedVersion { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public bool SyncToFile { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public string ExternFilePath { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public JToken ExternallyData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }

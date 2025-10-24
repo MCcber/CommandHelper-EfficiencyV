@@ -35,7 +35,7 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Entity
 {
-    public partial class EntityPageViewModel : ObservableObject,IGeneratorBuilder
+    public partial class EntityPageViewModel : ObservableObject,IGenerator
     {
         #region Field
         public bool HaveCustomName = false;
@@ -297,7 +297,7 @@ namespace CBHK.ViewModel.Component.Entity
         public bool SyncToFile { get; set; }
         public string ExternFilePath { get; set; }
         public IEventAggregator EventAggregator { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        string IGeneratorBuilder.SelectedVersion { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        string IGenerator.SelectedVersion { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public JToken ExternallyData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         #endregion
 

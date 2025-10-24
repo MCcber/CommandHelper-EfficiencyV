@@ -8,7 +8,6 @@ using System.Windows.Media;
 using System.Windows.Input;
 using System.Text;
 using CBHK.Utility.Common;
-using CBHK.Interface;
 using Prism.Events;
 using CBHK.Model.Common;
 using Newtonsoft.Json.Linq;
@@ -18,7 +17,7 @@ namespace CBHK.CustomControl
     /// <summary>
     /// StylizedTextBox.xaml 的交互逻辑
     /// </summary>
-    public partial class StylizedTextBox : UserControl,IComponentBuilder
+    public partial class StylizedTextBox : UserControl, Interface.IComponent
     {
         private int currentVersion = 1202;
         public int CurrentVersion
@@ -53,6 +52,7 @@ namespace CBHK.CustomControl
         public string ExternFilePath { get; set; }
         public JToken ExternallyData { get; set; }
         public bool ImportMode { get; set; }
+        public StringBuilder Result { get; set; }
 
         public static readonly DependencyProperty IsPresetModeProperty =
             DependencyProperty.Register("IsPresetMode", typeof(bool), typeof(StylizedTextBox), new PropertyMetadata(default(bool)));

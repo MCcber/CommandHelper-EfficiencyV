@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CBHK.Interface
 {
-    public partial interface IGeneratorBuilder
+    public partial interface IGenerator
     {
         public IEventAggregator EventAggregator { get; set; }
         public bool ShowResult { get; set; }

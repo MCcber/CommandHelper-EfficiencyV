@@ -1,4 +1,5 @@
-﻿using CBHK.Domain.Service;
+﻿using CBHK.Domain.Interface;
+using System.Windows.Controls;
 
 namespace CBHK.Domain.Implementation
 {

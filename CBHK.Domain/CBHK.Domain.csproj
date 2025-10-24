@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="9.0.10" />
     <PackageReference Include="MinecraftLanguageModelLibrary" Version="1.0.0" />
+    <PackageReference Include="Prism.Core" Version="9.0.537" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
   </ItemGroup>
 

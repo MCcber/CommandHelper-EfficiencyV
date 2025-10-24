@@ -1,4 +1,4 @@
-﻿namespace CBHK.Domain.Service
+﻿namespace CBHK.Domain.Interface
 {
     public interface IWorldGeneratorBuilder
     {
