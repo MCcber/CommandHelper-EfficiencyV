@@ -1,21 +1,22 @@
-﻿using CBHK.Utility;
-using System;
-using System.Threading.Tasks;
-using System.Windows;
-using Hardcodet.Wpf.TaskbarNotification;
-using System.Windows.Controls;
-using CBHK.CustomControl;
-using System.IO;
-using System.Windows.Media.Imaging;
-using CommunityToolkit.Mvvm.ComponentModel;
-using System.Windows.Media;
-using CommunityToolkit.Mvvm.Input;
-using Prism.Ioc;
+﻿using CBHK.CustomControl;
+using CBHK.Domain;
+using CBHK.Domain.Implementation;
+using CBHK.Domain.Model;
+using CBHK.Utility;
 using CBHK.View.Common;
 using CBHK.ViewModel.Common;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Hardcodet.Wpf.TaskbarNotification;
+using Prism.Ioc;
+using System;
+using System.IO;
 using System.Linq;
-using CBHK.Domain;
-using CBHK.Domain.Model;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel
 {

@@ -1,4 +1,5 @@
-﻿using MinecraftLanguageModelLibrary.Model.MCDocument;
+﻿using CBHK.Interface;
+using MinecraftLanguageModelLibrary.Model.MCDocument;
 using MinecraftLanguageModelLibrary.Model.MCDocument.EnumContent;
 using MinecraftLanguageModelLibrary.Model.MCDocument.InjectionContent;
 using System.Windows;
@@ -7,6 +8,12 @@ namespace CBHK.Domain.Interface
 {
     public interface INBTComponentBuilder
     {
+        #region Property
+        public List<IComponent> ComponentList { get; set; }
+        #endregion
+        
+        #region Method
+
         #region 获取顶层数据
         public List<Structure> GetStructureList();
         public List<Enumeration> GetEnumList();
@@ -25,6 +32,8 @@ namespace CBHK.Domain.Interface
 
         #region 生成有意义的NBT组件
         public List<FrameworkElement> BuildNBTComponent();
+        #endregion
+
         #endregion
     }
 }
