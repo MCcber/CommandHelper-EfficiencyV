@@ -1,5 +1,4 @@
-﻿using CBHK.Domain.Model;
-using CBHKShared.ContextModel;
+﻿using CBHK.Domain.Model.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace CBHK.Domain

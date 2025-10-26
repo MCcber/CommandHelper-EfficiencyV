@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CBHKShared.ContextModel
+namespace CBHK.Domain.Model.Database
 {
     public class AttributeSlot
     {

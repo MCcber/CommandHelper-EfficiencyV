@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System.Text;
 
-namespace CBHK.Interface
+namespace CBHK.Domain.Interface
 {
     public interface IComponent
     {

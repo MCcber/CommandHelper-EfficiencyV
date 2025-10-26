@@ -1,5 +1,5 @@
 ﻿using CBHK.Domain;
-using CBHK.Domain.Model;
+using CBHK.Domain.Model.Database;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;

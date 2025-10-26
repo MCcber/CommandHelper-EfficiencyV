@@ -18,4 +18,8 @@
     <ProjectReference Include="..\CBHK.Common\CBHK.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Model\MCDocument\" />
+  </ItemGroup>
+
 </Project>

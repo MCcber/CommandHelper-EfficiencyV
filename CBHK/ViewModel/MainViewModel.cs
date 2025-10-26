@@ -1,7 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
-using CBHK.Domain.Implementation;
-using CBHK.Domain.Model;
+using CBHK.Domain.Model.Database;
 using CBHK.Utility;
 using CBHK.View.Common;
 using CBHK.ViewModel.Common;

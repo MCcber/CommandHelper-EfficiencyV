@@ -1,5 +1,4 @@
-﻿using CBHK.Interface;
-using MinecraftLanguageModelLibrary.Model.MCDocument;
+﻿using MinecraftLanguageModelLibrary.Model.MCDocument;
 using MinecraftLanguageModelLibrary.Model.MCDocument.EnumContent;
 using MinecraftLanguageModelLibrary.Model.MCDocument.InjectionContent;
 using System.Windows;
@@ -10,29 +9,28 @@ namespace CBHK.Domain.Interface
     {
         #region Property
         public List<IComponent> ComponentList { get; set; }
+        public MCDocumentFileModel? DocumentFileModel { get; set; }
         #endregion
-        
+
         #region Method
 
-        #region 获取顶层数据
-        public List<Structure> GetStructureList();
-        public List<Enumeration> GetEnumList();
-        public List<TypeAlia> GetTypeAliaList();
-        public List<string> GetUseStatementList();
-        public List<Injection> GetInjectionList();
-        public List<DispatchStatement> GetDispatchStatementList();
-        #endregion
+        /// <summary>
+        /// 整合引用，用于在全局字典中检索控件资源
+        /// </summary>
+        /// <returns>一个引用列表</returns>
+        public List<IComponent> GetUsestatementList();
 
-        #region 获取中层数据
-        public List<StructField> GetStructFieldList();
-        public List<EnumField> GetEnumField();
-        public List<EnumInjection> GetEnumInjectionList();
-        public List<StructInjection> GetStructInjectionList();
-        #endregion
+        /// <summary>
+        /// 整合一个文件实例的所有结构体内的属性块
+        /// </summary>
+        /// <returns>一个控件列表</returns>
+        public List<IComponent> GetStructList();
 
-        #region 生成有意义的NBT组件
-        public List<FrameworkElement> BuildNBTComponent();
-        #endregion
+        /// <summary>
+        /// 整合一个文件实例的所有枚举元数据
+        /// </summary>
+        /// <returns></returns>
+        public List<IComponent> GetEnumMetaDataList();
 
         #endregion
     }

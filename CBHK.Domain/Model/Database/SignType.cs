@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CBHK.Domain.Model
+namespace CBHK.Domain.Model.Database
 {
-    public class CustomWorldEntry
+    public class SignType
     {
         [Key]
         public string ID { get; set; }
-        public string ZH { get; set; }
+        public string Version { get; set; }
     }
 }

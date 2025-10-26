@@ -1,4 +1,4 @@
-﻿namespace CBHK.Domain.Model
+﻿namespace CBHK.Domain.Model.Database
 {
     public class ScoreboardType
     {

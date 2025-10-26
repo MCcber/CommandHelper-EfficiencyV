@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CBHK.Domain
+namespace CBHK.Domain.Model.Database
 {
     public class GameRule
     {

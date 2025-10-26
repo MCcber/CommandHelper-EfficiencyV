@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
-namespace CBHK.Domain.Model
+namespace CBHK.Domain.Model.Database
 {
     public class EnvironmentConfig
     {

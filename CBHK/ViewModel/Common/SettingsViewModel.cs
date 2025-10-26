@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Controls;
 using CBHK.Domain;
-using CBHK.Domain.Model;
+using CBHK.Domain.Model.Database;
 
 namespace CBHK.ViewModel.Common
 {

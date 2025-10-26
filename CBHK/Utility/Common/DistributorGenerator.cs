@@ -1,5 +1,5 @@
 ﻿using CBHK.Domain;
-using CBHK.Domain.Model;
+using CBHK.Domain.Model.Database;
 using CBHK.Model;
 using CBHK.View;
 using CBHK.View.Generator;
