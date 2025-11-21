@@ -366,7 +366,7 @@ namespace CBHK.ViewModel.Component.Entity
                 JArray branch = nbt["Branch"] as JArray;
                 JToken descriptionObj = nbt["Description"];
                 string description = descriptionObj is not null ? descriptionObj.ToString() : "";
-                JToken toolTipObj = nbt["ToolTip"];
+                JToken toolTipObj = nbt["PrelimToolTip"];
                 string toolTip = toolTipObj is not null ? toolTipObj.ToString() : "";
                 JToken dependencyObj = nbt["Dependency"];
                 string dependency = dependencyObj is not null ? dependencyObj.ToString() : "";

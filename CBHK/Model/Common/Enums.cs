@@ -8,6 +8,12 @@
             Get
         }
 
+        public enum ModiferType
+        {
+            Range,
+            Length
+        }
+
         public enum MoveDirection
         {
             Up,

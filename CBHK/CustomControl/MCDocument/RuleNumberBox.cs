@@ -1,35 +1,35 @@
 ﻿using CBHK.Domain.Interface;
-using CBHK.Model.Common;
 using Newtonsoft.Json.Linq;
-using System;
+using Prism.Events;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Windows.Controls;
 
-namespace CBHK.Domain.Implementation
+namespace CBHK.CustomControl.MCDocument
 {
-    public class AttributeGrid : Grid, IComponent
+    public class RuleNumberBox : Slider, IComponent, IComponentModifier
     {
         public IEventAggregator EventAggregator { get; set; }
 
-        public RemoveComponentEvent RemoveComponentEvent { get; set; }
+        public PubSubEvent<string> VersionChanged { get; set; }
+
+        public List<PubSubEvent> ComponentEventList { get; set; }
 
         public StringBuilder Result { get; set; }
+        public bool? IsCompliantVersion { get; set; }
         public string Version { get; set; }
-        public string TargetVersion { get; init; }
         public string ExternFilePath { get; set; }
         public JToken ExternallyData { get; set; }
         public bool ImportMode { get; set; }
-        public bool IsContainer { get; set; }
-        List<IComponent> IComponent.Children { get; set; }
 
         public void Build(StringBuilder Result)
         {
+
         }
 
         public void CollectionData(StringBuilder Result)
         {
+
         }
 
         public StringBuilder Create()
@@ -37,8 +37,34 @@ namespace CBHK.Domain.Implementation
             return new();
         }
 
+        public void ImportExternData(string Data)
+        {
+
+        }
+
+        public List<IComponent> Modifier(IComponent targetComponent)
+        {
+            return [];
+        }
+
+        public void SetEnableState(bool state)
+        {
+
+        }
+
+        public void SetRawdata(string data)
+        {
+
+        }
+
         public void UpdateVersion(string SelectedVersion)
         {
+
+        }
+
+        public bool Verify(string targetData)
+        {
+            return false;
         }
     }
 }

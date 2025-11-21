@@ -1,32 +1,35 @@
 ﻿using CBHK.Domain.Interface;
-using CBHK.Model.Common;
 using Newtonsoft.Json.Linq;
+using Prism.Events;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows.Controls;
 
-namespace CBHK.Domain.Implementation
+namespace CBHK.CustomControl.MCDocument
 {
-    public class StructAccordion : Expander, IComponent
+    public class RuleTextBox : TextBox, IComponent
     {
         public IEventAggregator EventAggregator { get; set; }
 
-        public RemoveComponentEvent RemoveComponentEvent { get; set; }
+        public PubSubEvent<string> VersionChanged { get; set; }
+
+        public List<PubSubEvent> ComponentEventList { get; set; }
 
         public StringBuilder Result { get; set; }
+        public bool? IsCompliantVersion { get; set; }
         public string Version { get; set; }
-        public string TargetVersion { get; init; }
         public string ExternFilePath { get; set; }
         public JToken ExternallyData { get; set; }
         public bool ImportMode { get; set; }
-        public bool IsContainer { get; set; }
-        public List<IComponent> Children { get; set; }
 
         public void Build(StringBuilder Result)
         {
+
         }
 
         public void CollectionData(StringBuilder Result)
         {
+
         }
 
         public StringBuilder Create()
@@ -34,8 +37,19 @@ namespace CBHK.Domain.Implementation
             return new();
         }
 
+        public void ImportExternData(string Data)
+        {
+
+        }
+
+        public void SetEnableState(bool state)
+        {
+
+        }
+
         public void UpdateVersion(string SelectedVersion)
         {
+
         }
     }
 }

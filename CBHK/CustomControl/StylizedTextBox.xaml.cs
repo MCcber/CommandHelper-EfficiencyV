@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,15 +8,15 @@ using System.Windows.Input;
 using System.Text;
 using CBHK.Utility.Common;
 using Prism.Events;
-using CBHK.Model.Common;
 using Newtonsoft.Json.Linq;
+using CBHK.Domain.Interface;
 
 namespace CBHK.CustomControl
 {
     /// <summary>
     /// StylizedTextBox.xaml 的交互逻辑
     /// </summary>
-    public partial class StylizedTextBox : UserControl, Interface.IComponent
+    public partial class StylizedTextBox : UserControl, IComponent
     {
         private int currentVersion = 1202;
         public int CurrentVersion
@@ -33,6 +32,9 @@ namespace CBHK.CustomControl
             }
         }
 
+        public List<PubSubEvent> ComponentEventList { get; set; }
+
+        public bool? IsCompliantVersion { get; set; }
         public bool IsPresetMode
         {
             get { return (bool)GetValue(IsPresetModeProperty); }
@@ -47,8 +49,6 @@ namespace CBHK.CustomControl
 
         public IEventAggregator EventAggregator { get;set; }
 
-        public RemoveComponentEvent RemoveComponentEvent { get;set; }
-
         public string ExternFilePath { get; set; }
         public JToken ExternallyData { get; set; }
         public bool ImportMode { get; set; }
@@ -56,7 +56,7 @@ namespace CBHK.CustomControl
         public string Version { get; set; }
         public string TargetVersion { get; init; }
         public bool IsContainer { get; set; }
-        public List<Interface.IComponent> Children { get; set; }
+        public List<IComponent> Children { get; set; }
 
         public static readonly DependencyProperty IsPresetModeProperty =
             DependencyProperty.Register("IsPresetMode", typeof(bool), typeof(StylizedTextBox), new PropertyMetadata(default(bool)));
@@ -74,7 +74,7 @@ namespace CBHK.CustomControl
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void SetSelectionColor(object sender, PropertyChangedEventArgs e)
+        public void SetSelectionColor(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             TextRange textRange = new(richTextBox.Selection.Start, richTextBox.Selection.End);
             textRange.ApplyPropertyValue(TextBlock.ForegroundProperty, colorPicker.SelectColor);

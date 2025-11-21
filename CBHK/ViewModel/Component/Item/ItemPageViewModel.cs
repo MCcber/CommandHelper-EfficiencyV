@@ -534,7 +534,7 @@ namespace CBHK.ViewModel.Component.Item
             JToken children = nbtStructure["Children"];
             JToken descriptionObj = nbtStructure["Description"];
             string description = descriptionObj is not null ? descriptionObj.ToString() : "";
-            JToken toolTipObj = nbtStructure["ToolTip"];
+            JToken toolTipObj = nbtStructure["PrelimToolTip"];
             string toolTip = toolTipObj is not null ? toolTipObj.ToString() : "";
             JToken dependencyObj = nbtStructure["Dependency"];
             string dependency = dependencyObj is not null ? dependencyObj.ToString() : "";
