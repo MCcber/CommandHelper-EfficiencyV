@@ -6,10 +6,11 @@ using System.Text.RegularExpressions;
 
 namespace CBHK.Utility.Modifier
 {
-    public class IntegerRangeModifier : IComponentModifier
+    public class IntegerRangeModifier(RegexService regexService) : IComponentModifier
     {
         #region Field
         private string range = string.Empty;
+        private RegexService RegexService = regexService;
         #endregion
 
         #region Property

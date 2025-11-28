@@ -1,6 +1,5 @@
 ﻿using CBHK.Common.Model;
 using CBHK.Common.Utility;
-using Microsoft.EntityFrameworkCore;
 
 namespace CBHK.Domain
 {

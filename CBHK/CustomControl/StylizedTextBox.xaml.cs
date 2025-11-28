@@ -57,6 +57,7 @@ namespace CBHK.CustomControl
         public string TargetVersion { get; init; }
         public bool IsContainer { get; set; }
         public List<IComponent> Children { get; set; }
+        public PubSubEvent<string> VersionChanged { get; set; }
 
         public static readonly DependencyProperty IsPresetModeProperty =
             DependencyProperty.Register("IsPresetMode", typeof(bool), typeof(StylizedTextBox), new PropertyMetadata(default(bool)));
@@ -298,6 +299,16 @@ namespace CBHK.CustomControl
             {
                 Result.Length--;
             }
+        }
+
+        public void ImportExternData(string Data)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void SetEnableState(bool state)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

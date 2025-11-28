@@ -142,7 +142,7 @@ namespace CBHK.Implementation.MCDocumentBuilder
                 {
                     Description = description
                 };
-                attributeGrid.ColumnDefinitions.Add(column);
+                //attributeGrid.ColumnDefinitions.Add(column);
                 attributeGrid.AddChild([new(null, null)]);
 
                 result.Add(attributeGrid);
