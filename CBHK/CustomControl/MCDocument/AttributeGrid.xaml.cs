@@ -4,13 +4,15 @@ using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.MCDocument
 {
-    public class AttributeGrid : Grid, IContainerComponent
+    /// <summary>
+    /// AttributeGrid.xaml 的交互逻辑
+    /// </summary>
+    public partial class AttributeGrid : UserControl, IContainerComponent
     {
         public required string Description { get; set; }
         public IEventAggregator EventAggregator { get; set; }
@@ -25,19 +27,16 @@ namespace CBHK.CustomControl.MCDocument
 
         public AttributeGrid()
         {
-            ColumnDefinition column = new()
-            {
-                Width = new GridLength(1, GridUnitType.Auto)
-            };
-            ColumnDefinitions.Add(column);
+            InitializeComponent();
+            //ColumnDefinitions.Add(column);
             TextBlock textBlock = new()
             {
                 Text = Description,
                 Background = new SolidColorBrush(Colors.Transparent),
                 Foreground = new SolidColorBrush(Colors.White)
             };
-            Children.Add(textBlock);
-            SetColumn(textBlock, 0);
+            //Children.Add(textBlock);
+            //SetColumn(textBlock, 0);
         }
 
         public void AddChild(List<Tuple<IComponent, List<PubSubEvent>>> ChildrenMetaDataList)

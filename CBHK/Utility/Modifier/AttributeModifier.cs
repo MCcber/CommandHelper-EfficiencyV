@@ -13,6 +13,8 @@ namespace CBHK.Utility.Modifier
         private List<string> AttributeList = [];
         private Dictionary<string, Type> AttributeDictionary = new()
         {
+            { "pack_format",typeof(RuleTextBox) },
+            { "block_predicate",typeof(EnumComboBox) },
             { "canonical",typeof(UnionComboBox) },//联合体下拉框
             { "color",typeof(ColorButton) },//拾色器
             { "command",typeof(RuleTextBox) },//命令文本框

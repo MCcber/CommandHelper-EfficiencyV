@@ -3,7 +3,6 @@ using CBHK.Domain.Interface;
 using MinecraftLanguageModelLibrary.Model.MCDocument;
 using MinecraftLanguageModelLibrary.Model.MCDocument.InjectionContent;
 using Newtonsoft.Json;
-using Prism.Events;
 using Prism.Ioc;
 using System.Collections.Generic;
 using System.IO.Pipes;
@@ -139,7 +138,7 @@ namespace CBHK.Implementation.MCDocumentBuilder
                     Width = new GridLength(1, GridUnitType.Auto)
                 };
 
-                AttributeGrid attributeGrid = new(container.Resolve<IEventAggregator>())
+                AttributeGrid attributeGrid = new()
                 {
                     Description = description
                 };
@@ -154,7 +153,7 @@ namespace CBHK.Implementation.MCDocumentBuilder
         /// <summary>
         /// 整合枚举字段数据
         /// </summary>
-        /// <param name="FieldName"></param>
+        /// <param name="enumerationList"></param>
         /// <returns></returns>
         public IComponent GetEnumField(Enumeration enumerationList)
         {
