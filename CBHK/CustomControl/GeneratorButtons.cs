@@ -4,7 +4,7 @@ using System.Windows.Media;
 
 namespace CBHK.CustomControl
 {
-    public class GeneratorButtons:Button
+    public class GeneratorButtons:System.Windows.Controls.Button
     {
         public ImageSource Icon
 

@@ -5,6 +5,7 @@
     xmlns:Common="clr-namespace:CBHK.View.Common"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:SkeletonScreen="clr-namespace:CBHK.CustomControl.SkeletonScreen"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
@@ -871,6 +872,16 @@
                         Text="{Binding UserDescription}"
                         TextTrimming="CharacterEllipsis" />
                 </Grid>
+            </CustomControl:IconTabItems>
+            <CustomControl:IconTabItems Width="45" Height="45">
+                <VectorButton:VectorTextButton
+                    Width="150"
+                    Height="50"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#2a641c"
+                    Style="{StaticResource VectorTextButton}"
+                    Text="这是一个测试按钮" />
             </CustomControl:IconTabItems>
         </TabControl>
     </Grid>

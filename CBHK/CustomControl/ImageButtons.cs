@@ -1,10 +1,9 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl
 {
-    public class ImageButtons:Button
+    public class ImageButtons:System.Windows.Controls.Button
     {
         public ImageSource ImageData
         {

@@ -113,7 +113,7 @@ namespace CBHK.CustomControl
 
         public void CloseRichTabItemsClick(object sender, RoutedEventArgs e)
         {
-            TextTabItems item = (sender as Button).TemplatedParent as TextTabItems;
+            TextTabItems item = (sender as System.Windows.Controls.Button).TemplatedParent as TextTabItems;
             TabControl parent = item.Parent as TabControl;
             parent.Items.Remove(item);
         }

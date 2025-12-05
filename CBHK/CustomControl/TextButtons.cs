@@ -1,11 +1,10 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace CBHK.CustomControl
 {
-    public class TextButtons:Button
+    public class TextButtons:System.Windows.Controls.Button
     {
         public BitmapImage ThicknessBackground
         {

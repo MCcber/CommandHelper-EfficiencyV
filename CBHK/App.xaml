@@ -8,6 +8,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/CBHK;component/WindowDictionaries/TheCommonWindow.xaml" />
                 <ResourceDictionary Source="/CBHK;component/ControlDictionary/GeneratorButtons.xaml" />
+                <ResourceDictionary Source="/CBHK;component/ControlDictionary/Button/VectorTextButton.xaml" />
                 <ResourceDictionary Source="/CBHK;component/ControlDictionary/Icon.xaml" />
                 <ResourceDictionary Source="/CBHK;component/ControlDictionary/AnimationTimePointItem.xaml" />
                 <ResourceDictionary Source="/CBHK;component/ControlDictionary/TextToolTip.xaml" />

@@ -1,10 +1,9 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl
 {
-    public class StereoTextButton:Button
+    public class StereoTextButton:System.Windows.Controls.Button
     {
         public Brush LeftBorderTexture
         {
