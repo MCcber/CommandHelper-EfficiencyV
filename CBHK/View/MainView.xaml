@@ -5,7 +5,8 @@
     xmlns:Common="clr-namespace:CBHK.View.Common"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:SkeletonScreen="clr-namespace:CBHK.CustomControl.SkeletonScreen"
-    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
+    xmlns:VectorTabItem="clr-namespace:CBHK.CustomControl.VectorTabItem"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
@@ -49,26 +50,6 @@
                 Foreground="White"
                 Header="退出" />
         </ContextMenu>
-
-        <VisualBrush
-            x:Key="BackgroundBrush"
-            AlignmentX="Center"
-            AlignmentY="Center"
-            Stretch="None">
-            <VisualBrush.Visual>
-                <Grid>
-                    <TextBlock
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Background="Transparent"
-                        FontSize="12"
-                        Foreground="#D6D6D6"
-                        Text="正以开发者模式运行"
-                        TextAlignment="Center" />
-                </Grid>
-            </VisualBrush.Visual>
-        </VisualBrush>
-
     </Window.Resources>
 
     <Grid>
@@ -93,22 +74,10 @@
             SelectedIndex="0"
             Style="{DynamicResource TabControlWithScrollBar}"
             TabStripPlacement="Left">
-            <CustomControl:IconTabItems
-                Width="45"
-                Height="45"
-                Background="#2F2F2F"
-                BorderThickness="0"
-                Selectedbackground="#595959"
-                Style="{DynamicResource IconTabItems}">
-                <TabItem.HeaderTemplate>
-                    <ItemContainerTemplate>
-                        <Image
-                            Width="35"
-                            Height="35"
-                            RenderOptions.BitmapScalingMode="NearestNeighbor"
-                            Source="/CBHK;component/Resource/CBHK/Image/IconHome.png" />
-                    </ItemContainerTemplate>
-                </TabItem.HeaderTemplate>
+            <VectorTabItem:VectorIconTextTabItem
+                HeaderImage="/CBHK;component/Resource/CBHK/Image/IconHome.png"
+                HeaderText="主页"
+                Style="{StaticResource VectorIconTextTabItem}">
                 <Grid Background="#2F2F2F">
                     <ScrollViewer
                         Background="#2F2F2F"
@@ -737,152 +706,33 @@
                             HorizontalAlignment="Left" />
                     </Grid>
                 </Grid>
-            </CustomControl:IconTabItems>
-            <CustomControl:IconTabItems
-                Width="45"
-                Height="45"
-                Background="#2F2F2F"
-                BorderThickness="0"
-                Selectedbackground="#595959"
-                Style="{DynamicResource IconTabItems}">
-                <TabItem.HeaderTemplate>
-                    <ItemContainerTemplate>
-                        <Image
-                            Width="35"
-                            Height="35"
-                            Source="/CBHK;component/Resource/CBHK/Image/IconTeach.png" />
-                    </ItemContainerTemplate>
-                </TabItem.HeaderTemplate>
+            </VectorTabItem:VectorIconTextTabItem>
+            <VectorTabItem:VectorIconTextTabItem
+                HeaderImage="/CBHK;component/Resource/CBHK/Image/IconTeach.png"
+                HeaderText="教程"
+                Style="{StaticResource VectorIconTextTabItem}">
                 <Common:TutorialsView />
-            </CustomControl:IconTabItems>
-            <CustomControl:IconTabItems
-                Width="45"
-                Height="45"
-                Background="#2F2F2F"
-                BorderThickness="0"
-                Selectedbackground="#595959"
-                Style="{DynamicResource IconTabItems}">
-                <TabItem.HeaderTemplate>
-                    <ItemContainerTemplate>
-                        <Image
-                            Width="35"
-                            Height="35"
-                            Source="/CBHK;component/Resource/CBHK/Image/IconMore.png" />
-                    </ItemContainerTemplate>
-                </TabItem.HeaderTemplate>
+            </VectorTabItem:VectorIconTextTabItem>
+            <VectorTabItem:VectorIconTextTabItem
+                HeaderImage="/CBHK;component/Resource/CBHK/Image/IconMore.png"
+                HeaderText="更多"
+                Style="{StaticResource VectorIconTextTabItem}">
                 <Common:MoreView />
-            </CustomControl:IconTabItems>
-            <CustomControl:IconTabItems
-                Width="45"
-                Height="45"
-                Background="#2F2F2F"
-                BorderThickness="0"
-                Selectedbackground="#595959"
-                Style="{DynamicResource IconTabItems}">
-                <TabItem.HeaderTemplate>
-                    <ItemContainerTemplate>
-                        <Image
-                            Width="35"
-                            Height="35"
-                            Source="/CBHK;component/Resource/CBHK/Image/IconSetting.png" />
-                    </ItemContainerTemplate>
-                </TabItem.HeaderTemplate>
+            </VectorTabItem:VectorIconTextTabItem>
+            <VectorTabItem:VectorIconTextTabItem
+                HeaderImage="/CBHK;component/Resource/CBHK/Image/IconSetting.png"
+                HeaderText="设置"
+                Style="{StaticResource VectorIconTextTabItem}">
                 <Common:SettingsView />
-            </CustomControl:IconTabItems>
-            <CustomControl:IconTabItems
-                Width="45"
-                Height="45"
-                Background="#2F2F2F"
-                BorderThickness="0"
-                Selectedbackground="#595959"
-                Style="{DynamicResource IconTabItems}">
-                <TabItem.HeaderTemplate>
-                    <ItemContainerTemplate>
-                        <Image
-                            Width="35"
-                            Height="35"
-                            Source="/CBHK;component/Resource/CBHK/Image/IconUser.png" />
-                    </ItemContainerTemplate>
-                </TabItem.HeaderTemplate>
-                <Grid Margin="5">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="50" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="50" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Image
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        Panel.ZIndex="1"
-                        Cursor="Hand"
-                        RenderOptions.BitmapScalingMode="HighQuality"
-                        Source="{Binding UserHead}">
-                        <Image.Clip>
-                            <EllipseGeometry
-                                Center="25,25"
-                                RadiusX="30"
-                                RadiusY="30" />
-                        </Image.Clip>
-                    </Image>
-                    <Image
-                        Grid.Row="0"
-                        Grid.RowSpan="3"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="3"
-                        VerticalAlignment="Top"
-                        Panel.ZIndex="0"
-                        RenderOptions.BitmapScalingMode="HighQuality"
-                        Source="{Binding UserBackground}"
-                        Stretch="Uniform" />
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Margin="5,0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        FontSize="30"
-                        Foreground="White"
-                        Text="{Binding UserID}"
-                        TextAlignment="Left" />
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="2"
-                        Margin="10,0,0,0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        FontSize="30"
-                        Foreground="White"
-                        Text="{Binding UserName}" />
-                    <TextBlock
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="3"
-                        Margin="10,0,0,0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        FontSize="25"
-                        Foreground="White"
-                        Text="{Binding UserDescription}"
-                        TextTrimming="CharacterEllipsis" />
-                </Grid>
-            </CustomControl:IconTabItems>
-            <CustomControl:IconTabItems Width="45" Height="45">
-                <VectorButton:VectorTextButton
-                    Width="150"
-                    Height="50"
+            </VectorTabItem:VectorIconTextTabItem>
+            <VectorTabItem:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItem}">
+                <VectorComboBox:VectorTextComboBox
+                    Width="200"
+                    Height="40"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="#2a641c"
-                    Style="{StaticResource VectorTextButton}"
-                    Text="这是一个测试按钮" />
-            </CustomControl:IconTabItems>
+                    Style="{StaticResource VectorTextComboBoxStyle}" />
+            </VectorTabItem:VectorIconTextTabItem>
         </TabControl>
     </Grid>
 </localWindow:CommonWindow>

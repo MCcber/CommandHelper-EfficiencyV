@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.CustomControl.VectorButton;
 using CBHK.Domain;
 using CBHK.Domain.Model.Database;
 using CBHK.Utility;
@@ -69,24 +70,26 @@ namespace CBHK.ViewModel
 
                 foreach (var data in context.GeneratorSet)
                 {
-                    GeneratorButtons button = new()
+                    GeneratorVectorButton button = new()
                     {
-                        Style = Application.Current.Resources["GeneratorButtons"] as Style,
-                        BorderThickness = new Thickness(0)
+                        Style = Application.Current.Resources["GeneratorVectorButton"] as Style
                     };
                     string currentId = data.ID;
                     currentId = currentId[0].ToString().ToUpper() + currentId[1..];
                     string currentName = data.ZH;
                     string imagePath = baseImagePath + currentId + ".png";
-                    BitmapImage bitmapImage = new(new Uri("pack://application:,,,/CBHK;component/Resource/CBHK/Image/GeneratorButtonBackground.png", UriKind.RelativeOrAbsolute));
-                    if (bitmapImage is not null)
-                        button.Background = new ImageBrush(bitmapImage);
                     if (File.Exists(imagePath))
+                    {
                         button.Icon = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
+                    }
                     if (currentId is not null)
+                    {
                         button.Title = currentName;
+                    }
                     if (currentName is not null)
+                    {
                         button.SubTitle = currentId;
+                    }
                     IRelayCommand behavior = GeneratorClickEvent.Set(currentId, generatorFunction);
                     button.Command = behavior;
                     GeneratorTable.Children.Add(button);

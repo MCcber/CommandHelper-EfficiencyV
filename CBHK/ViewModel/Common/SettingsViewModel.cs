@@ -42,8 +42,7 @@ namespace CBHK.ViewModel.Common
         [ObservableProperty]
         private ObservableCollection<TextComboBoxItem> _stateList = [
                 new() { Text = "保持不变" },
-                new() { Text = "最小化" },
-                new() { Text = "关闭" }
+                new() { Text = "最小化" }
             ];
 
         private bool _closeToTray = false;

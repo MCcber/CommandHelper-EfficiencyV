@@ -92,8 +92,8 @@ namespace CBHK.CustomControl.VectorButton
         {
             RoundBorderBrush = Brushes.Black;
             Loaded += VectorTextButton_Loaded;
-            MouseEnter += VectorButton_MouseEnter;
-            MouseLeave += VectorButton_MouseLeave;
+            MouseEnter += VectorTextButton_MouseEnter;
+            MouseLeave += VectorTextButton_MouseLeave;
             PreviewMouseLeftButtonDown += VectorTextButton_PreviewMouseLeftButtonDown;
             PreviewMouseLeftButtonUp += VectorTextButton_PreviewMouseLeftButtonUp;
         }
@@ -154,17 +154,17 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorTextButton_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            VectorButton_MouseEnter(sender, null);
+            VectorTextButton_MouseEnter(sender, null);
         }
 
         private void VectorTextButton_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            object borderElement = Template.FindName("border", sender as FrameworkElement);
+            object borderElement = Template.FindName("templateRoot", sender as FrameworkElement);
             object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if (borderElement is Border border)
+            if (borderElement is Border templateRoot)
             {
                 Color color = ColorTool.DarkenByHSL((Background as SolidColorBrush).Color, 0.4f);
-                border.Background = new SolidColorBrush(color);
+                templateRoot.Background = new SolidColorBrush(color);
             }
             if (extraBottomLine is RowDefinition row)
             {
@@ -173,13 +173,13 @@ namespace CBHK.CustomControl.VectorButton
             Margin = new(Margin.Left, Margin.Top + 10, Margin.Right, Margin.Bottom);
         }
 
-        private void VectorButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        private void VectorTextButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            object borderElement = Template.FindName("border", sender as FrameworkElement);
+            object borderElement = Template.FindName("templateRoot", sender as FrameworkElement);
             object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if (borderElement is Border border)
+            if (borderElement is Border templateRoot)
             {
-                border.Background = OriginBackgroundBrush;
+                templateRoot.Background = OriginBackgroundBrush;
             }
             if (extraBottomLine is RowDefinition row)
             {
@@ -191,15 +191,15 @@ namespace CBHK.CustomControl.VectorButton
             OriginBottomHeight = 6;
         }
 
-        private void VectorButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        private void VectorTextButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            object borderElement = Template.FindName("border", sender as FrameworkElement);
+            object borderElement = Template.FindName("templateRoot", sender as FrameworkElement);
             object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
 
-            if (borderElement is Border border)
+            if (borderElement is Border templateRoot)
             {
                 Color darkColor = ColorTool.DarkenByHSL((Background as SolidColorBrush).Color, 0.2f);
-                border.Background = new SolidColorBrush(darkColor);
+                templateRoot.Background = new SolidColorBrush(darkColor);
             }
             if (extraBottomLine is RowDefinition row)
             {
