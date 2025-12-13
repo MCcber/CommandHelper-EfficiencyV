@@ -1,5 +1,4 @@
-﻿using CBHK.CustomControl;
-using CBHK.CustomControl.VectorButton;
+﻿using CBHK.CustomControl.VectorButton;
 using CBHK.Domain;
 using CBHK.Domain.Model.Database;
 using CBHK.Utility;
@@ -10,12 +9,12 @@ using CommunityToolkit.Mvvm.Input;
 using Hardcodet.Wpf.TaskbarNotification;
 using Prism.Ioc;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel
@@ -45,6 +44,8 @@ namespace CBHK.ViewModel
         public WindowState _windowState = WindowState.Normal;
         [ObservableProperty]
         private bool _showInTaskBar = true;
+        [ObservableProperty]
+        private ObservableCollection<CustomControl.VectorComboBox.VectorTextComboBoxItem> comboBoxItemList = [];
         #endregion
 
         #region Event
@@ -55,10 +56,25 @@ namespace CBHK.ViewModel
         /// <param name="e"></param>
         public void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            ComboBoxItemList.Add(new CustomControl.VectorComboBox.VectorTextComboBoxItem()
+            {
+                Text = "Item1",
+                SelectedMarkerVisibility = Visibility.Hidden
+            });
+            ComboBoxItemList.Add(new CustomControl.VectorComboBox.VectorTextComboBoxItem()
+            {
+                Text = "Item2",
+                SelectedMarkerVisibility = Visibility.Hidden
+            });
+            ComboBoxItemList.Add(new CustomControl.VectorComboBox.VectorTextComboBoxItem()
+            {
+                Text = "Item3",
+                SelectedMarkerVisibility = Visibility.Hidden
+            });
             SetGeneratorButtonProgress = new Progress<byte>((state) =>
             {
                 DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
-                string baseImagePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
+                string baseImagePath = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/";
                 int rowIndex = 0;
                 int columnIndex = 0;
 
@@ -78,9 +94,10 @@ namespace CBHK.ViewModel
                     currentId = currentId[0].ToString().ToUpper() + currentId[1..];
                     string currentName = data.ZH;
                     string imagePath = baseImagePath + currentId + ".png";
-                    if (File.Exists(imagePath))
+                    Uri uri = new(imagePath, UriKind.Absolute);
+                    if (Application.GetResourceStream(uri) is not null)
                     {
-                        button.Icon = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
+                        button.Icon = new BitmapImage(uri);
                     }
                     if (currentId is not null)
                     {

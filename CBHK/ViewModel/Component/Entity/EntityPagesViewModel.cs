@@ -609,7 +609,7 @@ namespace CBHK.ViewModel.Component.Entity
 
             #region 处理版本实体ID的更新
             EntityIDList.Clear();
-            foreach (var pair in dataService.EntityGroupByVersionDictionary)
+            foreach (var pair in dataService.GetEntityIDAndNameGroupByVersionMap())
             {
                 if(CurrentMinVersion >= pair.Key)
                 {

@@ -337,7 +337,7 @@ namespace CBHK.ViewModel.Generator
                 #region 物品
                 string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
 
-                Dictionary<string, string> ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+                Dictionary<string, string> ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap()
                 .SelectMany(pair => pair.Value)
                 .ToDictionary(
                     pair => pair.Key,
@@ -347,14 +347,14 @@ namespace CBHK.ViewModel.Generator
                 List<string> ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
                 ItemKeyList.Sort();
 
-                Parallel.For(0, context.ItemSet.Count(), i =>
+                Parallel.For(0, context.ItemSet.Count, i =>
                 {
                     SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, currentPath + IDOrValueList[i], IDOrValueList[i], ItemIDAndNameMap[IDOrValueList[i]], BlockIDList.Contains(IDOrValueList[i]) ? "Block&ItemView" : "ItemView", false));
                 });
                 #endregion
 
                 #region 实体
-                Dictionary<string, string> EntityIDAndNameMap = _dataService.EntityGroupByVersionDictionary
+                Dictionary<string, string> EntityIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap()
                 .SelectMany(pair => pair.Value)
                 .ToDictionary(
                     pair => pair.Key,

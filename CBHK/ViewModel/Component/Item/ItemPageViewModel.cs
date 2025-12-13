@@ -253,7 +253,7 @@ namespace CBHK.ViewModel.Component.Item
             }
 
             ItemList.Clear();
-            Dictionary<string, string> ItemIDAndNameMap = dataService.ItemGroupByVersionDicionary
+            Dictionary<string, string> ItemIDAndNameMap = dataService.GetItemIDAndNameGroupByVersionMap()
             .Where(pair => pair.Key <= CurrentMinVersion)
             .SelectMany(pair => pair.Value)
             .ToDictionary(

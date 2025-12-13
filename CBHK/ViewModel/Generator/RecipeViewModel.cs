@@ -190,7 +190,7 @@ namespace CBHK.ViewModel.Generator
                 CustomItemList[item.Item1].NBT = item.Item5;
             });
 
-            ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+            ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap()
             .Where(pair => pair.Key <= CurrentMinVersion)
             .SelectMany(pair => pair.Value)
             .ToDictionary(

@@ -32,10 +32,10 @@ namespace CBHK.Domain
         #endregion
 
         #region DataStructure
-        public Dictionary<int, Dictionary<string, string>> ItemGroupByVersionDicionary = [];
-        public Dictionary<int, Dictionary<string, string>> EnchantmentGroupByVersionDicionary = [];
-        public Dictionary<string, Tuple<string, string?>> BlockIDAndName = [];
-        public Dictionary<int, Dictionary<string, string>> EntityGroupByVersionDictionary = [];
+        private Dictionary<int, Dictionary<string, string>> ItemGroupByVersionDicionary = [];
+        private Dictionary<int, Dictionary<string, string>> EnchantmentGroupByVersionDicionary = [];
+        private Dictionary<string, Tuple<string, string?>> BlockIDAndName = [];
+        private Dictionary<int, Dictionary<string, string>> EntityGroupByVersionDictionary = [];
         #endregion
 
         public DataService(CBHKDataContext Context,RegexService RegexService)
@@ -46,17 +46,17 @@ namespace CBHK.Domain
             #region 根据版本分类所有物品ID
             if (ItemGroupByVersionDicionary.Count == 0)
             {
-                //foreach (var item in context.ItemSet)
-                //{
-                //    if (item.ID is not null && item.ID.Length > 0)
-                //    {
-                //        _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
-                //        if (!ItemGroupByVersionDicionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
-                //        {
-                //            ItemGroupByVersionDicionary[version].Add(item.ID, item.Name);
-                //        }
-                //    }
-                //}
+                foreach (var item in context.ItemSet)
+                {
+                    //if (item.ID is not null && item.ID.Length > 0)
+                    //{
+                    //    _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
+                    //    if (!ItemGroupByVersionDicionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
+                    //    {
+                    //        ItemGroupByVersionDicionary[version].Add(item.ID, item.Name);
+                    //    }
+                    //}
+                }
             }
             #endregion
 

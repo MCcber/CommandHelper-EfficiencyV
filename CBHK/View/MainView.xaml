@@ -731,6 +731,7 @@
                     Height="40"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
+                    ItemsSource="{Binding ComboBoxItemList}"
                     Style="{StaticResource VectorTextComboBoxStyle}" />
             </VectorTabItem:VectorIconTextTabItem>
         </TabControl>

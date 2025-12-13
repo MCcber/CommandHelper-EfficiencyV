@@ -1,6 +1,5 @@
 ﻿using CBHK.CustomControl;
 using CBHK.Domain;
-using CBHK.Interface;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
@@ -8,7 +7,6 @@ using CBHK.View.Component.Sign;
 using CBHK.ViewModel.Generator;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Newtonsoft.Json.Linq;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
@@ -186,8 +184,8 @@ namespace CBHK.ViewModel.Component.Sign
         #region Method
         public SignPageViewModel(IContainerProvider container,CBHKDataContext context)
         {
-            context = context;
-            container = container;
+            this.context = context;
+            this.container = container;
 
             #region 处理正反面文档
             SignPanelSource = new()

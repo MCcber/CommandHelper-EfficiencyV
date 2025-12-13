@@ -69,6 +69,28 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="cb.ico" />
+    <Resource Include="Resource\CBHK\Image\Generator\advancement.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\armorstand.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\datapack.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\dimension.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\entity.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\firework.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\item.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\loottable.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\ooc.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\recipe.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\spawner.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\tag.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\villager.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\writtenbook.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\customWorld.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\damageType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\分类.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\sign.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\itemModifier.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\dimensionType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\chatType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\predicate.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command1.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command2.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command3.png" />
@@ -440,6 +462,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="cb.ico" />
+    <None Remove="Resource\CBHK\Image\Generator\advancement.png" />
+    <None Remove="Resource\CBHK\Image\Generator\armorstand.png" />
+    <None Remove="Resource\CBHK\Image\Generator\datapack.png" />
+    <None Remove="Resource\CBHK\Image\Generator\dimension.png" />
+    <None Remove="Resource\CBHK\Image\Generator\entity.png" />
+    <None Remove="Resource\CBHK\Image\Generator\firework.png" />
+    <None Remove="Resource\CBHK\Image\Generator\item.png" />
+    <None Remove="Resource\CBHK\Image\Generator\loottable.png" />
+    <None Remove="Resource\CBHK\Image\Generator\ooc.png" />
+    <None Remove="Resource\CBHK\Image\Generator\recipe.png" />
+    <None Remove="Resource\CBHK\Image\Generator\spawner.png" />
+    <None Remove="Resource\CBHK\Image\Generator\tag.png" />
+    <None Remove="Resource\CBHK\Image\Generator\villager.png" />
+    <None Remove="Resource\CBHK\Image\Generator\writtenbook.png" />
+    <None Remove="Resource\CBHK\Image\Generator\分类.png" />
     <None Remove="Utility\jsonReader - v1.3.js" />
     <None Remove="Resource\CBHK\Image\Error.png" />
     <None Remove="Resource\CBHK\Image\eyeHide.png" />

@@ -13,7 +13,7 @@ namespace CBHK.CustomControl.VectorButton
         private Brush OriginTopBorderBrush { get; set; }
         private Brush OriginBorderCornerBrush { get; set; }
         private Brush OriginRoundBorderBrush { get; set; }
-
+        public virtual double MarginTopOffset { get; set; } = 10;
         public virtual double OriginBottomHeight { get; set; } = 6;
 
         public string Text
@@ -204,22 +204,6 @@ namespace CBHK.CustomControl.VectorButton
             OriginBackgroundBrush = Background;
         }
 
-        private void This_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            object borderElement = Template.FindName("templateRoot", sender as FrameworkElement);
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if (borderElement is Border templateRoot)
-            {
-                Color color = ColorTool.DarkenByHSL((Background as SolidColorBrush).Color, 0.4f);
-                templateRoot.Background = new SolidColorBrush(color);
-            }
-            if (extraBottomLine is RowDefinition row)
-            {
-                row.Height = new(0, GridUnitType.Pixel);
-            }
-            Margin = new(Margin.Left, Margin.Top + 10, Margin.Right, Margin.Bottom);
-        }
-
         private void VectorToggleTextButton_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (IsChecked.Value)
@@ -236,6 +220,22 @@ namespace CBHK.CustomControl.VectorButton
                 return;
             }
             This_PreviewMouseLeftButtonDown(sender,e);
+        }
+
+        private void This_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            object borderElement = Template.FindName("templateRoot", sender as FrameworkElement);
+            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
+            if (borderElement is Border templateRoot)
+            {
+                Color color = ColorTool.DarkenByHSL((Background as SolidColorBrush).Color, 0.4f);
+                templateRoot.Background = new SolidColorBrush(color);
+            }
+            if (extraBottomLine is RowDefinition row)
+            {
+                row.Height = new(0, GridUnitType.Pixel);
+            }
+            Margin = new(Margin.Left, Margin.Top + MarginTopOffset, Margin.Right, Margin.Bottom);
         }
 
         private void VectorToggleTextButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)

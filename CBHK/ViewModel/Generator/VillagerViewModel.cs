@@ -657,7 +657,7 @@ namespace CBHK.ViewModel.Generator
                 }
             });
 
-            ItemIDAndNameMap = dataService.ItemGroupByVersionDicionary
+            ItemIDAndNameMap = dataService.GetItemIDAndNameGroupByVersionMap()
             .Where(pair => pair.Key <= CurrentMinVersion)
             .SelectMany(pair => pair.Value)
             .ToDictionary(

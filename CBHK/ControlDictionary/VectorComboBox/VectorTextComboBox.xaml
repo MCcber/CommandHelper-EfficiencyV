@@ -5,9 +5,6 @@
     xmlns:VectorTabItem="clr-namespace:CBHK.CustomControl.VectorTabItem"
     xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2">
 
-    <Style x:Key="FocusVisual">
-        <Setter Property="Control.Template" Value="{x:Null}" />
-    </Style>
     <SolidColorBrush x:Key="TextBox.Static.Background" Color="#FFFFFFFF" />
     <Style x:Key="ComboBoxEditableTextBox" TargetType="{x:Type TextBox}">
         <Setter Property="OverridesDefaultStyle" Value="true" />
@@ -71,8 +68,104 @@
     <SolidColorBrush x:Key="ComboBox.Disabled.Editable.Button.Background" Color="Transparent" />
     <SolidColorBrush x:Key="ComboBox.Disabled.Editable.Button.Border" Color="Transparent" />
 
+    <Style x:Key="VectorComboBoxItemContainerStyle" TargetType="{x:Type ComboBoxItem}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ComboBoxItem}">
+                    <Border
+                        x:Name="Bd"
+                        Padding="{TemplateBinding Padding}"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        SnapsToDevicePixels="true">
+                        <ContentPresenter
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="true">
+                            <Setter TargetName="Bd" Property="Background" Value="#78797A" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter TargetName="Bd" Property="Background" Value="#A0A0A0" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <DataTemplate x:Key="VectorTextComboBoxItemTemplate">
+        <Grid
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Background="#58585A"
+            FocusVisualStyle="{x:Null}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                Grid.Column="0"
+                Margin="10,0,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Foreground="White"
+                Text="{Binding Text, Mode=OneWay}"
+                TextAlignment="Left" />
+            <Canvas Grid.Column="1" Visibility="{Binding SelectedMarkerVisibility}">
+                <Line
+                    RenderOptions.EdgeMode="Aliased"
+                    RenderTransformOrigin="0.5 0.5"
+                    SnapsToDevicePixels="True"
+                    Stroke="{StaticResource ComboBox.Static.Glyph}"
+                    StrokeEndLineCap="Square"
+                    StrokeStartLineCap="Square"
+                    StrokeThickness="0.5"
+                    X1="3"
+                    X2="5"
+                    Y1="3"
+                    Y2="5">
+                    <!--<Line.RenderTransform>
+                    <TransformGroup>
+                        <TranslateTransform X="5" Y="15" />
+                    </TransformGroup>
+                </Line.RenderTransform>-->
+                </Line>
+                <Line
+                    RenderOptions.EdgeMode="Aliased"
+                    RenderTransformOrigin="0.5 0.5"
+                    SnapsToDevicePixels="True"
+                    Stroke="{StaticResource ComboBox.Static.Glyph}"
+                    StrokeEndLineCap="Square"
+                    StrokeStartLineCap="Square"
+                    StrokeThickness="0.5"
+                    X1="5"
+                    X2="10"
+                    Y1="5"
+                    Y2="0">
+                    <!--<Line.RenderTransform>
+                    <TransformGroup>
+                        <TranslateTransform X="5" Y="15" />
+                    </TransformGroup>
+                </Line.RenderTransform>-->
+                </Line>
+            </Canvas>
+        </Grid>
+    </DataTemplate>
+
     <Style x:Key="VectorComboBoxToggleButton" TargetType="{x:Type VectorButton:VectorComboBoxToggleTextButton}">
         <Setter Property="OverridesDefaultStyle" Value="true" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="IsTabStop" Value="false" />
         <Setter Property="Focusable" Value="false" />
         <Setter Property="ClickMode" Value="Press" />
@@ -152,11 +245,10 @@
                                 Grid.Row="1"
                                 Grid.Column="1"
                                 Width="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}"
-                                Margin="0,-5,5,0"
                                 HorizontalAlignment="Right"
                                 BorderBrush="Transparent"
                                 SnapsToDevicePixels="True">
-                                <Canvas>
+                                <Canvas Margin="-5,-2,0,0">
                                     <Line
                                         x:Name="arrow"
                                         RenderOptions.EdgeMode="Aliased"
@@ -291,7 +383,7 @@
                 Grid.ColumnSpan="2"
                 AllowsTransparency="true"
                 IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource Mode=TemplatedParent}}"
-                Placement="Bottom"
+                Placement="Center"
                 PopupAnimation="{DynamicResource {x:Static SystemParameters.ComboBoxPopupAnimationKey}}">
                 <theme:SystemDropShadowChrome
                     x:Name="shadow"
@@ -387,7 +479,7 @@
                 Margin="1"
                 AllowsTransparency="true"
                 IsOpen="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource Mode=TemplatedParent}}"
-                Placement="Bottom"
+                Placement="Center"
                 PopupAnimation="{DynamicResource {x:Static SystemParameters.ComboBoxPopupAnimationKey}}">
                 <theme:SystemDropShadowChrome
                     x:Name="shadow"
@@ -396,12 +488,87 @@
                     Color="Transparent">
                     <Border
                         x:Name="dropDownBorder"
-                        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
-                        BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}"
+                        Background="#8C8D90"
+                        BorderBrush="#1e1e1f"
                         BorderThickness="1">
-                        <ScrollViewer x:Name="DropDownScrollViewer">
+                        <ScrollViewer x:Name="DropDownScrollViewer" FocusVisualStyle="{x:Null}">
                             <Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
-                                <Canvas
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="40" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" Background="#48494A">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="2" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="2" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="2" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Foreground="White"
+                                        Text="Header" />
+                                    <Button
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        Width="20"
+                                        Height="20"
+                                        Margin="0,0,10,0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Content="X" />
+                                    <Rectangle
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Fill="#6D6D6E"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        Fill="#6D6D6E"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="0"
+                                        Grid.Column="2"
+                                        Fill="#7B7B7C"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Fill="#6D6D6E"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="1"
+                                        Grid.Column="2"
+                                        Fill="#5A5B5C"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="2"
+                                        Grid.Column="0"
+                                        Fill="#7B7B7C"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="2"
+                                        Grid.Column="1"
+                                        Fill="#5A5B5C"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="2"
+                                        Grid.Column="2"
+                                        Fill="#5A5B5C"
+                                        IsHitTestVisible="False" />
+                                </Grid>
+                                <Border Grid.Row="1" Background="#8C8D90" />
+                                <!--<Canvas
                                     x:Name="canvas"
                                     Width="0"
                                     Height="0"
@@ -412,9 +579,10 @@
                                         Width="{Binding ActualWidth, ElementName=dropDownBorder}"
                                         Height="{Binding ActualHeight, ElementName=dropDownBorder}"
                                         Fill="{Binding Background, ElementName=dropDownBorder}" />
-                                </Canvas>
+                                </Canvas>-->
                                 <ItemsPresenter
                                     x:Name="ItemsPresenter"
+                                    Grid.Row="1"
                                     KeyboardNavigation.DirectionalNavigation="Contained"
                                     SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                             </Grid>
@@ -448,7 +616,7 @@
                 <Setter TargetName="shadow" Property="Color" Value="#71000000" />
             </Trigger>
             <Trigger Property="HasItems" Value="false">
-                <Setter TargetName="dropDownBorder" Property="Height" Value="95" />
+                <Setter TargetName="dropDownBorder" Property="Height" Value="200" />
             </Trigger>
             <MultiTrigger>
                 <MultiTrigger.Conditions>
@@ -457,15 +625,15 @@
                 </MultiTrigger.Conditions>
                 <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
             </MultiTrigger>
-            <Trigger SourceName="DropDownScrollViewer" Property="ScrollViewer.CanContentScroll" Value="false">
+            <!--<Trigger SourceName="DropDownScrollViewer" Property="ScrollViewer.CanContentScroll" Value="false">
                 <Setter TargetName="opaqueRect" Property="Canvas.Top" Value="{Binding VerticalOffset, ElementName=DropDownScrollViewer}" />
                 <Setter TargetName="opaqueRect" Property="Canvas.Left" Value="{Binding HorizontalOffset, ElementName=DropDownScrollViewer}" />
-            </Trigger>
+            </Trigger>-->
         </ControlTemplate.Triggers>
     </ControlTemplate>
 
     <Style x:Key="VectorTextComboBoxStyle" TargetType="{x:Type ComboBox}">
-        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Background" Value="{StaticResource ComboBox.Static.Background}" />
         <Setter Property="BorderBrush" Value="{StaticResource ComboBox.Static.Border}" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}" />
@@ -476,6 +644,8 @@
         <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
         <Setter Property="ScrollViewer.PanningMode" Value="Both" />
         <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
+        <Setter Property="ItemContainerStyle" Value="{StaticResource VectorComboBoxItemContainerStyle}" />
+        <Setter Property="ItemTemplate" Value="{StaticResource VectorTextComboBoxItemTemplate}" />
         <Setter Property="Template" Value="{StaticResource ComboBoxTemplate}" />
         <Style.Triggers>
             <Trigger Property="IsEditable" Value="true">
