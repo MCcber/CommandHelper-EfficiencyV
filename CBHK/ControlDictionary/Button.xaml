@@ -3,5 +3,6 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorTextButton.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorToggleTextButton.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/GeneratorVectorButton.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorIconRepeatButton.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

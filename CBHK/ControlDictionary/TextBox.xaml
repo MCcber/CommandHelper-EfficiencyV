@@ -24,10 +24,10 @@
                         SnapsToDevicePixels="True">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="6" />
+                                <RowDefinition Height="4" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <Rectangle Grid.Row="0" Fill="{TemplateBinding BorderBrush}" />
+                            <Rectangle Grid.Row="0" Fill="#242425" />
                             <ScrollViewer
                                 x:Name="PART_ContentHost"
                                 Grid.Row="1"

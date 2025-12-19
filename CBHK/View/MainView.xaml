@@ -726,12 +726,16 @@
                 <Common:SettingsView />
             </VectorTabItem:VectorIconTextTabItem>
             <VectorTabItem:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItem}">
-                <VectorComboBox:VectorTextComboBox
+                <RepeatButton
+                    Width="45"
+                    Height="45"
+                    Style="{StaticResource VectorIconRepeatButtonStyle}" />
+                <!--<VectorComboBox:VectorTextComboBox
                     Width="200"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     ItemsSource="{Binding ComboBoxItemList}"
-                    Style="{StaticResource VectorTextComboBoxStyle}" />
+                    Style="{StaticResource VectorTextComboBoxStyle}" />-->
             </VectorTabItem:VectorIconTextTabItem>
         </TabControl>
     </Grid>

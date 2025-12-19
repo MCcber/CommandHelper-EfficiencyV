@@ -719,7 +719,7 @@
                                         VerticalAlignment="Center"
                                         HorizontalContentAlignment="Left"
                                         Background="#313233"
-                                        BorderBrush="Black"
+                                        BorderBrush="#1E1E1F"
                                         FontSize="25"
                                         Foreground="{Binding SearchBoxForeground, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
                                         HorizontalScrollBarVisibility="Auto">

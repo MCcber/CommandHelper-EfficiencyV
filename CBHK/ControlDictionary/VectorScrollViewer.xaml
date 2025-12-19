@@ -61,25 +61,42 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type VectorScrollBar:VectorScrollBar}">
-                        <Border Background="#58585A" BorderThickness="0">
-                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                        <Grid>
+                            <Rectangle
+                                Width="5"
+                                Panel.ZIndex="0"
+                                Fill="#313233" />
+                            <Track
+                                x:Name="PART_Track"
+                                Panel.ZIndex="1"
+                                IsDirectionReversed="True">
                                 <Track.DecreaseRepeatButton>
-                                    <RepeatButton
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Command="ScrollBar.PageUpCommand" />
+                                    <RepeatButton BorderThickness="0" Command="ScrollBar.PageUpCommand">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="Transparent" BorderThickness="0">
+                                                    <ContentPresenter />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
                                 </Track.DecreaseRepeatButton>
                                 <Track.Thumb>
                                     <Thumb Template="{StaticResource VerticalThumbStyle}" />
                                 </Track.Thumb>
                                 <Track.IncreaseRepeatButton>
-                                    <RepeatButton
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Command="ScrollBar.PageDownCommand" />
+                                    <RepeatButton BorderThickness="0" Command="ScrollBar.PageDownCommand">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="Transparent" BorderThickness="0">
+                                                    <ContentPresenter />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
                                 </Track.IncreaseRepeatButton>
                             </Track>
-                        </Border>
+                        </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -167,8 +184,8 @@
                             x:Name="PART_VerticalScrollBar"
                             Grid.Row="0"
                             Grid.Column="0"
-                            HorizontalAlignment="Right"
                             MinHeight="10"
+                            HorizontalAlignment="Right"
                             AutomationProperties.AutomationId="VerticalScrollBar"
                             Maximum="{TemplateBinding ScrollableHeight}"
                             Minimum="0"
@@ -179,8 +196,8 @@
                         <VectorScrollBar:VectorScrollBar
                             x:Name="PART_HorizontalScrollBar"
                             Grid.Row="0"
-                            MinWidth="10"
                             Grid.Column="0"
+                            MinWidth="10"
                             VerticalAlignment="Bottom"
                             AutomationProperties.AutomationId="HorizontalScrollBar"
                             Maximum="{TemplateBinding ScrollableWidth}"

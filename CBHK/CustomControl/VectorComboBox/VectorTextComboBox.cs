@@ -88,7 +88,7 @@ namespace CBHK.CustomControl.VectorComboBox
         #region Event
         private void VectorTextComboBox_Loaded(object sender, RoutedEventArgs e)
         {
-            MaxDropDownHeight -= 2.5;
+            MaxDropDownHeight -= 11.5;
             SearchBoxForeground = Brushes.White;
             TitleBrush = Brushes.White;
             ClosePopupCommand = ClosePopupClickCommand as RelayCommand;
