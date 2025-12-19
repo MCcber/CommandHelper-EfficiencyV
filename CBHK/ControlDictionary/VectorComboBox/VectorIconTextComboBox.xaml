@@ -1,0 +1,69 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/ControlDictionary/VectorComboBox/VectorTextComboBox.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <DataTemplate x:Key="VectorIconTextComboBoxItemTemplate">
+        <Grid
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            FocusVisualStyle="{x:Null}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.Height>
+                <Binding
+                    FallbackValue="40"
+                    Path="ActualHeight"
+                    RelativeSource="{RelativeSource AncestorType={x:Type VectorComboBox:VectorIconTextComboBox}}" />
+            </Grid.Height>
+            <Image
+                Grid.Row="0"
+                Grid.Column="0"
+                Width="30"
+                Height="30"
+                Margin="5,0,0,0"
+                Source="{Binding Image}" />
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="1"
+                Margin="5,0,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Text="{Binding Text, Mode=OneWay}"
+                TextAlignment="Center"
+                TextTrimming="CharacterEllipsis"
+                TextWrapping="NoWrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{Binding MemberBrush}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ComboBoxItem}}}" Value="{x:Null}">
+                                <Setter Property="Foreground" Value="{Binding DisplayPanelBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ComboBoxItem}}}" Value="{x:Static DependencyProperty.UnsetValue}">
+                                <Setter Property="Foreground" Value="{Binding DisplayPanelBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
+    </DataTemplate>
+
+    <Style
+        x:Key="VectorIconTextComboBoxStyle"
+        BasedOn="{StaticResource VectorTextComboBoxStyle}"
+        TargetType="{x:Type VectorComboBox:VectorIconTextComboBox}">
+        <Setter Property="ItemTemplate" Value="{StaticResource VectorIconTextComboBoxItemTemplate}" />
+    </Style>
+</ResourceDictionary>

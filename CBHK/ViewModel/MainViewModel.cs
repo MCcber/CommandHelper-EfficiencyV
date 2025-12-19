@@ -15,6 +15,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel
@@ -56,21 +57,15 @@ namespace CBHK.ViewModel
         /// <param name="e"></param>
         public void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            ComboBoxItemList.Add(new CustomControl.VectorComboBox.VectorTextComboBoxItem()
+            for (int i = 0; i < 100; i++)
             {
-                Text = "Item1",
-                SelectedMarkerVisibility = Visibility.Hidden
-            });
-            ComboBoxItemList.Add(new CustomControl.VectorComboBox.VectorTextComboBoxItem()
-            {
-                Text = "Item2",
-                SelectedMarkerVisibility = Visibility.Hidden
-            });
-            ComboBoxItemList.Add(new CustomControl.VectorComboBox.VectorTextComboBoxItem()
-            {
-                Text = "Item3",
-                SelectedMarkerVisibility = Visibility.Hidden
-            });
+                ComboBoxItemList.Add(new CustomControl.VectorComboBox.VectorTextComboBoxItem()
+                {
+                    Text = "Item" + i,
+                    DisplayPanelBrush = Brushes.Black,
+                    MemberBrush = Brushes.White
+                });
+            }
             SetGeneratorButtonProgress = new Progress<byte>((state) =>
             {
                 DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
