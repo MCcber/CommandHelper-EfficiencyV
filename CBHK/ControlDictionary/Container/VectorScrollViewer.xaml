@@ -8,16 +8,17 @@
         <Border BorderBrush="Black" BorderThickness="2">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="2" />
+                    <RowDefinition Height="2" MinHeight="1" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="2" />
-                    <RowDefinition Height="6" />
+                    <RowDefinition Height="2" MinHeight="1" />
+                    <RowDefinition Height="6" MinHeight="0" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="2" />
                 </Grid.ColumnDefinitions>
+
                 <Rectangle
                     Grid.Row="0"
                     Grid.Column="2"
@@ -27,7 +28,7 @@
                     Grid.Column="0"
                     Fill="#F9FAFA" />
                 <Rectangle
-                    Grid.RowSpan="3"
+                    Grid.Row="1"
                     Grid.Column="1"
                     Fill="#E6E8EB" />
                 <Rectangle
@@ -36,17 +37,17 @@
                     Grid.ColumnSpan="2"
                     Fill="#F5F6F7" />
                 <Rectangle
-                    Grid.Row="1"
+                    Grid.RowSpan="1"
                     Grid.Column="0"
+                    Fill="#F5F6F7" />
+                <Rectangle
+                    Grid.RowSpan="1"
+                    Grid.Column="2"
                     Fill="#F5F6F7" />
                 <Rectangle
                     Grid.Row="2"
                     Grid.Column="1"
                     Grid.ColumnSpan="2"
-                    Fill="#F5F6F7" />
-                <Rectangle
-                    Grid.Row="1"
-                    Grid.Column="2"
                     Fill="#F5F6F7" />
                 <Rectangle
                     Grid.Row="3"
@@ -58,12 +59,18 @@
 
     <Style x:Key="VectorVerticalScrollBarStyle" TargetType="{x:Type VectorScrollBar:VectorScrollBar}">
         <Style.Setters>
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="UseLayoutRounding" Value="False" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type VectorScrollBar:VectorScrollBar}">
-                        <Grid>
+                        <Grid
+                            MinWidth="12"
+                            MinHeight="20"
+                            ClipToBounds="False">
                             <Rectangle
-                                Width="5"
+                                Width="4"
+                                HorizontalAlignment="Center"
                                 Panel.ZIndex="0"
                                 Fill="#313233" />
                             <Track
@@ -71,7 +78,10 @@
                                 Panel.ZIndex="1"
                                 IsDirectionReversed="True">
                                 <Track.DecreaseRepeatButton>
-                                    <RepeatButton BorderThickness="0" Command="ScrollBar.PageUpCommand">
+                                    <RepeatButton
+                                        BorderThickness="0"
+                                        Command="ScrollBar.PageUpCommand"
+                                        FocusVisualStyle="{x:Null}">
                                         <RepeatButton.Template>
                                             <ControlTemplate TargetType="RepeatButton">
                                                 <Border Background="Transparent" BorderThickness="0">
@@ -85,7 +95,10 @@
                                     <Thumb Template="{StaticResource VerticalThumbStyle}" />
                                 </Track.Thumb>
                                 <Track.IncreaseRepeatButton>
-                                    <RepeatButton BorderThickness="0" Command="ScrollBar.PageDownCommand">
+                                    <RepeatButton
+                                        BorderThickness="0"
+                                        Command="ScrollBar.PageDownCommand"
+                                        FocusVisualStyle="{x:Null}">
                                         <RepeatButton.Template>
                                             <ControlTemplate TargetType="RepeatButton">
                                                 <Border Background="Transparent" BorderThickness="0">
@@ -161,7 +174,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ScrollViewer}">
-                    <Grid x:Name="Grid" Background="{TemplateBinding Background}">
+                    <Grid Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <!--<ColumnDefinition Width="Auto" />-->
@@ -170,62 +183,44 @@
                             <RowDefinition Height="*" />
                             <!--<RowDefinition Height="Auto" />-->
                         </Grid.RowDefinitions>
+
                         <ScrollContentPresenter
                             x:Name="PART_ScrollContentPresenter"
                             Grid.Row="0"
                             Grid.Column="0"
                             Margin="{TemplateBinding Padding}"
-                            CanContentScroll="{TemplateBinding CanContentScroll}"
-                            CanHorizontallyScroll="False"
-                            CanVerticallyScroll="False"
-                            Content="{TemplateBinding Content}"
-                            ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            CanContentScroll="{TemplateBinding CanContentScroll}" />
+
                         <VectorScrollBar:VectorScrollBar
                             x:Name="PART_VerticalScrollBar"
                             Grid.Row="0"
                             Grid.Column="0"
-                            MinHeight="10"
                             HorizontalAlignment="Right"
-                            AutomationProperties.AutomationId="VerticalScrollBar"
                             Maximum="{TemplateBinding ScrollableHeight}"
-                            Minimum="0"
                             Style="{StaticResource VectorVerticalScrollBarStyle}"
                             ViewportSize="{TemplateBinding ViewportHeight}"
                             Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
                             Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+
                         <VectorScrollBar:VectorScrollBar
                             x:Name="PART_HorizontalScrollBar"
                             Grid.Row="0"
                             Grid.Column="0"
-                            MinWidth="10"
+                            Height="12"
+                            Margin="0,0,20,0"
                             VerticalAlignment="Bottom"
-                            AutomationProperties.AutomationId="HorizontalScrollBar"
                             Maximum="{TemplateBinding ScrollableWidth}"
-                            Minimum="0"
                             Orientation="Horizontal"
-                            Style="{StaticResource VectorHorizontalScrollBarStyle}"
                             ViewportSize="{TemplateBinding ViewportWidth}"
                             Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
                             Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
                     </Grid>
+
                     <ControlTemplate.Triggers>
-                        <!--  鼠标在ScrollViewer内时显示滚动条  -->
                         <Trigger Property="IsMouseOver" Value="False">
                             <Setter TargetName="PART_VerticalScrollBar" Property="Opacity" Value="0" />
                             <Setter TargetName="PART_HorizontalScrollBar" Property="Opacity" Value="0" />
                         </Trigger>
-                        <!--<MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition SourceName="PART_VerticalScrollBar" Property="IsMouseOver" Value="True" />
-                            </MultiTrigger.Conditions>
-                            <Setter TargetName="PART_VerticalScrollBar" Property="Opacity" Value="1" />
-                        </MultiTrigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition SourceName="PART_HorizontalScrollBar" Property="IsMouseOver" Value="True" />
-                            </MultiTrigger.Conditions>
-                            <Setter TargetName="PART_HorizontalScrollBar" Property="Opacity" Value="1" />
-                        </MultiTrigger>-->
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

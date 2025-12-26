@@ -1,0 +1,140 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton">
+
+    <SolidColorBrush x:Key="Button.Static.Background" Color="#FFDDDDDD" />
+    <SolidColorBrush x:Key="Button.Static.Border" Color="#FF707070" />
+    <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#FFBEE6FD" />
+    <SolidColorBrush x:Key="Button.MouseOver.Border" Color="#FF3C7FB1" />
+    <SolidColorBrush x:Key="Button.Pressed.Background" Color="#FFC4E5F6" />
+    <SolidColorBrush x:Key="Button.Pressed.Border" Color="#FF2C628B" />
+    <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4" />
+    <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
+    <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
+    <Style x:Key="VectorFlatIconTextButtonStyle" TargetType="{x:Type VectorButton:VectorFlatIconTextButton}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Background" Value="{StaticResource Button.Static.Background}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Button.Static.Border}" />
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="1" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type VectorButton:VectorFlatIconTextButton}">
+                    <Border
+                        x:Name="border"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="Black"
+                        BorderThickness="2"
+                        SnapsToDevicePixels="true">
+                        <Grid Background="#48494A">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="3" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="3" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="3" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="3" />
+                            </Grid.RowDefinitions>
+                            <Rectangle
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Fill="#5A5B5C"
+                                IsHitTestVisible="False" />
+                            <Rectangle
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Fill="#333334"
+                                IsHitTestVisible="False" />
+                            <Rectangle
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Fill="#3F4041"
+                                IsHitTestVisible="False" />
+                            <Rectangle
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Fill="#5A5B5C"
+                                IsHitTestVisible="False" />
+                            <Rectangle
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                Fill="#3F4041"
+                                IsHitTestVisible="False" />
+                            <Rectangle
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Grid.ColumnSpan="2"
+                                Fill="#333334"
+                                IsHitTestVisible="False" />
+                            <Grid Grid.Row="1" Grid.Column="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Viewbox
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Width="30"
+                                    Height="30"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                    <Path
+                                        Data="M953.256909 229.777561L609.490479 26.697393c-60.094131-35.496534-134.786837-35.596524-195.080949 0L70.743091 229.777561c-11.698858 6.899326-18.798164 19.498096-18.798164 32.996777v410.859877c0 67.493409 36.096475 130.787228 94.190802 165.083879l268.373792 158.584513c30.097061 17.798262 63.79377 26.697393 97.490479 26.697393s67.493409-8.899131 97.490479-26.697393l268.373792-158.584513c58.094327-34.296651 94.190802-97.59047 94.190802-165.083879V262.774338c0-13.598672-7.199297-26.097451-18.798164-32.996777zM570.494288 92.690948L872.96475 271.373499l-65.493605 35.696514-356.96514-212.579241 2.999707-1.799824c36.096475-21.39791 80.992091-21.39791 116.988576 0zM456.305439 432.157797L175.232887 257.074895l92.190997-54.494678c0.799922 0.599941 1.399863 1.299873 2.299776 1.799824L614.989942 412.05976l-42.79582 23.397715c-36.296455 19.698076-80.69212 18.498194-115.888683-3.299678z m236.776877-62.693877L364.714383 172.183185l33.596719-19.498096 330.967679 197.080754-36.196465 19.698077zM745.977151 427.958207l34.396641-18.698174V549.946294L745.977151 566.244703V427.958207zM185.131921 772.624548c-34.896592-20.597988-56.494483-58.494288-56.494483-98.990333V318.368909l287.171956 178.782541c18.098233 11.298897 37.796309 18.898154 57.994336 23.497705l-0.19998 418.959086c-6.799336-2.399766-13.698662-4.699541-20.098038-8.49917L185.131921 772.624548z m653.736158 0L570.494288 931.209062c-6.399375 3.799629-13.398692 6.099404-20.298018 8.59916l0.19998-416.959281c20.198028-3.599648 39.896104-9.999024 58.394298-20.098038l60.394102-32.996777V626.938776c0 13.098721 6.699346 25.39752 17.898252 32.396836 6.299385 3.899619 13.298701 5.899424 20.497998 5.899424 5.599453 0 11.298897-1.199883 16.498389-3.699639l111.089152-52.894835c13.398692-6.299385 21.897862-19.798067 21.897861-34.596621V367.364125l38.29626-20.89796v327.16805c0 40.496045-21.597891 78.392344-56.494483 98.990333z"
+                                        Fill="White"
+                                        Stroke="White"
+                                        StrokeThickness="1" />
+                                </Viewbox>
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="White"
+                                    Text="Button" />
+                            </Grid>
+                            <ContentPresenter
+                                x:Name="contentPresenter"
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Focusable="False"
+                                RecognizesAccessKey="True"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </Grid>
+                    </Border>
+                    <!--<ControlTemplate.Triggers>
+                        <Trigger Property="IsDefaulted" Value="true">
+                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="true">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource Button.MouseOver.Background}" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.MouseOver.Border}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="true">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource Button.Pressed.Background}" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.Pressed.Border}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource Button.Disabled.Background}" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.Disabled.Border}" />
+                            <Setter TargetName="contentPresenter" Property="TextElement.Foreground" Value="{StaticResource Button.Disabled.Foreground}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>-->
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

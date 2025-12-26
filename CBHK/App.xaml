@@ -8,7 +8,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/WindowDictionaries/TheCommonWindow.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Button.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/TabItem.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/CheckBox.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Container.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Icon.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ComboBox.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/AnimationTimePointItem.xaml" />
@@ -21,7 +22,7 @@
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ConciseComboBoxItem.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ConciseListBoxItem.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ListBoxWithScrollViewer.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/TextBox.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Input.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/DefaultContextMenuStyle.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/IconTextButtons.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/IconButtons.xaml" />
@@ -33,7 +34,6 @@
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ColorCheckBoxs.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/IconCheckBoxs.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/RichCheckBoxs.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/VectorScrollViewer.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ColorSliders.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ResizableTextBoxs.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/TextToggleButtons.xaml" />

@@ -561,6 +561,7 @@
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="CustomControl\VectorTabItem\" />
     <Folder Include="Utility\ScrollViewerHelper\" />
   </ItemGroup>
   <ItemGroup>

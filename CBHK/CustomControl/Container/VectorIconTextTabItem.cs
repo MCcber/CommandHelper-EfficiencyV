@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace CBHK.CustomControl.VectorTabItem
+namespace CBHK.CustomControl.Container
 {
     public class VectorIconTextTabItem : TabItem
     {

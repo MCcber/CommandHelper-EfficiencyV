@@ -1,10 +1,9 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl
 {
-    public class GeneratorButtons:System.Windows.Controls.Button
+    public class GeneratorButton : System.Windows.Controls.Button
     {
         public ImageSource Icon
 
@@ -14,7 +13,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty IconProperty =
-            DependencyProperty.Register("Icon", typeof(ImageSource), typeof(GeneratorButtons), new PropertyMetadata(default(ImageSource)));
+            DependencyProperty.Register("Icon", typeof(ImageSource), typeof(GeneratorButton), new PropertyMetadata(default(ImageSource)));
 
         public ImageSource HoverBorder
         {
@@ -23,7 +22,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty HoverBorderProperty =
-            DependencyProperty.Register("HoverBorder", typeof(ImageSource), typeof(GeneratorButtons), new PropertyMetadata(default(ImageSource)));
+            DependencyProperty.Register("HoverBorder", typeof(ImageSource), typeof(GeneratorButton), new PropertyMetadata(default(ImageSource)));
 
         public string Title
         {
@@ -32,7 +31,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register("Title", typeof(string), typeof(GeneratorButtons), new PropertyMetadata(default(string)));
+            DependencyProperty.Register("Title", typeof(string), typeof(GeneratorButton), new PropertyMetadata(default(string)));
 
         public string SubTitle
         {
@@ -41,6 +40,6 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty SubTitleProperty =
-            DependencyProperty.Register("SubTitle", typeof(string), typeof(GeneratorButtons), new PropertyMetadata(default(string)));
+            DependencyProperty.Register("SubTitle", typeof(string), typeof(GeneratorButton), new PropertyMetadata(default(string)));
     }
 }

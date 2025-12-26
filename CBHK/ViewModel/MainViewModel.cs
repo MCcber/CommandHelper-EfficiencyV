@@ -57,15 +57,17 @@ namespace CBHK.ViewModel
         /// <param name="e"></param>
         public void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
-                ComboBoxItemList.Add(new CustomControl.VectorComboBox.VectorTextComboBoxItem()
+                ComboBoxItemList.Add(new CustomControl.VectorComboBox.VectorIconTextComboBoxItem()
                 {
                     Text = "Item" + i,
                     DisplayPanelBrush = Brushes.Black,
-                    MemberBrush = Brushes.White
+                    MemberBrush = Brushes.White,
+                    Image = new BitmapImage(new Uri("pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/armorstand.png", UriKind.Absolute))
                 });
             }
+
             SetGeneratorButtonProgress = new Progress<byte>((state) =>
             {
                 DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
@@ -83,7 +85,7 @@ namespace CBHK.ViewModel
                 {
                     GeneratorVectorButton button = new()
                     {
-                        Style = Application.Current.Resources["GeneratorVectorButton"] as Style
+                        Style = Application.Current.Resources["GeneratorVectorButtonStyle"] as Style
                     };
                     string currentId = data.ID;
                     currentId = currentId[0].ToString().ToUpper() + currentId[1..];

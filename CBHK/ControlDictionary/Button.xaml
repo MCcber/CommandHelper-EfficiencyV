@@ -1,8 +1,14 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/GeneratorVectorButton.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorTextButton.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorToggleTextButton.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorToggleIconTextButton.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/GeneratorVectorButton.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorIconRepeatButton.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorTextRepeatButton.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorFlatIconButton.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorFlatTextButton.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorFlatIconTextButton.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

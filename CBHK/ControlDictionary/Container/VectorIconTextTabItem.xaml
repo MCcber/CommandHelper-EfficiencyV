@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl.VectorTabItem">
+    xmlns:CustomControl="clr-namespace:CBHK.CustomControl.Container">
 
     <Style x:Key="VectorIconTextTabItem" TargetType="{x:Type CustomControl:VectorIconTextTabItem}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />

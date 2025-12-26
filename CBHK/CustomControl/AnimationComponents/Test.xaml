@@ -9,6 +9,6 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
     <Grid>
-        <RepeatButton Style="{DynamicResource VectorIconRepeatButton}" />
+        <TabItem Style="{StaticResource VectorRichTabItemStyle}" />
     </Grid>
 </UserControl>

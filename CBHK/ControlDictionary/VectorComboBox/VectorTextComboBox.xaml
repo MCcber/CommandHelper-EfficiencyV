@@ -736,6 +736,8 @@
                                 x:Name="DropDownScrollViewer"
                                 Grid.Row="1"
                                 FocusVisualStyle="{x:Null}"
+                                HorizontalScrollBarVisibility="Auto"
+                                SnapsToDevicePixels="True"
                                 Style="{DynamicResource VectorScrollViewerStyle}"
                                 VerticalScrollBarVisibility="Auto">
                                 <Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
