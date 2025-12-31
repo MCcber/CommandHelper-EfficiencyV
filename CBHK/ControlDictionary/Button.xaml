@@ -10,5 +10,6 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorFlatIconButton.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorFlatTextButton.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorFlatIconTextButton.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorSolidIconButton.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

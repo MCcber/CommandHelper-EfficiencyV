@@ -17,14 +17,14 @@
                             Background="Transparent"
                             BorderBrush="{TemplateBinding Border.BorderBrush}"
                             BorderThickness="0">
+                            <!--  DynamicResource {ComponentResourceKey TypeInTargetAssembly=FrameworkElement,ResourceId=MenuScrollViewer}  -->
                             <ScrollViewer
                                 Name="ContextMenuScrollViewer"
                                 Grid.ColumnSpan="2"
                                 Margin="1,0,1,0"
                                 Background="Transparent"
                                 BorderThickness="0"
-                                Style="{DynamicResource {ComponentResourceKey TypeInTargetAssembly=FrameworkElement,
-                                                                              ResourceId=MenuScrollViewer}}">
+                                Style="{DynamicResource VectorScrollViewerStyle}">
                                 <Grid Background="Transparent" RenderOptions.ClearTypeHint="Enabled">
                                     <Canvas
                                         Width="0"

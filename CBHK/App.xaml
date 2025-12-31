@@ -40,7 +40,6 @@
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/TextComboBoxs.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/RichTreeViewItems.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/TextCheckBoxs.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/TextMenuItems.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ColorToolBars.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Accordion.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/TreeViewWithScrollBars.xaml" />

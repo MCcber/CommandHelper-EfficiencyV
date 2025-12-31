@@ -92,7 +92,7 @@
                                     </RepeatButton>
                                 </Track.DecreaseRepeatButton>
                                 <Track.Thumb>
-                                    <Thumb Template="{StaticResource VerticalThumbStyle}" />
+                                    <Thumb Template="{DynamicResource VerticalThumbStyle}" />
                                 </Track.Thumb>
                                 <Track.IncreaseRepeatButton>
                                     <RepeatButton
@@ -197,7 +197,7 @@
                             Grid.Column="0"
                             HorizontalAlignment="Right"
                             Maximum="{TemplateBinding ScrollableHeight}"
-                            Style="{StaticResource VectorVerticalScrollBarStyle}"
+                            Style="{DynamicResource VectorVerticalScrollBarStyle}"
                             ViewportSize="{TemplateBinding ViewportHeight}"
                             Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
                             Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource Mode=TemplatedParent}}" />

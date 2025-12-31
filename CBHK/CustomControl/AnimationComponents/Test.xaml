@@ -9,6 +9,6 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
     <Grid>
-        <TabItem Style="{StaticResource VectorRichTabItemStyle}" />
+        <MenuItem Style="{DynamicResource VectorTextMenuItemStyle}" />
     </Grid>
 </UserControl>

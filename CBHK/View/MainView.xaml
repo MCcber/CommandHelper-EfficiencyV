@@ -729,9 +729,21 @@
                 <Common:SettingsView />
             </Container:VectorIconTextTabItem>
             <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItem}">
-                <TabControl>
-                    <Container:VectorRichTabItem Style="{StaticResource VectorRichTabItemStyle}" />
-                </TabControl>
+                <Menu HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Container:VectorTextMenuItem
+                        Foreground="White"
+                        Header="MenuIte1"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
+                        <Container:VectorTextMenuItem
+                            Foreground="White"
+                            Header="MenuIte2"
+                            Style="{DynamicResource VectorTextMenuItemStyle}" />
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
+                        Foreground="White"
+                        Header="MenuItem3"
+                        Style="{DynamicResource VectorTextMenuItemStyle}" />
+                </Menu>
             </Container:VectorIconTextTabItem>
         </TabControl>
     </Grid>
