@@ -1,4 +1,4 @@
-﻿<localWindow:CommonWindow
+﻿<Container:VectorWindow
     x:Class="CBHK.View.MainView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -16,46 +16,57 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:tb="http://www.hardcodet.net/taskbar"
-    Title="CommandHelper-EfficiencyV v1.20.4 Release1.0"
+    Title="CommandHelper-EfficiencyV v1.20.4"
     Width="910"
     Height="652"
     MinWidth="910"
     MinHeight="652"
     prism:ViewModelLocator.AutoWireViewModel="True"
-    Background="#2F2F2F"
+    Background="Transparent"
+    FocusVisualStyle="{x:Null}"
     RenderOptions.BitmapScalingMode="NearestNeighbor"
     RenderOptions.CachingHint="Cache"
-    ResizeMode="CanResizeWithGrip"
     ShowInTaskbar="{Binding ShowInTaskBar}"
+    Style="{StaticResource VectorWindowStyle}"
     WindowStartupLocation="CenterScreen"
     WindowState="{Binding WindowState}"
     mc:Ignorable="d">
 
     <behaviors:Interaction.Triggers>
         <behaviors:EventTrigger EventName="Loaded">
-            <behaviors:CallMethodAction MethodName="MainWindow_Loaded" TargetObject="{Binding}" />
+            <behaviors:InvokeCommandAction Command="{Binding MainWindowLoadedCommand}" />
         </behaviors:EventTrigger>
         <behaviors:EventTrigger EventName="Closing">
-            <behaviors:CallMethodAction MethodName="MainWindow_Closing" TargetObject="{Binding}" />
+            <behaviors:InvokeCommandAction Command="{Binding MainWindowClosingCommand}" PassEventArgsToCommand="True" />
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
 
-    <Window.Resources>
+    <Container:VectorWindow.Resources>
         <ContextMenu
             x:Key="SysTrayMenu"
             BorderBrush="#424242"
-            BorderThickness="1">
-            <MenuItem
+            BorderThickness="1"
+            Style="{StaticResource DefaultContextMenuStyle}">
+            <Container:VectorTextMenuItem
                 Background="#2F2F2F"
                 BorderBrush="Transparent"
                 BorderThickness="1"
                 Command="{Binding ExitApplicationCommand}"
                 Foreground="White"
-                Header="退出" />
+                Header="退出"
+                Style="{DynamicResource VectorTextMenuItemStyle}" />
         </ContextMenu>
-    </Window.Resources>
+    </Container:VectorWindow.Resources>
 
-    <Grid>
+    <!--  #802B2B2B  -->
+    <!--  #221A1A1A  -->
+    <!--  #802B2B2B  -->
+    <!--  #0f0f0f  -->
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="100" />
+        </Grid.RowDefinitions>
         <tb:TaskbarIcon
             ContextMenu="{StaticResource SysTrayMenu}"
             DoubleClickCommand="{Binding ShowMainWindowCommand}"
@@ -65,14 +76,13 @@
             Visibility="Collapsed">
             <behaviors:Interaction.Triggers>
                 <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:CallMethodAction MethodName="TaskBarIcon_Loaded" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger EventName="MouseLeftButtonUp">
-                    <behaviors:CallMethodAction MethodName="TaskbarIcon_MouseLeftButtonUp" TargetObject="{Binding}" />
+                    <behaviors:InvokeCommandAction Command="{Binding TaskBarIconLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=tb:TaskbarIcon}}" />
                 </behaviors:EventTrigger>
             </behaviors:Interaction.Triggers>
         </tb:TaskbarIcon>
         <TabControl
+            Grid.Row="0"
+            Background="Transparent"
             BorderThickness="0"
             SelectedIndex="0"
             Style="{DynamicResource TabControlWithScrollBar}"
@@ -81,15 +91,15 @@
                 HeaderImage="/CBHK;component/Resource/CBHK/Image/IconHome.png"
                 HeaderText="主页"
                 Style="{StaticResource VectorIconTextTabItem}">
-                <Grid Background="#2F2F2F">
-                    <ScrollViewer
-                        Background="#2F2F2F"
-                        HorizontalScrollBarVisibility="Auto"
-                        VerticalScrollBarVisibility="Auto">
-                        <Grid Background="Transparent" Visibility="Collapsed">
+                <Grid>
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <Grid
+                            Background="Transparent"
+                            FocusVisualStyle="{x:Null}"
+                            Visibility="Collapsed">
                             <behaviors:Interaction.Triggers>
                                 <behaviors:EventTrigger EventName="Loaded">
-                                    <behaviors:CallMethodAction MethodName="GeneratorTable_Loaded" TargetObject="{Binding}" />
+                                    <behaviors:InvokeCommandAction Command="{Binding GeneratorTableLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
                                 </behaviors:EventTrigger>
                             </behaviors:Interaction.Triggers>
                         </Grid>
@@ -98,6 +108,7 @@
                         Margin="0,0,0,0"
                         Panel.ZIndex="1"
                         Background="#2F2F2F"
+                        FocusVisualStyle="{x:Null}"
                         Visibility="Visible">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
@@ -116,7 +127,7 @@
                         </Grid.ColumnDefinitions>
                         <behaviors:Interaction.Triggers>
                             <behaviors:EventTrigger EventName="Loaded">
-                                <behaviors:CallMethodAction MethodName="SkeletonGrid_Loaded" TargetObject="{Binding}" />
+                                <behaviors:InvokeCommandAction Command="{Binding SkeletonGridLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
                             </behaviors:EventTrigger>
                         </behaviors:Interaction.Triggers>
                         <SkeletonScreen:Blocks
@@ -729,22 +740,14 @@
                 <Common:SettingsView />
             </Container:VectorIconTextTabItem>
             <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItem}">
-                <Menu HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Container:VectorTextMenuItem
-                        Foreground="White"
-                        Header="MenuIte1"
-                        Style="{DynamicResource VectorTextMenuItemStyle}">
-                        <Container:VectorTextMenuItem
-                            Foreground="White"
-                            Header="MenuIte2"
-                            Style="{DynamicResource VectorTextMenuItemStyle}" />
-                    </Container:VectorTextMenuItem>
-                    <Container:VectorTextMenuItem
-                        Foreground="White"
-                        Header="MenuItem3"
-                        Style="{DynamicResource VectorTextMenuItemStyle}" />
-                </Menu>
+                <VectorButton:VectorFlatImageButton
+                    Width="50"
+                    Height="50"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Image="/Resource/CBHK/Image/Generator/chatType.png"
+                    Style="{StaticResource VectorFlatImageButtonStyle}" />
             </Container:VectorIconTextTabItem>
         </TabControl>
     </Grid>
-</localWindow:CommonWindow>
+</Container:VectorWindow>

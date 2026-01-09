@@ -24,6 +24,7 @@
                         SnapsToDevicePixels="true">
                         <ScrollViewer
                             Focusable="false"
+                            Style="{DynamicResource VectorScrollViewerStyle}"
                             VirtualizingPanel.IsVirtualizing="True"
                             VirtualizingPanel.ScrollUnit="Pixel"
                             VirtualizingPanel.VirtualizationMode="Recycling">

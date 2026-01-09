@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace CBHK.Domain.Model.Database
 {
@@ -8,7 +7,7 @@ namespace CBHK.Domain.Model.Database
         [Key]
         public int ID { get; set; } = 1;
         public string? Visibility { get; set; }
-        public string? CloseToTray { get; set; }
         public string? ShowNotice { get; set; }
+        public bool IsCloseToTray { get; set; }
     }
 }

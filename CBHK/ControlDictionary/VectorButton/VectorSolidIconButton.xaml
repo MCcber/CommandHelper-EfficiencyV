@@ -123,6 +123,9 @@
                             <Setter TargetName="border" Property="Background" Value="#58585A" />
                             <!--<Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.MouseOver.Border}" />-->
                         </Trigger>
+                        <Trigger Property="Tag" Value="Hover">
+                            <Setter TargetName="border" Property="Background" Value="#58585A" />
+                        </Trigger>
                         <Trigger Property="IsPressed" Value="true">
                             <Setter TargetName="border" Property="Background" Value="#313233" />
                             <!--<Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.Pressed.Border}" />-->

@@ -118,7 +118,6 @@
         SelectedIndex="0"
         Style="{DynamicResource TabControlWithScrollBar}">
         <CustomControl:TextTabItems
-            Background="#48382C"
             BorderThickness="4,4,4,0"
             Foreground="White"
             Header="关于我们"
@@ -264,7 +263,6 @@
             </Grid>
         </CustomControl:TextTabItems>
         <CustomControl:TextTabItems
-            Background="#48382C"
             BorderThickness="4,4,4,0"
             Foreground="White"
             Header="加入QQ群一起交流"
@@ -339,7 +337,6 @@
             </DataGrid>
         </CustomControl:TextTabItems>-->
         <CustomControl:TextTabItems
-            Background="#48382C"
             BorderThickness="4,4,4,0"
             Foreground="White"
             Header="反馈Bug"
@@ -380,7 +377,6 @@
             </StackPanel>
         </CustomControl:TextTabItems>
         <CustomControl:TextTabItems
-            Background="#48382C"
             BorderThickness="4,4,4,0"
             Foreground="White"
             Header="用户须知"

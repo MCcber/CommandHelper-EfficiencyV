@@ -1,4 +1,5 @@
-﻿using CBHK.CustomControl.VectorButton;
+﻿using CBHK.Common.Utility.Event;
+using CBHK.CustomControl.VectorButton;
 using CBHK.Domain;
 using CBHK.Domain.Model.Database;
 using CBHK.Utility;
@@ -7,6 +8,7 @@ using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Hardcodet.Wpf.TaskbarNotification;
+using Prism.Events;
 using Prism.Ioc;
 using System;
 using System.Collections.ObjectModel;
@@ -20,11 +22,13 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel
 {
-    public partial class MainViewModel(IContainerProvider container,CBHKDataContext context) : ObservableObject
+    public partial class MainViewModel(IContainerProvider container,CBHKDataContext context,IEventAggregator eventAggregator) : ObservableObject
     {
         #region Field
         private IContainerProvider container = container;
+        private IEventAggregator eventAggregator = eventAggregator;
         private readonly CBHKDataContext context = context;
+        private bool isContextMenuCloseCommand = false;
         /// <summary>
         /// 主页可见性
         /// </summary>
@@ -55,7 +59,8 @@ namespace CBHK.ViewModel
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        [RelayCommand]
+        private void MainWindowLoaded()
         {
             for (int i = 0; i < 1000; i++)
             {
@@ -148,11 +153,14 @@ namespace CBHK.ViewModel
             ReadDataSource();
         }
 
-        public void GeneratorTable_Loaded(object sender, RoutedEventArgs e) => GeneratorTable = sender as Grid;
+        [RelayCommand]
+        private void GeneratorTableLoaded(object sender) => GeneratorTable = sender as Grid;
 
-        public void SkeletonGrid_Loaded(object sender, RoutedEventArgs e) => SkeletonGrid = sender as Grid;
+        [RelayCommand]
+        private void SkeletonGridLoaded(object sender) => SkeletonGrid = sender as Grid;
 
-        public void TaskBarIcon_Loaded(object sender, RoutedEventArgs e)
+        [RelayCommand]
+        private void TaskBarIconLoaded(object sender)
         {
             TaskBarIcon = sender as TaskbarIcon;
             TaskBarIcon.Visibility = Visibility.Visible;
@@ -163,10 +171,11 @@ namespace CBHK.ViewModel
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        [RelayCommand]
+        private void MainWindowClosing(System.ComponentModel.CancelEventArgs e)
         {
-            e.Cancel = bool.Parse(_config.CloseToTray);
-            await context.SaveChangesAsync();
+            e.Cancel = _config.IsCloseToTray && !isContextMenuCloseCommand;
+            context.SaveChanges();
             if (e.Cancel)
             {
                 WindowState = WindowState.Minimized;
@@ -175,8 +184,8 @@ namespace CBHK.ViewModel
             else
             {
                 WindowState = WindowState.Minimized;
-                TaskBarIcon.Dispose();
-                Environment.Exit(0);
+                TaskBarIcon.CloseBalloon();
+                eventAggregator.GetEvent<CloseWindowEvent>().Publish();
             }
         }
 
@@ -192,7 +201,7 @@ namespace CBHK.ViewModel
             window.ShowInTaskbar = true;
             window.WindowState = WindowState.Normal;
             window.Show();
-            window.Focus();
+            window.Activate();
         }
 
         /// <summary>
@@ -201,10 +210,11 @@ namespace CBHK.ViewModel
         /// <param name="sender"></param>
         /// <param name="e"></param>
         [RelayCommand]
-        public void ExitApplication()
+        private void ExitApplication()
         {
-            TaskBarIcon.Dispose();
-            Environment.Exit(0);
+            isContextMenuCloseCommand = true;
+            TaskBarIcon.CloseBalloon();
+            eventAggregator.GetEvent<CloseWindowEvent>().Publish();
         }
         #endregion
 

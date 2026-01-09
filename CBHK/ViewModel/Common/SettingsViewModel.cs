@@ -1,15 +1,15 @@
 ﻿using CBHK.CustomControl;
+using CBHK.Domain;
+using CBHK.Domain.Model.Database;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing.Text;
-using System;
-using System.Windows.Media;
 using System.IO;
 using System.Linq;
 using System.Windows.Controls;
-using CBHK.Domain;
-using CBHK.Domain.Model.Database;
+using System.Windows.Media;
 
 namespace CBHK.ViewModel.Common
 {
@@ -18,7 +18,7 @@ namespace CBHK.ViewModel.Common
         #region Field
         private InstalledFontCollection SystemFonts = new();
         private CBHKDataContext context;
-        private EnvironmentConfig _config = null;
+        private EnvironmentConfig config;
         string fontListDirectory = AppDomain.CurrentDomain.BaseDirectory + "Resource\\Fonts";
         #endregion
 
@@ -41,33 +41,29 @@ namespace CBHK.ViewModel.Common
 
         [ObservableProperty]
         private ObservableCollection<TextComboBoxItem> _stateList = [
-                new() { Text = "保持不变" },
-                new() { Text = "最小化" }
+                new() { Text = "Visible" },
+                new() { Text = "Hidden" },
+                new() { Text = "Collapsed" }
             ];
 
-        private bool _closeToTray = false;
-        public bool CloseToTray
-        {
-            get => _closeToTray;
-            set
-            {
-                SetProperty(ref _closeToTray, value);
-                _config.CloseToTray = value.ToString().ToLower();
-            }
-        }
+        [ObservableProperty]
+        private bool closeToTray;
 
         #endregion
 
         #region Method
         public SettingsViewModel(CBHKDataContext Context)
         {
+            #region Init
             context = Context;
-            _config = context.EnvironmentConfigSet.First();
-            TextComboBoxItem visibilityItem = StateList.Where(item=>item.Text == _config.Visibility).First();
+            config = context.EnvironmentConfigSet.First();
+            TextComboBoxItem visibilityItem = StateList.Where(item=>item.Text == config.Visibility).First();
             if(visibilityItem is not null)
             {
                 SelectVisibleItem = visibilityItem;
             }
+            PropertyChanged += SettingsViewModel_PropertyChanged;
+            #endregion
 
             #region 获取自定义字体库
             string[] fontListFolder = Directory.GetFiles(fontListDirectory, "*ttf", SearchOption.AllDirectories);
@@ -103,16 +99,24 @@ namespace CBHK.ViewModel.Common
             #endregion
 
             #region 设置默认字体
-            CloseToTray = _config.CloseToTray.ToLower() == "true";
+            CloseToTray = config.IsCloseToTray;
             SelectedFontFamilyItem = CurrentFontFamilyNameList[0];
             #endregion
+        }
+
+        private void SettingsViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(CloseToTray))
+            {
+                config.IsCloseToTray = CloseToTray;
+            }
         }
         #endregion
 
         #region Event
         public void ViewState_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _config.Visibility = SelectVisibleItem.Text;
+            config.Visibility = SelectVisibleItem.Text;
         }
 
         public void FontComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
