@@ -5,12 +5,14 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace CBHK.CustomControl.Container
 {
     public partial class VectorWindow : Window
     {
         #region Field And ExternMethod
+        private string restoreGeometryData = "M795.5 230.6v727.2H64V230.6h731.5z m-82.2 78H146.2V880h567V308.6zM228.5 66.2H960v731.5H795.5v-82.2h82.2V148.4h-567v82.2h-82.2V66.2z";
         /// <summary>
         /// 设计时基准高度（96 DPI下的高度）
         /// </summary>
@@ -116,6 +118,15 @@ namespace CBHK.CustomControl.Container
         public static readonly DependencyProperty MaximizeWindowCommandProperty =
             DependencyProperty.Register("MaximizeWindowCommand", typeof(IRelayCommand), typeof(VectorWindow), new PropertyMetadata(default(IRelayCommand)));
 
+        public IRelayCommand RestoreWindowCommand
+        {
+            get { return (IRelayCommand)GetValue(RestoreWindowCommandProperty); }
+            set { SetValue(RestoreWindowCommandProperty, value); }
+        }
+
+        public static readonly DependencyProperty RestoreWindowCommandProperty =
+            DependencyProperty.Register("RestoreWindowCommand", typeof(IRelayCommand), typeof(VectorWindow), new PropertyMetadata(default(IRelayCommand)));
+
         public IRelayCommand CloseWindowCommand
         {
             get { return (IRelayCommand)GetValue(CloseWindowCommandProperty); }
@@ -124,11 +135,55 @@ namespace CBHK.CustomControl.Container
 
         public static readonly DependencyProperty CloseWindowCommandProperty =
             DependencyProperty.Register("CloseWindowCommand", typeof(IRelayCommand), typeof(VectorWindow), new PropertyMetadata(default(IRelayCommand)));
+
+        public Geometry MaximizePathData
+        {
+            get { return (Geometry)GetValue(MaximizePathDataProperty); }
+            set { SetValue(MaximizePathDataProperty, value); }
+        }
+
+        public static readonly DependencyProperty MaximizePathDataProperty =
+            DependencyProperty.Register("MaximizePathData", typeof(Geometry), typeof(VectorWindow), new PropertyMetadata(default(Geometry)));
+
+        public Geometry RestorePathData
+        {
+            get { return (Geometry)GetValue(RestorePathDataProperty); }
+            set { SetValue(RestorePathDataProperty, value); }
+        }
+
+        public static readonly DependencyProperty RestorePathDataProperty =
+            DependencyProperty.Register("RestorePathData", typeof(Geometry), typeof(VectorWindow), new PropertyMetadata(default(Geometry)));
+
+        public Brush RestorePathFillBrush
+        {
+            get { return (Brush)GetValue(RestorePathFillBrushProperty); }
+            set { SetValue(RestorePathFillBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty RestorePathFillBrushProperty =
+            DependencyProperty.Register("RestorePathFillBrush", typeof(Brush), typeof(VectorWindow), new PropertyMetadata(default(Brush)));
+
+        public Geometry MaximizeButtonPathData
+        {
+            get { return (Geometry)GetValue(MaximizeButtonPathDataProperty); }
+            set { SetValue(MaximizeButtonPathDataProperty, value); }
+        }
+
+        public static readonly DependencyProperty MaximizeButtonPathDataProperty =
+            DependencyProperty.Register("MaximizeButtonPathData", typeof(Geometry), typeof(VectorWindow), new PropertyMetadata(default(Geometry)));
         #endregion
 
         #region Method
         public VectorWindow()
         {
+            RestorePathData = Geometry.Parse(restoreGeometryData);
+            Rectangle rectangle = new();
+            rectangle.Width = rectangle.Height = 10;
+            rectangle.StrokeThickness = 1;
+            rectangle.Stroke = Brushes.White;
+            RectangleGeometry rectangleGeometry = new(new Rect(0, 0, 10, 10), 0, 0);
+            MaximizePathData = rectangleGeometry;
+            MaximizeButtonPathData = MaximizePathData;
             // 获取当前DPI缩放因子
             var dpiInfo = VisualTreeHelper.GetDpi(this);
             double dpiScaleY = dpiInfo.DpiScaleY; // Y轴DPI缩放
@@ -146,7 +201,7 @@ namespace CBHK.CustomControl.Container
             CloseWindowCommand = new RelayCommand(Close);
         }
 
-        private void SetAcrylicBackground()
+        public void SetAcrylicBackground()
         {
             var handle = new WindowInteropHelper(this).Handle;
             int backup = DWMSBT_TRANSIENTWINDOW;
@@ -155,13 +210,70 @@ namespace CBHK.CustomControl.Container
             DwmFlush();
         }
 
-        private void SetMicaBackground()
+        public void SetMicaBackground()
         {
             var handle = new WindowInteropHelper(this).Handle;
             int backup = DWMSBT_MAINWINDOW;
             DwmSetWindowAttribute(handle, 38, ref backup, sizeof(int));
             RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
             DwmFlush();
+        }
+
+        private bool IsMouseOnButton(IInputElement element)
+        {
+            if (element is DependencyObject obj)
+            {
+                // 向上寻找父级，看是否落在按钮内
+                while (obj != null)
+                {
+                    // 根据你的 XAML，这会匹配到 VectorSolidIconButton
+                    if (obj is Button || obj is System.Windows.Controls.Primitives.ButtonBase)
+                    {
+                        return true;
+                    }
+                    obj = VisualTreeHelper.GetParent(obj);
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 临时为窗口添加 WS_CAPTION 标志，执行指定动作后（短延迟）恢复原样。
+        /// 用途：在执行最大化/还原过渡时让 DWM 使用系统标题栏动画采样。
+        /// </summary>
+        private void TemporarilyUseCaptionForAction(Action action, int delayMs = 100)
+        {
+            var handle = new WindowInteropHelper(this).Handle;
+            uint original = GetWindowLong(handle, GWL_STYLE);
+            bool hadCaption = (original & WS_CAPTION) != 0;
+
+            if (!hadCaption)
+            {
+                SetWindowLong(handle, GWL_STYLE, original | WS_CAPTION);
+                SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, 0x0037);
+            }
+
+            try
+            {
+                action?.Invoke();
+            }
+            finally
+            {
+                // 在后台等待一段时间再移除 WS_CAPTION，确保系统有时间做动画
+                System.Threading.Tasks.Task.Run(async () =>
+                {
+                    await System.Threading.Tasks.Task.Delay(delayMs).ConfigureAwait(false);
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        if (!hadCaption)
+                        {
+                            uint now = GetWindowLong(handle, GWL_STYLE);
+                            SetWindowLong(handle, GWL_STYLE, now & ~WS_CAPTION);
+                            SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, 0x0037);
+                        }
+                    }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                });
+            }
         }
         #endregion
 
@@ -286,10 +398,18 @@ namespace CBHK.CustomControl.Container
                     {
                         if (wParam.ToInt32() == HTMAXBUTTON)
                         {
-                                    if (WindowState == WindowState.Maximized)
+                            if (WindowState == WindowState.Maximized)
+                            {
                                 TemporarilyUseCaptionForAction(() => SystemCommands.RestoreWindow(this));
+                                MaximizeButtonPathData = MaximizePathData;
+                                RestorePathFillBrush = Brushes.Transparent;
+                            }
                             else
+                            {
                                 TemporarilyUseCaptionForAction(() => SystemCommands.MaximizeWindow(this));
+                                MaximizeButtonPathData = RestorePathData;
+                                RestorePathFillBrush = Brushes.White;
+                            }
                             handled = true;
                             return IntPtr.Zero;
                         }
@@ -303,10 +423,14 @@ namespace CBHK.CustomControl.Container
                             if (WindowState == WindowState.Maximized)
                             {
                                 TemporarilyUseCaptionForAction(() => SystemCommands.RestoreWindow(this));
+                                MaximizeButtonPathData = MaximizePathData;
+                                RestorePathFillBrush = Brushes.Transparent;
                             }
                             else
                             {
                                 TemporarilyUseCaptionForAction(() => SystemCommands.MaximizeWindow(this));
+                                MaximizeButtonPathData = RestorePathData;
+                                RestorePathFillBrush = Brushes.White;
                             }
                             handled = true;
                             return IntPtr.Zero;
@@ -316,64 +440,6 @@ namespace CBHK.CustomControl.Container
             }
             return IntPtr.Zero;
         }
-
-        private bool IsMouseOnButton(IInputElement element)
-        {
-            if (element is DependencyObject obj)
-            {
-                // 向上寻找父级，看是否落在按钮内
-                while (obj != null)
-                {
-                    // 根据你的 XAML，这会匹配到 VectorSolidIconButton
-                    if (obj is Button || obj is System.Windows.Controls.Primitives.ButtonBase)
-                    {
-                        return true;
-                    }
-                    obj = VisualTreeHelper.GetParent(obj);
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 临时为窗口添加 WS_CAPTION 标志，执行指定动作后（短延迟）恢复原样。
-        /// 用途：在执行最大化/还原过渡时让 DWM 使用系统标题栏动画采样。
-        /// </summary>
-        private void TemporarilyUseCaptionForAction(Action action, int delayMs = 100)
-        {
-            var handle = new WindowInteropHelper(this).Handle;
-            uint original = GetWindowLong(handle, GWL_STYLE);
-            bool hadCaption = (original & WS_CAPTION) != 0;
-
-            if (!hadCaption)
-            {
-                SetWindowLong(handle, GWL_STYLE, original | WS_CAPTION);
-                SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, 0x0037);
-            }
-
-            try
-            {
-                action?.Invoke();
-            }
-            finally
-            {
-                // 在后台等待一段时间再移除 WS_CAPTION，确保系统有时间做动画
-                System.Threading.Tasks.Task.Run(async () =>
-                {
-                    await System.Threading.Tasks.Task.Delay(delayMs).ConfigureAwait(false);
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        if (!hadCaption)
-                        {
-                            uint now = GetWindowLong(handle, GWL_STYLE);
-                            SetWindowLong(handle, GWL_STYLE, now & ~WS_CAPTION);
-                            SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, 0x0037);
-                        }
-                    }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
-                });
-            }
-        }
-
         #endregion
     }
 }

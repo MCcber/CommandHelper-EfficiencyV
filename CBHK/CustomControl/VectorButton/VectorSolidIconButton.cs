@@ -15,13 +15,22 @@ namespace CBHK.CustomControl.VectorButton
         public static readonly DependencyProperty ImageDataProperty =
             DependencyProperty.Register("ImageData", typeof(Geometry), typeof(VectorSolidIconButton), new PropertyMetadata(default(Geometry)));
 
-        public Brush ImageColorBrush
+        public Brush ImageFillColorBrush
         {
-            get { return (Brush)GetValue(ImageColorBrushProperty); }
-            set { SetValue(ImageColorBrushProperty, value); }
+            get { return (Brush)GetValue(ImageFillColorBrushProperty); }
+            set { SetValue(ImageFillColorBrushProperty, value); }
         }
 
-        public static readonly DependencyProperty ImageColorBrushProperty =
-            DependencyProperty.Register("ImageColorBrush", typeof(Brush), typeof(VectorSolidIconButton), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty ImageFillColorBrushProperty =
+            DependencyProperty.Register("ImageFillColorBrush", typeof(Brush), typeof(VectorSolidIconButton), new PropertyMetadata(default(Brush)));
+
+        public Brush ImageStrokeColorBrush
+        {
+            get { return (Brush)GetValue(ImageStrokeColorBrushProperty); }
+            set { SetValue(ImageStrokeColorBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty ImageStrokeColorBrushProperty =
+            DependencyProperty.Register("ImageStrokeColorBrush", typeof(Brush), typeof(VectorSolidIconButton), new PropertyMetadata(default(Brush)));
     }
 }

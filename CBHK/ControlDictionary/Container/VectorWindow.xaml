@@ -83,7 +83,11 @@
                                         <VectorButton:VectorSolidIconButton
                                             Width="{TemplateBinding TitleBarHeight}"
                                             Height="{TemplateBinding TitleBarHeight}"
+                                            Command="{TemplateBinding MaximizeWindowCommand}"
                                             DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                            ImageData="{TemplateBinding MaximizeButtonPathData}"
+                                            ImageFillColorBrush="{TemplateBinding RestorePathFillBrush}"
+                                            ImageStrokeColorBrush="White"
                                             Style="{DynamicResource VectorSolidIconButtonStyle}"
                                             WindowChrome.IsHitTestVisibleInChrome="True">
                                             <behavior:Interaction.Triggers>
@@ -91,20 +95,13 @@
                                                     <behavior:CallMethodAction MethodName="MaximizeButton_Loaded" TargetObject="{Binding}" />
                                                 </behavior:EventTrigger>
                                             </behavior:Interaction.Triggers>
-                                            <Rectangle
-                                                Width="10"
-                                                Height="10"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Stroke="White"
-                                                StrokeThickness="1" />
                                         </VectorButton:VectorSolidIconButton>
                                         <VectorButton:VectorSolidIconButton
                                             Width="{TemplateBinding TitleBarHeight}"
                                             Height="{TemplateBinding TitleBarHeight}"
                                             Command="{TemplateBinding CloseWindowCommand}"
-                                            ImageColorBrush="White"
                                             ImageData="{DynamicResource CloseMark}"
+                                            ImageFillColorBrush="White"
                                             Style="{DynamicResource VectorSolidIconButtonStyle}"
                                             WindowChrome.IsHitTestVisibleInChrome="True" />
                                     </StackPanel>

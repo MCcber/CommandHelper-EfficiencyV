@@ -103,7 +103,11 @@
                                 Margin="10"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
-                                <Path Data="{TemplateBinding ImageData}" Fill="{TemplateBinding ImageColorBrush}" />
+                                <Path
+                                    Data="{TemplateBinding ImageData}"
+                                    Fill="{TemplateBinding ImageFillColorBrush}"
+                                    Stroke="{TemplateBinding ImageStrokeColorBrush}"
+                                    StrokeThickness="1" />
                             </Viewbox>
                             <ContentPresenter
                                 x:Name="contentPresenter"
