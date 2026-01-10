@@ -55,6 +55,10 @@ namespace CBHK.CustomControl.Container
         /// Acrylic (亚克力)
         /// </summary>
         private const int DWMSBT_TRANSIENTWINDOW = 3;
+        /// <summary>
+        /// Mica Alt (层次感更强，推荐)
+        /// </summary>
+        private const int DWMSBT_TABBEDWINDOW = 4;
 
         private const int WM_SYSCOMMAND = 0x0112;
         private const int SC_MAXIMIZE = 0xF030;
@@ -206,6 +210,10 @@ namespace CBHK.CustomControl.Container
             var handle = new WindowInteropHelper(this).Handle;
             int backup = DWMSBT_TRANSIENTWINDOW;
             DwmSetWindowAttribute(handle, 38, ref backup, sizeof(int));
+
+            MARGINS margins = new MARGINS { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
+            DwmExtendFrameIntoClientArea(handle, ref margins);
+
             RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
             DwmFlush();
         }
@@ -215,6 +223,23 @@ namespace CBHK.CustomControl.Container
             var handle = new WindowInteropHelper(this).Handle;
             int backup = DWMSBT_MAINWINDOW;
             DwmSetWindowAttribute(handle, 38, ref backup, sizeof(int));
+
+            MARGINS margins = new MARGINS { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
+            DwmExtendFrameIntoClientArea(handle, ref margins);
+
+            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
+            DwmFlush();
+        }
+
+        public void SetMicaAltBackground()
+        {
+            var handle = new WindowInteropHelper(this).Handle;
+            int backup = DWMSBT_TABBEDWINDOW;
+            DwmSetWindowAttribute(handle, 38, ref backup, sizeof(int));
+
+            MARGINS margins = new MARGINS { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
+            DwmExtendFrameIntoClientArea(handle, ref margins);
+
             RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
             DwmFlush();
         }
@@ -297,7 +322,7 @@ namespace CBHK.CustomControl.Container
             int darkMode = 1;
             DwmSetWindowAttribute(handle, 20, ref darkMode, sizeof(int));
 
-            SetMicaBackground();
+            SetMicaAltBackground();
 
             //圆角
             int cornerRadius = 2;
