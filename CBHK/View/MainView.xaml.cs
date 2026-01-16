@@ -1,5 +1,8 @@
 ﻿using CBHK.Common.Utility.Event;
+using CBHK.CustomControl.Container;
 using Prism.Events;
+using System.Diagnostics;
+using System.Windows;
 
 namespace CBHK.View
 {

@@ -3,7 +3,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
-    xmlns:VectorTabItem="clr-namespace:CBHK.CustomControl.VectorTabItem"
     xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2">
 
     <!--<SolidColorBrush x:Key="TextBox.Static.Background" Color="#FFFFFFFF" />-->
@@ -358,11 +357,11 @@
                                 Grid.Row="1"
                                 Grid.Column="1"
                                 Width="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}"
-                                Margin="0,0,5,0"
+                                Margin="{Binding ArrowMargin, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorComboBox:VectorTextComboBox}}"
                                 HorizontalAlignment="Right"
                                 BorderBrush="Transparent"
                                 SnapsToDevicePixels="True">
-                                <Grid Margin="0,12,0,0">
+                                <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1" />
                                         <ColumnDefinition Width="1" />
@@ -601,7 +600,7 @@
         </ControlTemplate.Triggers>
     </ControlTemplate>-->
 
-    <ControlTemplate x:Key="ComboBoxTemplate" TargetType="{x:Type ComboBox}">
+    <ControlTemplate x:Key="ComboBoxTemplate" TargetType="{x:Type VectorComboBox:VectorTextComboBox}">
         <Grid x:Name="templateRoot" SnapsToDevicePixels="true">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -658,19 +657,7 @@
                                             VerticalAlignment="Center"
                                             FontSize="15"
                                             Foreground="{Binding TitleBrush, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
-                                            Text="Header" />
-                                        <Button
-                                            Grid.Row="1"
-                                            Grid.Column="1"
-                                            Width="20"
-                                            Height="20"
-                                            Margin="0,0,10,0"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Center"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            Command="{Binding ClosePopupCommand, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
-                                            Content="X" />
+                                            Text="{TemplateBinding Title}" />
                                         <Rectangle
                                             Grid.Row="0"
                                             Grid.Column="0"
@@ -720,7 +707,6 @@
                                         HorizontalContentAlignment="Left"
                                         Background="#313233"
                                         BorderBrush="#1E1E1F"
-                                        FontSize="25"
                                         Foreground="{Binding SearchBoxForeground, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
                                         HorizontalScrollBarVisibility="Auto">
                                         <TextBox.Width>
@@ -817,9 +803,9 @@
         </ControlTemplate.Triggers>
     </ControlTemplate>
 
-    <Style x:Key="VectorTextComboBoxStyle" TargetType="{x:Type ComboBox}">
+    <Style x:Key="VectorTextComboBoxStyle" TargetType="{x:Type VectorComboBox:VectorTextComboBox}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Height" Value="40" />
+        <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
         <Setter Property="Background" Value="{StaticResource ComboBox.Static.Background}" />
         <Setter Property="BorderBrush" Value="{StaticResource ComboBox.Static.Border}" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}" />

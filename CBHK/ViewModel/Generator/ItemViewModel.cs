@@ -4,7 +4,6 @@ using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Item;
 using CBHK.ViewModel.Component.Item;
-using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -281,7 +280,7 @@ namespace CBHK.ViewModel.Generator
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void Return(CommonWindow win)
+        private void Return(Window win)
         {
             home.WindowState = WindowState.Normal;
             home.ShowInTaskbar = true;

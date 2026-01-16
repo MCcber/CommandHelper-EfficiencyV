@@ -1,12 +1,12 @@
 ﻿using CBHK.Domain;
 using CBHK.Domain.Model.Database;
-using CBHK.Model;
 using CBHK.View;
 using CBHK.View.Generator;
 using CBHK.ViewModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 
@@ -19,6 +19,7 @@ namespace CBHK.Utility
         private readonly IContainerProvider container;
         private readonly CBHKDataContext context;
         private readonly EnvironmentConfig config;
+        private Dictionary<string, IRelayCommand> commandDictionary = [];
         #endregion
 
         #region Method
@@ -32,6 +33,43 @@ namespace CBHK.Utility
             {
                 CBHK = viewModel;
             }
+
+            commandDictionary = new()
+            {
+                { "Advancement",StartAdvancementGeneratorCommand },
+                { "Ooc" , StartOnlyOneCommandGeneratorCommand},
+                { "DamageType" , StartDamageTypeGeneratorCommand},
+                { "Datapack" , StartDatapacksGeneratorCommand},
+                { "ChatType" , StartChatTpyeGeneratorCommand},
+                { "CustomWorld",StartCustomWorldGeneratorGeneratorCommand},
+                { "Armorstand" , StartArmorStandGeneratorCommand},
+                { "WrittenBook" , StartWrittenBooksGeneratorCommand},
+                { "Spawner" , StartSpawnerGeneratorCommand},
+                { "Recipe" , StartRecipesGeneratorCommand},
+                { "Villager" , StartVillagersGeneratorCommand},
+                { "Tag" , StartTagsGeneratorCommand},
+                { "Item" , StartItemsGeneratorCommand},
+                { "LootTable" , StartLootTableGeneratorCommand},
+                { "Predicate",StartPredicateGeneratorCommand},
+                { "ItemModifier" , StartItemModifierGeneratorCommand},
+                { "Firework" , StartFireworksGeneratorCommand},
+                { "Entity" , StartEntitiesGeneratorCommand},
+                { "Sign" , StartSignCommand},
+                { "Dimension" , StartDimensionGeneratorCommand},
+                { "DimensionType" , StartDimensionTypeGeneratorCommand}
+            };
+        }
+
+        public IRelayCommand GetGeneratorClickCommand(string target)
+        {
+            if(commandDictionary.TryGetValue(target,out IRelayCommand result))
+            {
+                return result;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -39,13 +77,13 @@ namespace CBHK.Utility
         /// </summary>
         private void SetCBHKState()
         {
-            if (config.Visibility == "关闭")
+            if (config.Visibility == "Collapsed")
             {
                 CBHK.ShowInTaskBar = false;
             }
             CBHK.WindowState = config.Visibility switch
             {
-                "最小化" or "关闭" => WindowState.Minimized,
+                "Hidden" or "Collapsed" => WindowState.Minimized,
                 _ => WindowState.Normal
             };
         }
@@ -302,44 +340,5 @@ namespace CBHK.Utility
             SetCBHKState();
         }
         #endregion
-    }
-
-    public static class GeneratorClickEvent
-    {
-        /// <summary>
-        /// 为生成器按钮分配方法
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="function"></param>
-        /// <returns></returns>
-        public static IRelayCommand Set(string id, DistributorGenerator function)
-        {
-            IRelayCommand result = id switch
-            {
-                "Advancement" => function.StartAdvancementGeneratorCommand,
-                "Ooc" => function.StartOnlyOneCommandGeneratorCommand,
-                "DamageType" => function.StartDamageTypeGeneratorCommand,
-                "Datapack" => function.StartDatapacksGeneratorCommand,
-                "ChatType" => function.StartChatTpyeGeneratorCommand,
-                "CustomWorld"=>function.StartCustomWorldGeneratorGeneratorCommand,
-                "Armorstand" => function.StartArmorStandGeneratorCommand,
-                "WrittenBook" => function.StartWrittenBooksGeneratorCommand,
-                "Spawner" => function.StartSpawnerGeneratorCommand,
-                "Recipe" => function.StartRecipesGeneratorCommand,
-                "Villager" => function.StartVillagersGeneratorCommand,
-                "Tag" => function.StartTagsGeneratorCommand,
-                "Item" => function.StartItemsGeneratorCommand,
-                "LootTable" => function.StartLootTableGeneratorCommand,
-                "Predicate"=>function.StartPredicateGeneratorCommand,
-                "ItemModifier" => function.StartItemModifierGeneratorCommand,
-                "Firework" => function.StartFireworksGeneratorCommand,
-                "Entity" => function.StartEntitiesGeneratorCommand,
-                "Sign" => function.StartSignCommand,
-                "Dimension" => function.StartDimensionGeneratorCommand,
-                "DimensionType" => function.StartDimensionTypeGeneratorCommand,
-                _ => null
-            };
-            return result;
-        }
     }
 }

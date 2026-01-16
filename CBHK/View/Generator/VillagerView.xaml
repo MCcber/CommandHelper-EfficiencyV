@@ -1,14 +1,16 @@
-﻿<localWindow:CommonWindow
+﻿<Container:VectorWindow
     x:Class="CBHK.View.Generator.VillagerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:Utility="clr-namespace:CBHK.Utility"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:VirtualizingWrapPanel="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Generator"
-    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:local_datacontext="clr-namespace:CBHK.View.Generator"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
@@ -20,6 +22,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconVillagers.png"
+    IconMargin="8 5 8 8"
     ResizeMode="CanResizeWithGrip"
     WindowStyle="None"
     mc:Ignorable="d">
@@ -44,7 +47,7 @@
         <KeyBinding
             Key="Esc"
             Command="{Binding ReturnCommand}"
-            CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=localWindow:CommonWindow}}" />
+            CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}" />
     </Window.InputBindings>
 
     <Grid>
@@ -64,7 +67,7 @@
                 Background="{StaticResource LeftArrow}"
                 BorderThickness="0"
                 Command="{Binding ReturnCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=localWindow:CommonWindow}}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
@@ -95,29 +98,22 @@
                         Foreground="White" />
                 </CustomControl:IconTextButtons.ToolTip>
             </CustomControl:IconTextButtons>
-            <TextBlock
-                Margin="10,0"
+            <VectorComboBox:VectorTextComboBox
+                Title="版本"
+                MinWidth="100"
                 HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                FontSize="15"
-                Foreground="White"
-                Text="版本"
-                TextAlignment="Center" />
-            <ComboBox
-                Width="100"
-                HorizontalAlignment="Left"
-                FontSize="20"
+                ArrowMargin="0 10 0 0"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=OneWay}"
-                Style="{DynamicResource TextComboBoxStyle}">
+                Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
                         <behavior:CallMethodAction MethodName="VersionBox_SelectionChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </ComboBox>
+            </VectorComboBox:VectorTextComboBox>
             <CustomControl:IconTextButtons
                 Width="25"
                 Height="25"
@@ -573,106 +569,90 @@
                 </Grid.RowDefinitions>
                 <DockPanel
                     Grid.Row="0"
-                    Margin="10,20,0,0"
+                    Height="40"
+                    VerticalAlignment="Bottom"
                     LastChildFill="False">
-                    <TextBlock
-                        Margin="0,0,5,0"
-                        VerticalAlignment="Center"
-                        FontSize="15"
-                        Foreground="White"
-                        Text="种类" />
-                    <ComboBox
-                        Width="105"
-                        Margin="0,0,5,0"
+                    <VectorComboBox:VectorTextComboBox
+                        Title="种类"
+                        MinWidth="80"
+                        Margin="0,5"
                         HorizontalAlignment="Left"
                         VerticalContentAlignment="Center"
                         AllowDrop="False"
+                        ArrowMargin="0 10 0 0"
                         IsReadOnly="True"
                         ItemsSource="{Binding VillagerTypeSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerType, Mode=TwoWay}"
-                        Style="{DynamicResource TextComboBoxStyle}" />
-                    <TextBlock
-                        Margin="0,0,5,0"
-                        VerticalAlignment="Center"
-                        FontSize="15"
-                        Foreground="White"
-                        Text="职业" />
-                    <ComboBox
-                        Width="120"
-                        Margin="0,0,5,0"
+                        Style="{DynamicResource VectorTextComboBoxStyle}" />
+                    <VectorComboBox:VectorTextComboBox
+                        Title="职业"
+                        MinWidth="100"
+                        Margin="0,5"
                         HorizontalAlignment="Left"
                         VerticalContentAlignment="Center"
                         AllowDrop="False"
+                        ArrowMargin="0 10 0 0"
                         IsReadOnly="True"
                         ItemsSource="{Binding VillagerProfessionTypeSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerProfessionType, Mode=TwoWay}"
-                        Style="{DynamicResource TextComboBoxStyle}" />
-                    <TextBlock
-                        Margin="0,0,5,0"
-                        VerticalAlignment="Center"
-                        FontSize="15"
-                        Foreground="White"
-                        Text="交易等级" />
-                    <ComboBox
+                        Style="{DynamicResource VectorTextComboBoxStyle}" />
+                    <VectorComboBox:VectorTextComboBox
+                        Title="交易等级"
                         Width="50"
-                        Margin="0,0,5,0"
+                        Margin="0,5"
                         HorizontalAlignment="Left"
                         VerticalContentAlignment="Center"
                         AllowDrop="False"
+                        ArrowMargin="0 10 0 0"
                         IsReadOnly="True"
                         ItemsSource="{Binding VillagerLevelSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerLevel, Mode=TwoWay}"
-                        Style="{DynamicResource TextComboBoxStyle}" />
-                    <CustomControl:TextToggleButtons
-                        Height="30"
-                        Margin="5,0"
-                        Padding="10,0"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Center"
-                        Background="Transparent"
-                        Content="愿意交配"
-                        FontSize="15"
-                        IsChecked="{Binding Willing, Mode=TwoWay}"
-                        Style="{DynamicResource TextToggleButtonsStyle}" />
-                    <CustomControl:TextToggleButtons
-                        Height="30"
-                        Margin="5,0"
-                        Padding="10,0"
+                        Style="{DynamicResource VectorTextComboBoxStyle}" />
+                    <VectorButton:VectorToggleTextButton
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
-                        Background="Transparent"
-                        Content="开启言论"
+                        Background="#D77A34"
                         FontSize="15"
+                        Foreground="Black"
+                        IsChecked="{Binding Willing, Mode=TwoWay}"
+                        OriginBottomHeight="3"
+                        Style="{DynamicResource VectorToggleTextButtonStyle}"
+                        Text="愿意交配" />
+                    <VectorButton:VectorToggleTextButton
+                        VerticalAlignment="Center"
+                        Background="#D77A34"
+                        FontSize="15"
+                        Foreground="Black"
                         IsChecked="{Binding CanEditGossip, Mode=TwoWay}"
                         IsHitTestVisible="{Binding CanTouchGossip, Mode=OneWay}"
-                        Style="{DynamicResource TextToggleButtonsStyle}">
+                        OriginBottomHeight="3"
+                        Style="{DynamicResource VectorToggleTextButtonStyle}"
+                        Text="开启言论">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Click">
                                 <behavior:CallMethodAction MethodName="GossipEditButton_Click" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </CustomControl:TextToggleButtons>
-                    <CustomControl:TextToggleButtons
-                        Height="30"
-                        Margin="5,0"
-                        Padding="10,0"
-                        HorizontalAlignment="Left"
+                    </VectorButton:VectorToggleTextButton>
+                    <VectorButton:VectorToggleTextButton
                         VerticalAlignment="Center"
-                        Background="Transparent"
-                        Content="开启记忆"
+                        Background="#D77A34"
                         FontSize="15"
+                        Foreground="Black"
                         IsChecked="{Binding CanEditBrain, Mode=TwoWay}"
                         IsHitTestVisible="{Binding CanTouchBrain, Mode=OneWay}"
-                        Style="{DynamicResource TextToggleButtonsStyle}">
+                        OriginBottomHeight="3"
+                        Style="{DynamicResource VectorToggleTextButtonStyle}"
+                        Text="开启记忆">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Click">
                                 <behavior:CallMethodAction MethodName="BrainEditButton_Click" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </CustomControl:TextToggleButtons>
+                    </VectorButton:VectorToggleTextButton>
                 </DockPanel>
                 <!--  记忆，言论  -->
                 <Grid
@@ -1462,4 +1442,4 @@
             </Grid>
         </Grid>
     </Grid>
-</localWindow:CommonWindow>
+</Container:VectorWindow>

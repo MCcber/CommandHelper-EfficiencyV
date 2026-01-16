@@ -23,7 +23,7 @@
                                 <RowDefinition Height="2.5" />
                                 <RowDefinition Height="*" />
                                 <RowDefinition Height="2.5" />
-                                <RowDefinition x:Name="extraBottomLine" Height="6" />
+                                <RowDefinition x:Name="extraBottomLine" />
                             </Grid.RowDefinitions>
                             <Rectangle
                                 Grid.Row="0"

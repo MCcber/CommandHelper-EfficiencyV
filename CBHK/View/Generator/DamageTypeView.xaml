@@ -1,15 +1,15 @@
-﻿<localWindow:CommonWindow
+﻿<Container:VectorWindow
     x:Class="CBHK.View.Generator.DamageTypeView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CompoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponents"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:ConverterSpace="clr-namespace:CBHK.Utility.TreeViewComponentsHelper"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Generator"
-    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="伤害类型编辑器"
@@ -84,4 +84,4 @@
             </behaviors:Interaction.Triggers>
         </avalonedit:TextEditor>
     </Grid>
-</localWindow:CommonWindow>
+</Container:VectorWindow>

@@ -246,7 +246,7 @@
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
                                 Foreground="White"
-                                Text="ToggleButton" />
+                                Text="{TemplateBinding Text}" />
                             <ContentPresenter
                                 x:Name="contentPresenter"
                                 Grid.ColumnSpan="3"

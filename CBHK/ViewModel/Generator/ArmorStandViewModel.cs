@@ -30,6 +30,8 @@ using CBHK.Utility.MessageTip;
 using CBHK.Utility.Common;
 using CBHK.Interface;
 using Prism.Events;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.CustomControl.VectorCheckBox;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -47,6 +49,7 @@ namespace CBHK.ViewModel.Generator
         private ArmorStandCameraMovementType _armorStandCameraMovementType;
         private ArmorStandCameraOverTheShoulderType _armorStandCameraOverTheShoulderType;
         private bool IsLeftShoulder = false;
+        private bool isSelectedAll = false;
         //右上角Gizimo中圆锥的底面半径
         double ConeBaseRadius = 0.8;
         //右上角Gizimo中圆锥的高
@@ -122,13 +125,6 @@ namespace CBHK.ViewModel.Generator
 
         //版本切换锁,防止属性之间无休止更新
         private bool permission_switch_lock = false;
-
-        #region 重置动作的按钮前景颜色对象
-        //灰色
-        private SolidColorBrush GrayBrush = new((Color)ColorConverter.ConvertFromString("#8F8F8F"));
-        //白色
-        private SolidColorBrush BlackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
-        #endregion
 
         #region 所有3D视图对象
         public PerspectiveCamera MainCamera = new();
@@ -339,7 +335,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetAllPose, value);
-                ResetAllPoseButtonForeground = CanResetAllPose ? BlackBrush : GrayBrush;
+                ResetAllPoseButtonForeground = CanResetAllPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -358,7 +354,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetHeadPose, value);
-                ResetHeadPoseButtonForeground = CanResetHeadPose ? BlackBrush : GrayBrush;
+                ResetHeadPoseButtonForeground = CanResetHeadPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -376,7 +372,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetBodyPose, value);
-                ResetBodyPoseButtonForeground = CanResetBodyPose ? BlackBrush : GrayBrush;
+                ResetBodyPoseButtonForeground = CanResetBodyPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -393,7 +389,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetLarmPose, value);
-                ResetLArmPoseButtonForeground = CanResetLArmPose ? BlackBrush : GrayBrush;
+                ResetLArmPoseButtonForeground = CanResetLArmPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -411,7 +407,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetRArmPose, value);
-                ResetRArmPoseButtonForeground = CanResetRArmPose ? BlackBrush : GrayBrush;
+                ResetRArmPoseButtonForeground = CanResetRArmPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -429,7 +425,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetLLegPose, value);
-                ResetLLegPoseButtonForeground = CanResetLLegPose ? BlackBrush : GrayBrush;
+                ResetLLegPoseButtonForeground = CanResetLLegPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -447,7 +443,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetRLegPose, value);
-                ResetRLegPoseButtonForeground = CanResetRLegPose ? BlackBrush : GrayBrush;
+                ResetRLegPoseButtonForeground = CanResetRLegPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -973,12 +969,12 @@ namespace CBHK.ViewModel.Generator
 
         #region 版本数据源
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionSource = [
-            new TextComboBoxItem() { Text = "1.20.2" },
-            new TextComboBoxItem() { Text = "1.13.0" },
-            new TextComboBoxItem() { Text = "1.12.0" },
-            new TextComboBoxItem() { Text = "1.9.0" },
-            new TextComboBoxItem() { Text = "1.8.0" }
+        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+            new VectorTextComboBoxItem() { Text = "1.20.2",DisplayPanelBrush = Brushes.Black,MemberBrush = Brushes.White },
+            new VectorTextComboBoxItem() { Text = "1.13.0",DisplayPanelBrush = Brushes.Black,MemberBrush = Brushes.White },
+            new VectorTextComboBoxItem() { Text = "1.12.0",DisplayPanelBrush = Brushes.Black,MemberBrush = Brushes.White },
+            new VectorTextComboBoxItem() { Text = "1.9.0",DisplayPanelBrush = Brushes.Black,MemberBrush = Brushes.White },
+            new VectorTextComboBoxItem() { Text = "1.8.0",DisplayPanelBrush = Brushes.Black,MemberBrush = Brushes.White }
             ];
         #endregion
 
@@ -1019,10 +1015,10 @@ namespace CBHK.ViewModel.Generator
             YAxis.DataContext = this;
             ZAxis.DataContext = this;
 
-            container = container;
+            this.container = container;
             home = mainView;
 
-            ResetAllPoseButtonForeground = ResetHeadPoseButtonForeground = ResetLArmPoseButtonForeground = ResetRArmPoseButtonForeground = ResetBodyPoseButtonForeground = ResetLLegPoseButtonForeground = ResetRLegPoseButtonForeground = GrayBrush;
+            ResetAllPoseButtonForeground = ResetHeadPoseButtonForeground = ResetLArmPoseButtonForeground = ResetRArmPoseButtonForeground = ResetBodyPoseButtonForeground = ResetLLegPoseButtonForeground = ResetRLegPoseButtonForeground = Brushes.White;
         }
 
         private ImageSource CreateColoredImage(BitmapImage originalImage, Color overlayColor)
@@ -1405,17 +1401,15 @@ namespace CBHK.ViewModel.Generator
             {
                 foreach (string item in ArmorStandNBTList)
                 {
-                    TextCheckBoxs textCheckBox = new()
+                    VectorTextCheckBox textCheckBox = new()
                     {
-                        Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-                        Margin = new Thickness(0, 0, 0, 10),
-                        HeaderText = item,
-                        HeaderHeight = 20,
+                        Foreground = Brushes.White,
+                        Text = item,
+                        Margin = new Thickness(10, 0, 0, 10),
                         FontSize = 15,
-                        HeaderWidth = 20,
                         HorizontalAlignment = HorizontalAlignment.Stretch,
                         VerticalAlignment = VerticalAlignment.Center,
-                        Style = Application.Current.Resources["TextCheckBox"] as Style
+                        Style = Application.Current.Resources["VectorTextCheckBoxStyle"] as Style
                     };
                     NBTList.Children.Add(textCheckBox);
                     textCheckBox.Checked += NBTChecked;
@@ -1444,7 +1438,10 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void Version_SelectionChanged(object sender, RoutedEventArgs e) { }
+        public void Version_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+
+        }
 
         /// <summary>
         /// 检测名称文本框内容为空
@@ -1675,7 +1672,8 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         public void ReverseAllNBT()
         {
-            foreach (TextCheckBoxs item in NBTList.Children)
+            isSelectedAll = false;
+            foreach (VectorTextCheckBox item in NBTList.Children)
             {
                 item.IsChecked = !item.IsChecked.Value;
             }
@@ -1688,10 +1686,10 @@ namespace CBHK.ViewModel.Generator
         /// <param name="obj"></param>
         public void SelectAllNBT(FrameworkElement frameworkElement)
         {
-            bool currentValue = (frameworkElement as TextCheckBoxs).IsChecked.Value;
-            foreach (TextCheckBoxs item in NBTList.Children)
+            isSelectedAll = !isSelectedAll;
+            foreach (VectorTextCheckBox item in NBTList.Children)
             {
-                item.IsChecked = currentValue;
+                item.IsChecked = isSelectedAll;
             }
         }
 
@@ -2180,8 +2178,8 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         private void NBTUnchecked(object sender, RoutedEventArgs e)
         {
-            TextCheckBoxs current = sender as TextCheckBoxs;
-            BoolTypeNBT.Remove(current.HeaderText);
+            VectorTextCheckBox current = sender as VectorTextCheckBox;
+            BoolTypeNBT.Remove(current.Text);
         }
 
         /// <summary>
@@ -2191,8 +2189,8 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         private void NBTChecked(object sender, RoutedEventArgs e)
         {
-            TextCheckBoxs current = sender as TextCheckBoxs;
-            BoolTypeNBT.Add(current.HeaderText);
+            VectorTextCheckBox current = sender as VectorTextCheckBox;
+            BoolTypeNBT.Add(current.Text);
         }
 
         #region 处理3D模型

@@ -28,6 +28,7 @@
                             Grid.Row="0"
                             Grid.Column="0"
                             HorizontalScrollBarVisibility="Auto"
+                            Style="{DynamicResource VectorScrollViewerStyle}"
                             VerticalScrollBarVisibility="Auto">
                             <Border
                                 x:Name="Line"

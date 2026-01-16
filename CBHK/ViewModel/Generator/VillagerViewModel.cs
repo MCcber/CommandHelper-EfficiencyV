@@ -5,7 +5,6 @@ using System.Windows.Input;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.Input;
 using System.IO;
 using System.Collections.ObjectModel;
@@ -817,7 +816,7 @@ namespace CBHK.ViewModel.Generator
             {
                 Window parent = Window.GetWindow(sender as ListView);
                 CustomViewSource = parent.FindResource("CustomItemView") as CollectionViewSource;
-                InitCustomItemList();
+                //InitCustomItemList();
                 CustomViewSource.Filter += CollectionViewSource_Filter;
             }
         }
@@ -993,7 +992,7 @@ namespace CBHK.ViewModel.Generator
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void Return(CommonWindow win)
+        private void Return(Window win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();

@@ -1,4 +1,7 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton">
 
     <SolidColorBrush x:Key="Button.Static.Background" Color="#FFDDDDDD" />
     <SolidColorBrush x:Key="Button.Static.Border" Color="Black" />
@@ -10,7 +13,7 @@
     <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
     <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
 
-    <Style x:Key="VectorIconRepeatButtonStyle" TargetType="{x:Type RepeatButton}">
+    <Style x:Key="VectorIconRepeatButtonStyle" TargetType="{x:Type VectorButton:VectorIconRepeatButton}">
         <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Background" Value="{StaticResource Button.Static.Background}" />
@@ -22,7 +25,7 @@
         <Setter Property="Padding" Value="1" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type ButtonBase}">
+                <ControlTemplate TargetType="{x:Type VectorButton:VectorIconRepeatButton}">
                     <Border
                         x:Name="border"
                         Background="{TemplateBinding Background}"
@@ -30,127 +33,135 @@
                         BorderThickness="{TemplateBinding BorderThickness}"
                         SnapsToDevicePixels="true">
                         <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="2" />
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="2" />
-                                <RowDefinition x:Name="extraBottomLine" Height="3" />
-                            </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2" />
+                                <ColumnDefinition Width="2.5" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="2" />
+                                <ColumnDefinition Width="2.5" />
                             </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="2.5" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="2.5" />
+                                <RowDefinition x:Name="extraBottomLine" />
+                            </Grid.RowDefinitions>
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="0"
-                                Fill="#ECEDEE"
+                                Fill="{TemplateBinding TopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="1"
-                                Fill="#ECEDEE"
+                                Fill="{TemplateBinding TopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="2"
-                                Fill="#F4F4F5"
+                                Fill="{TemplateBinding BorderCornerBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="0"
-                                Fill="#ECEDEE"
+                                Fill="{TemplateBinding TopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="2"
-                                Fill="#ECEDEE"
+                                Fill="{TemplateBinding TopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="0"
-                                Fill="#F4F4F5"
+                                Fill="{TemplateBinding BorderCornerBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="1"
-                                Fill="#ECEDEE"
+                                Fill="{TemplateBinding TopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="2"
-                                Fill="#ECEDEE"
+                                Fill="{TemplateBinding TopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="3"
                                 Grid.ColumnSpan="3"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
-                                Fill="#58585A"
+                                Fill="{TemplateBinding OriginBottomBrush}"
                                 IsHitTestVisible="False"
+                                Stroke="{TemplateBinding OriginBottomBrush}"
                                 StrokeThickness="0" />
                             <Grid
                                 Grid.Row="1"
                                 Grid.Column="1"
                                 HorizontalAlignment="Center"
-                                VerticalAlignment="Center">
+                                VerticalAlignment="Center"
+                                RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                RenderOptions.ClearTypeHint="Enabled"
+                                RenderOptions.EdgeMode="Unspecified"
+                                RenderTransformOrigin="0.5,0.5">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="2" />
+                                    <ColumnDefinition Width="2" />
+                                    <ColumnDefinition Width="2" />
+                                    <ColumnDefinition Width="2" />
+                                    <ColumnDefinition Width="2" />
+                                    <ColumnDefinition Width="2" />
+                                    <ColumnDefinition Width="2" />
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="1" />
-                                    <RowDefinition Height="1" />
-                                    <RowDefinition Height="1" />
-                                    <RowDefinition Height="1" />
+                                    <RowDefinition Height="2" />
+                                    <RowDefinition Height="2" />
+                                    <RowDefinition Height="2" />
+                                    <RowDefinition Height="2" />
                                 </Grid.RowDefinitions>
+                                <Grid.RenderTransform>
+                                    <RotateTransform Angle="{Binding IconAngle, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorIconRepeatButton}}" />
+                                </Grid.RenderTransform>
                                 <Rectangle
                                     Grid.Row="0"
                                     Grid.Column="0"
                                     Width="2"
                                     Height="2"
-                                    Fill="#FFFFFF" />
+                                    Fill="{TemplateBinding IconBrush}" />
                                 <Rectangle
                                     Grid.Row="1"
                                     Grid.Column="1"
                                     Width="2"
                                     Height="2"
-                                    Fill="#FFFFFF" />
+                                    Fill="{TemplateBinding IconBrush}" />
                                 <Rectangle
                                     Grid.Row="2"
                                     Grid.Column="2"
                                     Width="2"
                                     Height="2"
-                                    Fill="#FFFFFF" />
+                                    Fill="{TemplateBinding IconBrush}" />
                                 <Rectangle
                                     Grid.Row="3"
                                     Grid.Column="3"
                                     Width="2"
                                     Height="2"
-                                    Fill="#FFFFFF" />
+                                    Fill="{TemplateBinding IconBrush}" />
                                 <Rectangle
                                     Grid.Row="2"
                                     Grid.Column="4"
                                     Width="2"
                                     Height="2"
-                                    Fill="#FFFFFF" />
+                                    Fill="{TemplateBinding IconBrush}" />
                                 <Rectangle
                                     Grid.Row="1"
                                     Grid.Column="5"
                                     Width="2"
                                     Height="2"
-                                    Fill="#FFFFFF" />
+                                    Fill="{TemplateBinding IconBrush}" />
                                 <Rectangle
                                     Grid.Row="0"
                                     Grid.Column="6"
                                     Width="2"
                                     Height="2"
-                                    Fill="#FFFFFF" />
+                                    Fill="{TemplateBinding IconBrush}" />
                                 <ContentPresenter
                                     x:Name="contentPresenter"
                                     Grid.RowSpan="4"

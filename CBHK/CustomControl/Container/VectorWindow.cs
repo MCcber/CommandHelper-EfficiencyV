@@ -16,7 +16,8 @@ namespace CBHK.CustomControl.Container
         /// <summary>
         /// 设计时基准高度（96 DPI下的高度）
         /// </summary>
-        private double baseTitleBarHeight = 20.0;
+        private double baseTitleBarHeight = 25.0;
+        private double baseTitleButtonWidth = 30.0;
         private Button MaximizeButton;
         private const int GWL_STYLE = -16;
         private const uint WS_MAXIMIZEBOX = (uint)0x00010000L;
@@ -104,6 +105,23 @@ namespace CBHK.CustomControl.Container
         public static readonly DependencyProperty TitleBarHeightProperty =
             DependencyProperty.Register("TitleBarHeight", typeof(double), typeof(VectorWindow), new PropertyMetadata(default(double)));
 
+        public double TitleButtonWidth
+        {
+            get { return (double)GetValue(TitleButtonWidthProperty); }
+            set { SetValue(TitleButtonWidthProperty, value); }
+        }
+
+        public Thickness IconMargin
+        {
+            get { return (Thickness)GetValue(IconMarginProperty); }
+            set { SetValue(IconMarginProperty, value); }
+        }
+
+        public static readonly DependencyProperty IconMarginProperty =
+            DependencyProperty.Register("IconMargin", typeof(Thickness), typeof(VectorWindow), new PropertyMetadata(default(Thickness)));
+
+        public static readonly DependencyProperty TitleButtonWidthProperty =
+            DependencyProperty.Register("TitleButtonWidth", typeof(double), typeof(VectorWindow), new PropertyMetadata(default(double)));
         public IRelayCommand MinimizeWindowCommand
         {
             get { return (IRelayCommand)GetValue(MinimizeWindowCommandProperty); }
@@ -180,6 +198,7 @@ namespace CBHK.CustomControl.Container
         #region Method
         public VectorWindow()
         {
+            Loaded += VectorWindow_Loaded;
             RestorePathData = Geometry.Parse(restoreGeometryData);
             Rectangle rectangle = new();
             rectangle.Width = rectangle.Height = 10;
@@ -188,21 +207,19 @@ namespace CBHK.CustomControl.Container
             RectangleGeometry rectangleGeometry = new(new Rect(0, 0, 10, 10), 0, 0);
             MaximizePathData = rectangleGeometry;
             MaximizeButtonPathData = MaximizePathData;
-            // 获取当前DPI缩放因子
-            var dpiInfo = VisualTreeHelper.GetDpi(this);
-            double dpiScaleY = dpiInfo.DpiScaleY; // Y轴DPI缩放
-
-            // 计算实际高度
-            double actualHeight = baseTitleBarHeight;
-
-            // 通过绑定或直接设置CustomTitleBar的高度
-            TitleBarHeight = actualHeight * dpiScaleY;
             //设置三个按钮的命令
             MinimizeWindowCommand = new RelayCommand(() => 
             {
                 WindowState = WindowState.Minimized;
             });
             CloseWindowCommand = new RelayCommand(Close);
+            // 强制尝试查找并应用按类型键的样式
+            var style = TryFindResource(typeof(VectorWindow)) as Style
+                        ?? (Style)Application.Current.Resources[typeof(VectorWindow)];
+            if (style != null)
+            {
+                Style = style;
+            }
         }
 
         public void SetAcrylicBackground()
@@ -303,6 +320,17 @@ namespace CBHK.CustomControl.Container
         #endregion
 
         #region Event
+        private void VectorWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // 获取当前DPI缩放因子
+            var dpiInfo = VisualTreeHelper.GetDpi(this);
+            double dpiScaleY = dpiInfo.DpiScaleY; // Y轴DPI缩放
+
+            // 通过绑定或直接设置CustomTitleBar的高度
+            TitleBarHeight = baseTitleBarHeight * dpiInfo.DpiScaleY;
+            TitleButtonWidth = baseTitleButtonWidth * dpiInfo.DpiScaleX;
+        }
+
         public void MaximizeButton_Loaded(object sender, RoutedEventArgs e) => MaximizeButton = (sender as Button);
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -312,6 +340,7 @@ namespace CBHK.CustomControl.Container
             var handle = new WindowInteropHelper(this).Handle;
             #endregion
 
+            #region 设置各类外观属性
             // 1. 样式设置（保留需要的系统按钮与可调整边框）
             var style = GetWindowLong(handle, GWL_STYLE);
             style |= WS_MAXIMIZEBOX | WS_SYSMENU | WS_THICKFRAME;
@@ -333,6 +362,7 @@ namespace CBHK.CustomControl.Container
 
             // 6. 强制刷新窗口非客户区
             SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, 0x0037);
+            #endregion
         }
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)

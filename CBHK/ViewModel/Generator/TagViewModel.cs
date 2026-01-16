@@ -4,7 +4,6 @@ using CBHK.Model.Generator.Tag;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
-using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -290,8 +289,8 @@ namespace CBHK.ViewModel.Generator
                 return [];
             })];
             int EntityIDCount = _dataService.GetEntityIDList().Count;
-            int BiomeIDCount = context.BiomeIDSet.Count();
-            int GameEventValueCount = context.GameEventTagSet.Count();
+            int BiomeIDCount = context.BiomeIDSet.Count;
+            int GameEventValueCount = context.GameEventTagSet.Count;
             List<string> IDOrValueList = [.. context.ItemSet.SelectMany(item =>
             {
                 if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
@@ -406,7 +405,7 @@ namespace CBHK.ViewModel.Generator
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void Return(CommonWindow win)
+        private void Return(Window win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();

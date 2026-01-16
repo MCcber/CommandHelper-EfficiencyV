@@ -1,5 +1,4 @@
 ﻿using CBHK.CustomControl;
-using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
@@ -208,7 +207,7 @@ namespace CBHK.ViewModel.Generator
         /// 返回主页
         /// </summary>
         /// <param name="obj"></param>
-        private void Return(CommonWindow win)
+        private void Return(Window win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();

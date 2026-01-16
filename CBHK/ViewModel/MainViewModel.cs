@@ -109,7 +109,7 @@ namespace CBHK.ViewModel
                     {
                         button.SubTitle = currentId;
                     }
-                    IRelayCommand behavior = GeneratorClickEvent.Set(currentId, generatorFunction);
+                    IRelayCommand behavior = generatorFunction.GetGeneratorClickCommand(currentId);
                     button.Command = behavior;
                     GeneratorTable.Children.Add(button);
                     if (columnIndex > GeneratorTable.ColumnDefinitions.Count - 1)

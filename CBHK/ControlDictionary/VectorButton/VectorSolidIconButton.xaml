@@ -100,7 +100,7 @@
                                 Grid.Column="6"
                                 Fill="Red" />-->
                             <Viewbox
-                                Margin="10"
+                                Margin="{TemplateBinding IconMargin}"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
                                 <Path

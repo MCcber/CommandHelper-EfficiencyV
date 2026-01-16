@@ -5,7 +5,7 @@
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
+
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="EditPage"

@@ -1,29 +1,11 @@
-﻿using CommunityToolkit.Mvvm.Input;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 
 namespace CBHK.CustomControl.Input
 {
     public class NumbericUpDown : Control
     {
-        public RelayCommand IncreaseCommand
-        {
-            get { return (RelayCommand)GetValue(IncreaseCommandProperty); }
-            set { SetValue(IncreaseCommandProperty, value); }
-        }
-
-        public static readonly DependencyProperty IncreaseCommandProperty =
-            DependencyProperty.Register("IncreaseCommand", typeof(RelayCommand), typeof(NumbericUpDown), new PropertyMetadata(default(RelayCommand)));
-
-        public RelayCommand DecreaseCommand
-        {
-            get { return (RelayCommand)GetValue(DecreaseCommandProperty); }
-            set { SetValue(DecreaseCommandProperty, value); }
-        }
-
-        public static readonly DependencyProperty DecreaseCommandProperty =
-            DependencyProperty.Register("DecreaseCommand", typeof(RelayCommand), typeof(NumbericUpDown), new PropertyMetadata(default(RelayCommand)));
-
+        #region Property
         public string Text
         {
             get { return (string)GetValue(TextProperty); }
@@ -32,5 +14,26 @@ namespace CBHK.CustomControl.Input
 
         public static readonly DependencyProperty TextProperty =
             DependencyProperty.Register("Text", typeof(string), typeof(NumbericUpDown), new PropertyMetadata(default(string)));
+        #endregion
+
+        #region Method
+        public void OnIncrease_Click(object sender,RoutedEventArgs e)
+        {
+            if (int.TryParse(Text, out int value))
+            {
+                value++;
+                Text = value.ToString();
+            }
+        }
+
+        public void OnDecrease_Click(object sender, RoutedEventArgs e)
+        {
+            if (int.TryParse(Text, out int value))
+            {
+                value--;
+                Text = value.ToString();
+            }
+        }
+        #endregion
     }
 }

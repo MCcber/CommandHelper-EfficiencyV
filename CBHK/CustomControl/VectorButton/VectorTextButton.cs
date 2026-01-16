@@ -11,7 +11,6 @@ namespace CBHK.CustomControl.VectorButton
         private Thickness OriginMargin { get; set; }
         private Brush OriginTopBorderBrush { get; set; }
         private Brush OriginBorderCornerBrush { get; set; }
-        private Brush OriginRoundBorderBrush { get; set; }
 
         public string Text
         {
@@ -107,9 +106,16 @@ namespace CBHK.CustomControl.VectorButton
             {
                 Text = "Button";
             }
+
             if (OriginBottomHeight == 0)
             {
                 OriginBottomHeight = 6;
+            }
+
+            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
+            if(extraBottomLine is RowDefinition row)
+            {
+                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
 
             var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
@@ -170,7 +176,7 @@ namespace CBHK.CustomControl.VectorButton
             {
                 row.Height = new(0, GridUnitType.Pixel);
             }
-            Margin = new(Margin.Left, Margin.Top + 10, Margin.Right, Margin.Bottom);
+            Margin = new(Margin.Left, Margin.Top + 2, Margin.Right, Margin.Bottom);
         }
 
         private void VectorTextButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
@@ -183,12 +189,11 @@ namespace CBHK.CustomControl.VectorButton
             }
             if (extraBottomLine is RowDefinition row)
             {
-                row.Height = new(6, GridUnitType.Pixel);
+                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
             TopBorderBrush = OriginTopBorderBrush;
             BorderCornerBrush = OriginBorderCornerBrush;
             Margin = OriginMargin;
-            OriginBottomHeight = 6;
         }
 
         private void VectorTextButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
@@ -203,7 +208,7 @@ namespace CBHK.CustomControl.VectorButton
             }
             if (extraBottomLine is RowDefinition row)
             {
-                row.Height = new(6, GridUnitType.Pixel);
+                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
             Margin = OriginMargin;
             Color lightBorderColor = ColorTool.LightenByHSL((OriginTopBorderBrush as SolidColorBrush).Color, 0.4f);

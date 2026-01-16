@@ -4,7 +4,6 @@ using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Compoment.WrittenBook;
-using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
@@ -626,7 +625,7 @@ namespace CBHK.ViewModel.Generator
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void Return(CommonWindow win)
+        private void Return(Window win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -719,7 +718,7 @@ namespace CBHK.ViewModel.Generator
 
                 page_string = page_string.TrimEnd(',').Trim('\'');
                 result = page_string;
-                CommonWindow window = Window.GetWindow(WrittenBookEditor) as CommonWindow;
+                Window window = Window.GetWindow(WrittenBookEditor) as Window;
                 window.DialogResult = true;
             }
         }

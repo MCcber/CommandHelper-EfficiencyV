@@ -1,12 +1,12 @@
-﻿<localWindow:CommonWindow
+﻿<Container:VectorWindow
     x:Class="CBHK.View.Generator.SpawnerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Component="clr-namespace:CBHK.View.Generator"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="刷怪笼生成器"
@@ -43,7 +43,7 @@
                 Background="{StaticResource LeftArrow}"
                 BorderThickness="0"
                 Command="{Binding ReturnCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=localWindow:CommonWindow}}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
@@ -63,7 +63,7 @@
                 Background="{StaticResource RightArrow}"
                 BorderThickness="0"
                 Command="{Binding RunCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=localWindow:CommonWindow}}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
@@ -83,7 +83,7 @@
                 Background="{StaticResource SaveAll}"
                 BorderThickness="0"
                 Command="{Binding SaveAllCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=localWindow:CommonWindow}}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
                 FontSize="15"
                 Style="{DynamicResource IconTextButton}"
                 ToolTipService.BetweenShowDelay="0"
@@ -141,4 +141,4 @@
             SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
             Style="{DynamicResource TabControlWithScrollBar}" />
     </Grid>
-</localWindow:CommonWindow>
+</Container:VectorWindow>

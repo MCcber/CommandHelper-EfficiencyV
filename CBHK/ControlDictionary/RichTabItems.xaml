@@ -39,15 +39,12 @@
                 <ControlTemplate TargetType="{x:Type CustomControl:RichTabItems}">
                     <Grid x:Name="templateRoot" SnapsToDevicePixels="true">
                         <!--  {Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}, Path=ActualHeight}  -->
-                        <CustomControl:RichBorder
+                        <Border
                             x:Name="mainBorder"
                             Grid.Column="0"
                             Margin="0"
                             Background="{TemplateBinding Background}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            LeftBorderBrush="{TemplateBinding LeftBorderTexture}"
-                            RightBorderBrush="{TemplateBinding RightBorderTexture}"
-                            TopBorderBrush="{TemplateBinding TopBorderTexture}">
+                            BorderThickness="{TemplateBinding BorderThickness}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -94,7 +91,7 @@
                                     </behavior:Interaction.Triggers>
                                 </CustomControl:IconTextButtons>
                             </Grid>
-                        </CustomControl:RichBorder>
+                        </Border>
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="MouseEnter">
                                 <behavior:CallMethodAction MethodName="TabHeader_MouseEnter" TargetObject="{Binding}" />
@@ -312,9 +309,9 @@
                             <!--<Setter TargetName="innerBorder" Property="BorderThickness" Value="1,1,1,0" />-->
                             <!--<Setter TargetName="innerBorder" Property="BorderBrush" Value="{Binding SelectedBackground, RelativeSource={RelativeSource Mode=TemplatedParent}}" />-->
                             <!--<Setter TargetName="mainBorder" Property="BorderThickness" Value="{Binding BorderThickness}" />-->
-                            <Setter TargetName="mainBorder" Property="LeftBorderBrush" Value="{Binding SelectedLeftBorderTexture, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                            <!--<Setter TargetName="mainBorder" Property="LeftBorderBrush" Value="{Binding SelectedLeftBorderTexture, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
                             <Setter TargetName="mainBorder" Property="RightBorderBrush" Value="{Binding SelectedRightBorderTexture, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
-                            <Setter TargetName="mainBorder" Property="TopBorderBrush" Value="{Binding SelectedTopBorderTexture, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                            <Setter TargetName="mainBorder" Property="TopBorderBrush" Value="{Binding SelectedTopBorderTexture, RelativeSource={RelativeSource Mode=TemplatedParent}}" />-->
                             <Setter TargetName="mainBorder" Property="Background" Value="{Binding SelectedBackground, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
                             <Setter Property="FontWeight" Value="Bold" />
                         </MultiDataTrigger>

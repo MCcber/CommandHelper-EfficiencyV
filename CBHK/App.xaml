@@ -9,7 +9,6 @@
                 <!--<ResourceDictionary Source="pack://application:,,,/CBHK;component/WindowDictionaries/TheCommonWindow.xaml" />-->
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Button.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/CheckBox.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Container.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Icon.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ComboBox.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/AnimationTimePointItem.xaml" />
@@ -48,6 +47,7 @@
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/NumberBox.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ImageButtons.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/JsonTreeViewTemplate.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Container.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

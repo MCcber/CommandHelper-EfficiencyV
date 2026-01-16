@@ -436,20 +436,20 @@
                     Grid.RowSpan="3"
                 -->
                 <Border
-                    Height="20"
+                    Height="{TemplateBinding SlidingAreaHeight}"
                     Panel.ZIndex="0"
                     BorderBrush="Black"
                     BorderThickness="2">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="4" />
+                            <RowDefinition Height="2" />
                             <RowDefinition Height="*" />
-                            <RowDefinition Height="4" />
+                            <RowDefinition Height="2" />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="4" />
+                            <ColumnDefinition Width="2" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="4" />
+                            <ColumnDefinition Width="2" />
                         </Grid.ColumnDefinitions>
                         <Rectangle
                             Grid.Row="0"
@@ -640,6 +640,7 @@
         <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Background" Value="Transparent" />
+        <Setter Property="SlidingAreaHeight" Value="10" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource SliderThumb.Static.Foreground}" />
         <Setter Property="Template" Value="{StaticResource SliderHorizontal}" />

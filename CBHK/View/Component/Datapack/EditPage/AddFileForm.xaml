@@ -1,13 +1,13 @@
-﻿<localWindow:CommonWindow
+﻿<Container:VectorWindow
     x:Class="CBHK.View.Component.Datapack.EditPage.AddFileForm"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:Utility="clr-namespace:CBHK.Utility"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Component.Datapack.EditPage"
-    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="新建项"
     Width="950"
@@ -424,4 +424,4 @@
                 Style="{DynamicResource TextButtonsStyle}" />
         </DockPanel>
     </Grid>
-</localWindow:CommonWindow>
+</Container:VectorWindow>

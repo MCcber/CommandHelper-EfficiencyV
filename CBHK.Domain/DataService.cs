@@ -46,16 +46,17 @@ namespace CBHK.Domain
             #region 根据版本分类所有物品ID
             if (ItemGroupByVersionDicionary.Count == 0)
             {
-                foreach (var item in context.ItemSet)
+                foreach (var pair in context.ItemSet)
                 {
-                    //if (item.ID is not null && item.ID.Length > 0)
-                    //{
-                    //    _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
-                    //    if (!ItemGroupByVersionDicionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
-                    //    {
-                    //        ItemGroupByVersionDicionary[version].Add(item.ID, item.Name);
-                    //    }
-                    //}
+                    int version = int.Parse(pair.Key.Replace(".", ""));
+                    if(!ItemGroupByVersionDicionary.ContainsKey(version))
+                    {
+                        ItemGroupByVersionDicionary.Add(version, pair.Value.Select(item => item.Split('|', StringSplitOptions.RemoveEmptyEntries)).Where(item => item.Length == 2).ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim()));
+                    }
+                    else
+                    {
+                        ItemGroupByVersionDicionary[version] = pair.Value.Select(item => item.Split('|', StringSplitOptions.RemoveEmptyEntries)).Where(item => item.Length == 2).ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim());
+                    }
                 }
             }
             #endregion
@@ -63,28 +64,28 @@ namespace CBHK.Domain
             #region 根据版本分类所有附魔ID
             if (EnchantmentGroupByVersionDicionary.Count == 0)
             {
-                //foreach (var item in context.EnchantmentSet)
-                //{
-                //    if (item.ID is not null && item.ID.Length > 0)
-                //    {
-                //        _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
-                //        if (!EnchantmentGroupByVersionDicionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
-                //        {
-                //            EnchantmentGroupByVersionDicionary[version].Add(item.ID, item.Name);
-                //        }
-                //    }
-                //}
+                foreach (var item in context.EnchantmentSet)
+                {
+                    //if (pair.ID is not null && pair.ID.Length > 0)
+                    //{
+                    //    _ = int.TryParse(pair.Version is not null ? pair.Version.Replace(".", "") : "0", out int version);
+                    //    if (!EnchantmentGroupByVersionDicionary.TryAdd(version, new Dictionary<string, string> { { pair.ID, pair.Name } }))
+                    //    {
+                    //        EnchantmentGroupByVersionDicionary[version].Add(pair.ID, pair.Name);
+                    //    }
+                    //}
+                }
             }
             #endregion
 
             #region 根据方块ID为方块数据分组
             if (BlockIDAndName.Count == 0)
             {
-                //foreach (var item in context.BlockSet)
+                //foreach (var pair in context.BlockSet)
                 //{
-                //    if (item.ID is not null && item.ID.Length > 0)
+                //    if (pair.ID is not null && pair.ID.Length > 0)
                 //    {
-                //        if (!BlockIDAndName.TryAdd(item.ID, new Tuple<string, string?>(item.Name, item.LowVersionID)))
+                //        if (!BlockIDAndName.TryAdd(pair.ID, new Tuple<string, string?>(pair.Name, pair.LowVersionID)))
                 //        {
                 //        }
                 //    }
@@ -95,14 +96,14 @@ namespace CBHK.Domain
             #region 根据实体ID为实体数据分组
             if (EntityGroupByVersionDictionary.Count == 0)
             {
-                //foreach (var item in context.EntitySet)
+                //foreach (var pair in context.EntitySet)
                 //{
-                //    if (item.ID is not null && item.ID.Length > 0)
+                //    if (pair.ID is not null && pair.ID.Length > 0)
                 //    {
-                //        _ = int.TryParse(item.Version is not null ? item.Version.Replace(".", "") : "0", out int version);
-                //        if (!EntityGroupByVersionDictionary.TryAdd(version, new Dictionary<string, string> { { item.ID, item.Name } }))
+                //        _ = int.TryParse(pair.Version is not null ? pair.Version.Replace(".", "") : "0", out int version);
+                //        if (!EntityGroupByVersionDictionary.TryAdd(version, new Dictionary<string, string> { { pair.ID, pair.Name } }))
                 //        {
-                //            EntityGroupByVersionDictionary[version].Add(item.ID, item.Name);
+                //            EntityGroupByVersionDictionary[version].Add(pair.ID, pair.Name);
                 //        }
                 //    }
                 //}
@@ -115,29 +116,29 @@ namespace CBHK.Domain
             #region 添加物品Id
             //if (context.ItemSet is not null)
             //{
-            //    foreach (var item in context.ItemSet)
+            //    foreach (var pair in context.ItemSet)
             //    {
-            //        if (item.ID is not null)
-            //            ItemIDList.Add(item.ID);
+            //        if (pair.ID is not null)
+            //            ItemIDList.Add(pair.ID);
             //    }
             //}
             #endregion
 
             #region 添加方块Id
-            //foreach (var item in context.BlockSet)
+            //foreach (var pair in context.BlockSet)
             //{
-            //    if (item.ID is not null)
-            //        BlockIDList.Add(item.ID);
+            //    if (pair.ID is not null)
+            //        BlockIDList.Add(pair.ID);
             //}
             #endregion
 
             #region 添加附魔ID
             //if (context.EnchantmentSet is not null)
             //{
-            //    foreach (var item in context.EnchantmentSet)
+            //    foreach (var pair in context.EnchantmentSet)
             //    {
-            //        if (item.ID is not null)
-            //            Enchantments.Add(item.ID);
+            //        if (pair.ID is not null)
+            //            Enchantments.Add(pair.ID);
             //    }
             //}
             #endregion
@@ -167,10 +168,10 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加伤害类型
-            //foreach (var item in context.DamageTypeSet)
+            //foreach (var pair in context.DamageTypeSet)
             //{
-            //    if (item.Value is not null)
-            //        DamageTypeList.Add(item.Value);
+            //    if (pair.Value is not null)
+            //        DamageTypeList.Add(pair.Value);
             //}
             #endregion
 
@@ -238,26 +239,26 @@ namespace CBHK.Domain
             #endregion
 
             #region 添加实体Id
-            //foreach (var item in context.EntitySet)
+            //foreach (var pair in context.EntitySet)
             //{
-            //    if (item.ID is not null)
-            //        EntityIDList.Add(item.ID);
+            //    if (pair.ID is not null)
+            //        EntityIDList.Add(pair.ID);
             //}
             #endregion
 
             #region 添加粒子路径
-            //foreach (var item in context.ParticleSet)
+            //foreach (var pair in context.ParticleSet)
             //{
-            //    if (item.Value is not null)
-            //        ParticleIDList.Add(item.Value);
+            //    if (pair.Value is not null)
+            //        ParticleIDList.Add(pair.Value);
             //}
             #endregion
 
             #region 添加音效路径
-            //foreach (var item in context.SoundSet)
+            //foreach (var pair in context.SoundSet)
             //{
-            //    if (item.ID is not null)
-            //        SoundDictionary.Add(item.ID, item.Name);
+            //    if (pair.ID is not null)
+            //        SoundDictionary.Add(pair.ID, pair.Name);
             //}
             #endregion
 

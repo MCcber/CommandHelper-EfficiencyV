@@ -6,12 +6,30 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace CBHK.CustomControl.VectorComboBox
 {
     public partial class VectorTextComboBox : ComboBox
     {
         #region Property
+        public string Title
+        {
+            get { return (string)GetValue(TitleProperty); }
+            set { SetValue(TitleProperty, value); }
+        }
+
+        public Thickness ArrowMargin
+        {
+            get { return (Thickness)GetValue(ArrowMarginProperty); }
+            set { SetValue(ArrowMarginProperty, value); }
+        }
+
+        public static readonly DependencyProperty ArrowMarginProperty =
+            DependencyProperty.Register("ArrowMargin", typeof(Thickness), typeof(VectorTextComboBox), new PropertyMetadata(default(Thickness)));
+
+        public static readonly DependencyProperty TitleProperty =
+            DependencyProperty.Register("Title", typeof(string), typeof(VectorTextComboBox), new PropertyMetadata(default(string)));
 
         public Brush ItemContainerBackground
         {

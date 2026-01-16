@@ -18,25 +18,33 @@ namespace CBHK.CustomControl.VectorButton
 
         public static readonly DependencyProperty ThumbMarginProperty =
             DependencyProperty.Register("ThumbMargin", typeof(Thickness), typeof(VectorToggleIconTextButton), new PropertyMetadata(default(Thickness)));
+
+        public string Text
+        {
+            get { return (string)GetValue(TextProperty); }
+            set { SetValue(TextProperty, value); }
+        }
+
+        public static readonly DependencyProperty TextProperty =
+            DependencyProperty.Register("Text", typeof(string), typeof(VectorToggleIconTextButton), new PropertyMetadata(default(string)));
         #endregion
 
         #region Method
         public VectorToggleIconTextButton()
         {
             ThumbMargin = OriginThumbMargin;
-            Click += VectorToggleIconTextButton_Click;
+            Checked += VectorToggleIconTextButton_Checked;
+            Unchecked += VectorToggleIconTextButton_Unchecked;
         }
 
-        private void VectorToggleIconTextButton_Click(object sender, RoutedEventArgs e)
+        private void VectorToggleIconTextButton_Unchecked(object sender, RoutedEventArgs e)
         {
-            if (IsChecked.Value)
-            {
-                ThumbMargin = new(30, -5, 0, 1);
-            }
-            else
-            {
-                ThumbMargin = OriginThumbMargin;
-            }
+            ThumbMargin = OriginThumbMargin;
+        }
+
+        private void VectorToggleIconTextButton_Checked(object sender, RoutedEventArgs e)
+        {
+            ThumbMargin = new(30, -5, 0, 1);
         }
         #endregion
     }

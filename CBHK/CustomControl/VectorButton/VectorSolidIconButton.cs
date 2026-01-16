@@ -32,5 +32,14 @@ namespace CBHK.CustomControl.VectorButton
 
         public static readonly DependencyProperty ImageStrokeColorBrushProperty =
             DependencyProperty.Register("ImageStrokeColorBrush", typeof(Brush), typeof(VectorSolidIconButton), new PropertyMetadata(default(Brush)));
+
+        public Thickness IconMargin
+        {
+            get { return (Thickness)GetValue(IconMarginProperty); }
+            set { SetValue(IconMarginProperty, value); }
+        }
+
+        public static readonly DependencyProperty IconMarginProperty =
+            DependencyProperty.Register("IconMargin", typeof(Thickness), typeof(VectorSolidIconButton), new PropertyMetadata(default(Thickness)));
     }
 }

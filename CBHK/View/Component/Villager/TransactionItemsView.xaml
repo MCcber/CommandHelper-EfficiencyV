@@ -27,13 +27,7 @@
         <ImageBrush x:Key="BlackEdit" ImageSource="/CBHK;component/Resource/Common/Image/BlackEdit.png" />
     </UserControl.Resources>
 
-    <CustomControl:RichBorder
-        Background="#EFF2F1"
-        BorderThickness="10,15,10,33"
-        BottomBorderBrush="{StaticResource ButtonNormalBottom}"
-        LeftBorderBrush="{StaticResource ButtonNormalLeft}"
-        RightBorderBrush="{StaticResource ButtonNormalRight}"
-        TopBorderBrush="{StaticResource ButtonNormalTop}">
+    <Border Background="#EFF2F1" BorderThickness="10,15,10,33">
         <Grid
             RenderOptions.BitmapScalingMode="NearestNeighbor"
             RenderOptions.ClearTypeHint="Enabled"
@@ -268,6 +262,6 @@
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                 Style="{DynamicResource IconTextButton}" />
         </Grid>
-    </CustomControl:RichBorder>
+    </Border>
 
 </UserControl>
