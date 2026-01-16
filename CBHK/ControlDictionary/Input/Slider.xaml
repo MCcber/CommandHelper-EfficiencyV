@@ -141,21 +141,20 @@
 
     <ControlTemplate x:Key="SliderThumbHorizontalDefault" TargetType="{x:Type Thumb}">
         <Border
+            Background="{Binding ThumbBackground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorSlider}}"
             BorderBrush="Black"
             BorderThickness="2"
-            ClipToBounds="False"
             SnapsToDevicePixels="True"
-            UseLayoutRounding="False">
+            UseLayoutRounding="True">
             <Grid
-                Background="#D0D1D4"
                 ClipToBounds="False"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="False">
+                UseLayoutRounding="True">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="4" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="4" />
-                    <RowDefinition Height="8" />
+                    <RowDefinition x:Name="extraBottomLine" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="4" />
@@ -175,52 +174,50 @@
                 <Rectangle
                     Grid.Row="0"
                     Grid.Column="0"
-                    Fill="#ECEDEE"
+                    Fill="{Binding ThumbRoundBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorSlider}}"
                     IsHitTestVisible="False" />
                 <Rectangle
                     Grid.Row="0"
                     Grid.Column="1"
-                    Fill="#ECEDEE"
+                    Fill="{Binding ThumbRoundBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorSlider}}"
                     IsHitTestVisible="False" />
                 <Rectangle
                     Grid.Row="0"
                     Grid.Column="2"
-                    Fill="#F4F4F5"
+                    Fill="{Binding ThumbBorderCornerBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorSlider}}"
                     IsHitTestVisible="False" />
                 <Rectangle
                     Grid.Row="1"
                     Grid.Column="0"
-                    Fill="#ECEDEE"
+                    Fill="{Binding ThumbRoundBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorSlider}}"
                     IsHitTestVisible="False" />
                 <Rectangle
                     Grid.Row="1"
                     Grid.Column="2"
-                    Fill="#ECEDEE"
+                    Fill="{Binding ThumbRoundBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorSlider}}"
                     IsHitTestVisible="False" />
                 <Rectangle
                     Grid.Row="2"
                     Grid.Column="0"
-                    Fill="#F4F4F5"
+                    Fill="{Binding ThumbBorderCornerBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorSlider}}"
                     IsHitTestVisible="False" />
                 <Rectangle
                     Grid.Row="2"
                     Grid.Column="1"
-                    Fill="#ECEDEE"
+                    Fill="{Binding ThumbRoundBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorSlider}}"
                     IsHitTestVisible="False" />
                 <Rectangle
                     Grid.Row="2"
                     Grid.Column="2"
-                    Fill="#ECEDEE"
+                    Fill="{Binding ThumbRoundBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorSlider}}"
                     IsHitTestVisible="False" />
                 <Rectangle
                     Grid.Row="3"
                     Grid.ColumnSpan="3"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
-                    Fill="#58585A"
-                    IsHitTestVisible="False"
-                    Stroke="#58585A"
-                    StrokeThickness="0" />
+                    Fill="{Binding ThumbBottomBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorSlider}}"
+                    IsHitTestVisible="False" />
             </Grid>
         </Border>
         <ControlTemplate.Triggers>
@@ -387,7 +384,6 @@
     <ControlTemplate x:Key="SliderHorizontal" TargetType="{x:Type Input:VectorSlider}">
         <Border
             x:Name="border"
-            Background="{TemplateBinding Background}"
             BorderBrush="{TemplateBinding BorderBrush}"
             BorderThickness="{TemplateBinding BorderThickness}"
             SnapsToDevicePixels="True">
@@ -438,7 +434,7 @@
                 <Border
                     Height="{TemplateBinding SlidingAreaHeight}"
                     Panel.ZIndex="0"
-                    BorderBrush="Black"
+                    BorderBrush="{TemplateBinding BorderBrush}"
                     BorderThickness="2">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -454,39 +450,39 @@
                         <Rectangle
                             Grid.Row="0"
                             Grid.Column="2"
-                            Fill="#72A763" />
+                            Fill="{TemplateBinding BackgroundBorderCornerBrush}" />
                         <Rectangle
                             Grid.Row="2"
                             Grid.Column="0"
-                            Fill="#72A763" />
+                            Fill="{TemplateBinding BackgroundBorderCornerBrush}" />
                         <Rectangle
                             Grid.Row="1"
                             Grid.Column="1"
-                            Fill="#3C8527" />
+                            Fill="{TemplateBinding Background}" />
                         <Rectangle
                             Grid.Row="0"
                             Grid.Column="0"
                             Grid.ColumnSpan="2"
-                            Fill="#639D52" />
+                            Fill="{TemplateBinding BackgroundRoundBorderBrush}" />
                         <Rectangle
                             Grid.Row="1"
                             Grid.Column="0"
-                            Fill="#639D52" />
+                            Fill="{TemplateBinding BackgroundRoundBorderBrush}" />
                         <Rectangle
                             Grid.Row="1"
                             Grid.Column="2"
-                            Fill="#639D52" />
+                            Fill="{TemplateBinding BackgroundRoundBorderBrush}" />
                         <Rectangle
                             Grid.Row="2"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
-                            Fill="#639D52" />
+                            Fill="{TemplateBinding BackgroundBottomBorderBrush}" />
                     </Grid>
                 </Border>
                 <Track
                     x:Name="PART_Track"
                     Panel.ZIndex="1"
-                    IsDirectionReversed="True">
+                    IsDirectionReversed="False">
                     <Track.DecreaseRepeatButton>
                         <RepeatButton Command="{x:Static Slider.DecreaseLarge}">
                             <RepeatButton.Template>
@@ -512,8 +508,8 @@
                     <Track.Thumb>
                         <Thumb
                             x:Name="Thumb"
-                            Width="30"
-                            Height="35"
+                            Width="{TemplateBinding ThumbWidth}"
+                            Height="{TemplateBinding ThumbHeight}"
                             VerticalAlignment="Center"
                             Focusable="False"
                             OverridesDefaultStyle="True"
@@ -639,6 +635,8 @@
     <Style x:Key="VectorSliderStyle" TargetType="{x:Type Input:VectorSlider}">
         <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="ThumbWidth" Value="25" />
+        <Setter Property="ThumbHeight" Value="30" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="SlidingAreaHeight" Value="10" />
         <Setter Property="BorderBrush" Value="Transparent" />

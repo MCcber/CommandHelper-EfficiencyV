@@ -193,8 +193,8 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             {
                 dataPack.Dispatcher.InvokeAsync(async () =>
                 {
-                    DatapackViewModel viewModel = dataPack.DataContext as DatapackViewModel;
-                    SolutionTemplateSource = viewModel.TemplateSelectPage.FindResource("SolutionTemplateSource") as CollectionViewSource;
+                    DatapackViewModel CBHK = dataPack.DataContext as DatapackViewModel;
+                    SolutionTemplateSource = CBHK.TemplateSelectPage.FindResource("SolutionTemplateSource") as CollectionViewSource;
 
                     #region 清除数据
                     VersionList.Clear();

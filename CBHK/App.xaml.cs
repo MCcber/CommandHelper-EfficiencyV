@@ -2,6 +2,7 @@
 using CBHK.Domain;
 using CBHK.Utility.Common;
 using CBHK.View;
+using CBHK.ViewModel;
 using Microsoft.EntityFrameworkCore;
 using Prism.DryIoc;
 using Prism.Ioc;
@@ -76,6 +77,7 @@ namespace CBHK
                 return new CBHKDataContext(options);
             });
 
+            containerRegistry.RegisterSingleton<MainView>();
             containerRegistry.RegisterSingleton<DataService>();
             containerRegistry.RegisterSingleton<RegexService>();
         }
@@ -89,7 +91,7 @@ namespace CBHK
             {
                 var viewName = viewType.FullName;
 
-                var viewModelName = viewName.Replace("CBHK.View", "CBHK.ViewModel") + "Model";
+                var viewModelName = viewName.Replace("view", "ViewModel").Replace("View", "ViewModel");
 
                 return Type.GetType(viewModelName);
             });

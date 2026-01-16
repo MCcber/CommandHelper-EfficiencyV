@@ -17,21 +17,19 @@ namespace CBHK.Utility
         #region Field
         private MainViewModel CBHK;
         private readonly IContainerProvider container;
-        private readonly CBHKDataContext context;
         private readonly EnvironmentConfig config;
         private Dictionary<string, IRelayCommand> commandDictionary = [];
         #endregion
 
         #region Method
-        public DistributorGenerator(IContainerProvider Container,CBHKDataContext Context)
+        public DistributorGenerator(IContainerProvider Container,MainView cbhk,CBHKDataContext context)
         {
             container = Container;
-            context = Context;
             config = context.EnvironmentConfigSet.First();
             MainView mainWindow = container.Resolve<MainView>();
-            if (mainWindow is not null && mainWindow.DataContext is MainViewModel viewModel)
+            if(mainWindow.DataContext is MainViewModel mainViewModel)
             {
-                CBHK = viewModel;
+                CBHK = mainViewModel;
             }
 
             commandDictionary = new()

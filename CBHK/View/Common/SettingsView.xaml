@@ -97,7 +97,7 @@
                 Background="{StaticResource ButtonNormal}"
                 Content="..."
                 PressedBackground="{StaticResource ButtonPressed}"
-                Style="{StaticResource IconTextButton}" />
+                Style="{StaticResource IconTextButtonStyle}" />
         </Grid>
         <DockPanel>
             <TextBlock

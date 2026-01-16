@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:Utility="clr-namespace:CBHK.Utility"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
@@ -24,6 +25,7 @@
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconVillagers.png"
     IconMargin="8 5 8 8"
     ResizeMode="CanResizeWithGrip"
+    WindowStartupLocation="CenterScreen"
     WindowStyle="None"
     mc:Ignorable="d">
 
@@ -52,52 +54,50 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="10*" />
         </Grid.RowDefinitions>
         <DockPanel
             Grid.Row="0"
             Grid.Column="0"
             Background="Transparent">
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
+            <VectorButton:VectorSolidIconButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
-                Background="{StaticResource LeftArrow}"
                 BorderThickness="0"
                 Command="{Binding ReturnCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                IconMargin="5"
+                ImageData="M773.5 143.3L403 514.6l370.5 371.2-76.2 76.3-446.6-447.5L697.3 67l76.2 76.3zM697.3 67"
+                ImageFillColorBrush="White"
+                Style="{DynamicResource VectorSolidIconButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorSolidIconButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="ESC:返回主页"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
+                </VectorButton:VectorSolidIconButton.ToolTip>
+            </VectorButton:VectorSolidIconButton>
+            <VectorButton:VectorSolidIconButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
-                Background="{StaticResource RightArrow}"
                 BorderThickness="0"
                 Command="{Binding RunCommand}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                IconMargin="5"
+                ImageData="M243.0464 113.7664l536.576 397.8752-536.576 398.0288V113.7664z m0 0"
+                ImageFillColorBrush="White"
+                Style="{DynamicResource VectorSolidIconButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorSolidIconButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
+                </VectorButton:VectorSolidIconButton.ToolTip>
+            </VectorButton:VectorSolidIconButton>
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
                 MinWidth="100"
@@ -114,51 +114,48 @@
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
             </VectorComboBox:VectorTextComboBox>
-            <CustomControl:IconTextButtons
+            <VectorButton:VectorSolidIconButton
                 Width="25"
                 Height="25"
                 Margin="5,0,0,0"
                 HorizontalAlignment="Left"
-                Background="{StaticResource SaveIcon}"
                 Command="{Binding SaveCommand}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
+                IconMargin="0 0 5 5"
+                ImageData="M160 144C151.2 144 144 151.2 144 160L144 480C144 488.8 151.2 496 160 496L480 496C488.8 496 496 488.8 496 480L496 237.3C496 233.1 494.3 229 491.3 226L416 150.6L416 240C416 257.7 401.7 272 384 272L224 272C206.3 272 192 257.7 192 240L192 144L160 144zM240 144L240 224L368 224L368 144L240 144zM96 160C96 124.7 124.7 96 160 96L402.7 96C419.7 96 436 102.7 448 114.7L525.3 192C537.3 204 544 220.3 544 237.3L544 480C544 515.3 515.3 544 480 544L160 544C124.7 544 96 515.3 96 480L96 160zM256 384C256 348.7 284.7 320 320 320C355.3 320 384 348.7 384 384C384 419.3 355.3 448 320 448C284.7 448 256 419.3 256 384z"
+                ImageFillColorBrush="White"
+                Style="{DynamicResource VectorSolidIconButtonStyle}" />
+            <VectorButton:VectorTextButton
                 Margin="5,0,0,0"
                 Padding="5"
-                Background="{StaticResource ButtonNormal}"
+                Background="#D0D1D4"
                 Command="{Binding ImportFromClipboardCommand}"
-                Content="从剪切板导入"
-                PressedBackground="{StaticResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从剪切板导入" />
+            <VectorButton:VectorTextButton
                 Margin="5,0,0,0"
                 Padding="5"
-                Background="{StaticResource ButtonNormal}"
+                Background="#D0D1D4"
                 Command="{Binding ImportFromFileCommand}"
-                Content="从文件导入"
-                PressedBackground="{StaticResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:RadiusToggleButtons
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从文件导入" />
+            <VectorButton:VectorToggleIconTextButton
                 Margin="5,5,0,0"
                 Foreground="White"
                 IsChecked="{Binding ShowResult, Mode=OneWayToSource}"
-                SelectedToggleText="显示结果"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="26"
-                ToggleWidth="46"
-                UnSelectedToggleText="隐藏结果" />
+                Style="{DynamicResource VectorToggleIconTextButtonStyle}"
+                Text="显示结果" />
         </DockPanel>
         <Grid
             Grid.Row="1"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Top"
+            Margin="10"
             Background="#323232">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" MinHeight="600" />
-            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="350" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
             <Grid
                 Grid.Row="0"
@@ -177,38 +174,29 @@
                         FontWeight="Bold"
                         Foreground="White"
                         Text="交易" />
-                    <CustomControl:IconTextButtons
-                        Width="30"
-                        Padding="0,-5,0,0"
+                    <VectorButton:VectorFlatImageButton
                         HorizontalAlignment="Right"
-                        Background="{StaticResource CloseWhite}"
                         Command="{Binding ClearTransactionItemCommand}"
                         DockPanel.Dock="Right"
                         FontSize="25"
-                        IconColor="Black"
-                        PressedBackground="{StaticResource CloseWhiteHover}"
-                        Style="{DynamicResource IconTextButton}" />
-                    <CustomControl:IconTextButtons
-                        Width="30"
-                        Height="30"
+                        Image="/Resource/Common/Image/CloseWhite.png"
+                        Style="{DynamicResource VectorFlatImageButtonStyle}" />
+                    <VectorButton:VectorFlatImageButton
                         Margin="0,0,10,0"
-                        Padding="0,-5,0,0"
                         HorizontalAlignment="Right"
-                        Background="{StaticResource WhiteEdit}"
                         Command="{Binding AddTransactionItemCommand}"
                         DockPanel.Dock="Right"
-                        IconColor="Black"
+                        Image="/Resource/Common/Image/WhiteEdit.png"
                         RenderOptions.BitmapScalingMode="NearestNeighbor"
                         RenderOptions.EdgeMode="Aliased"
-                        Style="{DynamicResource IconTextButton}" />
+                        Style="{DynamicResource VectorFlatImageButtonStyle}" />
                 </DockPanel>
                 <ScrollViewer
                     Grid.Row="1"
-                    Margin="0,5,0,0"
-                    VerticalAlignment="Stretch"
+                    Margin="0,10"
                     Background="#555956"
-                    DockPanel.Dock="Top"
                     HorizontalScrollBarVisibility="Disabled"
+                    Style="{DynamicResource VectorScrollViewerStyle}"
                     VerticalScrollBarVisibility="Auto">
                     <Grid>
                         <ItemsControl Background="Transparent" ItemsSource="{Binding TransactionItemList}">
@@ -567,19 +555,23 @@
                     <RowDefinition Height="2.4*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <DockPanel
+                <Grid
                     Grid.Row="0"
                     Height="40"
-                    VerticalAlignment="Bottom"
-                    LastChildFill="False">
+                    VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
                     <VectorComboBox:VectorTextComboBox
                         Title="种类"
-                        MinWidth="80"
-                        Margin="0,5"
-                        HorizontalAlignment="Left"
-                        VerticalContentAlignment="Center"
+                        Grid.Column="0"
                         AllowDrop="False"
-                        ArrowMargin="0 10 0 0"
+                        ArrowMargin="0 15 0 0"
                         IsReadOnly="True"
                         ItemsSource="{Binding VillagerTypeSource}"
                         SelectedIndex="0"
@@ -587,12 +579,9 @@
                         Style="{DynamicResource VectorTextComboBoxStyle}" />
                     <VectorComboBox:VectorTextComboBox
                         Title="职业"
-                        MinWidth="100"
-                        Margin="0,5"
-                        HorizontalAlignment="Left"
-                        VerticalContentAlignment="Center"
+                        Grid.Column="1"
                         AllowDrop="False"
-                        ArrowMargin="0 10 0 0"
+                        ArrowMargin="0 15 0 0"
                         IsReadOnly="True"
                         ItemsSource="{Binding VillagerProfessionTypeSource}"
                         SelectedIndex="0"
@@ -600,20 +589,16 @@
                         Style="{DynamicResource VectorTextComboBoxStyle}" />
                     <VectorComboBox:VectorTextComboBox
                         Title="交易等级"
-                        Width="50"
-                        Margin="0,5"
-                        HorizontalAlignment="Left"
-                        VerticalContentAlignment="Center"
+                        Grid.Column="2"
                         AllowDrop="False"
-                        ArrowMargin="0 10 0 0"
+                        ArrowMargin="0 15 0 0"
                         IsReadOnly="True"
                         ItemsSource="{Binding VillagerLevelSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerLevel, Mode=TwoWay}"
                         Style="{DynamicResource VectorTextComboBoxStyle}" />
                     <VectorButton:VectorToggleTextButton
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
+                        Grid.Column="3"
                         Background="#D77A34"
                         FontSize="15"
                         Foreground="Black"
@@ -622,7 +607,7 @@
                         Style="{DynamicResource VectorToggleTextButtonStyle}"
                         Text="愿意交配" />
                     <VectorButton:VectorToggleTextButton
-                        VerticalAlignment="Center"
+                        Grid.Column="4"
                         Background="#D77A34"
                         FontSize="15"
                         Foreground="Black"
@@ -638,7 +623,7 @@
                         </behavior:Interaction.Triggers>
                     </VectorButton:VectorToggleTextButton>
                     <VectorButton:VectorToggleTextButton
-                        VerticalAlignment="Center"
+                        Grid.Column="5"
                         Background="#D77A34"
                         FontSize="15"
                         Foreground="Black"
@@ -653,7 +638,7 @@
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
                     </VectorButton:VectorToggleTextButton>
-                </DockPanel>
+                </Grid>
                 <!--  记忆，言论  -->
                 <Grid
                     Grid.Row="1"
@@ -1197,11 +1182,7 @@
                         </behavior:EventTrigger>
                     </behavior:Interaction.Triggers>
                 </TabControl>
-                <Grid
-                    Grid.Row="3"
-                    Margin="0,5,0,8"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Bottom">
+                <Grid Grid.Row="3" Margin="0,5,0,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="*" />
@@ -1213,28 +1194,22 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <!--  普通属性  -->
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        FontSize="15"
-                        Foreground="White"
-                        Text="搜索言论类型" />
-                    <ComboBox
+                    <VectorComboBox:VectorTextComboBox
+                        Title="搜索言论类型"
                         Grid.Row="0"
                         Grid.Column="1"
-                        FontSize="15"
+                        Height="30"
+                        ArrowMargin="0 10 0 0"
                         Foreground="White"
                         SelectedIndex="0"
                         SelectedItem="{Binding SelectedSearchGossipItem}"
-                        Style="{DynamicResource TextComboBoxStyle}">
+                        Style="{DynamicResource VectorTextComboBoxStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="GossipSearchTypeLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </ComboBox>
+                    </VectorComboBox:VectorTextComboBox>
                     <TextBox
                         Grid.Row="0"
                         Grid.Column="2"
@@ -1402,18 +1377,15 @@
                         ToolTip="此村民最后一次前往工作站点重新供应交易的刻。"
                         ToolTipService.InitialShowDelay="0"
                         ToolTipService.ShowDuration="1000" />
-                    <Slider
+                    <Input:NumbericUpDown
                         Grid.Row="1"
                         Grid.Column="1"
                         HorizontalAlignment="Stretch"
                         AllowDrop="False"
-                        Background="Transparent"
-                        BorderThickness="0"
+                        Background="#D0D1D4"
                         Foreground="White"
-                        Maximum="2147483647"
-                        Minimum="-2147483648"
-                        Style="{DynamicResource NumberBoxStyle}"
-                        Value="{Binding LastRestock, Mode=TwoWay}" />
+                        Style="{DynamicResource NumbericUpDownStyle}"
+                        Text="{Binding LastRestock, Mode=TwoWay}" />
                     <TextBlock
                         Grid.Row="1"
                         Grid.Column="2"
@@ -1425,19 +1397,17 @@
                         ToolTip="此村民当前的经验值。"
                         ToolTipService.InitialShowDelay="0"
                         ToolTipService.ShowDuration="1000" />
-                    <Slider
+                    <Input:NumbericUpDown
                         Grid.Row="1"
                         Grid.Column="3"
                         Margin="2.5,0"
                         HorizontalAlignment="Stretch"
                         AllowDrop="False"
-                        Background="Transparent"
+                        Background="#D0D1D4"
                         BorderThickness="0"
                         Foreground="White"
-                        Maximum="2147483647"
-                        Minimum="-2147483648"
-                        Style="{DynamicResource NumberBoxStyle}"
-                        Value="{Binding Xp, Mode=TwoWay}" />
+                        Style="{DynamicResource NumbericUpDownStyle}"
+                        Text="{Binding Xp, Mode=TwoWay}" />
                 </Grid>
             </Grid>
         </Grid>

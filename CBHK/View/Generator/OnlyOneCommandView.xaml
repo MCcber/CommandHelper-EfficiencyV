@@ -4,6 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -16,6 +18,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconCommandBlock.png"
+    IconMargin="8 8 5 8"
     ResizeMode="CanResizeWithGrip"
     mc:Ignorable="d">
 
@@ -665,60 +668,57 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <DockPanel Grid.Row="0" Grid.Column="0">
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
+            <VectorButton:VectorSolidIconButton
+                Margin="5"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
-                Background="{StaticResource LeftArrow}"
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                ImageData="M773.5 143.3L403 514.6l370.5 371.2-76.2 76.3-446.6-447.5L697.3 67l76.2 76.3zM697.3 67"
+                ImageFillColorBrush="White"
+                Style="{DynamicResource VectorSolidIconButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorSolidIconButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="ESC:返回"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
+                </VectorButton:VectorSolidIconButton.ToolTip>
+            </VectorButton:VectorSolidIconButton>
+            <VectorButton:VectorSolidIconButton
+                Margin="5"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
-                Background="{StaticResource RightArrow}"
                 Command="{Binding RunCommand}"
-                FontSize="15"
-                IconColor="White"
-                Style="{DynamicResource IconTextButton}"
+                ImageData="M243.0464 113.7664l536.576 397.8752-536.576 398.0288V113.7664z m0 0"
+                ImageFillColorBrush="White"
+                Style="{DynamicResource VectorSolidIconButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorSolidIconButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Padding="5,0"
+                </VectorButton:VectorSolidIconButton.ToolTip>
+            </VectorButton:VectorSolidIconButton>
+            <VectorButton:VectorTextButton
                 HorizontalAlignment="Left"
-                Background="{StaticResource ButtonNormal}"
+                Background="#C6C6C6"
                 Command="{Binding AddOneCommandPageCommand}"
-                Content="添加"
-                PressedBackground="{StaticResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
-                Padding="5,0"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="添加" />
+            <VectorButton:VectorTextButton
                 HorizontalAlignment="Left"
-                Background="{StaticResource ButtonNormal}"
+                Background="#C6C6C6"
                 Command="{Binding ClearCommandPageCommand}"
-                Content="清除"
-                PressedBackground="{StaticResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="清除" />
             <!--<CustomControl:StereoTextButton
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
@@ -731,23 +731,20 @@
                 RightBorderTexture="{StaticResource ButtonNormalRight}"
                 Style="{DynamicResource StereoTextButton}"
                 TopBorderTexture="{StaticResource ButtonNormalTop}" />-->
-            <CustomControl:IconTextButtons
-                Padding="5"
+            <VectorButton:VectorTextButton
                 HorizontalAlignment="Left"
-                Background="{StaticResource ButtonNormal}"
+                Background="#C6C6C6"
                 BorderThickness="4,3,4,7"
                 Command="{Binding ImportFromFileCommand}"
-                Content="从文件导入"
-                PressedBackground="{StaticResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:RadiusToggleButtons
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从文件导入" />
+            <VectorButton:VectorToggleIconTextButton
                 Foreground="White"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
-                SelectedToggleText="显示结果"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
-                UnSelectedToggleText="隐藏结果" />
+                Style="{DynamicResource VectorToggleIconTextButtonStyle}"
+                Text="显示结果" />
             <TextBox
                 Margin="2"
                 HorizontalAlignment="Stretch"

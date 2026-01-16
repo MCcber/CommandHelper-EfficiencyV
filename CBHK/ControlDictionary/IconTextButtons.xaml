@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl">
 
-    <Style x:Key="IconTextButton" TargetType="{x:Type CustomControl:IconTextButtons}">
+    <Style x:Key="IconTextButtonStyle" TargetType="{x:Type CustomControl:IconTextButtons}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />

@@ -102,17 +102,12 @@
                         Foreground="White" />
                 </VectorButton:VectorSolidIconButton.ToolTip>
             </VectorButton:VectorSolidIconButton>
-            <TextBlock
-                Margin="5,0"
-                VerticalAlignment="Center"
-                FontSize="15"
-                Foreground="White"
-                Text="版本"
-                TextAlignment="Center" />
             <VectorComboBox:VectorTextComboBox
+                Title="版本"
                 Width="90"
                 Height="35"
                 HorizontalAlignment="Left"
+                ArrowMargin="0 10 0 0"
                 Foreground="Black"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
@@ -126,13 +121,6 @@
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </VectorComboBox:VectorTextComboBox>
-            <TextBlock
-                Margin="5,5,5,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                FontSize="15"
-                Foreground="White"
-                Text="名称" />
             <CustomControl:StylizedTextBox
                 Width="140"
                 Height="80"
@@ -334,11 +322,12 @@
                                         Margin="6,0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
+                                        Background="#D77A34"
                                         BorderThickness="0"
-                                        Foreground="Black"
                                         Maximum="180"
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
+                                        ThumbBackground="#D0D1D4"
                                         Value="{Binding Path=HeadX, Mode=TwoWay}" />
                                     <Input:NumbericUpDown
                                         Width="125"
@@ -366,11 +355,13 @@
                                         Margin="6,0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
+                                        Background="#D77A34"
                                         BorderThickness="0"
                                         Foreground="Black"
                                         Maximum="180"
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
+                                        ThumbBackground="#D0D1D4"
                                         Value="{Binding Path=HeadY, Mode=TwoWay}" />
                                     <Input:NumbericUpDown
                                         Width="125"
@@ -398,11 +389,13 @@
                                         Margin="6,0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
+                                        Background="#D77A34"
                                         BorderThickness="0"
                                         Foreground="Black"
                                         Maximum="180"
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
+                                        ThumbBackground="#D0D1D4"
                                         Value="{Binding Path=HeadZ, Mode=TwoWay}" />
                                     <Input:NumbericUpDown
                                         Width="125"
