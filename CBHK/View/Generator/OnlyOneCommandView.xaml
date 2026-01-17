@@ -719,18 +719,14 @@
                 OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="清除" />
-            <!--<CustomControl:StereoTextButton
+            <VectorButton:VectorTextButton
                 HorizontalAlignment="Left"
-                Background="#EFF2F1"
-                BorderThickness="4,3,4,7"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+                Background="#C6C6C6"
                 Command="{Binding ImportFormClipBoard}"
-                Content="从剪切板导入"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4 3 4 4"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}" />-->
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从剪切板导入" />
             <VectorButton:VectorTextButton
                 HorizontalAlignment="Left"
                 Background="#C6C6C6"
@@ -820,7 +816,6 @@
             Grid.Row="1"
             Grid.Column="0"
             Background="Transparent"
-            BorderThickness="0"
             ItemsSource="{Binding OocTabSource}"
             SelectedIndex="0"
             SelectedItem="{Binding SelectedItem, Mode=TwoWay}"

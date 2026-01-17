@@ -2,7 +2,6 @@
 using CBHK.Domain;
 using CBHK.Utility.Common;
 using CBHK.View;
-using CBHK.ViewModel;
 using Microsoft.EntityFrameworkCore;
 using Prism.DryIoc;
 using Prism.Ioc;

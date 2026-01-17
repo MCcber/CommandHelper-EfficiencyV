@@ -55,16 +55,13 @@
 
         <UtilityCommon:PositionConverter x:Key="PositionConverter" />
     </Window.Resources>
-    <Grid Background="#7F323232">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <DockPanel
-            Grid.Row="0"
-            Height="40"
-            VerticalAlignment="Top">
+        <DockPanel Grid.Row="0" Height="40">
             <VectorButton:VectorSolidIconButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
@@ -104,12 +101,9 @@
             </VectorButton:VectorSolidIconButton>
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
-                Width="90"
-                Height="35"
-                HorizontalAlignment="Left"
-                ArrowMargin="0 10 0 0"
+                MinWidth="100"
+                ArrowMargin="0 5 10 0"
                 Foreground="Black"
-                IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
                 SearchBoxForeground="White"
                 SelectedIndex="0"

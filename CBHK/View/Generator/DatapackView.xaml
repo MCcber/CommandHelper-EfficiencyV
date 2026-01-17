@@ -16,6 +16,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#242424"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconDataPack.png"
+    IconMargin="8 8 5 8"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">

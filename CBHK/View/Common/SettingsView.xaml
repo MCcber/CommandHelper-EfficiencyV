@@ -3,6 +3,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.CustomControl"
@@ -14,134 +17,73 @@
     FontFamily="{Binding SelectedFontFamily}"
     mc:Ignorable="d">
     <StackPanel Margin="10,5">
-        <CustomControl:TextCheckBoxs
-            Grid.Row="0"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            FontSize="15"
-            Foreground="White"
-            HeaderHeight="20"
-            HeaderText="关闭后缩小到托盘"
-            HeaderWidth="20"
-            IsChecked="{Binding CloseToTray}"
-            Style="{StaticResource TextCheckBox}">
+        <VectorComboBox:VectorTextComboBox
+            Title="启动器可见性"
+            Grid.Row="1"
+            Grid.Column="1"
+            Height="40"
+            Margin="0,0,35,5"
+            HorizontalAlignment="Stretch"
+            ArrowMargin="0 0 10 0"
+            ItemsSource="{Binding StateList}"
+            SelectedItem="{Binding SelectVisibleItem}"
+            Style="{DynamicResource VectorTextComboBoxStyle}">
             <behavior:Interaction.Triggers>
-                <behavior:EventTrigger EventName="Click">
-                    <behavior:CallMethodAction MethodName="IsCloseToTray_Click" TargetObject="{Binding}" />
+                <behavior:EventTrigger EventName="SelectionChanged">
+                    <behavior:CallMethodAction MethodName="ViewState_SelectionChanged" TargetObject="{Binding}" />
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
-        </CustomControl:TextCheckBoxs>
-        <DockPanel>
-            <TextBlock
-                Grid.Row="1"
-                Grid.Column="0"
-                Width="100"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                FontSize="15"
-                Foreground="White"
-                Text="启动器可见性" />
-            <ComboBox
-                Grid.Row="1"
-                Grid.Column="1"
-                Height="25"
-                Margin="0,0,35,0"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Top"
-                ItemsSource="{Binding StateList}"
-                SelectedItem="{Binding SelectVisibleItem}"
-                Style="{DynamicResource TextComboBoxStyle}">
-                <behavior:Interaction.Triggers>
-                    <behavior:EventTrigger EventName="SelectionChanged">
-                        <behavior:CallMethodAction MethodName="ViewState_SelectionChanged" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
-                </behavior:Interaction.Triggers>
-            </ComboBox>
-        </DockPanel>
+        </VectorComboBox:VectorTextComboBox>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock
+            <VectorComboBox:VectorTextComboBox
+                Title="字体"
                 Grid.Column="0"
-                Margin="0,5"
-                HorizontalAlignment="Right"
+                Height="40"
+                Margin="0,0,0,5"
                 VerticalAlignment="Center"
-                Background="Transparent"
-                FontSize="15"
-                Foreground="White"
-                Text="字体" />
-            <ComboBox
-                Grid.Column="1"
-                Height="25"
-                Margin="69.5,0,0,0"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Center"
-                FontSize="15"
+                ArrowMargin="0 0 10 0"
                 Foreground="White"
                 ItemsSource="{Binding CurrentFontFamilyNameList}"
                 SelectedIndex="{Binding SelectFontIndex}"
                 SelectedItem="{Binding SelectedFontFamilyItem}"
-                Style="{DynamicResource TextComboBoxStyle}">
+                Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
                         <behavior:CallMethodAction MethodName="FontComboBox_SelectionChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </ComboBox>
-            <CustomControl:IconTextButtons
+            </VectorComboBox:VectorTextComboBox>
+            <VectorButton:VectorTextButton
                 Grid.Column="2"
                 Width="35"
-                Background="{StaticResource ButtonNormal}"
-                Content="..."
-                PressedBackground="{StaticResource ButtonPressed}"
-                Style="{StaticResource IconTextButtonStyle}" />
+                Background="#D0D1D4"
+                Style="{StaticResource VectorTextButtonStyle}"
+                Text="..." />
         </Grid>
-        <DockPanel>
-            <TextBlock
-                Grid.Row="2"
-                Grid.Column="0"
-                Margin="0,5"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Background="Transparent"
-                FontSize="15"
-                Foreground="White"
-                Text="主题颜色" />
-            <ComboBox
-                Grid.Row="2"
-                Grid.Column="1"
-                Height="25"
-                Margin="40,0,35,0"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Center"
-                FontSize="15"
-                Foreground="White"
-                Style="{DynamicResource TextComboBoxStyle}" />
-        </DockPanel>
-        <DockPanel>
-            <TextBlock
-                Grid.Row="1"
-                Grid.Column="0"
-                Margin="0,5"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Background="Transparent"
-                FontSize="15"
-                Foreground="White"
-                Text="语言" />
-            <ComboBox
-                Grid.Row="1"
-                Grid.Column="1"
-                Height="25"
-                Margin="69.3,0,35.5,0"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Center"
-                FontSize="15"
-                Foreground="White"
-                Style="{DynamicResource TextComboBoxStyle}" />
-        </DockPanel>
+        <VectorComboBox:VectorTextComboBox
+            Title="主题颜色"
+            Grid.Row="2"
+            Grid.Column="1"
+            Height="40"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            ArrowMargin="0 0 10 0"
+            Background="#D0D1D4"
+            Foreground="White"
+            Style="{DynamicResource VectorTextComboBoxStyle}" />
+        <VectorComboBox:VectorTextComboBox
+            Title="test"
+            Grid.Row="1"
+            Grid.Column="1"
+            Height="40"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            ArrowMargin="0 0 10 0"
+            Foreground="White"
+            Style="{DynamicResource VectorTextComboBoxStyle}" />
     </StackPanel>
 </UserControl>

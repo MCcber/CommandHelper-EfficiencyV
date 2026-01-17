@@ -67,19 +67,6 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="100" />
         </Grid.RowDefinitions>
-        <tb:TaskbarIcon
-            ContextMenu="{StaticResource SysTrayMenu}"
-            DoubleClickCommand="{Binding ShowMainWindowCommand}"
-            DoubleClickCommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-            IconSource="pack://application:,,,/CBHK;component/cb.ico"
-            ToolTipText="命令管家"
-            Visibility="Collapsed">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:InvokeCommandAction Command="{Binding TaskBarIconLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=tb:TaskbarIcon}}" />
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
-        </tb:TaskbarIcon>
         <TabControl
             Grid.Row="0"
             Background="Transparent"

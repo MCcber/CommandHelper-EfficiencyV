@@ -7,7 +7,6 @@ using CBHK.View.Common;
 using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Hardcodet.Wpf.TaskbarNotification;
 using Prism.Events;
 using Prism.Ioc;
 using System;
@@ -43,8 +42,6 @@ namespace CBHK.ViewModel
         #endregion
 
         #region Property
-        [ObservableProperty]
-        public TaskbarIcon _taskBarIcon = null;
         [ObservableProperty]
         public WindowState _windowState = WindowState.Normal;
         [ObservableProperty]
@@ -159,13 +156,6 @@ namespace CBHK.ViewModel
         [RelayCommand]
         private void SkeletonGridLoaded(object sender) => SkeletonGrid = sender as Grid;
 
-        [RelayCommand]
-        private void TaskBarIconLoaded(object sender)
-        {
-            TaskBarIcon = sender as TaskbarIcon;
-            TaskBarIcon.Visibility = Visibility.Visible;
-        }
-
         /// <summary>
         /// 主窗体关闭事件
         /// </summary>
@@ -184,7 +174,6 @@ namespace CBHK.ViewModel
             else
             {
                 WindowState = WindowState.Minimized;
-                TaskBarIcon.CloseBalloon();
                 eventAggregator.GetEvent<CloseWindowEvent>().Publish();
             }
         }
@@ -213,7 +202,6 @@ namespace CBHK.ViewModel
         private void ExitApplication()
         {
             isContextMenuCloseCommand = true;
-            TaskBarIcon.CloseBalloon();
             eventAggregator.GetEvent<CloseWindowEvent>().Publish();
         }
         #endregion

@@ -152,6 +152,7 @@
                                 Margin="0,15,0,0"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
+                                UseLayoutRounding="True"
                                 Visibility="Hidden">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="1" />
@@ -356,11 +357,12 @@
                                 x:Name="splitBorder"
                                 Grid.Row="1"
                                 Grid.Column="1"
-                                Width="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}"
                                 Margin="{Binding ArrowMargin, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorComboBox:VectorTextComboBox}}"
                                 HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
                                 BorderBrush="Transparent"
-                                SnapsToDevicePixels="True">
+                                SnapsToDevicePixels="True"
+                                UseLayoutRounding="True">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1" />

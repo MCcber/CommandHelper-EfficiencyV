@@ -1,5 +1,4 @@
-﻿using CBHK.CustomControl;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,6 +18,7 @@ using CBHK.View;
 using CBHK.View.Generator;
 using CBHK.Utility.MessageTip;
 using CBHK.Common.Utility;
+using CBHK.CustomControl.Container;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -51,29 +51,21 @@ namespace CBHK.ViewModel.Generator
         /// OOC标签页数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<RichTabItems> _oocTabSource = [
-            new RichTabItems()
+        public ObservableCollection<VectorTextTabItem> _oocTabSource = [
+            new VectorTextTabItem()
         {
-            Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-            Header = "欢迎使用",
+            Style = Application.Current.Resources["VectorTextTabItemStyle"] as Style,
+            Title = "欢迎使用",
+            Foreground = Brushes.White,
             FontWeight = FontWeights.Normal,
-            IsContentSaved = true,
-            BorderThickness = new(4, 4, 4, 0),
-            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-            SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-            LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-            RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-            TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-            SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-            SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-            SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C"))
         }];
 
         /// <summary>
         /// 当前选中的标签页
         /// </summary>
         [ObservableProperty]
-        private RichTabItems _selectedItem = null;
+        private VectorTextTabItem _selectedItem = null;
         #endregion
 
         #region Event
@@ -168,7 +160,6 @@ namespace CBHK.ViewModel.Generator
         {
             TextEditor editControl = new()
             {
-                HorizontalAlignment = HorizontalAlignment.Stretch,
                 FontSize = 15,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
@@ -179,24 +170,15 @@ namespace CBHK.ViewModel.Generator
             };
             //McfunctionLanguage mcfunctionLanguage = new(editControl);
             //editControl.CustomLanguage = mcfunctionLanguage;
-            RichTabItems tabItem = new()
+            VectorTextTabItem tabItem = new()
             {
                 FontSize = 12,
-                Header = "OOC",
+                Title = "OOC",
                 FontWeight = FontWeights.Normal,
                 Content = editControl,
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Style = Application.Current.Resources["VectorTextTabItemStyle"] as Style
             };
             OocTabSource.Add(tabItem);
             SelectedItem = tabItem;
@@ -228,7 +210,7 @@ namespace CBHK.ViewModel.Generator
 
             int Offset = 2;
 
-            foreach (RichTabItems tab in OocTabSource)
+            foreach (VectorTextTabItem tab in OocTabSource)
             {
                 if(tab.Content is TextEditor editControl && tab.Uid == "")
                 {

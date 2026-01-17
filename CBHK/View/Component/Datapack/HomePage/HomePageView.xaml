@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:heightConverter="clr-namespace:CBHK.ViewModel.Component.Datapack.HomePage"
@@ -203,26 +204,22 @@
                     IsHitTestVisible="False"
                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                     Source="/CBHK;component\Resource\Common\Image\Datapack\IconProject.png" />
-                <CustomControl:TextButtons
+                <VectorButton:VectorTextButton
                     Grid.Row="0"
                     Grid.RowSpan="3"
                     Grid.Column="0"
                     Grid.ColumnSpan="2"
                     Width="345"
                     Height="76"
-                    Padding="48,0,0,0"
+                    Padding="45,0,0,0"
                     HorizontalContentAlignment="Left"
                     VerticalContentAlignment="Top"
                     Background="#383838"
-                    BorderThickness="1"
                     Command="{Binding OpenLocalProjectCommand}"
-                    Content="打开本地项目"
                     FontSize="20"
                     Foreground="White"
-                    MouseLeftDownBackground="#221D46"
-                    MouseOverBackground="#221D46"
-                    MouseOverBorderBrush="#7160E8"
-                    Style="{DynamicResource TextButtonsStyle}" />
+                    Style="{DynamicResource VectorTextButtonStyle}"
+                    Text="打开本地项目" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"
@@ -258,26 +255,23 @@
                     IsHitTestVisible="False"
                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                     Source="/CBHK;component\Resource\Common\Image\Datapack\IconFolder.png" />
-                <CustomControl:TextButtons
+                <VectorButton:VectorTextButton
                     Grid.Row="0"
                     Grid.RowSpan="3"
                     Grid.Column="0"
                     Grid.ColumnSpan="2"
                     Width="345"
                     Height="76"
-                    Padding="48,0,0,0"
+                    Padding="45,0,0,0"
                     HorizontalContentAlignment="Left"
                     VerticalContentAlignment="Top"
                     Background="#383838"
                     BorderThickness="1"
                     Command="{Binding OpenLocalFolderCommand}"
-                    Content="打开本地文件夹"
                     FontSize="20"
                     Foreground="White"
-                    MouseLeftDownBackground="#221D46"
-                    MouseOverBackground="#221D46"
-                    MouseOverBorderBrush="#7160E8"
-                    Style="{DynamicResource TextButtonsStyle}" />
+                    Style="{DynamicResource VectorTextButtonStyle}"
+                    Text="打开本地文件夹" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"
@@ -313,26 +307,23 @@
                     IsHitTestVisible="False"
                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                     Source="/CBHK;component\Resource\Common\Image\Datapack\IconNew.png" />
-                <CustomControl:TextButtons
+                <VectorButton:VectorTextButton
                     Grid.Row="0"
                     Grid.RowSpan="3"
                     Grid.Column="0"
                     Grid.ColumnSpan="2"
                     Width="345"
                     Height="76"
-                    Padding="48,0,0,0"
+                    Padding="45,0,0,0"
                     HorizontalContentAlignment="Left"
                     VerticalContentAlignment="Top"
                     Background="#383838"
                     BorderThickness="1"
                     Command="{Binding OpenLocalFileCommand}"
-                    Content="打开本地文件"
                     FontSize="20"
                     Foreground="White"
-                    MouseLeftDownBackground="#221D46"
-                    MouseOverBackground="#221D46"
-                    MouseOverBorderBrush="#7160E8"
-                    Style="{DynamicResource TextButtonsStyle}" />
+                    Style="{DynamicResource VectorTextButtonStyle}"
+                    Text="打开本地文件" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"
@@ -368,26 +359,23 @@
                     IsHitTestVisible="False"
                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                     Source="/CBHK;component\Resource\Common\Image\Datapack\IconDataPack.png" />
-                <CustomControl:TextButtons
+                <VectorButton:VectorTextButton
                     Grid.Row="0"
                     Grid.RowSpan="3"
                     Grid.Column="0"
                     Grid.ColumnSpan="2"
                     Width="345"
                     Height="76"
-                    Padding="48,0,0,0"
+                    Padding="45,0,0,0"
                     HorizontalContentAlignment="Left"
                     VerticalContentAlignment="Top"
                     Background="#383838"
                     BorderThickness="1"
                     Command="{Binding CreateLocalDataPackCommand}"
-                    Content="创建新的数据包"
                     FontSize="20"
                     Foreground="White"
-                    MouseLeftDownBackground="#221D46"
-                    MouseOverBackground="#221D46"
-                    MouseOverBorderBrush="#7160E8"
-                    Style="{DynamicResource TextButtonsStyle}" />
+                    Style="{DynamicResource VectorTextButtonStyle}"
+                    Text="创建新的数据包" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"

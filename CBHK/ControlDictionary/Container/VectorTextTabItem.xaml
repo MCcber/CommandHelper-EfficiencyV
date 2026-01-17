@@ -25,8 +25,8 @@
         <Setter Property="BorderBrush" Value="{StaticResource TabItem.Static.Border}" />
         <Setter Property="Margin" Value="0,0,0,0" />
         <Setter Property="Padding" Value="6,2,6,2" />
-        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Container:VectorTextTabItem}">
@@ -78,11 +78,12 @@
                             Panel.ZIndex="1"
                             Background="#48382C">
                             <TextBlock
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Foreground="White"
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Foreground="{TemplateBinding Foreground}"
                                 IsHitTestVisible="False"
-                                Text="TabItem"
+                                Text="{TemplateBinding Title}"
                                 TextTrimming="CharacterEllipsis"
                                 TextWrapping="NoWrap" />
                         </Border>
