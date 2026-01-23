@@ -3,7 +3,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl.VectorButton">
     <Style x:Key="GeneratorVectorButtonStyle" TargetType="{x:Type CustomControl:GeneratorVectorButton}">
-        <Setter Property="Background" Value="#2E2E2E" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="Black" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -22,15 +21,14 @@
                             <ColumnDefinition Width="4" />
                         </Grid.ColumnDefinitions>
                         <Rectangle
-                            Grid.RowSpan="3"
+                            Grid.Row="0"
                             Grid.Column="1"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"
                             Panel.ZIndex="-1"
                             Fill="{TemplateBinding TopBottomBorderBrush}"
                             IsHitTestVisible="False"
-                            Stroke="{TemplateBinding BorderBrush}"
-                            StrokeThickness="1" />
+                            StrokeThickness="0" />
                         <Rectangle
                             Grid.Row="1"
                             Grid.ColumnSpan="3"
@@ -39,10 +37,8 @@
                             Panel.ZIndex="-1"
                             Fill="{TemplateBinding SideBorderBrush}"
                             IsHitTestVisible="False"
-                            Stroke="{TemplateBinding BorderBrush}"
-                            StrokeThickness="1" />
+                            StrokeThickness="0" />
                         <Rectangle
-                            x:Name="background"
                             Grid.Row="1"
                             Grid.Column="1"
                             Panel.ZIndex="0"

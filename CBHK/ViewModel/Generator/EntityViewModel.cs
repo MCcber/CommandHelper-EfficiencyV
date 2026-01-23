@@ -140,7 +140,7 @@ namespace CBHK.ViewModel.Generator
                         if (nbt.Length > 0)
                         entityIDPath = "CustomName";
                     JToken name = resultJSON.SelectToken(entityIDPath);
-                    FileNameList.Add(pageContext.SelectedEntityId.ComboBoxItemId + (name is not null ? "-" + name.ToString() : ""));
+                    FileNameList.Add(pageContext.SelectedEntityId.Text + (name is not null ? "-" + name.ToString() : ""));
                     Result.Add(result);
                 });
             }
@@ -202,12 +202,12 @@ namespace CBHK.ViewModel.Generator
         {
             EntityPageView entityPages = SelectedEntityPage.Content as EntityPageView;
             EntityPageViewModel entityPagesDataContext = entityPages.DataContext as EntityPageViewModel;
-            Grid currentGrid = entityPagesDataContext.SpecialDataDictionary[entityPagesDataContext.SelectedEntityId.ComboBoxItemId];
+            Grid currentGrid = entityPagesDataContext.SpecialDataDictionary[entityPagesDataContext.SelectedEntityId.Text];
             entityPagesDataContext.SpecialDataDictionary.Clear();
-            entityPagesDataContext.SpecialDataDictionary.Add(entityPagesDataContext.SelectedEntityId.ComboBoxItemId, currentGrid);
+            entityPagesDataContext.SpecialDataDictionary.Add(entityPagesDataContext.SelectedEntityId.Text, currentGrid);
             foreach (var item in entityPagesDataContext.SpecialTagsResult)
             {
-                if (item.Key != entityPagesDataContext.SelectedEntityId.ComboBoxItemId)
+                if (item.Key != entityPagesDataContext.SelectedEntityId.Text)
                 {
                     item.Value.Clear();
                 }

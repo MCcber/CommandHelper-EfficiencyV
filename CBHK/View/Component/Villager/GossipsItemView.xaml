@@ -1,0 +1,156 @@
+﻿<UserControl
+    x:Class="CBHK.View.Component.Villager.GossipsItemView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CBHK.View.Component.Villager"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="Transparent"
+    mc:Ignorable="d">
+
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="Loaded">
+            <behaviors:CallMethodAction MethodName="GossipItem_Loaded" TargetObject="{Binding}" />
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
+
+    <UserControl.Resources>
+        <ImageBrush x:Key="CloseWhite" ImageSource="/CBHK;component/Resource/Common/Image/CloseWhite.png" />
+        <ImageBrush x:Key="CloseWhiteHover" ImageSource="/CBHK;component/Resource/Common/Image/CloseWhiteHover.png" />
+        <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
+        <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
+        <ImageBrush x:Key="WhiteEdit" ImageSource="/CBHK;component/Resource/Common/Image/WhiteEdit.png" />
+    </UserControl.Resources>
+
+    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="5" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="5" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="5" />
+        </Grid.RowDefinitions>
+        <Rectangle
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Fill="{Binding LeftTopBorderBrush}"
+            IsHitTestVisible="False" />
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="2"
+            Fill="{Binding RightBottomBorderBrush}"
+            IsHitTestVisible="False" />
+        <Rectangle
+            Grid.Row="0"
+            Grid.Column="2"
+            Fill="{Binding CornerBorderBrush}"
+            IsHitTestVisible="False" />
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="0"
+            Fill="{Binding LeftTopBorderBrush}"
+            IsHitTestVisible="False" />
+        <Rectangle
+            Grid.Row="2"
+            Grid.Column="0"
+            Fill="{Binding CornerBorderBrush}"
+            IsHitTestVisible="False" />
+        <Rectangle
+            Grid.Row="2"
+            Grid.Column="1"
+            Grid.ColumnSpan="2"
+            Fill="{Binding RightBottomBorderBrush}"
+            IsHitTestVisible="False" />
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="1" Height="40">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <VectorButton:VectorTextButton
+                    Grid.Column="0"
+                    Background="#D0D1D4"
+                    Command="{Binding EditCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                    Foreground="Black"
+                    OriginBottomHeight="3"
+                    Style="{DynamicResource VectorTextButtonStyle}"
+                    Text="编辑" />
+                <VectorButton:VectorTextButton
+                    Grid.Column="1"
+                    Background="#D0D1D4"
+                    Command="{Binding DeleteCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
+                    Foreground="Black"
+                    OriginBottomHeight="3"
+                    Style="{DynamicResource VectorTextButtonStyle}"
+                    Text="删除" />
+            </Grid>
+            <Input:NumbericUpDown
+                Grid.Row="2"
+                Grid.Column="1"
+                HorizontalAlignment="Stretch"
+                AllowDrop="False"
+                Background="#D0D1D4"
+                BorderThickness="0"
+                Foreground="White"
+                Style="{DynamicResource NumbericUpDownStyle}"
+                Text="0"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="此言论的强度。" />
+            <Input:VectorTextBox
+                Grid.Row="3"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Height="30"
+                VerticalContentAlignment="Center"
+                Background="#313233"
+                BorderBrush="Black"
+                BorderThickness="1"
+                CaretBrush="White"
+                Foreground="White"
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding TargetText}"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="引发言论的玩家的UUID" />
+            <VectorComboBox:VectorTextComboBox
+                Title="言论的类型"
+                Grid.Row="4"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Height="30"
+                HorizontalAlignment="Stretch"
+                ArrowMargin="0 0 5 0"
+                ItemSelectedMarkerBrush="Black"
+                ItemsSource="{Binding GossipTypeList}"
+                SelectedIndex="0"
+                SelectedItem="{Binding SelectedTypeItem}"
+                SelectedValuePath="{Binding SelectedTypeItemPath}"
+                Style="{DynamicResource VectorTextComboBoxStyle}"
+                TitleBrush="White" />
+        </Grid>
+    </Grid>
+
+</UserControl>

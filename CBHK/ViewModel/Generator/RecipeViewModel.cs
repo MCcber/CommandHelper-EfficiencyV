@@ -23,7 +23,6 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using static CBHK.Model.Common.Enums;
 
 namespace CBHK.ViewModel.Generator
 {

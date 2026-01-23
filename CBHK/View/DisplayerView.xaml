@@ -14,6 +14,7 @@
     MinHeight="560"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
+    IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"

@@ -24,7 +24,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#37383B"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconArmorStand.png"
-    IconMargin="8 8 5 8"
+    IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
@@ -62,43 +62,45 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0" Height="40">
-            <VectorButton:VectorSolidIconButton
+            <VectorButton:VectorFlatImageButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
                 BorderThickness="0"
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-                IconMargin="10"
-                ImageData="M773.5 143.3L403 514.6l370.5 371.2-76.2 76.3-446.6-447.5L697.3 67l76.2 76.3zM697.3 67"
-                ImageFillColorBrush="White"
-                Style="{DynamicResource VectorSolidIconButtonStyle}"
+                Image="/Resource/Common/Image/IconArrowLeft.png"
+                ImageMargin="5"
+                RenderOptions.BitmapScalingMode="Unspecified"
+                RenderOptions.EdgeMode="Unspecified"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <VectorButton:VectorSolidIconButton.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="ESC:返回主页"
                         Foreground="White" />
-                </VectorButton:VectorSolidIconButton.ToolTip>
-            </VectorButton:VectorSolidIconButton>
-            <VectorButton:VectorSolidIconButton
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
                 BorderThickness="0"
                 Command="{Binding RunCommand}"
-                IconMargin="10"
-                ImageData="M243.0464 113.7664l536.576 397.8752-536.576 398.0288V113.7664z m0 0"
-                ImageFillColorBrush="White"
-                Style="{DynamicResource VectorSolidIconButtonStyle}"
+                Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="5"
+                RenderOptions.BitmapScalingMode="Unspecified"
+                RenderOptions.EdgeMode="Unspecified"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <VectorButton:VectorSolidIconButton.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </VectorButton:VectorSolidIconButton.ToolTip>
-            </VectorButton:VectorSolidIconButton>
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
                 MinWidth="100"
@@ -117,7 +119,7 @@
             </VectorComboBox:VectorTextComboBox>
             <CustomControl:StylizedTextBox
                 Width="140"
-                Height="80"
+                Height="40"
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
                 BorderBrush="Black"

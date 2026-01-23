@@ -18,6 +18,7 @@
     MaxHeight="450"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
+    IconMargin="5"
     mc:Ignorable="d">
 
     <Window.Resources>

@@ -21,12 +21,10 @@
     <Style x:Key="VectorTextTabItemStyle" TargetType="{x:Type Container:VectorTextTabItem}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Foreground" Value="Black" />
-        <Setter Property="Background" Value="{StaticResource TabItem.Static.Background}" />
-        <Setter Property="BorderBrush" Value="{StaticResource TabItem.Static.Border}" />
+        <!--<Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />-->
         <Setter Property="Margin" Value="0,0,0,0" />
         <Setter Property="Padding" Value="6,2,6,2" />
-        <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Container:VectorTextTabItem}">
@@ -34,6 +32,8 @@
                         x:Name="templateRoot"
                         MinWidth="70"
                         MinHeight="30"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
                         ClipToBounds="True"
                         SnapsToDevicePixels="true">
                         <Grid.RowDefinitions>
@@ -62,7 +62,7 @@
                             Panel.ZIndex="0"
                             BorderBrush="Black"
                             BorderThickness="2">
-                            <Rectangle Fill="#66513D" />
+                            <Rectangle Fill="{TemplateBinding SideBorderBrush}" />
                         </Border>
                         <Rectangle
                             Grid.Row="1"
@@ -70,20 +70,21 @@
                             Height="5"
                             Margin="1.7,0,2,0"
                             VerticalAlignment="Top"
-                            Fill="#66513D" />
+                            Fill="{TemplateBinding TopBorderBrush}" />
                         <Border
                             Grid.Row="1"
                             Grid.Column="1"
                             Margin="2,2,2,0"
                             Panel.ZIndex="1"
-                            Background="#48382C">
+                            Background="{TemplateBinding Background}">
                             <TextBlock
                                 Margin="{TemplateBinding Padding}"
-                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
                                 Foreground="{TemplateBinding Foreground}"
                                 IsHitTestVisible="False"
                                 Text="{TemplateBinding Title}"
+                                TextAlignment="Center"
                                 TextTrimming="CharacterEllipsis"
                                 TextWrapping="NoWrap" />
                         </Border>

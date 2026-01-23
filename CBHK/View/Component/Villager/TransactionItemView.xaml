@@ -3,36 +3,75 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Component.Villager"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
-    d:DesignHeight="100"
+    d:DesignHeight="200"
     d:DesignWidth="800"
     prism:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d">
 
     <behaviors:Interaction.Triggers>
         <behaviors:EventTrigger EventName="Loaded">
-            <behaviors:CallMethodAction MethodName="TransactionItems_Loaded" TargetObject="{Binding}" />
+            <behaviors:CallMethodAction MethodName="TransactionItemView_Loaded" TargetObject="{Binding}" />
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
 
-    <UserControl.Resources>
-        <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
-        <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
-        <ImageBrush x:Key="Close" ImageSource="/CBHK;component/Resource/Common/Image/Close.png" />
-        <ImageBrush x:Key="CloseHover" ImageSource="/CBHK;component/Resource/Common/Image/CloseHover.png" />
-        <ImageBrush x:Key="BlackEdit" ImageSource="/CBHK;component/Resource/Common/Image/BlackEdit.png" />
-    </UserControl.Resources>
-
-    <Border Background="#EFF2F1" BorderThickness="10,15,10,33">
+    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="5" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="5" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="5" />
+        </Grid.RowDefinitions>
+        <Rectangle
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Fill="{Binding LeftTopBorderBrush}"
+            IsHitTestVisible="False" />
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="2"
+            Fill="{Binding RightBottomBorderBrush}"
+            IsHitTestVisible="False" />
+        <Rectangle
+            Grid.Row="0"
+            Grid.Column="2"
+            Fill="{Binding CornerBorderBrush}"
+            IsHitTestVisible="False" />
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="0"
+            Fill="{Binding LeftTopBorderBrush}"
+            IsHitTestVisible="False" />
+        <Rectangle
+            Grid.Row="2"
+            Grid.Column="0"
+            Fill="{Binding CornerBorderBrush}"
+            IsHitTestVisible="False" />
+        <Rectangle
+            Grid.Row="2"
+            Grid.Column="1"
+            Grid.ColumnSpan="2"
+            Fill="{Binding RightBottomBorderBrush}"
+            IsHitTestVisible="False" />
         <Grid
-            RenderOptions.BitmapScalingMode="NearestNeighbor"
+            Grid.Row="1"
+            Grid.Column="1"
+            Background="{Binding Background}"
+            RenderOptions.BitmapScalingMode="Unspecified"
             RenderOptions.ClearTypeHint="Enabled"
             UseLayoutRounding="True">
             <Grid.RowDefinitions>
+                <RowDefinition Height="35" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
@@ -41,10 +80,32 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+            <VectorButton:VectorTextButton
+                Grid.Row="0"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="2,2,0,0"
+                Background="#D0D1D4"
+                Command="{Binding EditCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="编辑" />
+            <VectorButton:VectorTextButton
+                Grid.Row="0"
+                Grid.Column="3"
+                Margin="0,2,2,0"
+                Background="#D0D1D4"
+                Command="{Binding DeleteCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="删除" />
             <TextBlock
-                Grid.Row="1"
+                Grid.Row="2"
                 Grid.Column="0"
                 Margin="10,-10,0,0"
                 HorizontalAlignment="Left"
@@ -52,7 +113,7 @@
                 Text="{Binding BuyCountDisplayText}"
                 TextDecorations="{Binding BuyDecorations}" />
             <TextBlock
-                Grid.Row="1"
+                Grid.Row="2"
                 Grid.Column="0"
                 Margin="40,-10,0,0"
                 HorizontalAlignment="Center"
@@ -60,60 +121,54 @@
                 Text="{Binding BuyDisCountDisplayText}"
                 Visibility="{Binding BuyDisCountDisplayVisible}" />
             <TextBlock
-                Grid.Row="1"
+                Grid.Row="2"
                 Grid.Column="1"
                 Margin="0,-10,0,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
                 Text="{Binding BuyBCountDisplayText}" />
             <TextBlock
-                Grid.Row="1"
+                Grid.Row="2"
                 Grid.Column="3"
                 Margin="10,-10,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Text="{Binding SellCountDisplayText}" />
-            <CustomControl:IconTextButtons
-                Grid.Row="0"
+            <VectorButton:VectorFlatImageButton
+                Grid.Row="1"
                 Grid.Column="0"
-                Width="12"
-                Height="12"
-                Margin="0,18,-15,0"
-                HorizontalAlignment="Right"
+                Width="25"
+                Height="25"
+                Margin="60,8,0,0"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Background="{StaticResource Close}"
                 Command="{Binding DeleteBuyItemCommand}"
-                IconColor="Black"
-                PressedBackground="{StaticResource CloseHover}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
-                Grid.Row="0"
+                Image="/Resource/Common/Image/CloseWhite.png"
+                Style="{DynamicResource VectorFlatImageButtonStyle}" />
+            <VectorButton:VectorFlatImageButton
+                Grid.Row="1"
                 Grid.Column="1"
-                Width="12"
-                Height="12"
-                Margin="0,18,-25,0"
-                HorizontalAlignment="Right"
+                Width="25"
+                Height="25"
+                Margin="70,8,-10,0"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Background="{StaticResource Close}"
                 Command="{Binding DeleteBuyBItemCommand}"
-                IconColor="Black"
-                PressedBackground="{StaticResource CloseHover}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
-                Grid.Row="0"
+                Image="/Resource/Common/Image/CloseWhite.png"
+                Style="{DynamicResource VectorFlatImageButtonStyle}" />
+            <VectorButton:VectorFlatImageButton
+                Grid.Row="1"
                 Grid.Column="3"
-                Width="12"
-                Height="12"
-                Margin="0,18,-15,0"
-                HorizontalAlignment="Right"
+                Width="25"
+                Height="25"
+                Margin="60,8,0,0"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Background="{StaticResource Close}"
                 Command="{Binding DeleteSellItemCommand}"
-                IconColor="Black"
-                PressedBackground="{StaticResource CloseHover}"
-                Style="{DynamicResource IconTextButton}" />
+                Image="/Resource/Common/Image/CloseWhite.png"
+                Style="{DynamicResource VectorFlatImageButtonStyle}" />
             <Image
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="0"
                 Width="45"
                 Height="45"
@@ -137,7 +192,7 @@
                 </behaviors:Interaction.Triggers>
             </Image>
             <Image
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="0"
                 Width="50"
                 Height="50"
@@ -152,7 +207,7 @@
                 Source="/CBHK;component/Resource/Common/Image/itemFrame.png"
                 UseLayoutRounding="True" />
             <Image
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="1"
                 Width="45"
                 Height="45"
@@ -176,7 +231,7 @@
                 </behaviors:Interaction.Triggers>
             </Image>
             <Image
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="1"
                 Width="50"
                 Height="50"
@@ -190,18 +245,18 @@
                 Source="/CBHK;component/Resource/Common/Image/itemFrame.png"
                 UseLayoutRounding="True" />
             <Image
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="2"
                 Width="35"
                 Height="35"
                 Margin="20,10,0,0"
-                HorizontalAlignment="Left"
+                HorizontalAlignment="Center"
                 Panel.ZIndex="-1"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 RenderOptions.ClearTypeHint="Enabled"
                 Source="/CBHK;component/Resource/Common/Image/TradeRightArrow.png" />
             <Image
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="3"
                 Width="45"
                 Height="45"
@@ -225,7 +280,7 @@
                 </behaviors:Interaction.Triggers>
             </Image>
             <Image
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="3"
                 Width="50"
                 Height="50"
@@ -238,30 +293,7 @@
                 SnapsToDevicePixels="True"
                 Source="/CBHK;component/Resource/Common/Image/itemFrame.png"
                 UseLayoutRounding="True" />
-            <CustomControl:IconTextButtons
-                Grid.Row="0"
-                Grid.Column="4"
-                Width="25"
-                Height="25"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Background="{StaticResource Close}"
-                Command="{Binding DeleteCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                PressedBackground="{StaticResource CloseHover}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
-                Grid.Row="0"
-                Grid.Column="4"
-                Width="25"
-                Height="25"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Bottom"
-                Background="{StaticResource BlackEdit}"
-                Command="{Binding EditCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                Style="{DynamicResource IconTextButton}" />
         </Grid>
-    </Border>
+    </Grid>
 
 </UserControl>

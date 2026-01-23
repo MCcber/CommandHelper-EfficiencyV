@@ -26,8 +26,7 @@ namespace CBHK.Utility
         {
             container = Container;
             config = context.EnvironmentConfigSet.First();
-            MainView mainWindow = container.Resolve<MainView>();
-            if(mainWindow.DataContext is MainViewModel mainViewModel)
+            if(cbhk.DataContext is MainViewModel mainViewModel)
             {
                 CBHK = mainViewModel;
             }

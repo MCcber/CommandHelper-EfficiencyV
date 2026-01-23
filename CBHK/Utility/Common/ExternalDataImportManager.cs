@@ -27,7 +27,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using static CBHK.Model.Common.Enums;
 
 namespace CBHK.Utility.Common
 {
@@ -559,7 +558,7 @@ namespace CBHK.Utility.Common
                 {
                     context.AddGossipItem();
                     JToken value = gossip.SelectToken("Value");
-                    GossipsItemsViewModel gossipsItemsViewModel = context.GossipItemList[^1].DataContext as GossipsItemsViewModel;
+                    GossipsItemViewModel gossipsItemsViewModel = context.GossipItemList[^1].DataContext as GossipsItemViewModel;
                     if (gossip.SelectToken("Target") is JArray targetUID)
                         gossipsItemsViewModel.TargetText = targetUID[0].ToString() + "," + targetUID[1].ToString() + "," + targetUID[2].ToString() + "," + targetUID[3].ToString();
                     if (gossip.SelectToken("Type") is JObject type)
@@ -720,7 +719,7 @@ namespace CBHK.Utility.Common
                 context.ExternallyReadEntityData = externData;
                 if (version1_12)
                     context.SelectedVersion = context.VersionSource[^1];
-                context.SelectedEntityId = context.EntityIDList.Where(item => item.ComboBoxItemText == selectedEntityID).First();
+                context.SelectedEntityId = context.EntityIDList.Where(item => item.Text == selectedEntityID).First();
             }
             richTabItems.Content = entityPages;
             itemPageList.Add(richTabItems);

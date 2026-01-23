@@ -2,8 +2,11 @@
     x:Class="CBHK.View.Component.Entity.EntityPageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:UtilityCommon="clr-namespace:CBHK.Utility.Common"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Component.Entity"
@@ -48,170 +51,97 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="25" />
+            <RowDefinition Height="35" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0" Margin="5,0,0,0">
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource RightArrow}"
-                BorderThickness="0"
+            <VectorButton:VectorFlatImageButton
                 Command="{Binding RunCommand}"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/IconArrowRight.png"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Width="20"
-                Height="20"
-                Margin="5,0"
-                Padding="5"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Background="{StaticResource Save}"
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 Command="{Binding SaveCommand}"
-                NeedMouseOverStyle="False"
-                Style="{DynamicResource IconTextButton}" />
-            <TextBlock
-                Margin="5,0"
+                Image="/Resource/Common/Image/Save.png"
+                Style="{DynamicResource VectorFlatImageButtonStyle}" />
+            <VectorComboBox:VectorTextComboBox
+                Title="版本"
+                Width="70"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Foreground="White"
-                Text="版本"
-                TextAlignment="Center" />
-            <ComboBox
-                Width="95"
-                Height="25"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                IsReadOnly="True"
+                ArrowMargin="0 0 5 0"
                 ItemsSource="{Binding VersionSource, Mode=OneWay}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}">
+                Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
                         <behavior:CallMethodAction MethodName="Version_SelectionChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </ComboBox>
-            <TextBlock
-                Margin="2.5,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Foreground="White"
-                Text="ID" />
-            <ComboBox
+            </VectorComboBox:VectorTextComboBox>
+            <VectorComboBox:VectorIconTextComboBox
+                Title="实体ID"
                 Width="235"
-                Height="25"
                 HorizontalAlignment="Left"
-                VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
+                ArrowMargin="0 0 5 0"
                 Foreground="White"
                 ItemsSource="{Binding EntityIDList, Mode=OneWay}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedEntityId, Mode=TwoWay}"
-                Style="{DynamicResource IconComboBoxStyle}">
+                Style="{DynamicResource VectorIconTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
                         <behavior:CallMethodAction MethodName="EntityIDBox_SelectionChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </ComboBox>
-            <CustomControl:RadiusToggleButtons
+            </VectorComboBox:VectorIconTextComboBox>
+            <VectorButton:VectorToggleTextButton
                 x:Name="EnableButton"
-                Grid.Column="5"
-                Height="30"
                 HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                BorderThickness="4,5,4,7"
-                Foreground="White"
-                IsChecked="{Binding Give, Mode=TwoWay}"
-                SelectedToggleText="给予"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="26"
-                ToggleWidth="46"
-                UnSelectedToggleText="召唤" />
-            <CustomControl:StereoToggleButton
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
                 Background="#D77A34"
-                BorderThickness="4,4,4,5"
-                BottomBorderTexture="{StaticResource TextToggleButtonFalseBottomFrame}"
-                Content="同步到文件"
+                Foreground="Black"
+                IsChecked="{Binding Give, Mode=TwoWay}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="给予" />
+            <VectorButton:VectorToggleTextButton
+                HorizontalAlignment="Left"
+                Background="#D77A34"
+                Foreground="Black"
+                IsChecked="{Binding Summon, Mode=TwoWay}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="召唤" />
+            <VectorButton:VectorToggleTextButton
+                HorizontalAlignment="Left"
+                Background="#D77A34"
                 Foreground="Black"
                 IsChecked="{Binding SyncToFile, Mode=OneWayToSource}"
-                IsCheckedThickness="4"
-                LeftBorderTexture="{StaticResource TextToggleButtonFalseLeftFrame}"
-                RightBorderTexture="{StaticResource TextToggleButtonFalseRightFrame}"
-                Style="{DynamicResource StereoToggleButton}"
-                TopBorderTexture="{StaticResource TextToggleButtonFalseTopFrame}"
-                TrueBottomBorderTexture="{StaticResource TextToggleButtonTrueBottomFrame}"
-                TrueLeftBorderTexture="{StaticResource TextToggleButtonTrueLeftFrame}"
-                TrueRightBorderTexture="{StaticResource TextToggleButtonTrueRightFrame}"
-                TrueTopBorderTexture="{StaticResource TextToggleButtonTrueTopFrame}" />
-            <TextBlock
-                Margin="2,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Foreground="White"
-                Text="共通标签可见性" />
-            <CustomControl:TextCheckBoxs
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
-                Content="实体"
-                Foreground="White"
-                HeaderHeight="15"
-                HeaderWidth="15"
-                IsChecked="{Binding EntityCommonTagsVisibility, Mode=TwoWay, Converter={StaticResource BooleanToVisibilityConverter}}"
-                IsEnabled="{Binding EntityCommonTagsEnabled, Mode=OneWay}"
-                Style="{DynamicResource TextCheckBox}" />
-            <CustomControl:TextCheckBoxs
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
-                Content="活体"
-                Foreground="White"
-                HeaderHeight="15"
-                HeaderWidth="15"
-                IsChecked="{Binding LivingBodyCommonTagsVisibility, Mode=TwoWay, Converter={StaticResource BooleanToVisibilityConverter}}"
-                IsEnabled="{Binding LivingBodyCommonTagsEnabled, Mode=OneWay}"
-                Style="{DynamicResource TextCheckBox}" />
-            <CustomControl:TextCheckBoxs
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
-                Content="生物"
-                Foreground="White"
-                HeaderHeight="15"
-                HeaderWidth="15"
-                IsChecked="{Binding MobCommonTagsVisibility, Mode=TwoWay, Converter={StaticResource BooleanToVisibilityConverter}}"
-                IsEnabled="{Binding MobCommonTagsEnabled, Mode=OneWay}"
-                Style="{DynamicResource TextCheckBox}" />
-            <CustomControl:RadiusToggleButtons
-                Margin="5,0,0,0"
-                Padding="5"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="同步到文件" />
+            <VectorButton:VectorToggleIconTextButton
                 VerticalContentAlignment="Center"
                 Foreground="White"
                 IsChecked="{Binding ShowResult, Mode=OneWayToSource}"
-                SelectedToggleText="显示结果"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
-                UnSelectedToggleText="隐藏结果" />
+                Style="{DynamicResource VectorToggleIconTextButtonStyle}"
+                Text="显示结果" />
         </DockPanel>
-        <TabControl
+        <Container:VectorTabControl
             Grid.Row="1"
             BorderThickness="0"
             SelectedIndex="0"
-            Style="{DynamicResource TabControlWithScrollBar}"
+            Style="{DynamicResource VectorTabControlStyle}"
             VirtualizingPanel.IsVirtualizing="False">
             <behavior:Interaction.Triggers>
                 <behavior:EventTrigger EventName="SelectionChanged">
@@ -221,13 +151,11 @@
                     <behavior:CallMethodAction MethodName="SpecialTagsPanelLoaded" TargetObject="{Binding}" />
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
-            <CustomControl:TextTabItems
+            <Container:VectorTextTabItem
                 Uid="SpecialTags"
-                Background="{StaticResource TabBack}"
+                Title="专属NBT"
                 Foreground="White"
-                Header="专属NBT"
-                SelectedBackground="{StaticResource TabFront}"
-                Style="{DynamicResource TextTabItemStyle}">
+                Style="{DynamicResource VectorTextTabItemStyle}">
                 <ScrollViewer
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -239,14 +167,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="string"
-                Background="{StaticResource TabBack}"
+                Title="字符串"
                 Foreground="White"
-                Header="字符串"
-                SelectedBackground="{StaticResource TabFront}"
-                Style="{DynamicResource TextTabItemStyle}">
+                Style="{DynamicResource VectorTextTabItemStyle}">
                 <ScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
@@ -259,21 +185,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="number"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="数值"
                 Foreground="White"
-                Header="数值"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}">
+                Style="{DynamicResource VectorTextTabItemStyle}">
                 <ScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
@@ -286,21 +203,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="boolean"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="是/否"
                 Foreground="White"
-                Header="是/否"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}">
+                Style="{DynamicResource VectorTextTabItemStyle}">
                 <ScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
@@ -313,14 +221,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="compound"
-                Background="{StaticResource TabBack}"
+                Title="集合"
                 Foreground="White"
-                Header="集合"
-                SelectedBackground="{StaticResource TabFront}"
-                Style="{DynamicResource TextTabItemStyle}">
+                Style="{DynamicResource VectorTextTabItemStyle}">
                 <ScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
@@ -333,14 +239,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="list"
-                Background="{StaticResource TabBack}"
+                Title="列表"
                 Foreground="White"
-                Header="列表"
-                SelectedBackground="{StaticResource TabFront}"
-                Style="{DynamicResource TextTabItemStyle}">
+                Style="{DynamicResource VectorTextTabItemStyle}">
                 <ScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
@@ -353,21 +257,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="BreedableMobExtraFields"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="可繁殖生物额外字段"
                 Foreground="White"
-                Header="可繁殖生物额外字段"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding BreedableMobExtraFieldsVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -382,21 +277,12 @@
                         <Grid.RowDefinitions />
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="AngryCreatureExtraField"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="可愤怒生物额外字段"
                 Foreground="White"
-                Header="可愤怒生物额外字段"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding AngryCreatureExtraFieldVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -410,21 +296,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="TameableMobExtraFields"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="可驯服生物额外字段"
                 Foreground="White"
-                Header="可驯服生物额外字段"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding TameableMobExtraFieldsVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -438,21 +315,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="CommonTagsForRideableEntities"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="可骑乘实体共通标签"
                 Foreground="White"
-                Header="可骑乘实体共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding CommonTagsForRideableEntitiesVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -466,21 +334,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="CommonTagsForZombies"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="僵尸共通标签"
                 Foreground="White"
-                Header="僵尸共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding CommonTagsForZombiesVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -494,21 +353,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="CommonTagsForMobsSpawnedInRaids"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="生成于袭击中的生物共通标签"
                 Foreground="White"
-                Header="生成于袭击中的生物共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding CommonTagsForMobsSpawnedInRaidsVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -522,21 +372,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="ArrowProjectileCommonTags"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="箭类投掷物共通标签"
                 Foreground="White"
-                Header="箭类投掷物共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding ArrowProjectileCommonTagsVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -550,21 +391,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="ContainerEntityCommonTags"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="容器实体共通标签"
                 Foreground="White"
-                Header="容器实体共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding ContainerEntityCommonTagsVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -578,21 +410,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="FireballProjectileCommonTags"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="火球类投掷物共通标签"
                 Foreground="White"
-                Header="火球类投掷物共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding FireballProjectileCommonTagsVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -606,21 +429,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="ItemProjectileCommonTags"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="物品类投掷物共通标签"
                 Foreground="White"
-                Header="物品类投掷物共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding ItemProjectileCommonTagsVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -634,21 +448,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="MineCartCommonTags"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="矿车共通标签"
                 Foreground="White"
-                Header="矿车共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding MineCartCommonTagsVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -662,21 +467,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="PotionEffectCommonTags"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="药水效果共通标签"
                 Foreground="White"
-                Header="药水效果共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding PotionEffectCommonTagsVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -690,21 +486,12 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
                 Uid="ProjectileCommonTags"
-                Background="#48382C"
-                BorderThickness="4,4,4,0"
+                Title="投掷物共通标签"
                 Foreground="White"
-                Header="投掷物共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
-                SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}"
+                Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding ProjectileCommonTagsVisibility, Mode=TwoWay}">
                 <ScrollViewer
                     Background="#2F2F2F"
@@ -718,7 +505,7 @@
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ScrollViewer>
-            </CustomControl:TextTabItems>
-        </TabControl>
+            </Container:VectorTextTabItem>
+        </Container:VectorTabControl>
     </Grid>
 </UserControl>

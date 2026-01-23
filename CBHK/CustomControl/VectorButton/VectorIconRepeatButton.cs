@@ -141,20 +141,20 @@ namespace CBHK.CustomControl.VectorButton
             if (originborderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originborderCornerBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.4f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
                 BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(color);
             }
             var originTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, TopBorderBrushProperty);
             if (originTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originTopBorderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.2f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
                 TopBorderBrush = OriginTopBorderBrush = new SolidColorBrush(color);
             }
             var originBottomBrushSource = DependencyPropertyHelper.GetValueSource(this, OriginBottomBrushProperty);
             if (originBottomBrushSource.BaseValueSource is BaseValueSource.Default || originBottomBrushSource.BaseValueSource is BaseValueSource.Style)
             {
-                Color color = ColorTool.DarkenByHSL((Background as SolidColorBrush).Color, 0.5f);
+                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.5f);
                 OriginBottomBrush ??= new SolidColorBrush(color);
             }
 
@@ -173,7 +173,7 @@ namespace CBHK.CustomControl.VectorButton
             object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
             if (borderElement is Border templateRoot)
             {
-                Color color = ColorTool.DarkenByHSL((Background as SolidColorBrush).Color, 0.4f);
+                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.4f);
                 templateRoot.Background = new SolidColorBrush(color);
             }
             if (extraBottomLine is RowDefinition row)
@@ -207,7 +207,7 @@ namespace CBHK.CustomControl.VectorButton
 
             if (borderElement is Border templateRoot)
             {
-                Color darkColor = ColorTool.DarkenByHSL((Background as SolidColorBrush).Color, 0.2f);
+                Color darkColor = ColorTool.Darken((Background as SolidColorBrush).Color, 0.2f);
                 templateRoot.Background = new SolidColorBrush(darkColor);
             }
             if (extraBottomLine is RowDefinition row)
@@ -215,9 +215,9 @@ namespace CBHK.CustomControl.VectorButton
                 row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
             Margin = OriginMargin;
-            Color lightBorderColor = ColorTool.LightenByHSL((OriginTopBorderBrush as SolidColorBrush).Color, 0.4f);
+            Color lightBorderColor = ColorTool.Lighten((OriginTopBorderBrush as SolidColorBrush).Color, 0.4f);
             TopBorderBrush = new SolidColorBrush(lightBorderColor);
-            Color lightCornerColor = ColorTool.LightenByHSL((OriginBorderCornerBrush as SolidColorBrush).Color, 0.6f);
+            Color lightCornerColor = ColorTool.Lighten((OriginBorderCornerBrush as SolidColorBrush).Color, 0.6f);
             BorderCornerBrush = new SolidColorBrush(lightCornerColor);
         }
         #endregion

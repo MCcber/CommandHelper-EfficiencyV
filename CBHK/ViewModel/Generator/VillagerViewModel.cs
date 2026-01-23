@@ -141,7 +141,7 @@ namespace CBHK.ViewModel.Generator
         /// 言论数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<GossipsItemsView> _gossipItemList = [];
+        public ObservableCollection<GossipsItemView> _gossipItemList = [];
         /// <summary>
         /// 当前选中的交易项
         /// </summary>
@@ -349,7 +349,7 @@ namespace CBHK.ViewModel.Generator
                     return "";
                 }
                 string result = "Gossips:[";
-                result += string.Join(",", GossipItemList.Select(item => (item.DataContext as GossipsItemsViewModel).GossipData));
+                result += string.Join(",", GossipItemList.Select(item => (item.DataContext as GossipsItemViewModel).GossipData));
                 result = result.TrimEnd(',') + "],";
                 return result;
             }
@@ -796,6 +796,11 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void OriginalItemListView_Loaded(object sender,RoutedEventArgs e)
         {
+            Bag = sender as ListView;
+            Bag.DataContext = this;
+            Bag.PreviewMouseLeftButtonDown += SelectItemClickDown;
+            Bag.MouseMove += Bag_MouseMove;
+            Bag.MouseLeave += ListBox_MouseLeave;
             if (OriginalItemList.Count == 0)
             {
                 Window parent = Window.GetWindow(sender as ListView);
@@ -812,6 +817,11 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void CustomItemListView_Loaded(object sender, RoutedEventArgs e)
         {
+            CustomBag = sender as ListView;
+            CustomBag.DataContext = this;
+            CustomBag.PreviewMouseLeftButtonDown += SelectItemClickDown;
+            CustomBag.MouseMove += Bag_MouseMove;
+            CustomBag.MouseLeave += ListBox_MouseLeave;
             if (CustomItemList.Count == 0)
             {
                 Window parent = Window.GetWindow(sender as ListView);
@@ -1059,7 +1069,7 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void AddGossipItem()
         {
-            GossipsItemsView gossipsItem = new()
+            GossipsItemView gossipsItem = new()
             {
                 Margin = new Thickness(12, 0, 0, 5),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -1075,28 +1085,6 @@ namespace CBHK.ViewModel.Generator
         private void ClearGossipItem()
         {
             GossipItemList.Clear();
-        }
-
-        /// <summary>
-        /// 载入物品库
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void Items_Loaded(object sender, RoutedEventArgs e)
-        {
-            Bag = ((sender as TabControl).Items[0] as TextTabItems).Content as ListView;
-            CustomBag = ((sender as TabControl).Items[1] as TextTabItems).Content as ListView;
-
-            Bag.DataContext = this;
-            CustomBag.DataContext = this;
-
-            Bag.PreviewMouseLeftButtonDown += SelectItemClickDown;
-            Bag.MouseMove += Bag_MouseMove;
-            Bag.MouseLeave += ListBox_MouseLeave;
-
-            CustomBag.PreviewMouseLeftButtonDown += SelectItemClickDown;
-            CustomBag.MouseMove += Bag_MouseMove;
-            CustomBag.MouseLeave += ListBox_MouseLeave;
         }
 
         /// <summary>
@@ -1139,9 +1127,9 @@ namespace CBHK.ViewModel.Generator
             if(CanEditGossip)
             {
                 string current_type = SelectedSearchGossipItem.Text;
-                List<GossipsItemsView> target_gossip = GossipItemList.Where(gossip =>
+                List<GossipsItemView> target_gossip = GossipItemList.Where(gossip =>
                 {
-                    GossipsItemsViewModel gossipsItemsViewModel = gossip.DataContext as GossipsItemsViewModel;
+                    GossipsItemViewModel gossipsItemsViewModel = gossip.DataContext as GossipsItemViewModel;
                     string type = gossipsItemsViewModel.SelectedTypeItem.Text;
                     if (gossipsItemsViewModel.TargetText == GossipSearchTarget.Text.Trim() && type == current_type)
                         return true;

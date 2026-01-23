@@ -17,7 +17,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
-using static CBHK.Model.Common.Enums;
 
 namespace CBHK.Utility
 {
@@ -1235,7 +1234,7 @@ namespace CBHK.Utility
                             case "string":
                                 {
                                     object dataTypes = DataType.None;
-                                    bool parseResult = Enum.TryParse(typeof(DataType), currentNodeItemType[0].ToString().ToUpper() + currentNodeItemType[1..], out dataTypes);
+                                    bool parseResult = System.Enum.TryParse(typeof(DataType), currentNodeItemType[0].ToString().ToUpper() + currentNodeItemType[1..], out dataTypes);
                                     if (parseResult)
                                     {
                                         item.DataType = (DataType)dataTypes;

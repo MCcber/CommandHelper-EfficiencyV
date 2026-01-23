@@ -19,6 +19,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconRecipes.png"
+    IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     mc:Ignorable="d">
 

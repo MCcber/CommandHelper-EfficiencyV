@@ -14,7 +14,9 @@
     <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
     <Style x:Key="VectorFlatImageButtonStyle" TargetType="{x:Type VectorButton:VectorFlatImageButton}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Background" Value="{StaticResource Button.Static.Background}" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Background" Value="#48494A" />
         <Setter Property="BorderBrush" Value="{StaticResource Button.Static.Border}" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
         <Setter Property="BorderThickness" Value="1" />
@@ -28,55 +30,58 @@
                         x:Name="border"
                         Background="{TemplateBinding Background}"
                         BorderBrush="Black"
-                        BorderThickness="2"
-                        SnapsToDevicePixels="true">
-                        <Grid Background="#48494A">
+                        BorderThickness="1"
+                        SnapsToDevicePixels="true"
+                        UseLayoutRounding="True">
+                        <Grid SnapsToDevicePixels="true" UseLayoutRounding="True">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="3" />
+                                <ColumnDefinition Width="3.5" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="3" />
+                                <ColumnDefinition Width="3.5" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="3" />
+                                <RowDefinition Height="3.5" />
                                 <RowDefinition Height="*" />
-                                <RowDefinition Height="3" />
+                                <RowDefinition Height="3.5" />
                             </Grid.RowDefinitions>
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
-                                Fill="#5A5B5C"
+                                Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="2"
-                                Fill="#333334"
+                                Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="2"
-                                Fill="#3F4041"
+                                Fill="{TemplateBinding CornerBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="0"
-                                Fill="#5A5B5C"
+                                Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="0"
-                                Fill="#3F4041"
+                                Fill="{TemplateBinding CornerBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="1"
                                 Grid.ColumnSpan="2"
-                                Fill="#333334"
+                                Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Image
                                 Grid.Row="1"
                                 Grid.Column="1"
-                                Margin="5"
+                                Margin="{TemplateBinding ImageMargin}"
+                                RenderOptions.BitmapScalingMode="Unspecified"
+                                RenderOptions.EdgeMode="Unspecified"
                                 Source="{TemplateBinding Image}" />
                             <ContentPresenter
                                 x:Name="contentPresenter"
@@ -88,24 +93,6 @@
                                 SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                         </Grid>
                     </Border>
-                    <!--<ControlTemplate.Triggers>
-                        <Trigger Property="IsDefaulted" Value="true">
-                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource Button.MouseOver.Background}" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.MouseOver.Border}" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="true">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource Button.Pressed.Background}" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.Pressed.Border}" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="false">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource Button.Disabled.Background}" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.Disabled.Border}" />
-                            <Setter TargetName="contentPresenter" Property="TextElement.Foreground" Value="{StaticResource Button.Disabled.Foreground}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>-->
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

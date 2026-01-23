@@ -113,11 +113,11 @@
             Stretch="Uniform" />
     </UserControl.Resources>
 
-    <TabControl
+    <Container:VectorTabControl
         x:Name="class_tab"
         BorderThickness="0"
         SelectedIndex="0"
-        Style="{DynamicResource TabControlWithScrollBar}">
+        Style="{DynamicResource VectorTabControlStyle}">
         <Container:VectorTextTabItem
             Title="关于我们"
             Foreground="White"
@@ -349,5 +349,5 @@
                 </FlowDocument>
             </RichTextBox>
         </Container:VectorTextTabItem>
-    </TabControl>
+    </Container:VectorTabControl>
 </UserControl>

@@ -103,6 +103,7 @@
                 Margin="5,0,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
+                FontFamily="{Binding Font}"
                 Text="{Binding Text, Mode=OneWay}"
                 TextAlignment="Center"
                 TextTrimming="CharacterEllipsis"

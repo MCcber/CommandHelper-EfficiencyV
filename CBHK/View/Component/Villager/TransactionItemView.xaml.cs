@@ -7,9 +7,11 @@ namespace CBHK.View.Component.Villager
     /// </summary>
     public partial class TransactionItemView : UserControl
     {
+        #region Method
         public TransactionItemView()
         {
             InitializeComponent();
         }
+        #endregion
     }
 }

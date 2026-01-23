@@ -15,6 +15,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     ContextMenu="{x:Null}"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png"
+    IconMargin="5"
     ResizeMode="CanMinimize"
     mc:Ignorable="d">
 

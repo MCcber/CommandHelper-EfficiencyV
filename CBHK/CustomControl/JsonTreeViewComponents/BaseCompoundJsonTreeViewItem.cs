@@ -13,7 +13,6 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using static CBHK.Model.Common.Enums;
 using CBHK.Utility.Common;
 using CBHK.Common.Utility;
 using CBHK.Interface;

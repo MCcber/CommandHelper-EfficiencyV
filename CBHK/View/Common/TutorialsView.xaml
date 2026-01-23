@@ -17,11 +17,11 @@
         <ImageBrush x:Key="DataButtonPressedBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextToggleButtonPressed.png" />
     </UserControl.Resources>
 
-    <TabControl
+    <Container:VectorTabControl
         x:Name="class_tab"
         BorderThickness="0"
         SelectedIndex="0"
-        Style="{DynamicResource TabControlWithScrollBar}">
+        Style="{DynamicResource VectorTabControlStyle}">
         <Container:VectorTextTabItem
             Title="基础"
             Cursor="Arrow"
@@ -61,5 +61,5 @@
                 </behaviors:Interaction.Triggers>
             </Image>
         </Container:VectorTextTabItem>
-    </TabControl>
+    </Container:VectorTabControl>
 </UserControl>

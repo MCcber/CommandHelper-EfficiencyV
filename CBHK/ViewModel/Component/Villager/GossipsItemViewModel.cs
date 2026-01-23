@@ -9,26 +9,36 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace CBHK.ViewModel.Component.Villager
 {
-    public partial class GossipsItemsViewModel:ObservableObject
+    public partial class GossipsItemViewModel:ObservableObject
     {
         #region Property
         [ObservableProperty]
-        public string _selectedTypeItemPath = "Text";
+        public Brush background;
+        [ObservableProperty]
+        public Brush leftTopBorderBrush;
+        [ObservableProperty]
+        public Brush rightBottomBorderBrush;
+        [ObservableProperty]
+        public Brush cornerBorderBrush;
 
         [ObservableProperty]
-        public double _gossipValue = 0;
+        public string selectedTypeItemPath = "Text";
 
         [ObservableProperty]
-        public TextComboBoxItem _selectedTypeItem = null;
+        public double gossipValue = 0;
 
         [ObservableProperty]
-        public string _targetText = "";
+        public TextComboBoxItem selectedTypeItem = null;
 
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _gossipTypeList = [];
+        public string targetText = "";
+
+        [ObservableProperty]
+        public ObservableCollection<TextComboBoxItem> gossipTypeList = [];
 
         /// <summary>
         /// 返回该言论的数据
@@ -59,14 +69,18 @@ namespace CBHK.ViewModel.Component.Villager
         /// <param name="e"></param>
         public void GossipItem_Loaded(object sender, RoutedEventArgs e)
         {
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#313233"));
+            LeftTopBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#5A5B5C"));
+            RightBottomBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#333334"));
+            CornerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F4041"));
             VillagerViewModel context = Window.GetWindow(sender as UserControl).DataContext as VillagerViewModel;
             GossipTypeList = context.GossipTypeList;
         }
 
         [RelayCommand]
-        public void Delete(GossipsItemsView view)
+        public void Delete(GossipsItemView view)
         {
-            GossipsItemsViewModel context = view.DataContext as GossipsItemsViewModel;
+            GossipsItemViewModel context = view.DataContext as GossipsItemViewModel;
             VillagerViewModel villagerViewModel = Window.GetWindow(view).DataContext as VillagerViewModel;
             villagerViewModel.GossipItemList.Remove(view);
         }
@@ -96,11 +110,11 @@ namespace CBHK.ViewModel.Component.Villager
 
             _ = context.GossipItemList.Where(item =>
             {
-                GossipsItemsViewModel gossipsItemsViewModel = item.DataContext as GossipsItemsViewModel;
+                GossipsItemViewModel gossipsItemsViewModel = item.DataContext as GossipsItemViewModel;
                 string currentGossipType = gossipsItemsViewModel.SelectedTypeItem.Text;
                 if (currentGossipTypes.ContainsKey(currentGossipType) && gossipsItemsViewModel.TargetText == currentUID && !handedMarkers[currentGossipType])
                 {
-                    currentGossipTypes[currentGossipType] = int.Parse(GossipValue.ToString());
+                    currentGossipTypes[currentGossipType] = int.Parse((string)this.GossipValue.ToString());
                     handedMarkers[currentGossipType] = true;
                 }
                 return true;

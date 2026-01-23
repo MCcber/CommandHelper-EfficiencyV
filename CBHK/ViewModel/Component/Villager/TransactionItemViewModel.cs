@@ -36,6 +36,14 @@ namespace CBHK.ViewModel.Component.Villager
         #endregion
 
         #region Property
+        [ObservableProperty]
+        public Brush background;
+        [ObservableProperty]
+        public Brush leftTopBorderBrush;
+        [ObservableProperty]
+        public Brush rightBottomBorderBrush;
+        [ObservableProperty]
+        public Brush cornerBorderBrush;
 
         #region 物品数据
         /// <summary>
@@ -80,7 +88,10 @@ namespace CBHK.ViewModel.Component.Villager
         [ObservableProperty]
         public float priceMultiplier = 0f;
         #endregion
-        #region 当前交易项数据
+
+        /// <summary>
+        /// 当前交易项数据
+        /// </summary>
         public string TransactionItemData
         {
             get
@@ -172,7 +183,7 @@ namespace CBHK.ViewModel.Component.Villager
                 return result;
             }
         }
-        #endregion
+
         #region 交易物、交易物B、售卖物的显示数量文本等
         [ObservableProperty]
         public string _buyCountDisplayText = "x1";
@@ -193,7 +204,7 @@ namespace CBHK.ViewModel.Component.Villager
         #region Method
         public TransactionItemViewModel(CBHKDataContext Context, DataService dataService)
         {
-            context = context;
+            context = Context;
             _dataService = dataService;
             ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap().SelectMany(item => item.Value).ToDictionary();
         }
@@ -279,9 +290,12 @@ namespace CBHK.ViewModel.Component.Villager
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void TransactionItems_Loaded(object sender, RoutedEventArgs e)
+        public void TransactionItemView_Loaded(object sender, RoutedEventArgs e)
         {
-
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48494A"));
+            LeftTopBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#5A5B5C"));
+            RightBottomBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#333334"));
+            CornerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F4041"));
         }
 
         /// <summary>

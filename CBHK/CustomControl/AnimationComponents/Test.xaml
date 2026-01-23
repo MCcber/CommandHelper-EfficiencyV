@@ -8,5 +8,7 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <Grid />
+    <Grid>
+        <TabControl Style="{DynamicResource VectorTabControlStyle}" />
+    </Grid>
 </UserControl>

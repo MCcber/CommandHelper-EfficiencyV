@@ -139,13 +139,13 @@ namespace CBHK.CustomControl.Container
             if (leftTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || leftTopBorderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.4f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
                 LeftTopBorderBrush = new SolidColorBrush(color);
             }
             var rightBottomBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
             if (rightBottomBrushSource.BaseValueSource is BaseValueSource.Default || rightBottomBrushSource.BaseValueSource is BaseValueSource.Style)
             {
-                Color color = ColorTool.DarkenByHSL((Background as SolidColorBrush).Color, 0.4f);
+                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.4f);
                 RightBottomBorderBrush ??= new SolidColorBrush(color);
             }
 
@@ -187,7 +187,7 @@ namespace CBHK.CustomControl.Container
                 VectorIconTextTabItem_MouseLeave(null, null);
                 return;
             }
-            Color color = ColorTool.LightenByHSL((OriginBackground as SolidColorBrush).Color,0.3f);
+            Color color = ColorTool.Lighten((OriginBackground as SolidColorBrush).Color,0.3f);
             Background = new SolidColorBrush(color);
         }
 

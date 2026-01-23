@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Generator"
@@ -18,6 +19,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconFireworks.png"
+    IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStyle="None"
     mc:Ignorable="d">
@@ -50,144 +52,103 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
-            <RowDefinition Height="5*" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <DockPanel Grid.Row="0" Height="30">
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource LeftArrow}"
-                BorderThickness="0"
+        <DockPanel Grid.Row="0">
+            <VectorButton:VectorFlatImageButton
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/IconArrowLeft.png"
+                ImageMargin="5"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="ESC:返回"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource RightArrow}"
-                BorderThickness="0"
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 Command="{Binding RunCommand}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="5"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource Save}"
-                BorderThickness="0"
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 Command="{Binding SaveAllCommand}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
-                ToolTip="保存"
-                ToolTipService.InitialShowDelay="0" />
-            <CustomControl:IconTextButtons
-                Padding="5"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Background="{DynamicResource ButtonNormal}"
+                Image="/Resource/Common/Image/Save.png"
+                ImageMargin="5"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <VectorButton:VectorFlatImageButton.ToolTip>
+                    <ToolTip
+                        Background="#484848"
+                        Content="保存"
+                        Foreground="White" />
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorTextButton
+                MinWidth="60"
+                Background="#D0D1D4"
                 Command="{Binding AddFireworkRocketCommand}"
-                Content="添加"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
-                Padding="5"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Background="{DynamicResource ButtonNormal}"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="添加" />
+            <VectorButton:VectorTextButton
+                MinWidth="60"
+                Background="#D0D1D4"
                 Command="{Binding ClearFireworkRocketCommand}"
-                Content="清空"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:StereoTextButton
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Background="#EFF2F1"
-                BorderThickness="4,4,4,7"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="清空" />
+            <VectorButton:VectorTextButton
+                MinWidth="60"
+                Background="#D0D1D4"
                 Command="{Binding ImportFireworkRocketFromClipboardCommand}"
-                Content="从剪切板导入"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}" />
-            <CustomControl:StereoTextButton
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Background="#EFF2F1"
-                BorderThickness="4,4,4,7"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从剪切板导入" />
+            <VectorButton:VectorTextButton
+                MinWidth="60"
+                Background="#D0D1D4"
                 Command="{Binding ImportFireworkRocketFromFileCommand}"
-                Content="从文件导入"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}" />
-            <CustomControl:StereoTextButton
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Background="#EFF2F1"
-                BorderThickness="4,4,4,7"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从文件导入" />
+            <VectorButton:VectorTextButton
+                Background="#D0D1D4"
                 Command="{Binding PreviewEffectCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                Content="预览效果"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}" />
-            <CustomControl:RadiusToggleButtons
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="预览效果" />
+            <VectorButton:VectorToggleIconTextButton
                 VerticalContentAlignment="Center"
-                Foreground="White"
+                Foreground="Black"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
-                SelectedToggleText="显示结果"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="26"
-                ToggleWidth="45"
-                UnSelectedToggleText="隐藏结果" />
+                Style="{DynamicResource VectorToggleIconTextButtonStyle}"
+                Text="显示结果" />
         </DockPanel>
         <TabControl
             Grid.Row="1"

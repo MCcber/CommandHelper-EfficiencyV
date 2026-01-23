@@ -17,6 +17,7 @@
     Height="700"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#1B1B1B"
+    IconMargin="5"
     mc:Ignorable="d">
 
     <Window.Resources>

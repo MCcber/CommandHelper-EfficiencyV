@@ -1,4 +1,5 @@
-﻿using CBHK.Common.Utility.Event;
+﻿using CBHK.Common.Model;
+using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorButton;
 using CBHK.Domain;
 using CBHK.Domain.Model.Database;
@@ -7,7 +8,6 @@ using CBHK.View.Common;
 using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Prism.Events;
 using Prism.Ioc;
 using System;
 using System.Collections.ObjectModel;
@@ -21,17 +21,16 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel
 {
-    public partial class MainViewModel(IContainerProvider container,CBHKDataContext context,IEventAggregator eventAggregator) : ObservableObject
+    public partial class MainViewModel(IContainerProvider container,CBHKDataContext context) : ObservableObject
     {
         #region Field
         private IContainerProvider container = container;
-        private IEventAggregator eventAggregator = eventAggregator;
         private readonly CBHKDataContext context = context;
         private bool isContextMenuCloseCommand = false;
         /// <summary>
         /// 主页可见性
         /// </summary>
-        public EnvironmentConfig _config = null;
+        public EnvironmentConfig config = null;
         private Grid SkeletonGrid = null;
         private Grid GeneratorTable = null;
         private IProgress<byte> SetGeneratorButtonProgress = null;
@@ -87,6 +86,7 @@ namespace CBHK.ViewModel
                 {
                     GeneratorVectorButton button = new()
                     {
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2E2E2E")),
                         Style = Application.Current.Resources["GeneratorVectorButtonStyle"] as Style
                     };
                     string currentId = data.ID;
@@ -146,8 +146,20 @@ namespace CBHK.ViewModel
                 StopSkeletonScreen(Task.CompletedTask);
             });
 
-            _config = context.EnvironmentConfigSet.FirstOrDefault();
             ReadDataSource();
+        }
+
+        [RelayCommand]
+        private void MainWindowClosing() => context.SaveChanges();
+
+        [RelayCommand]
+        private void MainWindowActivated(object sender)
+        {
+            var window = sender as VectorWindow;
+            config = context.EnvironmentConfigSet.FirstOrDefault();
+            window.ThemeType = (WindowThemeType)Enum.Parse(typeof(WindowThemeType), config.ThemeType);
+            window.VisualType = (WindowVisualType)Enum.Parse(typeof(WindowVisualType), config.VisualType);
+            window.CornerPreference = (WindowCornerPreference)Enum.Parse(typeof(WindowCornerPreference), config.CornerPreferenceType);
         }
 
         [RelayCommand]
@@ -155,58 +167,10 @@ namespace CBHK.ViewModel
 
         [RelayCommand]
         private void SkeletonGridLoaded(object sender) => SkeletonGrid = sender as Grid;
-
-        /// <summary>
-        /// 主窗体关闭事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        [RelayCommand]
-        private void MainWindowClosing(System.ComponentModel.CancelEventArgs e)
-        {
-            e.Cancel = _config.IsCloseToTray && !isContextMenuCloseCommand;
-            context.SaveChanges();
-            if (e.Cancel)
-            {
-                WindowState = WindowState.Minimized;
-                ShowInTaskBar = false;
-            }
-            else
-            {
-                WindowState = WindowState.Minimized;
-                eventAggregator.GetEvent<CloseWindowEvent>().Publish();
-            }
-        }
-
-        [RelayCommand]
-        /// <summary>
-        /// 显示管家
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ShowMainWindow(object sender)
-        {
-            Window window = sender as Window;
-            window.ShowInTaskbar = true;
-            window.WindowState = WindowState.Normal;
-            window.Show();
-            window.Activate();
-        }
-
-        /// <summary>
-        /// 关闭管家
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        [RelayCommand]
-        private void ExitApplication()
-        {
-            isContextMenuCloseCommand = true;
-            eventAggregator.GetEvent<CloseWindowEvent>().Publish();
-        }
         #endregion
 
         #region Method
+
         /// <summary>
         /// 骨架屏持续时间
         /// </summary>
@@ -216,14 +180,14 @@ namespace CBHK.ViewModel
         {
             SkeletonGrid.Visibility = Visibility.Collapsed;
             GeneratorTable.Visibility = Visibility.Visible;
-            if (bool.TryParse(_config.ShowNotice,out bool showNotice) && showNotice)
+            if (bool.TryParse(config.ShowNotice,out bool showNotice) && showNotice)
             {
                 NoticeToUsersView noticeToUsers = container.Resolve<NoticeToUsersView>();
                 noticeToUsers.Topmost = true;
                 NoticeToUsersViewModel notichViewModel = noticeToUsers.DataContext as NoticeToUsersViewModel;
                 if (noticeToUsers.ShowDialog().Value)
                 {
-                    _config.ShowNotice = (!notichViewModel.DonotShowNextTime).ToString();
+                    config.ShowNotice = (!notichViewModel.DonotShowNextTime).ToString();
                 }
             }
         }
@@ -231,12 +195,7 @@ namespace CBHK.ViewModel
         /// <summary>
         /// 读取启动器配置
         /// </summary>
-        private void ReadDataSource()
-        {
-            _config = context.EnvironmentConfigSet.FirstOrDefault();
-
-            InitUIDataProgress.Report(0);
-        }
+        private void ReadDataSource() => InitUIDataProgress.Report(0);
         #endregion
     }
 }

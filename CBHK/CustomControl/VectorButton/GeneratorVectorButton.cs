@@ -9,6 +9,9 @@ namespace CBHK.CustomControl.VectorButton
     public class GeneratorVectorButton : Button
     {
         #region Property
+        private Brush OriginBackgroundBrush;
+        private Brush OriginTopBottomBorderBrush;
+        private Brush OriginSideBorderBrush;
 
         public ImageSource Icon
 
@@ -37,15 +40,6 @@ namespace CBHK.CustomControl.VectorButton
 
         public static readonly DependencyProperty SubTitleProperty =
             DependencyProperty.Register("SubTitle", typeof(string), typeof(GeneratorVectorButton), new PropertyMetadata(default(string)));
-
-        public Brush OriginBackgroundBrush
-        {
-            get { return (Brush)GetValue(OriginBackgroundBrushProperty); }
-            set { SetValue(OriginBackgroundBrushProperty, value); }
-        }
-
-        public static readonly DependencyProperty OriginBackgroundBrushProperty =
-            DependencyProperty.Register("OriginBackgroundBrush", typeof(Brush), typeof(GeneratorVectorButton), new PropertyMetadata(default(Brush)));
 
         public Brush TopBottomBorderBrush
         {
@@ -97,10 +91,10 @@ namespace CBHK.CustomControl.VectorButton
                 Foreground = Brushes.White;
             }
             var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            //if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style)
-            //{
-            //    Background = new BrushConverter().ConvertFromString("#3c8527") as Brush;
-            //}
+            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style)
+            {
+                Background = new BrushConverter().ConvertFromString("#48494A") as Brush;
+            }
             var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
             if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
@@ -110,32 +104,30 @@ namespace CBHK.CustomControl.VectorButton
             if (originTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originTopBorderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.5f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
                 TopBottomBorderBrush = new SolidColorBrush(color);
             }
             var originSideBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, SideBorderBrushProperty);
             if (originSideBorderBrushSource.BaseValueSource is BaseValueSource.Default || originSideBorderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.5f);
+                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.1f);
                 SideBorderBrush = new SolidColorBrush(color);
             }
 
             OriginBackgroundBrush = Background;
+            OriginTopBottomBorderBrush = TopBottomBorderBrush;
+            OriginSideBorderBrush = SideBorderBrush;
         }
 
         private void GeneratorVectorButton_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             BorderBrush = Brushes.White;
-            object rectangleElement = Template.FindName("background", sender as FrameworkElement);
             SolidColorBrush solidColorBrush = OriginBackgroundBrush as SolidColorBrush;
-            Color startColor = ColorTool.LightenByHSL(solidColorBrush.Color, 0.1f);
-            Color endColor = ColorTool.DarkenByHSL(solidColorBrush.Color, 0.1f);
+            Color startColor = ColorTool.Lighten(solidColorBrush.Color, 0.1f);
+            Color endColor = ColorTool.Darken(solidColorBrush.Color, 0.1f);
             LinearGradientBrush linearGradientBrush = new(startColor, endColor, 90);
-            if (rectangleElement is Rectangle rectangle)
-            {
-                rectangle.Fill = linearGradientBrush;
-            }
+            Background = linearGradientBrush;
         }
 
         private void VectorTextButton_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -145,24 +137,14 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorTextButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            object rectangleElement = Template.FindName("background", sender as FrameworkElement);
-            if (rectangleElement is Rectangle rectangle)
-            {
-                rectangle.Fill = OriginBackgroundBrush;
-            }
             BorderBrush = Brushes.Black;
             Background = OriginBackgroundBrush;
         }
 
         private void VectorTextButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            object rectangleElement = Template.FindName("background", sender as FrameworkElement);
-
-            if (rectangleElement is Rectangle rectangle && Background is SolidColorBrush backgroundBrush)
-            {
-                Color darkColor = ColorTool.LightenByHSL(backgroundBrush.Color, 0.2f);
-                rectangle.Fill = new SolidColorBrush(darkColor);
-            }
+            Color darkColor = ColorTool.Lighten((OriginBackgroundBrush as SolidColorBrush).Color, 0.1f);
+            Background = new SolidColorBrush(darkColor);
         }
         #endregion
     }

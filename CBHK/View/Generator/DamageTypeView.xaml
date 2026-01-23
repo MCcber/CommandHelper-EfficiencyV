@@ -16,7 +16,8 @@
     Width="1080"
     Height="700"
     prism:ViewModelLocator.AutoWireViewModel="True"
-    Background="#1B1B1B">
+    Background="#1B1B1B"
+    IconMargin="5">
     <Window.Resources>
         <CompoundItem:JsonTreeViewTemplateSelector
             x:Key="JsonTreeViewTemplateSelector"

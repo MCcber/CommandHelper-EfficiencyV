@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using static CBHK.Model.Common.Enums;
 
 namespace CBHK.Interface
 {

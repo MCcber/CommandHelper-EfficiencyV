@@ -1,4 +1,5 @@
 ﻿using CBHK.Interface;
+using CBHK.Model.Common;
 using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ICSharpCode.AvalonEdit.Document;
@@ -6,7 +7,6 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using static CBHK.Model.Common.Enums;
 
 namespace CBHK.CustomControl.JsonTreeViewComponents
 {
@@ -241,7 +241,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         public int LayerCount { get; set; } = 1;
 
         [ObservableProperty]
-        public DataType _dataType = DataType.None;
+        public DataType _dataType;
 
         /// <summary>
         /// 父节点

@@ -146,42 +146,42 @@ namespace CBHK.CustomControl.Input
             if (originBackgroundBorderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originBackgroundBorderCornerBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.6f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.6f);
                 BackgroundBorderCornerBrush = new SolidColorBrush(color);
             }
             var originBackgroundRoundBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, BackgroundRoundBorderBrushProperty);
             if (originBackgroundRoundBorderBrushSource.BaseValueSource is BaseValueSource.Default || originBackgroundRoundBorderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.4f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
                 BackgroundRoundBorderBrush = new SolidColorBrush(color);
             }
             var originBackgroundBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, BackgroundBottomBorderBrushProperty);
             if (originBackgroundBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originBackgroundBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.2f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
                 BackgroundBottomBorderBrush = new SolidColorBrush(color);
             }
             var originThumbBorderCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, ThumbBorderCornerBrushProperty);
             if (originThumbBorderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originThumbBorderCornerBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = ThumbBackground as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.4f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
                 ThumbBorderCornerBrush = new SolidColorBrush(color);
             }
             var originThumbRoundBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, ThumbRoundBorderBrushProperty);
             if (originThumbRoundBorderBrushSource.BaseValueSource is BaseValueSource.Default || originThumbRoundBorderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = ThumbBackground as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.2f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
                 ThumbRoundBorderBrush = new SolidColorBrush(color);
             }
             var originThumbBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, ThumbBottomBorderBrushProperty);
             if (originThumbBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originThumbBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = ThumbBackground as SolidColorBrush;
-                Color color = ColorTool.DarkenByHSL(solidBorderBrush.Color, 0.6f);
+                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.6f);
                 ThumbBottomBorderBrush = new SolidColorBrush(color);
             }
 
@@ -205,7 +205,7 @@ namespace CBHK.CustomControl.Input
 
         private void VectorSlider_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            Color color = ColorTool.DarkenByHSL((OriginThumbBackground as SolidColorBrush).Color, 0.2f);
+            Color color = ColorTool.Darken((OriginThumbBackground as SolidColorBrush).Color, 0.2f);
             ThumbBackground = new SolidColorBrush(color);
         }
         #endregion

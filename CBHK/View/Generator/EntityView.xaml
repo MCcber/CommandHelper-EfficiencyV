@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Generator"
@@ -18,6 +19,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png"
+    IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
@@ -50,173 +52,126 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0">
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
+            <VectorButton:VectorFlatImageButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
-                Background="{StaticResource LeftArrow}"
                 BorderThickness="0"
                 Command="{Binding ReturnCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                Image="/Resource/Common/Image/IconArrowLeft.png"
+                ImageMargin="5"
+                RenderOptions.BitmapScalingMode="Unspecified"
+                RenderOptions.EdgeMode="Unspecified"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="ESC:返回主页"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalAlignment="Left"
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
-                Background="{StaticResource RightArrow}"
                 BorderThickness="0"
                 Command="{Binding RunCommand}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="5"
+                RenderOptions.BitmapScalingMode="Unspecified"
+                RenderOptions.EdgeMode="Unspecified"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Width="20"
-                Height="20"
-                Margin="5,0"
-                Padding="5"
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
+                Width="40"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Background="{StaticResource Save}"
                 Command="{Binding SaveAllCommand}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:StereoTextButton
+                Image="/Resource/Common/Image/Save.png"
+                ImageMargin="5"
+                Style="{DynamicResource VectorFlatImageButtonStyle}" />
+            <VectorButton:VectorTextButton
+                MinWidth="80"
                 HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
                 Background="#EFF2F1"
-                BorderThickness="4,3,4,7"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
                 Command="{Binding AddEntityCommand}"
-                Content="添加"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}" />
-            <CustomControl:StereoTextButton
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
-                Background="#EFF2F1"
-                BorderThickness="4,3,4,7"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ClearEntityCommand}"
-                Content="清空"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}" />
-            <CustomControl:StereoTextButton
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
-                Background="#EFF2F1"
-                BorderThickness="4,3,4,7"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ImportEntityFromClipboardCommand}"
-                Content="从剪切板导入"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}" />
-            <CustomControl:StereoTextButton
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
-                Background="#EFF2F1"
-                BorderThickness="4,3,4,7"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ImportEntityFromFileCommand}"
-                Content="从文件导入"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
-                TopBorderTexture="{StaticResource ButtonNormalTop}" />
-            <CustomControl:StereoTextButton
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
-                Background="#EFF2F1"
-                BorderThickness="4,3,4,7"
-                BottomBorderTexture="{StaticResource ButtonNormalBottom}"
-                Command="{Binding ClearUnnecessaryDataCommand}"
-                Content="冻结数据"
                 Foreground="Black"
-                LeftBorderTexture="{StaticResource ButtonNormalLeft}"
-                PressedBorderThickness="4"
-                PressedBottomBorderTexture="{StaticResource ButtonPressedBottom}"
-                PressedLeftBorderTexture="{StaticResource ButtonPressedLeft}"
-                PressedRightBorderTexture="{StaticResource ButtonPressedRight}"
-                PressedTopBorderTexture="{StaticResource ButtonPressedTop}"
-                RightBorderTexture="{StaticResource ButtonNormalRight}"
-                Style="{DynamicResource StereoTextButton}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="添加" />
+            <VectorButton:VectorTextButton
+                MinWidth="80"
+                HorizontalAlignment="Left"
+                Background="#EFF2F1"
+                Command="{Binding ClearEntityCommand}"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="清空" />
+            <VectorButton:VectorTextButton
+                MinWidth="80"
+                HorizontalAlignment="Left"
+                Background="#EFF2F1"
+                Command="{Binding ImportEntityFromClipboardCommand}"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从剪切板导入" />
+            <VectorButton:VectorTextButton
+                MinWidth="80"
+                HorizontalAlignment="Left"
+                Background="#EFF2F1"
+                Command="{Binding ImportEntityFromFileCommand}"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从文件导入" />
+            <VectorButton:VectorTextButton
+                MinWidth="80"
+                HorizontalAlignment="Left"
+                Background="#EFF2F1"
+                Command="{Binding ClearUnnecessaryDataCommand}"
+                Foreground="Black"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="冻结数据"
                 ToolTipService.BetweenShowDelay="0"
-                ToolTipService.InitialShowDelay="0"
-                TopBorderTexture="{StaticResource ButtonNormalTop}">
-                <CustomControl:StereoTextButton.ToolTip>
+                ToolTipService.InitialShowDelay="0">
+                <VectorButton:VectorTextButton.ToolTip>
                     <ToolTip
                         Background="#2F2F2F"
                         Content="点击后清除历史实体的特指数据"
                         Foreground="White" />
-                </CustomControl:StereoTextButton.ToolTip>
-            </CustomControl:StereoTextButton>
-            <CustomControl:RadiusToggleButtons
+                </VectorButton:VectorTextButton.ToolTip>
+            </VectorButton:VectorTextButton>
+            <VectorButton:VectorToggleIconTextButton
                 VerticalContentAlignment="Center"
                 Foreground="White"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
-                SelectedToggleText="显示结果"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="26"
-                ToggleWidth="46"
-                UnSelectedToggleText="隐藏结果" />
+                Style="{DynamicResource VectorToggleIconTextButtonStyle}"
+                Text="显示结果" />
         </DockPanel>
-        <TabControl
+        <Container:VectorTabControl
             Grid.Row="1"
             Background="Transparent"
             BorderThickness="0"
             ItemsSource="{Binding EntityPageList, IsAsync=True}"
             SelectedIndex="0"
             SelectedItem="{Binding SelectedEntityPage, Mode=OneWayToSource}"
-            Style="{DynamicResource TabControlWithScrollBar}" />
+            Style="{DynamicResource VectorTabControlStyle}" />
     </Grid>
 
 </Container:VectorWindow>

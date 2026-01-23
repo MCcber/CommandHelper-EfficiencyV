@@ -4,6 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ColorPicker="clr-namespace:CBHK.CustomControl.ColorPickerComponents"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -33,108 +37,84 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
-            <RowDefinition Height="5*" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <DockPanel Grid.Row="0" Height="30">
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource RightArrow}"
-                BorderThickness="0"
+        <DockPanel Grid.Row="0">
+            <VectorButton:VectorFlatImageButton
                 Command="{Binding RunCommand}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="5"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
-                Margin="0,0,5,0"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource Save}"
-                BorderThickness="0"
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 Command="{Binding SaveCommand}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/Save.png"
+                ImageMargin="5"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTip="保存"
                 ToolTipService.InitialShowDelay="0" />
-            <TextBlock
-                Margin="5,0"
+            <VectorComboBox:VectorTextComboBox
+                Title="版本"
+                MinWidth="80"
                 HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                FontSize="15"
-                Foreground="White"
-                Text="版本"
-                TextAlignment="Center" />
-            <ComboBox
-                Width="100"
-                Height="25"
-                VerticalContentAlignment="Center"
-                FontSize="15"
-                IsReadOnly="True"
+                ArrowMargin="0 0 5 0"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}" />
-            <CustomControl:RadiusToggleButtons
-                Margin="5,0"
-                HorizontalAlignment="Left"
-                Foreground="White"
-                IsChecked="{Binding Give, Mode=TwoWay}"
-                SelectedToggleText="给予"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
-                UnSelectedToggleText="召唤" />
-            <CustomControl:StereoToggleButton
-                Width="90"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
+                Style="{DynamicResource VectorTextComboBoxStyle}" />
+            <VectorButton:VectorToggleTextButton
                 Background="#D77A34"
-                BorderThickness="4,5,4,7"
-                BottomBorderTexture="{StaticResource TextToggleButtonFalseBottomFrame}"
-                Content="按角度飞出"
+                Foreground="Black"
+                IsChecked="{Binding Give, Mode=TwoWay}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="给予" />
+            <VectorButton:VectorToggleTextButton
+                Background="#D77A34"
+                Foreground="Black"
+                IsChecked="{Binding Give, Mode=TwoWay}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="召唤" />
+            <VectorButton:VectorToggleTextButton
+                MinWidth="90"
+                Background="#D77A34"
                 Foreground="Black"
                 IsChecked="{Binding FlyAngle, Mode=TwoWay}"
-                IsCheckedThickness="4 4 4 4"
-                LeftBorderTexture="{StaticResource TextToggleButtonFalseLeftFrame}"
-                RightBorderTexture="{StaticResource TextToggleButtonFalseRightFrame}"
-                Style="{DynamicResource StereoToggleButton}"
-                TopBorderTexture="{StaticResource TextToggleButtonFalseTopFrame}"
-                TrueBottomBorderTexture="{StaticResource TextToggleButtonTrueBottomFrame}"
-                TrueLeftBorderTexture="{StaticResource TextToggleButtonTrueLeftFrame}"
-                TrueRightBorderTexture="{StaticResource TextToggleButtonTrueRightFrame}"
-                TrueTopBorderTexture="{StaticResource TextToggleButtonTrueTopFrame}" />
-            <CustomControl:RadiusToggleButtons
-                Margin="5,0"
-                VerticalContentAlignment="Center"
-                Foreground="White"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="按角度飞出" />
+            <VectorButton:VectorToggleTextButton
+                HorizontalAlignment="Left"
+                Background="#D77A34"
+                Foreground="Black"
                 IsChecked="{Binding GeneratorFireStar, Mode=TwoWay}"
-                SelectedToggleText="生成烟火之星"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="26"
-                ToggleWidth="45"
-                UnSelectedToggleText="生成烟花火箭" />
-            <CustomControl:RadiusToggleButtons
-                VerticalContentAlignment="Center"
-                Foreground="White"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="生成烟火之星" />
+            <VectorButton:VectorToggleTextButton
+                HorizontalAlignment="Left"
+                Background="#D77A34"
+                Foreground="Black"
+                IsChecked="{Binding GeneratorFireStar, Mode=TwoWay}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="生成烟花火箭" />
+            <VectorButton:VectorToggleIconTextButton
+                HorizontalAlignment="Left"
+                Foreground="Black"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
-                SelectedToggleText="显示结果"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="26"
-                ToggleWidth="45"
-                UnSelectedToggleText="隐藏结果" />
+                Style="{DynamicResource VectorToggleIconTextButtonStyle}"
+                Text="显示结果" />
         </DockPanel>
         <ScrollViewer
             Grid.Row="1"
@@ -320,117 +300,75 @@
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
                     </ColorPicker:ColorPickers>
-                    <CustomControl:TextCheckBoxs
+                    <VectorCheckBox:VectorTextCheckBox
                         Grid.Row="0"
                         Grid.Column="2"
-                        HorizontalAlignment="Stretch"
-                        Foreground="White"
-                        HeaderHeight="20"
-                        HeaderText="点"
-                        HeaderWidth="20"
+                        Foreground="Black"
                         IsChecked="{Binding PointMode, Mode=TwoWay}"
-                        Style="{DynamicResource TextCheckBox}" />
-                    <CustomControl:TextCheckBoxs
+                        Style="{DynamicResource VectorTextCheckBoxStyle}"
+                        Text="点" />
+                    <VectorCheckBox:VectorTextCheckBox
                         Grid.Row="0"
                         Grid.Column="3"
-                        HorizontalAlignment="Stretch"
-                        Foreground="White"
-                        HeaderHeight="20"
-                        HeaderText="连续"
-                        HeaderWidth="20"
+                        Foreground="Black"
                         IsChecked="{Binding ContinuousMode, Mode=TwoWay}"
-                        Style="{DynamicResource TextCheckBox}" />
-                    <TextBlock
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="White"
-                        Text="形状" />
-                    <CustomControl:TextComboBoxs
+                        Style="{DynamicResource VectorTextCheckBoxStyle}"
+                        Text="连续" />
+                    <VectorComboBox:VectorTextComboBox
+                        Title="形状"
                         Grid.Row="1"
                         Grid.Column="1"
-                        Height="25"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Center"
-                        VerticalContentAlignment="Center"
+                        Height="40"
+                        VerticalAlignment="Top"
+                        Background="#D0D1D4"
                         ItemsSource="{Binding ShapeList}"
                         SelectedIndex="{Binding SelectedShape, Mode=TwoWay}"
-                        Style="{DynamicResource TextComboBoxStyle}" />
-                    <CustomControl:TextCheckBoxs
+                        Style="{DynamicResource VectorTextComboBoxStyle}" />
+                    <VectorCheckBox:VectorTextCheckBox
                         Grid.Row="1"
                         Grid.Column="2"
-                        HorizontalAlignment="Stretch"
-                        Foreground="White"
-                        HeaderHeight="20"
-                        HeaderText="闪烁"
-                        HeaderWidth="20"
+                        Foreground="Black"
                         IsChecked="{Binding Flicker, Mode=TwoWay}"
-                        Style="{DynamicResource TextCheckBox}" />
-                    <CustomControl:TextCheckBoxs
+                        Style="{DynamicResource VectorTextCheckBoxStyle}"
+                        Text="闪烁" />
+                    <VectorCheckBox:VectorTextCheckBox
                         Grid.Row="1"
                         Grid.Column="3"
-                        HorizontalAlignment="Stretch"
-                        Foreground="White"
-                        HeaderHeight="20"
-                        HeaderText="拖尾"
-                        HeaderWidth="20"
+                        Foreground="Black"
                         IsChecked="{Binding Trail, Mode=TwoWay}"
-                        Style="{DynamicResource TextCheckBox}" />
-                    <TextBlock
+                        Style="{DynamicResource VectorTextCheckBoxStyle}"
+                        Text="拖尾" />
+                    <Input:NumbericUpDown
                         Grid.Row="2"
                         Grid.Column="0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="White"
-                        Text="飞行时长"
-                        TextAlignment="Center" />
-                    <Slider
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        Grid.ColumnSpan="3"
-                        Height="25"
-                        Margin="0,2"
+                        Grid.ColumnSpan="4"
                         HorizontalAlignment="Stretch"
-                        Maximum="127"
-                        Minimum="-128"
-                        Style="{DynamicResource NumberBoxStyle}"
-                        Value="{Binding Duration, Mode=TwoWay}" />
-                    <TextBlock
+                        Background="#D0D1D4"
+                        Style="{DynamicResource NumbericUpDownStyle}"
+                        Text="{Binding Duration, Mode=TwoWay}"
+                        WaterMarkerBrush="Gray"
+                        WaterMarkerMargin="5 0 0 0"
+                        WaterMarkerText="飞行时长" />
+                    <Input:NumbericUpDown
                         Grid.Row="3"
                         Grid.Column="0"
-                        Margin="2,0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="White"
-                        Text="Life" />
-                    <Slider
-                        Grid.Row="3"
-                        Grid.Column="1"
-                        Height="25"
-                        Margin="0,2"
-                        HorizontalAlignment="Stretch"
-                        Maximum="2147483647"
-                        Minimum="-2147483648"
-                        Style="{DynamicResource NumberBoxStyle}"
-                        Value="{Binding Life, Mode=TwoWay}" />
-                    <TextBlock
+                        Grid.ColumnSpan="2"
+                        Background="#D0D1D4"
+                        Style="{DynamicResource NumbericUpDownStyle}"
+                        Text="{Binding Life, Mode=TwoWay}"
+                        WaterMarkerBrush="Gray"
+                        WaterMarkerMargin="5 0 0 0"
+                        WaterMarkerText="生命值" />
+                    <Input:NumbericUpDown
                         Grid.Row="4"
                         Grid.Column="2"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="White"
-                        Text="LifeTime" />
-                    <Slider
-                        Grid.Row="4"
-                        Grid.Column="3"
-                        Height="25"
-                        Margin="0,2"
-                        HorizontalAlignment="Stretch"
-                        Maximum="2147483647"
-                        Minimum="-2147483648"
-                        Style="{DynamicResource NumberBoxStyle}"
-                        Value="{Binding LifeTime, Mode=TwoWay}" />
+                        Grid.ColumnSpan="2"
+                        Background="#D0D1D4"
+                        Style="{DynamicResource NumbericUpDownStyle}"
+                        Text="{Binding LifeTime, Mode=TwoWay}"
+                        WaterMarkerBrush="Gray"
+                        WaterMarkerMargin="5 0 0 0"
+                        WaterMarkerText="生存时长" />
                 </Grid>
             </StackPanel>
         </ScrollViewer>

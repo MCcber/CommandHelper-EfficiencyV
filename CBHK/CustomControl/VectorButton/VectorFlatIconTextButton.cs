@@ -150,20 +150,20 @@ namespace CBHK.CustomControl.VectorButton
             if (originborderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originborderCornerBrushSource.BaseValueSource is BaseValueSource.Style || IsLoaded)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.DarkenByHSL(solidBorderBrush.Color, 0.3f);
+                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.3f);
                 BorderCornerBrush = new SolidColorBrush(color);
             }
             var originTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopBorderBrushProperty);
             if (originTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originTopBorderBrushSource.BaseValueSource is BaseValueSource.Style || IsLoaded)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.LightenByHSL(solidBorderBrush.Color, 0.3f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.3f);
                 LeftTopBorderBrush = new SolidColorBrush(color);
             }
             var originBottomBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
             if (originBottomBrushSource.BaseValueSource is BaseValueSource.Default || originBottomBrushSource.BaseValueSource is BaseValueSource.Style || IsLoaded)
             {
-                Color color = ColorTool.DarkenByHSL((Background as SolidColorBrush).Color, 0.5f);
+                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.5f);
                 RightBottomBorderBrush ??= new SolidColorBrush(color);
             }
         }

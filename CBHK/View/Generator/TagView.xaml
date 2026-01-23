@@ -17,6 +17,7 @@
     Background="#2F2F2F"
     Foreground="White"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconTags.png"
+    IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">

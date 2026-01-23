@@ -5,9 +5,9 @@ namespace CBHK.View.Component.Villager
     /// <summary>
     /// GossipsItemsView.xaml 的交互逻辑
     /// </summary>
-    public partial class GossipsItemsView : UserControl
+    public partial class GossipsItemView : UserControl
     {
-        public GossipsItemsView()
+        public GossipsItemView()
         {
             InitializeComponent();
         }

@@ -18,7 +18,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconCommandBlock.png"
-    IconMargin="8 8 5 8"
+    IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     mc:Ignorable="d">
 
@@ -661,50 +661,46 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <DockPanel Grid.Row="0" Grid.Column="0">
-            <VectorButton:VectorSolidIconButton
-                Margin="5"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
+            <VectorButton:VectorFlatImageButton
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
-                ImageData="M773.5 143.3L403 514.6l370.5 371.2-76.2 76.3-446.6-447.5L697.3 67l76.2 76.3zM697.3 67"
-                ImageFillColorBrush="White"
-                Style="{DynamicResource VectorSolidIconButtonStyle}"
+                Image="/Resource/Common/Image/IconArrowLeft.png"
+                ImageMargin="5"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <VectorButton:VectorSolidIconButton.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="ESC:返回"
                         Foreground="White" />
-                </VectorButton:VectorSolidIconButton.ToolTip>
-            </VectorButton:VectorSolidIconButton>
-            <VectorButton:VectorSolidIconButton
-                Margin="5"
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
                 Command="{Binding RunCommand}"
-                ImageData="M243.0464 113.7664l536.576 397.8752-536.576 398.0288V113.7664z m0 0"
-                ImageFillColorBrush="White"
-                Style="{DynamicResource VectorSolidIconButtonStyle}"
+                Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="5"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <VectorButton:VectorSolidIconButton.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </VectorButton:VectorSolidIconButton.ToolTip>
-            </VectorButton:VectorSolidIconButton>
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
             <VectorButton:VectorTextButton
-                HorizontalAlignment="Left"
+                MinWidth="60"
                 Background="#C6C6C6"
                 Command="{Binding AddOneCommandPageCommand}"
                 Foreground="Black"
@@ -712,7 +708,7 @@
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="添加" />
             <VectorButton:VectorTextButton
-                HorizontalAlignment="Left"
+                MinWidth="60"
                 Background="#C6C6C6"
                 Command="{Binding ClearCommandPageCommand}"
                 Foreground="Black"
@@ -720,7 +716,7 @@
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="清除" />
             <VectorButton:VectorTextButton
-                HorizontalAlignment="Left"
+                MinWidth="60"
                 Background="#C6C6C6"
                 Command="{Binding ImportFormClipBoard}"
                 Foreground="Black"
@@ -728,9 +724,8 @@
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从剪切板导入" />
             <VectorButton:VectorTextButton
-                HorizontalAlignment="Left"
+                MinWidth="60"
                 Background="#C6C6C6"
-                BorderThickness="4,3,4,7"
                 Command="{Binding ImportFromFileCommand}"
                 Foreground="Black"
                 OriginBottomHeight="3"
@@ -741,76 +736,19 @@
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
-            <TextBox
+            <Input:VectorTextBox
                 Margin="2"
                 HorizontalAlignment="Stretch"
                 VerticalContentAlignment="Center"
+                Background="#424242"
                 BorderBrush="#424242"
                 CaretBrush="White"
                 FontSize="15"
                 Foreground="White"
-                Text="{Binding SelectedItem.Header, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                <TextBox.Resources>
-                    <VisualBrush
-                        x:Key="BackgroundBrush"
-                        AlignmentX="Left"
-                        AlignmentY="Center"
-                        Stretch="UniformToFill">
-                        <VisualBrush.Visual>
-                            <Grid
-                                Width="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualWidth}"
-                                Height="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualHeight}"
-                                Background="#383838">
-                                <TextBlock
-                                    Margin="10,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"
-                                    Background="Transparent"
-                                    FontSize="12"
-                                    Foreground="#D6D6D6"
-                                    Text="当前标记"
-                                    TextAlignment="Center" />
-                            </Grid>
-                        </VisualBrush.Visual>
-                    </VisualBrush>
-                </TextBox.Resources>
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Setter Property="Background" Value="{StaticResource EditBox}" />
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="TextBox">
-                                    <Border
-                                        x:Name="border"
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        SnapsToDevicePixels="True">
-                                        <ScrollViewer
-                                            x:Name="PART_ContentHost"
-                                            Focusable="False"
-                                            HorizontalScrollBarVisibility="Hidden"
-                                            VerticalScrollBarVisibility="Hidden" />
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="border" Property="BorderBrush" Value="#424242" />
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <Style.Triggers>
-                            <Trigger Property="Text" Value="">
-                                <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="BorderBrush" Value="#424242" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBox.Style>
-            </TextBox>
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding SelectedItem.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                WaterMarkerMargin="5 0 0 2"
+                WaterMarkerText="当前标记" />
         </DockPanel>
         <TabControl
             Grid.Row="1"

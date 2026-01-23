@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.Interface;
 using CBHK.Model.Common;
@@ -18,18 +19,15 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -127,12 +125,12 @@ namespace CBHK.ViewModel.Component.Entity
         /// 实体ID
         /// </summary>
         [ObservableProperty]
-        private IconComboBoxItem _selectedEntityId = null;
+        private VectorTextComboBoxItem _selectedEntityId = null;
         /// <summary>
         /// 实体数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<IconComboBoxItem> _entityIDList = [];
+        public ObservableCollection<VectorIconTextComboBoxItem> _entityIDList = [];
 
         /// <summary>
         /// 属性数据
@@ -436,7 +434,7 @@ namespace CBHK.ViewModel.Component.Entity
         /// <summary>
         /// 根据当前切换的实体ID来动态切换UI元素的显隐
         /// </summary>
-        public async Task UpdateUILayOut(Task task = null)
+        public void UpdateUILayOut(Task task = null)
         {
             SelectedEntityId ??= EntityIDList[0];
             string data = File.ReadAllText(SpecialNBTStructureFilePath);
@@ -444,13 +442,13 @@ namespace CBHK.ViewModel.Component.Entity
             //更新标签页显示文本
             if (currentEntityPage.Parent is TabItem currentTab)
             {
-                currentTab.Header = SelectedEntityId.ComboBoxItemId + ":" + SelectedEntityId.ComboBoxItemText;
+                currentTab.Header = SelectedEntityId.Text + ":" + SelectedEntityId.Text;
             }
 
             #region 搜索当前实体ID对应的JSON对象
             JToken targetEntityObject = specialDataArray.First(item =>
             {
-                return item["Type"] is not null && item["Type"].ToString() == SelectedEntityId.ComboBoxItemId;
+                return item["Type"] is not null && item["Type"].ToString() == SelectedEntityId.Text;
             });
             #endregion
 
@@ -462,7 +460,7 @@ namespace CBHK.ViewModel.Component.Entity
                 List<string> closedCommonTagList = specialEntityCommonTagList.Except(commonTagList).ToList();
 
                 #region 处理专属NBT
-                if (!SpecialDataDictionary.TryGetValue(SelectedEntityId.ComboBoxItemId, out Grid newGrid))
+                if (!SpecialDataDictionary.TryGetValue(SelectedEntityId.Text, out Grid newGrid))
                 {
                     JArray children = JArray.Parse(targetEntityObject["Children"].ToString());
                     CacheGrid = new();
@@ -563,11 +561,10 @@ namespace CBHK.ViewModel.Component.Entity
                 if (item is not null)
                 {
                     string iconPath = File.Exists(entityImageFolderPath + item + "_spawn_egg.png") ? entityImageFolderPath + item + "_spawn_egg.png" : entityImageFolderPath + item + ".png";
-                    IconComboBoxItem iconComboBoxItem = new()
+                    VectorIconTextComboBoxItem iconComboBoxItem = new()
                     {
-                        ComboBoxItemIcon = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
-                        ComboBoxItemText = item ?? "",
-                        ComboBoxItemId = item
+                        Image = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
+                        Text = item ?? ""
                     };
                     EntityIDList.Add(iconComboBoxItem);
                 }
@@ -585,9 +582,9 @@ namespace CBHK.ViewModel.Component.Entity
             //更新专属和共通标签、额外字段
             Task.Run(async () =>
             {
-                await currentEntityPage.Dispatcher.InvokeAsync(async () =>
+                await currentEntityPage.Dispatcher.InvokeAsync(() =>
                 {
-                    await UpdateUILayOut();
+                    UpdateUILayOut();
                 });
             });
         }
@@ -613,7 +610,7 @@ namespace CBHK.ViewModel.Component.Entity
             {
                 if(CurrentMinVersion >= pair.Key)
                 {
-                    EntityIDList.AddRange(pair.Value.Select(item => new IconComboBoxItem() { ComboBoxItemId = item.Key, ComboBoxItemText = item.Value }));
+                    EntityIDList.AddRange(pair.Value.Select(item => new VectorIconTextComboBoxItem() { Text = item.Value }));
                 }
             }
             SelectedEntityId = EntityIDList[0];
@@ -752,7 +749,7 @@ namespace CBHK.ViewModel.Component.Entity
             JArray array = JArray.Parse(data);
             JToken targetObj = array.First(item =>
             {
-                return item["Type"].ToString() == SelectedEntityId.ComboBoxItemId;
+                return item["Type"].ToString() == SelectedEntityId.Text;
             });
             string type = targetObj["Type"].ToString();
             string commonTagData = targetObj["Common"].ToString();
@@ -822,7 +819,7 @@ namespace CBHK.ViewModel.Component.Entity
             List<JToken> result = [.. array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["Type"].ToString() == SelectedEntityId.ComboBoxItemId)
+                if (currentObj["Type"].ToString() == SelectedEntityId.Text)
                     return true;
                 return false;
             })];
@@ -838,7 +835,7 @@ namespace CBHK.ViewModel.Component.Entity
 
         public void Build(StringBuilder Result)
         {
-            Result = new((SpecialTagsResult.TryGetValue(SelectedEntityId.ComboBoxItemId, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
+            Result = new((SpecialTagsResult.TryGetValue(SelectedEntityId.Text, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
             {
                 if (item is not null && item.Result.Length > 0)
                     return item.Result;
@@ -857,7 +854,7 @@ namespace CBHK.ViewModel.Component.Entity
 
             if (UseForTool)
             {
-                Result = new("{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result is not null && Result.Length > 0 ? "," + Result : "") + "}");
+                Result = new("{id:\"minecraft:" + SelectedEntityId.Text + "\"" + (Result is not null && Result.Length > 0 ? "," + Result : "") + "}");
                 EntityView entity = Window.GetWindow(currentEntityPage) as EntityView;
                 entity.DialogResult = true;
                 return;
@@ -866,9 +863,9 @@ namespace CBHK.ViewModel.Component.Entity
             if (!Give)
             {
                 if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""Right Click To Run\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""newGrid\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Length > 0 ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}");
+                    Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""Right Click To Run\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""newGrid\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Length > 0 ? "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~") + @"\\\""}\""}}""}}");
                 else
-                    Result = new(Result.ToString().Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~");
+                    Result = new(Result.ToString().Trim() != "" ? "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~");
             }
             else
             {
@@ -876,15 +873,15 @@ namespace CBHK.ViewModel.Component.Entity
                 {
                     if (!HaveCustomName)
                     {
-                        Result = new("give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}");
+                        Result = new("give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.Text + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}");
                     }
                     else
                     {
-                        Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""Right Click To Run\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""newGrid\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}");
+                        Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""Right Click To Run\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""newGrid\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.Text + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}");
                     }
                 }
                 else
-                    Result = new("give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1");
+                    Result = new("give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.Text + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1");
             }
 
             if (SyncToFile && ExternFilePath.Length > 0 && File.Exists(ExternFilePath))

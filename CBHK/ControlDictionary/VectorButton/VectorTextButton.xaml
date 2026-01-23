@@ -70,9 +70,9 @@
                                 Grid.ColumnSpan="3"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
-                                Fill="{TemplateBinding OriginBottomBrush}"
+                                Fill="{TemplateBinding BottomBorderBrush}"
                                 IsHitTestVisible="False"
-                                Stroke="{TemplateBinding OriginBottomBrush}"
+                                Stroke="{TemplateBinding BottomBorderBrush}"
                                 StrokeThickness="0" />
                             <TextBlock
                                 Grid.Row="1"

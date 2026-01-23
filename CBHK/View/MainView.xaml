@@ -16,15 +16,15 @@
     xmlns:prism="http://prismlibrary.com/"
     xmlns:tb="http://www.hardcodet.net/taskbar"
     Title="CommandHelper-EfficiencyV v1.20.4"
-    Width="910"
-    Height="652"
-    MinWidth="910"
-    MinHeight="652"
+    Width="900"
+    Height="600"
+    MinWidth="900"
+    MinHeight="600"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="Transparent"
     FocusVisualStyle="{x:Null}"
     Icon="/cb.ico"
-    IconMargin="8 8 5 8"
+    IconMargin="5"
     RenderOptions.BitmapScalingMode="NearestNeighbor"
     RenderOptions.CachingHint="Cache"
     ShowInTaskbar="{Binding ShowInTaskBar}"
@@ -33,46 +33,22 @@
     mc:Ignorable="d">
 
     <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="Activated">
+            <behaviors:InvokeCommandAction Command="{Binding MainWindowActivatedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}" />
+        </behaviors:EventTrigger>
         <behaviors:EventTrigger EventName="Loaded">
             <behaviors:InvokeCommandAction Command="{Binding MainWindowLoadedCommand}" />
         </behaviors:EventTrigger>
         <behaviors:EventTrigger EventName="Closing">
-            <behaviors:InvokeCommandAction Command="{Binding MainWindowClosingCommand}" PassEventArgsToCommand="True" />
+            <behaviors:InvokeCommandAction Command="{Binding MainWindowClosingCommand}" />
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
 
-    <Container:VectorWindow.Resources>
-        <ContextMenu
-            x:Key="SysTrayMenu"
-            BorderBrush="#424242"
-            BorderThickness="1"
-            Style="{StaticResource DefaultContextMenuStyle}">
-            <Container:VectorTextMenuItem
-                Background="#2F2F2F"
-                BorderBrush="Transparent"
-                BorderThickness="1"
-                Command="{Binding ExitApplicationCommand}"
-                Foreground="White"
-                Header="退出"
-                Style="{DynamicResource VectorTextMenuItemStyle}" />
-        </ContextMenu>
-    </Container:VectorWindow.Resources>
-
-    <!--  #802B2B2B  -->
-    <!--  #221A1A1A  -->
-    <!--  #802B2B2B  -->
-    <!--  #0f0f0f  -->
     <Grid Background="Transparent">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="100" />
-        </Grid.RowDefinitions>
-        <TabControl
-            Grid.Row="0"
-            Background="Transparent"
+        <Container:VectorTabControl
             BorderThickness="0"
             SelectedIndex="0"
-            Style="{DynamicResource TabControlWithScrollBar}"
+            Style="{DynamicResource VectorTabControlStyle}"
             TabStripPlacement="Left">
             <Container:VectorIconTextTabItem
                 HeaderImage="/CBHK;component/Resource/CBHK/Image/IconHome.png"
@@ -726,15 +702,7 @@
                 Style="{StaticResource VectorIconTextTabItem}">
                 <Common:SettingsView />
             </Container:VectorIconTextTabItem>
-            <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItem}">
-                <VectorButton:VectorFlatImageButton
-                    Width="50"
-                    Height="50"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Image="/Resource/CBHK/Image/Generator/chatType.png"
-                    Style="{StaticResource VectorFlatImageButtonStyle}" />
-            </Container:VectorIconTextTabItem>
-        </TabControl>
+            <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItem}" />
+        </Container:VectorTabControl>
     </Grid>
 </Container:VectorWindow>

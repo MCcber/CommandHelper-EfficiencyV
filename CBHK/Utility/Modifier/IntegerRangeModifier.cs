@@ -14,7 +14,7 @@ namespace CBHK.Utility.Modifier
         #endregion
 
         #region Property
-        public Enums.ModiferType ModiferType { get; set; } = Enums.ModiferType.Range;
+        public ModiferType ModiferType { get; set; } = ModiferType.Range;
         #endregion
 
         public void SetRawdata(string data)

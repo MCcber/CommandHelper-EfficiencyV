@@ -19,7 +19,7 @@
                                 <ColumnDefinition Width="3*" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <TextBox
+                            <Input:VectorTextBox
                                 Grid.RowSpan="2"
                                 Grid.Column="0"
                                 Padding="2,0,0,0"
@@ -28,7 +28,18 @@
                                 Background="#313233"
                                 BorderBrush="#242425"
                                 Foreground="{TemplateBinding Foreground}"
-                                Text="{TemplateBinding Text}" />
+                                LocateLineBrush="{TemplateBinding LocateLineBrush}"
+                                Style="{DynamicResource VectorTextBoxStyle}"
+                                Text="{TemplateBinding Text}"
+                                WaterMarkerBrush="{TemplateBinding WaterMarkerBrush}"
+                                WaterMarkerMargin="{TemplateBinding WaterMarkerMargin}"
+                                WaterMarkerText="{TemplateBinding WaterMarkerText}">
+                                <behaviors:Interaction.Triggers>
+                                    <behaviors:EventTrigger EventName="TextChanged">
+                                        <behaviors:CallMethodAction MethodName="OnTextChanged" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                                    </behaviors:EventTrigger>
+                                </behaviors:Interaction.Triggers>
+                            </Input:VectorTextBox>
                             <VectorButton:VectorIconRepeatButton
                                 Grid.Row="0"
                                 Grid.Column="1"
