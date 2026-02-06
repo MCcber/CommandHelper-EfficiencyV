@@ -1,53 +1,51 @@
-﻿using System;
-using System.Windows.Threading;
-using System.Windows;
-using System.Windows.Documents;
-using System.Windows.Controls;
-using System.Windows.Media;
+﻿using CBHK.Model.Common;
+using System;
 using System.Collections.ObjectModel;
-using System.Windows.Media.Imaging;
-using CommunityToolkit.Mvvm.Input;
-using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace CBHK.Utility.MessageTip
 {
-    public class MessageAdorner : Adorner
+    public class MessageAdorner(UIElement adornedElement) : Adorner(adornedElement)
     {
+        #region Field
         private ListBox listBox;
-        private ObservableCollection<MessageData> source { get; set; } = [];
+        private ObservableCollection<GeneratorMessage> Source { get; set; } = [];
         private UIElement _child;
-        private FrameworkElement adornedElement;
-        public MessageAdorner(UIElement adornedElement) : base(adornedElement)
-        {
-            this.adornedElement = adornedElement as FrameworkElement;
-        }
+        private readonly FrameworkElement adornedElement = adornedElement as FrameworkElement;
+        #endregion
 
-        public void PushMessage(string message, MessageBoxImage type = MessageBoxImage.Information)
+        #region Method
+        public void PushMessage(GeneratorMessage generatorMessage)
         {
             if (listBox is null)
             {
                 listBox = new ListBox
                 {
+                    HorizontalAlignment = HorizontalAlignment.Right,
                     IsHitTestVisible = false,
                     Style = null,
                     BorderThickness = new Thickness(0),
                     Background = Brushes.Transparent,
-                    Margin = new(0, 20, 0, 0),
+                    Margin = new(0, 10, 10, 0),
                     ItemTemplate = Application.Current.Resources["MessageTipItemTemplate"] as DataTemplate,
-                    ItemsSource = source
+                    ItemsSource = Source
                 };
                 Child = listBox;
             }
-            ImageSource icon = new BitmapImage();
-            if (type == MessageBoxImage.Information)
-                icon = Application.Current.Resources["InfomationIcon"] as DrawingImage;
-            else
-                if (type == MessageBoxImage.Error)
-                icon = Application.Current.Resources["ErrorIcon"] as DrawingImage;
-            MessageData messageData = new()
+
+            GeneratorMessage messageData = new()
             {
-                MessageString = message,
-                Icon = icon
+                Message = generatorMessage.Message,
+                MessageBrush = generatorMessage.MessageBrush,
+                SecondBackground = generatorMessage.SecondBackground,
+                FirstBackground = generatorMessage.FirstBackground,
+                SubMessage = generatorMessage.SubMessage,
+                SubMessageBrush = generatorMessage.SubMessageBrush,
+                Icon = generatorMessage.Icon
             };
             DispatcherTimer timer = new()
             {
@@ -55,12 +53,14 @@ namespace CBHK.Utility.MessageTip
             };
             timer.Tick += (sender, e) =>
             {
-                source.Remove(messageData);
+                Source.Remove(messageData);
                 timer.Stop();
             };
-            if (source.Count >= 5)
-                source.RemoveAt(4);
-            source.Insert(0, messageData);
+            if (Source.Count >= 5)
+            {
+                Source.RemoveAt(4);
+            }
+            Source.Insert(0, messageData);
             timer.Start();
         }
 
@@ -89,25 +89,22 @@ namespace CBHK.Utility.MessageTip
 
         protected override Size ArrangeOverride(Size finalSize)
         {
-            var x = (adornedElement.ActualWidth - _child.DesiredSize.Width) / 2;
-            _child.Arrange(new Rect(new Point(x, 0), _child.DesiredSize));
+            // 计算右上角位置
+            double rightMargin = 10;
+            double topMargin = 10;
+            var x = adornedElement.ActualWidth - _child.DesiredSize.Width - rightMargin;
+            // 确保不超出左边界
+            if (x < 0) x = 0;
+            var y = topMargin; // 设置顶部边距
+            _child.Arrange(new Rect(new Point(x, y), _child.DesiredSize));
             return finalSize;
         }
 
-        protected override Visual GetVisualChild(int index)
+        protected override System.Windows.Media.Visual GetVisualChild(int index)
         {
             if (index == 0 && _child is not null) return _child;
             return base.GetVisualChild(index);
-        }
-    }
-
-    public class MessageData
-    {
-        public ImageSource Icon { get; set; }
-        public string MessageString { get; set; }
-
-        public string CollapseCount { get; set; } = "1";
-
-        public Visibility CollapseBlockVisibility { get; set; } = Visibility.Collapsed;
+        } 
+        #endregion
     }
 }

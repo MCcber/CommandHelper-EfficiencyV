@@ -1,5 +1,7 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.TextElement;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
@@ -54,7 +56,7 @@ namespace CBHK.ViewModel.Component.Sign
         /// <summary>
         /// 事件设置控件
         /// </summary>
-        TextEvent EventComponent = new() { };
+        //TextEvent EventComponent = new() { };
 
         #region 悬浮菜单
         Popup popup = new()
@@ -79,7 +81,7 @@ namespace CBHK.ViewModel.Component.Sign
         /// 告示牌类型
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedSignType;
+        private VectorTextComboBoxItem _selectedSignType;
         /// <summary>
         /// 告示牌背景
         /// </summary>
@@ -96,18 +98,18 @@ namespace CBHK.ViewModel.Component.Sign
         /// 已选择的版本
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem _selectedVersion;
 
         /// <summary>
         /// 版本数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
         /// <summary>
         /// 告示牌类型数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _typeSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> _typeSource = [];
 
         /// <summary>
         /// 正反面文档
@@ -301,24 +303,24 @@ namespace CBHK.ViewModel.Component.Sign
                     };
                     #endregion
 
-                    BindingOperations.SetBinding(EventComponent.EnableClickEvent, ToggleButton.IsCheckedProperty, HaveClickEventBinder);
-                    BindingOperations.SetBinding(EventComponent.EnableHoverEvent, ToggleButton.IsCheckedProperty, HaveHoverEventBinder);
-                    BindingOperations.SetBinding(EventComponent.EnableInsertion, ToggleButton.IsCheckedProperty, HaveInsertionBinder);
+                    //BindingOperations.SetBinding(EventComponent.EnableClickEvent, ToggleButton.IsCheckedProperty, HaveClickEventBinder);
+                    //BindingOperations.SetBinding(EventComponent.EnableHoverEvent, ToggleButton.IsCheckedProperty, HaveHoverEventBinder);
+                    //BindingOperations.SetBinding(EventComponent.EnableInsertion, ToggleButton.IsCheckedProperty, HaveInsertionBinder);
 
-                    EventComponent.ClickEventPanel.Visibility = CurrentRichRun.HasClickEvent ? Visibility.Visible : Visibility.Collapsed;
-                    EventComponent.HoverEventPanel.Visibility = CurrentRichRun.HasHoverEvent ? Visibility.Visible : Visibility.Collapsed;
-                    EventComponent.InsertionPanel.Visibility = CurrentRichRun.HasInsertion ? Visibility.Visible : Visibility.Collapsed;
+                    //EventComponent.ClickEventPanel.Visibility = CurrentRichRun.HasClickEvent ? Visibility.Visible : Visibility.Collapsed;
+                    //EventComponent.HoverEventPanel.Visibility = CurrentRichRun.HasHoverEvent ? Visibility.Visible : Visibility.Collapsed;
+                    //EventComponent.InsertionPanel.Visibility = CurrentRichRun.HasInsertion ? Visibility.Visible : Visibility.Collapsed;
 
                     //EventComponent.EnableClickEvent.IsChecked = CurrentRichRun.HasClickEvent;
                     //EventComponent.EnableHoverEvent.IsChecked = CurrentRichRun.HasHoverEvent;
                     //EventComponent.EnableInsertion.IsChecked = CurrentRichRun.HasInsertion;
 
-                    BindingOperations.SetBinding(EventComponent.ClickEventActionBox, Selector.SelectedItemProperty, ClickEventActionBinder);
-                    BindingOperations.SetBinding(EventComponent.HoverEventActionBox, Selector.SelectedItemProperty, HoverEventActionBinder);
+                    //BindingOperations.SetBinding(EventComponent.ClickEventActionBox, Selector.SelectedItemProperty, ClickEventActionBinder);
+                    //BindingOperations.SetBinding(EventComponent.HoverEventActionBox, Selector.SelectedItemProperty, HoverEventActionBinder);
 
-                    BindingOperations.SetBinding(EventComponent.ClickEventValueBox, TextBox.TextProperty, ClickEventValueBinder);
-                    BindingOperations.SetBinding(EventComponent.HoverEventValueBox, TextBox.TextProperty, HoverEventValueBinder);
-                    BindingOperations.SetBinding(EventComponent.InsertionValueBox, TextBox.TextProperty, InsertionValueBinder);
+                    //BindingOperations.SetBinding(EventComponent.ClickEventValueBox, TextBox.TextProperty, ClickEventValueBinder);
+                    //BindingOperations.SetBinding(EventComponent.HoverEventValueBox, TextBox.TextProperty, HoverEventValueBinder);
+                    //BindingOperations.SetBinding(EventComponent.InsertionValueBox, TextBox.TextProperty, InsertionValueBinder);
                     #endregion
                 }
                 else//选区首尾文本块不同则更新它们之间的所有文本块
@@ -386,7 +388,7 @@ namespace CBHK.ViewModel.Component.Sign
             }
             Result.Sort();
             foreach (var item in Result)
-                TypeSource.Add(new TextComboBoxItem() { Text = item });
+                TypeSource.Add(new VectorTextComboBoxItem() { Text = item });
             SelectedSignType = TypeSource[0];
         }
 
@@ -447,7 +449,7 @@ namespace CBHK.ViewModel.Component.Sign
                 typeSource.Sort();
                 foreach (var item in typeSource)
                 {
-                    TypeSource.Add(new TextComboBoxItem() { Text = item });
+                    TypeSource.Add(new VectorTextComboBoxItem() { Text = item });
                 }
             });
             #endregion
@@ -463,7 +465,7 @@ namespace CBHK.ViewModel.Component.Sign
             SignTextEditor = sender as RichTextBox;
             SignTextEditor.Document = SignDocumentList[0];
             //设置悬浮菜单
-            popup.Child = EventComponent;
+            //popup.Child = EventComponent;
             popup.PlacementTarget = SignTextEditor;
         }
 
@@ -993,7 +995,15 @@ namespace CBHK.ViewModel.Component.Sign
             else
             {
                 Clipboard.SetText(Result);
-                Message.PushMessage("生成成功！告示牌已进入剪切板",MessageBoxImage.Information);
+                bool hanged = CanHanging && IsHanging;
+                string hangingStateString = hanged ?"hanging_":"";
+                string resultTypeString = SelectedSignType.Text + '_' + hangingStateString + "sign";
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "生成成功！告示牌已进入剪切板",
+                    SubMessage = "告示牌生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + resultTypeString + ".png", UriKind.RelativeOrAbsolute))
+                });
             }
         }
 

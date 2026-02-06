@@ -1,5 +1,7 @@
 ﻿using CBHK.CustomControl;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
+using CBHK.Model.Common;
 using CBHK.Model.Generator.Tag;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
@@ -20,6 +22,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -59,7 +62,7 @@ namespace CBHK.ViewModel.Generator
         /// 标签生成器的过滤类型数据源
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _typeItemSource = [];
+        private ObservableCollection<VectorTextComboBoxItem> _typeItemSource = [];
         /// <summary>
         /// 是否替换
         /// </summary>
@@ -74,12 +77,12 @@ namespace CBHK.ViewModel.Generator
         /// 版本列表
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionList = [new TextComboBoxItem() { Text = "1.20.4" }];
+        private ObservableCollection<VectorTextComboBoxItem> _versionList = [new VectorTextComboBoxItem() { Text = "1.20.4" }];
         /// <summary>
         /// 已选中版本
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedVersion = null;
+        private VectorTextComboBoxItem _selectedVersion = null;
         /// <summary>
         /// 当前选中的值成员
         /// </summary>
@@ -94,7 +97,7 @@ namespace CBHK.ViewModel.Generator
         /// 当前选中的类型成员
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedTypeItem = null;
+        private VectorTextComboBoxItem _selectedTypeItem = null;
         /// <summary>
         /// 全选
         /// </summary>
@@ -271,7 +274,7 @@ namespace CBHK.ViewModel.Generator
                 string[] Types = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\Data\TypeFilter.ini");
                 for (int i = 0; i < Types.Length; i++)
                 {
-                    TypeItemSource.Add(new TextComboBoxItem() { Text = Types[i] });
+                    TypeItemSource.Add(new VectorTextComboBoxItem() { Text = Types[i] });
                 }
             }
             #endregion
@@ -438,7 +441,14 @@ namespace CBHK.ViewModel.Generator
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
                 File.WriteAllText(saveFileDialog.FileName, result);
-                Message.PushMessage("标签生成成功！", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "标签生成成功！",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "标签生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                });
                 //OpenFolderThenSelectFiles.ExplorerFile(saveFileDialog.FileName);
             }
         }

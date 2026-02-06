@@ -1,6 +1,7 @@
 ﻿using CBHK.Common.Model;
 using CBHK.Common.Utility;
 using CBHK.CustomControl;
+using CBHK.CustomControl.Container;
 using CBHK.Domain;
 using CBHK.Utility.Common;
 using CBHK.View;
@@ -38,24 +39,14 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// <summary>
         /// 初始标签页
         /// </summary>
-        private RichTabItems WelComeTab = new()
+        private VectorRichTabItem WelComeTab = new()
         {
             Style = Application.Current.Resources["RichTabItemStyle"] as Style,
             Uid = "DemonstrationPage",
             FontSize = 12,
             Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
             Header = "欢迎使用",
-            FontWeight = FontWeights.Normal,
-            IsContentSaved = true,
-            BorderThickness = new(4, 3, 4, 0),
-            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-            SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-            LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-            RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-            TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-            SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-            SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-            SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+            FontWeight = FontWeights.Normal
         };
         /// <summary>
         /// 符号结构文件
@@ -158,7 +149,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         [ObservableProperty]
         private string _datapackSeacherText = "";
         [ObservableProperty]
-        public ObservableCollection<RichTabItems> _functionModifyTabItems = [];
+        public ObservableCollection<VectorRichTabItem> _functionModifyTabItems = [];
         [ObservableProperty]
         public ObservableCollection<TreeViewItem> _datapackTreeViewItems = [];
         [ObservableProperty]
@@ -173,7 +164,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// 当前选中的文本编辑器
         /// </summary>
         [ObservableProperty]
-        private RichTabItems _selectedFileItem = null;
+        private VectorRichTabItem _selectedFileItem = null;
         /// <summary>
         /// 解决方案视图被选中的成员
         /// </summary>
@@ -717,7 +708,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
                         File.Move(path,currentParent.Uid + Path.GetFileName(path));
 
                         #region 更新编辑区文件的UID路径数据
-                        foreach (RichTabItems tab in FunctionModifyTabItems)
+                        foreach (VectorRichTabItem tab in FunctionModifyTabItems)
                         {
                             if (tab.Uid == path)
                             {
@@ -773,11 +764,11 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         private void ExcludeFromProject()
         {
             #region 编辑区对应标签页改为未保存
-            foreach (RichTabItems tab in FunctionModifyTabItems)
+            foreach (VectorRichTabItem tab in FunctionModifyTabItems)
             {
                 if (tab.Uid == SolutionViewSelectedItem.Uid)
                 {
-                    tab.IsContentSaved = false;
+                    //tab.IsContentSaved = false;
                     break;
                 }
             }
@@ -844,24 +835,14 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
                 await datapack.Dispatcher.InvokeAsync(() =>
                 {
                     string fileContent = File.ReadAllText(currentItem.Uid);
-                    RichTabItems item = new()
+                    VectorRichTabItem item = new()
                     {
                         Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                         Uid = currentItem.Uid,
                         FontSize = 12,
                         Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")),
                         Header = Path.GetFileName(currentItem.Uid),
-                        IsContentSaved = true,
-                        FontWeight = FontWeights.Normal,
-                        BorderThickness = new(4, 3, 4, 0),
-                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                        SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                        LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                        RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                        TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                        SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                        SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                        SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+                        FontWeight = FontWeights.Normal
                     };
 
                     EditPageView editPageView = container.Resolve<EditPageView>();
@@ -892,7 +873,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         private async void TextEditor_KeyDown(object sender, KeyEventArgs e)
         {
             TextEditor textEditor = sender as TextEditor;
-            RichTabItems parent = textEditor.Parent as RichTabItems;
+            VectorRichTabItem parent = textEditor.Parent as VectorRichTabItem;
             DatapackView datapack = Window.GetWindow(parent) as DatapackView;
             #region 保存
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.S)
@@ -903,7 +884,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
                     if (!Directory.Exists(folder))
                         Directory.CreateDirectory(folder);
                     _ = File.WriteAllTextAsync(parent.Uid, textEditor.Text);
-                    parent.IsContentSaved = true;
+                    //parent.IsContentSaved = true;
                 });
             }
             #endregion
@@ -917,8 +898,8 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         private void TextEditor_TextChanged(object sender, EventArgs e)
         {
             TextEditor textEditor = sender as TextEditor;
-            RichTabItems parent = textEditor.Parent as RichTabItems;
-            parent.IsContentSaved = false;
+            VectorRichTabItem parent = textEditor.Parent as VectorRichTabItem;
+            //parent.IsContentSaved = false;
         }
         #endregion
     }

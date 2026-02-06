@@ -3,13 +3,14 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:TextElement="clr-namespace:CBHK.CustomControl.TextElement"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
+    xmlns:utility="clr-namespace:CBHK.Utility.Visual"
     Title="一键命令方块生成器"
     Width="983"
     Height="606"
@@ -56,7 +57,7 @@
             HorizontalScrollBarVisibility="Disabled"
             IsReadOnly="True"
             VerticalScrollBarVisibility="Visible">
-            <CustomControl:EnabledFlowDocument LineHeight="10">
+            <TextElement:EnabledFlowDocument LineHeight="10">
                 <Paragraph Padding="0,10,0,0" TextAlignment="Center">
                     <Run
                         FontSize="20"
@@ -655,7 +656,7 @@
                             Text="Home" />
                     </Border>
                 </Paragraph>
-            </CustomControl:EnabledFlowDocument>
+            </TextElement:EnabledFlowDocument>
         </RichTextBox>
     </Window.Resources>
 
@@ -740,6 +741,7 @@
                 Margin="2"
                 HorizontalAlignment="Stretch"
                 VerticalContentAlignment="Center"
+                utility:TextSizeHelper.AutoFontSize="True"
                 Background="#424242"
                 BorderBrush="#424242"
                 CaretBrush="White"
@@ -750,13 +752,13 @@
                 WaterMarkerMargin="5 0 0 2"
                 WaterMarkerText="当前标记" />
         </DockPanel>
-        <TabControl
+        <Container:VectorTabControl
             Grid.Row="1"
             Grid.Column="0"
             Background="Transparent"
             ItemsSource="{Binding OocTabSource}"
             SelectedIndex="0"
             SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
-            Style="{DynamicResource TabControlWithScrollBar}" />
+            Style="{DynamicResource VectorTabControlStyle}" />
     </Grid>
 </Container:VectorWindow>

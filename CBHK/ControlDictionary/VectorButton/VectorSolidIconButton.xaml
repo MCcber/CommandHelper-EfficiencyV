@@ -17,6 +17,9 @@
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
         <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="IconWidth" Value="20" />
+        <Setter Property="IconHeight" Value="20" />
+        <Setter Property="Background" Value="Red" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
@@ -100,13 +103,15 @@
                                 Grid.Column="6"
                                 Fill="Red" />-->
                             <Viewbox
+                                Width="{TemplateBinding IconWidth}"
+                                Height="{TemplateBinding IconHeight}"
                                 Margin="{TemplateBinding IconMargin}"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
                                 <Path
-                                    Data="{TemplateBinding ImageData}"
-                                    Fill="{TemplateBinding ImageFillColorBrush}"
-                                    Stroke="{TemplateBinding ImageStrokeColorBrush}"
+                                    Data="{TemplateBinding Icon}"
+                                    Fill="{TemplateBinding IconFillColor}"
+                                    Stroke="{TemplateBinding IconStrokeColor}"
                                     StrokeThickness="1" />
                             </Viewbox>
                             <ContentPresenter

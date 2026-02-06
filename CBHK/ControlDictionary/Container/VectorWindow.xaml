@@ -45,7 +45,7 @@
                                         <TextBlock
                                             Margin="10,0"
                                             VerticalAlignment="Center"
-                                            Foreground="White"
+                                            Foreground="{TemplateBinding Foreground}"
                                             Text="{TemplateBinding Title}" />
                                     </StackPanel>
                                     <Grid
@@ -84,10 +84,11 @@
                                             Width="{TemplateBinding TitleButtonWidth}"
                                             Height="{TemplateBinding TitleBarHeight}"
                                             DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-                                            IconMargin="10"
-                                            ImageData="{TemplateBinding MaximizeButtonPathData}"
-                                            ImageFillColorBrush="{TemplateBinding RestorePathFillBrush}"
-                                            ImageStrokeColorBrush="White"
+                                            Icon="{TemplateBinding MaximizeButtonPathData}"
+                                            IconFillColor="{TemplateBinding RestorePathFillBrush}"
+                                            IconHeight="10"
+                                            IconStrokeColor="White"
+                                            IconWidth="10"
                                             Style="{DynamicResource VectorSolidIconButtonStyle}"
                                             WindowChrome.IsHitTestVisibleInChrome="True">
                                             <behavior:Interaction.Triggers>
@@ -101,9 +102,10 @@
                                             Width="{TemplateBinding TitleButtonWidth}"
                                             Height="{TemplateBinding TitleBarHeight}"
                                             DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-                                            IconMargin="10"
-                                            ImageData="{DynamicResource CloseMark}"
-                                            ImageFillColorBrush="White"
+                                            Icon="{DynamicResource CloseMark}"
+                                            IconFillColor="White"
+                                            IconHeight="10"
+                                            IconWidth="10"
                                             Style="{DynamicResource VectorSolidIconButtonStyle}"
                                             WindowChrome.IsHitTestVisibleInChrome="True">
                                             <behavior:Interaction.Triggers>

@@ -1,4 +1,6 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
@@ -19,6 +21,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -53,29 +56,19 @@ namespace CBHK.ViewModel.Generator
         /// 当前选中的物品页
         /// </summary>
         [ObservableProperty]
-        private RichTabItems _selectedItemPage = null;
+        private VectorRichTabItem _selectedItemPage = null;
 
         /// <summary>
         /// 物品页数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<RichTabItems> _itemPageList =
+        public ObservableCollection<VectorRichTabItem> _itemPageList =
         [
-            new RichTabItems()
+            new VectorRichTabItem()
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 Header = "物品",
-                FontWeight = FontWeights.Normal,
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+                FontWeight = FontWeights.Normal
             }
         ];
 
@@ -84,20 +77,20 @@ namespace CBHK.ViewModel.Generator
         /// 版本列表
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionList = [
-            new TextComboBoxItem() { Text = "1.20.4" }, 
-            new TextComboBoxItem() { Text = "1.20.2" },
-            new TextComboBoxItem() { Text = "1.20.0" },
-            new TextComboBoxItem() { Text = "1.19.4" },
-            new TextComboBoxItem() { Text = "1.19.3" },
-            new TextComboBoxItem() { Text = "1.19.0" },
-            new TextComboBoxItem() { Text = "1.16.2" },
-            new TextComboBoxItem() { Text = "1.16.0" },
-            new TextComboBoxItem() { Text = "1.15.0" },
-            new TextComboBoxItem() { Text = "1.14.0" },
-            new TextComboBoxItem() { Text = "1.13.1" },
-            new TextComboBoxItem() { Text = "1.13.0" }, 
-            new TextComboBoxItem() { Text = "1.12.0" }];
+        public ObservableCollection<VectorTextComboBoxItem> _versionList = [
+            new VectorTextComboBoxItem() { Text = "1.20.4" }, 
+            new VectorTextComboBoxItem() { Text = "1.20.2" },
+            new VectorTextComboBoxItem() { Text = "1.20.0" },
+            new VectorTextComboBoxItem() { Text = "1.19.4" },
+            new VectorTextComboBoxItem() { Text = "1.19.3" },
+            new VectorTextComboBoxItem() { Text = "1.19.0" },
+            new VectorTextComboBoxItem() { Text = "1.16.2" },
+            new VectorTextComboBoxItem() { Text = "1.16.0" },
+            new VectorTextComboBoxItem() { Text = "1.15.0" },
+            new VectorTextComboBoxItem() { Text = "1.14.0" },
+            new VectorTextComboBoxItem() { Text = "1.13.1" },
+            new VectorTextComboBoxItem() { Text = "1.13.0" }, 
+            new VectorTextComboBoxItem() { Text = "1.12.0" }];
 
         /// <summary>
         /// 版本ID数据源
@@ -122,11 +115,11 @@ namespace CBHK.ViewModel.Generator
         private void ClearUnnecessaryData()
         {
             ItemPageViewModel itemPageDataContext = (SelectedItemPage.Content as ItemPageView).DataContext as ItemPageViewModel;
-            if (itemPageDataContext.specialDataDictionary.TryGetValue(itemPageDataContext.SelectedItem.ComboBoxItemId, out Grid grid))
-                grid = itemPageDataContext.specialDataDictionary[itemPageDataContext.SelectedItem.ComboBoxItemId];
+            if (itemPageDataContext.specialDataDictionary.TryGetValue(itemPageDataContext.SelectedItem.Text, out Grid grid))
+                grid = itemPageDataContext.specialDataDictionary[itemPageDataContext.SelectedItem.Text];
             itemPageDataContext.specialDataDictionary.Clear();
             grid ??= new();
-            itemPageDataContext.specialDataDictionary.Add(itemPageDataContext.SelectedItem.ComboBoxItemId, grid);
+            itemPageDataContext.specialDataDictionary.Add(itemPageDataContext.SelectedItem.Text, grid);
         }
 
         [RelayCommand]
@@ -143,22 +136,11 @@ namespace CBHK.ViewModel.Generator
                     return;
                 }
             }
-            RichTabItems richTabItems = new()
+            VectorRichTabItem richTabItems = new()
             {
                 Header = "物品",
                 FontWeight = FontWeights.Normal,
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                Foreground = new SolidColorBrush(Colors.White),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Style = Application.Current.Resources["RichTabItemStyle"] as Style
             };
             ItemPageView itemPage = new() 
             { 
@@ -204,7 +186,7 @@ namespace CBHK.ViewModel.Generator
             };
             if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
             {
-                ObservableCollection<RichTabItems> result = ItemPageList;
+                ObservableCollection<VectorRichTabItem> result = ItemPageList;
                 ExternalDataImportManager.ImportItemDataHandler(dialog.FileName, ref result);
             }
         }
@@ -215,7 +197,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportItemFromClipboard()
         {
-            ObservableCollection<RichTabItems> result = ItemPageList;
+            ObservableCollection<VectorRichTabItem> result = ItemPageList;
             ExternalDataImportManager.ImportItemDataHandler(Clipboard.GetText(), ref result, false);
         }
 
@@ -252,7 +234,7 @@ namespace CBHK.ViewModel.Generator
                         if (nbt.Length > 0)
                         entityIDPath = "CustomName";
                     JToken name = resultJSON.SelectToken(entityIDPath);
-                    FileNameList.Add(context.SelectedItem.ComboBoxItemId + (name is not null ? "-" + name.ToString() : ""));
+                    FileNameList.Add(context.SelectedItem.Text + (name is not null ? "-" + name.ToString() : ""));
                     Result.Add(result);
                 });
             }
@@ -314,7 +296,12 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString());
-                Message.PushMessage("物品全部生成成功！数据已进入剪切板", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "物品全部生成成功！数据已进入剪切板",
+                    SubMessage = "物品生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\item_frame.png", UriKind.RelativeOrAbsolute))
+                });
             }
         }
         #endregion

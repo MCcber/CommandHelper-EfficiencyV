@@ -1,4 +1,7 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorCheckBox;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
@@ -40,7 +43,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 原版颜色库面板
         /// </summary>
-        public List<IconCheckBoxs> StructureColorList = [];
+        public List<VectorTextCheckBox> StructureColorList = [];
         /// <summary>
         /// 三维视图
         /// </summary>
@@ -70,38 +73,29 @@ namespace CBHK.ViewModel.Generator
         /// 烟花火箭标签页
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<RichTabItems> _fireworkRocketPageList = 
+        public ObservableCollection<VectorRichTabItem> _fireworkRocketPageList = 
         [ 
-            new RichTabItems() { Header = "烟花",
-                IsContentSaved = true,
+            new VectorRichTabItem() { Header = "烟花",
                 BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush, 
+                Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style
             } 
         ];
 
         [ObservableProperty]
-        private RichTabItems _selectedFireworkRocketPage;
+        private VectorRichTabItem _selectedFireworkRocketPage;
 
         /// <summary>
         /// 形状数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _shapeList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _shapeList = [];
 
         #region 版本数据源
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionSource = [
-            new TextComboBoxItem() { Text = "1.20.2" },
-            new TextComboBoxItem() { Text = "1.12.0" }
+        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+            new VectorTextComboBoxItem() { Text = "1.20.2" },
+            new VectorTextComboBoxItem() { Text = "1.12.0" }
             ];
         #endregion
 
@@ -116,7 +110,7 @@ namespace CBHK.ViewModel.Generator
                 string[] shapes = File.ReadAllLines(shapePath);
                 foreach (string shape in shapes)
                 {
-                    ShapeList.Add(new TextComboBoxItem() { Text = shape[(shape.LastIndexOf(':') + 1)..] });
+                    ShapeList.Add(new VectorTextComboBoxItem() { Text = shape[(shape.LastIndexOf(':') + 1)..] });
                 }
             }
             #endregion
@@ -269,22 +263,13 @@ namespace CBHK.ViewModel.Generator
         private void AddFireworkRocket()
         {
             FireworkRocketPageView fireworkRocketPages = new() { FontWeight = FontWeights.Normal };
-            RichTabItems richTabItems = new()
+            VectorRichTabItem richTabItems = new()
             {
                 Header = "烟花",
                 Content = fireworkRocketPages,
-                IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Style = Application.Current.Resources["RichTabItemStyle"] as Style
             };
             FireworkRocketPageList.Add(richTabItems);
 
@@ -311,7 +296,7 @@ namespace CBHK.ViewModel.Generator
         /// <exception cref="NotImplementedException"></exception>
         private void ImportFireworkRocketFromFile()
         {
-            Microsoft.Win32.OpenFileDialog dialog = new()
+            OpenFileDialog dialog = new()
             {
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
                 RestoreDirectory = true,
@@ -322,7 +307,7 @@ namespace CBHK.ViewModel.Generator
             if (dialog.ShowDialog().Value)
                 if (File.Exists(dialog.FileName))
                 {
-                    ObservableCollection<RichTabItems> result = FireworkRocketPageList;
+                    ObservableCollection<VectorRichTabItem> result = FireworkRocketPageList;
                     ExternalDataImportManager.ImportFireworkDataHandler(dialog.FileName, ref result);
                 }
         }
@@ -333,7 +318,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFireworkRocketFromClipboard()
         {
-            ObservableCollection<RichTabItems> result = FireworkRocketPageList;
+            ObservableCollection<VectorRichTabItem> result = FireworkRocketPageList;
             ExternalDataImportManager.ImportFireworkDataHandler(Clipboard.GetText(), ref result, false);
         }
 
@@ -379,7 +364,12 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString());
-                Message.PushMessage("烟花全部生成成功！数据已进入剪切板", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "烟花全部生成成功！数据已进入剪切板",
+                    SubMessage = "烟花火箭生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\firework_rocket.png", UriKind.RelativeOrAbsolute))
+                });
             }
         }
 

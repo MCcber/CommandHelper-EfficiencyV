@@ -2,7 +2,8 @@
     x:Class="CBHK.View.Common.NoticeToUsersView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
@@ -86,17 +87,15 @@
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             LastChildFill="False">
-            <CustomControl:TextCheckBoxs
+            <VectorCheckBox:VectorTextCheckBox
                 Grid.Row="1"
                 Height="25"
                 Margin="0,0,10,10"
                 Background="{StaticResource ButtonNormal}"
                 Foreground="White"
-                HeaderHeight="20"
-                HeaderText="下次不再显示本窗体"
-                HeaderWidth="20"
                 IsChecked="{Binding DonotShowNextTime}"
-                Style="{DynamicResource TextCheckBox}" />
+                Style="{DynamicResource VectorTextCheckBoxStyle}"
+                Text="下次不再显示本窗体" />
             <TextBlock
                 x:Name="browseTimeBlock"
                 Margin="0,0,10,10"
@@ -105,7 +104,7 @@
                 Foreground="White"
                 Text="{Binding BrowseTimeBlockText}"
                 Visibility="{Binding CountDownVisibility}" />
-            <CustomControl:TextButtons
+            <VectorButton:VectorTextButton
                 x:Name="understandButton"
                 Grid.Row="1"
                 Width="45"
@@ -116,9 +115,7 @@
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
                 Content="已了解"
                 IsEnabled="{Binding UnderstandButtonEnable}"
-                MouseLeftDownBackground="{StaticResource ButtonPressed}"
-                MouseOverBackground="{StaticResource ButtonNormal}"
-                Style="{DynamicResource TextButtonsStyle}" />
+                Style="{DynamicResource VectorTextButtonStyle}" />
         </DockPanel>
     </Grid>
 </Window>

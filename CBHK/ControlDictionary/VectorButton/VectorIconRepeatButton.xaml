@@ -16,6 +16,8 @@
     <Style x:Key="VectorIconRepeatButtonStyle" TargetType="{x:Type VectorButton:VectorIconRepeatButton}">
         <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
         <Setter Property="Background" Value="{StaticResource Button.Static.Background}" />
         <Setter Property="BorderBrush" Value="{StaticResource Button.Static.Border}" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
@@ -47,12 +49,12 @@
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="0"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="1"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="0"
@@ -62,12 +64,12 @@
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="0"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="2"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
@@ -77,22 +79,20 @@
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="1"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="2"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="3"
                                 Grid.ColumnSpan="3"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
-                                Fill="{TemplateBinding OriginBottomBrush}"
-                                IsHitTestVisible="False"
-                                Stroke="{TemplateBinding OriginBottomBrush}"
-                                StrokeThickness="0" />
+                                Fill="{TemplateBinding BottomBorderBrush}"
+                                IsHitTestVisible="False" />
                             <Grid
                                 Grid.Row="1"
                                 Grid.Column="1"

@@ -58,6 +58,7 @@
             <VectorButton:VectorFlatImageButton
                 Command="{Binding RunCommand}"
                 Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
@@ -71,6 +72,7 @@
             <VectorButton:VectorFlatImageButton
                 Command="{Binding SaveCommand}"
                 Image="/Resource/Common/Image/Save.png"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}" />
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
@@ -131,8 +133,9 @@
                 Style="{DynamicResource VectorToggleTextButtonStyle}"
                 Text="同步到文件" />
             <VectorButton:VectorToggleIconTextButton
+                HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
-                Foreground="White"
+                Foreground="Black"
                 IsChecked="{Binding ShowResult, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
@@ -156,9 +159,10 @@
                 Title="专属NBT"
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
+                    Style="{DynamicResource VectorScrollViewerStyle}"
                     VerticalScrollBarVisibility="Auto">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -166,14 +170,14 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="string"
                 Title="字符串"
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -184,14 +188,14 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="number"
                 Title="数值"
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -202,14 +206,14 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="boolean"
                 Title="是/否"
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -220,14 +224,14 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="compound"
                 Title="集合"
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -238,14 +242,14 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="list"
                 Title="列表"
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -256,7 +260,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="BreedableMobExtraFields"
@@ -264,7 +268,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding BreedableMobExtraFieldsVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -276,7 +280,7 @@
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions />
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="AngryCreatureExtraField"
@@ -284,7 +288,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding AngryCreatureExtraFieldVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -295,7 +299,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="TameableMobExtraFields"
@@ -303,7 +307,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding TameableMobExtraFieldsVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -314,7 +318,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="CommonTagsForRideableEntities"
@@ -322,7 +326,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding CommonTagsForRideableEntitiesVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -333,7 +337,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="CommonTagsForZombies"
@@ -341,7 +345,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding CommonTagsForZombiesVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -352,7 +356,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="CommonTagsForMobsSpawnedInRaids"
@@ -360,7 +364,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding CommonTagsForMobsSpawnedInRaidsVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -371,7 +375,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="ArrowProjectileCommonTags"
@@ -379,7 +383,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding ArrowProjectileCommonTagsVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -390,7 +394,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="ContainerEntityCommonTags"
@@ -398,7 +402,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding ContainerEntityCommonTagsVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -409,7 +413,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="FireballProjectileCommonTags"
@@ -417,7 +421,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding FireballProjectileCommonTagsVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -428,7 +432,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="ItemProjectileCommonTags"
@@ -436,7 +440,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding ItemProjectileCommonTagsVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -447,7 +451,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="MineCartCommonTags"
@@ -455,7 +459,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding MineCartCommonTagsVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -466,7 +470,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="PotionEffectCommonTags"
@@ -474,7 +478,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding PotionEffectCommonTagsVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -485,7 +489,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
             <Container:VectorTextTabItem
                 Uid="ProjectileCommonTags"
@@ -493,7 +497,7 @@
                 Foreground="White"
                 Style="{DynamicResource VectorTextTabItemStyle}"
                 Visibility="{Binding ProjectileCommonTagsVisibility, Mode=TwoWay}">
-                <ScrollViewer
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
@@ -504,7 +508,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                     </Grid>
-                </ScrollViewer>
+                </Container:VectorScrollViewer>
             </Container:VectorTextTabItem>
         </Container:VectorTabControl>
     </Grid>

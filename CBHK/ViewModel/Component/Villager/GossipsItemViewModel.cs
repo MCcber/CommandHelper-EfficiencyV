@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.View.Component.Villager;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Generator;
@@ -32,13 +33,13 @@ namespace CBHK.ViewModel.Component.Villager
         public double gossipValue = 0;
 
         [ObservableProperty]
-        public TextComboBoxItem selectedTypeItem = null;
+        public VectorTextComboBoxItem selectedTypeItem = null;
 
         [ObservableProperty]
         public string targetText = "";
 
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> gossipTypeList = [];
+        public ObservableCollection<VectorTextComboBoxItem> gossipTypeList = [];
 
         /// <summary>
         /// 返回该言论的数据

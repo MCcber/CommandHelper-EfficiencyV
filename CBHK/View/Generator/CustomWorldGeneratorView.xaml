@@ -5,7 +5,7 @@
     xmlns:CompoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponents"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:ConverterSpace="clr-namespace:CBHK.Utility.TreeViewComponentsHelper"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -42,32 +42,32 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <CustomControl:TextComboBoxs
+            <VectorComboBox:VectorTextComboBox
                 Grid.Column="0"
                 Height="30"
                 ItemsSource="{Binding VersionList}"
                 SelectedIndex="0"
                 SelectedItem="{Binding CurrentVersion}"
-                Style="{StaticResource TextComboBoxStyle}">
+                Style="{StaticResource VectorTextComboBoxStyle}">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="SelectionChanged">
                         <behaviors:CallMethodAction MethodName="Version_SelectionChanged" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
-            </CustomControl:TextComboBoxs>
-            <CustomControl:TextComboBoxs
+            </VectorComboBox:VectorTextComboBox>
+            <VectorComboBox:VectorTextComboBox
                 Grid.Column="1"
                 Height="30"
                 ItemsSource="{Binding GeneratorList}"
                 SelectedIndex="0"
                 SelectedItem="{Binding CurrentGenerator}"
-                Style="{StaticResource TextComboBoxStyle}">
+                Style="{StaticResource VectorTextComboBoxStyle}">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="SelectionChanged">
                         <behaviors:CallMethodAction MethodName="Generator_SelectionChanged" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
-            </CustomControl:TextComboBoxs>
+            </VectorComboBox:VectorTextComboBox>
         </Grid>
         <TreeView
             Grid.Row="1"

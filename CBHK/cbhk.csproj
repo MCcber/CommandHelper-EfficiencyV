@@ -124,7 +124,6 @@
     </Resource>
     <Resource Include="Resource\CBHK\Image\eyeHide.png" />
     <Resource Include="Resource\CBHK\Image\eyeShow.png" />
-    <Resource Include="Resource\CBHK\Image\GeneratorButtonBackground.png" />
     <Resource Include="Resource\CBHK\Image\IconMore.png" />
     <Resource Include="Resource\CBHK\Image\IconSetting.png" />
     <Resource Include="Resource\CBHK\Image\IconTeach.png" />
@@ -132,12 +131,7 @@
     <Resource Include="Resource\CBHK\Image\Info.png">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resource\CBHK\Image\login.jpg" />
-    <Resource Include="Resource\CBHK\Image\LoginMinimize.png" />
-    <Resource Include="Resource\CBHK\Image\LoginText.png" />
-    <Resource Include="Resource\CBHK\Image\LoginX.png" />
     <Resource Include="Resource\CBHK\Image\More\github.png" />
-    <Resource Include="Resource\CBHK\Image\SignInBackground.png" />
     <Resource Include="Resource\Common\Fonts\MinecraftAE.ttf" />
   </ItemGroup>
   <ItemGroup>
@@ -393,16 +387,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resource\Common\Image\Issue.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resource\CBHK\Image\Bottom.png" />
-    <Resource Include="Resource\CBHK\Image\BottomLeft.png" />
-    <Resource Include="Resource\CBHK\Image\BottomRight.png" />
-    <Resource Include="Resource\CBHK\Image\Left.png" />
-    <Resource Include="Resource\CBHK\Image\Right.png" />
-    <Resource Include="Resource\CBHK\Image\Top.png" />
-    <Resource Include="Resource\CBHK\Image\TopLeft.png" />
-    <Resource Include="Resource\CBHK\Image\TopRight.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconDataPack.png" />

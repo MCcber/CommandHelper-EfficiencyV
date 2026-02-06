@@ -1,5 +1,6 @@
-﻿using CBHK.CustomControl;
-using CBHK.CustomControl.ColorPickerComponents;
+﻿using CBHK.CustomControl.VectorCheckBox;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Model.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.FireworkRocket;
@@ -49,7 +50,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// <summary>
         /// 拾色器
         /// </summary>
-        ColorPickers colorpicker = null;
+        //ColorPickers colorpicker = null;
         /// <summary>
         /// 烟花粒子纹理文件路径
         /// </summary>
@@ -75,7 +76,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// </summary>
         public int ParticleCount = 350;
         UniformGrid StructureColorGrid = null;
-        List<IconCheckBoxs> StructureColorList = [];
+        List<VectorTextCheckBox> StructureColorList = [];
         /// <summary>
         /// 原版颜色映射库
         /// </summary>
@@ -94,19 +95,19 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// 已选版本
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem _selectedVersion;
 
         /// <summary>
         /// 版本数据源
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionSource = [];
+        private ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
 
         /// <summary>
         /// 形状数据源
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _shapeList = [];
+        private ObservableCollection<VectorTextComboBoxItem> _shapeList = [];
 
         /// <summary>
         /// 生成行为
@@ -588,16 +589,14 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                     string colorName = Path.GetFileNameWithoutExtension(item);
                     colorName = colorName[..colorName.LastIndexOf('_')];
                     BitmapImage bitmapImage = new(new Uri(item, UriKind.Absolute));
-                    IconCheckBoxs iconCheckBoxs = new()
+                    VectorTextCheckBox iconCheckBoxs = new()
                     {
-                        ContentImage = bitmapImage,
-                        HeaderHeight = 25,
-                        HeaderWidth = 25,
+                        Foreground = Brushes.Black,
                         SnapsToDevicePixels = true,
                         UseLayoutRounding = true,
                         ToolTip = colorName,
                         Tag = colorName,
-                        Style = Application.Current.Resources["IconCheckBox"] as Style
+                        Style = Application.Current.Resources["VectorTextCheckBoxStyle"] as Style
                     };
                     iconCheckBoxs.Checked += StructureColorChecked;
                     RenderOptions.SetBitmapScalingMode(iconCheckBoxs, BitmapScalingMode.NearestNeighbor);
@@ -626,7 +625,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// <param name="e"></param>
         private void StructureColorChecked(object sender, RoutedEventArgs e)
         {
-            IconCheckBoxs iconCheckBoxs = sender as IconCheckBoxs;
+            VectorTextCheckBox iconCheckBoxs = sender as VectorTextCheckBox;
             string searchTarget = iconCheckBoxs.Tag.ToString();
             string colorValue = OriginColorDictionary.Where(item => item.Value == searchTarget).Select(item => item.Key).First();
             if (AddInMain && MainColorList.Count < ParticleCount)
@@ -681,8 +680,8 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// <param name="e"></param>
         public void ColorPicker_Loaded(object sender, RoutedEventArgs e)
         {
-            colorpicker = sender as ColorPickers;
-            colorpicker.rectColorGrid.PreviewMouseLeftButtonUp += ColorPickers_PreviewMouseLeftButtonUp;
+            //colorpicker = sender as ColorPickers;
+            //colorpicker.rectColorGrid.PreviewMouseLeftButtonUp += ColorPickers_PreviewMouseLeftButtonUp;
         }
 
         /// <summary>
@@ -733,7 +732,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// <param name="e"></param>
         public async void FireworkExploded(object sender, EventArgs e)
         {
-            FireworkRocketView fireworkRocket = Window.GetWindow(colorpicker) as FireworkRocketView;
+            FireworkRocketView fireworkRocket = null/*Window.GetWindow(colorpicker) as FireworkRocketView*/;
             FireworkRocketViewModel context = fireworkRocket.DataContext as FireworkRocketViewModel;
             await fireworkRocket.Dispatcher.InvokeAsync(() =>
             {
@@ -983,7 +982,12 @@ namespace CBHK.ViewModel.Component.FireworkRocket
             else
             {
                 Clipboard.SetText(Result);
-                Message.PushMessage("烟花生成成功！数据已进入剪切板", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "烟花生成成功！数据已进入剪切板",
+                    SubMessage = "烟花火箭生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\firework_rocket.png", UriKind.RelativeOrAbsolute))
+                });
             }
         }
 
@@ -1079,37 +1083,37 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// <param name="e"></param>
         public void ColorPickers_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (colorpicker.pop.IsOpen && PointMode)
-            {
-                if (AddInMain)
-                {
-                    Border border = new()
-                    {
-                        Width = 25,
-                        Background = colorpicker.SelectColor,
-                        ToolTip = "右击删除"
-                    };
-                    ToolTipService.SetBetweenShowDelay(border, 0);
-                    ToolTipService.SetInitialShowDelay(border, 0);
-                    border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
-                    border.Uid = "Main";
-                    MainColorList.Add(border);
-                }
-                if (AddInFade)
-                {
-                    Border border = new()
-                    {
-                        Width = 25,
-                        Background = colorpicker.SelectColor,
-                        ToolTip = "右击删除"
-                    };
-                    ToolTipService.SetBetweenShowDelay(border, 0);
-                    ToolTipService.SetInitialShowDelay(border, 0);
-                    border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
-                    border.Uid = "Fade";
-                    FadeColorList.Add(border);
-                }
-            }
+            //if (colorpicker.pop.IsOpen && PointMode)
+            //{
+            //    if (AddInMain)
+            //    {
+            //        Border border = new()
+            //        {
+            //            Width = 25,
+            //            Background = colorpicker.SelectColor,
+            //            ToolTip = "右击删除"
+            //        };
+            //        ToolTipService.SetBetweenShowDelay(border, 0);
+            //        ToolTipService.SetInitialShowDelay(border, 0);
+            //        border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
+            //        border.Uid = "Main";
+            //        MainColorList.Add(border);
+            //    }
+            //    if (AddInFade)
+            //    {
+            //        Border border = new()
+            //        {
+            //            Width = 25,
+            //            Background = colorpicker.SelectColor,
+            //            ToolTip = "右击删除"
+            //        };
+            //        ToolTipService.SetBetweenShowDelay(border, 0);
+            //        ToolTipService.SetInitialShowDelay(border, 0);
+            //        border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
+            //        border.Uid = "Fade";
+            //        FadeColorList.Add(border);
+            //    }
+            //}
         }
 
         [RelayCommand]
@@ -1138,7 +1142,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         {
             foreach (var item in StructureColorGrid.Children)
             {
-                IconCheckBoxs iconCheckBoxs = item as IconCheckBoxs;
+                VectorTextCheckBox iconCheckBoxs = item as VectorTextCheckBox;
                 iconCheckBoxs.IsChecked = !iconCheckBoxs.IsChecked.Value;
             }
         }
@@ -1151,7 +1155,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         {
             foreach (var item in StructureColorGrid.Children)
             {
-                IconCheckBoxs iconCheckBoxs = item as IconCheckBoxs;
+                VectorTextCheckBox iconCheckBoxs = item as VectorTextCheckBox;
                 iconCheckBoxs.IsChecked = true;
             }
         }

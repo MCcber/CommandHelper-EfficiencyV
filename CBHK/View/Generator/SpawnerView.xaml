@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Component="clr-namespace:CBHK.View.Generator"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -21,125 +21,105 @@
     ResizeMode="CanResizeWithGrip"
     mc:Ignorable="d">
 
-    <Window.Resources>
-        <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
-        <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
-        <ImageBrush x:Key="IssueIcon" ImageSource="/CBHK;component/Resource/Common/Image/Issue.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
-        <ImageBrush x:Key="SaveAll" ImageSource="/CBHK;component/Resource/Common/Image/Save.png" />
-    </Window.Resources>
-
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="25" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0" LastChildFill="False">
-            <CustomControl:IconTextButtons
+            <VectorButton:VectorFlatImageButton
                 Width="25"
                 Height="25"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
-                Background="{StaticResource LeftArrow}"
                 BorderThickness="0"
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
                 FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/IconArrowLeft.png"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="ESC:返回主页"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 Width="25"
                 Height="25"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
-                Background="{StaticResource RightArrow}"
                 BorderThickness="0"
                 Command="{Binding RunCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
                 FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/IconArrowRight.png"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 Width="25"
                 Height="25"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
-                Background="{StaticResource SaveAll}"
                 BorderThickness="0"
                 Command="{Binding SaveAllCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
                 FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/Save.png"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="保存"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorTextButton
                 Padding="5"
-                Background="{DynamicResource ButtonNormal}"
                 Command="{Binding AddSpawnerCommand}"
-                Content="添加"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="添加" />
+            <VectorButton:VectorTextButton
                 Padding="5"
-                Background="{DynamicResource ButtonNormal}"
                 Command="{Binding ClearSpawnerCommand}"
-                Content="清除"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="清除" />
+            <VectorButton:VectorTextButton
                 Padding="5"
-                Background="{DynamicResource ButtonNormal}"
                 Command="{Binding ImportFromClipboardCommand}"
-                Content="从剪切板导入"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从剪切板导入" />
+            <VectorButton:VectorTextButton
                 Padding="5"
-                Background="{DynamicResource ButtonNormal}"
                 Command="{Binding ImportFromFileCommand}"
-                Content="从文件导入"
-                PressedBackground="{DynamicResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:RadiusToggleButtons
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从文件导入" />
+            <VectorButton:VectorToggleIconTextButton
                 Foreground="White"
                 IsChecked="{Binding ShowResult, Mode=OneWayToSource}"
-                SelectedToggleText="显示结果"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
-                UnSelectedToggleText="隐藏结果" />
+                Style="{DynamicResource VectorToggleIconTextButtonStyle}"
+                Text="显示结果" />
         </DockPanel>
-        <TabControl
+        <Container:VectorTabControl
             Grid.Row="1"
             Background="Transparent"
             BorderThickness="0"
             ItemsSource="{Binding SpawnerPageList}"
             SelectedIndex="0"
             SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
-            Style="{DynamicResource TabControlWithScrollBar}" />
+            Style="{DynamicResource VectorTabControlStyle}" />
     </Grid>
 </Container:VectorWindow>

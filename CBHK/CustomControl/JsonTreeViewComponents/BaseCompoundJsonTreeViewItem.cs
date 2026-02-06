@@ -16,6 +16,7 @@ using System.Windows.Media;
 using CBHK.Utility.Common;
 using CBHK.Common.Utility;
 using CBHK.Interface;
+using CBHK.CustomControl.VectorComboBox;
 
 namespace CBHK.CustomControl.JsonTreeViewComponents
 {
@@ -92,17 +93,17 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         /// 枚举数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _enumItemsSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> _enumItemsSource = [];
 
-        private TextComboBoxItem oldSelectedEnumItem;
-        private TextComboBoxItem oldSelectedValueTypeItem;
+        private VectorTextComboBoxItem oldSelectedEnumItem;
+        private VectorTextComboBoxItem oldSelectedValueTypeItem;
 
         /// <summary>
         /// 已选中的数据类型
         /// </summary>
-        private TextComboBoxItem _selectedValueType = null;
+        private VectorTextComboBoxItem _selectedValueType = null;
 
-        public TextComboBoxItem SelectedValueType
+        public VectorTextComboBoxItem SelectedValueType
         {
             get => _selectedValueType;
             set
@@ -137,7 +138,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         /// 已选中的枚举成员
         /// </summary>
         [ObservableProperty]
-        public TextComboBoxItem _selectedEnumItem = null;
+        public VectorTextComboBoxItem _selectedEnumItem = null;
 
         /// <summary>
         /// 枚举下拉框可见性
@@ -198,7 +199,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
         public ObservableCollection<JsonTreeViewItem> _logicChildren = [];
 
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _valueTypeSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> _valueTypeSource = [];
         #endregion
 
         #region Method
@@ -1390,17 +1391,17 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                                 Match contextMatch = regexService.GetContextKey().Match(InfoTipText);
                                 if (enumModeMatch1.Count > 0)
                                 {
-                                    EnumItemsSource.AddRange(enumModeMatch1.Select(item => new TextComboBoxItem() { Text = item.Groups[1].Value }));
+                                    EnumItemsSource.AddRange(enumModeMatch1.Select(item => new VectorTextComboBoxItem() { Text = item.Groups[1].Value }));
                                 }
                                 else
                                 if (enumModeMatch2.Count > 0)
                                 {
-                                    EnumItemsSource.AddRange(enumModeMatch2.Select(item => new TextComboBoxItem() { Text = item.Groups[1].Value }));
+                                    EnumItemsSource.AddRange(enumModeMatch2.Select(item => new VectorTextComboBoxItem() { Text = item.Groups[1].Value }));
                                 }
                                 else
                                 if (contextMatch.Success)
                                 {
-                                    EnumItemsSource.Add(new TextComboBoxItem()
+                                    EnumItemsSource.Add(new VectorTextComboBoxItem()
                                     {
                                         Text = "- unset -"
                                     });
@@ -1408,7 +1409,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                                     {
                                         EnumItemsSource.AddRange(targetEnumIDList.Select(item =>
                                         {
-                                            return new TextComboBoxItem()
+                                            return new VectorTextComboBoxItem()
                                             {
                                                 Text = item
                                             };
@@ -1506,7 +1507,7 @@ namespace CBHK.CustomControl.JsonTreeViewComponents
                         {
                             EnumItemsSource.AddRange(targetDictionary.Keys.Select(item =>
                             {
-                                return new TextComboBoxItem() { Text = item };
+                                return new VectorTextComboBoxItem() { Text = item };
                             }));
                         }
 

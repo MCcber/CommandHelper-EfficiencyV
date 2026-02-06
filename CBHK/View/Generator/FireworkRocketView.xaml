@@ -56,8 +56,8 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <DockPanel Grid.Row="0">
             <VectorButton:VectorFlatImageButton
@@ -144,22 +144,21 @@
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="预览效果" />
             <VectorButton:VectorToggleIconTextButton
-                VerticalContentAlignment="Center"
+                HorizontalAlignment="Left"
                 Foreground="Black"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
         </DockPanel>
-        <TabControl
+        <Container:VectorTabControl
             Grid.Row="1"
             Grid.Column="0"
-            Margin="0,-5,0,0"
             Background="Transparent"
             BorderThickness="0"
             ItemsSource="{Binding FireworkRocketPageList}"
             SelectedIndex="0"
             SelectedItem="{Binding SelectedFireworkRocketPage, Mode=OneWayToSource}"
-            Style="{DynamicResource TabControlWithScrollBar}"
+            Style="{DynamicResource VectorTabControlStyle}"
             VirtualizingPanel.IsVirtualizing="False" />
         <Image
             Grid.Row="0"

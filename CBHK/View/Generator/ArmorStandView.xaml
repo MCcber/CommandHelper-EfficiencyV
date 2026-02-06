@@ -2,8 +2,6 @@
     x:Class="CBHK.View.Generator.ArmorStandView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:AnimationComponents="clr-namespace:CBHK.CustomControl.AnimationComponents"
-    xmlns:ColorPickers="clr-namespace:CBHK.CustomControl.ColorPickerComponents"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
@@ -11,9 +9,9 @@
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:control_datacontexts="clr-namespace:CBHK.ControlDataContext"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hx="http://helix-toolkit.org/wpf"
+    xmlns:local="clr-namespace:CBHK.ViewModel.Generator"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="{Binding Title}"
@@ -38,21 +36,9 @@
     </Window.InputBindings>
 
     <Window.Resources>
-        <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
-        <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
-        <ImageBrush x:Key="IssueIcon" ImageSource="/CBHK;component/Resource/Common/Image/issue.png" />
-        <ImageBrush x:Key="TextBoxBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
-        <ImageBrush x:Key="DataButtonBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextToggleButtonNormal.png" />
-        <ImageBrush x:Key="DataButtonPressedBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextToggleButtonPressed.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
         <BitmapImage x:Key="Slot" UriSource="/CBHK;component/Resource/Common/Image/Slot.png" />
-
         <BitmapImage x:Key="SmithingTemplate" UriSource="/CBHK;component/Resource/Common/Image/SmithingTemplate.png" />
         <BitmapImage x:Key="TrimMaterial" UriSource="/CBHK;component/Resource/Common/Image/TrimMaterial.png" />
-
-        <control_datacontexts:DoubleToFloat x:Key="DoubleToFloatConverter" />
-
         <UtilityCommon:PositionConverter x:Key="PositionConverter" />
     </Window.Resources>
     <Grid>
@@ -65,6 +51,7 @@
             <VectorButton:VectorFlatImageButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
+                Background="#D0D1D4"
                 BorderThickness="0"
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
@@ -85,6 +72,7 @@
             <VectorButton:VectorFlatImageButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
+                Background="#D0D1D4"
                 BorderThickness="0"
                 Command="{Binding RunCommand}"
                 Image="/Resource/Common/Image/IconArrowRight.png"
@@ -104,10 +92,9 @@
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
                 MinWidth="100"
-                ArrowMargin="0 5 10 0"
+                Background="#D0D1D4"
                 Foreground="Black"
                 ItemsSource="{Binding VersionSource}"
-                SearchBoxForeground="White"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
                 Style="{DynamicResource VectorTextComboBoxStyle}">
@@ -117,22 +104,16 @@
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </VectorComboBox:VectorTextComboBox>
-            <CustomControl:StylizedTextBox
-                Width="140"
-                Height="40"
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
+            <Input:TextStyleEditor
+                Title="盔甲架名称"
+                Width="150"
+                Background="#D0D1D4"
                 BorderBrush="Black"
-                Foreground="White">
-                <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="Loaded">
-                        <behaviors:CallMethodAction MethodName="CustomNameBox_Loaded" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
-                    <behaviors:EventTrigger EventName="PreviewKeyUp">
-                        <behaviors:CallMethodAction MethodName="StylizedTextBox_PreviewKeyUp" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
-                </behaviors:Interaction.Triggers>
-            </CustomControl:StylizedTextBox>
+                Foreground="Black"
+                ItemSelectedMarkerBrush="White"
+                OriginBottomHeight="4"
+                SelectedIndex="0"
+                Style="{DynamicResource TextStyleEditorStyle}" />
             <VectorButton:VectorToggleIconTextButton
                 Margin="5,0,0,0"
                 HorizontalAlignment="Left"
@@ -140,8 +121,7 @@
                 Foreground="White"
                 IsChecked="{Binding CustomNameVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
-                Text="名称可见性"
-                ThumbMargin="0" />
+                Text="名称可见性" />
             <VectorButton:VectorToggleIconTextButton
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
@@ -177,10 +157,7 @@
                             FontWeight="Bold"
                             Foreground="White"
                             Text="动作与权限" />
-                        <VectorButton:VectorToggleIconTextButton
-                            HorizontalAlignment="Left"
-                            IsChecked="{Binding CanResetAllPose, Mode=TwoWay}"
-                            Style="{DynamicResource VectorToggleIconTextButtonStyle}" />
+                        <VectorButton:VectorToggleIconTextButton IsChecked="{Binding CanResetAllPose, Mode=TwoWay}" Style="{DynamicResource VectorToggleIconTextButtonStyle}" />
                         <VectorButton:VectorFlatIconTextButton
                             Width="80"
                             Background="#C6C6C6"
@@ -189,7 +166,7 @@
                             Command="{Binding ResetAllPoseCommand}"
                             Foreground="{Binding ResetAllPoseButtonForeground}"
                             Icon="M111.104 584.704c8.704-8.704 12.8-19.456 12.8-29.696V277.504c0-12.8 8.704-21.504 21.504-21.504H819.2l-76.8 76.8c-16.896 16.896-16.896 42.496 0 59.904 8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8l140.8-142.848c16.896-16.896 16.896-42.496 0-59.904L802.304 47.104c-16.896-16.896-42.496-16.896-59.904 0-16.896 16.896-16.896 42.496 0 59.904l61.952 64H78.848c-23.552 0-42.496 19.456-42.496 42.496v341.504c0 25.6 21.504 42.496 42.496 42.496 12.8 0 23.552-4.608 32.256-12.8z m823.296-155.648c-10.752 0-21.504 4.096-29.696 12.8-8.704 8.704-12.8 19.456-12.8 29.696v275.456c0 12.8-8.704 21.504-21.504 21.504H198.656L271.36 695.808c16.896-16.896 16.896-42.496 0-59.904-16.896-16.896-42.496-16.896-59.904 0l-140.8 142.848c-16.896 16.896-16.896 42.496 0 59.904l140.8 142.848c8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8 16.896-16.896 16.896-42.496 0-59.904l-64-66.048h729.6c23.552 0 42.496-19.456 42.496-42.496V471.552c-2.048-25.6-20.992-42.496-44.544-42.496z"
-                            IconFillBrush="White"
+                            IconFillBrush="{Binding ResetAllPoseButtonForeground}"
                             IconHeight="15"
                             IconMargin="10 0 0 0"
                             IconWidth="15"
@@ -200,9 +177,9 @@
                             Height="35"
                             Margin="5,0"
                             HorizontalAlignment="Left"
+                            Icon="M512 938.666667c235.648 0 426.666667-191.018667 426.666667-426.666667S747.648 85.333333 512 85.333333 85.333333 276.352 85.333333 512s191.018667 426.666667 426.666667 426.666667z m0 85.333333C229.248 1024 0 794.752 0 512S229.248 0 512 0s512 229.248 512 512-229.248 512-512 512z M520.96 232.106667c-62.293333 0-111.786667 17.92-147.626667 54.613333-36.693333 35.84-54.613333 84.48-54.613333 146.773333h90.453333c0-37.546667 7.68-67.413333 23.04-87.893333 17.066667-23.893333 45.226667-35.84 83.626667-35.84 30.72 0 54.613333 8.533333 71.68 25.6 16.213333 17.066667 24.746667 40.106667 24.746667 69.973333 0 22.186667-7.68 42.666667-23.04 62.293334l-14.506667 16.213333c-52.906667 46.933333-85.333333 81.92-97.28 105.813333-11.093333 22.186667-16.213333 49.493333-16.213333 81.066667v14.506667h91.306666v-14.506667c0-21.333333 4.266667-40.106667 13.653334-57.173333 7.68-15.36 19.626667-29.866667 34.986666-43.52 40.96-34.986667 64.853333-57.173333 72.533334-66.56 20.48-27.306667 31.573333-62.293333 31.573333-104.106667 0-51.2-17.066667-92.16-50.346667-122.026667-34.133333-30.72-78.506667-45.226667-133.973333-45.226666z m-14.506667 499.2c-17.92 0-32.426667 5.12-43.52 17.066666-12.8 11.093333-18.773333 25.6-18.773333 43.52 0 17.066667 5.973333 31.573333 18.773333 43.52 11.093333 11.946667 25.6 17.92 43.52 17.92 17.066667 0 32.426667-5.973333 45.226667-17.066666 11.946667-11.946667 17.92-26.453333 17.92-44.373334 0-17.92-5.973333-32.426667-17.92-43.52-11.946667-11.946667-27.306667-17.066667-45.226667-17.066666z"
+                            IconFillColor="White"
                             IconMargin="5"
-                            ImageData="M512 938.666667c235.648 0 426.666667-191.018667 426.666667-426.666667S747.648 85.333333 512 85.333333 85.333333 276.352 85.333333 512s191.018667 426.666667 426.666667 426.666667z m0 85.333333C229.248 1024 0 794.752 0 512S229.248 0 512 0s512 229.248 512 512-229.248 512-512 512z M520.96 232.106667c-62.293333 0-111.786667 17.92-147.626667 54.613333-36.693333 35.84-54.613333 84.48-54.613333 146.773333h90.453333c0-37.546667 7.68-67.413333 23.04-87.893333 17.066667-23.893333 45.226667-35.84 83.626667-35.84 30.72 0 54.613333 8.533333 71.68 25.6 16.213333 17.066667 24.746667 40.106667 24.746667 69.973333 0 22.186667-7.68 42.666667-23.04 62.293334l-14.506667 16.213333c-52.906667 46.933333-85.333333 81.92-97.28 105.813333-11.093333 22.186667-16.213333 49.493333-16.213333 81.066667v14.506667h91.306666v-14.506667c0-21.333333 4.266667-40.106667 13.653334-57.173333 7.68-15.36 19.626667-29.866667 34.986666-43.52 40.96-34.986667 64.853333-57.173333 72.533334-66.56 20.48-27.306667 31.573333-62.293333 31.573333-104.106667 0-51.2-17.066667-92.16-50.346667-122.026667-34.133333-30.72-78.506667-45.226667-133.973333-45.226666z m-14.506667 499.2c-17.92 0-32.426667 5.12-43.52 17.066666-12.8 11.093333-18.773333 25.6-18.773333 43.52 0 17.066667 5.973333 31.573333 18.773333 43.52 11.093333 11.946667 25.6 17.92 43.52 17.92 17.066667 0 32.426667-5.973333 45.226667-17.066666 11.946667-11.946667 17.92-26.453333 17.92-44.373334 0-17.92-5.973333-32.426667-17.92-43.52-11.946667-11.946667-27.306667-17.066667-45.226667-17.066666z"
-                            ImageFillColorBrush="White"
                             Style="{DynamicResource VectorSolidIconButtonStyle}"
                             ToolTipService.BetweenShowDelay="0"
                             ToolTipService.InitialShowDelay="0">
@@ -214,25 +191,23 @@
                             </VectorButton:VectorSolidIconButton.ToolTip>
                         </VectorButton:VectorSolidIconButton>
                     </DockPanel>
-                    <TabControl
+                    <Container:VectorTabControl
                         Height="150"
                         Margin="6,0,0,0"
-                        Background="Transparent"
+                        Background="#565A57"
                         BorderBrush="Black"
                         BorderThickness="0"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectedIndex="0"
-                        Style="{DynamicResource TabControlWithScrollBar}"
+                        Style="{DynamicResource VectorTabControlStyle}"
                         TabStripPlacement="Left">
-                        <CustomControl:IconTabItems
+                        <Container:VectorTextTabItem
+                            Title="头部"
                             Width="50"
                             Height="30"
-                            Background="{StaticResource DataButtonBackground}"
                             FontSize="15"
                             Foreground="White"
-                            HeaderText="头部"
-                            Selectedbackground="{StaticResource DataButtonPressedBackground}"
-                            Style="{DynamicResource IconTabItems}">
+                            Style="{DynamicResource VectorTextTabItemStyle}">
                             <Grid Margin="0,0,5,0" Background="#515B59">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
@@ -240,25 +215,24 @@
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <DockPanel Grid.Row="0" Margin="25,0,0,5">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="White"
-                                        Text="三轴合一"
-                                        TextAlignment="Center" />
-                                    <CustomControl:IconTextButtons
-                                        Width="50"
-                                        Height="30"
-                                        Margin="35,0,0,0"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        Background="{StaticResource ButtonNormal}"
+                                <DockPanel
+                                    Grid.Row="0"
+                                    Height="30"
+                                    Margin="10,2,0,-5"
+                                    VerticalAlignment="Top">
+                                    <VectorButton:VectorFlatIconTextButton
+                                        Padding="5,0"
                                         BorderThickness="1"
                                         Command="{Binding HeadThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        PressedBackground="{StaticResource ButtonPressed}"
-                                        Style="{DynamicResource IconTextButton}">
+                                        Foreground="White"
+                                        Icon="M972.8 844.8l-138.24-204.8c-5.12-10.24-20.48-10.24-25.6 0l-40.96 81.92-220.16-102.4V373.76h92.16c10.24 0 20.48-10.24 10.24-20.48l-128-215.04c-5.12-10.24-20.48-10.24-25.6 0L373.76 353.28c-5.12 10.24 0 20.48 10.24 20.48h92.16V614.4L256 716.8l-35.84-81.92c-5.12-10.24-20.48-10.24-25.6 0l-138.24 204.8c-5.12 10.24 0 20.48 10.24 20.48l240.64 30.72c10.24 0 20.48-10.24 15.36-20.48l-35.84-81.92 225.28-107.52 225.28 107.52-35.84 81.92c-5.12 10.24 5.12 20.48 15.36 20.48l245.76-25.6c10.24 0 15.36-15.36 10.24-20.48z"
+                                        IconFillBrush="White"
+                                        IconHeight="20"
+                                        IconMargin="2"
+                                        IconWidth="20"
+                                        Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                        Text="三轴合一">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -270,22 +244,11 @@
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseWheel" TargetObject="{Binding}" />
                                             </behaviors:EventTrigger>
                                         </behaviors:Interaction.Triggers>
-                                        <Button.Content>
-                                            <Viewbox
-                                                Width="15"
-                                                Height="15"
-                                                Margin="0,0,0,2">
-                                                <Path Fill="Black">
-                                                    <Path.Data>
-                                                        M911.36 803.84l-128-163.84c-5.12-5.12-15.36-5.12-15.36 0l-30.72 61.44-184.32-81.92V378.88h71.68c10.24 0 15.36-10.24 10.24-15.36l-107.52-174.08c-5.12-5.12-15.36-5.12-15.36 0L394.24 363.52c-5.12 5.12 0 15.36 10.24 15.36h71.68V614.4l-189.44 92.16-30.72-61.44c-5.12-5.12-15.36-5.12-15.36 0l-122.88 168.96c-5.12 5.12 0 15.36 5.12 15.36l220.16 15.36c10.24 0 15.36-10.24 10.24-15.36l-25.6-51.2 184.32-87.04 194.56 87.04-25.6 56.32c-5.12 5.12 0 15.36 10.24 15.36l220.16-20.48c0-10.24 5.12-20.48 0-25.6z
-                                                    </Path.Data>
-                                                </Path>
-                                            </Viewbox>
-                                        </Button.Content>
-                                    </CustomControl:IconTextButtons>
+                                    </VectorButton:VectorFlatIconTextButton>
                                     <DockPanel Margin="0,0,5,-5" HorizontalAlignment="Right">
                                         <VectorButton:VectorToggleIconTextButton
                                             HorizontalAlignment="Left"
+                                            BackgroundHeight="30"
                                             IsChecked="{Binding CanResetHeadPose, Mode=TwoWay}"
                                             Style="{DynamicResource VectorToggleIconTextButtonStyle}" />
                                         <VectorButton:VectorFlatIconTextButton
@@ -296,7 +259,7 @@
                                             Command="{Binding ResetHeadPoseCommand}"
                                             Foreground="{Binding ResetHeadPoseButtonForeground}"
                                             Icon="M111.104 584.704c8.704-8.704 12.8-19.456 12.8-29.696V277.504c0-12.8 8.704-21.504 21.504-21.504H819.2l-76.8 76.8c-16.896 16.896-16.896 42.496 0 59.904 8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8l140.8-142.848c16.896-16.896 16.896-42.496 0-59.904L802.304 47.104c-16.896-16.896-42.496-16.896-59.904 0-16.896 16.896-16.896 42.496 0 59.904l61.952 64H78.848c-23.552 0-42.496 19.456-42.496 42.496v341.504c0 25.6 21.504 42.496 42.496 42.496 12.8 0 23.552-4.608 32.256-12.8z m823.296-155.648c-10.752 0-21.504 4.096-29.696 12.8-8.704 8.704-12.8 19.456-12.8 29.696v275.456c0 12.8-8.704 21.504-21.504 21.504H198.656L271.36 695.808c16.896-16.896 16.896-42.496 0-59.904-16.896-16.896-42.496-16.896-59.904 0l-140.8 142.848c-16.896 16.896-16.896 42.496 0 59.904l140.8 142.848c8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8 16.896-16.896 16.896-42.496 0-59.904l-64-66.048h729.6c23.552 0 42.496-19.456 42.496-42.496V471.552c-2.048-25.6-20.992-42.496-44.544-42.496z"
-                                            IconFillBrush="White"
+                                            IconFillBrush="{Binding ResetHeadPoseButtonForeground}"
                                             IconHeight="15"
                                             IconMargin="10 0 0 0"
                                             IconWidth="15"
@@ -325,14 +288,18 @@
                                         Style="{DynamicResource VectorSliderStyle}"
                                         ThumbBackground="#D0D1D4"
                                         Value="{Binding Path=HeadX, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
-                                        Text="{Binding Path=HeadX, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                        Text="{Binding Path=HeadX, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        WaterMarkerBrush="Gray"
+                                        WaterMarkerMargin="5 0 0 0"
+                                        WaterMarkerText="头部X轴" />
                                     <VectorButton:VectorToggleIconTextButton
+                                        HorizontalAlignment="Left"
                                         Foreground="White"
                                         IsChecked="{Binding CannotPlaceOrReplaceHead, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -359,14 +326,15 @@
                                         Style="{DynamicResource VectorSliderStyle}"
                                         ThumbBackground="#D0D1D4"
                                         Value="{Binding Path=HeadY, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=HeadY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
+                                        HorizontalAlignment="Left"
                                         Foreground="White"
                                         IsChecked="{Binding CannotTakeOrReplaceHead, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -393,32 +361,29 @@
                                         Style="{DynamicResource VectorSliderStyle}"
                                         ThumbBackground="#D0D1D4"
                                         Value="{Binding Path=HeadZ, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=HeadZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
+                                        HorizontalAlignment="Left"
                                         Foreground="White"
                                         IsChecked="{Binding CannotPlaceHead, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                                         Text="防止添加" />
                                 </DockPanel>
                             </Grid>
-                        </CustomControl:IconTabItems>
-                        <CustomControl:IconTabItems
+                        </Container:VectorTextTabItem>
+                        <Container:VectorTextTabItem
+                            Title="身体"
                             Width="50"
                             Height="30"
-                            Background="{StaticResource DataButtonBackground}"
                             FontSize="15"
                             Foreground="White"
-                            HeaderText="身体"
-                            ImageHeight="100"
-                            ImageWidth="50"
-                            Selectedbackground="{StaticResource DataButtonPressedBackground}"
-                            Style="{DynamicResource IconTabItems}">
+                            Style="{DynamicResource VectorTextTabItemStyle}">
                             <Grid Margin="0,0,5,0" Background="#515B59">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
@@ -433,19 +398,17 @@
                                         Foreground="White"
                                         Text="三轴合一"
                                         TextAlignment="Center" />
-                                    <CustomControl:IconTextButtons
+                                    <VectorButton:VectorTextButton
                                         Width="50"
                                         Height="30"
                                         Margin="35,0,0,0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
-                                        Background="{StaticResource ButtonNormal}"
                                         BorderBrush="Black"
                                         ClickMode="Press"
                                         Command="{Binding BodyThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        PressedBackground="{StaticResource ButtonPressed}"
-                                        Style="{DynamicResource IconTextButton}">
+                                        Style="{DynamicResource VectorTextButtonStyle}">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -457,44 +420,26 @@
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseWheel" TargetObject="{Binding}" />
                                             </behaviors:EventTrigger>
                                         </behaviors:Interaction.Triggers>
-                                        <Button.Content>
-                                            <Viewbox
-                                                Width="15"
-                                                Height="15"
-                                                Margin="0,0,0,2">
-                                                <Path Fill="Black">
-                                                    <Path.Data>
-                                                        M980.949333 861.525333c0-0.256 0.042667-0.469333 0-0.682667l-49.834667-177.152c-2.304-8.661333-7.936-15.616-15.146667-19.797333-7.168-4.224-13.098667-10.581333-21.717333-8.277333-17.408 4.693333-27.733333 22.442667-23.04 39.978667l26.496 106.282667-356.053333-205.568L541.653333 185.941333l78.848 76.16c12.757333 12.757333 33.28 12.757333 46.037333 0 6.314667-6.314667 3.754667-14.592 3.754667-22.997333 0-8.362667-3.242667-16.64-9.557333-22.954667l-128.64-131.797333c-0.085333-0.128-0.256-0.170667-0.512-0.298667-2.816-2.858667-9.514667-5.162667-13.226667-6.741333-3.413333-1.365333-0.597333-1.877333-4.096-2.133333-0.725333 0-1.365333-0.341333-2.048-0.341333-0.512 0-0.853333 0.256-1.322667 0.256-3.797333 0.170667-5.674667 0.853333-9.344 2.218667-3.2 1.365333-5.930667 3.456-8.490667 5.674667-0.682667 0.512-1.450667 0.768-2.048 1.365333L359.381333 216.192c-12.8 12.672-6.912 33.322667 5.802667 45.952 12.714667 12.757333 33.322667 12.757333 45.994667 0l70.357333-76.16 0.042667 414.336-355.370667 205.141333 26.581333-106.325333c4.693333-17.450667-5.632-35.2-23.04-39.936-8.661333-2.304-14.506667 4.053333-21.76 8.234667-7.210667 4.181333-12.842667 11.136-15.146667 19.797333l-49.792 177.237333c-0.085333 0.170667 0 0.341333 0 0.597333-1.024 3.968 0.256 10.794667 0.725333 14.848 0.512 3.626667-1.322667 1.493333 0.256 4.522667 0.341333 0.725333 0.341333 1.408 0.682667 2.005333 0.256 0.469333 0.682667 0.682667 0.896 1.024 2.048 3.157333 3.626667 4.437333 6.528 6.954667 2.773333 2.090667 6.016 3.370667 9.258667 4.522667 0.725333 0.298667 1.408 0.896 2.218667 1.066667l179.968 48.213333c17.365333 4.693333 32.298667-10.666667 36.821333-28.074667 4.693333-17.322667-5.589333-35.242667-22.954667-39.808l-101.248-22.869333 358.784-207.146667 352.682667 203.605333-101.205333 22.869333c-17.322667 4.565333-27.605333 22.442667-22.954667 39.808 4.522667 17.408 19.498667 32.810667 36.821333 28.074667l180.010667-48.213333c0.853333-0.213333 1.493333-0.768 2.261333-1.066667 3.2-1.109333 6.4-2.432 9.216-4.522667 2.944-2.517333 4.48-3.797333 6.528-6.954667 0.256-0.426667 0.682667-0.597333 0.896-1.024 0.341333-0.597333 0.341333-1.237333 0.725333-1.962667 1.493333-3.072-0.298667-0.938667 0.213333-4.565333C980.693333 872.277333 981.973333 865.408 980.949333 861.525333z
-                                                    </Path.Data>
-                                                </Path>
-                                            </Viewbox>
-                                        </Button.Content>
-                                    </CustomControl:IconTextButtons>
+                                    </VectorButton:VectorTextButton>
                                     <DockPanel Margin="0,0,5,0" HorizontalAlignment="Right">
-                                        <CustomControl:RadiusToggleButtons
-                                            Width="46"
-                                            Height="26"
+                                        <VectorButton:VectorToggleIconTextButton
                                             Margin="5,5,0,0"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
                                             IsChecked="{Binding Path=CanResetBodyPose, Mode=TwoWay}"
-                                            Style="{StaticResource RadiusToggleButton}"
-                                            ToggleHeight="25"
-                                            ToggleWidth="45" />
-                                        <CustomControl:IconTextButtons
+                                            Style="{StaticResource VectorToggleIconTextButtonStyle}" />
+                                        <VectorButton:VectorFlatIconTextButton
                                             Width="60"
                                             Height="30"
                                             Margin="0,2,0,0"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
-                                            Background="{StaticResource ButtonNormal}"
                                             BorderThickness="0"
                                             ClickMode="Press"
                                             Command="{Binding ResetBodyPoseCommand}"
-                                            Content="重置"
                                             Foreground="{Binding Path=ResetBodyPoseButtonForeground, Mode=OneWay}"
-                                            PressedBackground="{StaticResource ButtonPressed}"
-                                            Style="{DynamicResource IconTextButton}" />
+                                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                            Text="重置" />
                                     </DockPanel>
                                 </DockPanel>
                                 <DockPanel Grid.Row="1" Margin="10,0,0,0">
@@ -517,12 +462,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=BodyX, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=BodyX, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -550,12 +495,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=BodyY, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=BodyY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Background="#FF191919"
@@ -582,12 +527,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=BodyZ, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=BodyZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -598,18 +543,14 @@
                                         Text="防止添加" />
                                 </DockPanel>
                             </Grid>
-                        </CustomControl:IconTabItems>
-                        <CustomControl:IconTabItems
+                        </Container:VectorTextTabItem>
+                        <Container:VectorTextTabItem
+                            Title="左臂"
                             Width="50"
                             Height="30"
-                            Background="{StaticResource DataButtonBackground}"
                             FontSize="15"
                             Foreground="White"
-                            HeaderText="左臂"
-                            ImageHeight="100"
-                            ImageWidth="50"
-                            Selectedbackground="{StaticResource DataButtonPressedBackground}"
-                            Style="{DynamicResource IconTabItems}">
+                            Style="{DynamicResource VectorTextTabItemStyle}">
                             <Grid Margin="0,0,5,0" Background="#515B59">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
@@ -624,19 +565,17 @@
                                         Foreground="White"
                                         Text="三轴合一"
                                         TextAlignment="Center" />
-                                    <CustomControl:IconTextButtons
+                                    <VectorButton:VectorTextButton
                                         Width="50"
                                         Height="30"
                                         Margin="35,0,0,0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
-                                        Background="{StaticResource ButtonNormal}"
                                         BorderBrush="Black"
                                         ClickMode="Press"
                                         Command="{Binding LeftArmThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        PressedBackground="{StaticResource ButtonPressed}"
-                                        Style="{DynamicResource IconTextButton}">
+                                        Style="{DynamicResource VectorTextButtonStyle}">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -660,32 +599,28 @@
                                                 </Path>
                                             </Viewbox>
                                         </Button.Content>
-                                    </CustomControl:IconTextButtons>
+                                    </VectorButton:VectorTextButton>
                                     <DockPanel Margin="0,0,5,0" HorizontalAlignment="Right">
-                                        <CustomControl:RadiusToggleButtons
+                                        <VectorButton:VectorToggleIconTextButton
                                             Width="46"
                                             Height="26"
                                             Margin="5,5,0,0"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
                                             IsChecked="{Binding Path=CanResetLArmPose, Mode=TwoWay}"
-                                            Style="{StaticResource RadiusToggleButton}"
-                                            ToggleHeight="25"
-                                            ToggleWidth="45" />
-                                        <CustomControl:IconTextButtons
+                                            Style="{StaticResource VectorToggleIconTextButtonStyle}" />
+                                        <VectorButton:VectorTextButton
                                             Width="60"
                                             Height="30"
                                             Margin="0,2,0,0"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
-                                            Background="{StaticResource ButtonNormal}"
                                             BorderThickness="0"
                                             ClickMode="Press"
                                             Command="{Binding ResetLeftArmPoseCommand}"
                                             Content="重置"
                                             Foreground="{Binding Path=ResetLArmPoseButtonForeground, Mode=OneWay}"
-                                            PressedBackground="{StaticResource ButtonPressed}"
-                                            Style="{DynamicResource IconTextButton}" />
+                                            Style="{DynamicResource VectorTextButtonStyle}" />
                                     </DockPanel>
                                 </DockPanel>
                                 <DockPanel Grid.Row="1" Margin="10,0,0,0">
@@ -707,12 +642,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=LArmX, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=LArmX, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -740,12 +675,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=LArmY, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=LArmY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -774,12 +709,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=LArmZ, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=LArmZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -790,19 +725,15 @@
                                         Text="防止添加" />
                                 </DockPanel>
                             </Grid>
-                        </CustomControl:IconTabItems>
-                        <CustomControl:IconTabItems
+                        </Container:VectorTextTabItem>
+                        <Container:VectorTextTabItem
+                            Title="右臂"
                             Width="50"
                             Height="30"
                             VerticalAlignment="Bottom"
-                            Background="{StaticResource DataButtonBackground}"
                             FontSize="15"
                             Foreground="White"
-                            HeaderText="右臂"
-                            ImageHeight="100"
-                            ImageWidth="50"
-                            Selectedbackground="{StaticResource DataButtonPressedBackground}"
-                            Style="{DynamicResource IconTabItems}">
+                            Style="{DynamicResource VectorTextTabItemStyle}">
                             <Grid Margin="0,0,5,0" Background="#515B59">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
@@ -817,19 +748,17 @@
                                         Foreground="White"
                                         Text="三轴合一"
                                         TextAlignment="Center" />
-                                    <CustomControl:IconTextButtons
+                                    <VectorButton:VectorTextButton
                                         Width="50"
                                         Height="30"
                                         Margin="35,0,0,0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
-                                        Background="{StaticResource ButtonNormal}"
                                         BorderBrush="Black"
                                         ClickMode="Press"
                                         Command="{Binding RightArmThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        PressedBackground="{StaticResource ButtonPressed}"
-                                        Style="{DynamicResource IconTextButton}">
+                                        Style="{DynamicResource VectorTextButtonStyle}">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -853,32 +782,28 @@
                                                 </Path>
                                             </Viewbox>
                                         </Button.Content>
-                                    </CustomControl:IconTextButtons>
+                                    </VectorButton:VectorTextButton>
                                     <DockPanel Margin="0,0,5,0" HorizontalAlignment="Right">
-                                        <CustomControl:RadiusToggleButtons
+                                        <VectorButton:VectorToggleIconTextButton
                                             Width="46"
                                             Height="26"
                                             Margin="5,5,0,0"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
                                             IsChecked="{Binding Path=CanResetRArmPose, Mode=TwoWay}"
-                                            Style="{StaticResource RadiusToggleButton}"
-                                            ToggleHeight="25"
-                                            ToggleWidth="45" />
-                                        <CustomControl:IconTextButtons
+                                            Style="{StaticResource VectorToggleIconTextButtonStyle}" />
+                                        <VectorButton:VectorTextButton
                                             Width="60"
                                             Height="30"
                                             Margin="0,2,0,0"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
-                                            Background="{StaticResource ButtonNormal}"
                                             BorderThickness="0"
                                             ClickMode="Press"
                                             Command="{Binding ResetRightArmPoseCommand}"
                                             Content="重置"
                                             Foreground="{Binding Path=ResetRArmPoseButtonForeground, Mode=OneWay}"
-                                            PressedBackground="{StaticResource ButtonPressed}"
-                                            Style="{DynamicResource IconTextButton}" />
+                                            Style="{DynamicResource VectorTextButtonStyle}" />
                                     </DockPanel>
                                 </DockPanel>
                                 <DockPanel Grid.Row="1" Margin="10,0,0,0">
@@ -900,12 +825,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=RArmX, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=RArmX, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -933,12 +858,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=RArmY, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=RArmY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -966,12 +891,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=RArmZ, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=RArmZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -982,18 +907,14 @@
                                         Text="防止添加" />
                                 </DockPanel>
                             </Grid>
-                        </CustomControl:IconTabItems>
-                        <CustomControl:IconTabItems
+                        </Container:VectorTextTabItem>
+                        <Container:VectorTextTabItem
+                            Title="左腿"
                             Width="50"
                             Height="30"
-                            Background="{StaticResource DataButtonBackground}"
                             FontSize="15"
                             Foreground="White"
-                            HeaderText="左腿"
-                            ImageHeight="100"
-                            ImageWidth="50"
-                            Selectedbackground="{StaticResource DataButtonPressedBackground}"
-                            Style="{DynamicResource IconTabItems}">
+                            Style="{DynamicResource VectorTextTabItemStyle}">
                             <Grid Margin="0,0,5,0" Background="#515B59">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
@@ -1008,19 +929,17 @@
                                         Foreground="White"
                                         Text="三轴合一"
                                         TextAlignment="Center" />
-                                    <CustomControl:IconTextButtons
+                                    <VectorButton:VectorTextButton
                                         Width="50"
                                         Height="30"
                                         Margin="35,0,0,0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
-                                        Background="{StaticResource ButtonNormal}"
                                         BorderBrush="Black"
                                         ClickMode="Press"
                                         Command="{Binding LeftLegThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        PressedBackground="{StaticResource ButtonPressed}"
-                                        Style="{DynamicResource IconTextButton}">
+                                        Style="{DynamicResource VectorTextButtonStyle}">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -1044,32 +963,28 @@
                                                 </Path>
                                             </Viewbox>
                                         </Button.Content>
-                                    </CustomControl:IconTextButtons>
+                                    </VectorButton:VectorTextButton>
                                     <DockPanel Margin="0,0,5,0" HorizontalAlignment="Right">
-                                        <CustomControl:RadiusToggleButtons
+                                        <VectorButton:VectorToggleIconTextButton
                                             Width="46"
                                             Height="26"
                                             Margin="5,5,0,0"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
                                             IsChecked="{Binding Path=CanResetLLegPose, Mode=TwoWay}"
-                                            Style="{StaticResource RadiusToggleButton}"
-                                            ToggleHeight="25"
-                                            ToggleWidth="45" />
-                                        <CustomControl:IconTextButtons
+                                            Style="{StaticResource VectorToggleIconTextButtonStyle}" />
+                                        <VectorButton:VectorTextButton
                                             Width="60"
                                             Height="30"
                                             Margin="0,2,0,0"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
-                                            Background="{StaticResource ButtonNormal}"
                                             BorderThickness="0"
                                             ClickMode="Press"
                                             Command="{Binding ResetLeftLegPoseCommand}"
                                             Content="重置"
                                             Foreground="{Binding Path=ResetLLegPoseButtonForeground, Mode=OneWay}"
-                                            PressedBackground="{StaticResource ButtonPressed}"
-                                            Style="{DynamicResource IconTextButton}" />
+                                            Style="{DynamicResource VectorTextButtonStyle}" />
                                     </DockPanel>
                                 </DockPanel>
                                 <DockPanel Grid.Row="1" Margin="10,0,0,0">
@@ -1091,12 +1006,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=LLegX, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=LLegX, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -1124,12 +1039,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=LLegY, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=LLegY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -1157,12 +1072,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=LLegZ, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=LLegZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -1173,18 +1088,14 @@
                                         Text="防止添加" />
                                 </DockPanel>
                             </Grid>
-                        </CustomControl:IconTabItems>
-                        <CustomControl:IconTabItems
+                        </Container:VectorTextTabItem>
+                        <Container:VectorTextTabItem
+                            Title="右腿"
                             Width="50"
                             Height="30"
-                            Background="{StaticResource DataButtonBackground}"
                             FontSize="15"
                             Foreground="White"
-                            HeaderText="右腿"
-                            ImageHeight="100"
-                            ImageWidth="50"
-                            Selectedbackground="{StaticResource DataButtonPressedBackground}"
-                            Style="{DynamicResource IconTabItems}">
+                            Style="{DynamicResource VectorTextTabItemStyle}">
                             <Grid Margin="0,0,5,0" Background="#515B59">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
@@ -1199,19 +1110,17 @@
                                         Foreground="White"
                                         Text="三轴合一"
                                         TextAlignment="Center" />
-                                    <CustomControl:IconTextButtons
+                                    <VectorButton:VectorTextButton
                                         Width="50"
                                         Height="30"
                                         Margin="35,0,0,0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
-                                        Background="{StaticResource ButtonNormal}"
                                         BorderBrush="Black"
                                         ClickMode="Press"
                                         Command="{Binding RightLegThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        PressedBackground="{StaticResource ButtonPressed}"
-                                        Style="{DynamicResource IconTextButton}">
+                                        Style="{DynamicResource VectorTextButtonStyle}">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -1235,32 +1144,28 @@
                                                 </Path>
                                             </Viewbox>
                                         </Button.Content>
-                                    </CustomControl:IconTextButtons>
+                                    </VectorButton:VectorTextButton>
                                     <DockPanel Margin="0,0,5,0" HorizontalAlignment="Right">
-                                        <CustomControl:RadiusToggleButtons
+                                        <VectorButton:VectorToggleIconTextButton
                                             Width="46"
                                             Height="26"
                                             Margin="5,5,0,0"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
                                             IsChecked="{Binding Path=CanResetRLegPose, Mode=TwoWay}"
-                                            Style="{StaticResource RadiusToggleButton}"
-                                            ToggleHeight="25"
-                                            ToggleWidth="45" />
-                                        <CustomControl:IconTextButtons
+                                            Style="{StaticResource VectorToggleIconTextButtonStyle}" />
+                                        <VectorButton:VectorTextButton
                                             Width="60"
                                             Height="30"
                                             Margin="0,2,0,0"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
-                                            Background="{StaticResource ButtonNormal}"
                                             BorderThickness="0"
                                             ClickMode="Press"
                                             Command="{Binding ResetRightLegPoseCommand}"
                                             Content="重置"
                                             Foreground="{Binding Path=ResetRLegPoseButtonForeground, Mode=OneWay}"
-                                            PressedBackground="{StaticResource ButtonPressed}"
-                                            Style="{DynamicResource IconTextButton}" />
+                                            Style="{DynamicResource VectorTextButtonStyle}" />
                                     </DockPanel>
                                 </DockPanel>
                                 <DockPanel Grid.Row="1" Margin="10,0,0,0">
@@ -1282,12 +1187,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=RLegX, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=RLegX, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -1315,12 +1220,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=RLegY, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=RLegY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -1348,12 +1253,12 @@
                                         Minimum="-180"
                                         Style="{DynamicResource VectorSliderStyle}"
                                         Value="{Binding Path=RLegZ, Mode=TwoWay}" />
-                                    <Input:NumbericUpDown
+                                    <Input:VectorNumbericUpDown
                                         Width="125"
                                         Background="#D0D1D4"
                                         FontSize="20"
                                         Foreground="White"
-                                        Style="{DynamicResource NumbericUpDownStyle}"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=RLegZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
@@ -1364,18 +1269,14 @@
                                         Text="防止添加" />
                                 </DockPanel>
                             </Grid>
-                        </CustomControl:IconTabItems>
-                        <CustomControl:IconTabItems
+                        </Container:VectorTextTabItem>
+                        <Container:VectorTextTabItem
+                            Title="双脚"
                             Width="50"
                             Height="30"
-                            Background="{StaticResource DataButtonBackground}"
                             FontSize="15"
                             Foreground="White"
-                            HeaderText="双脚"
-                            ImageHeight="100"
-                            ImageWidth="50"
-                            Selectedbackground="{StaticResource DataButtonPressedBackground}"
-                            Style="{DynamicResource IconTabItems}">
+                            Style="{DynamicResource VectorTextTabItemStyle}">
                             <Grid Margin="0,0,5,0" Background="#515B59">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
@@ -1408,8 +1309,8 @@
                                     Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                                     Text="禁止添加" />
                             </Grid>
-                        </CustomControl:IconTabItems>
-                    </TabControl>
+                        </Container:VectorTextTabItem>
+                    </Container:VectorTabControl>
                 </StackPanel>
                 <StackPanel Grid.Row="1">
                     <TextBlock
@@ -1561,7 +1462,7 @@
                                 Style="{DynamicResource VectorTextButtonStyle}"
                                 Text="反选" />
                         </Grid>
-                        <ScrollViewer
+                        <Container:VectorScrollViewer
                             Grid.Row="1"
                             Margin="5,0,5,5"
                             Background="#565A57"
@@ -1576,7 +1477,7 @@
                                     </behaviors:EventTrigger>
                                 </behaviors:Interaction.Triggers>
                             </StackPanel>
-                        </ScrollViewer>
+                        </Container:VectorScrollViewer>
                     </Grid>
                 </Grid>
             </Grid>
@@ -1753,13 +1654,14 @@
                     IsHitTestVisible="False"
                     Source="{StaticResource TrimMaterial}" />
             </Grid>
-            <TabControl
+            <Container:VectorTabControl
                 Grid.Column="2"
                 Margin="0,4,5,5"
                 VerticalAlignment="Stretch"
                 Background="Transparent"
                 BorderBrush="#ECBE88"
-                BorderThickness="1">
+                BorderThickness="1"
+                Style="{DynamicResource VectorTabControlStyle}">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="KeyDown">
                         <behaviors:CallMethodAction MethodName="ArmorStandViewer_KeyDown" TargetObject="{Binding}" />
@@ -1774,53 +1676,52 @@
                         <behaviors:CallMethodAction MethodName="ModelViewMouseWheel" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
-                <CustomControl:TextTabItems
+                <Container:VectorTextTabItem
+                    Title="{Binding PreviewModeText}"
                     Background="Transparent"
                     FontSize="18"
                     FontWeight="Bold"
                     Foreground="White"
-                    Header="{Binding PreviewModeText}"
-                    Style="{DynamicResource TextTabItemStyle}">
+                    Style="{DynamicResource VectorTextTabItemStyle}">
                     <Grid Background="Transparent">
                         <StackPanel
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
                             Panel.ZIndex="1">
-                            <CustomControl:ImageButtons
+                            <!--<VectorButton:VectorFlatImageButton
                                 Width="25"
                                 Height="25"
                                 Margin="0,0,0,5"
                                 Command="{Binding PreviewMenuVisibilitySwitcherCommand}"
-                                ImageData="{StaticResource IconVisible}"
-                                PressedImage="{StaticResource IconInvisible}"
-                                Style="{DynamicResource ImageButtons}"
+                                Image="{StaticResource IconVisible}"
+                                Style="{DynamicResource VectorFlatImageButtonStyle}"
                                 ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.InitialShowDelay="0">
-                                <CustomControl:ImageButtons.ToolTip>
+                                <VectorButton:VectorFlatImageButton.ToolTip>
                                     <ToolTip
                                         Background="#424242"
                                         Content="显示/隐藏功能"
                                         Foreground="White" />
-                                </CustomControl:ImageButtons.ToolTip>
-                            </CustomControl:ImageButtons>
-                            <CustomControl:ImageButtons
+                                </VectorButton:VectorFlatImageButton.ToolTip>
+                            </VectorButton:VectorFlatImageButton>
+                            <VectorButton:VectorFlatImageButton
                                 Width="25"
                                 Height="25"
                                 Margin="0,0,0,5"
                                 Command="{Binding ResetCameraStateCommand}"
-                                ImageData="{StaticResource IconReset}"
-                                Style="{DynamicResource ImageButtons}"
+                                Image="{StaticResource IconReset}"
+                                Style="{DynamicResource VectorFlatImageButtonStyle}"
                                 ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.InitialShowDelay="0"
                                 Visibility="{Binding PreviewMenuVisibility}">
-                                <CustomControl:ImageButtons.ToolTip>
+                                <VectorButton:VectorFlatImageButton.ToolTip>
                                     <ToolTip
                                         Background="#424242"
                                         Content="重置相机状态"
                                         Foreground="White" />
-                                </CustomControl:ImageButtons.ToolTip>
-                            </CustomControl:ImageButtons>
-                            <CustomControl:ImageButtons
+                                </VectorButton:VectorFlatImageButton.ToolTip>
+                            </VectorButton:VectorFlatImageButton>
+                            <VectorButton:VectorFlatImageButton
                                 Uid="Watch"
                                 Width="25"
                                 Height="25"
@@ -1831,19 +1732,19 @@
                                 CommandParameter="{x:Static UtilityCommon:ArmorStandCameraMovementType.Watch}"
                                 FontSize="15"
                                 FontWeight="Normal"
-                                ImageData="{StaticResource IconGaze}"
-                                Style="{DynamicResource ImageButtons}"
+                                Image="{StaticResource IconGaze}"
+                                Style="{DynamicResource VectorFlatImageButtonStyle}"
                                 ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.InitialShowDelay="0"
                                 Visibility="{Binding PreviewMenuVisibility}">
-                                <CustomControl:ImageButtons.ToolTip>
+                                <VectorButton:VectorFlatImageButton.ToolTip>
                                     <ToolTip
                                         Background="#424242"
                                         Content="开启/关闭注视视角"
                                         Foreground="White" />
-                                </CustomControl:ImageButtons.ToolTip>
-                            </CustomControl:ImageButtons>
-                            <CustomControl:ImageButtons
+                                </VectorButton:VectorFlatImageButton.ToolTip>
+                            </VectorButton:VectorFlatImageButton>
+                            <VectorButton:VectorFlatImageButton
                                 Uid="Free"
                                 Width="25"
                                 Height="25"
@@ -1854,19 +1755,19 @@
                                 CommandParameter="{x:Static UtilityCommon:ArmorStandCameraMovementType.Free}"
                                 FontSize="15"
                                 FontWeight="Normal"
-                                ImageData="{StaticResource IconFree}"
-                                Style="{DynamicResource ImageButtons}"
+                                Image="{StaticResource IconFree}"
+                                Style="{DynamicResource VectorFlatImageButtonStyle}"
                                 ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.InitialShowDelay="0"
                                 Visibility="{Binding PreviewMenuVisibility}">
-                                <CustomControl:ImageButtons.ToolTip>
+                                <VectorButton:VectorFlatImageButton.ToolTip>
                                     <ToolTip
                                         Background="#424242"
                                         Content="开启/关闭自由视角"
                                         Foreground="White" />
-                                </CustomControl:ImageButtons.ToolTip>
-                            </CustomControl:ImageButtons>
-                            <CustomControl:ImageButtons
+                                </VectorButton:VectorFlatImageButton.ToolTip>
+                            </VectorButton:VectorFlatImageButton>
+                            <VectorButton:VectorFlatImageButton
                                 Uid="ThirdPerson"
                                 Width="25"
                                 Height="25"
@@ -1877,19 +1778,19 @@
                                 CommandParameter="{x:Static UtilityCommon:ArmorStandCameraMovementType.ThirdPerson}"
                                 FontSize="15"
                                 FontWeight="Normal"
-                                ImageData="{StaticResource IconThirdPerson}"
-                                Style="{DynamicResource ImageButtons}"
+                                Image="{StaticResource IconThirdPerson}"
+                                Style="{DynamicResource VectorFlatImageButtonStyle}"
                                 ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.InitialShowDelay="0"
                                 Visibility="{Binding PreviewMenuVisibility}">
-                                <CustomControl:ImageButtons.ToolTip>
+                                <VectorButton:VectorFlatImageButton.ToolTip>
                                     <ToolTip
                                         Background="#424242"
                                         Content="开启/关闭第三人称视角"
                                         Foreground="White" />
-                                </CustomControl:ImageButtons.ToolTip>
-                            </CustomControl:ImageButtons>
-                            <CustomControl:ImageButtons
+                                </VectorButton:VectorFlatImageButton.ToolTip>
+                            </VectorButton:VectorFlatImageButton>
+                            <VectorButton:VectorFlatImageButton
                                 Uid="OverTheShoulder"
                                 Width="25"
                                 Height="25"
@@ -1900,18 +1801,18 @@
                                 CommandParameter="{x:Static UtilityCommon:ArmorStandCameraMovementType.OverTheShoulder}"
                                 FontSize="15"
                                 FontWeight="Normal"
-                                ImageData="{StaticResource IconShouder}"
-                                Style="{DynamicResource ImageButtons}"
+                                Image="{StaticResource IconShouder}"
+                                Style="{DynamicResource VectorFlatImageButtonStyle}"
                                 ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.InitialShowDelay="0"
                                 Visibility="{Binding PreviewMenuVisibility}">
-                                <CustomControl:ImageButtons.ToolTip>
+                                <VectorButton:VectorFlatImageButton.ToolTip>
                                     <ToolTip
                                         Background="#424242"
                                         Content="开启/关闭越肩视角"
                                         Foreground="White" />
-                                </CustomControl:ImageButtons.ToolTip>
-                            </CustomControl:ImageButtons>
+                                </VectorButton:VectorFlatImageButton.ToolTip>
+                            </VectorButton:VectorFlatImageButton>-->
                         </StackPanel>
                         <DockPanel
                             Margin="0,0,5,0"
@@ -2662,57 +2563,8 @@
                             </Viewport3D.Children>
                         </Viewport3D>
                     </Grid>
-                </CustomControl:TextTabItems>
-            </TabControl>
+                </Container:VectorTextTabItem>
+            </Container:VectorTabControl>
         </Grid>
-        <AnimationComponents:AnimationContainer Grid.Row="2">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:CallMethodAction MethodName="AnimationContainer_Loaded" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
-            <AnimationComponents:AnimationContainer.HeadPose>
-                <MultiBinding Converter="{StaticResource PositionConverter}" Mode="TwoWay">
-                    <Binding Mode="TwoWay" Path="HeadX" />
-                    <Binding Mode="TwoWay" Path="HeadY" />
-                    <Binding Mode="TwoWay" Path="HeadZ" />
-                </MultiBinding>
-            </AnimationComponents:AnimationContainer.HeadPose>
-            <AnimationComponents:AnimationContainer.BodyPose>
-                <MultiBinding Converter="{StaticResource PositionConverter}" Mode="TwoWay">
-                    <Binding Mode="TwoWay" Path="BodyX" />
-                    <Binding Mode="TwoWay" Path="BodyY" />
-                    <Binding Mode="TwoWay" Path="BodyZ" />
-                </MultiBinding>
-            </AnimationComponents:AnimationContainer.BodyPose>
-            <AnimationComponents:AnimationContainer.LeftArmPose>
-                <MultiBinding Converter="{StaticResource PositionConverter}" Mode="TwoWay">
-                    <Binding Mode="TwoWay" Path="LArmX" />
-                    <Binding Mode="TwoWay" Path="LArmY" />
-                    <Binding Mode="TwoWay" Path="LArmZ" />
-                </MultiBinding>
-            </AnimationComponents:AnimationContainer.LeftArmPose>
-            <AnimationComponents:AnimationContainer.RightArmPose>
-                <MultiBinding Converter="{StaticResource PositionConverter}" Mode="TwoWay">
-                    <Binding Mode="TwoWay" Path="RArmX" />
-                    <Binding Mode="TwoWay" Path="RArmY" />
-                    <Binding Mode="TwoWay" Path="RArmZ" />
-                </MultiBinding>
-            </AnimationComponents:AnimationContainer.RightArmPose>
-            <AnimationComponents:AnimationContainer.LeftLegPose>
-                <MultiBinding Converter="{StaticResource PositionConverter}" Mode="TwoWay">
-                    <Binding Mode="TwoWay" Path="LLegX" />
-                    <Binding Mode="TwoWay" Path="LLegY" />
-                    <Binding Mode="TwoWay" Path="LLegZ" />
-                </MultiBinding>
-            </AnimationComponents:AnimationContainer.LeftLegPose>
-            <AnimationComponents:AnimationContainer.RightLegPose>
-                <MultiBinding Converter="{StaticResource PositionConverter}" Mode="TwoWay">
-                    <Binding Mode="TwoWay" Path="RLegX" />
-                    <Binding Mode="TwoWay" Path="RLegY" />
-                    <Binding Mode="TwoWay" Path="RLegZ" />
-                </MultiBinding>
-            </AnimationComponents:AnimationContainer.RightLegPose>
-        </AnimationComponents:AnimationContainer>
     </Grid>
 </Container:VectorWindow>

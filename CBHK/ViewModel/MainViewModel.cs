@@ -45,8 +45,6 @@ namespace CBHK.ViewModel
         public WindowState _windowState = WindowState.Normal;
         [ObservableProperty]
         private bool _showInTaskBar = true;
-        [ObservableProperty]
-        private ObservableCollection<CustomControl.VectorComboBox.VectorTextComboBoxItem> comboBoxItemList = [];
         #endregion
 
         #region Event
@@ -58,17 +56,6 @@ namespace CBHK.ViewModel
         [RelayCommand]
         private void MainWindowLoaded()
         {
-            for (int i = 0; i < 1000; i++)
-            {
-                ComboBoxItemList.Add(new CustomControl.VectorComboBox.VectorIconTextComboBoxItem()
-                {
-                    Text = "Item" + i,
-                    DisplayPanelBrush = Brushes.Black,
-                    MemberBrush = Brushes.White,
-                    Image = new BitmapImage(new Uri("pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/armorstand.png", UriKind.Absolute))
-                });
-            }
-
             SetGeneratorButtonProgress = new Progress<byte>((state) =>
             {
                 DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
@@ -180,7 +167,7 @@ namespace CBHK.ViewModel
         {
             SkeletonGrid.Visibility = Visibility.Collapsed;
             GeneratorTable.Visibility = Visibility.Visible;
-            if (bool.TryParse(config.ShowNotice,out bool showNotice) && showNotice)
+            if (bool.TryParse(config.ShowNotice, out bool showNotice) && showNotice)
             {
                 NoticeToUsersView noticeToUsers = container.Resolve<NoticeToUsersView>();
                 noticeToUsers.Topmost = true;

@@ -16,6 +16,9 @@
     <Style x:Key="VectorToggleIconTextButtonStyle" TargetType="{x:Type VectorButton:VectorToggleIconTextButton}">
         <Setter Property="ClipToBounds" Value="False" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -27,30 +30,29 @@
                         x:Name="border"
                         Background="Transparent"
                         BorderThickness="0"
-                        ClipToBounds="False"
-                        SnapsToDevicePixels="true">
-                        <Grid Height="32" ClipToBounds="False">
+                        SnapsToDevicePixels="true"
+                        UseLayoutRounding="True">
+                        <Grid ClipToBounds="False">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <Border
                                 Grid.Column="0"
-                                Width="62"
-                                Height="30"
+                                Width="{TemplateBinding BackgroundWidth}"
+                                Height="{TemplateBinding BackgroundHeight}"
+                                Margin="2,0,0,0"
                                 HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                VerticalAlignment="Bottom"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Panel.ZIndex="0"
                                 BorderBrush="Black"
                                 BorderThickness="2">
                                 <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*" />
-                                    </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Grid Grid.Column="0" Background="#3C8527">
+                                    <Grid Grid.Column="0" Background="{TemplateBinding SelectedBackground}">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="2" />
                                             <ColumnDefinition Width="*" />
@@ -64,23 +66,24 @@
                                             Grid.Row="0"
                                             Grid.Column="0"
                                             Grid.ColumnSpan="2"
-                                            Fill="#639D52"
+                                            Fill="{TemplateBinding LeftTopSelectedBorderBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="1"
                                             Grid.Column="0"
-                                            Fill="#639D52"
+                                            Fill="{TemplateBinding LeftTopSelectedBorderBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            Fill="#72A763"
+                                            Fill="{TemplateBinding LeftSideSelectedBorderCornerBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="2"
                                             Grid.Column="1"
-                                            Fill="#639D52"
+                                            Fill="{TemplateBinding LeftSideBottomSelectedBorderBrush}"
                                             IsHitTestVisible="False" />
+                                        <!--#region 竖线标记-->
                                         <Rectangle
                                             Grid.Row="1"
                                             Grid.Column="1"
@@ -90,8 +93,9 @@
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
                                             Fill="#FFFFFF" />
+                                        <!--#endregion-->
                                     </Grid>
-                                    <Grid Grid.Column="1" Background="#8C8D90">
+                                    <Grid Grid.Column="1" Background="{TemplateBinding UnSelectedBackground}">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="2" />
@@ -104,85 +108,92 @@
                                         <Rectangle
                                             Grid.Row="0"
                                             Grid.Column="0"
-                                            Fill="#A3A4A6"
+                                            Fill="{TemplateBinding RightTopUnSelectedBorderBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="0"
                                             Grid.Column="1"
-                                            Fill="#ACADAF"
+                                            Fill="{TemplateBinding RightSideUnSelectedBorderCornerBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="1"
                                             Grid.Column="1"
-                                            Fill="#97989B"
+                                            Fill="{TemplateBinding RightTopUnSelectedBorderBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="2"
                                             Grid.Column="0"
                                             Grid.ColumnSpan="2"
-                                            Fill="#97989B"
+                                            Fill="{TemplateBinding RightSideBottomUnSelectedBorderBrush}"
                                             IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="1"
-                                            Grid.Column="0"
-                                            Width="2.5"
-                                            Height="10"
-                                            Margin="7,0,0,0"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Center"
-                                            Fill="#242425"
-                                            IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="1"
-                                            Grid.Column="0"
-                                            Width="10"
-                                            Height="2.5"
-                                            Margin="1.5,3,0,0"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Top"
-                                            Fill="#242425"
-                                            IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="1"
-                                            Grid.Column="0"
-                                            Width="10"
-                                            Height="2"
-                                            Margin="2.5,0,0,4"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Bottom"
-                                            Fill="#242425"
-                                            IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="1"
-                                            Grid.Column="0"
-                                            Width="2"
-                                            Height="10"
-                                            Margin="0,0,5.5,0"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Center"
-                                            Fill="#242425"
-                                            IsHitTestVisible="False" />
+                                        <!--#region 圆圈标记-->
+                                        <Viewbox Grid.Row="1" Grid.Column="0">
+                                            <Grid Margin="2">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Rectangle
+                                                    Grid.Row="1"
+                                                    Grid.Column="2"
+                                                    Width="0.5"
+                                                    Height="4"
+                                                    HorizontalAlignment="Left"
+                                                    Fill="#242425"
+                                                    IsHitTestVisible="False" />
+                                                <Rectangle
+                                                    Grid.Row="2"
+                                                    Grid.Column="1"
+                                                    Width="4"
+                                                    Height="0.5"
+                                                    VerticalAlignment="Top"
+                                                    Fill="#242425"
+                                                    IsHitTestVisible="False" />
+                                                <Rectangle
+                                                    Grid.Row="0"
+                                                    Grid.Column="1"
+                                                    Width="4"
+                                                    Height="1"
+                                                    VerticalAlignment="Bottom"
+                                                    Fill="#242425"
+                                                    IsHitTestVisible="False" />
+                                                <Rectangle
+                                                    Grid.Row="1"
+                                                    Grid.Column="0"
+                                                    Width="1"
+                                                    Height="4"
+                                                    HorizontalAlignment="Right"
+                                                    Fill="#242425"
+                                                    IsHitTestVisible="False" />
+                                            </Grid>
+                                        </Viewbox>
+                                        <!--#endregion-->
                                     </Grid>
                                 </Grid>
                             </Border>
                             <Border
                                 Grid.Column="0"
-                                Grid.ColumnSpan="2"
-                                Width="33"
-                                Height="35"
+                                Width="{TemplateBinding ThumbWidth}"
+                                Height="{TemplateBinding ThumbHeight}"
                                 Margin="{TemplateBinding ThumbMargin}"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Bottom"
-                                Panel.ZIndex="2"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Panel.ZIndex="1"
                                 BorderBrush="Black"
                                 BorderThickness="2"
                                 ClipToBounds="False">
-                                <Grid Background="#D0D1D4">
+                                <Grid Background="{TemplateBinding ThumbBackground}">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="2" />
                                         <RowDefinition Height="*" />
                                         <RowDefinition Height="2" />
-                                        <RowDefinition Height="6" />
+                                        <RowDefinition x:Name="extraBottomLine" />
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="2" />
@@ -192,59 +203,57 @@
                                     <Rectangle
                                         Grid.Row="0"
                                         Grid.Column="0"
-                                        Fill="#ECEDEE"
+                                        Fill="{TemplateBinding LeftTopBorderBrush}"
                                         IsHitTestVisible="False" />
                                     <Rectangle
                                         Grid.Row="0"
                                         Grid.Column="1"
-                                        Fill="#ECEDEE"
+                                        Fill="{TemplateBinding LeftTopBorderBrush}"
                                         IsHitTestVisible="False" />
                                     <Rectangle
                                         Grid.Row="0"
                                         Grid.Column="2"
-                                        Fill="#F4F4F5"
+                                        Fill="{TemplateBinding BorderCornerBrush}"
                                         IsHitTestVisible="False" />
                                     <Rectangle
                                         Grid.Row="1"
                                         Grid.Column="0"
-                                        Fill="#ECEDEE"
+                                        Fill="{TemplateBinding LeftTopBorderBrush}"
                                         IsHitTestVisible="False" />
                                     <Rectangle
                                         Grid.Row="1"
                                         Grid.Column="2"
-                                        Fill="#ECEDEE"
+                                        Fill="{TemplateBinding RightBottomBorderBrush}"
                                         IsHitTestVisible="False" />
                                     <Rectangle
                                         Grid.Row="2"
                                         Grid.Column="0"
-                                        Fill="#F4F4F5"
+                                        Fill="{TemplateBinding BorderCornerBrush}"
                                         IsHitTestVisible="False" />
                                     <Rectangle
                                         Grid.Row="2"
                                         Grid.Column="1"
-                                        Fill="#ECEDEE"
+                                        Fill="{TemplateBinding RightBottomBorderBrush}"
                                         IsHitTestVisible="False" />
                                     <Rectangle
                                         Grid.Row="2"
                                         Grid.Column="2"
-                                        Fill="#ECEDEE"
+                                        Fill="{TemplateBinding RightBottomBorderBrush}"
                                         IsHitTestVisible="False" />
                                     <Rectangle
                                         Grid.Row="3"
                                         Grid.ColumnSpan="3"
                                         HorizontalAlignment="Stretch"
                                         VerticalAlignment="Stretch"
-                                        Fill="#58585A"
-                                        IsHitTestVisible="False"
-                                        Stroke="#58585A"
-                                        StrokeThickness="0" />
+                                        Fill="{TemplateBinding BottomBorderBrush}"
+                                        IsHitTestVisible="False" />
                                 </Grid>
                             </Border>
                             <TextBlock
                                 Grid.Column="1"
-                                Margin="5,0,0,0"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
+                                Panel.ZIndex="1"
                                 Foreground="{TemplateBinding Foreground}"
                                 Text="{TemplateBinding Text}" />
                             <ContentPresenter

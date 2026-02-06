@@ -3,13 +3,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container">
 
-    <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF" />
     <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC" />
     <Style x:Key="VectorTabControlStyle" TargetType="{x:Type Container:VectorTabControl}">
         <Setter Property="Padding" Value="2" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="{StaticResource TabItem.Selected.Border}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
@@ -29,9 +28,10 @@
                             <RowDefinition x:Name="RowDefinition0" Height="Auto" />
                             <RowDefinition x:Name="RowDefinition1" Height="*" />
                         </Grid.RowDefinitions>
-                        <ScrollViewer
+                        <Container:VectorScrollViewer
                             Grid.Row="0"
                             Grid.Column="0"
+                            Background="{TemplateBinding Background}"
                             HorizontalScrollBarVisibility="Auto"
                             Style="{DynamicResource VectorScrollViewerStyle}"
                             VerticalScrollBarVisibility="Auto">
@@ -45,11 +45,11 @@
                                     Grid.Column="0"
                                     Margin="2,2,2,0"
                                     Panel.ZIndex="1"
-                                    Background="Transparent"
+                                    Background="{TemplateBinding Background}"
                                     IsItemsHost="true"
                                     KeyboardNavigation.TabIndex="1" />
                             </Border>
-                        </ScrollViewer>
+                        </Container:VectorScrollViewer>
                         <Border
                             x:Name="contentPanel"
                             Grid.Row="1"

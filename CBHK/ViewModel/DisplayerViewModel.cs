@@ -9,6 +9,8 @@ using System.Windows.Input;
 using CBHK.CustomControl;
 using System.Windows.Media.Imaging;
 using System.IO;
+using CBHK.CustomControl.Container;
+using CBHK.CustomControl.TextElement;
 
 namespace CBHK.ViewModel
 {
@@ -48,8 +50,8 @@ namespace CBHK.ViewModel
         {
             #region 遍历当前标签页对象，查找是否有相同类型的
             bool ExistSamePage = false;
-            RichTabItems currentTabItem = null;
-            foreach (RichTabItems tab in ResultTabControl.Items)
+            VectorRichTabItem currentTabItem = null;
+            foreach (VectorRichTabItem tab in ResultTabControl.Items)
             {
                 ExistSamePage = tab.Header.ToString() == headerText;
                 if (ExistSamePage)
@@ -119,25 +121,15 @@ namespace CBHK.ViewModel
                     VerticalAlignment = VerticalAlignment.Stretch,
                     CaretBrush = new SolidColorBrush(Colors.White)
                 };
-                ScrollViewer.SetVerticalScrollBarVisibility(result_box, ScrollBarVisibility.Auto);
-                ScrollViewer.SetHorizontalScrollBarVisibility(result_box, ScrollBarVisibility.Disabled);
+                VectorScrollViewer.SetVerticalScrollBarVisibility(result_box, ScrollBarVisibility.Auto);
+                VectorScrollViewer.SetHorizontalScrollBarVisibility(result_box, ScrollBarVisibility.Disabled);
 
-                RichTabItems itt = new()
+                VectorRichTabItem itt = new()
                 {
-                    IsContentSaved = true,
                     Content = result_box,
                     Header = headerText,
-                    BorderThickness = new(4, 4, 4, 0),
-                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                    SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
                     Foreground = new SolidColorBrush(Colors.White),
-                    Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                    LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                    RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                    TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                    SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                    SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                    SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                    Style = Application.Current.Resources["RichTabItemStyle"] as Style
                 };
                 ResultTabControl.Items.Add(itt);
                 ResultTabControl.SelectedItem = itt;

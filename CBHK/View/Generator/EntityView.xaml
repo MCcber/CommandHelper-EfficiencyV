@@ -52,7 +52,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="40" />
+            <RowDefinition Height="35" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0">
@@ -104,30 +104,30 @@
                 ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}" />
             <VectorButton:VectorTextButton
-                MinWidth="80"
+                MinWidth="50"
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
                 Command="{Binding AddEntityCommand}"
                 Foreground="Black"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="添加" />
             <VectorButton:VectorTextButton
-                MinWidth="80"
+                MinWidth="50"
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
                 Command="{Binding ClearEntityCommand}"
                 Foreground="Black"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="清空" />
             <VectorButton:VectorTextButton
-                MinWidth="80"
+                MinWidth="50"
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
                 Command="{Binding ImportEntityFromClipboardCommand}"
                 Foreground="Black"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从剪切板导入" />
             <VectorButton:VectorTextButton
@@ -136,16 +136,16 @@
                 Background="#EFF2F1"
                 Command="{Binding ImportEntityFromFileCommand}"
                 Foreground="Black"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
             <VectorButton:VectorTextButton
-                MinWidth="80"
+                MinWidth="50"
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
                 Command="{Binding ClearUnnecessaryDataCommand}"
                 Foreground="Black"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="冻结数据"
                 ToolTipService.BetweenShowDelay="0"
@@ -158,8 +158,9 @@
                 </VectorButton:VectorTextButton.ToolTip>
             </VectorButton:VectorTextButton>
             <VectorButton:VectorToggleIconTextButton
+                HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
-                Foreground="White"
+                Foreground="Black"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />

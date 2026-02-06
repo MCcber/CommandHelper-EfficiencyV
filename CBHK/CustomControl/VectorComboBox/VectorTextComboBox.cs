@@ -6,7 +6,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 
 namespace CBHK.CustomControl.VectorComboBox
 {
@@ -19,6 +18,9 @@ namespace CBHK.CustomControl.VectorComboBox
             set { SetValue(TitleProperty, value); }
         }
 
+        public static readonly DependencyProperty TitleProperty =
+            DependencyProperty.Register("Title", typeof(string), typeof(VectorTextComboBox), new PropertyMetadata(default(string)));
+
         public Thickness ArrowMargin
         {
             get { return (Thickness)GetValue(ArrowMarginProperty); }
@@ -27,9 +29,6 @@ namespace CBHK.CustomControl.VectorComboBox
 
         public static readonly DependencyProperty ArrowMarginProperty =
             DependencyProperty.Register("ArrowMargin", typeof(Thickness), typeof(VectorTextComboBox), new PropertyMetadata(default(Thickness)));
-
-        public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register("Title", typeof(string), typeof(VectorTextComboBox), new PropertyMetadata(default(string)));
 
         public Brush ItemContainerBackground
         {
@@ -84,15 +83,6 @@ namespace CBHK.CustomControl.VectorComboBox
 
         public static readonly DependencyProperty SearchBoxForegroundProperty =
             DependencyProperty.Register("SearchBoxForeground", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
-
-        public RelayCommand ClosePopupCommand
-        {
-            get { return (RelayCommand)GetValue(ClosePopupCommandProperty); }
-            set { SetValue(ClosePopupCommandProperty, value); }
-        }
-
-        public static readonly DependencyProperty ClosePopupCommandProperty =
-            DependencyProperty.Register("ClosePopupCommand", typeof(RelayCommand), typeof(VectorTextComboBox), new PropertyMetadata(default(RelayCommand)));
         #endregion
 
         #region Method
@@ -106,10 +96,8 @@ namespace CBHK.CustomControl.VectorComboBox
         #region Event
         private void VectorTextComboBox_Loaded(object sender, RoutedEventArgs e)
         {
-            MaxDropDownHeight -= 11.5;
             SearchBoxForeground = Brushes.White;
             TitleBrush = Brushes.White;
-            ClosePopupCommand = ClosePopupClickCommand as RelayCommand;
             ArrowBrush = Brushes.Black;
             ItemSelectedMarkerBrush = Brushes.White;
             ItemContainerBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#58585A"));
@@ -130,9 +118,6 @@ namespace CBHK.CustomControl.VectorComboBox
                 toggleButton.RaiseEvent(args);
             }
         }
-
-        [RelayCommand]
-        private void ClosePopupClick() => IsDropDownOpen = false;
         #endregion
     }
 }

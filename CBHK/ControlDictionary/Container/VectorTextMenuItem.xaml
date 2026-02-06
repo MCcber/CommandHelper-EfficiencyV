@@ -306,7 +306,7 @@
                         Background="{DynamicResource Menu.Static.Background}"
                         BorderBrush="{DynamicResource Menu.Static.Border}"
                         BorderThickness="0">
-                        <ScrollViewer x:Name="SubMenuScrollViewer" Style="{DynamicResource VectorScrollViewerStyle}">
+                        <Container:VectorScrollViewer x:Name="SubMenuScrollViewer" Style="{DynamicResource VectorScrollViewerStyle}">
                             <Grid RenderOptions.ClearTypeHint="Enabled">
                                 <Canvas
                                     Width="0"
@@ -331,7 +331,7 @@
                                     KeyboardNavigation.TabNavigation="Cycle"
                                     SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                             </Grid>
-                        </ScrollViewer>
+                        </Container:VectorScrollViewer>
                     </Border>
                 </Popup>
             </Grid>

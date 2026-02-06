@@ -1,4 +1,5 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Common;
 using CBHK.Model.Generator.Tag;
 using CBHK.Utility.MessageTip;
@@ -32,14 +33,18 @@ namespace CBHK.Utility.Common
 {
     public static class ExternalDataImportManager
     {
+        #region Field
         private static DataTable ItemTable = null;
         private static DataTable EntityTable = null;
+        #endregion
+
+        #region Method
         public static void Init()
         {
         }
 
         #region 处理导入外部标签
-        public static void ImportTagDataHandler(string filePathOrData, ref ObservableCollection<TagItemTemplate> itemList,ref TagViewModel context, bool IsPath = true)
+        public static void ImportTagDataHandler(string filePathOrData, ref ObservableCollection<TagItemTemplate> itemList, ref TagViewModel context, bool IsPath = true)
         {
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
@@ -48,16 +53,16 @@ namespace CBHK.Utility.Common
                 JObject content = JObject.Parse(data);
                 if (content.SelectToken("replace") is JToken replace)
                     context.Replace = replace.ToString().ToString().ToLower() == "true";
-                if(content.SelectToken("values") is JArray valuesArray)
+                if (content.SelectToken("values") is JArray valuesArray)
                 {
-                    List<string> values = valuesArray.ToList().ConvertAll(item=>item.ToString().Replace("minecraft:",""));
+                    List<string> values = valuesArray.ToList().ConvertAll(item => item.ToString().Replace("minecraft:", ""));
                     StringBuilder id = new();
                     foreach (var item in itemList)
                     {
                         id.Clear();
                         id.Append(item.DisplayId);
                         item.BeChecked = values.Where(value => value == id.ToString()).Any();
-                        if(item.BeChecked.Value)
+                        if (item.BeChecked.Value)
                         {
                             switch (item.DataType)
                             {
@@ -83,7 +88,14 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "标签生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\name_tag.png"))
+                });
             }
         }
         #endregion
@@ -97,7 +109,7 @@ namespace CBHK.Utility.Common
                 JObject json = JObject.Parse(data);
                 if (json["type"] is JToken recipeType)
                 {
-                    switch (recipeType.ToString().Replace("minecraft:",""))
+                    switch (recipeType.ToString().Replace("minecraft:", ""))
                     {
                         case "crafting_shaped":
                         case "crafting_shapeness":
@@ -169,13 +181,20 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "配方生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\knowledge_book.png", UriKind.Relative))
+                });
             }
         }
         #endregion
 
         #region 处理导入外部刷怪笼
-        public static void ImportSpawnerDataHandler(string filePathOrData, ref ObservableCollection<RichTabItems> itemPageList, bool IsPath = true)
+        public static void ImportSpawnerDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList, bool IsPath = true)
         {
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
@@ -194,11 +213,18 @@ namespace CBHK.Utility.Common
                 JObject nbtObj = JObject.Parse(nbtData);
                 //确定版本
                 bool version1_12 = Regex.IsMatch(data, @"^/setblock (minecraft:)?mob_spawner");
-                AddSpawnerData(nbtObj,version1_12?"1.12.0":"1.13.0",itemPageList);
+                AddSpawnerData(nbtObj, version1_12 ? "1.12.0" : "1.13.0", itemPageList);
             }
             catch
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "刷怪笼生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\spawner.png", UriKind.Relative))
+                });
             }
         }
         public static string GetSpawnerDataHandler(string filePathOrData, bool IsPath = true)
@@ -229,25 +255,16 @@ namespace CBHK.Utility.Common
         /// </summary>
         /// <param name="nbtObj"></param>
         /// <param name="itemPageList"></param>
-        private static void AddSpawnerData(JObject nbtObj,string version, ObservableCollection<RichTabItems> itemPageList)
+        private static void AddSpawnerData(JObject nbtObj, string version, ObservableCollection<VectorRichTabItem> itemPageList)
         {
             SpawnerPageView spawnerPage = new() { FontWeight = FontWeights.Normal };
-            RichTabItems richTabItems = new()
+            VectorRichTabItem richTabItems = new()
             {
                 Header = "刷怪笼",
-                IsContentSaved = true,
                 Content = spawnerPage,
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                Foreground = new SolidColorBrush(Colors.White),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Foreground = new SolidColorBrush(Colors.White)
             };
             SpawnerPageViewModel context = spawnerPage.DataContext as SpawnerPageViewModel;
             itemPageList.Add(richTabItems);
@@ -266,7 +283,7 @@ namespace CBHK.Utility.Common
                     context.AddSpawnPotential(null);
                     SpawnPotential spawnPotentialInstance = context.SpawnPotentialList[^1];
                     if (spawnPotential.SelectToken("weight") is JToken weight)
-                        spawnPotentialInstance.weight.Value = short.Parse(weight.ToString());
+                        spawnPotentialInstance.weight.Text = weight.ToString();
 
                     #region 方块光限制
                     if (spawnPotential.SelectToken("data.custom_spawn_rules.block_light_limit") is JArray BlockLightArray)
@@ -275,8 +292,8 @@ namespace CBHK.Utility.Common
                         spawnPotentialInstance.UseDefaultBlockLightValue.IsChecked = false;
                         spawnPotentialInstance.BlockLightRange.Visibility = Visibility.Visible;
                         spawnPotentialInstance.BlockLightValue.Visibility = Visibility.Collapsed;
-                        spawnPotentialInstance.BlockLightMinValue.Value = int.Parse(BlockLightArray[0].ToString());
-                        spawnPotentialInstance.BlockLightMaxValue.Value = int.Parse(BlockLightArray[1].ToString());
+                        spawnPotentialInstance.BlockLightMinValue.Text = BlockLightArray[0].ToString();
+                        spawnPotentialInstance.BlockLightMaxValue.Text = BlockLightArray[1].ToString();
                     }
                     else
                         if (spawnPotential.SelectToken("data.custom_spawn_rules.block_light_limit") is JToken BlockLight)
@@ -285,7 +302,7 @@ namespace CBHK.Utility.Common
                         spawnPotentialInstance.UseDefaultBlockLightValue.IsChecked = false;
                         spawnPotentialInstance.BlockLightRange.Visibility = Visibility.Collapsed;
                         spawnPotentialInstance.BlockLightValue.Visibility = Visibility.Visible;
-                        spawnPotentialInstance.BlockLightValue.Value = int.Parse(BlockLight.ToString());
+                        spawnPotentialInstance.BlockLightValue.Text = BlockLight.ToString();
                     }
                     #endregion
 
@@ -296,8 +313,8 @@ namespace CBHK.Utility.Common
                         spawnPotentialInstance.UseDefaultSkyLightValue.IsChecked = false;
                         spawnPotentialInstance.SkyLightRange.Visibility = Visibility.Visible;
                         spawnPotentialInstance.SkyLightValue.Visibility = Visibility.Collapsed;
-                        spawnPotentialInstance.SkyLightMinValue.Value = int.Parse(SkyLightArray[0].ToString());
-                        spawnPotentialInstance.SkyLightMaxValue.Value = int.Parse(SkyLightArray[1].ToString());
+                        spawnPotentialInstance.SkyLightMinValue.Text = SkyLightArray[0].ToString();
+                        spawnPotentialInstance.SkyLightMaxValue.Text = SkyLightArray[1].ToString();
                     }
                     else
                         if (spawnPotential.SelectToken("data.custom_spawn_rules.sky_light_limit") is JToken SkyLight)
@@ -306,7 +323,7 @@ namespace CBHK.Utility.Common
                         spawnPotentialInstance.UseDefaultSkyLightValue.IsChecked = false;
                         spawnPotentialInstance.SkyLightRange.Visibility = Visibility.Collapsed;
                         spawnPotentialInstance.SkyLightValue.Visibility = Visibility.Visible;
-                        spawnPotentialInstance.SkyLightValue.Value = int.Parse(SkyLight.ToString());
+                        spawnPotentialInstance.SkyLightValue.Text = SkyLight.ToString();
                     }
                     #endregion
 
@@ -316,7 +333,7 @@ namespace CBHK.Utility.Common
                         ImageBrush imageBrush = null;
                         string data = entity.ToString();
                         spawnPotentialInstance.entity.Tag = data;
-                        string entityID = JObject.Parse(data)["oldID"].ToString().Replace("minecraft:","");
+                        string entityID = JObject.Parse(data)["oldID"].ToString().Replace("minecraft:", "");
                         string rootPath = AppDomain.CurrentDomain.BaseDirectory + "resources\\data_sources\\entityImages\\";
                         string iconPath = rootPath + entityID + ".png";
                         if (!File.Exists(iconPath))
@@ -343,7 +360,7 @@ namespace CBHK.Utility.Common
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
             string entityID = "";
 
-            
+
 
             //召唤实体物品
             if (Regex.IsMatch(data, @"^/?summon"))
@@ -354,7 +371,7 @@ namespace CBHK.Utility.Common
             #region 提取可用NBT数据和实体ID
             if (data.Contains('{') && data.Contains('}'))
                 result = data[data.IndexOf('{')..(data.LastIndexOf('}') + 1)];
-            if(result.Length > 0)
+            if (result.Length > 0)
             {
                 //补齐缺失双引号对的key
                 result = Regex.Replace(result, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
@@ -373,22 +390,27 @@ namespace CBHK.Utility.Common
                 }
                 catch
                 {
-                    Message.PushMessage("导入失败！文件内容格式不合法");
+                    Message.PushMessage(new GeneratorMessage()
+                    {
+                        Message = "导入失败！文件内容格式不合法",
+                        MessageBrush = Brushes.Red,
+                        SubMessage = "导入",
+                        SubMessageBrush = Brushes.DarkGray,
+                        Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\pig.png", UriKind.Relative))
+                    });
                 }
                 #endregion
             }
             return result;
             #endregion
         }
-        
+
         /// <summary>
         /// 导入村民数据
         /// </summary>
-        public static void ImportVillagerDataHandler(string filePathOrData,VillagerViewModel context, bool IsPath = true)
+        public static void ImportVillagerDataHandler(string filePathOrData, VillagerViewModel context, bool IsPath = true)
         {
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
-
-            
 
             #region 提取可用NBT数据和村民ID
             string nbtData = "";
@@ -405,11 +427,18 @@ namespace CBHK.Utility.Common
                 JObject nbtObj = JObject.Parse(nbtData);
                 if (nbtObj.SelectToken("EntitTag") is JObject entityTag)
                     nbtObj = JObject.Parse(entityTag.ToString());
-                AddVillagerData(nbtObj,context);
+                AddVillagerData(nbtObj, context);
             }
             catch
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "村民生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\villager.png", UriKind.Relative))
+                });
             }
         }
 
@@ -418,10 +447,10 @@ namespace CBHK.Utility.Common
         /// </summary>
         /// <param name="nbtObj"></param>
         /// <param name="context"></param>
-        private static void AddVillagerData(JObject nbtObj,VillagerViewModel context)
+        private static void AddVillagerData(JObject nbtObj, VillagerViewModel context)
         {
             #region 处理交易数据
-            if(nbtObj.SelectToken("Offers.Recipes") is JArray Recipes)
+            if (nbtObj.SelectToken("Offers.Recipes") is JArray Recipes)
             {
                 string rootPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\";
                 foreach (JObject recipe in Recipes.Cast<JObject>())
@@ -469,7 +498,7 @@ namespace CBHK.Utility.Common
                         Uri iconUri = new(iconPath, UriKind.Absolute);
                         ItemStructure imageTag = new()
                         {
-                            ImagePath = new BitmapImage(iconUri), 
+                            ImagePath = new BitmapImage(iconUri),
                             IDAndName = buyID,
                             NBT = recipe.SelectToken("buy.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
                         };
@@ -478,7 +507,7 @@ namespace CBHK.Utility.Common
                     }
                     #endregion
                     #region buyB
-                    if(ExistItem)
+                    if (ExistItem)
                     {
                         if (recipe.SelectToken("buyB.oldID") is JToken buyBIDObj)
                             buyBID = buyBIDObj.ToString().Replace("minecraft:", "");
@@ -496,8 +525,8 @@ namespace CBHK.Utility.Common
                             Uri iconUri = new(iconPath, UriKind.Absolute);
                             ItemStructure imageTag = new()
                             {
-                                ImagePath = new BitmapImage(iconUri), 
-                                IDAndName = buyBID, 
+                                ImagePath = new BitmapImage(iconUri),
+                                IDAndName = buyBID,
                                 NBT = recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
                             };
                             transactionItemsViewModel.BuyB.Source = new BitmapImage(iconUri);
@@ -557,7 +586,7 @@ namespace CBHK.Utility.Common
                 foreach (JObject gossip in Gossips.Cast<JObject>())
                 {
                     context.AddGossipItem();
-                    JToken value = gossip.SelectToken("Value");
+                    JToken value = gossip.SelectToken("Text");
                     GossipsItemViewModel gossipsItemsViewModel = context.GossipItemList[^1].DataContext as GossipsItemViewModel;
                     if (gossip.SelectToken("Target") is JArray targetUID)
                         gossipsItemsViewModel.TargetText = targetUID[0].ToString() + "," + targetUID[1].ToString() + "," + targetUID[2].ToString() + "," + targetUID[3].ToString();
@@ -575,14 +604,14 @@ namespace CBHK.Utility.Common
                 JToken level = VillagerData.SelectToken("level");
                 JToken profession = VillagerData.SelectToken("profession");
                 JToken type = VillagerData.SelectToken("type");
-                if(level is not null)
-                context.VillagerLevel = context.VillagerLevelSource.Where(item=>item.Text == level.ToString()).First();
-                if(profession is not null)
+                if (level is not null)
+                    context.VillagerLevel = context.VillagerLevelSource.Where(item => item.Text == level.ToString()).First();
+                if (profession is not null)
                 {
                     string professionType = context.VillagerProfessionTypeDataBase.Where(item => item.Key == profession.ToString().Replace("minecraft:", "")).First().Value;
                     context.VillagerProfessionType = context.VillagerProfessionTypeSource.Where(item => item.Text == professionType).First();
                 }
-                if(type is not null)
+                if (type is not null)
                 {
                     string villagerType = context.VillagerTypeDataBase.Where(item => item.Key == type.ToString().Replace("minecraft:", "")).First().Value;
                     context.VillagerType = context.VillagerTypeSource.Where(item => item.Text == villagerType).First();
@@ -612,8 +641,9 @@ namespace CBHK.Utility.Common
         /// <param name="filePathOrData"></param>
         /// <param name="itemPageList"></param>
         /// <param name="IsPath"></param>
-        public static void ImportEntityDataHandler(string filePathOrData, ref ObservableCollection<RichTabItems> itemPageList, bool IsPath = true)
+        public static void ImportEntityDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList, bool IsPath = true)
         {
+            bool importFail = false;
             string GeneratorMode = "Summon";
             bool version1_12 = false;
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
@@ -645,13 +675,12 @@ namespace CBHK.Utility.Common
                 }
                 else
                 {
-                    Message.PushMessage("导入失败！文件内容格式不合法");
-                    return;
+                    importFail = true;
                 }
             }
-            catch(Exception e)
+            catch
             {
-                Message.PushMessage(e.Message,MessageBoxImage.Error);
+                importFail = true;
             }
 
             try
@@ -664,8 +693,7 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
-                return;
+                importFail = true;
             }
             #endregion
 
@@ -673,40 +701,43 @@ namespace CBHK.Utility.Common
             {
                 JObject nbtObj = JObject.Parse(nbtData);
                 //启用外部导入模式
-                DataRow result = EntityTable.Select("oldID='minecraft:"+ entityID + "'").First();
+                DataRow result = EntityTable.Select("oldID='minecraft:" + entityID + "'").First();
                 if (result is not null)
                 {
                     entityID = result["oldID"].ToString();
                     //添加实体命令
-                    AddEntityCommand(nbtObj, entityID, version1_12, GeneratorMode, IsPath ? filePathOrData : "",ref itemPageList);
+                    AddEntityCommand(nbtObj, entityID, version1_12, GeneratorMode, IsPath ? filePathOrData : "", ref itemPageList);
                 }
             }
             catch
             {
-                Message.PushMessage("导入失败！文件内容格式不合法",MessageBoxImage.Error);
+                importFail = true;
+            }
+
+            if (importFail)
+            {
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "实体生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\pig.png", UriKind.Relative))
+                });
             }
         }
 
         /// <summary>
         /// 添加实体
         /// </summary>
-        private static void AddEntityCommand(JObject externData, string selectedEntityID, bool version1_12, string mode, string filePath,ref ObservableCollection<RichTabItems> itemPageList)
+        private static void AddEntityCommand(JObject externData, string selectedEntityID, bool version1_12, string mode, string filePath, ref ObservableCollection<VectorRichTabItem> itemPageList)
         {
-            RichTabItems richTabItems = new()
+            VectorRichTabItem richTabItems = new()
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 Header = "实体",
-                IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                Foreground = new SolidColorBrush(Colors.White),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Foreground = new SolidColorBrush(Colors.White)
             };
             EntityPageView entityPages = new() { FontWeight = FontWeights.Normal };
             if (externData is not null)
@@ -759,7 +790,7 @@ namespace CBHK.Utility.Common
                 JObject resultObj = JObject.Parse(result);
                 if (resultObj.SelectToken("ItemView") is not JObject)
                 {
-                    if(!data.StartsWith('{') && !data.EndsWith('}'))
+                    if (!data.StartsWith('{') && !data.EndsWith('}'))
                     {
                         int itemCount = int.Parse(Regex.Match(data, @"\d+$").ToString());
                         resultObj = JObject.Parse("{Count:" + itemCount + ",tag:" + result.Replace("\n", "").Replace("\r", "") + "}");
@@ -767,26 +798,26 @@ namespace CBHK.Utility.Common
                     }
                 }
                 else
-                    if(resultObj.SelectToken("ItemView") is JObject itemObj)
+                    if (resultObj.SelectToken("ItemView") is JObject itemObj)
                     resultObj = JObject.Parse(itemObj.ToString());
-                    result = Regex.Replace(resultObj.ToString(),@"\s+","");
+                result = Regex.Replace(resultObj.ToString(), @"\s+", "");
                 #endregion
             }
 
             return result;
             #endregion
         }
-        public static void ImportItemDataHandler(string filePathOrData, ref ObservableCollection<RichTabItems> itemPageList, bool IsPath = true, bool ReferenceMode = false)
+        public static void ImportItemDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList, bool IsPath = true, bool ReferenceMode = false)
         {
             string GeneratorMode = "";
             bool version1_12 = false;
-            
+
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
             #region 提取可用NBT数据和实体ID
             string nbtData = "", itemID = "";
-            if(data.Contains('{') && data.Contains('}'))
-            nbtData = data[data.IndexOf('{')..(data.LastIndexOf('}') + 1)];
+            if (data.Contains('{') && data.Contains('}'))
+                nbtData = data[data.IndexOf('{')..(data.LastIndexOf('}') + 1)];
             //补齐缺失双引号对的key
             nbtData = Regex.Replace(nbtData, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
             //清除数值型数据的单位
@@ -810,7 +841,14 @@ namespace CBHK.Utility.Common
             else
             if (nbtData.Length == 0)
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "物品生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\item_frame.png", UriKind.Relative))
+                });
                 return;
             }
 
@@ -825,7 +863,14 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "物品生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\item_frame.png", UriKind.Relative))
+                });
                 return;
             }
             #endregion
@@ -834,41 +879,39 @@ namespace CBHK.Utility.Common
             {
                 JObject nbtObj = JObject.Parse(nbtData);
                 //启用外部导入模式
-                DataRow[] results = ItemTable.Select("oldID='"+itemID+"'");
+                DataRow[] results = ItemTable.Select("oldID='" + itemID + "'");
                 if (results.Length > 0)
                 {
                     itemID = results[0]["oldID"].ToString();
                     //添加实体命令
-                    if(!ReferenceMode)
-                    AddItemCommand(nbtObj, itemID, version1_12, GeneratorMode, IsPath ? filePathOrData : "", ref itemPageList);
+                    if (!ReferenceMode)
+                        AddItemCommand(nbtObj, itemID, version1_12, GeneratorMode, IsPath ? filePathOrData : "", ref itemPageList);
                 }
             }
             catch
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "物品生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\item_frame.png", UriKind.Relative))
+                });
             }
         }
 
         /// <summary>
         /// 添加物品
         /// </summary>
-        private static void AddItemCommand(JObject externData, string selectedItemID, bool version1_12, string mode, string filePath, ref ObservableCollection<RichTabItems> itemPageList)
+        private static void AddItemCommand(JObject externData, string selectedItemID, bool version1_12, string mode, string filePath, ref ObservableCollection<VectorRichTabItem> itemPageList)
         {
-            RichTabItems richTabItems = new()
+            VectorRichTabItem richTabItems = new()
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 Header = "物品",
-                IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                Foreground = new SolidColorBrush(Colors.White),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Foreground = new SolidColorBrush(Colors.White)
             };
             ItemPageView itemPages = new() { FontWeight = FontWeights.Normal };
             ItemPageViewModel context = itemPages.DataContext as ItemPageViewModel;
@@ -882,7 +925,7 @@ namespace CBHK.Utility.Common
             }
             if (version1_12)
                 context.SelectedVersion.Text = "1.12-";
-            context.SelectedItem = new IconComboBoxItem() { ComboBoxItemId = selectedItemID };
+            context.SelectedItem = new VectorIconTextComboBoxItem() { Text = selectedItemID };
 
             richTabItems.Content = itemPages;
             itemPageList.Add(richTabItems);
@@ -899,12 +942,12 @@ namespace CBHK.Utility.Common
         #endregion
 
         #region 处理导入外部烟花数据
-        public static void ImportFireworkDataHandler(string filePathOrData, ref ObservableCollection<RichTabItems> itemPageList, bool IsPath = true)
+        public static void ImportFireworkDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList, bool IsPath = true)
         {
             string GeneratorMode;
             bool version1_12 = false;
 
-            
+
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
             #region 提取可用NBT数据和烟花ID
@@ -929,9 +972,16 @@ namespace CBHK.Utility.Common
             }
             else
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "烟花火箭生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                });
                 if (itemPageList.Count > 0)
-                itemPageList.RemoveAt(itemPageList.Count - 1);
+                    itemPageList.RemoveAt(itemPageList.Count - 1);
                 return;
             }
 
@@ -941,7 +991,14 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "烟花火箭生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                });
                 return;
             }
             #endregion
@@ -954,30 +1011,28 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage("导入失败！文件内容格式不合法");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "烟花火箭生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                });
             }
         }
 
         /// <summary>
         /// 添加烟花
         /// </summary>
-        private static void AddFireworkCommand(JObject externData, bool version1_12, string mode, string filePath, ref ObservableCollection<RichTabItems> itemPageList)
+        private static void AddFireworkCommand(JObject externData, bool version1_12, string mode, string filePath, ref ObservableCollection<VectorRichTabItem> itemPageList)
         {
-            RichTabItems richTabItems = new()
+            VectorRichTabItem richTabItems = new()
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 Header = "烟花",
-                IsContentSaved = true,
                 BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                Foreground = new SolidColorBrush(Colors.White),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Foreground = new SolidColorBrush(Colors.White)
             };
             FireworkRocketPageView itemPages = new() { FontWeight = FontWeights.Normal };
             FireworkRocketPageViewModel context = itemPages.DataContext as FireworkRocketPageViewModel;
@@ -999,6 +1054,7 @@ namespace CBHK.Utility.Common
             }
             richTabItems.Content = itemPages;
         }
+        #endregion 
         #endregion
     }
 }

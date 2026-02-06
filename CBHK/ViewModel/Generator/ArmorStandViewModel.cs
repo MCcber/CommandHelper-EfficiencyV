@@ -1,11 +1,21 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.AnimationComponents;
+using CBHK.CustomControl.Input;
+using CBHK.CustomControl.VectorCheckBox;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface;
+using CBHK.Model.Common;
+using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CBHK.View;
+using CBHK.View.Component.Item;
+using CBHK.View.Generator;
+using CBHK.ViewModel.Component.Item;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DryIoc;
 using HelixToolkit.Wpf;
 using Newtonsoft.Json.Linq;
+using Prism.Events;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
@@ -23,15 +33,6 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using CBHK.View.Generator;
-using CBHK.ViewModel.Component.Item;
-using CBHK.View.Component.Item;
-using CBHK.Utility.MessageTip;
-using CBHK.Utility.Common;
-using CBHK.Interface;
-using Prism.Events;
-using CBHK.CustomControl.VectorComboBox;
-using CBHK.CustomControl.VectorCheckBox;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -66,15 +67,12 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private Viewport3D ArmorStandViewer = null;
         private ModelVisual3D ModelGroup = null;
+        private TextStyleEditor textStyleEditor = null;
 
         /// <summary>
         /// ArmorStand的所有NBT项
         /// </summary>
         private List<string> ArmorStandNBTList = [];
-        /// <summary>
-        /// 动画容器
-        /// </summary>
-        private AnimationContainer animationContainer = null;
 
         /// <summary>
         /// 超出三轴合一按钮范围
@@ -106,11 +104,6 @@ namespace CBHK.ViewModel.Generator
         StackPanel NBTList = null;
 
         private readonly IContainerProvider container;
-
-        /// <summary>
-        /// 样式化文本框引用
-        /// </summary>
-        StylizedTextBox stylizedTextBox = null;
         /// <summary>
         /// 标签文本框
         /// </summary>
@@ -979,8 +972,8 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region 已选择的版本
-        private TextComboBoxItem selectedVersion;
-        public TextComboBoxItem SelectedVersion
+        private VectorTextComboBoxItem selectedVersion;
+        public VectorTextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
             set
@@ -991,6 +984,7 @@ namespace CBHK.ViewModel.Generator
         }
 
         private int currentMinVersion = 1202;
+
         public int CurrentMinVersion
         {
             get => currentMinVersion;
@@ -1345,7 +1339,13 @@ namespace CBHK.ViewModel.Generator
             #endregion
         }
 
-        public void AnimationContainer_Loaded(object sender, RoutedEventArgs e) => animationContainer = sender as AnimationContainer;
+        public void CustomNameBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if(sender is TextStyleEditor editor)
+            {
+                textStyleEditor = editor;
+            }
+        }
 
         /// <summary>
         /// 切换运镜模式
@@ -1365,16 +1365,6 @@ namespace CBHK.ViewModel.Generator
             };
             PreviewModeText = "预览-" + type.ToString();
             action?.Invoke();
-        }
-
-        /// <summary>
-        /// 载入名称文本框
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void CustomNameBox_Loaded(object sender, RoutedEventArgs e)
-        {
-            stylizedTextBox = sender as StylizedTextBox;
         }
 
         /// <summary>
@@ -1441,34 +1431,6 @@ namespace CBHK.ViewModel.Generator
         public void Version_SelectionChanged(object sender, RoutedEventArgs e)
         {
 
-        }
-
-        /// <summary>
-        /// 检测名称文本框内容为空
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void StylizedTextBox_PreviewKeyUp(object sender, KeyEventArgs e)
-        {
-            if ((e.Key == Key.Back || e.Key == Key.Delete))
-            {
-                if (stylizedTextBox.richTextBox.Document.Blocks.FirstBlock is null)
-                    stylizedTextBox.richTextBox.Document.Blocks.Add(new RichParagraph());
-                else
-                {
-                    Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
-                    if (paragraph.Inlines.Count == 1)
-                    {
-                        Run run = paragraph.Inlines.FirstInline as Run;
-                        run = new RichRun() { Text = run.Text };
-                    }
-                    else
-                    if (paragraph.Inlines.Count == 0)
-                    {
-                        paragraph.Inlines.Add(new RichRun());
-                    }
-                }
-            }
         }
 
         [RelayCommand]
@@ -1563,7 +1525,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "Head":
                 //        if (HeadItem is not null && HeadItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(HeadItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string HeadData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1573,7 +1535,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "Body":
                 //        if (BodyItem is not null && BodyItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(BodyItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string BodyData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1583,7 +1545,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "LeftHand":
                 //        if (LeftHandItem is not null && LeftHandItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(LeftHandItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string LeftHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1593,7 +1555,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "RightHand":
                 //        if (RightHandItem is not null && RightHandItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(RightHandItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string RightHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1603,7 +1565,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "Legs":
                 //        if (LegsItem is not null && LegsItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(LegsItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string LegsData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1613,7 +1575,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "Feet":
                 //        if (FeetItem is not null && FeetItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(FeetItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string FeetData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1701,11 +1663,12 @@ namespace CBHK.ViewModel.Generator
         {
             StringBuilder Result = new();
             CustomName = "";
-            //await stylizedTextBox.Upgrade(CurrentMinVersion);
+            //await textStyleEditor.Upgrade(CurrentMinVersion);
             await tagRichTextBox.GetResult();
-            StringBuilder customnameResult = stylizedTextBox.Create();
-            stylizedTextBox.CollectionData(customnameResult);
-            stylizedTextBox.Build(customnameResult);
+            StringBuilder customnameResult = new();
+            //StringBuilder customnameResult = textStyleEditor.Create();
+            //textStyleEditor.CollectionData(customnameResult);
+            //textStyleEditor.Build(customnameResult);
             string CustomNameValue = customnameResult.ToString();
             if (CustomNameValue.Trim().Length > 0)
             {
@@ -1743,7 +1706,12 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString());
-                Message.PushMessage("盔甲架生成成功！数据已进入剪切板", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "盔甲架生成成功！数据已进入剪切板",
+                    SubMessage = "盔甲架生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\armor_stand.png", UriKind.RelativeOrAbsolute))
+                });
             }
             #endregion
         }

@@ -22,6 +22,7 @@ using CBHK.Domain;
 using System.Windows.Controls;
 using CBHK.Common.Utility;
 using CBHK.Interface;
+using CBHK.CustomControl.VectorComboBox;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -40,26 +41,26 @@ namespace CBHK.ViewModel.Generator
         private string EditorPath = @"\Data\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
-        private TextComboBoxItem _currentVersion = new();
-        public override TextComboBoxItem CurrentVersion
+        private VectorTextComboBoxItem _currentVersion = new();
+        public override VectorTextComboBoxItem CurrentVersion
         {
             get => _currentVersion;
             set => SetProperty(ref _currentVersion, value);
         }
 
-        public override ObservableCollection<TextComboBoxItem> VersionList { get; set; } =
+        public override ObservableCollection<VectorTextComboBoxItem> VersionList { get; set; } =
             [
-                new TextComboBoxItem()
+                new VectorTextComboBoxItem()
                 {
                     Text = "1.20.3-1.20.4"
                 }
             ];
 
         [ObservableProperty]
-        private TextComboBoxItem _currentGenerator = new();
+        private VectorTextComboBoxItem _currentGenerator = new();
 
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _generatorList = [];
+        private ObservableCollection<VectorTextComboBoxItem> _generatorList = [];
 
         private ObservableCollection<JsonTreeViewItem> _treeViewItemList;
         public override ObservableCollection<JsonTreeViewItem> TreeViewItemList
@@ -179,7 +180,7 @@ namespace CBHK.ViewModel.Generator
         {
             foreach (var item in BaseContext.CustomWorldEntrySet)
             {
-                GeneratorList.Add(new TextComboBoxItem()
+                GeneratorList.Add(new VectorTextComboBoxItem()
                 {
                     Text = item.ID[0].ToString().ToUpper() + item.ID[1..]
                 });

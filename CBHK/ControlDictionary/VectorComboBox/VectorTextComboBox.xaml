@@ -1,9 +1,12 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
-    xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2">
+    xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
+    xmlns:utility="clr-namespace:CBHK.Utility.Visual">
 
     <!--<SolidColorBrush x:Key="TextBox.Static.Background" Color="#FFFFFFFF" />-->
     <!--<Style x:Key="ComboBoxEditableTextBox" TargetType="{x:Type TextBox}">
@@ -12,12 +15,12 @@
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="ScrollViewer.PanningMode" Value="VerticalFirst" />
+        <Setter Property="VectorScrollViewer.PanningMode" Value="VerticalFirst" />
         <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type TextBox}">
-                    <ScrollViewer
+                    <VectorScrollViewer
                         x:Name="PART_ContentHost"
                         Background="Transparent"
                         Focusable="false"
@@ -279,22 +282,22 @@
                 <ControlTemplate TargetType="{x:Type VectorButton:VectorComboBoxToggleTextButton}">
                     <Border
                         x:Name="templateRoot"
-                        Background="{StaticResource ComboBox.Static.Background}"
                         BorderBrush="{StaticResource ComboBox.Static.Border}"
                         BorderThickness="{TemplateBinding BorderThickness}"
-                        SnapsToDevicePixels="true">
+                        SnapsToDevicePixels="true"
+                        UseLayoutRounding="True">
                         <!--  F1 M 0,0 L 2.667,2.66665 L 5.3334,0 L 5.3334,-1.78168 L 2.6667,0.88501 L0,-1.78168 L0,0 Z  -->
-                        <Grid>
+                        <Grid Background="{TemplateBinding Background}">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="2" />
+                                <RowDefinition Height="2.5" />
                                 <RowDefinition Height="*" />
-                                <RowDefinition Height="2" />
-                                <RowDefinition x:Name="extraBottomLine" Height="3" />
+                                <RowDefinition Height="2.5" />
+                                <RowDefinition x:Name="extraBottomLine" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2" />
+                                <ColumnDefinition Width="2.5" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="2" />
+                                <ColumnDefinition Width="2.5" />
                             </Grid.ColumnDefinitions>
                             <ContentPresenter
                                 x:Name="ContentPresenter"
@@ -308,12 +311,12 @@
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="0"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="1"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="0"
@@ -323,12 +326,12 @@
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="0"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="2"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
@@ -338,22 +341,21 @@
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="1"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="2"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="3"
+                                Grid.Column="0"
                                 Grid.ColumnSpan="3"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
-                                Fill="{TemplateBinding OriginBottomBrush}"
-                                IsHitTestVisible="False"
-                                Stroke="{TemplateBinding OriginBottomBrush}"
-                                StrokeThickness="0" />
+                                Fill="{TemplateBinding BottomBorderBrush}"
+                                IsHitTestVisible="False" />
                             <Border
                                 x:Name="splitBorder"
                                 Grid.Row="1"
@@ -531,7 +533,7 @@
                         Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
                         BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}"
                         BorderThickness="1">
-                        <ScrollViewer x:Name="DropDownScrollViewer">
+                        <VectorScrollViewer x:Name="DropDownScrollViewer">
                             <Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
                                 <Canvas
                                     x:Name="canvas"
@@ -550,7 +552,7 @@
                                     KeyboardNavigation.DirectionalNavigation="Contained"
                                     SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                             </Grid>
-                        </ScrollViewer>
+                        </VectorScrollViewer>
                     </Border>
                 </theme:SystemDropShadowChrome>
             </Popup>
@@ -594,9 +596,9 @@
                     <Condition Property="IsGrouping" Value="true" />
                     <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="false" />
                 </MultiTrigger.Conditions>
-                <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
+                <Setter Property="VectorScrollViewer.CanContentScroll" Value="false" />
             </MultiTrigger>
-            <Trigger SourceName="DropDownScrollViewer" Property="ScrollViewer.CanContentScroll" Value="false">
+            <Trigger SourceName="DropDownScrollViewer" Property="VectorScrollViewer.CanContentScroll" Value="false">
                 <Setter TargetName="opaqueRect" Property="Canvas.Top" Value="{Binding VerticalOffset, ElementName=DropDownScrollViewer}" />
                 <Setter TargetName="opaqueRect" Property="Canvas.Left" Value="{Binding HorizontalOffset, ElementName=DropDownScrollViewer}" />
             </Trigger>
@@ -640,7 +642,7 @@
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="35" />
                                     </Grid.RowDefinitions>
                                     <Grid Grid.Row="0">
                                         <Grid.ColumnDefinitions>
@@ -702,26 +704,22 @@
                                             Fill="#5A5B5C"
                                             IsHitTestVisible="False" />
                                     </Grid>
-                                    <TextBox
+                                    <Input:VectorTextBox
                                         Grid.Row="1"
-                                        Height="40"
-                                        Padding="2.5,0,0,0"
-                                        VerticalAlignment="Center"
+                                        Padding="2,0,0,0"
                                         HorizontalContentAlignment="Left"
+                                        VerticalContentAlignment="Center"
+                                        utility:TextSizeHelper.AutoFontSize="True"
                                         Background="#313233"
                                         BorderBrush="#1E1E1F"
                                         Foreground="{Binding SearchBoxForeground, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
-                                        HorizontalScrollBarVisibility="Auto">
-                                        <TextBox.Width>
-                                            <Binding
-                                                ElementName="templateRoot"
-                                                FallbackValue="40"
-                                                Path="ActualWidth" />
-                                        </TextBox.Width>
-                                    </TextBox>
+                                        HorizontalScrollBarVisibility="Auto"
+                                        Style="{DynamicResource VectorTextBoxStyle}"
+                                        WaterMarkerBrush="Gray"
+                                        WaterMarkerText="搜索成员" />
                                 </Grid>
                             </Border>
-                            <ScrollViewer
+                            <Container:VectorScrollViewer
                                 x:Name="DropDownScrollViewer"
                                 Grid.Row="1"
                                 FocusVisualStyle="{x:Null}"
@@ -759,7 +757,7 @@
                                         KeyboardNavigation.DirectionalNavigation="Contained"
                                         SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                                 </Grid>
-                            </ScrollViewer>
+                            </Container:VectorScrollViewer>
                         </Grid>
                     </Border>
                 </theme:SystemDropShadowChrome>
@@ -771,7 +769,7 @@
                 BorderBrush="{TemplateBinding BorderBrush}"
                 BorderThickness="{TemplateBinding BorderThickness}"
                 IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource Mode=TemplatedParent}}"
-                Style="{StaticResource VectorComboBoxToggleButton}" />
+                Style="{DynamicResource VectorComboBoxToggleButton}" />
             <ContentPresenter
                 x:Name="contentPresenter"
                 Margin="{TemplateBinding Padding}"
@@ -799,7 +797,7 @@
                 </MultiTrigger.Conditions>
                 <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
             </MultiTrigger>
-            <!--<Trigger SourceName="DropDownScrollViewer" Property="ScrollViewer.CanContentScroll" Value="false">
+            <!--<Trigger SourceName="DropDownScrollViewer" Property="VectorScrollViewer.CanContentScroll" Value="false">
                 <Setter TargetName="opaqueRect" Property="Canvas.Top" Value="{Binding VerticalOffset, ElementName=DropDownScrollViewer}" />
                 <Setter TargetName="opaqueRect" Property="Canvas.Left" Value="{Binding HorizontalOffset, ElementName=DropDownScrollViewer}" />
             </Trigger>-->
@@ -821,7 +819,7 @@
         <Setter Property="ItemContainerStyle" Value="{StaticResource VectorComboBoxItemContainerStyle}" />
         <Setter Property="ItemTemplate" Value="{StaticResource VectorTextComboBoxItemTemplate}" />
         <Setter Property="ItemsPanel" Value="{StaticResource VectorComboBoxItemsPanelStyle}" />
-        <Setter Property="Template" Value="{StaticResource ComboBoxTemplate}" />
+        <Setter Property="Template" Value="{DynamicResource ComboBoxTemplate}" />
         <!--<Style.Triggers>
             <Trigger Property="IsEditable" Value="true">
                 <Setter Property="IsTabStop" Value="false" />

@@ -2,7 +2,9 @@
     x:Class="CBHK.View.Component.Item.ItemPageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Component.Item"
@@ -19,13 +21,6 @@
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
 
-    <UserControl.Resources>
-        <ImageBrush x:Key="Save" ImageSource="/CBHK;component/Resource/Common/Image/Save.png" />
-        <ImageBrush x:Key="IssueIcon" ImageSource="/CBHK;component/Resource/Common/Image/Issue.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
-    </UserControl.Resources>
-
     <UserControl.InputBindings>
         <KeyBinding Key="F5" Command="{Binding RunCommand}" />
     </UserControl.InputBindings>
@@ -36,105 +31,78 @@
             <RowDefinition Height="9*" />
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0">
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource RightArrow}"
-                BorderThickness="0"
+            <VectorButton:VectorFlatImageButton
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
                 Command="{Binding RunCommand}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="2"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Width="20"
-                Height="20"
-                Margin="5,0"
-                Padding="5"
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Background="{StaticResource Save}"
                 Command="{Binding SaveCommand}"
-                Style="{DynamicResource IconTextButton}" />
-            <TextBlock
-                Margin="10,0"
+                Image="/Resource/Common/Image/Save.png"
+                ImageMargin="2"
+                Style="{DynamicResource VectorFlatImageButtonStyle}" />
+            <VectorComboBox:VectorTextComboBox
+                Title="版本"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Foreground="White"
-                Text="版本"
-                TextAlignment="Center" />
-            <ComboBox
-                Width="110"
-                Height="25"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                FontSize="15"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource, IsAsync=True}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}">
+                Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
                         <behavior:CallMethodAction MethodName="Version_SelectionChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </ComboBox>
-            <TextBlock
-                Margin="5,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Foreground="White"
-                Text="ID" />
-            <ComboBox
-                Width="300"
-                Height="25"
+            </VectorComboBox:VectorTextComboBox>
+            <VectorComboBox:VectorTextComboBox
+                Title="物品ID"
                 HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
                 Foreground="White"
                 ItemsSource="{Binding ItemList, Mode=OneWay}"
                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
-                Style="{DynamicResource IconComboBoxStyle}">
+                Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
                         <behavior:CallMethodAction MethodName="ItemID_SelectionChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </ComboBox>
-            <CustomControl:RadiusToggleButtons
+            </VectorComboBox:VectorTextComboBox>
+            <VectorButton:VectorToggleTextButton
+                Background="#CC6C24"
                 Foreground="White"
                 IsChecked="{Binding Summon, Mode=TwoWay}"
                 IsEnabled="{Binding IsNoStyleText, Mode=OneWay}"
-                SelectedToggleText="召唤"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="25"
-                ToggleWidth="45"
-                UnSelectedToggleText="给予" />
-            <CustomControl:RadiusToggleButtons
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="召唤" />
+            <VectorButton:VectorToggleIconTextButton
                 VerticalContentAlignment="Center"
                 Foreground="White"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
-                SelectedToggleText="显示结果"
-                Style="{DynamicResource RadiusToggleButton}"
-                ToggleHeight="26"
-                ToggleWidth="45"
-                UnSelectedToggleText="隐藏结果" />
+                Style="{DynamicResource VectorToggleIconTextButtonStyle}"
+                Text="显示结果" />
         </DockPanel>
-        <TabControl
+        <Container:VectorTabControl
             Grid.Row="1"
             Margin="0,-2,0,0"
             BorderThickness="0"
             SelectedIndex="0"
-            Style="{DynamicResource TabControlWithScrollBar}">
+            Style="{DynamicResource VectorTabControlStyle}">
             <behavior:Interaction.Triggers>
                 <behavior:EventTrigger EventName="SelectionChanged">
                     <behavior:CallMethodAction MethodName="TabControl_SelectionChanged" TargetObject="{Binding}" />
@@ -143,73 +111,31 @@
                     <behavior:CallMethodAction MethodName="SpecialTagsPanelLoaded" TargetObject="{Binding}" />
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
-            <CustomControl:TextTabItems
+            <Container:VectorTextTabItem
+                Title="专属NBT"
                 Background="#48382C"
-                BorderThickness="4,4,4,0"
                 Foreground="White"
-                Header="专属NBT"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
                 SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}">
-                <ScrollViewer
+                Style="{DynamicResource VectorTextTabItemStyle}">
+                <Container:VectorScrollViewer
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <ScrollViewer.Resources>
-                        <VisualBrush
-                            x:Key="BackgroundBrush"
-                            AlignmentX="Center"
-                            AlignmentY="Center"
-                            Stretch="None">
-                            <VisualBrush.Visual>
-                                <Grid Width="{Binding RelativeSource={RelativeSource AncestorType=ScrollViewer}, Path=ActualWidth}" Height="{Binding RelativeSource={RelativeSource AncestorType=ScrollViewer}, Path=ActualHeight}">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Background="Transparent"
-                                        FontSize="12"
-                                        Foreground="#D6D6D6"
-                                        Text="此物品没有特指NBT"
-                                        TextAlignment="Center" />
-                                </Grid>
-                            </VisualBrush.Visual>
-                        </VisualBrush>
-                    </ScrollViewer.Resources>
-                    <ScrollViewer.Style>
-                        <Style TargetType="ScrollViewer">
-                            <Style.Triggers>
-                                <Trigger Property="Content" Value="{x:Null}">
-                                    <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ScrollViewer.Style>
-                </ScrollViewer>
-            </CustomControl:TextTabItems>
-            <CustomControl:TextTabItems
+                    Style="{DynamicResource VectorScrollViewerStyle}"
+                    VerticalScrollBarVisibility="Auto" />
+            </Container:VectorTextTabItem>
+            <Container:VectorTextTabItem
+                Title="物品共通标签"
                 Background="#48382C"
-                BorderThickness="4,4,4,0"
                 Foreground="White"
-                Header="物品共通标签"
-                LeftBorderTexture="{StaticResource TabItemLeft}"
-                RightBorderTexture="{StaticResource TabItemRight}"
                 SelectedBackground="#CC6B23"
-                SelectedLeftBorderTexture="{StaticResource SelectedTabItemLeft}"
-                SelectedRightBorderTexture="{StaticResource SelectedTabItemRight}"
-                SelectedTopBorderTexture="{StaticResource SelectedTabItemTop}"
-                Style="{DynamicResource TextTabItemStyle}"
-                TopBorderTexture="{StaticResource TabItemTop}">
-                <ScrollViewer
+                Style="{DynamicResource VectorTextTabItemStyle}">
+                <Container:VectorScrollViewer
                     Background="#2F2F2F"
                     FontWeight="Normal"
                     HorizontalScrollBarVisibility="Disabled"
+                    Style="{DynamicResource VectorScrollViewerStyle}"
                     VerticalScrollBarVisibility="Auto" />
-            </CustomControl:TextTabItems>
-        </TabControl>
+            </Container:VectorTextTabItem>
+        </Container:VectorTabControl>
     </Grid>
 </UserControl>

@@ -1,24 +1,26 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CBHK.Common.Utility;
+using CBHK.CustomControl.Container;
+using CBHK.Model.Common;
+using CBHK.Utility.MessageTip;
+using CBHK.View;
+using CBHK.View.Generator;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ICSharpCode.AvalonEdit;
+using Microsoft.Win32;
+using Prism.Ioc;
+using SharpNBT;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using System.Text;
-using ICSharpCode.AvalonEdit;
-using Microsoft.Win32;
-using System;
-using SharpNBT;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using Prism.Ioc;
-using CBHK.View;
-using CBHK.View.Generator;
-using CBHK.Utility.MessageTip;
-using CBHK.Common.Utility;
-using CBHK.CustomControl.Container;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -126,7 +128,14 @@ namespace CBHK.ViewModel.Generator
                 }
                 catch (Exception e)
                 {
-                    Message.PushMessage(e.Message, MessageBoxImage.Error);
+                    Message.PushMessage(new GeneratorMessage()
+                    {
+                        Message = e.Message,
+                        MessageBrush = Brushes.Red,
+                        SubMessage = "OOC生成器",
+                        SubMessageBrush = Brushes.DarkGray,
+                        Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                    });
                 }
             }
         }
@@ -235,7 +244,12 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result);
-                Message.PushMessage("Ooc生成成功！数据已进入剪切板", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "Ooc生成成功！数据已进入剪切板",
+                    SubMessage = "OOC生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\command_block_minecart.png", UriKind.RelativeOrAbsolute))
+                });
             }
         }
         #endregion

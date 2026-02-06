@@ -1,5 +1,7 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
@@ -21,6 +23,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -52,47 +55,37 @@ namespace CBHK.ViewModel.Generator
         /// 实体标签页的数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<RichTabItems> _entityPageList = [
-            new RichTabItems()
+        public ObservableCollection<VectorRichTabItem> _entityPageList = [
+            new VectorRichTabItem()
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
                 Header = "实体",
-                FontWeight = FontWeights.Normal,
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+                FontWeight = FontWeights.Normal
             } ];
 
         /// <summary>
         /// 已选中的实体页
         /// </summary>
         [ObservableProperty]
-        private RichTabItems _selectedEntityPage;
+        private VectorRichTabItem _selectedEntityPage;
 
         /// <summary>
         /// 版本数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionSource = [
-            new TextComboBoxItem() { Text = "1.20.5" },
-            new TextComboBoxItem() { Text = "1.20.2" },
-            new TextComboBoxItem() { Text = "1.20.1" },
-            new TextComboBoxItem() { Text = "1.20.0" },
-            new TextComboBoxItem() { Text = "1.19.0" },
-            new TextComboBoxItem() { Text = "1.17.0" },
-            new TextComboBoxItem() { Text = "1.16.2" },
-            new TextComboBoxItem() { Text = "1.16.0" },
-            new TextComboBoxItem() { Text = "1.15.0" },
-            new TextComboBoxItem() { Text = "1.14.0" },
-            new TextComboBoxItem() { Text = "1.13.0" },
-            new TextComboBoxItem() { Text = "1.12.0" }
+        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+            new VectorTextComboBoxItem() { Text = "1.20.5" },
+            new VectorTextComboBoxItem() { Text = "1.20.2" },
+            new VectorTextComboBoxItem() { Text = "1.20.1" },
+            new VectorTextComboBoxItem() { Text = "1.20.0" },
+            new VectorTextComboBoxItem() { Text = "1.19.0" },
+            new VectorTextComboBoxItem() { Text = "1.17.0" },
+            new VectorTextComboBoxItem() { Text = "1.16.2" },
+            new VectorTextComboBoxItem() { Text = "1.16.0" },
+            new VectorTextComboBoxItem() { Text = "1.15.0" },
+            new VectorTextComboBoxItem() { Text = "1.14.0" },
+            new VectorTextComboBoxItem() { Text = "1.13.0" },
+            new VectorTextComboBoxItem() { Text = "1.12.0" }
         ];
 
         /// <summary>
@@ -230,7 +223,7 @@ namespace CBHK.ViewModel.Generator
             };
             if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
             {
-                ObservableCollection<RichTabItems> result = EntityPageList;
+                ObservableCollection<VectorRichTabItem> result = EntityPageList;
                 ExternalDataImportManager.ImportEntityDataHandler(dialog.FileName, ref result);
             }
         }
@@ -241,7 +234,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportEntityFromClipboard()
         {
-            ObservableCollection<RichTabItems> result = EntityPageList;
+            ObservableCollection<VectorRichTabItem> result = EntityPageList;
             ExternalDataImportManager.ImportEntityDataHandler(Clipboard.GetText(), ref result,false);
         }
 
@@ -271,20 +264,10 @@ namespace CBHK.ViewModel.Generator
                     return;
                 }
             }
-            RichTabItems richTabItems = new()
+            VectorRichTabItem richTabItems = new()
             {
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                Header = "实体",
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+                Header = "实体"
             };
             EntityPageView entityPages = new() { FontWeight = FontWeights.Normal };
             EntityPageViewModel pageContext = entityPages.DataContext as EntityPageViewModel;
@@ -342,7 +325,12 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString());
-                Message.PushMessage("实体全部生成成功！数据已进入剪切板", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "实体全部生成成功！数据已进入剪切板",
+                    SubMessage = "实体生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\entity.png", UriKind.Relative))
+                });
             }
         }
 

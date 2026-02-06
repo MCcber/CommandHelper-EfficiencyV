@@ -44,8 +44,9 @@
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
 
-    <Grid Background="Transparent">
+    <Grid>
         <Container:VectorTabControl
+            Background="Transparent"
             BorderThickness="0"
             SelectedIndex="0"
             Style="{DynamicResource VectorTabControlStyle}"
@@ -53,20 +54,20 @@
             <Container:VectorIconTextTabItem
                 HeaderImage="/CBHK;component/Resource/CBHK/Image/IconHome.png"
                 HeaderText="主页"
-                Style="{StaticResource VectorIconTextTabItem}">
+                Style="{StaticResource VectorIconTextTabItemStyle}">
                 <Grid>
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                        <Grid
-                            Background="Transparent"
-                            FocusVisualStyle="{x:Null}"
-                            Visibility="Collapsed">
+                    <Container:VectorScrollViewer
+                        Background="Transparent"
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Auto">
+                        <Grid FocusVisualStyle="{x:Null}" Visibility="Collapsed">
                             <behaviors:Interaction.Triggers>
                                 <behaviors:EventTrigger EventName="Loaded">
                                     <behaviors:InvokeCommandAction Command="{Binding GeneratorTableLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
                                 </behaviors:EventTrigger>
                             </behaviors:Interaction.Triggers>
                         </Grid>
-                    </ScrollViewer>
+                    </Container:VectorScrollViewer>
                     <Grid
                         Margin="0,0,0,0"
                         Panel.ZIndex="1"
@@ -687,22 +688,26 @@
             <Container:VectorIconTextTabItem
                 HeaderImage="/CBHK;component/Resource/CBHK/Image/IconTeach.png"
                 HeaderText="教程"
-                Style="{StaticResource VectorIconTextTabItem}">
+                Style="{StaticResource VectorIconTextTabItemStyle}">
                 <Common:TutorialsView />
             </Container:VectorIconTextTabItem>
             <Container:VectorIconTextTabItem
                 HeaderImage="/CBHK;component/Resource/CBHK/Image/IconMore.png"
                 HeaderText="更多"
-                Style="{StaticResource VectorIconTextTabItem}">
+                Style="{StaticResource VectorIconTextTabItemStyle}">
                 <Common:MoreView />
             </Container:VectorIconTextTabItem>
             <Container:VectorIconTextTabItem
                 HeaderImage="/CBHK;component/Resource/CBHK/Image/IconSetting.png"
                 HeaderText="设置"
-                Style="{StaticResource VectorIconTextTabItem}">
+                Style="{StaticResource VectorIconTextTabItemStyle}">
                 <Common:SettingsView />
             </Container:VectorIconTextTabItem>
-            <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItem}" />
+            <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItemStyle}">
+                <Grid>
+                    <Input:VectorColorPicker Style="{DynamicResource VectorColorPicker}" />
+                </Grid>
+            </Container:VectorIconTextTabItem>
         </Container:VectorTabControl>
     </Grid>
 </Container:VectorWindow>

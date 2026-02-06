@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using CBHK.Common.Utility;
 using CBHK.Interface;
+using CBHK.CustomControl.VectorComboBox;
 
 namespace CBHK.ViewModel.Common
 {
@@ -38,9 +39,9 @@ namespace CBHK.ViewModel.Common
         protected virtual IContainerProvider Container { get; set; }
         protected virtual JsonTreeViewItemExtension JsonTool { get; set; }
 
-        public virtual TextComboBoxItem CurrentVersion { get; set; }
+        public virtual VectorTextComboBoxItem CurrentVersion { get; set; }
 
-        public virtual ObservableCollection<TextComboBoxItem> VersionList { get; set; } = [];
+        public virtual ObservableCollection<VectorTextComboBoxItem> VersionList { get; set; } = [];
 
         public virtual ObservableCollection<JsonTreeViewItem> TreeViewItemList { get; set; } = [];
 

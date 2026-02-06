@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.Model.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.Utility.Time;
 using CBHK.View.Component.Datapack.EditPage;
@@ -23,6 +24,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 
 namespace CBHK.ViewModel.Component.Datapack.HomePage
@@ -308,12 +310,26 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                 }
                 else
                 {
-                    Message.PushMessage("目标解决方案不存在");
+                    Message.PushMessage(new GeneratorMessage()
+                    {
+                        Message = "目标解决方案不存在",
+                        MessageBrush = Brushes.Red,
+                        SubMessage = "数据包编辑器",
+                        SubMessageBrush = Brushes.DarkGray,
+                        Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\command_block.png", UriKind.Relative))
+                    });
                 }
             }
             else
             {
-                Message.PushMessage("无法打开！所选解决方案不存在,已删除");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "无法打开！所选解决方案不存在,已删除",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "数据包编辑器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\command_block.png", UriKind.Relative))
+                });
                 File.Delete(RecentSolutionFolderPath + "\\" + recentTreeItem.Title.Text);
                 TreeViewItem timeMarkerItem = treeViewItem.Parent as TreeViewItem;
                 timeMarkerItem.Items.Remove(treeViewItem);

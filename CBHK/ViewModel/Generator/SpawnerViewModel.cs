@@ -1,4 +1,6 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
@@ -17,6 +19,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -43,23 +46,13 @@ namespace CBHK.ViewModel.Generator
         /// 刷怪笼标签页集合
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<RichTabItems> _spawnerPageList =
+        public ObservableCollection<VectorRichTabItem> _spawnerPageList =
         [
-            new RichTabItems()
+            new VectorRichTabItem()
             {
                 Header = "刷怪笼",
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush
+                Style = Application.Current.Resources["RichTabItemStyle"] as Style
             }
         ];
 
@@ -67,7 +60,7 @@ namespace CBHK.ViewModel.Generator
         /// 已选中的刷怪笼
         /// </summary>
         [ObservableProperty]
-        private RichTabItems _selectedItem = null;
+        private VectorRichTabItem _selectedItem = null;
 
         /// <summary>
         /// 显示结果
@@ -79,9 +72,9 @@ namespace CBHK.ViewModel.Generator
         /// 选中版本以及版本数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionSource = [
-            new TextComboBoxItem() { Text = "1.20.5" },
-            new TextComboBoxItem() { Text = "1.12.0" }
+        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+            new VectorTextComboBoxItem() { Text = "1.20.5" },
+            new VectorTextComboBoxItem() { Text = "1.12.0" }
         ];
         #endregion
 
@@ -104,22 +97,12 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void AddSpawner()
         {
-            RichTabItems richTabItems = new()
+            VectorRichTabItem richTabItems = new()
             {
                 Header = "刷怪笼",
                 Content = container.Resolve<SpawnerPageView>(),
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Style = Application.Current.Resources["RichTabItemStyle"] as Style
             };
             SpawnerPageList.Add(richTabItems);
             if(SpawnerPageList.Count == 1)
@@ -141,7 +124,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFromClipboard()
         {
-            ObservableCollection<RichTabItems> items = SpawnerPageList;
+            ObservableCollection<VectorRichTabItem> items = SpawnerPageList;
             ExternalDataImportManager.ImportSpawnerDataHandler(Clipboard.GetText(),ref items,false);
         }
 
@@ -163,7 +146,7 @@ namespace CBHK.ViewModel.Generator
             };
             if (openFileDialog.ShowDialog().Value)
             {
-                ObservableCollection<RichTabItems> items = SpawnerPageList;
+                ObservableCollection<VectorRichTabItem> items = SpawnerPageList;
                 ExternalDataImportManager.ImportSpawnerDataHandler(openFileDialog.FileName,ref items);
             }
         }
@@ -189,7 +172,7 @@ namespace CBHK.ViewModel.Generator
         private void Run()
         {
             Result = new();
-            foreach (RichTabItems item in SpawnerPageList)
+            foreach (VectorRichTabItem item in SpawnerPageList)
             {
                 SpawnerPageView spawnerPage = item.Content as SpawnerPageView;
                 SpawnerPageViewModel context = spawnerPage.DataContext as SpawnerPageViewModel;
@@ -210,7 +193,12 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString().Trim(','));
-                Message.PushMessage("刷怪笼全部生成成功！", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "全部生成成功！",
+                    SubMessage = "刷怪笼生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\spawner.png", UriKind.RelativeOrAbsolute))
+                });
             }
             #endregion
         }
@@ -224,7 +212,7 @@ namespace CBHK.ViewModel.Generator
             List<string> Results = [];
             await Task.Run(() =>
             {
-                foreach (RichTabItems item in SpawnerPageList)
+                foreach (VectorRichTabItem item in SpawnerPageList)
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {

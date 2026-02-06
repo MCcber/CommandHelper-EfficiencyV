@@ -61,6 +61,15 @@ namespace CBHK.CustomControl.VectorButton
 
         public static readonly DependencyProperty BottomBorderBrushProperty =
             DependencyProperty.Register("BottomBorderBrush", typeof(Brush), typeof(VectorTextButton), new PropertyMetadata(default(Brush)));
+
+        public TextDecorationCollection TextDecoration
+        {
+            get { return (TextDecorationCollection)GetValue(TextDecorationProperty); }
+            set { SetValue(TextDecorationProperty, value); }
+        }
+
+        public static readonly DependencyProperty TextDecorationProperty =
+            DependencyProperty.Register("TextDecoration", typeof(TextDecorationCollection), typeof(VectorTextButton), new PropertyMetadata(default(TextDecorationCollection)));
         #endregion
 
         #region Method
@@ -73,7 +82,6 @@ namespace CBHK.CustomControl.VectorButton
             PreviewMouseLeftButtonDown += VectorTextButton_PreviewMouseLeftButtonDown;
             PreviewMouseLeftButtonUp += VectorTextButton_PreviewMouseLeftButtonUp;
         }
-
         #endregion
 
         #region Event
@@ -104,7 +112,7 @@ namespace CBHK.CustomControl.VectorButton
                 Foreground = Brushes.White;
             }
             var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style)
+            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style || Background is null)
             {
                 Background = new BrushConverter().ConvertFromString("#3c8527") as Brush;
             }

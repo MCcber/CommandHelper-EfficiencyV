@@ -7,6 +7,9 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorScrollViewer.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorTextMenuItem.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorTabControl.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/ContextMenu.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/JsonTreeViewTemplate.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorWindow.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/EyedropperWindow.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

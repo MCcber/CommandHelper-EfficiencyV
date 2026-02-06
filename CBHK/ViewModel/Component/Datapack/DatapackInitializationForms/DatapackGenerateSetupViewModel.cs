@@ -1,4 +1,6 @@
 ﻿using CBHK.CustomControl;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Model.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.View.Generator;
@@ -16,6 +18,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 
 namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
@@ -57,7 +61,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
 
         #region 存储解决方案的保存路径
         [ObservableProperty]
-        private TextComboBoxItem _selectedSolutionPath;
+        private VectorTextComboBoxItem _selectedSolutionPath;
         #endregion
 
         #region 解决方案名称为空时的提示可见性
@@ -67,7 +71,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
 
         #region 生成路径、描述等数据
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _generatorPathList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _generatorPathList = [];
         [ObservableProperty]
         public string _description = "";
         #endregion
@@ -81,7 +85,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             List<string> generatorList = [.. File.ReadAllLines(DatapackGeneratorFilePath)];
             foreach (var item in generatorList)
             {
-                GeneratorPathList.Add(new TextComboBoxItem() { Text = item });
+                GeneratorPathList.Add(new VectorTextComboBoxItem() { Text = item });
             }
             #endregion
         }
@@ -143,7 +147,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                     string selectedPath = openFolderDialog.FolderName;
                     if (!GeneratorPathList.Any(item => item.Text == selectedPath))
                     {
-                        GeneratorPathList.Insert(0, new TextComboBoxItem() { Text = selectedPath });
+                        GeneratorPathList.Insert(0, new VectorTextComboBoxItem() { Text = selectedPath });
                     }
                     else
                     {
@@ -167,7 +171,14 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             #region 解决方案无名称不生成
             if (SolutionName.Trim().Length == 0 || GeneratorPathList.Count == 0)
             {
-                Message.PushMessage("生成失败！解决方案未设置名称",MessageBoxImage.Error);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "生成失败！解决方案未设置名称",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "数据包编辑器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                });
                 return;
             }
             #endregion

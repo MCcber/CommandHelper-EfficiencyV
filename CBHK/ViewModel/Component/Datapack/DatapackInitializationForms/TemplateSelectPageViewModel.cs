@@ -1,5 +1,6 @@
 ﻿using CBHK.Common.Utility;
 using CBHK.CustomControl;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.View.Component.Datapack.TemplateSelectPage;
 using CBHK.View.Generator;
@@ -82,17 +83,17 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// 存放版本列表
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _versionList = [];
         /// <summary>
         /// 存放模板类型列表
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _developerNameList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _developerNameList = [];
         /// <summary>
         /// 包功能类型列表
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _functionTypeList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _functionTypeList = [];
 
         /// <summary>
         /// 清除过滤参数可见性
@@ -102,7 +103,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
 
         #region 存储已选择的版本
         [ObservableProperty]
-        private TextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem _selectedVersion;
 
         [ObservableProperty]
         private int _selectedVersionIndex = 0;
@@ -114,8 +115,8 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         #endregion
 
         #region 存储已选择的开发者名称
-        private TextComboBoxItem selectedDeveloperName;
-        public TextComboBoxItem SelectedDeveloperName
+        private VectorTextComboBoxItem selectedDeveloperName;
+        public VectorTextComboBoxItem SelectedDeveloperName
         {
             get => selectedDeveloperName;
             set
@@ -132,8 +133,8 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         #endregion
 
         #region 存储已选择的功能类型
-        private TextComboBoxItem selectedFunctionType;
-        public TextComboBoxItem SelectedFunctionType
+        private VectorTextComboBoxItem selectedFunctionType;
+        public VectorTextComboBoxItem SelectedFunctionType
         {
             get => selectedFunctionType;
             set
@@ -201,9 +202,9 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                     SolutionTemplateList.Clear();
                     DeveloperNameList.Clear();
                     FunctionTypeList.Clear();
-                    VersionList.Add(new TextComboBoxItem() { Text = "全部" });
-                    DeveloperNameList.Add(new TextComboBoxItem() { Text = "全部" });
-                    FunctionTypeList.Add(new TextComboBoxItem() { Text = "全部" });
+                    VersionList.Add(new VectorTextComboBoxItem() { Text = "全部" });
+                    DeveloperNameList.Add(new VectorTextComboBoxItem() { Text = "全部" });
+                    FunctionTypeList.Add(new VectorTextComboBoxItem() { Text = "全部" });
                     #endregion
 
                     #region 载入版本
@@ -212,7 +213,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                         List<string> versionList = [];
                         foreach (var item in versionList)
                         {
-                            VersionList.Add(new TextComboBoxItem() { Text = item });
+                            VersionList.Add(new VectorTextComboBoxItem() { Text = item });
                         }
                     }
                     #endregion
@@ -264,12 +265,12 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                                         {
                                             solutionTemplateItems.Developer.Text = developer.ToString();
                                             if (!DeveloperNameList.Any(item => item.Text == developer.ToString()))
-                                                DeveloperNameList.Add(new TextComboBoxItem() { Text = developer.ToString() });
+                                                DeveloperNameList.Add(new VectorTextComboBoxItem() { Text = developer.ToString() });
                                         }
                                         if (data.SelectToken("Type") is JToken type)
                                         {
                                             if (!FunctionTypeList.Any(item => item.Text == type.ToString()))
-                                                FunctionTypeList.Add(new TextComboBoxItem() { Text = type.ToString() });
+                                                FunctionTypeList.Add(new VectorTextComboBoxItem() { Text = type.ToString() });
                                             TextBlock textBlock = new()
                                             {
                                                 VerticalAlignment = VerticalAlignment.Center,

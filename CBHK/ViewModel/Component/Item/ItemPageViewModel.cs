@@ -1,6 +1,7 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorCheckBox;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
-using CBHK.Domain.Model;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
@@ -21,7 +22,6 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -41,7 +41,7 @@ namespace CBHK.ViewModel.Component.Item
         private CBHKDataContext context;
         private DataService dataService = null;
 
-        private IProgress<IconComboBoxItem> AddItemProgress = null;
+        private IProgress<VectorIconTextComboBoxItem> AddItemProgress = null;
         private IProgress<(int, string, string, string)> SetItemProgress = null;
         /// <summary>
         /// 需要适应版本变化的特指数据所属控件的事件
@@ -76,11 +76,11 @@ namespace CBHK.ViewModel.Component.Item
         //Common页
         //public View.Component.Item.Common common = null;
         //特指标签页视图容器
-        ScrollViewer SpecialViewer = null;
+        VectorScrollViewer SpecialViewer = null;
         /// <summary>
         /// 物品页
         /// </summary>
-        RichTabItems currentItemPages = null;
+        VectorRichTabItem currentItemPages = null;
 
         ItemViewModel itemDataContext = null;
         #endregion
@@ -109,8 +109,8 @@ namespace CBHK.ViewModel.Component.Item
         #endregion
 
         #region 已选择的版本
-        private TextComboBoxItem selectedVersion;
-        public TextComboBoxItem SelectedVersion
+        private VectorTextComboBoxItem selectedVersion;
+        public VectorTextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
             set
@@ -126,42 +126,42 @@ namespace CBHK.ViewModel.Component.Item
 
         #region 版本数据源
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionSource = [];
+        private ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
         #endregion
 
         #region 物品ID列表
         [ObservableProperty]
-        private ObservableCollection<IconComboBoxItem> _itemList = [];
-        public Dictionary<int, List<IconComboBoxItem>> ItemIDListCopy = [];
+        private ObservableCollection<VectorIconTextComboBoxItem> _itemList = [];
+        public Dictionary<int, List<VectorIconTextComboBoxItem>> ItemIDListCopy = [];
         #endregion
 
         #region 方块ID列表
         [ObservableProperty]
-        public ObservableCollection<IconComboBoxItem> _blockList = [];
+        public ObservableCollection<VectorIconTextComboBoxItem> _blockList = [];
         #endregion
 
         #region 附魔ID列表
         [ObservableProperty]
-        public ObservableCollection<IconComboBoxItem> _enchantmentIDList = [];
+        public ObservableCollection<VectorIconTextComboBoxItem> _enchantmentIDList = [];
         #endregion
 
         #region 属性相关的列表
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _attributeIDList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _attributeIDList = [];
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _attributeSlotList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _attributeSlotList = [];
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _attributeValueTypeList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _attributeValueTypeList = [];
         #endregion
 
         #region 药水效果ID列表
         [ObservableProperty]
-        public ObservableCollection<IconComboBoxItem> _effectItemList = [];
+        public ObservableCollection<VectorIconTextComboBoxItem> _effectItemList = [];
         #endregion
 
         #region 保存物品ID
-        private IconComboBoxItem selectedItem;
-        public IconComboBoxItem SelectedItem
+        private VectorIconTextComboBoxItem selectedItem;
+        public VectorIconTextComboBoxItem SelectedItem
         {
             get => selectedItem;
             set
@@ -171,7 +171,7 @@ namespace CBHK.ViewModel.Component.Item
                 LowVersionId = "";
                 if (CurrentMinVersion < 1130)
                 {
-                    List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == selectedItem.ComboBoxItemId)];
+                    List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == selectedItem.Text)];
                     if (matchVersionIDList.Count > 0)
                         LowVersionId = matchVersionIDList.First().LowVersionID;
                 }
@@ -229,12 +229,11 @@ namespace CBHK.ViewModel.Component.Item
             SpecialArray = JArray.Parse(SpecialData);
             #endregion
 
-            AddItemProgress = new Progress<IconComboBoxItem>(ItemList.Add);
+            AddItemProgress = new Progress<VectorIconTextComboBoxItem>(ItemList.Add);
             SetItemProgress = new Progress<(int, string, string, string)>(item =>
             {
-                ItemList[item.Item1].ComboBoxItemId = item.Item2;
-                ItemList[item.Item1].ComboBoxItemText = item.Item3;
-                ItemList[item.Item1].ComboBoxItemIcon = File.Exists(item.Item4) ? new BitmapImage(new Uri(item.Item4, UriKind.Absolute)) : null;
+                ItemList[item.Item1].Text = item.Item2;
+                ItemList[item.Item1].Image = File.Exists(item.Item4) ? new BitmapImage(new Uri(item.Item4, UriKind.Absolute)) : null;
                 if (item.Item1 == 0)
                 {
                     SelectedItem = ItemList[0];
@@ -267,7 +266,7 @@ namespace CBHK.ViewModel.Component.Item
             ParallelOptions parallelOptions = new();
             await Parallel.ForAsync(0, ItemIDAndNameMap.Count, parallelOptions, (i, cancellationToken) =>
             {
-                AddItemProgress.Report(new IconComboBoxItem());
+                AddItemProgress.Report(new VectorIconTextComboBoxItem());
                 return new ValueTask();
             });
 
@@ -313,11 +312,10 @@ namespace CBHK.ViewModel.Component.Item
                 if (item is not null && File.Exists(imagePath))
                 {
                     imagePath = ImageSetFolderPath + item + ".png";
-                    IconComboBoxItem iconComboBoxItem = new()
+                    VectorIconTextComboBoxItem iconComboBoxItem = new()
                     {
-                        ComboBoxItemId = item,
-                        ComboBoxItemText = item,
-                        ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
+                        Text = item,
+                        Image = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
                     };
                     EffectItemList.Add(iconComboBoxItem);
                 }
@@ -350,11 +348,10 @@ namespace CBHK.ViewModel.Component.Item
                 if (item is not null && File.Exists(imagePath))
                 {
                     imagePath = ImageSetFolderPath + item + ".png";
-                    IconComboBoxItem iconComboBoxItem = new()
+                    VectorIconTextComboBoxItem iconComboBoxItem = new()
                     {
-                        ComboBoxItemId = item,
-                        ComboBoxItemText = item,
-                        ComboBoxItemIcon = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
+                        Text = item,
+                        Image = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
                     };
                     EnchantmentIDList.Add(iconComboBoxItem);
                 }
@@ -380,7 +377,7 @@ namespace CBHK.ViewModel.Component.Item
                 }
                 if (item.ID is not null)
                 {
-                    TextComboBoxItem textComboBoxItem = new()
+                    VectorTextComboBoxItem textComboBoxItem = new()
                     {
                         Text = item.ID
                     };
@@ -394,7 +391,7 @@ namespace CBHK.ViewModel.Component.Item
             {
                 if (item.Value is not null && item.Value.Length > 0)
                 {
-                    AttributeSlotList.Add(new TextComboBoxItem()
+                    AttributeSlotList.Add(new VectorTextComboBoxItem()
                     {
                         Text = item.Value
                     });
@@ -407,7 +404,7 @@ namespace CBHK.ViewModel.Component.Item
             {
                 if (item.Value is not null)
                 {
-                    AttributeValueTypeList.Add(new TextComboBoxItem()
+                    AttributeValueTypeList.Add(new VectorTextComboBoxItem()
                     {
                         Text = item.ID
                     });
@@ -419,7 +416,7 @@ namespace CBHK.ViewModel.Component.Item
         /// <summary>
         /// 保存指令
         /// </summary>
-        private async Task Save()
+        private void Save()
         {
             //执行生成
 
@@ -446,20 +443,20 @@ namespace CBHK.ViewModel.Component.Item
         /// <summary>
         /// 执行生成
         /// </summary>
-        private async Task Run()
+        private void Run()
         {
             StringBuilder nbt = new();
 
             if (SpecialTagsResult.Count > 0)
             {
-                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.ComboBoxItemId];
+                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.Text];
                 nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
             }
 
             if (nbt.ToString().EndsWith(','))
                 nbt.Remove(nbt.ToString().Length - 1, 1);
 
-            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItem.ComboBoxItemId;
+            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItem.Text;
 
             if (Summon)
             {
@@ -511,7 +508,12 @@ namespace CBHK.ViewModel.Component.Item
             else
             {
                 Clipboard.SetText(Result);
-                Message.PushMessage("物品生成成功!数据已进入剪切板", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "物品生成成功!数据已进入剪切板",
+                    SubMessage = "物品生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\item_frame.png", UriKind.RelativeOrAbsolute))
+                });
             }
         }
 
@@ -560,13 +562,13 @@ namespace CBHK.ViewModel.Component.Item
         private async Task UpdateUILayOut()
         {
             SelectedItem ??= ItemList[0];
-            currentItemPages.Header = SelectedItem.ComboBoxItemId + ":" + SelectedItem.ComboBoxItemText;
+            currentItemPages.Header = SelectedItem.Text + ":" + SelectedItem.Text;
 
             #region 搜索当前物品ID对应的JSON对象
             List<JToken> targetList = SpecialArray.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedItem.ComboBoxItemId)
+                if (currentObj["type"].ToString() == SelectedItem.Text)
                     return true;
                 return false;
             }).ToList();
@@ -578,7 +580,7 @@ namespace CBHK.ViewModel.Component.Item
                 {
                     JObject targetObj = targetList.First() as JObject;
                     #region 处理特指NBT
-                    if (!specialDataDictionary.TryGetValue(SelectedItem.ComboBoxItemId, out Grid value))
+                    if (!specialDataDictionary.TryGetValue(SelectedItem.Text, out Grid value))
                     {
                         JArray children = JArray.Parse(targetObj["Children"].ToString());
                         List<FrameworkElement> components = [];
@@ -607,7 +609,7 @@ namespace CBHK.ViewModel.Component.Item
                                 if (LeftIndex || newGrid.RowDefinitions.Count == 0)
                                     newGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
                                 newGrid.Children.Add(components[j]);
-                                if (components[j] is Accordion || components[j] is TextCheckBoxs)
+                                if (components[j] is VectorTextExpander || components[j] is VectorTextCheckBox)
                                 {
                                     Grid.SetRow(components[j], newGrid.RowDefinitions.Count - 1);
                                     Grid.SetColumn(components[j], 0);
@@ -624,8 +626,8 @@ namespace CBHK.ViewModel.Component.Item
                         });
                         #endregion
 
-                        if (!specialDataDictionary.ContainsKey(SelectedItem.ComboBoxItemId))
-                            specialDataDictionary.Add(SelectedItem.ComboBoxItemId, newGrid);
+                        if (!specialDataDictionary.ContainsKey(SelectedItem.Text))
+                            specialDataDictionary.Add(SelectedItem.Text, newGrid);
                         await SpecialViewer.Dispatcher.InvokeAsync(() =>
                         {
                             SpecialViewer.Content = newGrid;
@@ -661,7 +663,7 @@ namespace CBHK.ViewModel.Component.Item
         /// <param name="e"></param>
         public void ItemPages_Loaded(object sender, RoutedEventArgs e)
         {
-            currentItemPages ??= (sender as ItemPageView).Parent as RichTabItems;
+            currentItemPages ??= (sender as ItemPageView).Parent as VectorRichTabItem;
             itemDataContext ??= Window.GetWindow(sender as ItemPageView).DataContext as ItemViewModel;
             if (VersionSource.Count == 0)
             {
@@ -684,7 +686,7 @@ namespace CBHK.ViewModel.Component.Item
             {
                 item.DataContext = this;
             }
-            SpecialViewer = (tabControl.Items[0] as TabItem).Content as ScrollViewer;
+            SpecialViewer = (tabControl.Items[0] as TabItem).Content as VectorScrollViewer;
         }
 
         /// <summary>

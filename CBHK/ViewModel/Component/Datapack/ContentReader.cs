@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.CustomControl.TextElement;
 using CBHK.Utility.Common;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.ViewModel.Component.Datapack.EditPage;

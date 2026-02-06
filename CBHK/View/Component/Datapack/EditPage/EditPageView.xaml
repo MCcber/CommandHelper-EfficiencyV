@@ -2,11 +2,14 @@
     x:Class="CBHK.View.Component.Datapack.EditPage.EditPageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
+    xmlns:utility="clr-namespace:CBHK.Utility.Visual"
     Title="EditPage"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -801,29 +804,30 @@
                 MinWidth="200"
                 MaxWidth="600" />
         </Grid.ColumnDefinitions>
-        <CustomControl:IconTextButtons
+        <VectorButton:VectorFlatIconButton
             Grid.Row="0"
             Grid.Column="0"
             Width="25"
             Height="25"
             HorizontalContentAlignment="Center"
             VerticalContentAlignment="Center"
-            Background="{StaticResource BackToHomePage}"
             BorderThickness="0"
             Command="{Binding BackToHomePageCommand}"
-            CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=localWindow:CommonWindow}}"
+            CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
             FontSize="15"
-            Style="{DynamicResource IconTextButton}"
+            Icon="{StaticResource BackToHomePage}"
+            IconBrush="White"
+            Style="{DynamicResource VectorFlatIconButtonStyle}"
             ToolTipService.BetweenShowDelay="0"
             ToolTipService.InitialShowDelay="0">
-            <CustomControl:IconTextButtons.ToolTip>
+            <VectorButton:VectorFlatIconButton.ToolTip>
                 <ToolTip
                     Background="#484848"
                     Content="返回起始页"
                     Foreground="White" />
-            </CustomControl:IconTextButtons.ToolTip>
-        </CustomControl:IconTextButtons>
-        <CustomControl:IconTextButtons
+            </VectorButton:VectorFlatIconButton.ToolTip>
+        </VectorButton:VectorFlatIconButton>
+        <VectorButton:VectorFlatIconButton
             Grid.Row="0"
             Grid.Column="1"
             Width="25"
@@ -833,18 +837,18 @@
             Background="{StaticResource LeftArrow}"
             BorderThickness="0"
             Command="{Binding ReturnCommand}"
-            CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=localWindow:CommonWindow}}"
+            CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
             FontSize="15"
             Style="{DynamicResource IconTextButton}"
             ToolTipService.BetweenShowDelay="0"
             ToolTipService.InitialShowDelay="0">
-            <CustomControl:IconTextButtons.ToolTip>
+            <VectorButton:VectorFlatIconButton.ToolTip>
                 <ToolTip
                     Background="#484848"
                     Content="ESC:返回主页"
                     Foreground="White" />
-            </CustomControl:IconTextButtons.ToolTip>
-        </CustomControl:IconTextButtons>
+            </VectorButton:VectorFlatIconButton.ToolTip>
+        </VectorButton:VectorFlatIconButton>
         <Menu
             Grid.Row="0"
             Grid.Column="2"
@@ -908,7 +912,7 @@
                 Foreground="White"
                 Header="帮助" />
         </Menu>
-        <TabControl
+        <Container:VectorTabControl
             Grid.Row="1"
             Grid.Column="0"
             Grid.ColumnSpan="3"
@@ -920,14 +924,14 @@
             ItemsSource="{Binding FunctionModifyTabItems}"
             SelectedIndex="0"
             SelectedItem="{Binding SelectedFileItem, Mode=TwoWay}"
-            Style="{DynamicResource TabControlWithScrollBar}"
+            Style="{DynamicResource VectorTabControlStyle}"
             Visibility="{Binding FunctionModifyTabControlVisibility, Mode=OneWay}">
             <behavior:Interaction.Triggers>
                 <behavior:EventTrigger EventName="SelectionChanged">
                     <behavior:CallMethodAction MethodName="FunctionModifyTabControl_SelectionChanged" TargetObject="{Binding}" />
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
-        </TabControl>
+        </Container:VectorTabControl>
         <GridSplitter
             Grid.Row="1"
             Grid.Column="2"
@@ -950,85 +954,30 @@
                 FontSize="15"
                 Foreground="White"
                 Text="解决方案管理器" />
-            <TextBox
+            <Input:VectorTextBox
                 Grid.Row="1"
                 Margin="0,5,0,0"
                 Padding="2,0,0,0"
                 VerticalAlignment="Stretch"
                 HorizontalContentAlignment="Left"
                 VerticalContentAlignment="Center"
+                utility:TextSizeHelper.AutoFontSize="True"
                 BorderBrush="#424242"
                 BorderThickness="1"
                 CaretBrush="White"
                 FontSize="12"
                 Foreground="White"
-                Text="{Binding DatapackSeacherText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding DatapackSeacherText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="搜索数据包内容">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="TextChanged">
                         <behavior:CallMethodAction MethodName="DatapackSeacherTextBox_TextChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-                <TextBox.Resources>
-                    <VisualBrush
-                        x:Key="BackgroundBrush"
-                        AlignmentX="Left"
-                        AlignmentY="Center"
-                        Stretch="UniformToFill">
-                        <VisualBrush.Visual>
-                            <Grid
-                                Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=TextBox}, Path=ActualWidth}"
-                                Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=TextBox}, Path=ActualHeight}"
-                                Background="#383838">
-                                <TextBlock
-                                    Margin="5,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"
-                                    Background="Transparent"
-                                    FontSize="12"
-                                    Foreground="#D6D6D6"
-                                    Text="搜索数据包内容"
-                                    TextAlignment="Center" />
-                            </Grid>
-                        </VisualBrush.Visual>
-                    </VisualBrush>
-                </TextBox.Resources>
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Setter Property="Background" Value="{StaticResource EditBox}" />
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="TextBox">
-                                    <Border
-                                        x:Name="border"
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        SnapsToDevicePixels="True">
-                                        <ScrollViewer
-                                            x:Name="PART_ContentHost"
-                                            Focusable="False"
-                                            HorizontalScrollBarVisibility="Hidden"
-                                            VerticalScrollBarVisibility="Hidden" />
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="border" Property="BorderBrush" Value="#424242" />
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <Style.Triggers>
-                            <Trigger Property="Text" Value="">
-                                <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="BorderBrush" Value="#424242" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBox.Style>
-            </TextBox>
+            </Input:VectorTextBox>
             <TreeView
                 Grid.Row="2"
                 HorizontalAlignment="Stretch"

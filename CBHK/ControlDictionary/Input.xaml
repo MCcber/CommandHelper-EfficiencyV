@@ -1,7 +1,10 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/NumbericUpDown.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/VectorNumbericUpDown.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TextStyleEditor.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/VectorTextBox.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/VectorRichTextBox.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/VectorColorPicker.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/Slider.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

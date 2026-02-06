@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Common;
 using ICSharpCode.AvalonEdit.Document;
 using System;
@@ -15,9 +16,9 @@ namespace CBHK.Interface
         /// <summary>
         /// 当前选中的版本
         /// </summary>
-        public TextComboBoxItem CurrentVersion { get; set; }
+        public VectorTextComboBoxItem CurrentVersion { get; set; }
 
-        public ObservableCollection<TextComboBoxItem> VersionList { get; set; }
+        public ObservableCollection<VectorTextComboBoxItem> VersionList { get; set; }
         /// <summary>
         /// 存储需要被读取并解析的文件列表
         /// </summary>

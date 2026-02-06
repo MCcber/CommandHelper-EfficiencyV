@@ -8,12 +8,17 @@ namespace CBHK.CustomControl.VectorButton
 {
     public class VectorToggleTextButton:ToggleButton
     {
-        #region Property
+        #region Field
         private Thickness OriginMargin;
-        private Brush OriginTopBorderBrush;
+        private Brush OriginLeftTopBorderBrush;
+        private Brush OriginRightBottomBorderBrush;
+        private Brush OriginBottomBorderBrush;
         private Brush OriginBorderCornerBrush;
         private Brush OriginForegroundBrush;
         private Brush OriginBackgroundBrush;
+        #endregion
+
+        #region Property
         public virtual double MarginTopOffset { get; set; } = 5;
         public virtual double OriginBottomHeight { get; set; } = 6;
 
@@ -53,23 +58,32 @@ namespace CBHK.CustomControl.VectorButton
         public static readonly DependencyProperty CheckedMarkerBrushProperty =
             DependencyProperty.Register("CheckedMarkerBrush", typeof(Brush), typeof(VectorToggleTextButton), new PropertyMetadata(default(Brush)));
 
-        public Brush RoundBorderBrush
+        public Brush LeftTopBorderBrush
         {
-            get { return (Brush)GetValue(RoundBorderBrushProperty); }
-            set { SetValue(RoundBorderBrushProperty, value); }
+            get { return (Brush)GetValue(LeftTopBorderBrushProperty); }
+            set { SetValue(LeftTopBorderBrushProperty, value); }
         }
 
-        public static readonly DependencyProperty RoundBorderBrushProperty =
-            DependencyProperty.Register("RoundBorderBrush", typeof(Brush), typeof(VectorToggleTextButton), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty LeftTopBorderBrushProperty =
+            DependencyProperty.Register("LeftTopBorderBrush", typeof(Brush), typeof(VectorToggleTextButton), new PropertyMetadata(default(Brush)));
 
-        public Brush TopBorderBrush
+        public Brush RightBottomBorderBrush
         {
-            get { return (Brush)GetValue(TopBorderBrushProperty); }
-            set { SetValue(TopBorderBrushProperty, value); }
+            get { return (Brush)GetValue(RightBottomBorderBrushProperty); }
+            set { SetValue(RightBottomBorderBrushProperty, value); }
         }
 
-        public static readonly DependencyProperty TopBorderBrushProperty =
-            DependencyProperty.Register("TopBorderBrush", typeof(Brush), typeof(VectorToggleTextButton), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty RightBottomBorderBrushProperty =
+            DependencyProperty.Register("RightBottomBorderBrush", typeof(Brush), typeof(VectorToggleTextButton), new PropertyMetadata(default(Brush)));
+
+        public Brush BottomBorderBrush
+        {
+            get { return (Brush)GetValue(BottomBorderBrushProperty); }
+            set { SetValue(BottomBorderBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty BottomBorderBrushProperty =
+            DependencyProperty.Register("BottomBorderBrush", typeof(Brush), typeof(VectorToggleTextButton), new PropertyMetadata(default(Brush)));
 
         public Brush BorderCornerBrush
         {
@@ -79,16 +93,6 @@ namespace CBHK.CustomControl.VectorButton
 
         public static readonly DependencyProperty BorderCornerBrushProperty =
             DependencyProperty.Register("BorderCornerBrush", typeof(Brush), typeof(VectorToggleTextButton), new PropertyMetadata(default(Brush)));
-
-        public Brush OriginBottomBrush
-        {
-            get { return (Brush)GetValue(OriginBottomBrushProperty); }
-            set { SetValue(OriginBottomBrushProperty, value); }
-        }
-
-        public static readonly DependencyProperty OriginBottomBrushProperty =
-            DependencyProperty.Register("OriginBottomBrush", typeof(Brush), typeof(VectorToggleTextButton), new PropertyMetadata(default(Brush)));
-
         #endregion
 
         #region Method
@@ -100,38 +104,8 @@ namespace CBHK.CustomControl.VectorButton
             MouseLeave += VectorToggleTextButton_MouseLeave;
         }
 
-        #endregion
-
-        #region Event
-        private void VectorToggleTextButton_Click(object sender, RoutedEventArgs e)
+        private void UpdateBorderColorByBackgroundColor(object sender)
         {
-            if(IsChecked.Value)
-            {
-                IsShowCheckedMarker = Visibility.Visible;
-                This_PreviewMouseLeftButtonDown(sender, null);
-            }
-            else
-            {
-                IsShowCheckedMarker = Visibility.Hidden;
-                VectorToggleTextButton_MouseEnter(sender, null);
-            }
-        }
-
-        private void VectorToggleTextButton_Loaded(object sender, RoutedEventArgs e)
-        {
-            RoundBorderBrush = Brushes.Black;
-            CheckedMarkerBrush = Brushes.White;
-            SelectedMarkerWidth = Width / 6.15;
-            OriginMargin = Margin;
-            if (Text == "")
-            {
-                Text = "Button";
-            }
-            if (OriginBottomHeight == 0)
-            {
-                OriginBottomHeight = 6;
-            }
-
             var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
             if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
             {
@@ -151,21 +125,29 @@ namespace CBHK.CustomControl.VectorButton
             if (originborderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originborderCornerBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.8f);
                 BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(color);
             }
-            var originTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, TopBorderBrushProperty);
-            if (originTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originTopBorderBrushSource.BaseValueSource is BaseValueSource.Style)
+            var originLeftTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopBorderBrushProperty);
+            if (originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
                 SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
-                TopBorderBrush = OriginTopBorderBrush = new SolidColorBrush(color);
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.6f);
+                LeftTopBorderBrush = OriginLeftTopBorderBrush = new SolidColorBrush(color);
             }
-            var originBottomBrushSource = DependencyPropertyHelper.GetValueSource(this, OriginBottomBrushProperty);
-            if (originBottomBrushSource.BaseValueSource is BaseValueSource.Default || originBottomBrushSource.BaseValueSource is BaseValueSource.Style)
+            var originRightBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
+            if (originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style)
             {
-                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.5f);
-                OriginBottomBrush ??= new SolidColorBrush(color);
+                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
+                RightBottomBorderBrush = OriginRightBottomBorderBrush = new SolidColorBrush(color);
+            }
+            var originBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, BottomBorderBrushProperty);
+            if (originBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style)
+            {
+                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
+                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.5f);
+                BottomBorderBrush = OriginBottomBorderBrush = new SolidColorBrush(color);
             }
 
             object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
@@ -177,9 +159,9 @@ namespace CBHK.CustomControl.VectorButton
             OriginForegroundBrush = Foreground;
             OriginBackgroundBrush = Background;
 
-            if(IsChecked is not null)
+            if (IsChecked is not null)
             {
-                if(IsChecked.Value)
+                if (IsChecked.Value)
                 {
                     IsShowCheckedMarker = Visibility.Visible;
                 }
@@ -188,6 +170,41 @@ namespace CBHK.CustomControl.VectorButton
                     IsShowCheckedMarker = Visibility.Hidden;
                 }
             }
+        }
+        #endregion
+
+        #region Event
+        private void VectorToggleTextButton_Click(object sender, RoutedEventArgs e)
+        {
+            if(IsChecked.Value)
+            {
+                IsShowCheckedMarker = Visibility.Visible;
+                This_PreviewMouseLeftButtonDown(sender, null);
+            }
+            else
+            {
+                IsShowCheckedMarker = Visibility.Hidden;
+                VectorToggleTextButton_MouseEnter(sender, null);
+            }
+        }
+
+        private void VectorToggleTextButton_Loaded(object sender, RoutedEventArgs e)
+        {
+            BorderBrush = Brushes.Black;
+            CheckedMarkerBrush = Brushes.White;
+            SelectedMarkerWidth = Width / 6.15;
+            OriginMargin = Margin;
+            OriginForegroundBrush = Foreground;
+            if (Text == "")
+            {
+                Text = "Button";
+            }
+            if (OriginBottomHeight == 0)
+            {
+                OriginBottomHeight = 6;
+            }
+
+            UpdateBorderColorByBackgroundColor(sender);
         }
 
         private void This_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -214,7 +231,8 @@ namespace CBHK.CustomControl.VectorButton
                 row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
             Background = OriginBackgroundBrush;
-            TopBorderBrush = OriginTopBorderBrush;
+            LeftTopBorderBrush = OriginLeftTopBorderBrush;
+            RightBottomBorderBrush = OriginRightBottomBorderBrush;
             BorderCornerBrush = OriginBorderCornerBrush;
             Margin = OriginMargin;
         }
@@ -234,9 +252,11 @@ namespace CBHK.CustomControl.VectorButton
             Color darkColor = ColorTool.Darken((OriginBackgroundBrush as SolidColorBrush).Color, 0.2f);
             Background = new SolidColorBrush(darkColor);
             Margin = OriginMargin;
-            Color lightBorderColor = ColorTool.Lighten((OriginTopBorderBrush as SolidColorBrush).Color, 0.4f);
-            TopBorderBrush = new SolidColorBrush(lightBorderColor);
-            Color lightCornerColor = ColorTool.Lighten((OriginBorderCornerBrush as SolidColorBrush).Color, 0.6f);
+            Color leftToplightBorderColor = ColorTool.Lighten((OriginLeftTopBorderBrush as SolidColorBrush).Color, 0.4f);
+            LeftTopBorderBrush = new SolidColorBrush(leftToplightBorderColor);
+            Color rightBottomlightBorderColor = ColorTool.Lighten((OriginRightBottomBorderBrush as SolidColorBrush).Color, 0.2f);
+            RightBottomBorderBrush = new SolidColorBrush(rightBottomlightBorderColor);
+            Color lightCornerColor = ColorTool.Lighten((OriginBorderCornerBrush as SolidColorBrush).Color, 0.2f);
             BorderCornerBrush = new SolidColorBrush(lightCornerColor);
         }
         #endregion

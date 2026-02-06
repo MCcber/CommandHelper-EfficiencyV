@@ -20,6 +20,7 @@ using System.Windows;
 using CBHK.Domain;
 using CBHK.Common.Utility;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CBHK.CustomControl.VectorComboBox;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -30,11 +31,11 @@ namespace CBHK.ViewModel.Generator
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
         [ObservableProperty]
-        private TextComboBoxItem _currentVersion = new();
+        private VectorTextComboBoxItem _currentVersion = new();
 
-        public override ObservableCollection<TextComboBoxItem> VersionList { get; set; } =
+        public override ObservableCollection<VectorTextComboBoxItem> VersionList { get; set; } =
         [
-            new TextComboBoxItem()
+            new VectorTextComboBoxItem()
             {
                 Text = "1.20.3-1.20.4"
             }

@@ -37,7 +37,7 @@ namespace CBHK.CustomControl.Container
             {
                 lastSelectedItem.Margin = lastSelectedItem.OriginMargin;
                 lastSelectedItem.Background = lastSelectedItem.OriginBackground;
-                lastSelectedItem.UpdateBackground();
+                lastSelectedItem.UpdateBorderColorByBackgroundColor();
             }
 
             if (SelectedItem is VectorTextTabItem vectorTextTabItem)
@@ -47,7 +47,7 @@ namespace CBHK.CustomControl.Container
                 {
                     vectorTextTabItem.Background = vectorTextTabItem.SelectedBackground;
                 }
-                vectorTextTabItem.UpdateBackground();
+                vectorTextTabItem.UpdateBorderColorByBackgroundColor();
             }
 
             if (SelectedItem is TabItem tabItem)

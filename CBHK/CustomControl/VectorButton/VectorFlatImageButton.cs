@@ -7,12 +7,14 @@ namespace CBHK.CustomControl.VectorButton
 {
     public class VectorFlatImageButton:Button
     {
-        #region Property
+        #region Field
         private Brush OriginBackground;
         private Brush OriginLeftTopBorderBrush;
         private Brush OriginRightBottomBorderBrush;
         private Brush OriginCornerBorderBrush;
+        #endregion
 
+        #region Property
         public ImageSource Image
         {
             get { return (ImageSource)GetValue(ImageProperty); }
@@ -69,7 +71,7 @@ namespace CBHK.CustomControl.VectorButton
             PreviewMouseLeftButtonUp += VectorFlatImageButton_PreviewMouseLeftButtonUp;
         }
 
-        private void UpdateOriginBorderBrush()
+        private void UpdateBorderColorByBackgroundColor()
         {
             var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
             if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
@@ -123,13 +125,12 @@ namespace CBHK.CustomControl.VectorButton
                 OriginCornerBorderBrush = CornerBorderBrush;
             }
         }
-
         #endregion
 
         #region Event
         private void VectorFlatImageButton_Loaded(object sender, RoutedEventArgs e)
         {
-            UpdateOriginBorderBrush();
+            UpdateBorderColorByBackgroundColor();
         }
 
         private void VectorFlatImageButton_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -141,7 +142,7 @@ namespace CBHK.CustomControl.VectorButton
         {
             Color lightBackgroundColor = ColorTool.Darken((OriginBackground as SolidColorBrush).Color, 0.2f);
             Background = new SolidColorBrush(lightBackgroundColor);
-            Color lightLeftTopBorderColor = ColorTool.Darken((OriginLeftTopBorderBrush as SolidColorBrush).Color, 0.1f);
+            Color lightLeftTopBorderColor = ColorTool.Darken((OriginLeftTopBorderBrush as SolidColorBrush).Color, 0.4f);
             LeftTopBorderBrush = new SolidColorBrush(lightLeftTopBorderColor);
             Color lightRightBottomBorderColor = ColorTool.Darken((RightBottomBorderBrush as SolidColorBrush).Color, 0.2f);
             RightBottomBorderBrush = new SolidColorBrush(lightRightBottomBorderColor);

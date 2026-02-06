@@ -1,6 +1,7 @@
 ﻿using CBHK.Common.Utility;
 using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
@@ -325,11 +326,11 @@ namespace CBHK.Utility
                                             if (enumMode1Count + enumMode2Count > 0)
                                             {
                                                 subCompoundItem.EnumBoxVisibility = Visibility.Visible;
-                                                subCompoundItem.EnumItemsSource.AddRange(enumValueList1.Select(item => new TextComboBoxItem()
+                                                subCompoundItem.EnumItemsSource.AddRange(enumValueList1.Select(item => new VectorTextComboBoxItem()
                                                 {
                                                     Text = item.Value
                                                 }));
-                                                subCompoundItem.EnumItemsSource.AddRange(enumValueList2.Select(item => new TextComboBoxItem()
+                                                subCompoundItem.EnumItemsSource.AddRange(enumValueList2.Select(item => new VectorTextComboBoxItem()
                                                 {
                                                     Text = item.Value
                                                 }));
@@ -407,11 +408,11 @@ namespace CBHK.Utility
                                         targetItem.EnumBoxVisibility = Visibility.Visible;
                                         if (targetItem.IsCanBeDefaulted)
                                         {
-                                            targetItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                            targetItem.EnumItemsSource.Add(new VectorTextComboBoxItem() { Text = "- unset -" });
                                         }
                                         targetItem.EnumItemsSource.AddRange(dictionary.Keys.Select(item =>
                                         {
-                                            return new TextComboBoxItem()
+                                            return new VectorTextComboBoxItem()
                                             {
                                                 Text = item
                                             };
@@ -954,11 +955,11 @@ namespace CBHK.Utility
                         {
                             if (compoundJsonTreeViewItem.IsCanBeDefaulted)
                             {
-                                compoundJsonTreeViewItem.ValueTypeSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                compoundJsonTreeViewItem.ValueTypeSource.Add(new VectorTextComboBoxItem() { Text = "- unset -" });
                             }
                             for (int j = 0; j < NBTFeatureList.Count - 1; j++)
                             {
-                                compoundJsonTreeViewItem.ValueTypeSource.Add(new TextComboBoxItem()
+                                compoundJsonTreeViewItem.ValueTypeSource.Add(new VectorTextComboBoxItem()
                                 {
                                     Text = NBTFeatureList[j][0].ToString().ToUpper() + NBTFeatureList[j][1..]
                                 });
@@ -1174,7 +1175,7 @@ namespace CBHK.Utility
                                 }
                             }
                             #endregion
-                            multipleDataTypeElement.ValueTypeSource.AddRange(NBTFeatureList.Select(item => new TextComboBoxItem() { Text = item[0].ToString().ToUpper() + item[1..] }));
+                            multipleDataTypeElement.ValueTypeSource.AddRange(NBTFeatureList.Select(item => new VectorTextComboBoxItem() { Text = item[0].ToString().ToUpper() + item[1..] }));
                             multipleDataTypeElement.SelectedValueType = multipleDataTypeElement.ValueTypeSource[0];
                             multipleDataTypeElement.ValueTypeBoxVisibility = Visibility.Visible;
                             result.Result.Add(multipleDataTypeElement);
@@ -1435,7 +1436,7 @@ namespace CBHK.Utility
                             {
                                 CurrentCompoundItem.EnumItemsSource.AddRange(targetList1.Select(item =>
                                 {
-                                    return new TextComboBoxItem() { Text = item };
+                                    return new VectorTextComboBoxItem() { Text = item };
                                 }));
                                 CurrentCompoundItem.EnumBoxVisibility = Visibility.Visible;
                             }
@@ -1635,12 +1636,12 @@ namespace CBHK.Utility
                                             }
                                             if (newPropertyItem.IsCanBeDefaulted && newPropertyItem.EnumItemsSource.Count == 0)
                                             {
-                                                newPropertyItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                                newPropertyItem.EnumItemsSource.Add(new VectorTextComboBoxItem() { Text = "- unset -" });
                                             }
                                             newPropertyItem.SelectedEnumItem = newPropertyItem.EnumItemsSource[0];
                                             foreach (var element in jarray)
                                             {
-                                                newPropertyItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = element.ToString() });
+                                                newPropertyItem.EnumItemsSource.Add(new VectorTextComboBoxItem() { Text = element.ToString() });
                                             }
                                             result.Result.Add(newPropertyItem);
                                             oldPropertyItem = newPropertyItem;
@@ -1752,11 +1753,11 @@ namespace CBHK.Utility
 
                             if (CurrentCompoundItem.EnumItemsSource.Count == 0)
                             {
-                                CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
+                                CurrentCompoundItem.EnumItemsSource.Add(new VectorTextComboBoxItem() { Text = "- unset -" });
                             }
                             CurrentCompoundItem.EnumItemsSource.AddRange(enumSource.Select(enum1 =>
                             {
-                                return new TextComboBoxItem() { Text = operatorString + enum1 };
+                                return new VectorTextComboBoxItem() { Text = operatorString + enum1 };
                             }));
 
                             if (CurrentCompoundItem.EnumItemsSource.Count > 0)
@@ -1785,8 +1786,8 @@ namespace CBHK.Utility
                             CurrentCompoundItem.EnumItemCount = EnumItemCount;
                             EnumItemCount = 0;
                             CurrentCompoundItem.EnumBoxVisibility = Visibility.Visible;
-                            CurrentCompoundItem.EnumItemsSource.Add(new TextComboBoxItem() { Text = "- unset -" });
-                            CurrentCompoundItem.EnumItemsSource.AddRange(KeyList.Select(item => new TextComboBoxItem() { Text = item }));
+                            CurrentCompoundItem.EnumItemsSource.Add(new VectorTextComboBoxItem() { Text = "- unset -" });
+                            CurrentCompoundItem.EnumItemsSource.AddRange(KeyList.Select(item => new VectorTextComboBoxItem() { Text = item }));
                             KeyList.Clear();
                             CurrentCompoundItem.SelectedEnumItem = CurrentCompoundItem.EnumItemsSource.FirstOrDefault();
                             CurrentCompoundItem.EnumKey = CurrentEnumKey;
@@ -2215,7 +2216,7 @@ namespace CBHK.Utility
                         }
                         previousCompoundItem.ItemType = ItemType.MultiType;
                         previousCompoundItem.ValueTypeBoxVisibility = Visibility.Visible;
-                        previousCompoundItem.ValueTypeSource.AddRange(previousItemTypeList.Select(previousValueTypeItem => new TextComboBoxItem() { Text = previousValueTypeItem }));
+                        previousCompoundItem.ValueTypeSource.AddRange(previousItemTypeList.Select(previousValueTypeItem => new VectorTextComboBoxItem() { Text = previousValueTypeItem }));
                         previousCompoundItem.SelectedValueType = previousCompoundItem.ValueTypeSource.FirstOrDefault();
                         if (item is BaseCompoundJsonTreeViewItem CurrentCompoundItem)
                         {

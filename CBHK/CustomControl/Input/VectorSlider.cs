@@ -1,6 +1,7 @@
 ﻿using CBHK.Utility.Common;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.Input
@@ -8,7 +9,7 @@ namespace CBHK.CustomControl.Input
     public class VectorSlider : Slider
     {
         #region Property
-        private double ThumbBottomBorderHeight { get; set; }
+        private double ThumbBottomBorderHeight { get; set; } = 4;
         private Brush OriginThumbBackground { get; set; }
         private Brush OriginBackground { get; set; }
 
@@ -117,10 +118,14 @@ namespace CBHK.CustomControl.Input
         #region Event
         private void VectorSlider_Loaded(object sender, RoutedEventArgs e)
         {
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if(extraBottomLine is RowDefinition row)
+            var trackObject = Template.FindName("PART_Track",sender as FrameworkElement);
+            if (trackObject is Track track && track.Thumb is not null)
             {
-                row.Height = new(ThumbBottomBorderHeight, GridUnitType.Pixel);
+                object extraBottomLine = track.Thumb.Template.FindName("extraBottomLine", track.Thumb);
+                if (extraBottomLine is RowDefinition row)
+                {
+                    row.Height = new(ThumbBottomBorderHeight, GridUnitType.Pixel);
+                }
             }
             var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
             if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle)

@@ -3,11 +3,15 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
+    xmlns:utility="clr-namespace:CBHK.Utility.Visual"
     Title="标签生成器"
     Width="835"
     Height="530"
@@ -48,233 +52,130 @@
 
     <Grid VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <DockPanel
-            Grid.Row="0"
-            Height="25"
-            Margin="0,2,0,0"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Top">
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource LeftArrow}"
-                BorderThickness="0"
+        <DockPanel Grid.Row="0">
+            <VectorButton:VectorFlatImageButton
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/IconArrowLeft.png"
+                ImageMargin="2"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="ESC:返回主页"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:IconTextButtons
-                Width="25"
-                Height="25"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Background="{StaticResource RightArrow}"
-                BorderThickness="0"
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorButton:VectorFlatImageButton
                 Command="{Binding RunCommand}"
-                FontSize="15"
-                Style="{DynamicResource IconTextButton}"
+                Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="2"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="F5:运行"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <CustomControl:TextCheckBoxs
-                Width="60"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
-                Content="替换"
-                FontSize="15"
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <VectorCheckBox:VectorTextCheckBox
+                Margin="5,0,0,0"
                 Foreground="White"
-                HeaderHeight="20"
-                HeaderWidth="20"
                 IsChecked="{Binding Replace, Mode=TwoWay}"
-                Style="{DynamicResource TextCheckBox}"
+                Style="{DynamicResource VectorTextCheckBoxStyle}"
+                Text="替换"
                 ToolTip="Replace"
                 ToolTipService.InitialShowDelay="0"
                 ToolTipService.ShowDuration="3000" />
-            <CustomControl:TextCheckBoxs
-                Width="60"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
-                Content="全选"
-                FontSize="15"
+            <VectorCheckBox:VectorTextCheckBox
+                Margin="5,0,0,0"
                 Foreground="White"
-                HeaderHeight="20"
-                HeaderWidth="20"
                 IsChecked="{Binding SelectedAll, Mode=OneWayToSource}"
-                Style="{DynamicResource TextCheckBox}">
+                Style="{DynamicResource VectorTextCheckBoxStyle}"
+                Text="全选">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="Click">
                         <behavior:CallMethodAction MethodName="SelectAll_Click" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </CustomControl:TextCheckBoxs>
-            <CustomControl:TextCheckBoxs
-                Width="60"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
-                Content="反选"
-                FontSize="15"
+            </VectorCheckBox:VectorTextCheckBox>
+            <VectorCheckBox:VectorTextCheckBox
+                Margin="5,0,0,0"
                 Foreground="White"
-                HeaderHeight="20"
-                HeaderWidth="20"
                 IsChecked="{Binding ReverseAll, Mode=OneWayToSource}"
-                Style="{DynamicResource TextCheckBox}">
+                Style="{DynamicResource VectorTextCheckBoxStyle}"
+                Text="反选">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="Click">
                         <behavior:CallMethodAction MethodName="ReverseAll_Click" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </CustomControl:TextCheckBoxs>
-            <TextBlock
-                Margin="10,0,0,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                FontSize="15"
-                Text="类型过滤" />
-            <ComboBox
-                Width="80"
-                Margin="10,0"
-                VerticalAlignment="Center"
+            </VectorCheckBox:VectorTextCheckBox>
+            <VectorComboBox:VectorTextComboBox
+                Title="数据类型"
+                MinWidth="80"
+                Margin="5,0,0,0"
+                ArrowMargin="0 2 5 0"
                 BorderBrush="Black"
-                FontSize="15"
                 Foreground="White"
                 IsReadOnly="True"
                 ItemsSource="{Binding TypeItemSource, IsAsync=True}"
                 SelectedItem="{Binding SelectedTypeItem, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}">
+                Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
                         <behavior:CallMethodAction MethodName="TypeBox_SelectionChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </ComboBox>
-            <TextBlock
-                VerticalAlignment="Center"
-                FontSize="15"
-                Text="版本" />
-            <ComboBox
+            </VectorComboBox:VectorTextComboBox>
+            <VectorComboBox:VectorTextComboBox
+                Title="版本"
                 Width="80"
-                Margin="10,0"
-                VerticalAlignment="Center"
+                ArrowMargin="0 2 5 0"
                 BorderBrush="Black"
-                FontSize="15"
                 Foreground="White"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionList}"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
-                Style="{DynamicResource TextComboBoxStyle}" />
-            <CustomControl:IconTextButtons
-                Padding="5"
-                Background="{StaticResource ButtonNormal}"
+                Style="{DynamicResource VectorTextComboBoxStyle}" />
+            <VectorButton:VectorTextButton
+                Background="#D0D1D4"
                 Command="{Binding ImportFromClipboardCommand}"
-                Content="从剪切板导入"
-                PressedBackground="{StaticResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <CustomControl:IconTextButtons
-                Padding="5"
-                Background="{StaticResource ButtonNormal}"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从剪切板导入" />
+            <VectorButton:VectorTextButton
+                Background="#D0D1D4"
                 Command="{Binding ImportFromFileCommand}"
-                Content="从文件导入"
-                PressedBackground="{StaticResource ButtonPressed}"
-                Style="{DynamicResource IconTextButton}" />
-            <TextBox
-                Margin="5,0"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="从文件导入" />
+            <Input:VectorTextBox
                 HorizontalAlignment="Stretch"
                 VerticalContentAlignment="Center"
-                BorderBrush="#424242"
+                utility:TextSizeHelper.AutoFontSize="True"
+                Background="#313233"
+                BorderBrush="Black"
                 CaretBrush="White"
                 FontSize="15"
                 Foreground="White"
+                Style="{DynamicResource VectorTextBoxStyle}"
                 Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
-                TextAlignment="Left">
+                TextAlignment="Left"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="搜索成员">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="TextChanged">
                         <behavior:CallMethodAction MethodName="SearchTextBox_TextChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-                <TextBox.Resources>
-                    <VisualBrush
-                        x:Key="BackgroundBrush"
-                        AlignmentX="Left"
-                        AlignmentY="Center"
-                        Stretch="UniformToFill">
-                        <VisualBrush.Visual>
-                            <Grid
-                                Width="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualWidth}"
-                                Height="{Binding RelativeSource={RelativeSource AncestorType=TextBox}, Path=ActualHeight}"
-                                Background="#383838">
-                                <TextBlock
-                                    Margin="15,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"
-                                    Background="Transparent"
-                                    FontSize="12"
-                                    Foreground="#D6D6D6"
-                                    Text="搜索成员"
-                                    TextAlignment="Center" />
-                            </Grid>
-                        </VisualBrush.Visual>
-                    </VisualBrush>
-                </TextBox.Resources>
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Setter Property="Background" Value="{StaticResource EditBox}" />
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="TextBox">
-                                    <Border
-                                        x:Name="border"
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        SnapsToDevicePixels="True">
-                                        <ScrollViewer
-                                            x:Name="PART_ContentHost"
-                                            Focusable="False"
-                                            HorizontalScrollBarVisibility="Hidden"
-                                            VerticalScrollBarVisibility="Hidden" />
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="border" Property="BorderBrush" Value="#424242" />
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <Style.Triggers>
-                            <Trigger Property="Text" Value="">
-                                <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="BorderBrush" Value="#424242" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBox.Style>
-            </TextBox>
+            </Input:VectorTextBox>
         </DockPanel>
         <ListView
             Grid.Row="2"

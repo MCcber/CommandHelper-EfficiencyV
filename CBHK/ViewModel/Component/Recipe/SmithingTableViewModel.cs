@@ -166,7 +166,14 @@ namespace CBHK.ViewModel.Component.Recipe
                 if (saveFileDialog.ShowDialog().Value)
                 {
                     _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
-                    Message.PushMessage("锻造台配方生成成功！", MessageBoxImage.Information);
+                    Message.PushMessage(new GeneratorMessage()
+                    {
+                        Message = "锻造台配方生成成功！",
+                        MessageBrush = Brushes.Red,
+                        SubMessage = "配方生成器",
+                        SubMessageBrush = Brushes.DarkGray,
+                        Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                    });
                     //OpenFolderThenSelectFiles.ExplorerFile(saveFileDialog.FileName);
                 }
             }

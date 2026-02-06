@@ -1,4 +1,5 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Model.Common;
+using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View.Component.Entity;
 using CBHK.View.Generator;
@@ -20,6 +21,10 @@ namespace CBHK.View.Component.Spawner
     /// </summary>
     public partial class ReferenceEntity : UserControl
     {
+        #region Field
+        private ImageSource defaultErrorIcon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\barrier.png", UriKind.Relative));
+        #endregion
+
         public ReferenceEntity()
         {
             InitializeComponent();
@@ -67,7 +72,14 @@ namespace CBHK.View.Component.Spawner
             }
             catch
             {
-                Message.PushMessage("导入失败！剪切板内容与实体无关或内容有误");
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！剪切板内容与实体无关或内容有误",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "引用实体",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = defaultErrorIcon
+                });
             }
         }
 
@@ -107,7 +119,14 @@ namespace CBHK.View.Component.Spawner
                     {
                         Button button = sender as Button;
                         SpawnerView spawner = Window.GetWindow(button) as SpawnerView;
-                        Message.PushMessage("导入失败！剪切板内容与实体无关或内容有误");
+                        Message.PushMessage(new GeneratorMessage()
+                        {
+                            Message = "导入失败！文件内容与实体无关或内容有误",
+                            MessageBrush = Brushes.Red,
+                            SubMessage = "引用实体",
+                            SubMessageBrush = Brushes.DarkGray,
+                            Icon = defaultErrorIcon
+                        });
                     }
                 }
             }

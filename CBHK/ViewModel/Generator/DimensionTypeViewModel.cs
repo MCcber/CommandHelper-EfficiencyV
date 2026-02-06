@@ -16,6 +16,7 @@ using CBHK.CustomControl;
 using CBHK.ViewModel.Common;
 using CBHK.Domain;
 using CBHK.Common.Utility;
+using CBHK.CustomControl.VectorComboBox;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -48,16 +49,16 @@ namespace CBHK.ViewModel.Generator
         public override List<string> DependencyFileList { get; set; } = [];
         public override List<string> DependencyDirectoryList { get; set; } = [];
 
-        private TextComboBoxItem _currentVersion = new();
-        public override TextComboBoxItem CurrentVersion
+        private VectorTextComboBoxItem _currentVersion = new();
+        public override VectorTextComboBoxItem CurrentVersion
         {
             get => _currentVersion;
             set => SetProperty(ref _currentVersion, value);
         }
 
-        public override ObservableCollection<TextComboBoxItem> VersionList { get; set; } =
+        public override ObservableCollection<VectorTextComboBoxItem> VersionList { get; set; } =
         [
-            new TextComboBoxItem()
+            new VectorTextComboBoxItem()
             {
                 Text = "1.20.3-1.20.4"
             }

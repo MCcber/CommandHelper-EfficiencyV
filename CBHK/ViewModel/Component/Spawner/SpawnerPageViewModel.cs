@@ -1,4 +1,5 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.VectorComboBox;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
@@ -15,6 +16,8 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Spawner
 {
@@ -51,9 +54,9 @@ namespace CBHK.ViewModel.Component.Spawner
         /// 选中版本以及版本数据源
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem _selectedVersion;
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionSource = [];
+        private ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
         /// <summary>
         /// 潜在实体数据源
         /// </summary>
@@ -252,7 +255,12 @@ namespace CBHK.ViewModel.Component.Spawner
             else
             {
                 Clipboard.SetText(Result.Trim(','));
-                Message.PushMessage("刷怪笼生成成功！", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "生成成功！",
+                    SubMessage = "刷怪笼生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\spawner.png", UriKind.RelativeOrAbsolute))
+                });
             }
             #endregion
         }

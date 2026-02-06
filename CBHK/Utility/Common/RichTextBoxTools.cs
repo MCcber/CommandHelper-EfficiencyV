@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.CustomControl.TextElement;
 using System.Windows.Documents;
 
 namespace CBHK.Utility.Common

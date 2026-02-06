@@ -2,8 +2,7 @@
     x:Class="CBHK.View.Component.FireworkRocket.FireworkRocketPageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:ColorPicker="clr-namespace:CBHK.CustomControl.ColorPickerComponents"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
@@ -13,7 +12,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     d:DesignHeight="450"
-    d:DesignWidth="800"
     prism:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d">
 
@@ -116,14 +114,15 @@
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
         </DockPanel>
-        <ScrollViewer
+        <Container:VectorScrollViewer
             Grid.Row="1"
             Margin="0,2,0,0"
             HorizontalAlignment="Stretch"
             HorizontalScrollBarVisibility="Disabled"
+            Style="{DynamicResource VectorScrollViewerStyle}"
             VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <CustomControl:Accordion
+                <!--<CustomControl:Accordion
                     Title="原版颜色库"
                     HorizontalAlignment="Stretch"
                     Background="#FFE5B663"
@@ -138,7 +137,7 @@
                     ModifyVisibility="Visible"
                     Style="{DynamicResource AccordionStyle}"
                     TitleForeground="Black">
-                    <ScrollViewer
+                    <VectorScrollViewer
                         MinHeight="100"
                         Background="Transparent"
                         HorizontalScrollBarVisibility="Disabled"
@@ -150,7 +149,7 @@
                                 </behavior:EventTrigger>
                             </behavior:Interaction.Triggers>
                         </UniformGrid>
-                    </ScrollViewer>
+                    </VectorScrollViewer>
                 </CustomControl:Accordion>
                 <CustomControl:Accordion
                     Title="淡入颜色"
@@ -174,7 +173,7 @@
                                 <behavior:CallMethodAction MethodName="Canvas_PreviewMouseWheel" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                        <ScrollViewer
+                        <VectorScrollViewer
                             MaxWidth="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=CustomControl:Accordion}, Path=ActualWidth}"
                             Panel.ZIndex="1"
                             Background="Transparent"
@@ -191,8 +190,8 @@
                                 Background="Transparent"
                                 BorderThickness="0"
                                 ItemsSource="{Binding MainColorList}"
-                                ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                VectorScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                VectorScrollViewer.VerticalScrollBarVisibility="Disabled">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <DockPanel
@@ -207,7 +206,7 @@
                                     </behavior:EventTrigger>
                                 </behavior:Interaction.Triggers>
                             </ItemsControl>
-                        </ScrollViewer>
+                        </VectorScrollViewer>
                     </Canvas>
                 </CustomControl:Accordion>
                 <CustomControl:Accordion
@@ -233,7 +232,7 @@
                                 <behavior:CallMethodAction MethodName="Canvas_PreviewMouseWheel" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                        <ScrollViewer
+                        <VectorScrollViewer
                             MaxWidth="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=CustomControl:Accordion}, Path=ActualWidth}"
                             HorizontalScrollBarVisibility="Auto"
                             VerticalScrollBarVisibility="Disabled">
@@ -246,8 +245,8 @@
                                 Height="50"
                                 BorderThickness="0"
                                 ItemsSource="{Binding FadeColorList}"
-                                ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                VectorScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                VectorScrollViewer.VerticalScrollBarVisibility="Disabled">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <DockPanel
@@ -262,9 +261,9 @@
                                     </behavior:EventTrigger>
                                 </behavior:Interaction.Triggers>
                             </ItemsControl>
-                        </ScrollViewer>
+                        </VectorScrollViewer>
                     </Canvas>
-                </CustomControl:Accordion>
+                </CustomControl:Accordion>-->
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -285,7 +284,7 @@
                         VerticalAlignment="Center"
                         Foreground="White"
                         Text="颜色板" />
-                    <ColorPicker:ColorPickers
+                    <!--<ColorPicker:ColorPickers
                         Grid.Row="0"
                         Grid.Column="1"
                         Width="200"
@@ -299,10 +298,11 @@
                                 <behavior:CallMethodAction MethodName="ColorPicker_Loaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </ColorPicker:ColorPickers>
+                    </ColorPicker:ColorPickers>-->
                     <VectorCheckBox:VectorTextCheckBox
                         Grid.Row="0"
                         Grid.Column="2"
+                        Margin="5,0,0,0"
                         Foreground="Black"
                         IsChecked="{Binding PointMode, Mode=TwoWay}"
                         Style="{DynamicResource VectorTextCheckBoxStyle}"
@@ -320,6 +320,7 @@
                         Grid.Column="1"
                         Height="40"
                         VerticalAlignment="Top"
+                        ArrowMargin="0 0 5 0"
                         Background="#D0D1D4"
                         ItemsSource="{Binding ShapeList}"
                         SelectedIndex="{Binding SelectedShape, Mode=TwoWay}"
@@ -327,6 +328,7 @@
                     <VectorCheckBox:VectorTextCheckBox
                         Grid.Row="1"
                         Grid.Column="2"
+                        Margin="5,0,0,0"
                         Foreground="Black"
                         IsChecked="{Binding Flicker, Mode=TwoWay}"
                         Style="{DynamicResource VectorTextCheckBoxStyle}"
@@ -338,39 +340,39 @@
                         IsChecked="{Binding Trail, Mode=TwoWay}"
                         Style="{DynamicResource VectorTextCheckBoxStyle}"
                         Text="拖尾" />
-                    <Input:NumbericUpDown
+                    <Input:VectorNumbericUpDown
                         Grid.Row="2"
                         Grid.Column="0"
                         Grid.ColumnSpan="4"
                         HorizontalAlignment="Stretch"
                         Background="#D0D1D4"
-                        Style="{DynamicResource NumbericUpDownStyle}"
+                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                         Text="{Binding Duration, Mode=TwoWay}"
                         WaterMarkerBrush="Gray"
                         WaterMarkerMargin="5 0 0 0"
                         WaterMarkerText="飞行时长" />
-                    <Input:NumbericUpDown
+                    <Input:VectorNumbericUpDown
                         Grid.Row="3"
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
                         Background="#D0D1D4"
-                        Style="{DynamicResource NumbericUpDownStyle}"
+                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                         Text="{Binding Life, Mode=TwoWay}"
                         WaterMarkerBrush="Gray"
                         WaterMarkerMargin="5 0 0 0"
                         WaterMarkerText="生命值" />
-                    <Input:NumbericUpDown
+                    <Input:VectorNumbericUpDown
                         Grid.Row="4"
                         Grid.Column="2"
                         Grid.ColumnSpan="2"
                         Background="#D0D1D4"
-                        Style="{DynamicResource NumbericUpDownStyle}"
+                        Style="{DynamicResource VectorNumbericUpDownStyle}"
                         Text="{Binding LifeTime, Mode=TwoWay}"
                         WaterMarkerBrush="Gray"
                         WaterMarkerMargin="5 0 0 0"
                         WaterMarkerText="生存时长" />
                 </Grid>
             </StackPanel>
-        </ScrollViewer>
+        </Container:VectorScrollViewer>
     </Grid>
 </UserControl>

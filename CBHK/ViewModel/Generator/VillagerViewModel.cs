@@ -23,6 +23,7 @@ using CBHK.View.Component.Villager;
 using CBHK.Domain;
 using CBHK.Utility.MessageTip;
 using CBHK.Utility.Common;
+using CBHK.CustomControl.VectorComboBox;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -116,14 +117,14 @@ namespace CBHK.ViewModel.Generator
 
         #region Property
         [ObservableProperty]
-        private TextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem _selectedVersion;
         /// <summary>
         /// 版本源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionSource = [
-            new TextComboBoxItem() { Text = "1.20.2" },
-            new TextComboBoxItem() { Text = "1.13.0" }
+        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+            new VectorTextComboBoxItem() { Text = "1.20.2" },
+            new VectorTextComboBoxItem() { Text = "1.13.0" }
             ];
         /// <summary>
         /// 是否显示结果
@@ -131,7 +132,7 @@ namespace CBHK.ViewModel.Generator
         [ObservableProperty]
         public bool _showResult;
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _gossipTypeList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _gossipTypeList = [];
         /// <summary>
         /// 左侧交易项数据源
         /// </summary>
@@ -166,7 +167,7 @@ namespace CBHK.ViewModel.Generator
         /// 已选中的搜索言论成员
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedSearchGossipItem;
+        private VectorTextComboBoxItem _selectedSearchGossipItem;
         /// <summary>
         /// 原版物品库
         /// </summary>
@@ -182,14 +183,14 @@ namespace CBHK.ViewModel.Generator
         public ObservableCollection<string> _bagItemToolTips = [];
         //言论搜索类型数据源
         [ObservableProperty]
-        ObservableCollection<TextComboBoxItem> _gossipSearchType = [];
+        ObservableCollection<VectorTextComboBoxItem> _gossipSearchType = [];
         //言论搜索类型配置文件路径
         string gossipSearchTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\GossipSearchTypes.ini";
         /// <summary>
         /// 维度数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _dimensionTypeSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> _dimensionTypeSource = [];
         /// <summary>
         /// 交易项数据面板可见性
         /// </summary>
@@ -249,17 +250,17 @@ namespace CBHK.ViewModel.Generator
         /// 村民类型数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _villagerTypeSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> _villagerTypeSource = [];
         /// <summary>
         /// 村民职业数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _villagerProfessionTypeSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> _villagerProfessionTypeSource = [];
         /// <summary>
         /// 村民交易等级数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _villagerLevelSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> _villagerLevelSource = [];
         /// <summary>
         /// 村民数据
         /// </summary>
@@ -366,7 +367,7 @@ namespace CBHK.ViewModel.Generator
         [ObservableProperty]
         private double _meetingPointZ = 0;
         [ObservableProperty]
-        private TextComboBoxItem _meetingPointDimension = null;
+        private VectorTextComboBoxItem _meetingPointDimension = null;
         private string MeetingPointDimensionString
         {
             get
@@ -397,7 +398,7 @@ namespace CBHK.ViewModel.Generator
         [ObservableProperty]
         private double homeZ = 0;
         [ObservableProperty]
-        private TextComboBoxItem _homeDimension = null;
+        private VectorTextComboBoxItem _homeDimension = null;
         private string HomeDimensionString
         {
             get
@@ -428,7 +429,7 @@ namespace CBHK.ViewModel.Generator
         [ObservableProperty]
         private double _jobSiteZ = 0;
         [ObservableProperty]
-        private TextComboBoxItem _jobSiteDimension = null;
+        private VectorTextComboBoxItem _jobSiteDimension = null;
         private string JobSiteDimensionString
         {
             get
@@ -469,7 +470,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 村民种类
         [ObservableProperty]
-        private TextComboBoxItem _villagerType;
+        private VectorTextComboBoxItem _villagerType;
         private string VillagerTypeString
         {
             get
@@ -486,7 +487,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 村民职业
         [ObservableProperty]
-        private TextComboBoxItem _villagerProfessionType;
+        private VectorTextComboBoxItem _villagerProfessionType;
         private string VillagerProfessionTypeString
         {
             get
@@ -503,7 +504,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 村民交易等级
         [ObservableProperty]
-        private TextComboBoxItem _villagerLevel;
+        private VectorTextComboBoxItem _villagerLevel;
         private string VillagerLevelString
         {
             get
@@ -585,7 +586,7 @@ namespace CBHK.ViewModel.Generator
                     string id = item[0];
                     string name = item[1];
                     VillagerTypeDataBase.TryAdd(id, name);
-                    VillagerTypeSource.Add(new TextComboBoxItem() { Text = name });
+                    VillagerTypeSource.Add(new VectorTextComboBoxItem() { Text = name });
                 }
             }
             if (File.Exists(VillagerProfessionsSourceFilePath))
@@ -600,7 +601,7 @@ namespace CBHK.ViewModel.Generator
                     if (!VillagerProfessionTypeDataBase.ContainsKey(id))
                         VillagerProfessionTypeDataBase.Add(id, name);
 
-                    VillagerProfessionTypeSource.Add(new TextComboBoxItem() { Text = name });
+                    VillagerProfessionTypeSource.Add(new VectorTextComboBoxItem() { Text = name });
                 }
             }
             if (File.Exists(VillagerLevelSourceFilePath))
@@ -608,7 +609,7 @@ namespace CBHK.ViewModel.Generator
                 int level = int.Parse(File.ReadAllText(VillagerLevelSourceFilePath));
                 for (int i = 1; i <= level; i++)
                 {
-                    VillagerLevelSource.Add(new TextComboBoxItem() { Text = i.ToString() });
+                    VillagerLevelSource.Add(new VectorTextComboBoxItem() { Text = i.ToString() });
                 }
             }
             #endregion
@@ -628,7 +629,7 @@ namespace CBHK.ViewModel.Generator
                         if (!DimensionDataBase.ContainsKey(id))
                             DimensionDataBase.Add(id, name);
 
-                        DimensionTypeSource.Add(new TextComboBoxItem() { Text = name });
+                        DimensionTypeSource.Add(new VectorTextComboBoxItem() { Text = name });
                     }
                 }
             }
@@ -1033,7 +1034,12 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result);
-                Message.PushMessage("村民生成成功！", MessageBoxImage.Information);
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "生成成功！",
+                    SubMessage = "村民生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\villager.png", UriKind.RelativeOrAbsolute))
+                });
             }
         }
 
@@ -1110,7 +1116,7 @@ namespace CBHK.ViewModel.Generator
                 string[] types = File.ReadAllLines(gossipSearchTypeFilePath);
                 for (int i = 0; i < types.Length; i++)
                 {
-                    GossipSearchType.Add(new TextComboBoxItem() { Text = types[i] });
+                    GossipSearchType.Add(new VectorTextComboBoxItem() { Text = types[i] });
                 }
             }
             GossipSearchTypeBox.ItemsSource = GossipSearchType;

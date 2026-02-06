@@ -9,12 +9,12 @@ namespace CBHK.CustomControl.Container
     {
         #region Field
         private bool isLoaded = false;
+        public Thickness OriginMargin;
+        private Brush OriginForeground;
+        public Brush OriginBackground;
         #endregion
 
         #region Property
-        public Thickness OriginMargin { get; set; }
-        public Brush OriginBackground { get; set; }
-
         public string Title
         {
             get { return (string)GetValue(TitleProperty); }
@@ -58,19 +58,35 @@ namespace CBHK.CustomControl.Container
             Loaded += VectorTextTabItem_Loaded;
         }
 
-        public void UpdateBackground()
+        public void UpdateBorderColorByBackgroundColor()
         {
             var originSideBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, SideBorderBrushProperty);
             if (originSideBorderBrushSource.BaseValueSource is BaseValueSource.Default || originSideBorderBrushSource.BaseValueSource is BaseValueSource.Style || SideBorderBrush is null || isLoaded)
             {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
+                SolidColorBrush solidBorderBrush = null;
+                if (IsSelected)
+                {
+                    solidBorderBrush = SelectedBackground as SolidColorBrush;
+                }
+                else
+                {
+                    solidBorderBrush = Background as SolidColorBrush;
+                }
                 Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
                 SideBorderBrush = new SolidColorBrush(color);
             }
             var originTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, TopBorderBrushProperty);
             if (originTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originTopBorderBrushSource.BaseValueSource is BaseValueSource.Style || TopBorderBrush is null || isLoaded)
             {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
+                SolidColorBrush solidBorderBrush = null;
+                if (IsSelected)
+                {
+                    solidBorderBrush = SelectedBackground as SolidColorBrush;
+                }
+                else
+                {
+                    solidBorderBrush = Background as SolidColorBrush;
+                }
                 Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
                 TopBorderBrush = new SolidColorBrush(color);
             }
@@ -90,6 +106,7 @@ namespace CBHK.CustomControl.Container
             {
                 Foreground = Brushes.White;
             }
+
             var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
             if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style)
             {
@@ -97,7 +114,7 @@ namespace CBHK.CustomControl.Container
             }
 
             var selectedBackgroundSource = DependencyPropertyHelper.GetValueSource(this, SelectedBackgroundProperty);
-            if (selectedBackgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || selectedBackgroundSource.BaseValueSource is BaseValueSource.Style || SelectedBackground is null)
+            if (selectedBackgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || selectedBackgroundSource.BaseValueSource is BaseValueSource.Default || selectedBackgroundSource.BaseValueSource is BaseValueSource.Style || SelectedBackground is null)
             {
                 SelectedBackground = new BrushConverter().ConvertFromString("#CC6B23") as Brush;
             }
@@ -109,6 +126,7 @@ namespace CBHK.CustomControl.Container
             }
 
             OriginBackground ??= Background;
+            OriginForeground ??= Foreground;
             if (!isLoaded)
             {
                 OriginMargin = Margin;
@@ -120,7 +138,7 @@ namespace CBHK.CustomControl.Container
                 Background = SelectedBackground;
             }
 
-            UpdateBackground();
+            UpdateBorderColorByBackgroundColor();
 
             isLoaded = true;
         }

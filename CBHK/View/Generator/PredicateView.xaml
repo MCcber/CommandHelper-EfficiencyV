@@ -5,7 +5,7 @@
     xmlns:CompoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponents"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:ConverterSpace="clr-namespace:CBHK.Utility.TreeViewComponentsHelper"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -36,13 +36,14 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <CustomControl:TextComboBoxs
+        <VectorComboBox:VectorTextComboBox
+            Title="版本"
             Grid.Row="0"
             Height="30"
             ItemsSource="{Binding VersionList}"
             SelectedIndex="0"
             SelectedItem="{Binding CurrentVersion}"
-            Style="{StaticResource TextComboBoxStyle}" />
+            Style="{StaticResource VectorTextComboBoxStyle}" />
         <TreeView
             Grid.Row="1"
             Grid.Column="0"

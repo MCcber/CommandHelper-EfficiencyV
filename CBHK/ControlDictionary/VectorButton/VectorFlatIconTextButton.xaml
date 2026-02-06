@@ -92,6 +92,7 @@
                                 </Viewbox>
                                 <TextBlock
                                     Grid.Column="1"
+                                    Margin="{TemplateBinding Padding}"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Foreground="{TemplateBinding Foreground}"

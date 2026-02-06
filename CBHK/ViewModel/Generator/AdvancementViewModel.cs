@@ -23,6 +23,7 @@ using CBHK.Common.Utility;
 using CBHK.Interface;
 using Prism.Events;
 using System.Text;
+using CBHK.CustomControl.VectorComboBox;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -30,11 +31,11 @@ namespace CBHK.ViewModel.Generator
     {
         #region Property
         [ObservableProperty]
-        private TextComboBoxItem _currentVersion;
+        private VectorTextComboBoxItem _currentVersion;
 
-        public override ObservableCollection<TextComboBoxItem> VersionList { get; set; } =
+        public override ObservableCollection<VectorTextComboBoxItem> VersionList { get; set; } =
         [
-            new TextComboBoxItem()
+            new VectorTextComboBoxItem()
             {
                 Text = "1.20.3-1.20.4"
             }

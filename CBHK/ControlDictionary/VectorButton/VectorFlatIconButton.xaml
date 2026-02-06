@@ -14,23 +14,26 @@
     <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
     <Style x:Key="VectorFlatIconButtonStyle" TargetType="{x:Type VectorButton:VectorFlatIconButton}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="IconWidh" Value="15" />
+        <Setter Property="IconHeight" Value="15" />
+        <Setter Property="IconMargin" Value="0 0 0 2" />
         <Setter Property="Background" Value="{StaticResource Button.Static.Background}" />
         <Setter Property="BorderBrush" Value="{StaticResource Button.Static.Border}" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="Padding" Value="1" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type VectorButton:VectorFlatIconButton}">
                     <Border
                         x:Name="border"
                         Background="{TemplateBinding Background}"
-                        BorderBrush="Black"
-                        BorderThickness="2"
-                        SnapsToDevicePixels="true">
-                        <Grid Background="#48494A">
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        SnapsToDevicePixels="true"
+                        UseLayoutRounding="True">
+                        <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="3" />
                                 <ColumnDefinition Width="*" />
@@ -45,46 +48,43 @@
                                 Grid.Row="0"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
-                                Fill="#5A5B5C"
+                                Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="2"
-                                Fill="#333334"
+                                Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="2"
-                                Fill="#3F4041"
+                                Fill="{TemplateBinding BorderCornerBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="0"
-                                Fill="#5A5B5C"
+                                Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="0"
-                                Fill="#3F4041"
+                                Fill="{TemplateBinding BorderCornerBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="1"
                                 Grid.ColumnSpan="2"
-                                Fill="#333334"
+                                Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Viewbox
                                 Grid.Row="1"
                                 Grid.Column="1"
-                                Width="30"
-                                Height="30"
+                                Width="{TemplateBinding IconWidh}"
+                                Height="{TemplateBinding IconHeight}"
+                                Margin="{TemplateBinding IconMargin}"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
-                                <Path
-                                    Data="{TemplateBinding Icon}"
-                                    Fill="{TemplateBinding IconBrush}"
-                                    Stroke="White"
-                                    StrokeThickness="1" />
+                                <Path Data="{TemplateBinding Icon}" Fill="{TemplateBinding IconBrush}" />
                             </Viewbox>
                             <ContentPresenter
                                 x:Name="contentPresenter"

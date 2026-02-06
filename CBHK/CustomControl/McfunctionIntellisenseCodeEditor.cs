@@ -191,7 +191,7 @@ namespace CBHK.CustomControl
             PreviewKeyUp += TextEditor_PreviewKeyUp;
             #endregion
 
-            regexService = regexService;
+            regexService = RegexService;
 
             editPageDataContext = editPageView.DataContext as EditPageViewModel;
 

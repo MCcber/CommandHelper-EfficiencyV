@@ -106,7 +106,7 @@
                     Style="{DynamicResource VectorTextButtonStyle}"
                     Text="删除" />
             </Grid>
-            <Input:NumbericUpDown
+            <Input:VectorNumbericUpDown
                 Grid.Row="2"
                 Grid.Column="1"
                 HorizontalAlignment="Stretch"
@@ -114,7 +114,7 @@
                 Background="#D0D1D4"
                 BorderThickness="0"
                 Foreground="White"
-                Style="{DynamicResource NumbericUpDownStyle}"
+                Style="{DynamicResource VectorNumbericUpDownStyle}"
                 Text="0"
                 WaterMarkerBrush="Gray"
                 WaterMarkerMargin="5 0 0 0"

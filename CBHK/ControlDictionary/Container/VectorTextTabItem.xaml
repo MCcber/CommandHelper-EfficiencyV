@@ -21,8 +21,6 @@
     <Style x:Key="VectorTextTabItemStyle" TargetType="{x:Type Container:VectorTextTabItem}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Foreground" Value="Black" />
-        <!--<Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="HorizontalContentAlignment" Value="Center" />-->
         <Setter Property="Margin" Value="0,0,0,0" />
         <Setter Property="Padding" Value="6,2,6,2" />
         <Setter Property="Template">
