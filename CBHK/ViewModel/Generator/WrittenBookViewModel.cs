@@ -103,7 +103,7 @@ namespace CBHK.ViewModel.Generator
         //本生成器的图标路径
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png";
 
-        private ImageSource defaultSuccessIcon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\writtenbook.png",UriKind.RelativeOrAbsolute));
+        private ImageSource defaultSuccessIcon = new BitmapImage(new Uri("pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png", UriKind.RelativeOrAbsolute));
 
         //当前光标选中的文本对象链表
         List<RichRun> CurrentSelectedRichRunList = [];

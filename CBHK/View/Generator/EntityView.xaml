@@ -96,7 +96,6 @@
                 </VectorButton:VectorFlatImageButton.ToolTip>
             </VectorButton:VectorFlatImageButton>
             <VectorButton:VectorFlatImageButton
-                Width="40"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 Command="{Binding SaveAllCommand}"

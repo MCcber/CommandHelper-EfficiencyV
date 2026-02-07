@@ -37,7 +37,7 @@
                             VerticalScrollBarVisibility="Auto">
                             <Border
                                 x:Name="Line"
-                                BorderBrush="#FFE5B663"
+                                BorderBrush="{TemplateBinding Foreground}"
                                 BorderThickness="0,0,0,2">
                                 <TabPanel
                                     x:Name="headerPanel"

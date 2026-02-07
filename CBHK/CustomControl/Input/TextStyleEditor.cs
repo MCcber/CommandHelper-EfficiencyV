@@ -4,6 +4,7 @@ using CBHK.Utility.Visual;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -198,6 +199,27 @@ namespace CBHK.CustomControl.Input
         {
             editor.Selection.ApplyPropertyValue(System.Windows.Documents.TextElement.ForegroundProperty, new SolidColorBrush(color));
         }
+
+        private void AddNewStyleItem()
+        {
+            if (editor.Document.Blocks.FirstBlock is Paragraph paragraph)
+            {
+                if(paragraph.Inlines.Count == 1 && paragraph.Inlines.FirstInline is Run firstRun && string.IsNullOrEmpty(firstRun.Text))
+                {
+                    return;
+                }
+                List<Run> runList = [..paragraph.Inlines.Select(inline =>
+                {
+                    if(inline is Run run)
+                    {
+                        return run;
+                    }
+                    return null;
+                })];
+                runList.RemoveAll(item => item is null);
+                AddNewItem(runList, true);
+            }
+        }
         #endregion
 
         #region Event
@@ -292,9 +314,13 @@ namespace CBHK.CustomControl.Input
             if (sender is VectorRichTextBox vectorRichTextBox)
             {
                 editor = vectorRichTextBox;
-                // 注入装饰层
+
+                //注入装饰层
                 AdornerLayer layer = AdornerLayer.GetAdornerLayer(editor);
                 layer?.Add(new ObfuscatedAdorner(editor));
+
+                //订阅键盘事件
+                editor.PreviewKeyDown += Editor_PreviewKeyDown;
             }
         }
 
@@ -303,6 +329,16 @@ namespace CBHK.CustomControl.Input
             base.OnApplyTemplate();
             VectorColorPicker vectorColorPicker = GetTemplateChild("colorPicker") as VectorColorPicker;
             vectorColorPicker.CallBack = UpdateColor;
+        }
+
+        public void AddNewStyleItem_Click(object sender, RoutedEventArgs e) => AddNewStyleItem();
+
+        private void Editor_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key is Key.Enter)
+            {
+                AddNewStyleItem();
+            }
         }
 
         private void TextStyleEditor_SelectionChanged(object sender, SelectionChangedEventArgs e)

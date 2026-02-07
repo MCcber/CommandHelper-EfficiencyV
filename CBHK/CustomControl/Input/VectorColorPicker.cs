@@ -90,6 +90,15 @@ namespace CBHK.CustomControl.Input
         #region Property
         public Action<Color> CallBack { get; set; }
 
+        public string Title
+        {
+            get { return (string)GetValue(TitleProperty); }
+            set { SetValue(TitleProperty, value); }
+        }
+
+        public static readonly DependencyProperty TitleProperty =
+            DependencyProperty.Register("Title", typeof(string), typeof(VectorColorPicker), new PropertyMetadata(default(string)));
+
         // 定义 SelectedColor 依赖属性，方便外部绑定
         public Color SelectedColor
         {

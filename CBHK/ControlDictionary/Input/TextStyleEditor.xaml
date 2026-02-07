@@ -744,6 +744,7 @@
                                         </VectorButton:VectorTextButton>
                                         <Input:VectorColorPicker
                                             x:Name="colorPicker"
+                                            Title="设置文本颜色"
                                             Grid.Column="6"
                                             Style="{DynamicResource VectorColorPicker}" />
                                         <VectorButton:VectorFlatIconTextButton
@@ -824,7 +825,13 @@
                                             IconMargin="5"
                                             IconWidth="25"
                                             Style="{DynamicResource VectorFlatIconTextButtonStyle}"
-                                            Text="保存" />
+                                            Text="保存">
+                                            <behaviors:Interaction.Triggers>
+                                                <behaviors:EventTrigger EventName="Click">
+                                                    <behaviors:CallMethodAction MethodName="AddNewStyleItem_Click" TargetObject="{Binding}" />
+                                                </behaviors:EventTrigger>
+                                            </behaviors:Interaction.Triggers>
+                                        </VectorButton:VectorFlatIconTextButton>
                                     </Grid>
                                 </Grid>
                             </Border>

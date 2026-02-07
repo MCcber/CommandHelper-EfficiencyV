@@ -5,6 +5,6 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/VectorTextBox.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/VectorRichTextBox.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/VectorColorPicker.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/Slider.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/VectorSlider.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

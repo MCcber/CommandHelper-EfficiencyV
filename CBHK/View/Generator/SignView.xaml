@@ -19,24 +19,26 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
     IconMargin="5"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <DockPanel Grid.Row="0" LastChildFill="False">
+        <DockPanel
+            Grid.Row="0"
+            Height="35"
+            LastChildFill="False">
             <VectorButton:VectorFlatImageButton
-                Width="25"
-                Height="25"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
                 BorderThickness="0"
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
-                FontSize="15"
                 Image="/Resource/Common/Image/IconArrowLeft.png"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
@@ -48,15 +50,13 @@
                 </VectorButton:VectorFlatImageButton.ToolTip>
             </VectorButton:VectorFlatImageButton>
             <VectorButton:VectorFlatImageButton
-                Width="25"
-                Height="25"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
                 BorderThickness="0"
                 Command="{Binding RunCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
-                FontSize="15"
                 Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
@@ -68,15 +68,13 @@
                 </VectorButton:VectorFlatImageButton.ToolTip>
             </VectorButton:VectorFlatImageButton>
             <VectorButton:VectorFlatImageButton
-                Width="25"
-                Height="25"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
                 BorderThickness="0"
                 Command="{Binding SaveAllCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
-                FontSize="15"
                 Image="/Resource/Common/Image/Save.png"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">

@@ -24,19 +24,20 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="25" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <DockPanel Grid.Row="0" LastChildFill="False">
+        <DockPanel
+            Grid.Row="0"
+            Height="35"
+            LastChildFill="False">
             <VectorButton:VectorFlatImageButton
-                Width="25"
-                Height="25"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
                 BorderThickness="0"
                 Command="{Binding RunCommand}"
-                FontSize="15"
                 Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
@@ -48,14 +49,12 @@
                 </VectorButton:VectorFlatImageButton.ToolTip>
             </VectorButton:VectorFlatImageButton>
             <VectorButton:VectorFlatImageButton
-                Width="25"
-                Height="25"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
                 BorderThickness="0"
                 Command="{Binding SaveCommand}"
-                FontSize="15"
                 Image="/Resource/Common/Image/Save.png"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">

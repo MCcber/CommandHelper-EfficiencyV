@@ -366,7 +366,7 @@
                                 BorderBrush="Transparent"
                                 SnapsToDevicePixels="True"
                                 UseLayoutRounding="True">
-                                <Grid>
+                                <Grid HorizontalAlignment="Right" VerticalAlignment="Center">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1" />
                                         <ColumnDefinition Width="1" />

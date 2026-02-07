@@ -21,6 +21,7 @@
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconCommandBlock.png"
     IconMargin="5"
     ResizeMode="CanResizeWithGrip"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
     <behavior:Interaction.Triggers>
@@ -662,13 +663,16 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="40" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <DockPanel Grid.Row="0" Grid.Column="0">
+        <DockPanel
+            Grid.Row="0"
+            Grid.Column="0"
+            Height="35">
             <VectorButton:VectorFlatImageButton
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
@@ -733,7 +737,7 @@
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
             <VectorButton:VectorToggleIconTextButton
-                Foreground="White"
+                Foreground="Black"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />

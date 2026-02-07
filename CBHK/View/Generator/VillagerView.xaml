@@ -54,11 +54,12 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="40" />
+            <RowDefinition Height="35" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel
             Grid.Row="0"
+            Height="35"
             Margin="5,0,0,0"
             Background="Transparent">
             <VectorButton:VectorFlatImageButton
@@ -103,7 +104,7 @@
                 Title="版本"
                 MinWidth="100"
                 HorizontalAlignment="Left"
-                ArrowMargin="0 2 10 0"
+                ArrowMargin="0 2 5 0"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"
@@ -116,7 +117,6 @@
                 </behavior:Interaction.Triggers>
             </VectorComboBox:VectorTextComboBox>
             <VectorButton:VectorTextButton
-                Margin="5,0,0,0"
                 Padding="5"
                 Background="#D0D1D4"
                 Command="{Binding ImportFromClipboardCommand}"
@@ -125,7 +125,6 @@
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从剪切板导入" />
             <VectorButton:VectorTextButton
-                Margin="5,0,0,0"
                 Padding="5"
                 Background="#D0D1D4"
                 Command="{Binding ImportFromFileCommand}"
@@ -134,9 +133,8 @@
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
             <VectorButton:VectorToggleIconTextButton
-                Margin="5,5,0,0"
                 HorizontalAlignment="Left"
-                Foreground="White"
+                Foreground="Black"
                 IsChecked="{Binding ShowResult, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
@@ -155,10 +153,10 @@
                 Grid.Column="0"
                 Margin="10,0,10,0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="50" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <DockPanel Grid.Row="0">
+                <DockPanel Grid.Row="0" Height="40">
                     <TextBlock
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"

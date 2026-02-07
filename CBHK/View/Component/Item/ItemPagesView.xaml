@@ -27,16 +27,16 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="9*" />
         </Grid.RowDefinitions>
-        <DockPanel Grid.Row="0">
+        <DockPanel Grid.Row="0" Height="35">
             <VectorButton:VectorFlatImageButton
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 Command="{Binding RunCommand}"
                 Image="/Resource/Common/Image/IconArrowRight.png"
-                ImageMargin="2"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
@@ -52,7 +52,7 @@
                 VerticalAlignment="Center"
                 Command="{Binding SaveCommand}"
                 Image="/Resource/Common/Image/Save.png"
-                ImageMargin="2"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}" />
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
@@ -91,8 +91,9 @@
                 Style="{DynamicResource VectorToggleTextButtonStyle}"
                 Text="召唤" />
             <VectorButton:VectorToggleIconTextButton
+                HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
-                Foreground="White"
+                Foreground="Black"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />

@@ -21,6 +21,7 @@
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconFireworks.png"
     IconMargin="5"
     ResizeMode="CanResizeWithGrip"
+    WindowStartupLocation="CenterScreen"
     WindowStyle="None"
     mc:Ignorable="d">
 
@@ -52,7 +53,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="40" />
+            <RowDefinition Height="35" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>

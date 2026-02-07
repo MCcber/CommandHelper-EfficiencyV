@@ -7,6 +7,7 @@
 
     <Style x:Key="VectorNumbericUpDownStyle" TargetType="{x:Type Input:VectorNumbericUpDown}">
         <Style.Setters>
+            <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Input:VectorNumbericUpDown}">

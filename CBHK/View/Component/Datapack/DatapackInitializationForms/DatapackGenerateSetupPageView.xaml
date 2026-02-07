@@ -29,7 +29,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="40" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -42,7 +42,7 @@
             Margin="0,0,0,10"
             FontSize="20"
             Foreground="White"
-            Text="配置新数据包" />
+            Text="配置新解决方案" />
         <TextBlock
             Grid.Row="1"
             Grid.Column="0"
@@ -75,12 +75,16 @@
             Margin="0,5,0,5"
             HorizontalAlignment="Stretch"
             utility:TextSizeHelper.AutoFontSize="True"
+            Background="#323334"
             BorderBrush="Black"
             BorderThickness="1"
             CaretBrush="White"
             Foreground="White"
             Style="{DynamicResource VectorTextBoxStyle}"
-            Text="{Binding SolutionName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            Text="{Binding SolutionName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            WaterMarkerBrush="Gray"
+            WaterMarkerMargin="5 0 0 0"
+            WaterMarkerText="DatapackView" />
         <Viewbox
             Grid.Row="2"
             Grid.Column="1"
@@ -113,7 +117,7 @@
             Title="位置"
             Grid.Row="4"
             Grid.Column="0"
-            ArrowMargin="0 15 0 0"
+            ArrowMargin="0 2 5 0"
             Background="#D0D1D4"
             Foreground="White"
             IsReadOnly="True"
@@ -125,7 +129,6 @@
             Grid.Row="4"
             Grid.Column="1"
             Width="50"
-            Height="30"
             Margin="5,0,0,0"
             HorizontalAlignment="Left"
             Background="#D0D1D4"
@@ -138,11 +141,9 @@
             Grid.Row="5"
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            Height="25"
             Margin="0,5,280,10"
-            HorizontalAlignment="Stretch"
-            VerticalContentAlignment="Top"
             utility:TextSizeHelper.AutoFontSize="True"
+            Background="#323334"
             BorderBrush="Black"
             FontSize="12"
             Foreground="White"

@@ -18,6 +18,7 @@
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png"
     IconMargin="5"
     ResizeMode="CanMinimize"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
     <Window.InputBindings>
@@ -28,27 +29,25 @@
             CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}" />
     </Window.InputBindings>
 
-    <StackPanel Background="#2F2F2F">
-        <!--<Grid.RowDefinitions>
-            <RowDefinition Height="40" />
+    <Grid Background="#2F2F2F">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-        </Grid.RowDefinitions>-->
+        </Grid.RowDefinitions>
         <DockPanel
             Grid.Row="0"
-            Height="40"
+            Height="35"
             HorizontalAlignment="Left"
             VerticalAlignment="Center">
             <VectorButton:VectorFlatImageButton
-                Width="25"
-                Height="25"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
                 BorderThickness="0"
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
-                FontSize="15"
                 Image="/Resource/Common/Image/IconArrowLeft.png"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
@@ -60,14 +59,12 @@
                 </VectorButton:VectorFlatImageButton.ToolTip>
             </VectorButton:VectorFlatImageButton>
             <VectorButton:VectorFlatImageButton
-                Width="25"
-                Height="25"
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"
                 BorderThickness="0"
                 Command="{Binding RunCommand}"
-                FontSize="15"
                 Image="/Resource/Common/Image/IconArrowRight.png"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
@@ -80,8 +77,6 @@
             </VectorButton:VectorFlatImageButton>
             <Input:VectorNumbericUpDown
                 Width="130"
-                Height="25"
-                Margin="5,0"
                 Style="{DynamicResource VectorNumbericUpDownStyle}"
                 Text="{Binding JumpSpecificPageNumber, Mode=OneWayToSource}"
                 WaterMarkerBrush="Gray"
@@ -95,7 +90,8 @@
             </Input:VectorNumbericUpDown>
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
-                Width="70"
+                Width="100"
+                ArrowMargin="0 0 5 0"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion}"
@@ -113,7 +109,10 @@
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
         </DockPanel>
-        <DockPanel HorizontalAlignment="Center" LastChildFill="False">
+        <DockPanel
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            LastChildFill="False">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="63" />
@@ -232,20 +231,20 @@
                     </VectorButton:VectorTextButton.ToolTip>
                 </VectorButton:VectorTextButton>
             </Grid>
-            <!--<ColorPicker:ColorPickers
+            <Input:VectorColorPicker
+                Title="设置文本颜色"
                 Grid.Column="1"
-                Width="25"
-                Height="25"
                 Background="Black"
-                SelectColor="{Binding SelectionColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                SelectedColor="{Binding SelectionColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Style="{DynamicResource VectorColorPicker}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <ColorPicker:ColorPickers.ToolTip>
+                <Input:VectorColorPicker.ToolTip>
                     <ToolTip
                         Background="#424242"
                         Content="设置选定文本颜色"
                         Foreground="White" />
-                </ColorPicker:ColorPickers.ToolTip>
+                </Input:VectorColorPicker.ToolTip>
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="PropertyChanged">
                         <behavior:CallMethodAction MethodName="SetSelectionColor" TargetObject="{Binding}" />
@@ -254,10 +253,10 @@
                         <behavior:CallMethodAction MethodName="ColorPickerLoaded" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </ColorPicker:ColorPickers>-->
+            </Input:VectorColorPicker>
         </DockPanel>
         <ContentControl
-            Grid.Row="1"
+            Grid.Row="2"
             HorizontalAlignment="Center"
             VerticalAlignment="Stretch">
             <behavior:Interaction.Triggers>
@@ -266,6 +265,6 @@
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
         </ContentControl>
-    </StackPanel>
+    </Grid>
 
 </Container:VectorWindow>

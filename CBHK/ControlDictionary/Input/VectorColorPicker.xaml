@@ -34,7 +34,7 @@
                                 Foreground="Black"
                                 OriginBottomHeight="3"
                                 Style="{DynamicResource VectorTextButtonStyle}"
-                                Text="选择颜色" />
+                                Text="{TemplateBinding Title}" />
                             <Popup
                                 AllowsTransparency="True"
                                 IsOpen="{TemplateBinding IsShowColorPopup}"

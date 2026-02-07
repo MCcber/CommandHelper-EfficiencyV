@@ -47,7 +47,7 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <DockPanel Grid.Row="0" Height="40">
+        <DockPanel Grid.Row="0" Height="35">
             <VectorButton:VectorFlatImageButton
                 HorizontalContentAlignment="Center"
                 VerticalContentAlignment="Center"

@@ -24,6 +24,7 @@
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconRecipes.png"
     IconMargin="5"
     ResizeMode="CanResizeWithGrip"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
     <Window.Resources>
@@ -44,8 +45,8 @@
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="10*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="600" />
@@ -54,7 +55,8 @@
         <DockPanel
             Grid.Row="0"
             Grid.Column="0"
-            Grid.ColumnSpan="2">
+            Grid.ColumnSpan="2"
+            Height="35">
             <VectorButton:VectorFlatImageButton
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
@@ -93,7 +95,7 @@
                 <MenuItem
                     Uid="knowledge_book"
                     Background="Transparent"
-                    Foreground="White"
+                    Foreground="Black"
                     Header="添加配方">
                     <behavior:Interaction.Triggers>
                         <behavior:EventTrigger EventName="Loaded">
@@ -195,7 +197,7 @@
                 <MenuItem
                     Uid="knowledge_book"
                     Background="Transparent"
-                    Foreground="White"
+                    Foreground="Black"
                     Header="清空配方">
                     <behavior:Interaction.Triggers>
                         <behavior:EventTrigger EventName="Loaded">

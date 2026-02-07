@@ -291,8 +291,8 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         #endregion
 
         #region 已选择颜色
-        private SolidColorBrush selectedColor = new((Color)ColorConverter.ConvertFromString("#FF0000"));
-        public SolidColorBrush SelectedColor
+        private Color selectedColor = (Color)ColorConverter.ConvertFromString("#FF0000");
+        public Color SelectedColor
         {
             get => selectedColor;
             set
@@ -305,7 +305,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                         Border border = new()
                         {
                             Width = 25,
-                            Background = selectedColor
+                            Background = new SolidColorBrush(selectedColor)
                         };
                         border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
                         border.Uid = "Main";
@@ -316,7 +316,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                         Border border = new()
                         {
                             Width = 25,
-                            Background = selectedColor
+                            Background = new SolidColorBrush(selectedColor)
                         };
                         border.MouseRightButtonUp += DeleteColorMouseRightButtonUp;
                         border.Uid = "Fade";

@@ -35,7 +35,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="40" />
+            <RowDefinition Height="35" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0">
@@ -284,21 +284,22 @@
                         VerticalAlignment="Center"
                         Foreground="White"
                         Text="颜色板" />
-                    <!--<ColorPicker:ColorPickers
+                    <Input:VectorColorPicker
+                        Title="设置烟花颜色"
                         Grid.Row="0"
                         Grid.Column="1"
                         Width="200"
                         Height="30"
                         Margin="1,0,0,2"
                         HorizontalAlignment="Stretch"
-                        Background="{Binding RelativeSource={RelativeSource Mode=Self}, Path=SelectColor, Mode=OneWay}"
-                        SelectColor="{Binding SelectedColor, Mode=TwoWay}">
+                        SelectedColor="{Binding SelectedColor, Mode=TwoWay}"
+                        Style="{DynamicResource VectorColorPicker}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="ColorPicker_Loaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </ColorPicker:ColorPickers>-->
+                    </Input:VectorColorPicker>
                     <VectorCheckBox:VectorTextCheckBox
                         Grid.Row="0"
                         Grid.Column="2"

@@ -52,17 +52,17 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <DockPanel Grid.Row="0">
+        <DockPanel Grid.Row="0" Height="35">
             <VectorButton:VectorFlatImageButton
                 HorizontalAlignment="Left"
                 BorderThickness="0"
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
                 Image="/Resource/Common/Image/IconArrowLeft.png"
-                ImageMargin="2"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
@@ -77,7 +77,7 @@
                 HorizontalAlignment="Left"
                 Command="{Binding RunCommand}"
                 Image="/Resource/Common/Image/IconArrowRight.png"
-                ImageMargin="2"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
@@ -92,7 +92,7 @@
                 HorizontalAlignment="Left"
                 Command="{Binding SaveAllCommand}"
                 Image="/Resource/Common/Image/Save.png"
-                ImageMargin="2"
+                ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}" />
             <VectorButton:VectorTextButton
                 HorizontalAlignment="Left"
@@ -136,7 +136,7 @@
                 Text="冻结数据" />
             <VectorButton:VectorToggleIconTextButton
                 HorizontalAlignment="Left"
-                Foreground="White"
+                Foreground="Black"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
