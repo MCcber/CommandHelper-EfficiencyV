@@ -62,7 +62,7 @@
                             Grid.Column="1"
                             Margin="2,2,2,0"
                             Panel.ZIndex="1"
-                            Background="#48382C">
+                            Background="{TemplateBinding Background}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />

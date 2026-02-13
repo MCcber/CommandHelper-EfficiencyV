@@ -22,7 +22,7 @@
         </Setter>
     </Style>
 
-    <Style x:Key="VectorColorPicker" TargetType="{x:Type Input:VectorColorPicker}">
+    <Style x:Key="VectorColorPickerStyle" TargetType="{x:Type Input:VectorColorPicker}">
         <Style.Setters>
             <Setter Property="Template">
                 <Setter.Value>
@@ -32,7 +32,6 @@
                                 x:Name="PickerToggle"
                                 Background="#D0D1D4"
                                 Foreground="Black"
-                                OriginBottomHeight="3"
                                 Style="{DynamicResource VectorTextButtonStyle}"
                                 Text="{TemplateBinding Title}" />
                             <Popup
@@ -136,7 +135,7 @@
                                                 Icon="M19.35,11.72L17.22,13.85L15.81,12.43L8.1,20.14L3.5,22L5.36,17.4L13.07,9.7L11.66,8.28L13.78,6.16C14.17,5.77 14.8,5.77 15.19,6.16L19.35,10.31C19.74,10.7 19.74,11.33 19.35,11.72M10.22,18.73L6.96,18.04L7.65,14.78L15.1,7.33L17.67,9.9L10.22,18.73Z"
                                                 IconBrush="White"
                                                 IconHeight="16"
-                                                IconWidh="16"
+                                                IconWidth="16"
                                                 Style="{DynamicResource VectorFlatIconButtonStyle}" />
                                             <TextBlock
                                                 Grid.Column="2"

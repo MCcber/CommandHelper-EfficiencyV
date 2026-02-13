@@ -705,72 +705,7 @@
             </Container:VectorIconTextTabItem>
             <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItemStyle}">
                 <Grid>
-                    <Container:VectorRichExpander
-                        VerticalAlignment="Top"
-                        Header="VectorRichExpander"
-                        Style="{DynamicResource VectorRichExpanderStyle}">
-                        <Container:VectorRichExpander.HeaderContent>
-                            <DockPanel LastChildFill="False">
-                                <VectorButton:VectorTextButton
-                                    Background="#D0D1D4"
-                                    OriginBottomHeight="3"
-                                    Style="{DynamicResource VectorTextButtonStyle}"
-                                    Text="Test1" />
-                                <VectorButton:VectorTextButton
-                                    Background="#D0D1D4"
-                                    OriginBottomHeight="3"
-                                    Style="{DynamicResource VectorTextButtonStyle}"
-                                    Text="Test2" />
-                            </DockPanel>
-                        </Container:VectorRichExpander.HeaderContent>
-                        <Container:VectorRichExpander.Content>
-                            <StackPanel>
-                                <VectorButton:VectorTextButton
-                                    Width="50"
-                                    Background="#D0D1D4"
-                                    OriginBottomHeight="3"
-                                    Style="{DynamicResource VectorTextButtonStyle}"
-                                    Text="Test3" />
-                                <VectorButton:VectorTextButton
-                                    Width="50"
-                                    Background="#D0D1D4"
-                                    OriginBottomHeight="3"
-                                    Style="{DynamicResource VectorTextButtonStyle}"
-                                    Text="Test4" />
-                                <VectorButton:VectorTextButton
-                                    Width="50"
-                                    Background="#D0D1D4"
-                                    OriginBottomHeight="3"
-                                    Style="{DynamicResource VectorTextButtonStyle}"
-                                    Text="Test5" />
-                            </StackPanel>
-                        </Container:VectorRichExpander.Content>
-                    </Container:VectorRichExpander>
-                    <Expander
-                        VerticalAlignment="Top"
-                        Header="Test"
-                        Style="{DynamicResource VectorTextExpanderStyle}">
-                        <StackPanel>
-                            <VectorButton:VectorTextButton
-                                Width="50"
-                                Background="#D0D1D4"
-                                OriginBottomHeight="3"
-                                Style="{DynamicResource VectorTextButtonStyle}"
-                                Text="Test3" />
-                            <VectorButton:VectorTextButton
-                                Width="50"
-                                Background="#D0D1D4"
-                                OriginBottomHeight="3"
-                                Style="{DynamicResource VectorTextButtonStyle}"
-                                Text="Test4" />
-                            <VectorButton:VectorTextButton
-                                Width="50"
-                                Background="#D0D1D4"
-                                OriginBottomHeight="3"
-                                Style="{DynamicResource VectorTextButtonStyle}"
-                                Text="Test5" />
-                        </StackPanel>
-                    </Expander>
+                    <Container:TimelineToolContainer Background="Transparent" Style="{DynamicResource TimelineToolContainerStyle}" />
                 </Grid>
             </Container:VectorIconTextTabItem>
         </Container:VectorTabControl>

@@ -42,14 +42,14 @@ namespace CBHK.CustomControl.VectorButton
         public static readonly DependencyProperty IconMarginProperty =
             DependencyProperty.Register("IconMargin", typeof(Thickness), typeof(VectorFlatIconButton), new PropertyMetadata(default(Thickness)));
 
-        public double IconWidh
+        public double IconWidth
         {
-            get { return (double)GetValue(IconWidhProperty); }
-            set { SetValue(IconWidhProperty, value); }
+            get { return (double)GetValue(IconWidthProperty); }
+            set { SetValue(IconWidthProperty, value); }
         }
 
-        public static readonly DependencyProperty IconWidhProperty =
-            DependencyProperty.Register("IconWidh", typeof(double), typeof(VectorFlatIconButton), new PropertyMetadata(default(double)));
+        public static readonly DependencyProperty IconWidthProperty =
+            DependencyProperty.Register("IconWidth", typeof(double), typeof(VectorFlatIconButton), new PropertyMetadata(default(double)));
 
         public double IconHeight
         {

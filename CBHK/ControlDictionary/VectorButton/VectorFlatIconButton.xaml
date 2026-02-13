@@ -14,7 +14,7 @@
     <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
     <Style x:Key="VectorFlatIconButtonStyle" TargetType="{x:Type VectorButton:VectorFlatIconButton}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="IconWidh" Value="15" />
+        <Setter Property="IconWidth" Value="15" />
         <Setter Property="IconHeight" Value="15" />
         <Setter Property="IconMargin" Value="0 0 0 2" />
         <Setter Property="Background" Value="{StaticResource Button.Static.Background}" />
@@ -79,7 +79,7 @@
                             <Viewbox
                                 Grid.Row="1"
                                 Grid.Column="1"
-                                Width="{TemplateBinding IconWidh}"
+                                Width="{TemplateBinding IconWidth}"
                                 Height="{TemplateBinding IconHeight}"
                                 Margin="{TemplateBinding IconMargin}"
                                 HorizontalAlignment="Center"

@@ -1,4 +1,5 @@
 ﻿using CBHK.Utility.Common;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -8,7 +9,6 @@ namespace CBHK.CustomControl.Container
     public class VectorTextTabItem:TabItem
     {
         #region Field
-        private bool isLoaded = false;
         public Thickness OriginMargin;
         private Brush OriginForeground;
         public Brush OriginBackground;
@@ -60,36 +60,20 @@ namespace CBHK.CustomControl.Container
 
         public void UpdateBorderColorByBackgroundColor()
         {
-            var originSideBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, SideBorderBrushProperty);
-            if (originSideBorderBrushSource.BaseValueSource is BaseValueSource.Default || originSideBorderBrushSource.BaseValueSource is BaseValueSource.Style || SideBorderBrush is null || isLoaded)
+            if (IsSelected)
             {
-                SolidColorBrush solidBorderBrush = null;
-                if (IsSelected)
-                {
-                    solidBorderBrush = SelectedBackground as SolidColorBrush;
-                }
-                else
-                {
-                    solidBorderBrush = Background as SolidColorBrush;
-                }
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
-                SideBorderBrush = new SolidColorBrush(color);
+                Margin = new(OriginMargin.Left, OriginMargin.Top - 2, OriginMargin.Right, OriginMargin.Bottom);
+                Background = SelectedBackground;
             }
-            var originTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, TopBorderBrushProperty);
-            if (originTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originTopBorderBrushSource.BaseValueSource is BaseValueSource.Style || TopBorderBrush is null || isLoaded)
+            else
             {
-                SolidColorBrush solidBorderBrush = null;
-                if (IsSelected)
-                {
-                    solidBorderBrush = SelectedBackground as SolidColorBrush;
-                }
-                else
-                {
-                    solidBorderBrush = Background as SolidColorBrush;
-                }
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
-                TopBorderBrush = new SolidColorBrush(color);
+                Margin = OriginMargin;
+                Background = OriginBackground;
             }
+            Color color = ColorTool.Lighten((Background as SolidColorBrush).Color, 0.4f);
+            SolidColorBrush newColorBrush = new(color);
+            SideBorderBrush = newColorBrush;
+            TopBorderBrush = new SolidColorBrush(color);
         }
         #endregion
 
@@ -127,7 +111,7 @@ namespace CBHK.CustomControl.Container
 
             OriginBackground ??= Background;
             OriginForeground ??= Foreground;
-            if (!isLoaded)
+            if (!IsLoaded)
             {
                 OriginMargin = Margin;
             }
@@ -139,8 +123,24 @@ namespace CBHK.CustomControl.Container
             }
 
             UpdateBorderColorByBackgroundColor();
+        }
 
-            isLoaded = true;
+        protected override void OnSelected(RoutedEventArgs e)
+        {
+            base.OnSelected(e);
+            if (IsLoaded)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
+        }
+
+        protected override void OnUnselected(RoutedEventArgs e)
+        {
+            base.OnUnselected(e);
+            if (IsLoaded)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
         }
         #endregion
     }

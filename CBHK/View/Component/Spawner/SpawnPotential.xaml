@@ -54,13 +54,13 @@
             Grid.Column="1"
             Height="25"
             Style="{DynamicResource VectorNumbericUpDownStyle}" />
-        <Container:VectorTextExpander
+        <Container:VectorRichExpander
             Grid.Row="2"
             Grid.ColumnSpan="2"
             Background="#FFE5B663"
             BorderThickness="0"
             Header="生成规则"
-            Style="{DynamicResource VectorTextExpanderStyle}">
+            Style="{DynamicResource VectorRichExpanderStyle}">
             <Grid Background="#2F2F2F">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -223,7 +223,7 @@
                     Style="{DynamicResource VectorToggleTextButtonStyle}"
                     Text="使用默认值" />
             </Grid>
-        </Container:VectorTextExpander>
+        </Container:VectorRichExpander>
         <TextBlock
             Grid.Row="3"
             Grid.Column="0"

@@ -236,7 +236,7 @@
                 Grid.Column="1"
                 Background="Black"
                 SelectedColor="{Binding SelectionColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                Style="{DynamicResource VectorColorPicker}"
+                Style="{DynamicResource VectorColorPickerStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
                 <Input:VectorColorPicker.ToolTip>

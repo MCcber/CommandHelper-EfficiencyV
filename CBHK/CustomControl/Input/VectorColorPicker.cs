@@ -81,14 +81,16 @@ namespace CBHK.CustomControl.Input
         private Thumb PaletteThumb;
         private Rectangle ColorBase;
         private Thumb HueThumb;
-        private Grid PaletteArea;
+        public Grid PaletteArea;
         private VectorFlatIconButton Eyedropper;
 
         private bool isInternalUpdating = false;
         #endregion
 
         #region Property
-        public Action<Color> CallBack { get; set; }
+        public double OriginBottomHeight { get; set; }
+        public Action<Color> UpdateSelectedColorCallBack { get; set; }
+        public Action SelectedColorGridMouseLeftButtonUpCallBack { get; set; }
 
         public string Title
         {
@@ -148,7 +150,10 @@ namespace CBHK.CustomControl.Input
             Loaded += VectorColorPicker_Loaded;
         }
 
-        #region 色相条 (Hue) 逻辑
+        /// <summary>
+        /// 色相条 (Hue) 逻辑
+        /// </summary>
+        /// <param name="mouseX"></param>
         private void UpdateHue(double mouseX)
         {
             double width = HueCanvas.ActualWidth;
@@ -161,7 +166,7 @@ namespace CBHK.CustomControl.Input
             mouseX = Math.Clamp(mouseX, 0, width);
 
             // 移动滑块
-            Canvas.SetLeft(HueThumb, mouseX - (HueThumb.Width / 2));
+            Canvas.SetLeft(HueThumb, mouseX - (HueThumb.ActualWidth / 2));
 
             // 计算 Hue (0-360)
             _currentHue = (mouseX / width) * 360;
@@ -172,7 +177,6 @@ namespace CBHK.CustomControl.Input
 
             UpdateFinalColor();
         }
-        #endregion
 
         #region 调色板 (Sat/Val) 逻辑
         private void UpdateSaturationValue(Point mousePos)
@@ -206,7 +210,7 @@ namespace CBHK.CustomControl.Input
             isInternalUpdating = true;
 
             var color = new HsvColor(_currentHue, _currentSat, _currentVal).ToRgb();
-            SelectedColor = color; // 这会触发 OnSelectedColorChanged
+            SelectedColor = color;
             SelectedColorBrush = new SolidColorBrush(color);
             HexCode = color.ToString();
 
@@ -231,7 +235,7 @@ namespace CBHK.CustomControl.Input
 
             // 3. 计算并移动色相滑块 (Hue)
             double hueX = (_currentHue / 360) * HueCanvas.ActualWidth;
-            Canvas.SetLeft(HueThumb, hueX - (HueThumb.Width / 2));
+            Canvas.SetLeft(HueThumb, hueX - (HueThumb.ActualWidth / 2));
 
             // 4. 更新调色板的背景底色
             var hueColor = new HsvColor(_currentHue, 1, 1).ToRgb();
@@ -240,8 +244,8 @@ namespace CBHK.CustomControl.Input
             // 5. 计算并移动调色板中心点 (Saturation & Value)
             double paletteX = _currentSat * PaletteArea.ActualWidth;
             double paletteY = (1 - _currentVal) * PaletteArea.ActualHeight;
-            Canvas.SetLeft(PaletteThumb, paletteX - (PaletteThumb.Width / 2));
-            Canvas.SetTop(PaletteThumb, paletteY - (PaletteThumb.Height / 2));
+            Canvas.SetLeft(PaletteThumb, paletteX - (PaletteThumb.ActualWidth / 2));
+            Canvas.SetTop(PaletteThumb, paletteY - (PaletteThumb.ActualHeight / 2));
 
             // 6. 更新 Hex 文本和预览色块
             SelectedColorBrush = new SolidColorBrush(color);
@@ -250,7 +254,7 @@ namespace CBHK.CustomControl.Input
 
         private void UpdateSenderColor(Color newColor)
         {
-            CallBack?.Invoke(newColor);
+            UpdateSelectedColorCallBack?.Invoke(newColor);
         }
         #endregion
 
@@ -266,7 +270,7 @@ namespace CBHK.CustomControl.Input
 
             // 2. 更新色相条滑块位置
             double hueX = (_currentHue / 360) * HueCanvas.ActualWidth;
-            Canvas.SetLeft(HueThumb, hueX - (HueThumb.Width / 2));
+            Canvas.SetLeft(HueThumb, hueX - (HueThumb.ActualWidth / 2));
 
             // 3. 更新调色板底色
             var hueColor = new HsvColor(_currentHue, 1, 1).ToRgb();
@@ -295,7 +299,7 @@ namespace CBHK.CustomControl.Input
         {
             base.OnApplyTemplate();
 
-            Button PickerToggle = GetTemplateChild("PickerToggle") as Button;
+            VectorTextButton PickerToggle = GetTemplateChild("PickerToggle") as VectorTextButton;
             HueCanvas = GetTemplateChild("HueCanvas") as Canvas;
             HueThumb = GetTemplateChild("HueThumb") as Thumb;
             PaletteThumb = GetTemplateChild("PaletteThumb") as Thumb;
@@ -304,6 +308,19 @@ namespace CBHK.CustomControl.Input
             Eyedropper = GetTemplateChild("Eyedropper") as VectorFlatIconButton;
 
             PickerToggle.Click += ShowColorPopup_Click;
+            if(OriginBottomHeight == 0)
+            {
+                OriginBottomHeight = 6;
+            }
+            PickerToggle.Loaded += (sender,e) =>
+            {
+                PickerToggle.OriginBottomHeight = OriginBottomHeight;
+                object extraBottomLine = PickerToggle.Template.FindName("extraBottomLine", PickerToggle);
+                if (extraBottomLine is RowDefinition row)
+                {
+                    row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
+                }
+            };;
 
             HueCanvas.MouseLeftButtonDown += Hue_MouseDown;
             HueCanvas.MouseMove += Hue_MouseMove;
@@ -313,6 +330,7 @@ namespace CBHK.CustomControl.Input
             PaletteThumb.DragDelta += PaletteThumb_DragDelta;
 
             PaletteArea.MouseLeftButtonDown += Palette_MouseDown;
+            PaletteArea.MouseLeftButtonUp += PaletteArea_MouseLeftButtonUp;
             PaletteArea.MouseMove += Palette_MouseMove;
             PaletteArea.MouseUp += PaletteArea_MouseUp;
 
@@ -329,6 +347,11 @@ namespace CBHK.CustomControl.Input
             {
                 Loaded += (s, e) => SyncPositionsFromColor(SelectedColor);
             }
+        }
+
+        private void PaletteArea_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+           SelectedColorGridMouseLeftButtonUpCallBack?.Invoke();
         }
 
         public void ShowColorPopup_Click(object sender, RoutedEventArgs e)
@@ -407,6 +430,12 @@ namespace CBHK.CustomControl.Input
 
         public void Palette_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            // 如果点击源是 Thumb (或其可视子元素)，则不处理，交由 Thumb 自己的逻辑处理
+            if (e.OriginalSource is DependencyObject obj &&
+                (PaletteThumb == obj || PaletteThumb.IsAncestorOf(obj)))
+            {
+                return;
+            }
             PaletteArea.Focus();
             PaletteArea.CaptureMouse();
             UpdateSaturationValue(e.GetPosition(PaletteArea));
@@ -433,7 +462,7 @@ namespace CBHK.CustomControl.Input
             // 处理 Thumb 自身的拖拽
             double x = Canvas.GetLeft(PaletteThumb) + e.HorizontalChange;
             double y = Canvas.GetTop(PaletteThumb) + e.VerticalChange;
-            UpdateSaturationValue(new Point(x + PaletteThumb.Width / 2, y + PaletteThumb.Height / 2));
+            UpdateSaturationValue(new Point(x + PaletteThumb.ActualWidth / 2, y + PaletteThumb.ActualHeight / 2));
         }
         #endregion
     }

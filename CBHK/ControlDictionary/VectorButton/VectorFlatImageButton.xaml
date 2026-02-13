@@ -81,6 +81,7 @@
                                 Grid.Column="1"
                                 Margin="{TemplateBinding ImageMargin}"
                                 RenderOptions.BitmapScalingMode="Unspecified"
+                                RenderOptions.ClearTypeHint="Enabled"
                                 RenderOptions.EdgeMode="Unspecified"
                                 Source="{TemplateBinding Image}" />
                             <ContentPresenter

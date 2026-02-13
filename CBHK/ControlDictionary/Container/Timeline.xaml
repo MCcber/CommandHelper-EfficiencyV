@@ -1,0 +1,148 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors">
+
+    <Geometry x:Key="PlayHeadShape">
+        M512 981.53L242.89 751.6V58.23h538.22V751.6L512 981.53zM342.89 705.51L512 850l169.11-144.49V158.23H342.89v547.28z
+    </Geometry>
+
+    <Style x:Key="PlayHeadStyle" TargetType="{x:Type Thumb}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Thumb}">
+                    <Grid Background="Transparent">
+                        <Viewbox Width="35" Height="25">
+                            <Path
+                                x:Name="path"
+                                Data="{DynamicResource PlayHeadShape}"
+                                Fill="White"
+                                Stroke="White"
+                                StrokeThickness="2" />
+                        </Viewbox>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TimelineStyle" TargetType="{x:Type Container:Timeline}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Container:Timeline}">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <ItemsControl
+                            Grid.Column="0"
+                            Margin="{Binding TrackPanelMargin, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:Timeline}}"
+                            Background="Transparent"
+                            ItemsSource="{Binding TrackList, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:Timeline}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <TextBlock
+                                            Margin="{Binding Margin}"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Background="Transparent"
+                                            Foreground="{Binding Foreground}"
+                                            Text="{Binding TrackName}"
+                                            TextAlignment="Center"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                        <Container:VectorScrollViewer
+                            Grid.Column="1"
+                            Background="Transparent"
+                            PanningMode="None"
+                            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            Style="{DynamicResource VectorScrollViewerStyle}">
+                            <Grid>
+                                <ItemsControl
+                                    Margin="{TemplateBinding TrackPanelMargin}"
+                                    Panel.ZIndex="1"
+                                    Background="Transparent"
+                                    ItemsSource="{TemplateBinding TrackList}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <VirtualizingStackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                                <Canvas
+                                    x:Name="canvas"
+                                    Panel.ZIndex="0"
+                                    Background="Transparent"
+                                    ClipToBounds="False">
+                                    <Container:TimeRulerElement
+                                        x:Name="Ruler"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Panel.ZIndex="0"
+                                        IsHitTestVisible="False" />
+                                    <Grid
+                                        x:Name="playHeadGrid"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Background="Transparent">
+                                        <Thumb
+                                            x:Name="playerHeadThumb"
+                                            Width="35"
+                                            Height="25"
+                                            Margin="-20,0,0,0"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Panel.ZIndex="1"
+                                            RenderTransformOrigin="0.5 0.5"
+                                            Style="{DynamicResource PlayHeadStyle}" />
+                                        <Line
+                                            Margin="0,25,0,0"
+                                            Panel.ZIndex="1"
+                                            Stroke="Gray"
+                                            StrokeThickness="1"
+                                            X1="0"
+                                            X2="0"
+                                            Y1="0"
+                                            Y2="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ActualHeight}" />
+                                    </Grid>
+                                    <Line
+                                        x:Name="previewLine"
+                                        Margin="0,25,0,0"
+                                        Panel.ZIndex="1"
+                                        Stroke="MediumPurple"
+                                        StrokeThickness="1"
+                                        X1="0"
+                                        X2="0"
+                                        Y1="0"
+                                        Y2="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ActualHeight}" />
+                                </Canvas>
+                            </Grid>
+                        </Container:VectorScrollViewer>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

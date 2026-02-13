@@ -330,7 +330,7 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Command="{Binding RunCommand}"
-            Image="{DynamicResource RightArrow}"
+            Image="/Resource/Common/Image/IconArrowRight.png"
             Style="{DynamicResource VectorFlatImageButtonStyle}"
             ToolTipService.BetweenShowDelay="0"
             ToolTipService.InitialShowDelay="0">
@@ -444,7 +444,7 @@
                 Width="25"
                 Height="25"
                 Command="{Binding UpdateAndCloseSlotGridCommand}"
-                Image="{StaticResource CloseWhite}"
+                Image="/Resource/Common/Image/CloseWhite.png"
                 Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">

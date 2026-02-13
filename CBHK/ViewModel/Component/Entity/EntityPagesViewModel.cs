@@ -374,7 +374,7 @@ namespace CBHK.ViewModel.Component.Entity
                 string reference = referenceObj is not null ? referenceObj.ToString() : "";
 
                 TextBlock displayText = null;
-                VectorTextExpander accordion = null;
+                VectorRichExpander accordion = null;
                 if(tag != "Array" && tag != "List" && tag != "Compound")
                 {
                     displayText = new()
@@ -694,7 +694,7 @@ namespace CBHK.ViewModel.Component.Entity
         /// <param name="e"></param>
         public void AccordionVisibilitylLoaded(object sender, RoutedEventArgs e)
         {
-            VectorTextExpander accordion = sender as VectorTextExpander;
+            VectorRichExpander accordion = sender as VectorRichExpander;
             //if(accordion.ModifyVisibility == Visibility.Collapsed)
             //{
             //    accordion.ModifyVisibility = Visibility.Hidden;
@@ -782,7 +782,7 @@ namespace CBHK.ViewModel.Component.Entity
         /// <param name="ele"></param>
         private void ReverseAllBoolNBTs(FrameworkElement ele)
         {
-            VectorTextExpander accordion = ele as VectorTextExpander;
+            VectorRichExpander accordion = ele as VectorRichExpander;
             VectorScrollViewer scrollViewer = accordion.Content as VectorScrollViewer;
             Grid grid = scrollViewer.Content as Grid;
             foreach (var item in grid.Children)
@@ -802,7 +802,7 @@ namespace CBHK.ViewModel.Component.Entity
         /// </summary>
         private void SelectAllBoolNBTs(FrameworkElement ele)
         {
-            VectorTextExpander accordion = ele as VectorTextExpander;
+            VectorRichExpander accordion = ele as VectorRichExpander;
             VectorScrollViewer scrollViewer = accordion.Content as VectorScrollViewer;
             Grid grid = scrollViewer.Content as Grid;
             foreach (var item in grid.Children)

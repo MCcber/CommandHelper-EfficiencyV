@@ -942,7 +942,7 @@ namespace CBHK.Utility.Common
         #endregion
 
         #region 处理导入外部烟花数据
-        public static void ImportFireworkDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList, bool IsPath = true)
+        public static void ImportFireworkDataHandler(string filePathOrData, ref ObservableCollection<VectorTextTabItem> itemPageList, bool IsPath = true)
         {
             string GeneratorMode;
             bool version1_12 = false;
@@ -980,8 +980,6 @@ namespace CBHK.Utility.Common
                     SubMessageBrush = Brushes.DarkGray,
                     Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
                 });
-                if (itemPageList.Count > 0)
-                    itemPageList.RemoveAt(itemPageList.Count - 1);
                 return;
             }
 
@@ -1025,13 +1023,12 @@ namespace CBHK.Utility.Common
         /// <summary>
         /// 添加烟花
         /// </summary>
-        private static void AddFireworkCommand(JObject externData, bool version1_12, string mode, string filePath, ref ObservableCollection<VectorRichTabItem> itemPageList)
+        private static void AddFireworkCommand(JObject externData, bool version1_12, string mode, string filePath, ref ObservableCollection<VectorTextTabItem> itemPageList)
         {
-            VectorRichTabItem richTabItems = new()
+            VectorTextTabItem richTabItems = new()
             {
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                Header = "烟花",
-                BorderThickness = new(4, 4, 4, 0),
+                Style = Application.Current.Resources["VectorTextTabItemStyle"] as Style,
+                Title = "烟花",
                 Foreground = new SolidColorBrush(Colors.White)
             };
             FireworkRocketPageView itemPages = new() { FontWeight = FontWeights.Normal };
@@ -1054,7 +1051,8 @@ namespace CBHK.Utility.Common
             }
             richTabItems.Content = itemPages;
         }
-        #endregion 
+        #endregion
+
         #endregion
     }
 }

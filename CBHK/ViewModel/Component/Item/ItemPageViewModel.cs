@@ -609,7 +609,7 @@ namespace CBHK.ViewModel.Component.Item
                                 if (LeftIndex || newGrid.RowDefinitions.Count == 0)
                                     newGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
                                 newGrid.Children.Add(components[j]);
-                                if (components[j] is VectorTextExpander || components[j] is VectorTextCheckBox)
+                                if (components[j] is VectorRichExpander || components[j] is VectorTextCheckBox)
                                 {
                                     Grid.SetRow(components[j], newGrid.RowDefinitions.Count - 1);
                                     Grid.SetColumn(components[j], 0);

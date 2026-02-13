@@ -1,6 +1,8 @@
 ﻿using CBHK.Utility.Common;
+using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -14,6 +16,13 @@ namespace CBHK.CustomControl.Container
         private Brush OriginLeftTopBorderBrush;
         private Brush OriginRightTopBorderBrush;
         private Brush OriginBottomBorderBrush;
+
+        private Point _scrollStartPoint;
+        private Point _scrollStartOffset;
+        private bool _isDragging = false;
+        private readonly double _dragThreshold = 5.0; // 移动超过5像素才判定为拖拽
+        private ScrollBar VerticalScrollBar;
+        private ScrollBar HorizontalScrollBar;
         #endregion
 
         #region Property
@@ -59,6 +68,9 @@ namespace CBHK.CustomControl.Container
         {
             Loaded += VectorScrollViewer_Loaded;
             MouseWheel += VectorScrollViewer_MouseWheel;
+            PreviewMouseDown += ScrollViewer_PreviewMouseDown;
+            PreviewMouseMove += ScrollViewer_PreviewMouseMove;
+            PreviewMouseUp += ScrollViewer_PreviewMouseUp;
         }
 
         private void UpdateBorderColorByBackgroundColor()
@@ -109,6 +121,8 @@ namespace CBHK.CustomControl.Container
         #region Event
         private void VectorScrollViewer_Loaded(object sender, RoutedEventArgs e)
         {
+            VerticalScrollBar = GetTemplateChild("PART_VerticalScrollBar") as ScrollBar;
+            HorizontalScrollBar = GetTemplateChild("PART_HorizontalScrollBar") as ScrollBar;
             UpdateBorderColorByBackgroundColor();
         }
 
@@ -129,7 +143,64 @@ namespace CBHK.CustomControl.Container
                     parent.RaiseEvent(eventArg);
                 }
             }
-        } 
+        }
+
+        private void ScrollViewer_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var sv = sender as ScrollViewer;
+
+            _scrollStartPoint = e.GetPosition(sv);
+            _scrollStartOffset = new Point(sv.HorizontalOffset, sv.VerticalOffset);
+            _isDragging = false;
+        }
+
+        private void ScrollViewer_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            var sv = sender as ScrollViewer;
+            if (e.LeftButton == MouseButtonState.Pressed && PanningMode is not PanningMode.None)
+            {
+                Point currentPoint = e.GetPosition(sv);
+
+                // 判断是否达到了拖拽的最小距离
+                if (!_isDragging &&
+                    (Math.Abs(currentPoint.X - _scrollStartPoint.X) > _dragThreshold ||
+                     Math.Abs(currentPoint.Y - _scrollStartPoint.Y) > _dragThreshold) && HorizontalScrollBar.Visibility is not Visibility.Visible && VerticalScrollBar.Visibility is not Visibility.Visible)
+                {
+                    _isDragging = true;
+                    sv.CaptureMouse(); // 确定是拖拽后，再强行夺取鼠标控制权
+                }
+
+                if (_isDragging)
+                {
+                    double deltaX = currentPoint.X - _scrollStartPoint.X;
+                    double deltaY = currentPoint.Y - _scrollStartPoint.Y;
+
+                    sv.ScrollToHorizontalOffset(_scrollStartOffset.X - deltaX);
+                    sv.ScrollToVerticalOffset(_scrollStartOffset.Y - deltaY);
+
+                    // 改变光标增加反馈
+                    sv.Cursor = Cursors.Hand;
+                }
+            }
+        }
+
+        private void ScrollViewer_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            var sv = sender as ScrollViewer;
+
+            if (sv.IsMouseCaptured)
+            {
+                sv.ReleaseMouseCapture();
+                sv.Cursor = Cursors.Arrow;
+
+                if (_isDragging)
+                {
+                    e.Handled = true;
+                }
+            }
+
+            _isDragging = false;
+        }
         #endregion
     }
 }

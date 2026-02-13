@@ -328,7 +328,7 @@ namespace CBHK.CustomControl.Input
         {
             base.OnApplyTemplate();
             VectorColorPicker vectorColorPicker = GetTemplateChild("colorPicker") as VectorColorPicker;
-            vectorColorPicker.CallBack = UpdateColor;
+            vectorColorPicker.UpdateSelectedColorCallBack = UpdateColor;
         }
 
         public void AddNewStyleItem_Click(object sender, RoutedEventArgs e) => AddNewStyleItem();

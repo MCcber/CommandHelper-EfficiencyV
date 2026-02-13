@@ -50,6 +50,19 @@ namespace CBHK.Utility.Common
             return HslToRgb(h, s, l, color.A);
         }
 
+        public static bool IsDarkColor(string hexColor)
+        {
+            // 1. 将 Hex 转换为 WPF Color 对象
+            var color = (Color)ColorConverter.ConvertFromString(hexColor);
+
+            // 2. 计算亮度 (YIQ 算法)
+            // 权重：Red 29.9%, Green 58.7%, Blue 11.4%
+            double brightness = (color.R * 0.299) + (color.G * 0.587) + (color.B * 0.114);
+
+            // 3. 返回结果：亮度小于 128 则视为深色
+            return brightness < 128;
+        }
+
         private static void RgbToHsl(Color color, out double h, out double s, out double l)
         {
             // 归一化 RGB 到 0-1

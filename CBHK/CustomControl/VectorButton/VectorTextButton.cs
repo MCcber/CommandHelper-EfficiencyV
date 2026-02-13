@@ -154,13 +154,9 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorTextButton_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            object borderElement = Template.FindName("templateRoot", sender as FrameworkElement);
             object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if (borderElement is Border templateRoot)
-            {
-                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.4f);
-                templateRoot.Background = new SolidColorBrush(color);
-            }
+            Color color = ColorTool.Darken((OriginBackgroundBrush as SolidColorBrush).Color, 0.4f);
+            Background = new SolidColorBrush(color);
             if (extraBottomLine is RowDefinition row)
             {
                 row.Height = new(0, GridUnitType.Pixel);
@@ -170,12 +166,8 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorTextButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            object borderElement = Template.FindName("templateRoot", sender as FrameworkElement);
             object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if (borderElement is Border templateRoot)
-            {
-                templateRoot.Background = OriginBackgroundBrush;
-            }
+            Background = OriginBackgroundBrush;
             if (extraBottomLine is RowDefinition row)
             {
                 row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
@@ -187,14 +179,10 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorTextButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            object borderElement = Template.FindName("templateRoot", sender as FrameworkElement);
             object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
 
-            if (borderElement is Border templateRoot)
-            {
-                Color darkColor = ColorTool.Darken((Background as SolidColorBrush).Color, 0.2f);
-                templateRoot.Background = new SolidColorBrush(darkColor);
-            }
+            Color darkColor = ColorTool.Darken((OriginBackgroundBrush as SolidColorBrush).Color, 0.2f);
+            Background = new SolidColorBrush(darkColor);
             if (extraBottomLine is RowDefinition row)
             {
                 row.Height = new(OriginBottomHeight, GridUnitType.Pixel);

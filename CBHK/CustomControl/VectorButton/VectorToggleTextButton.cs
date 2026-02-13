@@ -13,9 +13,12 @@ namespace CBHK.CustomControl.VectorButton
         private Brush OriginLeftTopBorderBrush;
         private Brush OriginRightBottomBorderBrush;
         private Brush OriginBottomBorderBrush;
+        private Brush OriginCheckMarkerBrush;
         private Brush OriginBorderCornerBrush;
         private Brush OriginForegroundBrush;
         private Brush OriginBackgroundBrush;
+        private bool isUserClicking = false;
+        private bool lastIsCheckedValue = false;
         #endregion
 
         #region Property
@@ -98,8 +101,8 @@ namespace CBHK.CustomControl.VectorButton
         #region Method
         public VectorToggleTextButton()
         {
-            Loaded += VectorToggleTextButton_Loaded;
-            Click += VectorToggleTextButton_Click;
+            Initialized += VectorToggleTextButton_Initialized;
+            SizeChanged += VectorToggleTextButton_SizeChanged;
             MouseEnter += VectorToggleTextButton_MouseEnter;
             MouseLeave += VectorToggleTextButton_MouseLeave;
         }
@@ -149,6 +152,11 @@ namespace CBHK.CustomControl.VectorButton
                 Color color = ColorTool.Darken(solidBorderBrush.Color, 0.5f);
                 BottomBorderBrush = OriginBottomBorderBrush = new SolidColorBrush(color);
             }
+            var originCheckMarkerBrushSource = DependencyPropertyHelper.GetValueSource(this, CheckedMarkerBrushProperty);
+            if (originCheckMarkerBrushSource.BaseValueSource is BaseValueSource.Default || originCheckMarkerBrushSource.BaseValueSource is BaseValueSource.Style || CheckedMarkerBrush is null)
+            {
+                CheckedMarkerBrush = OriginCheckMarkerBrush = Brushes.White;
+            }
 
             object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
             if (extraBottomLine is RowDefinition row)
@@ -156,45 +164,72 @@ namespace CBHK.CustomControl.VectorButton
                 row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
 
-            OriginForegroundBrush = Foreground;
-            OriginBackgroundBrush = Background;
+            OriginForegroundBrush ??= Foreground;
+            OriginBackgroundBrush ??= Background;
 
-            if (IsChecked is not null)
+            if (IsChecked is bool value && value)
             {
-                if (IsChecked.Value)
-                {
-                    IsShowCheckedMarker = Visibility.Visible;
-                }
-                else
-                {
-                    IsShowCheckedMarker = Visibility.Hidden;
-                }
+                OnChecked(null);
+            }
+            else
+            {
+                OnUnchecked(null);
             }
         }
         #endregion
 
         #region Event
-        private void VectorToggleTextButton_Click(object sender, RoutedEventArgs e)
+
+        private void VectorToggleTextButton_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if(IsChecked.Value)
+            double currentWidth = ActualWidth <= 0 || ActualWidth is double.NaN ? Text.Length : ActualWidth;
+            SelectedMarkerWidth = ActualWidth / 2;
+        }
+
+        protected override void OnClick()
+        {
+            isUserClicking = true;
+            base.OnClick();
+            isUserClicking = false;
+        }
+
+        protected override void OnChecked(RoutedEventArgs e)
+        {
+            if (IsLoaded)
             {
                 IsShowCheckedMarker = Visibility.Visible;
-                This_PreviewMouseLeftButtonDown(sender, null);
-            }
-            else
-            {
-                IsShowCheckedMarker = Visibility.Hidden;
-                VectorToggleTextButton_MouseEnter(sender, null);
+                if (IsChecked is bool value && value)
+                {
+                    This_PreviewMouseLeftButtonDown(this, null);
+                }
             }
         }
 
-        private void VectorToggleTextButton_Loaded(object sender, RoutedEventArgs e)
+        protected override void OnUnchecked(RoutedEventArgs e)
         {
+            if (IsLoaded)
+            {
+                IsShowCheckedMarker = Visibility.Hidden;
+                if (IsChecked is bool value && !value && isUserClicking)
+                {
+                    VectorToggleTextButton_MouseEnter(this, null);
+                }
+                else
+                {
+                    VectorToggleTextButton_MouseLeave(this, null);
+                }
+            }
+        }
+
+        private void VectorToggleTextButton_Initialized(object sender, System.EventArgs e)
+        {
+            ApplyTemplate();
             BorderBrush = Brushes.Black;
-            CheckedMarkerBrush = Brushes.White;
-            SelectedMarkerWidth = Width / 6.15;
-            OriginMargin = Margin;
+            OriginMargin = Margin = new(0);
             OriginForegroundBrush = Foreground;
+
+            IsShowCheckedMarker = Visibility.Hidden;
+
             if (Text == "")
             {
                 Text = "Button";

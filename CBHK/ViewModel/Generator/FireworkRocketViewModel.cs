@@ -73,17 +73,17 @@ namespace CBHK.ViewModel.Generator
         /// 烟花火箭标签页
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorRichTabItem> _fireworkRocketPageList = 
+        public ObservableCollection<VectorTextTabItem> _fireworkRocketPageList = 
         [ 
-            new VectorRichTabItem() { Header = "烟花",
+            new VectorTextTabItem() { Title = "烟花",
                 BorderThickness = new(4, 4, 4, 0),
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style
+                Style = Application.Current.Resources["VectorTextTabItemStyle"] as Style
             } 
         ];
 
         [ObservableProperty]
-        private VectorRichTabItem _selectedFireworkRocketPage;
+        private VectorTextTabItem _selectedFireworkRocketPage;
 
         /// <summary>
         /// 形状数据源
@@ -94,15 +94,15 @@ namespace CBHK.ViewModel.Generator
         #region 版本数据源
         [ObservableProperty]
         public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
-            new VectorTextComboBoxItem() { Text = "1.20.2" },
-            new VectorTextComboBoxItem() { Text = "1.12.0" }
+            new VectorTextComboBoxItem() { Text = "1.20.2",MemberBrush = Brushes.White,DisplayPanelBrush = Brushes.Black },
+            new VectorTextComboBoxItem() { Text = "1.12.0",MemberBrush = Brushes.White,DisplayPanelBrush = Brushes.Black }
             ];
         #endregion
 
         #endregion
 
         #region Method
-        public FireworkRocketViewModel(IContainerProvider container,MainView mainView)
+        public FireworkRocketViewModel(IContainerProvider Container,MainView mainView)
         {
             #region 初始化数据
             if (ShapeList.Count == 0 && File.Exists(shapePath))
@@ -110,13 +110,13 @@ namespace CBHK.ViewModel.Generator
                 string[] shapes = File.ReadAllLines(shapePath);
                 foreach (string shape in shapes)
                 {
-                    ShapeList.Add(new VectorTextComboBoxItem() { Text = shape[(shape.LastIndexOf(':') + 1)..] });
+                    ShapeList.Add(new VectorTextComboBoxItem() { Text = shape[(shape.LastIndexOf(':') + 1)..], MemberBrush = Brushes.White, DisplayPanelBrush = Brushes.Black });
                 }
             }
             #endregion
 
             #region 初始化成员
-            container = container;
+            container = Container;
             home = mainView;
             FireworkRocketPageView fireworkRocketPages = container.Resolve<FireworkRocketPageView>();
             FireworkRocketPageList[0].Content = fireworkRocketPages;
@@ -263,19 +263,19 @@ namespace CBHK.ViewModel.Generator
         private void AddFireworkRocket()
         {
             FireworkRocketPageView fireworkRocketPages = new() { FontWeight = FontWeights.Normal };
-            VectorRichTabItem richTabItems = new()
+            VectorTextTabItem textTabItem = new()
             {
-                Header = "烟花",
+                Title = "烟花" + (FireworkRocketPageList.Count + 1),
                 Content = fireworkRocketPages,
                 BorderThickness = new(4, 4, 4, 0),
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style
+                Style = Application.Current.Resources["VectorTextTabItemStyle"] as Style
             };
-            FireworkRocketPageList.Add(richTabItems);
+            FireworkRocketPageList.Add(textTabItem);
 
             if (FireworkRocketPageList.Count == 1)
             {
-                TabControl tabControl = richTabItems.FindParent<TabControl>();
+                TabControl tabControl = textTabItem.FindParent<TabControl>();
                 tabControl.SelectedIndex = 0;
             }
         }
@@ -307,7 +307,7 @@ namespace CBHK.ViewModel.Generator
             if (dialog.ShowDialog().Value)
                 if (File.Exists(dialog.FileName))
                 {
-                    ObservableCollection<VectorRichTabItem> result = FireworkRocketPageList;
+                    ObservableCollection<VectorTextTabItem> result = FireworkRocketPageList;
                     ExternalDataImportManager.ImportFireworkDataHandler(dialog.FileName, ref result);
                 }
         }
@@ -318,7 +318,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFireworkRocketFromClipboard()
         {
-            ObservableCollection<VectorRichTabItem> result = FireworkRocketPageList;
+            ObservableCollection<VectorTextTabItem> result = FireworkRocketPageList;
             ExternalDataImportManager.ImportFireworkDataHandler(Clipboard.GetText(), ref result, false);
         }
 

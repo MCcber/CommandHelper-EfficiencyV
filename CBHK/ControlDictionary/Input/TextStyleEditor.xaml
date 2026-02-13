@@ -746,7 +746,7 @@
                                             x:Name="colorPicker"
                                             Title="设置文本颜色"
                                             Grid.Column="6"
-                                            Style="{DynamicResource VectorColorPicker}" />
+                                            Style="{DynamicResource VectorColorPickerStyle}" />
                                         <VectorButton:VectorFlatIconTextButton
                                             Grid.Column="7"
                                             Background="#D0D1D4"
