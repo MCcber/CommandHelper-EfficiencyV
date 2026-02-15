@@ -342,7 +342,10 @@ namespace CBHK.CustomControl.Container
 
         private void AddKeyFrames_Click()
         {
-
+            if(timeline is not null)
+            {
+                timeline.TrackList.Add();
+            }
         }
 
         /// <summary>

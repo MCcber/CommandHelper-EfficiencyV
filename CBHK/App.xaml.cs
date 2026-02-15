@@ -22,9 +22,8 @@ namespace CBHK
     public partial class App : PrismApplication
     {
         #region Field
-        private static string StartUpTimeString = "";
 
-        public static IServiceProvider ServiceProvider { get; private set; }
+        private static string StartUpTimeString = "";
 
 #pragma warning disable IDE0052
         private Mutex _mutex;
@@ -80,6 +79,8 @@ namespace CBHK
             containerRegistry.RegisterSingleton<MainView>();
             containerRegistry.RegisterSingleton<DataService>();
             containerRegistry.RegisterSingleton<RegexService>();
+            containerRegistry.RegisterSingleton<AnimationTimelineTool>();
+
         }
 
         protected override void ConfigureViewModelLocator()

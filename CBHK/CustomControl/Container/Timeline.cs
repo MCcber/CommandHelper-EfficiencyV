@@ -1,4 +1,7 @@
-﻿using System;
+﻿using CBHK.Utility.Common;
+using Prism.DryIoc;
+using Prism.Ioc;
+using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,6 +19,7 @@ namespace CBHK.CustomControl.Container
         private Thumb playHeadThumb;
         private Grid playHeadGrid;
         private Canvas canvas;
+        private AnimationTimelineTool animationTimelineTool;
         #endregion
 
         #region Property
@@ -63,6 +67,7 @@ namespace CBHK.CustomControl.Container
         public Timeline()
         {
             Loaded += Timeline_Loaded;
+            animationTimelineTool = (Application.Current as PrismApplication).Container.Resolve<AnimationTimelineTool>();
         }
 
         private void Timeline_Loaded(object sender, RoutedEventArgs e)
@@ -76,44 +81,6 @@ namespace CBHK.CustomControl.Container
                 new TimelineTrack() { TrackName = "左腿",Foreground = Brushes.Black,Margin = new(5,5,5,10) },
                 new TimelineTrack() { TrackName = "右腿",Foreground = Brushes.Black,Margin = new(5,5,5,10) }
                 ];
-        }
-
-        /// <summary>
-        /// 将鼠标横坐标转换为时间点
-        /// </summary>
-        /// <param name="mousePoint"></param>
-        /// <returns></returns>
-        private TimeSpan ConvertPixelToTime(double x)
-        {
-            if (Ruler == null)
-            {
-                return TimeSpan.Zero;
-            }
-
-            // 1. 计算原始秒数
-            double totalSeconds = x / (Ruler.BasePixelsPerSecond * Ruler.ZoomFactor);
-
-            // 2. 限制在有效时长内
-            totalSeconds = Math.Clamp(totalSeconds, 0, Ruler.Maximum);
-
-            // 3. 磁吸：四舍五入到最近的 0.05s (即 1/20 秒，1个 Minecraft Tick)
-            double tickCount = Math.Round(totalSeconds * 20);
-            return TimeSpan.FromSeconds(tickCount / 20.0);
-        }
-
-        /// <summary>
-        /// 将时间点转为画布横坐标
-        /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        private double ConvertTimeToPixel(TimeSpan time)
-        {
-            if (Ruler == null)
-            {
-                return 0;
-            }
-            // 公式：秒数 * 基础每秒像素 * 缩放倍率
-            return time.TotalSeconds * Ruler.BasePixelsPerSecond * Ruler.ZoomFactor;
         }
 
         public void UpdateTotalWidth()
@@ -192,13 +159,18 @@ namespace CBHK.CustomControl.Container
             {
                 return;
             }
-            double rawSeconds = ConvertPixelToTime(e.GetPosition(canvas).X).TotalSeconds;
+            double rawSeconds = animationTimelineTool.ConvertPixelToTime(e.GetPosition(canvas).X,Ruler).TotalSeconds;
             TimeSpan currentTime = SnapToTick(rawSeconds);
-            double pixelX = ConvertTimeToPixel(currentTime);
+            double pixelX = animationTimelineTool.ConvertTimeToPixel(currentTime, Ruler);
             pixelX = Math.Clamp(pixelX, 0, canvas.ActualWidth);
             Canvas.SetLeft(previewLine, pixelX);
         }
 
+        /// <summary>
+        /// 播放指针拖拽
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void PlayHeadThumb_DragDelta(object sender, DragDeltaEventArgs e)
         {
             if (canvas is null || Ruler is null || playHeadGrid is null)
@@ -212,14 +184,19 @@ namespace CBHK.CustomControl.Container
             // 1. 计算鼠标位移后的临时位置
             double newX = currentLeft + e.HorizontalChange;
             // 2. 将临时位置转换为“吸附后”的时间
-            CurrentTime = ConvertPixelToTime(newX);
+            CurrentTime = animationTimelineTool.ConvertPixelToTime(newX, Ruler);
         }
 
+        /// <summary>
+        /// 移动播放指针到指定位置
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Canvas_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (canvas is not null && Ruler is not null)
             {
-                double rawSeconds = ConvertPixelToTime(e.GetPosition(canvas).X).TotalSeconds;
+                double rawSeconds = animationTimelineTool.ConvertPixelToTime(e.GetPosition(canvas).X, Ruler).TotalSeconds;
                 //同样执行吸附
                 CurrentTime = SnapToTick(rawSeconds);
             }
@@ -235,11 +212,14 @@ namespace CBHK.CustomControl.Container
 
         private void OnCurrentTimeChanged(TimeSpan newValue)
         {
-            double newX = ConvertTimeToPixel(newValue);
+            double newX = animationTimelineTool.ConvertTimeToPixel(newValue, Ruler);
             Canvas.SetLeft(playHeadGrid, newX);
             TimeUpdateAction?.Invoke();
         }
 
+        /// <summary>
+        /// 根据时间更新播放指针的位置
+        /// </summary>
         public void UpdatePlayHeadPositionByCurrentTime()
         {
             if (playHeadGrid != null && Ruler != null)
@@ -247,7 +227,7 @@ namespace CBHK.CustomControl.Container
                 // 每次更新位置前，先确保画布宽度是对的
                 UpdateTotalWidth();
 
-                double newX = ConvertTimeToPixel(CurrentTime);
+                double newX = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler);
                 Canvas.SetLeft(playHeadGrid, newX);
             }
         }
