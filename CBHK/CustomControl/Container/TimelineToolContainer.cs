@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using Windows.Services.Maps;
 
 namespace CBHK.CustomControl.Container
 {
@@ -394,7 +393,7 @@ namespace CBHK.CustomControl.Container
             if(timePointList.Count > 0)
             {
                 double firstPoint = timePointList[0];
-                for (int i = 1; i < timePointList.Count; i++)
+                for (int i = 0; i < timePointList.Count; i++)
                 {
                     timePointList[i] -= firstPoint;
                 }

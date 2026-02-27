@@ -132,7 +132,7 @@ namespace CBHK.CustomControl.Container
         }
 
         /// <summary>
-        /// 在当前时间刻度下添加单点动画片段
+        /// 在当前时间刻度下添加关键帧
         /// </summary>
         public void AddTimelineClip()
         {
@@ -149,7 +149,7 @@ namespace CBHK.CustomControl.Container
         }
 
         /// <summary>
-        /// 在指定时间刻度下添加单点动画片段
+        /// 在指定时间刻度下添加动画关键帧
         /// </summary>
         /// <param name="time"></param>
         public void AddTimelineClip(TimeSpan time)
@@ -168,6 +168,13 @@ namespace CBHK.CustomControl.Container
             CurrentTrack.TimelineClipList.Add(timelineClip);
         }
 
+        /// <summary>
+        /// 合并为动画片段
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="timePointList"></param>
         public void AddTimelineClip(string title,TimeSpan start,TimeSpan end,List<double> timePointList)
         {
             double trackheight = GetTrackHeight();
@@ -183,6 +190,19 @@ namespace CBHK.CustomControl.Container
                 Style = Application.Current.Resources["TimelineClipStyle"] as Style,
                 Ruler = Ruler
             };
+            foreach (var timePointItem in timePointList)
+            {
+                TimeSpan timeSpan = animationTimelineTool.ConvertPixelToTime(timePointItem, Ruler);
+                ContinuousKeyframeItem continuousKeyframeItem = new()
+                {
+                    Width = 8,
+                    Height = 8,
+                    CurrentTime = timeSpan,
+                    X = timePointItem,
+                    Style = Application.Current.Resources["ContinuousKeyframeItemStyle"] as Style
+                };
+                rectangleTimelineClip.InnerKeyFrameList.Add(continuousKeyframeItem);
+            }
             CurrentTrack.TimelineClipList.Add(rectangleTimelineClip);
         }
 

@@ -6,7 +6,23 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Container:ContinuousKeyframeItem}">
-                    <Grid />
+                    <Grid
+                        x:Name="panel"
+                        Width="{TemplateBinding Width}"
+                        Height="{TemplateBinding Height}"
+                        RenderTransformOrigin="0.5 0.5">
+                        <Grid.RenderTransform>
+                            <RotateTransform Angle="45" />
+                        </Grid.RenderTransform>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="False">
+                            <Setter TargetName="panel" Property="Background" Value="{Binding OriginBackground, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="panel" Property="Background" Value="{Binding SelectedBackground, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

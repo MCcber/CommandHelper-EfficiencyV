@@ -3,6 +3,7 @@ using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -21,6 +22,7 @@ namespace CBHK.CustomControl.Input
         private Brush OriginInnerBorderBrush;
         private Brush OriginBackground;
         private Canvas parentCanvas;
+        private Canvas innerTimeCanvas;
         private Point dragPoint;
         private Point dragStartPoint;
         private TimeRulerElement timeRulerElement;
@@ -244,6 +246,7 @@ namespace CBHK.CustomControl.Input
         #region Method
         public TimelineClip()
         {
+            InnerKeyFrameList = [];
             TitleEditorVisibility = Visibility.Hidden;
             Loaded += TimelineClip_Loaded;
         }
@@ -364,9 +367,28 @@ namespace CBHK.CustomControl.Input
             UpdateBorderColorByBackgroundColor();
         }
 
-        public void ScaleTime_Loaded(object sender,RoutedEventArgs e)
+        public void InnerTimeCanvas_Loaded(object sender,RoutedEventArgs e)
         {
+            if(sender is Canvas canvas)
+            {
+                innerTimeCanvas = canvas;
+            }
 
+            if (innerTimeCanvas is not null && CurrentClipMode is ClipMode.Rectangle)
+            {
+                foreach (var keyframeItem in InnerKeyFrameList)
+                {
+                    keyframeItem.IsChecked = false;
+                    innerTimeCanvas.Children.Add(keyframeItem);
+                    Canvas.SetLeft(keyframeItem, keyframeItem.X - keyframeItem.Width / 2);
+                    Canvas.SetTop(keyframeItem, innerTimeCanvas.ActualHeight / 2);
+                }
+                InnerKeyFrameList.First().Cursor = Cursors.SizeWE;
+                InnerKeyFrameList.Last().Cursor = Cursors.SizeWE;
+
+                InnerKeyFrameList.First().IsChecked = true;
+                InnerKeyFrameList.Last().IsChecked = true;
+            }
         }
 
         protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
