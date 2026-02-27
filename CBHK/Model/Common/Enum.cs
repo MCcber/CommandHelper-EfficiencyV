@@ -78,4 +78,10 @@
         ObjectType,
         ArrayType
     };
+
+    public enum ClipMode
+    {
+        Point,
+        Rectangle
+    }
 }

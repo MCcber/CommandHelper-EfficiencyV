@@ -79,7 +79,6 @@ namespace CBHK
             containerRegistry.RegisterSingleton<MainView>();
             containerRegistry.RegisterSingleton<DataService>();
             containerRegistry.RegisterSingleton<RegexService>();
-            containerRegistry.RegisterSingleton<AnimationTimelineTool>();
 
         }
 

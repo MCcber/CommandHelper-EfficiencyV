@@ -12,6 +12,7 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorWindow.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/EyedropperWindow.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/TimelineToolContainer.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/ContinuousKeyframeItem.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/Timeline.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

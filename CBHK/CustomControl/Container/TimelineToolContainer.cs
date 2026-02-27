@@ -1,7 +1,11 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using CBHK.CustomControl.Input;
+using CBHK.Utility.Common;
+using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using Windows.Services.Maps;
 
 namespace CBHK.CustomControl.Container
 {
@@ -21,6 +25,15 @@ namespace CBHK.CustomControl.Container
 
         public static readonly DependencyProperty ZoomFactorProperty =
             DependencyProperty.Register("ZoomFactor", typeof(double), typeof(TimelineToolContainer), new PropertyMetadata(default(double), OnZoomFactor_ValueChanged));
+
+        public TimelineTrack SelectedTrack
+        {
+            get { return (TimelineTrack)GetValue(SelectedTrackProperty); }
+            set { SetValue(SelectedTrackProperty, value); }
+        }
+
+        public static readonly DependencyProperty SelectedTrackProperty =
+            DependencyProperty.Register("SelectedTrack", typeof(TimelineTrack), typeof(TimelineToolContainer), new PropertyMetadata(default(TimelineTrack)));
 
         public IRelayCommand MouseToolCommand
         {
@@ -66,6 +79,15 @@ namespace CBHK.CustomControl.Container
 
         public static readonly DependencyProperty SplitCommandProperty =
             DependencyProperty.Register("SplitCommand", typeof(IRelayCommand), typeof(TimelineToolContainer), new PropertyMetadata(default(IRelayCommand)));
+
+        public IRelayCommand MergeCommand
+        {
+            get { return (IRelayCommand)GetValue(MergeCommandProperty); }
+            set { SetValue(MergeCommandProperty, value); }
+        }
+
+        public static readonly DependencyProperty MergeCommandProperty =
+            DependencyProperty.Register("MergeCommand", typeof(IRelayCommand), typeof(TimelineToolContainer), new PropertyMetadata(default(IRelayCommand)));
 
         public IRelayCommand CuttingCommand
         {
@@ -185,6 +207,7 @@ namespace CBHK.CustomControl.Container
             DeleteKeyFramesCommand = new RelayCommand(DeleteFrames_Click);
             CopyCommand = new RelayCommand(Copy_Click);
             SplitCommand = new RelayCommand(Split_Click);
+            MergeCommand = new RelayCommand(Merge_Click);
             CuttingCommand = new RelayCommand(Cutting_Click);
             HorizontalFlipCommand = new RelayCommand(HorizontalFlip_Click);
             ReverseCommand = new RelayCommand(Reverse_Click);
@@ -307,7 +330,7 @@ namespace CBHK.CustomControl.Container
 
         private void AddTrack_Click()
         {
-
+            timeline.TrackList.Add(new());
         }
 
         private void Reverse_Click()
@@ -330,6 +353,59 @@ namespace CBHK.CustomControl.Container
 
         }
 
+        private void Merge_Click()
+        {
+            #region 搜索选中队列里最左侧和最右侧的关键帧并删除它们以及之间的所有关键帧
+            List<double> timePointList = [];
+            AnimationTimelineTool animationTimelineTool = new();
+            TimeSpan leftTime = TimeSpan.FromHours(24);
+            TimeSpan rightTime = TimeSpan.Zero;
+            TimelineClip leftClip = new();
+            TimelineClip rightClip = new();
+            for (int i = 0; i < timeline.CurrentTrack.TimelineClipList.Count; i++)
+            {
+                if (timeline.CurrentTrack.TimelineClipList[i].IsChecked is bool isChecked && isChecked)
+                {
+                    if (timeline.CurrentTrack.TimelineClipList[i].StartTime < leftTime)
+                    {
+                        leftTime = timeline.CurrentTrack.TimelineClipList[i].StartTime;
+                        leftClip = timeline.CurrentTrack.TimelineClipList[i];
+                    }
+                    if (timeline.CurrentTrack.TimelineClipList[i].EndTime > rightTime)
+                    {
+                        rightTime = timeline.CurrentTrack.TimelineClipList[i].EndTime;
+                        rightClip = timeline.CurrentTrack.TimelineClipList[i];
+                    }
+                }
+            }
+            for (int i = 0; i < timeline.CurrentTrack.TimelineClipList.Count; i++)
+            {
+                if (timeline.CurrentTrack.TimelineClipList[i].StartTime >= leftTime && timeline.CurrentTrack.TimelineClipList[i].EndTime <= rightTime)
+                {
+                    TimelineClip timelineclip = timeline.CurrentTrack.TimelineClipList[i];
+                    double currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.StartTime, timeline.Ruler);
+                    timePointList.Add(currentTimeValue);
+                    timeline.CurrentTrack.TimelineClipList.Remove(timelineclip);
+                    i--;
+                }
+            }
+
+            //从第一个开始整体偏移到0
+            if(timePointList.Count > 0)
+            {
+                double firstPoint = timePointList[0];
+                for (int i = 1; i < timePointList.Count; i++)
+                {
+                    timePointList[i] -= firstPoint;
+                }
+            }
+            #endregion
+
+            #region 把选区中的关键帧全部放进一个全新的连续模式动画片段实例中
+            timeline.AddTimelineClip("连续关键帧", leftTime, rightTime, timePointList);
+            #endregion
+        }
+
         private void Copy_Click()
         {
 
@@ -337,14 +413,17 @@ namespace CBHK.CustomControl.Container
 
         private void DeleteFrames_Click()
         {
-
+            if (timeline is not null && timeline.CurrentTrack is not null)
+            {
+                timeline.RemoveTimelineClip();
+            }
         }
 
         private void AddKeyFrames_Click()
         {
-            if(timeline is not null)
+            if(timeline is not null && timeline.CurrentTrack is not null)
             {
-                timeline.TrackList.Add();
+                timeline.AddTimelineClip();
             }
         }
 

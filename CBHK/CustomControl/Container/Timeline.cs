@@ -1,7 +1,7 @@
-﻿using CBHK.Utility.Common;
-using Prism.DryIoc;
-using Prism.Ioc;
+﻿using CBHK.CustomControl.Input;
+using CBHK.Utility.Common;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,7 +19,10 @@ namespace CBHK.CustomControl.Container
         private Thumb playHeadThumb;
         private Grid playHeadGrid;
         private Canvas canvas;
-        private AnimationTimelineTool animationTimelineTool;
+        private AnimationTimelineTool animationTimelineTool = new();
+        private ScrollViewer headScrollViewer;
+        private ScrollViewer contentViewer;
+        private TimelineTrack lastSelectedTrack;
         #endregion
 
         #region Property
@@ -44,6 +47,15 @@ namespace CBHK.CustomControl.Container
         public static readonly DependencyProperty TrackPanelMarginProperty =
             DependencyProperty.Register("TrackPanelMargin", typeof(Thickness), typeof(Timeline), new PropertyMetadata(default(Thickness)));
 
+        public double TrackPanelWidth
+        {
+            get { return (double)GetValue(TrackPanelWidthProperty); }
+            set { SetValue(TrackPanelWidthProperty, value); }
+        }
+
+        public static readonly DependencyProperty TrackPanelWidthProperty =
+            DependencyProperty.Register("TrackPanelWidth", typeof(double), typeof(Timeline), new PropertyMetadata(default(double)));
+
         public TimeSpan CurrentTime
         {
             get { return (TimeSpan)GetValue(CurrentTimeProperty); }
@@ -52,6 +64,15 @@ namespace CBHK.CustomControl.Container
 
         public static readonly DependencyProperty CurrentTimeProperty =
             DependencyProperty.Register("CurrentTime", typeof(TimeSpan), typeof(Timeline), new PropertyMetadata(default(TimeSpan), OnCurrentTimeChanged));
+
+        public TimelineTrack CurrentTrack
+        {
+            get { return (TimelineTrack)GetValue(CurrentTrackProperty); }
+            set { SetValue(CurrentTrackProperty, value); }
+        }
+
+        public static readonly DependencyProperty CurrentTrackProperty =
+            DependencyProperty.Register("CurrentTrack", typeof(TimelineTrack), typeof(Timeline), new PropertyMetadata(default(TimelineTrack)));
 
         public bool IsShowPreviewLine
         {
@@ -67,20 +88,11 @@ namespace CBHK.CustomControl.Container
         public Timeline()
         {
             Loaded += Timeline_Loaded;
-            animationTimelineTool = (Application.Current as PrismApplication).Container.Resolve<AnimationTimelineTool>();
         }
 
         private void Timeline_Loaded(object sender, RoutedEventArgs e)
         {
-            TrackPanelMargin = new(5, 30, 10, 0);
-            TrackList = [
-                new TimelineTrack() { TrackName = "头部",Foreground = Brushes.Black,Margin = new(5,5,5,10) },
-                new TimelineTrack() { TrackName = "身体",Foreground = Brushes.Black,Margin = new(5,5,5,10) },
-                new TimelineTrack() { TrackName = "左臂",Foreground = Brushes.Black,Margin = new(5,5,5,10) },
-                new TimelineTrack() { TrackName = "右臂",Foreground = Brushes.Black,Margin = new(5,5,5,10) },
-                new TimelineTrack() { TrackName = "左腿",Foreground = Brushes.Black,Margin = new(5,5,5,10) },
-                new TimelineTrack() { TrackName = "右腿",Foreground = Brushes.Black,Margin = new(5,5,5,10) }
-                ];
+            TrackPanelMargin = new(0, 30, 0, 0);
         }
 
         public void UpdateTotalWidth()
@@ -107,6 +119,84 @@ namespace CBHK.CustomControl.Container
             double tickCount = Math.Round(seconds * 20);
             return TimeSpan.FromSeconds(tickCount / 20.0);
         }
+
+        public double GetTrackHeight()
+        {
+            var height = contentViewer.ActualHeight;
+            double headHeight = height / TrackList.Count;
+            if (headHeight < 50)
+            {
+                headHeight = 50;
+            }
+            return headHeight;
+        }
+
+        /// <summary>
+        /// 在当前时间刻度下添加单点动画片段
+        /// </summary>
+        public void AddTimelineClip()
+        {
+            double trackheight = GetTrackHeight();
+            TimelineClip timelineClip = new()
+            {
+                Style = Application.Current.Resources["TimelineClipStyle"] as Style,
+                OriginStartTime = CurrentTime,
+                OriginCanvasTop = trackheight / 2,
+                Ruler = Ruler
+            };
+
+            CurrentTrack.TimelineClipList.Add(timelineClip);
+        }
+
+        /// <summary>
+        /// 在指定时间刻度下添加单点动画片段
+        /// </summary>
+        /// <param name="time"></param>
+        public void AddTimelineClip(TimeSpan time)
+        {
+            double trackheight = GetTrackHeight();
+            TimelineClip timelineClip = new() 
+            {
+                Style = Application.Current.Resources["TimelineClipStyle"] as Style,
+                OriginCanvasTop = trackheight / 2,
+                OriginStartTime = time,
+                Ruler = Ruler
+            };
+
+            double positionX = animationTimelineTool.ConvertTimeToPixel(time, Ruler);
+            Canvas.SetLeft(timelineClip, positionX);
+            CurrentTrack.TimelineClipList.Add(timelineClip);
+        }
+
+        public void AddTimelineClip(string title,TimeSpan start,TimeSpan end,List<double> timePointList)
+        {
+            double trackheight = GetTrackHeight();
+            TimelineClip rectangleTimelineClip = new()
+            {
+                ZoomFactor = Ruler.ZoomFactor,
+                RectangleModeHeight = trackheight,
+                OriginCanvasTop = trackheight / 2,
+                OriginStartTime = start,
+                OriginEndTime = end,
+                CurrentClipMode = Model.Common.ClipMode.Rectangle,
+                Title = title,
+                Style = Application.Current.Resources["TimelineClipStyle"] as Style,
+                Ruler = Ruler
+            };
+            CurrentTrack.TimelineClipList.Add(rectangleTimelineClip);
+        }
+
+        public void RemoveTimelineClip()
+        {
+            for (int j = 0; j < CurrentTrack.TimelineClipList.Count; j++)
+            {
+                if (CurrentTrack.TimelineClipList[j].IsChecked is bool isChecked && isChecked)
+                {
+                    CurrentTrack.TimelineClipList.RemoveAt(j);
+                    j--;
+                }
+            }
+        }
         #endregion
 
         #region Event
@@ -118,6 +208,18 @@ namespace CBHK.CustomControl.Container
             Ruler = GetTemplateChild("Ruler") as TimeRulerElement;
             canvas = GetTemplateChild("canvas") as Canvas;
             previewLine = GetTemplateChild("previewLine") as Line;
+
+            SolidColorBrush trackBackground = new((Color)ColorConverter.ConvertFromString("#CCD5F0"));
+            TrackList = [
+                new TimelineTrack() { TrackName = "头部",Foreground = Brushes.Black,Background = trackBackground },
+                new TimelineTrack() { TrackName = "身体",Foreground = Brushes.Black,Background = trackBackground },
+                new TimelineTrack() { TrackName = "左臂",Foreground = Brushes.Black,Background = trackBackground },
+                new TimelineTrack() { TrackName = "右臂",Foreground = Brushes.Black,Background = trackBackground },
+                new TimelineTrack() { TrackName = "左腿",Foreground = Brushes.Black,Background = trackBackground },
+                new TimelineTrack() { TrackName = "测试1",Foreground = Brushes.Black,Background = trackBackground },
+                new TimelineTrack() { TrackName = "测试2",Foreground = Brushes.Black,Background = trackBackground },
+                new TimelineTrack() { TrackName = "测试3",Foreground = Brushes.Black,Background = trackBackground }
+            ];
 
             if (canvas is not null)
             {
@@ -151,6 +253,90 @@ namespace CBHK.CustomControl.Container
             }
 
             UpdateTotalWidth();
+        }
+
+        public void HorizontalScrollViewer_Loaded(object sender,RoutedEventArgs e)
+        {
+            if (sender is ScrollViewer scrollViewer)
+            {
+                scrollViewer.ScrollChanged += HorizontalScrollViewer_ScrollChanged;
+            }
+        }
+
+        public void HeadScrollViewer_Loaded(object sender, RoutedEventArgs e)
+        {
+            headScrollViewer = sender as ScrollViewer;
+        }
+
+        /// <summary>
+        /// 设置高度、绑定头标滚动
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ContentScrollViewer_Loaded(object sender,RoutedEventArgs e)
+        {
+            if(sender is ScrollViewer scrollViewer)
+            {
+                contentViewer = scrollViewer;
+                double headHeight = GetTrackHeight();
+                foreach (var item in TrackList)
+                {
+                    item.Height = headHeight;
+                    item.HeadHeight = headHeight;
+                }
+                scrollViewer.ScrollChanged += ContentScrollViewer_ScrollChanged;
+            }
+        }
+
+        private void HorizontalScrollViewer_ScrollChanged(object sender,ScrollChangedEventArgs e)
+        {
+            contentViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
+        }
+
+        /// <summary>
+        /// 让头标视图的垂直轴与内容视图同步
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ContentScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            headScrollViewer.ScrollToVerticalOffset(e.VerticalOffset);
+        }
+
+        /// <summary>
+        /// 绑定轨道宽度
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void Canvas_Loaded(object sender,RoutedEventArgs e)
+        {
+            if (sender is Canvas canvas)
+            {
+                TrackPanelWidth = canvas.ActualWidth - TrackPanelMargin.Left;
+            }
+        }
+
+        /// <summary>
+        /// 左键按下后更新当前所选的轨道
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void Track_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is ItemsControl itemsControl && itemsControl.DataContext is TimelineTrack timelineTrack)
+            {
+                if(timelineTrack == CurrentTrack)
+                {
+                    return;
+                }
+                timelineTrack.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EAEAF2"));
+                if(lastSelectedTrack is not null)
+                {
+                    lastSelectedTrack.BorderBrush = Brushes.Transparent;
+                }
+                CurrentTrack = timelineTrack;
+                lastSelectedTrack = CurrentTrack;
+            }
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
@@ -192,7 +378,7 @@ namespace CBHK.CustomControl.Container
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Canvas_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Canvas_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (canvas is not null && Ruler is not null)
             {
@@ -222,13 +408,20 @@ namespace CBHK.CustomControl.Container
         /// </summary>
         public void UpdatePlayHeadPositionByCurrentTime()
         {
-            if (playHeadGrid != null && Ruler != null)
+            if (playHeadGrid is not null && Ruler is not null)
             {
                 // 每次更新位置前，先确保画布宽度是对的
                 UpdateTotalWidth();
 
-                double newX = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler);
-                Canvas.SetLeft(playHeadGrid, newX);
+                double positionX = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler);
+                Canvas.SetLeft(playHeadGrid, positionX);
+                for (int i = 0; i < TrackList.Count; i++)
+                {
+                    for (int j = 0; j < TrackList[i].TimelineClipList.Count; j++)
+                    {
+                        TrackList[i].TimelineClipList[j].UpdateClipByCurrentTime();
+                    }
+                }
             }
         }
         #endregion

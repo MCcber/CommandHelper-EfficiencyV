@@ -4,7 +4,6 @@
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors">
-
     <Geometry x:Key="PlayHeadShape">
         M512 981.53L242.89 751.6V58.23h538.22V751.6L512 981.53zM342.89 705.51L512 850l169.11-144.49V158.23H342.89v547.28z
     </Geometry>
@@ -40,21 +39,28 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
+
+                        <!--#region 轨道标头视图-->
                         <Container:VectorScrollViewer
                             x:Name="headViewer"
                             Grid.Column="0"
                             Margin="{Binding TrackPanelMargin, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:Timeline}}"
                             Background="Transparent"
                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                            <behaviors:Interaction.Triggers>
+                                <behaviors:EventTrigger EventName="Loaded">
+                                    <behaviors:CallMethodAction MethodName="HeadScrollViewer_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />
+                                </behaviors:EventTrigger>
+                            </behaviors:Interaction.Triggers>
                             <ItemsControl Background="Transparent" ItemsSource="{Binding TrackList, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:Timeline}}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid>
+                                        <Grid Height="{Binding HeadHeight}">
                                             <TextBlock
-                                                Margin="{Binding Margin}"
-                                                HorizontalAlignment="Left"
-                                                VerticalAlignment="Top"
+                                                Margin="10,0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
                                                 Background="Transparent"
                                                 Foreground="{Binding Foreground}"
                                                 Text="{Binding TrackName}"
@@ -71,45 +77,35 @@
                                 </ItemsControl.ItemsPanel>
                             </ItemsControl>
                         </Container:VectorScrollViewer>
+                        <!--#endregion-->
+
+                        <!--#region 刻度尺与轨道视图-->
                         <Container:VectorScrollViewer
-                            x:Name="contentViewer"
                             Grid.Column="1"
-                            Background="Transparent"
-                            PanningMode="None"
                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                            ScrollViewer.VerticalScrollBarVisibility="Auto"
-                            Style="{DynamicResource VectorScrollViewerStyle}">
+                            ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                            <behaviors:Interaction.Triggers>
+                                <behaviors:EventTrigger EventName="Loaded">
+                                    <behaviors:CallMethodAction MethodName="HorizontalScrollViewer_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />
+                                </behaviors:EventTrigger>
+                            </behaviors:Interaction.Triggers>
                             <Grid>
-                                <ItemsControl
-                                    Margin="{TemplateBinding TrackPanelMargin}"
-                                    Panel.ZIndex="1"
-                                    Background="Transparent"
-                                    ItemsSource="{TemplateBinding TrackList}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <ItemsControl ItemsSource="{Binding TimelineClipList}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <VectorCheckBox:VectorTextCheckBox
-                                                            IsChecked="{Binding IsSelected}"
-                                                            Style="{DynamicResource VectorTextCheckBoxStyle}"
-                                                            Text="" />
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <Canvas />
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                            </ItemsControl>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
                                 <Canvas
                                     x:Name="canvas"
-                                    Panel.ZIndex="0"
+                                    Grid.Row="0"
+                                    Height="30"
+                                    Panel.ZIndex="1"
                                     Background="Transparent"
                                     ClipToBounds="False">
+                                    <behaviors:Interaction.Triggers>
+                                        <behaviors:EventTrigger EventName="Loaded">
+                                            <behaviors:CallMethodAction MethodName="Canvas_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:Timeline}}" />
+                                        </behaviors:EventTrigger>
+                                    </behaviors:Interaction.Triggers>
                                     <Container:TimeRulerElement
                                         x:Name="Ruler"
                                         HorizontalAlignment="Left"
@@ -120,7 +116,9 @@
                                         x:Name="playHeadGrid"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Top"
-                                        Background="Transparent">
+                                        Panel.ZIndex="1"
+                                        Background="Transparent"
+                                        ClipToBounds="False">
                                         <Thumb
                                             x:Name="playerHeadThumb"
                                             Width="35"
@@ -152,8 +150,65 @@
                                         Y1="0"
                                         Y2="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ActualHeight}" />
                                 </Canvas>
+                                <!--  Margin="{TemplateBinding TrackPanelMargin}"  -->
+                                <Container:VectorScrollViewer
+                                    x:Name="contentViewer"
+                                    Grid.Row="1"
+                                    Panel.ZIndex="0"
+                                    Background="Transparent"
+                                    PanningMode="None"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                    ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                    Style="{DynamicResource VectorScrollViewerStyle}">
+                                    <behaviors:Interaction.Triggers>
+                                        <behaviors:EventTrigger EventName="Loaded">
+                                            <behaviors:CallMethodAction MethodName="ContentScrollViewer_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />
+                                        </behaviors:EventTrigger>
+                                    </behaviors:Interaction.Triggers>
+                                    <ItemsControl
+                                        x:Name="trackPanel"
+                                        Width="{TemplateBinding TrackPanelWidth}"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Background="Transparent"
+                                        ItemsSource="{TemplateBinding TrackList}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="{Binding BorderBrush}" BorderThickness="1">
+                                                    <ItemsControl
+                                                        Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
+                                                        Height="{Binding Height}"
+                                                        HorizontalAlignment="Left"
+                                                        Background="{Binding Background}"
+                                                        ItemsSource="{Binding TimelineClipList}">
+                                                        <behaviors:Interaction.Triggers>
+                                                            <behaviors:EventTrigger EventName="MouseLeftButtonDown">
+                                                                <behaviors:CallMethodAction MethodName="Track_MouseLeftButtonDown" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />
+                                                            </behaviors:EventTrigger>
+                                                        </behaviors:Interaction.Triggers>
+                                                        <!--<ItemsControl.ItemContainerStyle>
+                                                            <Style>
+                                                                <Setter Property="Canvas.Top" Value="0" />
+                                                                <Setter Property="Control.VerticalContentAlignment" Value="Stretch" />
+                                                                <Setter Property="Control.HorizontalContentAlignment" Value="Stretch" />
+                                                                <Setter Property="FrameworkElement.Height" Value="{Binding RelativeSource={RelativeSource AncestorType=Canvas}, Path=ActualHeight}" />
+                                                            </Style>
+                                                        </ItemsControl.ItemContainerStyle>-->
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <Canvas Background="Transparent" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                    </ItemsControl>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Container:VectorScrollViewer>
                             </Grid>
                         </Container:VectorScrollViewer>
+                        <!--#endregion-->
+
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

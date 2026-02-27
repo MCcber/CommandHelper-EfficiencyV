@@ -187,13 +187,14 @@ namespace CBHK.CustomControl.Container
 
             // 定义常量公差
             double epsilon = 0.0001;
-
+            double currentTime = 0;
+            double xPos = 0;
+            double renderX = 0; // 像素对齐
             for (int i = 0; i <= totalSmallSteps; i++)
             {
-                double currentTime = i * currentLevel.SmallStepSeconds;
-                double xPos = currentTime * pixelsPerSecond;
-                double renderX = xPos + 0.5; // 像素对齐
-
+                currentTime = i * currentLevel.SmallStepSeconds;
+                xPos = currentTime * pixelsPerSecond;
+                renderX = xPos + 0.5;
                 // 判断是大刻度还是小刻度
                 // 检查 currentTime 是否是大刻度的整数倍
                 double remainder = currentTime % currentLevel.LargeStepSeconds;

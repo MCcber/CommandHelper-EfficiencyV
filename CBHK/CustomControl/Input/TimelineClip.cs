@@ -1,10 +1,45 @@
-﻿using System.Windows;
+﻿using CBHK.CustomControl.Container;
+using CBHK.Model.Common;
+using CBHK.Utility.Common;
+using System;
+using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Media;
 
 namespace CBHK.CustomControl.Input
 {
-    public class TimelineClip : Control
+    public class TimelineClip : ToggleButton
     {
+        #region Field
+        private AnimationTimelineTool animationTimelineTool = new();
+        private bool isDragging = false;
+        private bool isEditSize = false;
+        private bool isReFreshingBrush = false;
+        private Brush OriginInnerBorderBrush;
+        private Brush OriginBackground;
+        private Canvas parentCanvas;
+        private Point dragPoint;
+        private Point dragStartPoint;
+        private TimeRulerElement timeRulerElement;
+        #endregion
+
+        #region Property
+        public TimeSpan OriginStartTime { get; set; }
+        public TimeSpan OriginEndTime { get; set; }
+        public double OriginCanvasTop { get; set; }
+
+        public TimeRulerElement Ruler
+        {
+            get { return (TimeRulerElement)GetValue(RulerProperty); }
+            set { SetValue(RulerProperty, value); }
+        }
+
+        public static readonly DependencyProperty RulerProperty =
+            DependencyProperty.Register("Ruler", typeof(TimeRulerElement), typeof(TimelineClip), new PropertyMetadata(default(TimeRulerElement)));
+
         public string Title
         {
             get { return (string)GetValue(TitleProperty); }
@@ -14,13 +49,465 @@ namespace CBHK.CustomControl.Input
         public static readonly DependencyProperty TitleProperty =
             DependencyProperty.Register("Title", typeof(string), typeof(TimelineClip), new PropertyMetadata(default(string)));
 
-        public string TimeText
+        public Visibility TitleEditorVisibility
         {
-            get { return (string)GetValue(TimeTextProperty); }
-            set { SetValue(TimeTextProperty, value); }
+            get { return (Visibility)GetValue(TitleEditorVisibilityProperty); }
+            set { SetValue(TitleEditorVisibilityProperty, value); }
         }
 
-        public static readonly DependencyProperty TimeTextProperty =
-            DependencyProperty.Register("TimeText", typeof(string), typeof(TimelineClip), new PropertyMetadata(default(string)));
+        public static readonly DependencyProperty TitleEditorVisibilityProperty =
+            DependencyProperty.Register("TitleEditorVisibility", typeof(Visibility), typeof(TimelineClip), new PropertyMetadata(default(Visibility)));
+
+        public double ZoomFactor
+        {
+            get { return (double)GetValue(ZoomFactorProperty); }
+            set { SetValue(ZoomFactorProperty, value); }
+        }
+
+        public static readonly DependencyProperty ZoomFactorProperty =
+            DependencyProperty.Register("ZoomFactor", typeof(double), typeof(TimelineClip), new PropertyMetadata(default(double)));
+
+        public double MinDuration
+        {
+            get { return (double)GetValue(MinDurationProperty); }
+            set { SetValue(MinDurationProperty, value); }
+        }
+
+        public static readonly DependencyProperty MinDurationProperty =
+            DependencyProperty.Register("MinDuration", typeof(double), typeof(TimelineClip), new PropertyMetadata(default(double)));
+
+        public Brush ClipColor
+        {
+            get { return (Brush)GetValue(ClipColorProperty); }
+            set { SetValue(ClipColorProperty, value); }
+        }
+
+        public static readonly DependencyProperty ClipColorProperty =
+            DependencyProperty.Register("ClipColor", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
+
+        public TimeSpan StartTime
+        {
+            get { return (TimeSpan)GetValue(StartTimeProperty); }
+            set { SetValue(StartTimeProperty, value); }
+        }
+
+        public static readonly DependencyProperty StartTimeProperty =
+            DependencyProperty.Register("StartTime", typeof(TimeSpan), typeof(TimelineClip), new PropertyMetadata(default(TimeSpan), Frame_PropertyChanged));
+
+        public TimeSpan EndTime
+        {
+            get { return (TimeSpan)GetValue(EndTimeProperty); }
+            set { SetValue(EndTimeProperty, value); }
+        }
+
+        public static readonly DependencyProperty EndTimeProperty =
+            DependencyProperty.Register("EndTime", typeof(TimeSpan), typeof(TimelineClip), new PropertyMetadata(default(TimeSpan), Frame_PropertyChanged));
+
+        public TimeSpan Duration => EndTime - StartTime;
+
+        public double DurationSecond
+        {
+            get { return (double)GetValue(DurationSecondProperty); }
+            set { SetValue(DurationSecondProperty, value); }
+        }
+
+        public static readonly DependencyProperty DurationSecondProperty =
+            DependencyProperty.Register("DurationSecond", typeof(double), typeof(TimelineClip), new PropertyMetadata(default(double)));
+
+        public string DurationText
+        {
+            get { return (string)GetValue(DurationTextProperty); }
+            set { SetValue(DurationTextProperty, value); }
+        }
+
+        public static readonly DependencyProperty DurationTextProperty =
+            DependencyProperty.Register("DurationText", typeof(string), typeof(TimelineClip), new PropertyMetadata(default(string)));
+
+        public double PointModeSize
+        {
+            get { return (double)GetValue(PointModeSizeProperty); }
+            set { SetValue(PointModeSizeProperty, value); }
+        }
+
+        public static readonly DependencyProperty PointModeSizeProperty =
+            DependencyProperty.Register("PointModeSize", typeof(double), typeof(TimelineClip), new PropertyMetadata(16.0));
+
+        public double RectangleModeWidth
+        {
+            get { return (double)GetValue(RectangleModeWidthProperty); }
+            set { SetValue(RectangleModeWidthProperty, value); }
+        }
+
+        public static readonly DependencyProperty RectangleModeWidthProperty =
+            DependencyProperty.Register("RectangleModeWidth", typeof(double), typeof(TimelineClip), new PropertyMetadata(16.0));
+
+        public double RectangleModeHeight
+        {
+            get { return (double)GetValue(RectangleModeHeightProperty); }
+            set { SetValue(RectangleModeHeightProperty, value); }
+        }
+
+        public static readonly DependencyProperty RectangleModeHeightProperty =
+            DependencyProperty.Register("RectangleModeHeight", typeof(double), typeof(TimelineClip), new PropertyMetadata(default(double)));
+
+        public ClipMode CurrentClipMode
+        {
+            get { return (ClipMode)GetValue(CurrentClipModeProperty); }
+            set { SetValue(CurrentClipModeProperty, value); }
+        }
+
+        public static readonly DependencyProperty CurrentClipModeProperty =
+            DependencyProperty.Register("CurrentClipMode", typeof(ClipMode), typeof(TimelineClip), new PropertyMetadata(default(ClipMode)));
+
+        public ObservableCollection<ContinuousKeyframeItem> InnerKeyFrameList
+        {
+            get { return (ObservableCollection<ContinuousKeyframeItem>)GetValue(InnerKeyFrameListProperty); }
+            set { SetValue(InnerKeyFrameListProperty, value); }
+        }
+
+        public static readonly DependencyProperty InnerKeyFrameListProperty =
+            DependencyProperty.Register("InnerKeyFrameList", typeof(ObservableCollection<ContinuousKeyframeItem>), typeof(TimelineClip), new PropertyMetadata(default(ObservableCollection<ContinuousKeyframeItem>)));
+
+        public Brush InnerBorderBrush
+        {
+            get { return (Brush)GetValue(InnerBorderBrushProperty); }
+            set { SetValue(InnerBorderBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty InnerBorderBrushProperty =
+            DependencyProperty.Register("InnerBorderBrush", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
+
+        public Brush InnerLeftTopBackground
+        {
+            get { return (Brush)GetValue(InnerLeftTopBackgroundProperty); }
+            set { SetValue(InnerLeftTopBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty InnerLeftTopBackgroundProperty =
+            DependencyProperty.Register("InnerLeftTopBackground", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
+
+        public Brush InnerRightTopBackground
+        {
+            get { return (Brush)GetValue(InnerRightTopBackgroundProperty); }
+            set { SetValue(InnerRightTopBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty InnerRightTopBackgroundProperty =
+            DependencyProperty.Register("InnerRightTopBackground", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
+
+        public Brush InnerLeftBottomBackground
+        {
+            get { return (Brush)GetValue(InnerLeftBottomBackgroundProperty); }
+            set { SetValue(InnerLeftBottomBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty InnerLeftBottomBackgroundProperty =
+            DependencyProperty.Register("InnerLeftBottomBackground", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
+
+        public Brush InnerRightBottomBackground
+        {
+            get { return (Brush)GetValue(InnerRightBottomBackgroundProperty); }
+            set { SetValue(InnerRightBottomBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty InnerRightBottomBackgroundProperty =
+            DependencyProperty.Register("InnerRightBottomBackground", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
+
+        public Brush LeftTopBorderBrush
+        {
+            get { return (Brush)GetValue(LeftTopBorderBrushProperty); }
+            set { SetValue(LeftTopBorderBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty LeftTopBorderBrushProperty =
+            DependencyProperty.Register("LeftTopBorderBrush", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
+
+        public Brush RightBottomBorderBrush
+        {
+            get { return (Brush)GetValue(RightBottomBorderBrushProperty); }
+            set { SetValue(RightBottomBorderBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty RightBottomBorderBrushProperty =
+            DependencyProperty.Register("RightBottomBorderBrush", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
+
+        public Brush BorderCornerBrush
+        {
+            get { return (Brush)GetValue(BorderCornerBrushProperty); }
+            set { SetValue(BorderCornerBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty BorderCornerBrushProperty =
+            DependencyProperty.Register("BorderCornerBrush", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
+        #endregion
+
+        #region Method
+        public TimelineClip()
+        {
+            TitleEditorVisibility = Visibility.Hidden;
+            Loaded += TimelineClip_Loaded;
+        }
+
+        private void UpdateBorderColorByBackgroundColor()
+        {
+            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
+            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
+            {
+                Foreground = Brushes.White;
+            }
+
+            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
+            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style || BorderBrush is null)
+            {
+                BorderBrush = Brushes.Black;
+            }
+
+            var originborderCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderCornerBrushProperty);
+            if (originborderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originborderCornerBrushSource.BaseValueSource is BaseValueSource.Style || BorderCornerBrush is null || isReFreshingBrush)
+            {
+                SolidColorBrush solidBorderBrush = OriginInnerBorderBrush as SolidColorBrush;
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
+                BorderCornerBrush = new SolidColorBrush(color);
+            }
+
+            var originLeftTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopBorderBrushProperty);
+            if (originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Style || LeftTopBorderBrush is null || isReFreshingBrush)
+            {
+                SolidColorBrush solidBorderBrush = OriginInnerBorderBrush as SolidColorBrush;
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.3f);
+                LeftTopBorderBrush = new SolidColorBrush(color);
+            }
+
+            var originRightBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
+            if (originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style || RightBottomBorderBrush is null || isReFreshingBrush)
+            {
+                SolidColorBrush solidBorderBrush = OriginInnerBorderBrush as SolidColorBrush;
+                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
+                RightBottomBorderBrush = new SolidColorBrush(color);
+            }
+
+            var originInnerLeftTopBackgroundSource = DependencyPropertyHelper.GetValueSource(this, InnerLeftTopBackgroundProperty);
+            if (originInnerLeftTopBackgroundSource.BaseValueSource is BaseValueSource.Default || originInnerLeftTopBackgroundSource.BaseValueSource is BaseValueSource.Style || InnerLeftTopBackground is null || isReFreshingBrush)
+            {
+                SolidColorBrush solidBorderBrush = OriginBackground as SolidColorBrush;
+                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.02f);
+                InnerLeftTopBackground = new SolidColorBrush(color);
+            }
+
+            var originInnerRightTopBackgroundSource = DependencyPropertyHelper.GetValueSource(this, InnerRightTopBackgroundProperty);
+            if (originInnerRightTopBackgroundSource.BaseValueSource is BaseValueSource.Default || originInnerRightTopBackgroundSource.BaseValueSource is BaseValueSource.Style || InnerRightTopBackground is null || isReFreshingBrush)
+            {
+                SolidColorBrush solidBorderBrush = OriginBackground as SolidColorBrush;
+                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.05f);
+                InnerRightTopBackground = new SolidColorBrush(color);
+            }
+
+            var originInnerLeftBottomBackgroundSource = DependencyPropertyHelper.GetValueSource(this, InnerLeftBottomBackgroundProperty);
+            if (originInnerLeftBottomBackgroundSource.BaseValueSource is BaseValueSource.Default || originInnerLeftBottomBackgroundSource.BaseValueSource is BaseValueSource.Style || InnerLeftBottomBackground is null || isReFreshingBrush)
+            {
+                SolidColorBrush solidBorderBrush = OriginBackground as SolidColorBrush;
+                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.05f);
+                InnerLeftBottomBackground = new SolidColorBrush(color);
+            }
+
+            var originInnerRightBottomBackgroundSource = DependencyPropertyHelper.GetValueSource(this, InnerRightBottomBackgroundProperty);
+            if (originInnerRightBottomBackgroundSource.BaseValueSource is BaseValueSource.Default || originInnerRightBottomBackgroundSource.BaseValueSource is BaseValueSource.Style || InnerRightBottomBackground is null || isReFreshingBrush)
+            {
+                SolidColorBrush solidBorderBrush = OriginBackground as SolidColorBrush;
+                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.08f);
+                InnerRightBottomBackground = new SolidColorBrush(color);
+            }
+        }
+        #endregion
+
+        #region Event
+        private void TimelineClip_Loaded(object sender, RoutedEventArgs e)
+        {
+            StartTime = OriginStartTime;
+
+            if(CurrentClipMode is ClipMode.Point)
+            {
+                OriginEndTime = OriginStartTime;
+            }
+
+            EndTime = OriginEndTime;
+            Canvas.SetTop(this, OriginCanvasTop - ActualHeight / 2);
+            if (IsChecked is bool value && value)
+            {
+                OriginBackground = new BrushConverter().ConvertFromString("#FFFFFF") as Brush;
+                OriginInnerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD7929"));
+            }
+            else
+            {
+                OriginBackground = new BrushConverter().ConvertFromString("#B8BEBA") as Brush;
+                OriginInnerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B8BEBA"));
+            }
+
+            var originBackgroundBrushSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
+            if (originBackgroundBrushSource.BaseValueSource is BaseValueSource.Default || originBackgroundBrushSource.BaseValueSource is BaseValueSource.Style || Background is null)
+            {
+                Background = OriginBackground;
+            }
+            var originInnerBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, InnerBorderBrushProperty);
+            if (originInnerBorderBrushSource.BaseValueSource is BaseValueSource.Default || originInnerBorderBrushSource.BaseValueSource is BaseValueSource.Style || InnerBorderBrush is null)
+            {
+                InnerBorderBrush = OriginInnerBorderBrush;
+            }
+
+            // 向上查找父级 Canvas
+            parentCanvas = VisualTreeHelper.GetParent(this) as Canvas;
+            while (parentCanvas == null && VisualTreeHelper.GetParent(this) != null)
+            {
+                parentCanvas = VisualTreeHelper.GetParent(VisualTreeHelper.GetParent(this)) as Canvas;
+            }
+
+            UpdateBorderColorByBackgroundColor();
+        }
+
+        public void ScaleTime_Loaded(object sender,RoutedEventArgs e)
+        {
+
+        }
+
+        protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            // 获取父级 Canvas (作为计算坐标的绝对参考系)
+            if (parentCanvas is not null)
+            {
+                dragPoint = dragStartPoint = e.GetPosition(parentCanvas);
+
+                // 【最关键的一句】强制控件捕获鼠标！
+                // 这样即使拖拽速度过快，鼠标箭头移出了控件范围，它依然能持续触发 MouseMove。
+                CaptureMouse();
+            }
+
+            // 调用基类方法，保证 ToggleButton 原本的选中/点击逻辑正常工作
+            base.OnPreviewMouseLeftButtonDown(e);
+        }
+
+        protected override void OnPreviewMouseMove(MouseEventArgs e)
+        {
+            // 只有在拖拽中且鼠标被捕获时才处理
+            if (IsMouseCaptured && parentCanvas is not null)
+            {
+                if (!isDragging)
+                {
+                    // SystemParameters.MinimumHorizontalDragDistance 通常是 4 像素
+                    if (Math.Abs(dragPoint.X - dragStartPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                        Math.Abs(dragPoint.Y - dragStartPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
+                    {
+                        isDragging = true;
+                    }
+                }
+
+                dragPoint = e.GetPosition(parentCanvas);
+
+                // 【注意】如果你需要在拖拽时实时更新 C# 里的 StartTime/EndTime，
+                // 可以利用你的 animationTimelineTool 在这里实时反推时间并赋值。
+                StartTime = animationTimelineTool.ConvertPixelToTime(dragPoint.X, Ruler);
+                if(CurrentClipMode is ClipMode.Point)
+                {
+                    EndTime = StartTime;
+                }
+                else
+                {
+                    EndTime = animationTimelineTool.ConvertPixelToTime(dragPoint.X + RectangleModeWidth, Ruler);
+                }
+            }
+
+            base.OnPreviewMouseMove(e);
+        }
+
+        protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
+        {
+            if (!isDragging && IsChecked is not null)
+            {
+                IsChecked = !IsChecked;
+            }
+            isDragging = false;
+            ReleaseMouseCapture();
+
+            base.OnPreviewMouseLeftButtonUp(e);
+        }
+
+        private static void Frame_PropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if(d is TimelineClip clip)
+            {
+                clip.TimelineClipFrame_Changed(e.Property.Name);
+            }
+        }
+
+        public void TimelineClipFrame_Changed(string PropertyName)
+        {
+            switch (PropertyName)
+            {
+                case "EndTime":
+                    {
+                        TimeSpan timeSpan = EndTime - StartTime;
+                        int seconds = timeSpan.Seconds;
+                        int milliseconds = timeSpan.Milliseconds;
+                        int frames = (int)(timeSpan.TotalSeconds * 20) % 20;
+                        DurationSecond = Duration.TotalSeconds;
+                        DurationText = string.Format("{0:D2}s{1:D2}ms{2:D2}f", seconds, milliseconds, frames);
+                        UpdateClipByCurrentTime();
+                        break;
+                    }
+            }
+        }
+
+        /// <summary>
+        /// 根据时间更新动画片段的位置
+        /// </summary>
+        public void UpdateClipByCurrentTime()
+        {
+            if (Ruler is not null)
+            {
+                double startPoint = animationTimelineTool.ConvertTimeToPixel(StartTime, Ruler);
+                double endPoint = animationTimelineTool.ConvertTimeToPixel(EndTime, Ruler);
+                Canvas.SetLeft(this, startPoint);
+
+                if (CurrentClipMode == ClipMode.Point)
+                {
+                    // 单点模式下，控件外层宽度应与内层视觉宽度保持一致，确保 Transform 生效基准正确
+                    Width = PointModeSize = 16;
+                }
+                else
+                {
+                    // 连续模式（Rectangle）
+                    if (endPoint >= startPoint)
+                    {
+                        RectangleModeWidth = endPoint - startPoint;
+                    }
+                }
+            }
+        }
+
+        protected override void OnChecked(RoutedEventArgs e)
+        {
+            base.OnChecked(e);
+            if (IsChecked is bool)
+            {
+                isReFreshingBrush = true;
+                Background = OriginBackground = new BrushConverter().ConvertFromString("#FFFFFF") as Brush;
+                InnerBorderBrush = OriginInnerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD7929"));
+                UpdateBorderColorByBackgroundColor();
+                isReFreshingBrush = false;
+            }
+        }
+
+        protected override void OnUnchecked(RoutedEventArgs e)
+        {
+            base.OnUnchecked(e);
+            if (IsChecked is bool)
+            {
+                isReFreshingBrush = true;
+                Background = OriginBackground = new BrushConverter().ConvertFromString("#B8BEBA") as Brush;
+                InnerBorderBrush = OriginInnerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B8BEBA"));
+                UpdateBorderColorByBackgroundColor();
+                isReFreshingBrush = false;
+            }
+        }
+        #endregion
     }
 }
