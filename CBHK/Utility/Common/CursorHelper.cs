@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32.SafeHandles;
-using System;
+﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -21,8 +20,6 @@ namespace CBHK.Utility.Common
             public IntPtr hbmColor;
         }
 
-
-
         [DllImport("user32.dll")]
         private static extern IntPtr CreateIconIndirect(ref IconInfo icon);
 
@@ -30,47 +27,71 @@ namespace CBHK.Utility.Common
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetIconInfo(IntPtr hIcon, ref IconInfo pIconInfo);
 
+        [DllImport("user32.dll")]
+        private static extern bool DestroyIcon(IntPtr hIcon);
 
-        private static Cursor InternalCreateCursor(System.Drawing.Bitmap bmp,
-            int xHotSpot, int yHotSpot)
+        [DllImport("gdi32.dll")]
+        private static extern bool DeleteObject(IntPtr hObject);
+
+        // 自定义 SafeHandle 用于光标句柄（已移除过时的 ReliabilityContract）
+        private sealed class SafeCursorHandle : SafeHandle
         {
-            IconInfo tmp = new IconInfo();
-            GetIconInfo(bmp.GetHicon(), ref tmp);
+            public SafeCursorHandle() : base(IntPtr.Zero, true) { }
+
+            public SafeCursorHandle(IntPtr handle) : base(IntPtr.Zero, true)
+            {
+                SetHandle(handle);
+            }
+
+            public override bool IsInvalid => handle == IntPtr.Zero;
+
+            protected override bool ReleaseHandle()
+            {
+                return DestroyIcon(handle);
+            }
+        }
+
+        private static Cursor InternalCreateCursor(System.Drawing.Bitmap bmp, int xHotSpot, int yHotSpot)
+        {
+            IconInfo tmp = new();
+            IntPtr hIcon = bmp.GetHicon(); // 该句柄随 Bitmap 释放
+            if (!GetIconInfo(hIcon, ref tmp))
+                throw new InvalidOperationException("Failed to get icon info.");
+
             tmp.xHotspot = xHotSpot;
             tmp.yHotspot = yHotSpot;
             tmp.fIcon = false;
 
-            IntPtr ptr = CreateIconIndirect(ref tmp);
-            SafeFileHandle handle = new SafeFileHandle(ptr, true);
-            return CursorInteropHelper.Create(handle);
+            IntPtr cursorPtr = CreateIconIndirect(ref tmp);
+
+            // 必须释放 GetIconInfo 分配的 GDI 位图句柄
+            if (tmp.hbmMask != IntPtr.Zero) DeleteObject(tmp.hbmMask);
+            if (tmp.hbmColor != IntPtr.Zero) DeleteObject(tmp.hbmColor);
+
+            SafeCursorHandle safeHandle = new(cursorPtr);
+            return CursorInteropHelper.Create(safeHandle);
         }
 
         public static Cursor CreateCursor(UIElement element, int xHotSpot, int yHotSpot)
         {
             element.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            element.Arrange(new Rect(0, 0, element.DesiredSize.Width,
-                element.DesiredSize.Height));
+            element.Arrange(new Rect(0, 0, element.DesiredSize.Width, element.DesiredSize.Height));
 
-            RenderTargetBitmap rtb = new RenderTargetBitmap((int)element.DesiredSize.Width,
-                (int)element.DesiredSize.Height, 96, 96, PixelFormats.Pbgra32);
+            RenderTargetBitmap rtb = new(
+                (int)element.DesiredSize.Width,
+                (int)element.DesiredSize.Height,
+                96, 96, PixelFormats.Pbgra32);
             rtb.Render(element);
 
-            PngBitmapEncoder encoder = new PngBitmapEncoder();
+            PngBitmapEncoder encoder = new();
             encoder.Frames.Add(BitmapFrame.Create(rtb));
 
-            MemoryStream ms = new MemoryStream();
+            using MemoryStream ms = new();
             encoder.Save(ms);
+            ms.Seek(0, SeekOrigin.Begin);
 
-            System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(ms);
-
-            ms.Close();
-            ms.Dispose();
-
-            Cursor cur = InternalCreateCursor(bmp, xHotSpot, yHotSpot);
-
-            bmp.Dispose();
-
-            return cur;
+            using System.Drawing.Bitmap bmp = new(ms);
+            return InternalCreateCursor(bmp, xHotSpot, yHotSpot);
         }
     }
 }

@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Converters;
 using System.Windows.Shapes;
 
 namespace CBHK.CustomControl.Container
@@ -32,6 +33,8 @@ namespace CBHK.CustomControl.Container
         public Action TimeUpdateAction { get; set; }
 
         public bool IsSplitModeOpened { get; set; }
+
+        public TimelineClip CurrentSplitTimelineClip { get; set; }
 
         public ObservableCollection<TimelineTrack> TrackList
         {
@@ -261,32 +264,22 @@ namespace CBHK.CustomControl.Container
         /// </summary>
         public void SplitClip()
         {
-            List<TimelineClip> selectedClipList = [..CurrentTrack.TimelineClipList.Where(item => item.IsChecked is bool value && value && item.CurrentClipMode is Model.Common.ClipMode.Rectangle)];
-            TimelineClip selectedClip = null;
-            foreach (TimelineClip clip in selectedClipList)
-            {
-                if (clip.StartTime < CurrentTime && clip.EndTime > CurrentTime)
-                {
-                    selectedClip = clip;
-                    break;
-                }
-            }
-
-            if(selectedClip is not null)
+            if(CurrentSplitTimelineClip is not null)
             {
                 #region 字段
-                TimeSpan keyFrameItemStartTime = selectedClip.StartTime;
+                TimeSpan keyFrameItemStartTime = CurrentSplitTimelineClip.StartTime;
+                TimeSpan splitTime = animationTimelineTool.ConvertPixelToTime(CurrentSplitTimelineClip.SplitPreviewLineOffsetX, Ruler) + keyFrameItemStartTime;
                 double trackheight = GetTrackHeight();
                 bool isOnKeyFrame = false;
-                int splitKeyFrameIndex = 0;
+                int splitKeyFrameIndex = -1;
                 List<ContinuousKeyframeItem> keyFrameList = [];
-                TimeSpan leftTime = TimeSpan.FromHours(24); 
+                TimeSpan leftTime = TimeSpan.FromHours(24);
                 #endregion
 
                 #region 搜索分割位置，正好在帧成员上或者在它们之间
-                for (int i = 0; i < selectedClip.InnerKeyFrameList.Count; i++)
+                for (int i = 0; i < CurrentSplitTimelineClip.InnerKeyFrameList.Count; i++)
                 {
-                    TimeSpan currentKeyFrameTime = selectedClip.InnerKeyFrameList[i].CurrentTime + keyFrameItemStartTime;
+                    TimeSpan currentKeyFrameTime = CurrentSplitTimelineClip.InnerKeyFrameList[i].CurrentTime + keyFrameItemStartTime;
                     if (currentKeyFrameTime >= CurrentTime && leftTime > currentKeyFrameTime)
                     {
                         splitKeyFrameIndex = i;
@@ -304,8 +297,8 @@ namespace CBHK.CustomControl.Container
                 #endregion
 
                 #region 保留旧的帧成员，标记当前选中的片段
-                keyFrameList = [.. selectedClip.InnerKeyFrameList.Skip(splitKeyFrameIndex)];
-                selectedClip.IsDivided = true;
+                keyFrameList = [.. CurrentSplitTimelineClip.InnerKeyFrameList.Skip(splitKeyFrameIndex)];
+                CurrentSplitTimelineClip.IsDivided = true;
                 #endregion
 
                 #region 生成新的动画片段以及它的左侧第一帧
@@ -317,22 +310,21 @@ namespace CBHK.CustomControl.Container
                     RectangleModeHeight = trackheight,
                     CurrentClipMode = Model.Common.ClipMode.Rectangle,
                     Style = Application.Current.Resources["TimelineClipStyle"] as Style,
-                    OriginStartTime = CurrentTime,
-                    OriginEndTime = selectedClip.EndTime,
-                    OriginCanvasTop = selectedClip.OriginCanvasTop,
+                    OriginStartTime = splitTime,
+                    OriginEndTime = CurrentSplitTimelineClip.EndTime,
+                    OriginCanvasTop = CurrentSplitTimelineClip.OriginCanvasTop,
                     Ruler = Ruler,
-                    Title = selectedClip.Title,
+                    Title = CurrentSplitTimelineClip.Title,
                     ParentTimeline = this,
                     ParentPanel = trackPanelList[TrackList.IndexOf(CurrentTrack)]
                 };
 
-                ContinuousKeyframeItem splitedKeyFrameItem = selectedClip.InnerKeyFrameList[splitKeyFrameIndex];
                 ContinuousKeyframeItem newKeyFrameItem = new()
                 {
                     IsBorderKeyFrame = true,
                     Width = 16,
                     Height = 16,
-                    CurrentTime = splitedKeyFrameItem.CurrentTime,
+                    CurrentTime = splitTime,
                     X = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler),
                     Style = Application.Current.Resources["ContinuousKeyframeItemStyle"] as Style
                 }; 
@@ -349,29 +341,29 @@ namespace CBHK.CustomControl.Container
                         IsBorderKeyFrame = true,
                         Width = 16,
                         Height = 16,
-                        CurrentTime = splitedKeyFrameItem.CurrentTime,
+                        CurrentTime = splitTime,
                         X = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler),
                         Style = Application.Current.Resources["ContinuousKeyframeItemStyle"] as Style
                     };
-                    selectedClip.UpdateStateAction = () =>
+                    CurrentSplitTimelineClip.UpdateStateAction = () =>
                     {
-                        if (selectedClip.RightBorderFrameItem is not null)
+                        if (CurrentSplitTimelineClip.RightBorderFrameItem is not null)
                         {
-                            selectedClip.RightBorderFrameItem.IsBorderKeyFrame = false;
+                            CurrentSplitTimelineClip.RightBorderFrameItem.IsBorderKeyFrame = false;
                         }
-                        selectedClip.RightBorderFrameItem = selectedEndKeyFrameItem;
+                        CurrentSplitTimelineClip.RightBorderFrameItem = selectedEndKeyFrameItem;
                     };
-                    selectedClip.InnerKeyFrameList = [.. selectedClip.InnerKeyFrameList.Take(splitKeyFrameIndex)];
-                    selectedClip.InnerKeyFrameList.Add(selectedEndKeyFrameItem);
+                    CurrentSplitTimelineClip.InnerKeyFrameList = [.. CurrentSplitTimelineClip.InnerKeyFrameList.Take(splitKeyFrameIndex)];
+                    CurrentSplitTimelineClip.InnerKeyFrameList.Add(selectedEndKeyFrameItem);
                 }
                 #endregion
 
                 #region 处理动画片段分割后的宽度
                 CurrentTrack.TimelineClipList.Add(newClip);
-                selectedClip.EndTime = splitedKeyFrameItem.CurrentTime;
-                double startValue = animationTimelineTool.ConvertTimeToPixel(selectedClip.StartTime, Ruler);
-                double endValue = animationTimelineTool.ConvertTimeToPixel(selectedClip.EndTime, Ruler);
-                selectedClip.RectangleModeWidth = endValue - startValue; 
+                CurrentSplitTimelineClip.EndTime = splitTime;
+                double startValue = animationTimelineTool.ConvertTimeToPixel(CurrentSplitTimelineClip.StartTime, Ruler);
+                double endValue = animationTimelineTool.ConvertTimeToPixel(CurrentSplitTimelineClip.EndTime, Ruler);
+                CurrentSplitTimelineClip.RectangleModeWidth = endValue - startValue; 
                 #endregion
             }
         }
@@ -495,26 +487,28 @@ namespace CBHK.CustomControl.Container
             if (sender is ItemsControl itemsControl && itemsControl.DataContext is TimelineTrack timelineTrack)
             {
                 #region 切换选中的轨道
-                if (timelineTrack == CurrentTrack)
+                if (timelineTrack != CurrentTrack)
                 {
-                    return;
-                }
 
-                if (CurrentTrack is not null)
-                {
-                    foreach (var item in CurrentTrack.TimelineClipList)
+                    if (CurrentTrack is not null)
                     {
-                        item.IsChecked = false;
-                        item.BorderBrush = Brushes.White;
+                        foreach (var item in CurrentTrack.TimelineClipList)
+                        {
+                            if (item.CurrentClipMode is Model.Common.ClipMode.Rectangle)
+                            {
+                                item.IsChecked = false;
+                                item.BorderBrush = Brushes.White;
+                            }
+                        }
                     }
+                    timelineTrack.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EAEAF2"));
+                    if (lastSelectedTrack is not null)
+                    {
+                        lastSelectedTrack.BorderBrush = Brushes.Transparent;
+                    }
+                    CurrentTrack = timelineTrack;
+                    lastSelectedTrack = CurrentTrack;
                 }
-                timelineTrack.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EAEAF2"));
-                if (lastSelectedTrack is not null)
-                {
-                    lastSelectedTrack.BorderBrush = Brushes.Transparent;
-                }
-                CurrentTrack = timelineTrack;
-                lastSelectedTrack = CurrentTrack;
                 #endregion
 
                 #region 切割动画片段

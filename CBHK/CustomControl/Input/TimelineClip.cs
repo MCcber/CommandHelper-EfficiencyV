@@ -3,16 +3,12 @@ using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Windows.Management.Deployment;
 
 namespace CBHK.CustomControl.Input
 {
@@ -33,7 +29,7 @@ namespace CBHK.CustomControl.Input
         private bool isTimelineClipLoaded;
         private bool isInnerTimeCanvasLoaded;
         private ContinuousKeyframeItem currentMemberFrameItem;
-
+        private Cursor splitCursor;
         #endregion
 
         #region Property
@@ -418,6 +414,23 @@ namespace CBHK.CustomControl.Input
 
             UpdateBorderColorByBackgroundColor();
 
+            Geometry geometry = (Application.Current.Resources["ShaverGeometry"] as Geometry).Clone();
+            Path path = new()
+            {
+                Data = geometry,
+                Fill = Brushes.Black,
+                Stroke = Brushes.Black,
+                StrokeThickness = 1
+            };
+            Viewbox viewbox = new()
+            {
+                Child = path,
+                Width = 35,
+                Height = 35
+            };
+            geometry.Transform = new RotateTransform(45);
+            splitCursor = CursorHelper.CreateCursor(viewbox, 0, 0);
+
             isTimelineClipLoaded = true;
         }
 
@@ -644,6 +657,10 @@ namespace CBHK.CustomControl.Input
         #region 调整动画片段整体位置
         protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
         {
+            if (ParentTimeline.IsSplitModeOpened)
+            {
+                ParentTimeline.CurrentSplitTimelineClip = this;
+            }
             ParentTimeline?.Track_MouseLeftButtonDown(ParentPanel, null);
             if (e.ClickCount == 1)
             {
@@ -698,8 +715,10 @@ namespace CBHK.CustomControl.Input
             #region 处理预览分割线的移动
             if(ParentTimeline is not null && ParentTimeline.IsSplitModeOpened)
             {
-                dragPoint = e.GetPosition(parentCanvas);
+                dragPoint = e.GetPosition(innerTimeCanvas);
                 double currentX = dragPoint.X;
+                TimeSpan timeSpan = animationTimelineTool.ConvertPixelToTime(currentX, Ruler);
+                currentX = animationTimelineTool.ConvertTimeToPixel(timeSpan, Ruler);
                 currentX = Math.Clamp(currentX,0,parentCanvas.ActualWidth);
                 SplitPreviewLineOffsetX = currentX;
             }
@@ -736,34 +755,20 @@ namespace CBHK.CustomControl.Input
                 RightBorderFrameItem.PreviewMouseLeftButtonDown += BorderKeyFrameItem_PreviewMouseLeftButtonDown;
                 RightBorderFrameItem.MouseEnter += KeyFrameItem_MouseEnter;
                 RightBorderFrameItem.MouseLeave += KeyFrameItem_MouseLeave;
-            } 
+            }
             #endregion
 
-            if(ParentTimeline is not null && ParentTimeline.IsSplitModeOpened)
+            #region 处理分割片段时的鼠标图案
+            if (ParentTimeline is not null && ParentTimeline.IsSplitModeOpened)
             {
                 SplitPreviewLineVisibility = Visibility.Visible;
-
-                Geometry geometry = (Application.Current.Resources["ShaverGeometry"] as Geometry).Clone();
-                Path path = new()
-                {
-                    Data = geometry,
-                    Fill = Brushes.Black,
-                    Stroke = Brushes.Black,
-                    StrokeThickness = 1
-                };
-                Viewbox viewbox = new()
-                {
-                    Child = path,
-                    Width = 50,
-                    Height = 50
-                };
-                geometry.Transform = new RotateTransform(45);
-                Cursor = CursorHelper.CreateCursor(viewbox, 0, 0);
+                Cursor = splitCursor;
             }
             else
             {
                 Cursor = Cursors.Arrow;
             }
+            #endregion
         }
 
         protected override void OnMouseLeave(MouseEventArgs e)

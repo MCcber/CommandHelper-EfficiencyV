@@ -164,6 +164,8 @@
                                     </behavior:Interaction.Triggers>
                                     <Line
                                         Canvas.Left="{TemplateBinding SplitPreviewLineOffsetX}"
+                                        Panel.ZIndex="1"
+                                        IsHitTestVisible="False"
                                         Stroke="Gray"
                                         StrokeDashArray="2,2"
                                         StrokeThickness="1"
