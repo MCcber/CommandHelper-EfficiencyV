@@ -6,6 +6,10 @@ namespace CBHK.CustomControl.Input
 {
     public class VectorNumbericUpDown : Control
     {
+        #region Field
+        private string originText = "";
+        #endregion
+
         #region Property
         public string Text
         {
@@ -68,26 +72,54 @@ namespace CBHK.CustomControl.Input
         #endregion
 
         #region Event
+        public void VectorNumbericUpDownTextBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (double.TryParse(Text, out double result))
+            {
+                originText = result.ToString();
+            }
+            VectorNumbericUpDown_LostFocus(sender, e);
+        }
+
+        public void VectorNumbericUpDown_GotFocus(object sender, RoutedEventArgs e)
+        {
+            Text = originText;
+        }
+
+        public void VectorNumbericUpDown_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(originText) && !string.IsNullOrEmpty(WaterMarkerText))
+            {
+                Text = WaterMarkerText + ':' + originText;
+            }
+        }
+
         public void OnTextChanged(object sender, TextChangedEventArgs e)
         {
             SetValue(HasTextPropertyKey, Text is not null && Text.Length > 0);
+            if (sender is TextBox textBox && textBox.IsFocused)
+            {
+                originText = Text;
+            }
         }
 
         public void OnIncrease_Click(object sender,RoutedEventArgs e)
         {
-            if (int.TryParse(Text, out int value))
+            if (int.TryParse(originText, out int value))
             {
                 value++;
-                Text = value.ToString();
+                originText = value.ToString();
+                Text = WaterMarkerText + ':' + originText;
             }
         }
 
         public void OnDecrease_Click(object sender, RoutedEventArgs e)
         {
-            if (int.TryParse(Text, out int value))
+            if (int.TryParse(originText, out int value))
             {
                 value--;
-                Text = value.ToString();
+                originText = value.ToString();
+                Text = WaterMarkerText + ':' + originText;
             }
         }
         #endregion

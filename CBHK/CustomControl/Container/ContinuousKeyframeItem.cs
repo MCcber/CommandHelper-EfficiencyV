@@ -8,6 +8,8 @@ namespace CBHK.CustomControl.Container
     public class ContinuousKeyframeItem:ToggleButton
     {
         #region Property
+        public bool IsBorderKeyFrame { get; set; }
+
         public TimeSpan CurrentTime
         {
             get { return (TimeSpan)GetValue(CurrentTimeProperty); }

@@ -31,13 +31,22 @@
                                 Foreground="{TemplateBinding Foreground}"
                                 LocateLineBrush="{TemplateBinding LocateLineBrush}"
                                 Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{TemplateBinding Text}"
+                                Text="{Binding Text, RelativeSource={RelativeSource Mode=TemplatedParent}, UpdateSourceTrigger=PropertyChanged}"
                                 WaterMarkerBrush="{TemplateBinding WaterMarkerBrush}"
                                 WaterMarkerMargin="{TemplateBinding WaterMarkerMargin}"
                                 WaterMarkerText="{TemplateBinding WaterMarkerText}">
                                 <behaviors:Interaction.Triggers>
+                                    <behaviors:EventTrigger EventName="Loaded">
+                                        <behaviors:CallMethodAction MethodName="VectorNumbericUpDownTextBox_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                                    </behaviors:EventTrigger>
                                     <behaviors:EventTrigger EventName="TextChanged">
                                         <behaviors:CallMethodAction MethodName="OnTextChanged" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                                    </behaviors:EventTrigger>
+                                    <behaviors:EventTrigger EventName="GotFocus">
+                                        <behaviors:CallMethodAction MethodName="VectorNumbericUpDown_GotFocus" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                                    </behaviors:EventTrigger>
+                                    <behaviors:EventTrigger EventName="LostFocus">
+                                        <behaviors:CallMethodAction MethodName="VectorNumbericUpDown_LostFocus" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />
                                     </behaviors:EventTrigger>
                                 </behaviors:Interaction.Triggers>
                             </Input:VectorTextBox>

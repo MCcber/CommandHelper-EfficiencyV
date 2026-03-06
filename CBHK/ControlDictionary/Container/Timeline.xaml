@@ -2,6 +2,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors">
     <Geometry x:Key="PlayHeadShape">
@@ -57,16 +59,19 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Height="{Binding HeadHeight}">
-                                            <TextBlock
+                                            <VectorButton:VectorFlatTextButton
                                                 Margin="10,0"
+                                                Padding="{Binding Padding}"
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center"
-                                                Background="Transparent"
+                                                Background="{Binding TrackHeadBackground}"
                                                 Foreground="{Binding Foreground}"
+                                                Style="{DynamicResource VectorFlatTextButtonStyle}"
+                                                Text="{Binding TrackName}" />
+                                            <Input:VectorTextBox
+                                                Style="{DynamicResource VectorTextBoxStyle}"
                                                 Text="{Binding TrackName}"
-                                                TextAlignment="Center"
-                                                TextTrimming="CharacterEllipsis"
-                                                TextWrapping="NoWrap" />
+                                                Visibility="Hidden" />
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -166,12 +171,11 @@
                                         </behaviors:EventTrigger>
                                     </behaviors:Interaction.Triggers>
                                     <ItemsControl
-                                        x:Name="trackPanel"
                                         Width="{TemplateBinding TrackPanelWidth}"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Top"
                                         Background="Transparent"
-                                        ItemsSource="{TemplateBinding TrackList}">
+                                        ItemsSource="{Binding TrackList, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:Timeline}}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border BorderBrush="{Binding BorderBrush}" BorderThickness="1">
@@ -182,18 +186,16 @@
                                                         Background="{Binding Background}"
                                                         ItemsSource="{Binding TimelineClipList}">
                                                         <behaviors:Interaction.Triggers>
+                                                            <behaviors:EventTrigger EventName="Loaded">
+                                                                <behaviors:CallMethodAction MethodName="Track_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />
+                                                            </behaviors:EventTrigger>
                                                             <behaviors:EventTrigger EventName="MouseLeftButtonDown">
                                                                 <behaviors:CallMethodAction MethodName="Track_MouseLeftButtonDown" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />
                                                             </behaviors:EventTrigger>
+                                                            <behaviors:EventTrigger EventName="MouseLeftButtonUp">
+                                                                <behaviors:CallMethodAction MethodName="Track_MouseLeftButtonUp" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />
+                                                            </behaviors:EventTrigger>
                                                         </behaviors:Interaction.Triggers>
-                                                        <!--<ItemsControl.ItemContainerStyle>
-                                                            <Style>
-                                                                <Setter Property="Canvas.Top" Value="0" />
-                                                                <Setter Property="Control.VerticalContentAlignment" Value="Stretch" />
-                                                                <Setter Property="Control.HorizontalContentAlignment" Value="Stretch" />
-                                                                <Setter Property="FrameworkElement.Height" Value="{Binding RelativeSource={RelativeSource AncestorType=Canvas}, Path=ActualHeight}" />
-                                                            </Style>
-                                                        </ItemsControl.ItemContainerStyle>-->
                                                         <ItemsControl.ItemsPanel>
                                                             <ItemsPanelTemplate>
                                                                 <Canvas Background="Transparent" />

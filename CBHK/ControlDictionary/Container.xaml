@@ -14,5 +14,6 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/TimelineToolContainer.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/ContinuousKeyframeItem.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/Timeline.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/MessageTipItemTemplate.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

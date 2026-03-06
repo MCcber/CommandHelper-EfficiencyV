@@ -3,6 +3,7 @@ using CBHK.Utility.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -23,11 +24,14 @@ namespace CBHK.CustomControl.Container
         private ScrollViewer headScrollViewer;
         private ScrollViewer contentViewer;
         private TimelineTrack lastSelectedTrack;
+        private List<ItemsControl> trackPanelList = [];
         #endregion
 
         #region Property
         public TimeRulerElement Ruler { get; set; }
         public Action TimeUpdateAction { get; set; }
+
+        public bool IsSplitModeOpened { get; set; }
 
         public ObservableCollection<TimelineTrack> TrackList
         {
@@ -122,8 +126,11 @@ namespace CBHK.CustomControl.Container
 
         public double GetTrackHeight()
         {
-            var height = contentViewer.ActualHeight;
-            double headHeight = height / TrackList.Count;
+            double headHeight = 50.0;
+            if (TrackList.Count > 0)
+            {
+                headHeight = contentViewer.ActualHeight / TrackList.Count;
+            }
             if (headHeight < 50)
             {
                 headHeight = 50;
@@ -142,7 +149,9 @@ namespace CBHK.CustomControl.Container
                 Style = Application.Current.Resources["TimelineClipStyle"] as Style,
                 OriginStartTime = CurrentTime,
                 OriginCanvasTop = trackheight / 2,
-                Ruler = Ruler
+                Ruler = Ruler,
+                ParentTimeline = this,
+                ParentPanel = trackPanelList[TrackList.IndexOf(CurrentTrack)]
             };
 
             CurrentTrack.TimelineClipList.Add(timelineClip);
@@ -160,7 +169,9 @@ namespace CBHK.CustomControl.Container
                 Style = Application.Current.Resources["TimelineClipStyle"] as Style,
                 OriginCanvasTop = trackheight / 2,
                 OriginStartTime = time,
-                Ruler = Ruler
+                Ruler = Ruler,
+                ParentTimeline = this,
+                ParentPanel = trackPanelList[TrackList.IndexOf(CurrentTrack)]
             };
 
             double positionX = animationTimelineTool.ConvertTimeToPixel(time, Ruler);
@@ -178,6 +189,7 @@ namespace CBHK.CustomControl.Container
         public void AddTimelineClip(string title,TimeSpan start,TimeSpan end,List<double> timePointList)
         {
             double trackheight = GetTrackHeight();
+
             TimelineClip rectangleTimelineClip = new()
             {
                 ZoomFactor = Ruler.ZoomFactor,
@@ -188,15 +200,18 @@ namespace CBHK.CustomControl.Container
                 CurrentClipMode = Model.Common.ClipMode.Rectangle,
                 Title = title,
                 Style = Application.Current.Resources["TimelineClipStyle"] as Style,
-                Ruler = Ruler
+                Ruler = Ruler,
+                ParentTimeline = this,
+                ParentPanel = trackPanelList[TrackList.IndexOf(CurrentTrack)]
             };
+
             foreach (var timePointItem in timePointList)
             {
                 TimeSpan timeSpan = animationTimelineTool.ConvertPixelToTime(timePointItem, Ruler);
                 ContinuousKeyframeItem continuousKeyframeItem = new()
                 {
-                    Width = 8,
-                    Height = 8,
+                    Width = 16,
+                    Height = 16,
                     CurrentTime = timeSpan,
                     X = timePointItem,
                     Style = Application.Current.Resources["ContinuousKeyframeItemStyle"] as Style
@@ -217,6 +232,149 @@ namespace CBHK.CustomControl.Container
                 }
             }
         }
+
+        public void AddTrack(string title)
+        {
+            SolidColorBrush trackBackground = new((Color)ColorConverter.ConvertFromString("#CCD5F0"));
+            SolidColorBrush trackHeadBackground = new((Color)ColorConverter.ConvertFromString("#CCD5F0"));
+            TimelineTrack timelineTrack = new() { Padding = new(5), TrackName = title, Foreground = Brushes.Black, Background = trackBackground,TrackHeadBackground = trackHeadBackground };
+            TrackList.Add(timelineTrack);
+
+            double headHeight = GetTrackHeight();
+            foreach (var item in TrackList)
+            {
+                item.Height = headHeight;
+                item.HeadHeight = headHeight;
+            }
+        }
+
+        public void RemoveTrack()
+        {
+            if(CurrentTrack is not null)
+            {
+                TrackList.Remove(CurrentTrack);
+            }
+        }
+
+        /// <summary>
+        /// 拆分动画片段
+        /// </summary>
+        public void SplitClip()
+        {
+            List<TimelineClip> selectedClipList = [..CurrentTrack.TimelineClipList.Where(item => item.IsChecked is bool value && value && item.CurrentClipMode is Model.Common.ClipMode.Rectangle)];
+            TimelineClip selectedClip = null;
+            foreach (TimelineClip clip in selectedClipList)
+            {
+                if (clip.StartTime < CurrentTime && clip.EndTime > CurrentTime)
+                {
+                    selectedClip = clip;
+                    break;
+                }
+            }
+
+            if(selectedClip is not null)
+            {
+                #region 字段
+                TimeSpan keyFrameItemStartTime = selectedClip.StartTime;
+                double trackheight = GetTrackHeight();
+                bool isOnKeyFrame = false;
+                int splitKeyFrameIndex = 0;
+                List<ContinuousKeyframeItem> keyFrameList = [];
+                TimeSpan leftTime = TimeSpan.FromHours(24); 
+                #endregion
+
+                #region 搜索分割位置，正好在帧成员上或者在它们之间
+                for (int i = 0; i < selectedClip.InnerKeyFrameList.Count; i++)
+                {
+                    TimeSpan currentKeyFrameTime = selectedClip.InnerKeyFrameList[i].CurrentTime + keyFrameItemStartTime;
+                    if (currentKeyFrameTime >= CurrentTime && leftTime > currentKeyFrameTime)
+                    {
+                        splitKeyFrameIndex = i;
+                        leftTime = currentKeyFrameTime;
+                    }
+
+                    isOnKeyFrame = currentKeyFrameTime == CurrentTime;
+                    if (isOnKeyFrame)
+                    {
+                        splitKeyFrameIndex = i;
+                        leftTime = currentKeyFrameTime;
+                        break;
+                    }
+                }
+                #endregion
+
+                #region 保留旧的帧成员，标记当前选中的片段
+                keyFrameList = [.. selectedClip.InnerKeyFrameList.Skip(splitKeyFrameIndex)];
+                selectedClip.IsDivided = true;
+                #endregion
+
+                #region 生成新的动画片段以及它的左侧第一帧
+                TimelineClip newClip = new()
+                {
+                    IsSplitOut = true,
+                    InnerKeyFrameList = new(keyFrameList),
+                    ZoomFactor = Ruler.ZoomFactor,
+                    RectangleModeHeight = trackheight,
+                    CurrentClipMode = Model.Common.ClipMode.Rectangle,
+                    Style = Application.Current.Resources["TimelineClipStyle"] as Style,
+                    OriginStartTime = CurrentTime,
+                    OriginEndTime = selectedClip.EndTime,
+                    OriginCanvasTop = selectedClip.OriginCanvasTop,
+                    Ruler = Ruler,
+                    Title = selectedClip.Title,
+                    ParentTimeline = this,
+                    ParentPanel = trackPanelList[TrackList.IndexOf(CurrentTrack)]
+                };
+
+                ContinuousKeyframeItem splitedKeyFrameItem = selectedClip.InnerKeyFrameList[splitKeyFrameIndex];
+                ContinuousKeyframeItem newKeyFrameItem = new()
+                {
+                    IsBorderKeyFrame = true,
+                    Width = 16,
+                    Height = 16,
+                    CurrentTime = splitedKeyFrameItem.CurrentTime,
+                    X = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler),
+                    Style = Application.Current.Resources["ContinuousKeyframeItemStyle"] as Style
+                }; 
+
+                newClip.InnerKeyFrameList.Add(newKeyFrameItem);
+                newClip.LeftBorderFrameItem = newKeyFrameItem;
+                #endregion
+
+                #region 没有在帧成员上分割时
+                if (!isOnKeyFrame)
+                {
+                    ContinuousKeyframeItem selectedEndKeyFrameItem = new()
+                    {
+                        IsBorderKeyFrame = true,
+                        Width = 16,
+                        Height = 16,
+                        CurrentTime = splitedKeyFrameItem.CurrentTime,
+                        X = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler),
+                        Style = Application.Current.Resources["ContinuousKeyframeItemStyle"] as Style
+                    };
+                    selectedClip.UpdateStateAction = () =>
+                    {
+                        if (selectedClip.RightBorderFrameItem is not null)
+                        {
+                            selectedClip.RightBorderFrameItem.IsBorderKeyFrame = false;
+                        }
+                        selectedClip.RightBorderFrameItem = selectedEndKeyFrameItem;
+                    };
+                    selectedClip.InnerKeyFrameList = [.. selectedClip.InnerKeyFrameList.Take(splitKeyFrameIndex)];
+                    selectedClip.InnerKeyFrameList.Add(selectedEndKeyFrameItem);
+                }
+                #endregion
+
+                #region 处理动画片段分割后的宽度
+                CurrentTrack.TimelineClipList.Add(newClip);
+                selectedClip.EndTime = splitedKeyFrameItem.CurrentTime;
+                double startValue = animationTimelineTool.ConvertTimeToPixel(selectedClip.StartTime, Ruler);
+                double endValue = animationTimelineTool.ConvertTimeToPixel(selectedClip.EndTime, Ruler);
+                selectedClip.RectangleModeWidth = endValue - startValue; 
+                #endregion
+            }
+        }
         #endregion
 
         #region Event
@@ -228,18 +386,7 @@ namespace CBHK.CustomControl.Container
             Ruler = GetTemplateChild("Ruler") as TimeRulerElement;
             canvas = GetTemplateChild("canvas") as Canvas;
             previewLine = GetTemplateChild("previewLine") as Line;
-
-            SolidColorBrush trackBackground = new((Color)ColorConverter.ConvertFromString("#CCD5F0"));
-            TrackList = [
-                new TimelineTrack() { TrackName = "头部",Foreground = Brushes.Black,Background = trackBackground },
-                new TimelineTrack() { TrackName = "身体",Foreground = Brushes.Black,Background = trackBackground },
-                new TimelineTrack() { TrackName = "左臂",Foreground = Brushes.Black,Background = trackBackground },
-                new TimelineTrack() { TrackName = "右臂",Foreground = Brushes.Black,Background = trackBackground },
-                new TimelineTrack() { TrackName = "左腿",Foreground = Brushes.Black,Background = trackBackground },
-                new TimelineTrack() { TrackName = "测试1",Foreground = Brushes.Black,Background = trackBackground },
-                new TimelineTrack() { TrackName = "测试2",Foreground = Brushes.Black,Background = trackBackground },
-                new TimelineTrack() { TrackName = "测试3",Foreground = Brushes.Black,Background = trackBackground }
-            ];
+            TrackList = [];
 
             if (canvas is not null)
             {
@@ -298,12 +445,6 @@ namespace CBHK.CustomControl.Container
             if(sender is ScrollViewer scrollViewer)
             {
                 contentViewer = scrollViewer;
-                double headHeight = GetTrackHeight();
-                foreach (var item in TrackList)
-                {
-                    item.Height = headHeight;
-                    item.HeadHeight = headHeight;
-                }
                 scrollViewer.ScrollChanged += ContentScrollViewer_ScrollChanged;
             }
         }
@@ -336,6 +477,14 @@ namespace CBHK.CustomControl.Container
             }
         }
 
+        public void Track_Loaded(object sender,RoutedEventArgs e)
+        {
+            if(sender is ItemsControl itemsControl)
+            {
+                trackPanelList.Add(itemsControl);
+            }
+        }
+
         /// <summary>
         /// 左键按下后更新当前所选的轨道
         /// </summary>
@@ -345,17 +494,51 @@ namespace CBHK.CustomControl.Container
         {
             if (sender is ItemsControl itemsControl && itemsControl.DataContext is TimelineTrack timelineTrack)
             {
-                if(timelineTrack == CurrentTrack)
+                #region 切换选中的轨道
+                if (timelineTrack == CurrentTrack)
                 {
                     return;
                 }
+
+                if (CurrentTrack is not null)
+                {
+                    foreach (var item in CurrentTrack.TimelineClipList)
+                    {
+                        item.IsChecked = false;
+                        item.BorderBrush = Brushes.White;
+                    }
+                }
                 timelineTrack.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EAEAF2"));
-                if(lastSelectedTrack is not null)
+                if (lastSelectedTrack is not null)
                 {
                     lastSelectedTrack.BorderBrush = Brushes.Transparent;
                 }
                 CurrentTrack = timelineTrack;
                 lastSelectedTrack = CurrentTrack;
+                #endregion
+
+                #region 切割动画片段
+                if (IsSplitModeOpened)
+                {
+                    SplitClip();
+                } 
+                #endregion
+            }
+        }
+
+        /// <summary>
+        /// 左击抬起后取消所有轨道的所有连续关键这的调整标记
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void Track_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            foreach (var track in TrackList)
+            {
+                foreach (var timelineClip in track.TimelineClipList)
+                {
+                    timelineClip.IsAdjustingFirstSize = timelineClip.IsAdjustingLastSize = false;
+                }
             }
         }
 
@@ -369,6 +552,7 @@ namespace CBHK.CustomControl.Container
             TimeSpan currentTime = SnapToTick(rawSeconds);
             double pixelX = animationTimelineTool.ConvertTimeToPixel(currentTime, Ruler);
             pixelX = Math.Clamp(pixelX, 0, canvas.ActualWidth);
+
             Canvas.SetLeft(previewLine, pixelX);
         }
 
@@ -426,13 +610,14 @@ namespace CBHK.CustomControl.Container
         /// <summary>
         /// 根据时间更新播放指针的位置
         /// </summary>
-        public void UpdatePlayHeadPositionByCurrentTime()
+        public void UpdateStateByCurrentTime()
         {
+            // 每次更新位置前，先确保画布宽度是对的
+            UpdateTotalWidth();
+
+            #region 更新播放指针的位置
             if (playHeadGrid is not null && Ruler is not null)
             {
-                // 每次更新位置前，先确保画布宽度是对的
-                UpdateTotalWidth();
-
                 double positionX = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler);
                 Canvas.SetLeft(playHeadGrid, positionX);
                 for (int i = 0; i < TrackList.Count; i++)
@@ -443,6 +628,28 @@ namespace CBHK.CustomControl.Container
                     }
                 }
             }
+            #endregion
+
+            #region 更新内部帧成员的相对位置
+            double offset = 0.0;
+            for (int i = 0; i < TrackList.Count; i++)
+            {
+                for (int j = 0; j < TrackList[i].TimelineClipList.Count; j++)
+                {
+                    for (int k = 0; k < TrackList[i].TimelineClipList[j].InnerKeyFrameList.Count; k++)
+                    {
+                        ContinuousKeyframeItem continuousKeyframeItem = TrackList[i].TimelineClipList[j].InnerKeyFrameList[k];
+                        double currentTimeValue = animationTimelineTool.ConvertTimeToPixel(continuousKeyframeItem.CurrentTime, Ruler);
+                        if(continuousKeyframeItem.CurrentTime.TotalSeconds == 0)
+                        {
+                            offset = currentTimeValue;
+                        }
+
+                        Canvas.SetLeft(continuousKeyframeItem, currentTimeValue - offset - (continuousKeyframeItem.Width / 2));
+                    }
+                }
+            } 
+            #endregion
         }
         #endregion
     }

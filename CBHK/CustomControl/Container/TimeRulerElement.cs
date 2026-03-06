@@ -57,10 +57,10 @@ namespace CBHK.CustomControl.Container
         public TimeRulerElement()
         {
             // 初始化画笔，冻结以提升性能
-            _mainTickPen = new Pen(new SolidColorBrush(Color.FromRgb(120, 120, 120)), 1);
+            _mainTickPen = new Pen(new SolidColorBrush(Color.FromRgb(250,250,250)), 1);
             _mainTickPen.Freeze();
 
-            _subTickPen = new Pen(new SolidColorBrush(Color.FromRgb(80, 80, 80)), 1);
+            _subTickPen = new Pen(new SolidColorBrush(Color.FromRgb(250, 250, 250)), 1);
             _subTickPen.Freeze();
 
             _typeface = new Typeface("Segoe UI");
@@ -211,7 +211,7 @@ namespace CBHK.CustomControl.Container
                     string text = FormatTimeText(currentTime);
                     FormattedText ft = new(
                         text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-                        _typeface, 10, Brushes.Gray, pixelsPerDip);
+                        _typeface, 10, Brushes.White, pixelsPerDip);
 
                     drawingContext.DrawText(ft, new Point(renderX + 2, 16));
                 }

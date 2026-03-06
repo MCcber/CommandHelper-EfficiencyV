@@ -10,6 +10,17 @@ namespace CBHK.CustomControl.Container
     public class TimelineTrack : INotifyPropertyChanged
     {
         #region Property
+        private Thickness padding;
+        public Thickness Padding
+        {
+            get => padding;
+            set
+            {
+                padding = value;
+                OnPropertyChanged();
+            }
+        }
+
         private Brush borderBrush;
         public Brush BorderBrush
         {
@@ -53,6 +64,18 @@ namespace CBHK.CustomControl.Container
                 OnPropertyChanged();
             }
         }
+
+        private Brush trackHeadBackground = Brushes.Transparent;
+        public Brush TrackHeadBackground
+        {
+            get => trackHeadBackground;
+            set
+            {
+                trackHeadBackground = value;
+                OnPropertyChanged();
+            }
+        }
+
 
         private double headHeight = 0;
         public double HeadHeight

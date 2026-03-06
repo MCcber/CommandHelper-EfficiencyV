@@ -6,19 +6,17 @@
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors">
 
     <Style x:Key="TimelineClipStyle" TargetType="{x:Type Input:TimelineClip}">
-        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Input:TimelineClip}">
-                    <Grid Background="Transparent">
+                    <Grid HorizontalAlignment="Left" Background="Transparent">
                         <Border
                             x:Name="singleFrameBorder"
                             Width="{TemplateBinding PointModeSize}"
                             Height="{TemplateBinding PointModeSize}"
                             BorderBrush="Black"
                             BorderThickness="1"
-                            RenderOptions.BitmapScalingMode="Unspecified"
+                            RenderOptions.BitmapScalingMode="NearestNeighbor"
                             RenderOptions.EdgeMode="Aliased"
                             RenderTransformOrigin="0.5 0.5">
                             <Grid x:Name="markGrid">
@@ -120,12 +118,18 @@
                         </Border>
                         <Border
                             x:Name="multipleFrameBorder"
-                            Background="#D0D1D4"
-                            BorderThickness="0"
+                            Width="{Binding RectangleModeWidth, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                            Height="{Binding RectangleModeHeight, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                            Background="#6EB5AD"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            ClipToBounds="True"
+                            CornerRadius="5"
                             Visibility="Hidden">
-                            <Grid Width="{Binding RectangleModeWidth, RelativeSource={RelativeSource Mode=TemplatedParent}}" Height="{Binding RectangleModeHeight, RelativeSource={RelativeSource Mode=TemplatedParent}}">
+                            <!--#region 内容网格-->
+                            <Grid>
                                 <TextBlock
-                                    Margin="10,0,0,0"
+                                    Margin="10,5,0,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
                                     Background="Transparent"
@@ -149,16 +153,28 @@
                                     Foreground="{TemplateBinding Foreground}"
                                     Text="{TemplateBinding DurationText}" />
                                 <Canvas
-                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}"
+                                    Width="{Binding InnerCanvasWidth, RelativeSource={RelativeSource Mode=TemplatedParent}}"
                                     HorizontalAlignment="Left"
+                                    Background="Transparent"
                                     ClipToBounds="True">
                                     <behavior:Interaction.Triggers>
                                         <behavior:EventTrigger EventName="Loaded">
                                             <behavior:CallMethodAction MethodName="InnerTimeCanvas_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />
                                         </behavior:EventTrigger>
                                     </behavior:Interaction.Triggers>
+                                    <Line
+                                        Canvas.Left="{TemplateBinding SplitPreviewLineOffsetX}"
+                                        Stroke="Gray"
+                                        StrokeDashArray="2,2"
+                                        StrokeThickness="1"
+                                        Visibility="{TemplateBinding SplitPreviewLineVisibility}"
+                                        X1="0"
+                                        X2="0"
+                                        Y1="0"
+                                        Y2="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Canvas}, Path=ActualHeight}" />
                                 </Canvas>
                             </Grid>
+                            <!--#endregion-->
                         </Border>
                         <ContentPresenter
                             x:Name="contentPresenter"

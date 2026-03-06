@@ -1,10 +1,16 @@
 ﻿using CBHK.CustomControl.Input;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.CustomControl.Container
 {
@@ -88,14 +94,14 @@ namespace CBHK.CustomControl.Container
         public static readonly DependencyProperty MergeCommandProperty =
             DependencyProperty.Register("MergeCommand", typeof(IRelayCommand), typeof(TimelineToolContainer), new PropertyMetadata(default(IRelayCommand)));
 
-        public IRelayCommand CuttingCommand
+        public IRelayCommand ExtractCommand
         {
-            get { return (IRelayCommand)GetValue(CuttingCommandProperty); }
-            set { SetValue(CuttingCommandProperty, value); }
+            get { return (IRelayCommand)GetValue(ExtractCommandProperty); }
+            set { SetValue(ExtractCommandProperty, value); }
         }
 
-        public static readonly DependencyProperty CuttingCommandProperty =
-            DependencyProperty.Register("CuttingCommand", typeof(IRelayCommand), typeof(TimelineToolContainer), new PropertyMetadata(default(IRelayCommand)));
+        public static readonly DependencyProperty ExtractCommandProperty =
+            DependencyProperty.Register("ExtractCommand", typeof(IRelayCommand), typeof(TimelineToolContainer), new PropertyMetadata(default(IRelayCommand)));
 
         public IRelayCommand HorizontalFlipCommand
         {
@@ -207,7 +213,7 @@ namespace CBHK.CustomControl.Container
             CopyCommand = new RelayCommand(Copy_Click);
             SplitCommand = new RelayCommand(Split_Click);
             MergeCommand = new RelayCommand(Merge_Click);
-            CuttingCommand = new RelayCommand(Cutting_Click);
+            ExtractCommand = new RelayCommand(Extract_Click);
             HorizontalFlipCommand = new RelayCommand(HorizontalFlip_Click);
             ReverseCommand = new RelayCommand(Reverse_Click);
             AddTrackCommand = new RelayCommand(AddTrack_Click);
@@ -293,7 +299,7 @@ namespace CBHK.CustomControl.Container
             {
                 timeRulerElement.ZoomFactor = newValue;
             }
-            timeline?.UpdatePlayHeadPositionByCurrentTime();
+            timeline?.UpdateStateByCurrentTime();
         }
 
         private void OnCurrentIsShowPreviewLine_ValueChanged(bool newValue)
@@ -314,7 +320,8 @@ namespace CBHK.CustomControl.Container
         /// </summary>
         private void MouseTool_Click()
         {
-
+            timeline.IsSplitModeOpened = false;
+            Cursor = null;
         }
 
         private void Play_Click()
@@ -324,12 +331,19 @@ namespace CBHK.CustomControl.Container
 
         private void DeleteTrack_Click()
         {
-
+            timeline.RemoveTrack();
         }
 
         private void AddTrack_Click()
         {
-            timeline.TrackList.Add(new());
+            timeline.AddTrack("头部");
+            timeline.AddTrack("身体");
+            timeline.AddTrack("左臂");
+            timeline.AddTrack("右臂");
+            timeline.AddTrack("左腿");
+            timeline.AddTrack("右腿");
+            timeline.AddTrack("测试1");
+            timeline.AddTrack("测试2");
         }
 
         private void Reverse_Click()
@@ -342,25 +356,42 @@ namespace CBHK.CustomControl.Container
 
         }
 
-        private void Cutting_Click()
+        private void Extract_Click()
         {
 
         }
 
         private void Split_Click()
         {
-
+            timeline.IsSplitModeOpened = true;
         }
 
         private void Merge_Click()
         {
+            #region 检测是否可以合并
+            if (timeline.CurrentTrack.TimelineClipList.Select(item => item.IsChecked is not null && item.IsChecked.Value).Count() < 2)
+            {
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "合并失败，请选择更多关键帧！",
+                    SubMessage = "盔甲架生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\armor_stand.png", UriKind.RelativeOrAbsolute)),
+                    MessageBrush = Brushes.Red
+                });
+                return;
+            } 
+            #endregion
+
             #region 搜索选中队列里最左侧和最右侧的关键帧并删除它们以及之间的所有关键帧
+            double currentTimeValue = 0.0;
             List<double> timePointList = [];
             AnimationTimelineTool animationTimelineTool = new();
             TimeSpan leftTime = TimeSpan.FromHours(24);
             TimeSpan rightTime = TimeSpan.Zero;
             TimelineClip leftClip = new();
             TimelineClip rightClip = new();
+            int loopCount = timeline.CurrentTrack.TimelineClipList.Count;
+
             for (int i = 0; i < timeline.CurrentTrack.TimelineClipList.Count; i++)
             {
                 if (timeline.CurrentTrack.TimelineClipList[i].IsChecked is bool isChecked && isChecked)
@@ -377,25 +408,40 @@ namespace CBHK.CustomControl.Container
                     }
                 }
             }
-            for (int i = 0; i < timeline.CurrentTrack.TimelineClipList.Count; i++)
+
+            while (loopCount > 0)
             {
-                if (timeline.CurrentTrack.TimelineClipList[i].StartTime >= leftTime && timeline.CurrentTrack.TimelineClipList[i].EndTime <= rightTime)
+                if (timeline.CurrentTrack.TimelineClipList[0].StartTime >= leftTime && timeline.CurrentTrack.TimelineClipList[0].EndTime <= rightTime)
                 {
-                    TimelineClip timelineclip = timeline.CurrentTrack.TimelineClipList[i];
-                    double currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.StartTime, timeline.Ruler);
-                    timePointList.Add(currentTimeValue);
+                    TimelineClip timelineclip = timeline.CurrentTrack.TimelineClipList[0];
+
+                    if (timeline.CurrentTrack.TimelineClipList[0].CurrentClipMode is Model.Common.ClipMode.Point)
+                    {
+                        currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.StartTime, timeline.Ruler);
+                        timePointList.Add(currentTimeValue);
+                    }
+                    else
+                    {
+                        double startTimeValue = animationTimelineTool.ConvertTimeToPixel(timeline.CurrentTrack.TimelineClipList[0].StartTime, timeline.Ruler);
+                        TimeSpan startTime = timeline.CurrentTrack.TimelineClipList[0].StartTime;
+                        for (int i = 0; i < timeline.CurrentTrack.TimelineClipList[0].InnerKeyFrameList.Count; i++)
+                        {
+                            currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timeline.CurrentTrack.TimelineClipList[0].InnerKeyFrameList[i].CurrentTime + startTime, timeline.Ruler);
+                            timePointList.Add(currentTimeValue);
+                        }
+                    }
                     timeline.CurrentTrack.TimelineClipList.Remove(timelineclip);
-                    i--;
                 }
+                loopCount--;
             }
 
             //从第一个开始整体偏移到0
             if(timePointList.Count > 0)
             {
-                double firstPoint = timePointList[0];
+                double minValue = timePointList.Min();
                 for (int i = 0; i < timePointList.Count; i++)
                 {
-                    timePointList[i] -= firstPoint;
+                    timePointList[i] -= minValue;
                 }
             }
             #endregion
