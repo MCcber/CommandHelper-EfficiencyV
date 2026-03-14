@@ -79,9 +79,30 @@
         ArrayType
     };
 
-    public enum ClipMode
+    public enum InterpolationType : byte
     {
-        Point,
-        Rectangle
+        Linear,
+        Discrete,
+        CubicBezier,
+        Quadratic
+    }
+
+    public enum KeyFrameValueType
+    {
+        // 数值
+        Byte,
+        Short,
+        Int,
+        Float,
+        Double,
+        Long,
+        UnsignedInt,
+        UnsignedFloat,
+        UnsignedDouble,
+        UnsignedLong,
+        // 字符串句柄
+        StringId,
+        // 布尔
+        Boolean
     }
 }

@@ -180,7 +180,7 @@
     <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.27.3" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.135</Version>
+      <Version>1.1.142</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.4</Version>
@@ -193,7 +193,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="SharpNBT" Version="1.3.1" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
-    <PackageReference Include="VirtualizingWrapPanel" Version="2.3.2" />
+    <PackageReference Include="VirtualizingWrapPanel" Version="2.5.1" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resource\CBHK\Image\empty.png" />
@@ -430,7 +430,6 @@
     <Resource Include="Resource\Common\Image\Datapack\editedIcon.png" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Utility\ScrollViewerHelper\ScrollToControlAction.cs" />
     <Compile Remove="Utility\TreeViewComponentsHelper\HeaderToJson.cs" />
     <Compile Remove="Utility\TreeViewComponentsHelper\ReturnTargetComponents.cs" />
     <Compile Remove="Utility\TreeViewComponentsHelper\TagToHeader.cs" />
@@ -542,9 +541,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Utility\ScrollViewerHelper\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CBHK.Common\CBHK.Common.csproj" />

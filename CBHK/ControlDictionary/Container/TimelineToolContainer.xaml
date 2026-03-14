@@ -5,8 +5,8 @@
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton">
 
-    <Geometry x:Key="TimeLinePauseIcon">
-        M874.058005 149.941995a510.06838 510.06838 0 1 0 109.740156 162.738976 511.396369 511.396369 0 0 0-109.740156-162.738976z M417.954256 281.533601a41.046923 41.046923 0 0 0-41.77128 40.201839v385.116718a41.892007 41.892007 0 0 0 83.663287 0v-385.116718a41.167649 41.167649 0 0 0-41.892007-40.201839zM606.045744 281.533601a41.046923 41.046923 0 0 0-41.77128 40.201839v385.116718a41.892007 41.892007 0 0 0 83.663287 0v-385.116718a41.167649 41.167649 0 0 0-41.892007-40.201839z
+    <Geometry x:Key="TimelinePauseIcon">
+        M209.417 62h150.008v900h-150.008v-900z M659.417 62h149.985v900h-149.985v-900z
     </Geometry>
 
     <Style x:Key="TimelineToolContainerStyle" TargetType="Container:TimelineToolContainer">
@@ -33,9 +33,10 @@
                             Grid.Row="0"
                             Grid.Column="0"
                             Grid.ColumnSpan="2"
-                            Height="35">
+                            Height="35"
+                            Panel.ZIndex="0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" MinWidth="396" />
+                                <ColumnDefinition Width="*" MinWidth="360" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
@@ -90,6 +91,34 @@
                                     ToolTip="删除关键帧"
                                     ToolTipService.BetweenShowDelay="0"
                                     ToolTipService.InitialShowDelay="0" />
+                                <!--  添加轨道  -->
+                                <VectorButton:VectorFlatIconButton
+                                    Width="36"
+                                    HorizontalAlignment="Left"
+                                    Background="#D0D1D4"
+                                    Command="{Binding AddTrackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:TimelineToolContainer}}"
+                                    Icon="M929.391304 1.853217c61.83513 0 92.755478 30.920348 92.755479 92.755479v834.782608c0 61.83513-30.920348 92.755478-92.755479 92.755479H94.608696C32.773565 1022.146783 1.853217 991.22087 1.853217 929.391304V94.608696C1.853217 32.773565 32.77913 1.853217 94.608696 1.853217h834.782608zM748.521739 233.73913a23.190261 23.190261 0 0 0-23.190261 23.190261v73.505392a69.565217 69.565217 0 0 0 0 131.244521v305.391305a23.190261 23.190261 0 0 0 46.380522 0V461.634783a69.565217 69.565217 0 0 0 0-131.155479V256.929391A23.190261 23.190261 0 0 0 748.521739 233.73913z m-231.885913 0a23.190261 23.190261 0 0 0-23.184696 23.190261v305.391305a69.565217 69.565217 0 0 0 0 131.244521v73.505392a23.190261 23.190261 0 0 0 46.374957 0v-73.549913a69.565217 69.565217 0 0 0 0-131.155479V256.929391A23.190261 23.190261 0 0 0 516.635826 233.73913z m-231.880348 0A23.190261 23.190261 0 0 0 261.565217 256.929391v73.505392a69.565217 69.565217 0 0 0 0 131.244521v305.391305a23.190261 23.190261 0 0 0 46.374957 0V461.634783a69.565217 69.565217 0 0 0 0-131.155479V256.929391A23.190261 23.190261 0 0 0 284.755478 233.73913z"
+                                    IconBrush="Black"
+                                    IconHeight="15"
+                                    IconWidth="15"
+                                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                                    ToolTip="添加轨道"
+                                    ToolTipService.BetweenShowDelay="0"
+                                    ToolTipService.InitialShowDelay="0" />
+                                <!--  删除轨道  -->
+                                <VectorButton:VectorFlatIconButton
+                                    Width="36"
+                                    HorizontalAlignment="Left"
+                                    Background="#D0D1D4"
+                                    Command="{Binding DeleteTrackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:TimelineToolContainer}}"
+                                    Icon="M781.28 851.36a58.56 58.56 0 0 1-58.56 58.56H301.28a58.72 58.72 0 0 1-58.56-58.56V230.4h538.56z m-421.6-725.92a11.84 11.84 0 0 1 12-12h281.28a11.84 11.84 0 0 1 12 12V160H359.68zM956.8 160H734.72v-34.56a81.76 81.76 0 0 0-81.76-81.76H371.68a82.08 82.08 0 0 0-81.76 81.76V160H67.2a35.36 35.36 0 0 0 0 70.56h105.12v620.8a128.96 128.96 0 0 0 128.96 128.96h421.44a128.96 128.96 0 0 0 128.96-128.96V230.4H956.8a35.2 35.2 0 0 0 35.2-35.2 34.56 34.56 0 0 0-35.2-35.2zM512 804.16a35.2 35.2 0 0 0 35.2-35.36V393.92a35.2 35.2 0 1 0-70.4 0V768.8a35.2 35.2 0 0 0 35.2 35.36m-164.32 0a35.36 35.36 0 0 0 35.36-35.36V393.92a35.36 35.36 0 1 0-70.56 0V768.8a36.32 36.32 0 0 0 35.2 35.36m328.64 0a35.36 35.36 0 0 0 35.2-35.36V393.92a35.36 35.36 0 1 0-70.56 0V768.8a35.36 35.36 0 0 0 35.36 35.36"
+                                    IconBrush="Black"
+                                    IconHeight="15"
+                                    IconWidth="15"
+                                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                                    ToolTip="删除轨道"
+                                    ToolTipService.BetweenShowDelay="0"
+                                    ToolTipService.InitialShowDelay="0" />
                                 <!--  复制  -->
                                 <VectorButton:VectorFlatIconButton
                                     Width="36"
@@ -140,14 +169,14 @@
                                     Width="36"
                                     HorizontalAlignment="Left"
                                     Background="#D0D1D4"
-                                    Command="{Binding CuttingCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:TimelineToolContainer}}"
-                                    Icon="M197.312 862.912l-36.224-36.224 72.448-72.384 36.16 36.16-72.384 72.448z m117.632-117.696l-36.16-36.16 72.384-72.448 36.224 36.224-72.448 72.384zM432.64 627.584l-36.224-36.224L468.8 519.04l36.224 36.224-72.384 72.32z m117.632-117.696l-36.16-36.16L586.496 401.28l36.224 36.224-72.448 72.384z m117.696-117.632l-36.224-36.224 72.384-72.384 36.224 36.224-72.384 72.32zM256 256v512h512V256.96L767.04 256H256zM153.6 256H51.2a51.2 51.2 0 1 1 0-102.4h102.4V51.2A51.2 51.2 0 1 1 256 51.2v102.4h614.4V768h102.4a51.2 51.2 0 1 1 0 102.4h-102.4v102.4a51.2 51.2 0 1 1-102.4 0v-102.4H153.6V256z"
+                                    Command="{Binding ExtractCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:TimelineToolContainer}}"
+                                    Icon="M810.666667 170.666667a128 128 0 0 1 127.786666 120.490666L938.666667 298.666667v426.666666a128 128 0 0 1-120.490667 127.786667L810.666667 853.333333h-84.608a42.666667 42.666667 0 0 1-4.992-85.034666l4.992-0.298667H810.666667a42.666667 42.666667 0 0 0 42.368-37.674667L853.333333 725.333333V298.666667a42.666667 42.666667 0 0 0-37.674666-42.368L810.666667 256H213.333333a42.666667 42.666667 0 0 0-42.368 37.674667L170.666667 298.666667v426.666666a42.666667 42.666667 0 0 0 37.674666 42.368L213.333333 768h86.698667a42.666667 42.666667 0 0 1 4.992 85.034667L300.032 853.333333H213.333333a128 128 0 0 1-127.786666-120.490666L85.333333 725.333333V298.666667a128 128 0 0 1 120.490667-127.786667L213.333333 170.666667h597.333334z m-296.789334 170.666666c21.333333 0 38.954667 16.042667 41.386667 36.693334l0.256 4.821333v210.986667l80.213333-66.474667 4.224-3.072a41.770667 41.770667 0 0 1 54.442667 8.448 41.386667 41.386667 0 0 1-1.621333 54.912l-3.84 3.541333-150.314667 124.586667-4.394667 3.157333a41.813333 41.813333 0 0 1-44.458666 0l-4.394667-3.2-150.357333-124.544-3.797334-3.541333a41.429333 41.429333 0 0 1-4.693333-50.688l3.072-4.224 3.626667-3.797333A41.813333 41.813333 0 0 1 384 524.245333l4.224 3.114667 83.968 69.546667V382.848c0-22.912 18.645333-41.514667 41.642667-41.514667z"
                                     IconBrush="Black"
                                     IconHeight="15"
                                     IconMargin="5"
                                     IconWidth="15"
                                     Style="{DynamicResource VectorFlatIconButtonStyle}"
-                                    ToolTip="剪裁"
+                                    ToolTip="提取"
                                     ToolTipService.BetweenShowDelay="0"
                                     ToolTipService.InitialShowDelay="0" />
                                 <!--  水平翻转  -->
@@ -165,49 +194,6 @@
                                     ToolTip="水平翻转"
                                     ToolTipService.BetweenShowDelay="0"
                                     ToolTipService.InitialShowDelay="0" />
-                                <!--  倒放  -->
-                                <VectorButton:VectorFlatIconButton
-                                    Width="36"
-                                    HorizontalAlignment="Left"
-                                    Background="#D0D1D4"
-                                    Command="{Binding ReverseCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:TimelineToolContainer}}"
-                                    Icon="M251.221333 115.285333a42.666667 42.666667 0 0 0-83.584-17.237333l-38.826666 188.032a42.666667 42.666667 0 0 0 33.194666 50.389333l188.032 38.826667a42.666667 42.666667 0 1 0 17.237334-83.584l-78.933334-16.298667A341.333333 341.333333 0 1 1 170.666667 533.333333a42.666667 42.666667 0 1 0-85.248 0c0 235.648 190.976 426.666667 426.666666 426.666667 235.605333 0 426.624-191.018667 426.624-426.666667s-191.061333-426.666667-426.666666-426.666666a425.173333 425.173333 0 0 0-280.746667 105.386666l19.968-96.768zM512 320a42.666667 42.666667 0 0 1 42.666667 42.666667v170.666666h149.333333a42.666667 42.666667 0 1 1 0 85.333334H512a42.666667 42.666667 0 0 1-42.666667-42.666667v-213.333333a42.666667 42.666667 0 0 1 42.666667-42.666667z"
-                                    IconBrush="Black"
-                                    IconHeight="15"
-                                    IconMargin="5"
-                                    IconWidth="15"
-                                    Style="{DynamicResource VectorFlatIconButtonStyle}"
-                                    ToolTip="倒放"
-                                    ToolTipService.BetweenShowDelay="0"
-                                    ToolTipService.InitialShowDelay="0" />
-                                <!--  添加轨道  -->
-                                <VectorButton:VectorFlatIconButton
-                                    Width="36"
-                                    HorizontalAlignment="Left"
-                                    Background="#D0D1D4"
-                                    Command="{Binding AddTrackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:TimelineToolContainer}}"
-                                    Icon="M929.391304 1.853217c61.83513 0 92.755478 30.920348 92.755479 92.755479v834.782608c0 61.83513-30.920348 92.755478-92.755479 92.755479H94.608696C32.773565 1022.146783 1.853217 991.22087 1.853217 929.391304V94.608696C1.853217 32.773565 32.77913 1.853217 94.608696 1.853217h834.782608zM748.521739 233.73913a23.190261 23.190261 0 0 0-23.190261 23.190261v73.505392a69.565217 69.565217 0 0 0 0 131.244521v305.391305a23.190261 23.190261 0 0 0 46.380522 0V461.634783a69.565217 69.565217 0 0 0 0-131.155479V256.929391A23.190261 23.190261 0 0 0 748.521739 233.73913z m-231.885913 0a23.190261 23.190261 0 0 0-23.184696 23.190261v305.391305a69.565217 69.565217 0 0 0 0 131.244521v73.505392a23.190261 23.190261 0 0 0 46.374957 0v-73.549913a69.565217 69.565217 0 0 0 0-131.155479V256.929391A23.190261 23.190261 0 0 0 516.635826 233.73913z m-231.880348 0A23.190261 23.190261 0 0 0 261.565217 256.929391v73.505392a69.565217 69.565217 0 0 0 0 131.244521v305.391305a23.190261 23.190261 0 0 0 46.374957 0V461.634783a69.565217 69.565217 0 0 0 0-131.155479V256.929391A23.190261 23.190261 0 0 0 284.755478 233.73913z"
-                                    IconBrush="Black"
-                                    IconHeight="15"
-                                    IconWidth="15"
-                                    Style="{DynamicResource VectorFlatIconButtonStyle}"
-                                    ToolTip="添加轨道"
-                                    ToolTipService.BetweenShowDelay="0"
-                                    ToolTipService.InitialShowDelay="0" />
-                                <!--  删除轨道  -->
-                                <VectorButton:VectorFlatIconButton
-                                    Width="36"
-                                    HorizontalAlignment="Left"
-                                    Background="#D0D1D4"
-                                    Command="{Binding DeleteTrackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:TimelineToolContainer}}"
-                                    Icon="M781.28 851.36a58.56 58.56 0 0 1-58.56 58.56H301.28a58.72 58.72 0 0 1-58.56-58.56V230.4h538.56z m-421.6-725.92a11.84 11.84 0 0 1 12-12h281.28a11.84 11.84 0 0 1 12 12V160H359.68zM956.8 160H734.72v-34.56a81.76 81.76 0 0 0-81.76-81.76H371.68a82.08 82.08 0 0 0-81.76 81.76V160H67.2a35.36 35.36 0 0 0 0 70.56h105.12v620.8a128.96 128.96 0 0 0 128.96 128.96h421.44a128.96 128.96 0 0 0 128.96-128.96V230.4H956.8a35.2 35.2 0 0 0 35.2-35.2 34.56 34.56 0 0 0-35.2-35.2zM512 804.16a35.2 35.2 0 0 0 35.2-35.36V393.92a35.2 35.2 0 1 0-70.4 0V768.8a35.2 35.2 0 0 0 35.2 35.36m-164.32 0a35.36 35.36 0 0 0 35.36-35.36V393.92a35.36 35.36 0 1 0-70.56 0V768.8a36.32 36.32 0 0 0 35.2 35.36m328.64 0a35.36 35.36 0 0 0 35.2-35.36V393.92a35.36 35.36 0 1 0-70.56 0V768.8a35.36 35.36 0 0 0 35.36 35.36"
-                                    IconBrush="Black"
-                                    IconHeight="15"
-                                    IconWidth="15"
-                                    Style="{DynamicResource VectorFlatIconButtonStyle}"
-                                    ToolTip="删除轨道"
-                                    ToolTipService.BetweenShowDelay="0"
-                                    ToolTipService.InitialShowDelay="0" />
                             </DockPanel>
                             <!--#endregion-->
 
@@ -215,14 +201,29 @@
                             <Grid Grid.Column="1" HorizontalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <VectorButton:VectorFlatIconButton
+                                    Grid.Column="0"
+                                    Width="36"
+                                    Background="#D0D1D4"
+                                    Command="{Binding ReversePlayCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:TimelineToolContainer}}"
+                                    Icon="{Binding ReversePlayIcon, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                                    IconBrush="Black"
+                                    IconHeight="15"
+                                    IconWidth="15"
+                                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                                    ToolTip="倒放"
+                                    ToolTipService.BetweenShowDelay="0"
+                                    ToolTipService.InitialShowDelay="0" />
+                                <VectorButton:VectorFlatIconButton
+                                    Grid.Column="1"
                                     Width="36"
                                     Background="#D0D1D4"
                                     Command="{Binding PlayCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:TimelineToolContainer}}"
-                                    Icon="M512 78.8c-239.3 0-433.2 194-433.2 433.2 0 239.3 194 433.2 433.2 433.2 239.3 0 433.2-194 433.2-433.2 0.1-239.2-193.9-433.2-433.2-433.2z m183.3 447.9L455.1 720c-12.3 9.9-30.5 1.1-30.5-14.6V318.7c0-15.7 18.2-24.5 30.5-14.6l240.2 193.4c9.4 7.5 9.4 21.7 0 29.2z"
+                                    Icon="{Binding PlayIcon, RelativeSource={RelativeSource Mode=TemplatedParent}}"
                                     IconBrush="Black"
                                     IconHeight="15"
                                     IconWidth="15"
@@ -231,13 +232,13 @@
                                     ToolTipService.BetweenShowDelay="0"
                                     ToolTipService.InitialShowDelay="0" />
                                 <TextBlock
-                                    Grid.Column="1"
+                                    Grid.Column="2"
                                     Margin="5,0,0,0"
                                     VerticalAlignment="Center"
                                     Foreground="Black"
                                     Text="{Binding CurrentTime, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:TimelineToolContainer}}" />
                                 <TextBlock
-                                    Grid.Column="2"
+                                    Grid.Column="3"
                                     Margin="0,0,5,0"
                                     VerticalAlignment="Center"
                                     Foreground="Black"
@@ -329,8 +330,19 @@
                             Grid.Row="1"
                             Grid.Column="0"
                             Grid.ColumnSpan="2"
+                            Panel.ZIndex="0"
                             Background="{TemplateBinding Background}"
                             Style="{DynamicResource TimelineStyle}" />
+                        <!--#endregion-->
+
+                        <!--#region 播放蒙版-->
+                        <Rectangle
+                            Grid.Row="1"
+                            Grid.ColumnSpan="2"
+                            Panel.ZIndex="1"
+                            Fill="Gray"
+                            Opacity="0.25"
+                            Visibility="{TemplateBinding PlayModeMaskVisibility}" />
                         <!--#endregion-->
 
                     </Grid>

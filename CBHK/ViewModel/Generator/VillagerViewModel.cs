@@ -45,14 +45,14 @@ namespace CBHK.ViewModel.Generator
         /// 本生成器的图标路径
         /// </summary>
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconVillagers.png";
-        string VillagerTypeSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\VillagerTypes.ini";
-        string VillagerProfessionsSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\VillagerProfessionTypes.ini";
-        string VillagerLevelSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\VillagerLevels.ini";
+        string VillagerTypeSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\DataList\VillagerTypes.ini";
+        string VillagerProfessionsSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\DataList\VillagerProfessionTypes.ini";
+        string VillagerLevelSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\DataList\VillagerLevels.ini";
 
         public Dictionary<string, string> VillagerTypeDataBase = [];
         public Dictionary<string, string> VillagerProfessionTypeDataBase = [];
         string emptyIcon = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/empty.png";
-        string GossipTypesFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\GossipTypeList.ini";
+        string GossipTypesFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\DataList\GossipTypeList.ini";
         private readonly SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
         private readonly SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private readonly SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
@@ -88,7 +88,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 维度数据源配置文件路径
         /// </summary>
-        string dimensionTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\DimensionTypes.ini";
+        string dimensionTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\DataList\DimensionTypes.ini";
         /// <summary>
         /// 维度类型数据库
         /// </summary>
@@ -185,7 +185,7 @@ namespace CBHK.ViewModel.Generator
         [ObservableProperty]
         ObservableCollection<VectorTextComboBoxItem> _gossipSearchType = [];
         //言论搜索类型配置文件路径
-        string gossipSearchTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\GossipSearchTypes.ini";
+        string gossipSearchTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\DataList\GossipSearchTypes.ini";
         /// <summary>
         /// 维度数据源
         /// </summary>

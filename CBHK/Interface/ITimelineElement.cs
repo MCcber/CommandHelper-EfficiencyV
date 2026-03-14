@@ -1,0 +1,17 @@
+﻿using CBHK.CustomControl.Container;
+using System;
+
+namespace CBHK.Interface
+{
+    public interface ITimelineElement
+    {
+        #region Property
+        public TimeRulerElement Ruler { get; set; }
+        public double OriginCanvasTop { get; set; }
+        public Timeline ParentTimeline { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public object ParentPanel { get; set; }
+        public string Title { get; set; }
+        #endregion
+    }
+}

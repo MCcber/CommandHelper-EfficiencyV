@@ -38,7 +38,7 @@ namespace CBHK.ViewModel.Generator
         private List<string> ConfigDirectoryPathList { get; set; } = [];
         public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\CustomWorldGenerator\";
 
-        private string EditorPath = @"\Data\Rule\";
+        private string EditorPath = @"\DataList\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
         private VectorTextComboBoxItem _currentVersion = new();

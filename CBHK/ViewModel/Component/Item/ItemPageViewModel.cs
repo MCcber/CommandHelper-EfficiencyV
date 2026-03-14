@@ -35,7 +35,7 @@ namespace CBHK.ViewModel.Component.Item
     {
         #region Field
         private object obj = new();
-        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Item\Data\SpecialTags.json";
+        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Item\DataList\SpecialTags.json";
         JArray SpecialArray = null;
         private IContainerProvider container;
         private CBHKDataContext context;
@@ -70,7 +70,7 @@ namespace CBHK.ViewModel.Component.Item
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItems.png";
         private string ImageSetFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
         //Data页
-        //public Data data = null;
+        //public DataList data = null;
         //Function页
         //public Function function = null;
         //Common页

@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.Input;
+﻿using CBHK.Interface;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -99,13 +99,13 @@ namespace CBHK.CustomControl.Container
             }
         }
 
-        private ObservableCollection<TimelineClip> timelineClipList = [];
-        public ObservableCollection<TimelineClip> TimelineClipList 
+        private ObservableCollection<ITimelineElement> timelineElementList = [];
+        public ObservableCollection<ITimelineElement> TimelineElementList 
         { 
-            get => timelineClipList;
+            get => timelineElementList;
             set
             {
-                timelineClipList = value;
+                timelineElementList = value;
                 OnPropertyChanged();
             }
         }
@@ -114,6 +114,14 @@ namespace CBHK.CustomControl.Container
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        #endregion
+
+        #region Event
+        public TimelineTrack Clone()
+        {
+            TimelineTrack result = new();
+            return result;
+        }
         #endregion
     }
 }

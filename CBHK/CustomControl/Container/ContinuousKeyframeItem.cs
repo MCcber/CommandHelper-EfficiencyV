@@ -1,14 +1,20 @@
-﻿using System;
+﻿using CBHK.Interface;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.Container
 {
-    public class ContinuousKeyframeItem:ToggleButton
+    public class ContinuousKeyframeItem : ToggleButton, ICloneable
     {
         #region Property
         public bool IsBorderKeyFrame { get; set; }
+
+        public ObservableCollection<IKeyFrameData> DataList { get; set; } = [];
 
         public TimeSpan CurrentTime
         {
@@ -61,7 +67,24 @@ namespace CBHK.CustomControl.Container
             {
                 SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD7929"));
             }
-        } 
+        }
+
+        public object Clone()
+        {
+            ContinuousKeyframeItem result = new()
+            {
+                IsBorderKeyFrame = IsBorderKeyFrame,
+                IsChecked = IsChecked,
+                DataList = new(DataList.ToList().Select(item => item.Clone())),
+                Width = Width,
+                Height = Height,
+                CurrentTime = CurrentTime,
+                X = X,
+                Style = Style
+            };
+            Canvas.SetTop(result, Canvas.GetTop(this));
+            return result;
+        }
         #endregion
     }
 }

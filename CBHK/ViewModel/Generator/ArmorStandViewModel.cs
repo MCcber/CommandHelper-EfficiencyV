@@ -1381,9 +1381,9 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void NBTCheckboxList_Loaded(object sender, RoutedEventArgs e)
         {
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Data\base_nbt.ini"))
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\DataList\base_nbt.ini"))
             {
-                ArmorStandNBTList = [.. File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Data\base_nbt.ini", Encoding.UTF8)];
+                ArmorStandNBTList = [.. File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\DataList\base_nbt.ini", Encoding.UTF8)];
             }
             NBTList = sender as StackPanel;
 

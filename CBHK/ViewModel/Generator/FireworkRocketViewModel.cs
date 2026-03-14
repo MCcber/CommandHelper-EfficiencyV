@@ -51,7 +51,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 形状路径
         /// </summary>
-        string shapePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Data\shapes.ini";
+        string shapePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\DataList\shapes.ini";
         private IContainerProvider container;
         #endregion
 

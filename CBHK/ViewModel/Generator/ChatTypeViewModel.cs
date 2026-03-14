@@ -23,7 +23,7 @@ namespace CBHK.ViewModel.Generator
     public partial class ChatTypeViewModel:BaseCustomWorldUnifiedPlan
     {
         #region Property
-        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ChatType\Data\Rule\";
+        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ChatType\DataList\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
         private VectorTextComboBoxItem _currentVersion = new();

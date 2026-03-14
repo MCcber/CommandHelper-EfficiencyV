@@ -76,7 +76,7 @@ namespace CBHK.ViewModel.Generator
         //取消署名背景文件路径
         string signatureCancelFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Image\cancel_signature.png";
         //混淆文本配置文件路径
-        string obfuscateFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Data\obfuscateChars.ini";
+        string obfuscateFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\DataList\obfuscateChars.ini";
         //流文档链表,每个成员代表成书中的一页
         public List<EnabledFlowDocument> WrittenBookPages = [];
 

@@ -38,8 +38,8 @@ namespace CBHK.ViewModel.Generator
         private MainView home = mainView;
         //本生成器的图标路径
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
-        private string ModifierOperationTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\AttributeModifierOperationType.ini";
-        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
+        private string ModifierOperationTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\AttributeModifierOperationType.ini";
+        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\SpecialTags.json";
         public ObservableCollection<string> ModifierOperationTypeSource = [];
         public JArray SpecialArray = null;
         #endregion

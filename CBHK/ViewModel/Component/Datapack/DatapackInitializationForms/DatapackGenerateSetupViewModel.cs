@@ -30,15 +30,15 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
     public partial class DatapackGenerateSetupPageViewModel : ObservableObject
     {
         #region Field
-        public string SolutionTemplatePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\SolutionTemplates.json";
+        public string SolutionTemplatePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\SolutionTemplates.json";
         /// <summary>
         /// 历史生成目录
         /// </summary>
-        private readonly string DatapackGeneratorFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\GeneratorPathes.ini";
+        private readonly string DatapackGeneratorFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\GeneratorPathes.ini";
         /// <summary>
         /// 空白解决方案路径
         /// </summary>
-        private readonly string BlankSolutionFolder = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\Template";
+        private readonly string BlankSolutionFolder = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\Template";
         #endregion
 
         #region Property

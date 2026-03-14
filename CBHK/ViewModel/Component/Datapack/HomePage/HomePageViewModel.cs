@@ -45,7 +45,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         /// <summary>
         /// 近期的解决方案
         /// </summary>
-        public string RecentSolutionFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\RecentTemplates";
+        public string RecentSolutionFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\RecentTemplates";
 
         /// <summary>
         /// 近期内容载入逻辑锁

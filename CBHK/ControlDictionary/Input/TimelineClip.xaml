@@ -6,120 +6,16 @@
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors">
 
     <Style x:Key="TimelineClipStyle" TargetType="{x:Type Input:TimelineClip}">
+        <Setter Property="Panel.ZIndex" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Input:TimelineClip}">
-                    <Grid HorizontalAlignment="Left" Background="Transparent">
+                    <Grid
+                        Width="{Binding RectangleModeWidth, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                        Height="{Binding RectangleModeHeight, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                        HorizontalAlignment="Left"
+                        Background="Transparent">
                         <Border
-                            x:Name="singleFrameBorder"
-                            Width="{TemplateBinding PointModeSize}"
-                            Height="{TemplateBinding PointModeSize}"
-                            BorderBrush="Black"
-                            BorderThickness="1"
-                            RenderOptions.BitmapScalingMode="NearestNeighbor"
-                            RenderOptions.EdgeMode="Aliased"
-                            RenderTransformOrigin="0.5 0.5">
-                            <Grid x:Name="markGrid">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="2.5" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="2.5" />
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="2.5" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="2.5" />
-                                </Grid.ColumnDefinitions>
-                                <Border
-                                    Grid.Row="1"
-                                    Grid.Column="1"
-                                    BorderBrush="{TemplateBinding InnerBorderBrush}"
-                                    BorderThickness="1">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="*" />
-                                            <RowDefinition Height="*" />
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Rectangle
-                                            Grid.Row="0"
-                                            Grid.Column="0"
-                                            Fill="{TemplateBinding InnerLeftTopBackground}"
-                                            Stroke="{TemplateBinding InnerLeftTopBackground}"
-                                            StrokeThickness="1" />
-                                        <Rectangle
-                                            Grid.Row="0"
-                                            Grid.Column="1"
-                                            Fill="{TemplateBinding InnerRightTopBackground}"
-                                            Stroke="{TemplateBinding InnerRightTopBackground}"
-                                            StrokeThickness="1" />
-                                        <Rectangle
-                                            Grid.Row="1"
-                                            Grid.Column="0"
-                                            Fill="{TemplateBinding InnerLeftBottomBackground}"
-                                            Stroke="{TemplateBinding InnerLeftBottomBackground}"
-                                            StrokeThickness="1" />
-                                        <Rectangle
-                                            Grid.Row="1"
-                                            Grid.Column="1"
-                                            Fill="{TemplateBinding InnerRightBottomBackground}"
-                                            Stroke="{TemplateBinding InnerRightBottomBackground}"
-                                            StrokeThickness="1" />
-                                    </Grid>
-                                </Border>
-                                <Rectangle
-                                    Grid.Row="0"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="2"
-                                    Fill="{TemplateBinding LeftTopBorderBrush}"
-                                    Stroke="{TemplateBinding LeftTopBorderBrush}"
-                                    StrokeThickness="1" />
-                                <Rectangle
-                                    Grid.Row="0"
-                                    Grid.Column="2"
-                                    Fill="{TemplateBinding BorderCornerBrush}"
-                                    Stroke="{TemplateBinding BorderCornerBrush}"
-                                    StrokeThickness="1" />
-                                <Rectangle
-                                    Grid.Row="1"
-                                    Grid.Column="0"
-                                    Fill="{TemplateBinding LeftTopBorderBrush}"
-                                    Stroke="{TemplateBinding LeftTopBorderBrush}"
-                                    StrokeThickness="1" />
-                                <Rectangle
-                                    Grid.Row="2"
-                                    Grid.Column="0"
-                                    Fill="{TemplateBinding BorderCornerBrush}"
-                                    Stroke="{TemplateBinding BorderCornerBrush}"
-                                    StrokeThickness="1" />
-                                <Rectangle
-                                    Grid.Row="1"
-                                    Grid.Column="2"
-                                    Fill="{TemplateBinding RightBottomBorderBrush}"
-                                    Stroke="{TemplateBinding RightBottomBorderBrush}"
-                                    StrokeThickness="1" />
-                                <Rectangle
-                                    Grid.Row="2"
-                                    Grid.Column="1"
-                                    Grid.ColumnSpan="2"
-                                    Fill="{TemplateBinding RightBottomBorderBrush}"
-                                    Stroke="{TemplateBinding RightBottomBorderBrush}"
-                                    StrokeThickness="1" />
-                            </Grid>
-                            <Border.RenderTransform>
-                                <TransformGroup>
-                                    <TranslateTransform X="-5" Y="8" />
-                                    <RotateTransform Angle="45" />
-                                </TransformGroup>
-                            </Border.RenderTransform>
-                        </Border>
-                        <Border
-                            x:Name="multipleFrameBorder"
-                            Width="{Binding RectangleModeWidth, RelativeSource={RelativeSource Mode=TemplatedParent}}"
-                            Height="{Binding RectangleModeHeight, RelativeSource={RelativeSource Mode=TemplatedParent}}"
                             Background="#6EB5AD"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="1"
@@ -188,12 +84,6 @@
                             RecognizesAccessKey="True"
                             SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                     </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="CurrentClipMode" Value="Rectangle">
-                            <Setter TargetName="singleFrameBorder" Property="Visibility" Value="Collapsed" />
-                            <Setter TargetName="multipleFrameBorder" Property="Visibility" Value="Visible" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

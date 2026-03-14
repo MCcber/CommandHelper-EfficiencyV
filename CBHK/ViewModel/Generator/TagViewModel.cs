@@ -269,9 +269,9 @@ namespace CBHK.ViewModel.Generator
         public void TagView_Loaded(object sender, RoutedEventArgs e)
         {
             #region 加载过滤类型
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\Data\TypeFilter.ini"))
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\DataList\TypeFilter.ini"))
             {
-                string[] Types = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\Data\TypeFilter.ini");
+                string[] Types = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\DataList\TypeFilter.ini");
                 for (int i = 0; i < Types.Length; i++)
                 {
                     TypeItemSource.Add(new VectorTextComboBoxItem() { Text = Types[i] });

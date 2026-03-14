@@ -49,7 +49,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// <summary>
         /// 颜色映射表路径
         /// </summary>
-        string colorTablePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Data\structureColorDictionary.ini";
+        string colorTablePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\DataList\structureColorDictionary.ini";
         /// <summary>
         /// 拾色器
         /// </summary>

@@ -50,7 +50,7 @@ namespace CBHK.ViewModel.Generator
 
         public override JsonTreeViewItem VisualLastItem { get; set; }
 
-        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\Data\Rule\";
+        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Advancement\DataList\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
         protected override TextEditor TextEditor { get; set; }
 

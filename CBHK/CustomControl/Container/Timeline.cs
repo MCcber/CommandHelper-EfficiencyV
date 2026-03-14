@@ -1,15 +1,19 @@
 ﻿using CBHK.CustomControl.Input;
+using CBHK.Interface;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
+using CBHK.Utility.MessageTip;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Converters;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
 namespace CBHK.CustomControl.Container
@@ -17,6 +21,7 @@ namespace CBHK.CustomControl.Container
     public class Timeline : Control
     {
         #region Field
+        private bool isSampling = false;
         private Line previewLine;
         private Thumb playHeadThumb;
         private Grid playHeadGrid;
@@ -26,6 +31,15 @@ namespace CBHK.CustomControl.Container
         private ScrollViewer contentViewer;
         private TimelineTrack lastSelectedTrack;
         private List<ItemsControl> trackPanelList = [];
+        private Dictionary<ITimelineElement, (TimeSpan, List<IKeyFrameData>)> TimelineElementMarkerMap = [];
+        private IComparer<ITimelineElement> timeComparer = Comparer<ITimelineElement>.Create((a, b) => a.StartTime.CompareTo(b.StartTime));
+        private List<ITimelineElement> TimelineElementMarkerList = [];
+        private List<IKeyFrameData> randomKeyFrameDataList = [];
+        private IProgress<ObservableCollection<IKeyFrameData>> DataSampleProgress = null;
+
+        private TimeSpan lastRenderTime = TimeSpan.Zero;
+        private int playDirection = 1; // 1 为正向，-1 为倒放
+        private const double TickStep = 0.05; // mcJava 步进基准 (1 Tick = 0.05s)
         #endregion
 
         #region Property
@@ -35,6 +49,8 @@ namespace CBHK.CustomControl.Container
         public bool IsSplitModeOpened { get; set; }
 
         public TimelineClip CurrentSplitTimelineClip { get; set; }
+        public bool IsPlaying { get; set; }
+        public TimeSpan MemoryCurrentTime { get; set; }
 
         public ObservableCollection<TimelineTrack> TrackList
         {
@@ -95,6 +111,13 @@ namespace CBHK.CustomControl.Container
         public Timeline()
         {
             Loaded += Timeline_Loaded;
+            CompositionTarget.Rendering += Timeline_Rendering;
+            DataSampleProgress = new Progress<ObservableCollection<IKeyFrameData>>(DataSample);
+            for (int i = 0; i < 100; i++)
+            {
+                byte[] bytes = [0,1,2,3,4,5,6,7,8,9,10];
+                randomKeyFrameDataList.Add(new KeyFrameData<byte>() { Easing = InterpolationType.Linear, Value = bytes[Random.Shared.Next(0, 10)] });
+            }
         }
 
         private void Timeline_Loaded(object sender, RoutedEventArgs e)
@@ -117,6 +140,57 @@ namespace CBHK.CustomControl.Container
             Ruler.Width = canvas.Width;
 
             canvas.UpdateLayout();
+        }
+
+        /// <summary>
+        /// 根据时间更新播放指针的位置
+        /// </summary>
+        public void UpdateStateByCurrentTime()
+        {
+            // 每次更新位置前，先确保画布宽度是对的
+            UpdateTotalWidth();
+
+            #region 更新播放指针的位置
+            if (playHeadGrid is not null && Ruler is not null)
+            {
+                double positionX = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler);
+                Canvas.SetLeft(playHeadGrid, positionX);
+                for (int i = 0; i < TrackList.Count; i++)
+                {
+                    for (int j = 0; j < TrackList[i].TimelineElementList.Count; j++)
+                    {
+                        if (TrackList[i].TimelineElementList[j] is TimelineClip clip)
+                        {
+                            clip.UpdateClipByCurrentTime();
+                        }
+                    }
+                }
+            }
+            #endregion
+
+            #region 更新内部帧成员的相对位置
+            double offset = 0.0;
+            for (int i = 0; i < TrackList.Count; i++)
+            {
+                for (int j = 0; j < TrackList[i].TimelineElementList.Count; j++)
+                {
+                    if (TrackList[i].TimelineElementList[j] is TimelineClip clip)
+                    {
+                        for (int k = 0; k < clip.InnerKeyFrameList.Count; k++)
+                        {
+                            ContinuousKeyframeItem continuousKeyframeItem = clip.InnerKeyFrameList[k];
+                            double currentTimeValue = animationTimelineTool.ConvertTimeToPixel(continuousKeyframeItem.CurrentTime, Ruler);
+                            if (continuousKeyframeItem.CurrentTime.TotalSeconds == 0)
+                            {
+                                offset = currentTimeValue;
+                            }
+
+                            Canvas.SetLeft(continuousKeyframeItem, currentTimeValue - offset - (continuousKeyframeItem.Width / 2));
+                        }
+                    }
+                }
+            }
+            #endregion
         }
 
         private static TimeSpan SnapToTick(double seconds)
@@ -144,42 +218,62 @@ namespace CBHK.CustomControl.Container
         /// <summary>
         /// 在当前时间刻度下添加关键帧
         /// </summary>
-        public void AddTimelineClip()
+        public void AddTimelineElement()
         {
             double trackheight = GetTrackHeight();
-            TimelineClip timelineClip = new()
+            TimelineKeyFrame timelineKeyFrame = new()
             {
-                Style = Application.Current.Resources["TimelineClipStyle"] as Style,
-                OriginStartTime = CurrentTime,
+                Style = Application.Current.Resources["TimelineKeyFrameStyle"] as Style,
+                StartTime = CurrentTime,
                 OriginCanvasTop = trackheight / 2,
                 Ruler = Ruler,
                 ParentTimeline = this,
                 ParentPanel = trackPanelList[TrackList.IndexOf(CurrentTrack)]
             };
 
-            CurrentTrack.TimelineClipList.Add(timelineClip);
+            double positionX = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler);
+            Canvas.SetLeft(timelineKeyFrame, positionX);
+            CurrentTrack.TimelineElementList.Add(timelineKeyFrame);
+
+            timelineKeyFrame.DataList.Add(randomKeyFrameDataList[Random.Shared.Next(0, randomKeyFrameDataList.Count)]);
+            TimelineElementMarkerMap.Add(timelineKeyFrame, (CurrentTime, [.. timelineKeyFrame.DataList]));
+            int index = TimelineElementMarkerList.BinarySearch(timelineKeyFrame, timeComparer);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+            TimelineElementMarkerList.Insert(index, timelineKeyFrame);
         }
 
         /// <summary>
         /// 在指定时间刻度下添加动画关键帧
         /// </summary>
         /// <param name="time"></param>
-        public void AddTimelineClip(TimeSpan time)
+        public void AddTimelineElement(TimeSpan time)
         {
             double trackheight = GetTrackHeight();
-            TimelineClip timelineClip = new() 
+            TimelineKeyFrame timelineKeyFrame = new() 
             {
-                Style = Application.Current.Resources["TimelineClipStyle"] as Style,
+                Style = Application.Current.Resources["timelineKeyFrameStyle"] as Style,
                 OriginCanvasTop = trackheight / 2,
-                OriginStartTime = time,
+                StartTime = time,
                 Ruler = Ruler,
                 ParentTimeline = this,
                 ParentPanel = trackPanelList[TrackList.IndexOf(CurrentTrack)]
             };
 
             double positionX = animationTimelineTool.ConvertTimeToPixel(time, Ruler);
-            Canvas.SetLeft(timelineClip, positionX);
-            CurrentTrack.TimelineClipList.Add(timelineClip);
+            Canvas.SetLeft(timelineKeyFrame, positionX);
+            CurrentTrack.TimelineElementList.Add(timelineKeyFrame);
+
+            timelineKeyFrame.DataList.Add(randomKeyFrameDataList[Random.Shared.Next(0, randomKeyFrameDataList.Count)]);
+            TimelineElementMarkerMap.Add(timelineKeyFrame, (time, [.. timelineKeyFrame.DataList]));
+            int index = TimelineElementMarkerList.BinarySearch(timelineKeyFrame, timeComparer);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+            TimelineElementMarkerList.Insert(index, timelineKeyFrame);
         }
 
         /// <summary>
@@ -189,7 +283,7 @@ namespace CBHK.CustomControl.Container
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <param name="timePointList"></param>
-        public void AddTimelineClip(string title,TimeSpan start,TimeSpan end,List<double> timePointList)
+        public void AddTimelineClip(string title,TimeSpan start,TimeSpan end,List<double> timePointList,List<ObservableCollection<IKeyFrameData>> keyFrameDataList)
         {
             double trackheight = GetTrackHeight();
 
@@ -200,7 +294,6 @@ namespace CBHK.CustomControl.Container
                 OriginCanvasTop = trackheight / 2,
                 OriginStartTime = start,
                 OriginEndTime = end,
-                CurrentClipMode = Model.Common.ClipMode.Rectangle,
                 Title = title,
                 Style = Application.Current.Resources["TimelineClipStyle"] as Style,
                 Ruler = Ruler,
@@ -208,29 +301,41 @@ namespace CBHK.CustomControl.Container
                 ParentPanel = trackPanelList[TrackList.IndexOf(CurrentTrack)]
             };
 
-            foreach (var timePointItem in timePointList)
+            for (int i = 0; i < timePointList.Count; i++)
             {
-                TimeSpan timeSpan = animationTimelineTool.ConvertPixelToTime(timePointItem, Ruler);
+                TimeSpan timeSpan = animationTimelineTool.ConvertPixelToTime(timePointList[i], Ruler);
+                bool isBorderKeyFrame = timeSpan == TimeSpan.Zero || timeSpan + start == end;
                 ContinuousKeyframeItem continuousKeyframeItem = new()
                 {
+                    DataList = new(keyFrameDataList[i]),
+                    IsBorderKeyFrame = isBorderKeyFrame,
                     Width = 16,
                     Height = 16,
                     CurrentTime = timeSpan,
-                    X = timePointItem,
+                    X = timePointList[i],
                     Style = Application.Current.Resources["ContinuousKeyframeItemStyle"] as Style
                 };
                 rectangleTimelineClip.InnerKeyFrameList.Add(continuousKeyframeItem);
             }
-            CurrentTrack.TimelineClipList.Add(rectangleTimelineClip);
+            CurrentTrack.TimelineElementList.Add(rectangleTimelineClip);
+
+            //rectangleTimelineClip.DataList.Add(randomKeyFrameDataList[Random.Shared.Next(0, randomKeyFrameDataList.Count)]);
+            //TimelineElementMarkerMap.Add(rectangleTimelineClip, (start, [.. rectangleTimelineClip.DataList]));
+            int index = TimelineElementMarkerList.BinarySearch(rectangleTimelineClip, timeComparer);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+            TimelineElementMarkerList.Insert(index, rectangleTimelineClip);
         }
 
-        public void RemoveTimelineClip()
+        public void RemoveTimelineElement()
         {
-            for (int j = 0; j < CurrentTrack.TimelineClipList.Count; j++)
+            for (int j = 0; j < CurrentTrack.TimelineElementList.Count; j++)
             {
-                if (CurrentTrack.TimelineClipList[j].IsChecked is bool isChecked && isChecked)
+                if (CurrentTrack.TimelineElementList[j] is TimelineClip clip && clip.IsChecked is bool isChecked && isChecked)
                 {
-                    CurrentTrack.TimelineClipList.RemoveAt(j);
+                    CurrentTrack.TimelineElementList.RemoveAt(j);
                     j--;
                 }
             }
@@ -267,38 +372,43 @@ namespace CBHK.CustomControl.Container
             if(CurrentSplitTimelineClip is not null)
             {
                 #region 字段
-                TimeSpan keyFrameItemStartTime = CurrentSplitTimelineClip.StartTime;
-                TimeSpan splitTime = animationTimelineTool.ConvertPixelToTime(CurrentSplitTimelineClip.SplitPreviewLineOffsetX, Ruler) + keyFrameItemStartTime;
+                ContinuousKeyframeItem splitKeyFrameItem = null;
+                TimeSpan localStartTime = CurrentSplitTimelineClip.StartTime;
+                TimeSpan localSplitTime = animationTimelineTool.ConvertPixelToTime(CurrentSplitTimelineClip.SplitPreviewLineOffsetX, Ruler);
                 double trackheight = GetTrackHeight();
                 bool isOnKeyFrame = false;
-                int splitKeyFrameIndex = -1;
                 List<ContinuousKeyframeItem> keyFrameList = [];
-                TimeSpan leftTime = TimeSpan.FromHours(24);
                 #endregion
 
                 #region 搜索分割位置，正好在帧成员上或者在它们之间
+                TimeSpan globalSplitTime = localSplitTime + localStartTime;
+                TimeSpan currentKeyFrameTime = new(); 
+                
                 for (int i = 0; i < CurrentSplitTimelineClip.InnerKeyFrameList.Count; i++)
                 {
-                    TimeSpan currentKeyFrameTime = CurrentSplitTimelineClip.InnerKeyFrameList[i].CurrentTime + keyFrameItemStartTime;
-                    if (currentKeyFrameTime >= CurrentTime && leftTime > currentKeyFrameTime)
+                    currentKeyFrameTime = CurrentSplitTimelineClip.InnerKeyFrameList[i].CurrentTime;
+                    if (currentKeyFrameTime > localSplitTime)
                     {
-                        splitKeyFrameIndex = i;
-                        leftTime = currentKeyFrameTime;
+                        CurrentSplitTimelineClip.InnerKeyFrameList[i].CurrentTime -= localSplitTime;
+                        CurrentSplitTimelineClip.InnerKeyFrameList[i].X = animationTimelineTool.ConvertTimeToPixel(CurrentSplitTimelineClip.InnerKeyFrameList[i].CurrentTime, Ruler);
+                        keyFrameList.Add(CurrentSplitTimelineClip.InnerKeyFrameList[i]);
                     }
 
-                    isOnKeyFrame = currentKeyFrameTime == CurrentTime;
-                    if (isOnKeyFrame)
+                    if (!isOnKeyFrame)
                     {
-                        splitKeyFrameIndex = i;
-                        leftTime = currentKeyFrameTime;
-                        break;
+                        isOnKeyFrame = currentKeyFrameTime == localSplitTime;
+                        if (isOnKeyFrame)
+                        {
+                            splitKeyFrameItem = CurrentSplitTimelineClip.InnerKeyFrameList[i];
+                        }
                     }
                 }
-                #endregion
 
-                #region 保留旧的帧成员，标记当前选中的片段
-                keyFrameList = [.. CurrentSplitTimelineClip.InnerKeyFrameList.Skip(splitKeyFrameIndex)];
-                CurrentSplitTimelineClip.IsDivided = true;
+                //如果分割点在动画片段的边缘则不处理
+                if(splitKeyFrameItem is not null && splitKeyFrameItem.IsBorderKeyFrame)
+                {
+                    return;
+                }
                 #endregion
 
                 #region 生成新的动画片段以及它的左侧第一帧
@@ -308,9 +418,8 @@ namespace CBHK.CustomControl.Container
                     InnerKeyFrameList = new(keyFrameList),
                     ZoomFactor = Ruler.ZoomFactor,
                     RectangleModeHeight = trackheight,
-                    CurrentClipMode = Model.Common.ClipMode.Rectangle,
                     Style = Application.Current.Resources["TimelineClipStyle"] as Style,
-                    OriginStartTime = splitTime,
+                    OriginStartTime = globalSplitTime,
                     OriginEndTime = CurrentSplitTimelineClip.EndTime,
                     OriginCanvasTop = CurrentSplitTimelineClip.OriginCanvasTop,
                     Ruler = Ruler,
@@ -318,54 +427,398 @@ namespace CBHK.CustomControl.Container
                     ParentTimeline = this,
                     ParentPanel = trackPanelList[TrackList.IndexOf(CurrentTrack)]
                 };
+                double globalNewClipStartPositionX = animationTimelineTool.ConvertTimeToPixel(newClip.OriginStartTime, Ruler);
+                double positionX = 0.0;
+                for (int i = 0; i < keyFrameList.Count; i++)
+                {
+                    CurrentSplitTimelineClip.RemoveKeyFrameItem(keyFrameList[i]);
+                    if (keyFrameList[i].IsBorderKeyFrame)
+                    {
+                        positionX = animationTimelineTool.ConvertTimeToPixel(newClip.OriginEndTime - globalSplitTime, Ruler);
+                        newClip.RightBorderFrameItem = keyFrameList[i];
+                    }
+                    else
+                    {
+                        positionX = animationTimelineTool.ConvertTimeToPixel(keyFrameList[i].CurrentTime, Ruler);
+                    }
+                    keyFrameList[i].X = positionX;
+                }
 
                 ContinuousKeyframeItem newKeyFrameItem = new()
                 {
                     IsBorderKeyFrame = true,
                     Width = 16,
                     Height = 16,
-                    CurrentTime = splitTime,
-                    X = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler),
+                    CurrentTime = TimeSpan.Zero,
                     Style = Application.Current.Resources["ContinuousKeyframeItemStyle"] as Style
-                }; 
+                };
 
-                newClip.InnerKeyFrameList.Add(newKeyFrameItem);
+                newClip.InnerKeyFrameList.Insert(0, newKeyFrameItem);
                 newClip.LeftBorderFrameItem = newKeyFrameItem;
                 #endregion
 
-                #region 没有在帧成员上分割时
+                #region 没有在帧成员上分割时以及在帧成员上分割两种情况
+                if (CurrentSplitTimelineClip.RightBorderFrameItem is not null)
+                {
+                    CurrentSplitTimelineClip.RightBorderFrameItem.IsBorderKeyFrame = false;
+                }
                 if (!isOnKeyFrame)
                 {
+                    double size = 16;
                     ContinuousKeyframeItem selectedEndKeyFrameItem = new()
                     {
+                        IsChecked = true,
                         IsBorderKeyFrame = true,
-                        Width = 16,
-                        Height = 16,
-                        CurrentTime = splitTime,
-                        X = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler),
+                        Width = size,
+                        Height = size,
+                        CurrentTime = localSplitTime,
+                        X = animationTimelineTool.ConvertTimeToPixel(localSplitTime, Ruler) - (Math.Sqrt(Math.Pow(size, 2) + Math.Pow(size, 2)) / 2),
                         Style = Application.Current.Resources["ContinuousKeyframeItemStyle"] as Style
                     };
-                    CurrentSplitTimelineClip.UpdateStateAction = () =>
+
+                    CurrentSplitTimelineClip.RightBorderFrameItem = selectedEndKeyFrameItem;
+                    CurrentSplitTimelineClip.InnerKeyFrameList = [.. CurrentSplitTimelineClip.InnerKeyFrameList.Except(keyFrameList)];
+                    for (int i = 0; i < keyFrameList.Count; i++)
                     {
-                        if (CurrentSplitTimelineClip.RightBorderFrameItem is not null)
-                        {
-                            CurrentSplitTimelineClip.RightBorderFrameItem.IsBorderKeyFrame = false;
-                        }
-                        CurrentSplitTimelineClip.RightBorderFrameItem = selectedEndKeyFrameItem;
-                    };
-                    CurrentSplitTimelineClip.InnerKeyFrameList = [.. CurrentSplitTimelineClip.InnerKeyFrameList.Take(splitKeyFrameIndex)];
+                        CurrentSplitTimelineClip.RemoveKeyFrameItem(keyFrameList[i]);
+                    }
                     CurrentSplitTimelineClip.InnerKeyFrameList.Add(selectedEndKeyFrameItem);
+                    CurrentSplitTimelineClip.AddKeyFrameItem(selectedEndKeyFrameItem, selectedEndKeyFrameItem.X);
+                }
+                else
+                if(splitKeyFrameItem is not null)
+                {
+                    CurrentSplitTimelineClip.RightBorderFrameItem = splitKeyFrameItem;
+                    splitKeyFrameItem.IsChecked = true;
+                    splitKeyFrameItem.IsBorderKeyFrame = true;
+                    splitKeyFrameItem.CurrentTime = localStartTime;
+                    splitKeyFrameItem.X = animationTimelineTool.ConvertTimeToPixel(localStartTime, Ruler) - (Math.Sqrt(Math.Pow(splitKeyFrameItem.Width, 2) + Math.Pow(splitKeyFrameItem.Width, 2)) / 2);
+                    Canvas.SetLeft(splitKeyFrameItem, splitKeyFrameItem.X);
+                    CurrentSplitTimelineClip.ProcessDivided();
                 }
                 #endregion
 
                 #region 处理动画片段分割后的宽度
-                CurrentTrack.TimelineClipList.Add(newClip);
-                CurrentSplitTimelineClip.EndTime = splitTime;
+                CurrentTrack.TimelineElementList.Add(newClip);
+                CurrentSplitTimelineClip.EndTime = globalSplitTime;
                 double startValue = animationTimelineTool.ConvertTimeToPixel(CurrentSplitTimelineClip.StartTime, Ruler);
                 double endValue = animationTimelineTool.ConvertTimeToPixel(CurrentSplitTimelineClip.EndTime, Ruler);
-                CurrentSplitTimelineClip.RectangleModeWidth = endValue - startValue; 
+                CurrentSplitTimelineClip.RectangleModeWidth = endValue - startValue;
                 #endregion
             }
+        }
+
+        /// <summary>
+        /// 水平翻转动画片段
+        /// </summary>
+        public void HorizontalFlip()
+        {
+            #region 检测是否可以翻转
+            List<ITimelineElement> selectedElementList = [.. CurrentTrack.TimelineElementList.Where(item => item is TimelineClip clip && clip.IsChecked is not null && clip.IsChecked.Value)];
+
+            if (selectedElementList.Count == 0)
+            {
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "翻转失败，请选择至少一个动画片段！",
+                    SubMessage = "盔甲架生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\armor_stand.png", UriKind.RelativeOrAbsolute)),
+                    MessageBrush = Brushes.Red
+                });
+                return;
+            }
+            #endregion
+
+            #region 计算翻转后的时间和偏移量
+            foreach (var selectedElement in selectedElementList)
+            {
+                #region 跳过当前片段
+                if(selectedElement.CurrentClipMode is ClipMode.Point)
+                {
+                    continue;
+                }
+                #endregion
+
+                #region 计算中间时间点和一半的时间跨度
+                TimeSpan halfDuration = selectedElement.Duration / 2;
+                TimeSpan middleTimePoint = selectedElement.StartTime + halfDuration; 
+                #endregion
+
+                #region 互换左右两侧起始帧成员的数据
+                TimeSpan leftBorderFrameItemTime = selectedElement.LeftBorderFrameItem.CurrentTime;
+                TimeSpan rightBorderFrameItemTime = selectedElement.RightBorderFrameItem.CurrentTime;
+                double leftBorderFrameItemPositionX = selectedElement.LeftBorderFrameItem.X;
+                double rightBorderFrameItemPositionX = selectedElement.RightBorderFrameItem.X;
+
+                selectedElement.LeftBorderFrameItem.CurrentTime = rightBorderFrameItemTime;
+                selectedElement.LeftBorderFrameItem.X = rightBorderFrameItemPositionX;
+                selectedElement.RightBorderFrameItem.CurrentTime = leftBorderFrameItemTime;
+                selectedElement.RightBorderFrameItem.X = leftBorderFrameItemPositionX;
+                #endregion
+
+                #region 执行数据翻转并更新帧成员渲染位置
+                foreach (var keyFrameItem in selectedElement.InnerKeyFrameList)
+                {
+                    TimeSpan minusTime = TimeSpan.Zero;
+                    if (keyFrameItem.IsBorderKeyFrame)
+                    {
+                        continue;
+                    }
+                    if (keyFrameItem.CurrentTime < middleTimePoint)
+                    {
+                        minusTime = halfDuration - keyFrameItem.CurrentTime;
+                        keyFrameItem.CurrentTime = halfDuration + minusTime;
+                    }
+                    else
+                    if (keyFrameItem.CurrentTime > middleTimePoint)
+                    {
+                        keyFrameItem.CurrentTime = halfDuration - minusTime;
+                    }
+                    keyFrameItem.X = animationTimelineTool.ConvertTimeToPixel(keyFrameItem.CurrentTime, Ruler);
+                }
+                selectedElement.UpdateInnerKeyFrameList(); 
+                #endregion
+            }
+            #endregion
+        }
+
+        /// <summary>
+        /// 提取选中的帧成员为单独的关键帧
+        /// </summary>
+        public void ExtractKeyFrameItem()
+        {
+            List<TimelineClip> selectedClipList = [.. CurrentTrack.TimelineElementList.Where(item => item.IsChecked is bool isChecked && isChecked)];
+            foreach (var timelineClip in selectedClipList)
+            {
+                for (int i = 0; i < timelineClip.InnerKeyFrameList.Count; i++)
+                {
+                    ContinuousKeyframeItem keyFrameItem = timelineClip.InnerKeyFrameList[i];
+                    if (keyFrameItem.IsChecked is bool isChecked && isChecked && !keyFrameItem.IsBorderKeyFrame)
+                    {
+                        timelineClip.RemoveKeyFrameItem(keyFrameItem);
+                        AddTimelineElement(keyFrameItem.CurrentTime + timelineClip.StartTime);
+                        i--;
+                    }
+                }
+            }
+        }
+
+        private void DataSample(ObservableCollection<IKeyFrameData> keyFrameDataList)
+        {
+            for (int i = 0; i < keyFrameDataList.Count; i++)
+            {
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "当前数据为" + keyFrameDataList[i].Value,
+                    SubMessage = "盔甲架生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\armor_stand.png", UriKind.RelativeOrAbsolute))
+                });
+            }
+        }
+
+        private void SwitchPlayState()
+        {
+            if(!IsPlaying)
+            {
+                SnapToTick();
+            }
+            else
+            {
+                Task.Run(() =>
+                {
+                    TimeSpan lastTime = TimeSpan.Zero;
+                    while (true)
+                    {
+                        for (int clipIndex = 0; clipIndex < TimelineElementMarkerList.Count; clipIndex++)
+                        {
+                            TimelineClip clip = TimelineElementMarkerList[clipIndex];
+                            if (TimelineElementMarkerMap.TryGetValue(clip, out (TimeSpan, List<IKeyFrameData>) dataItem))
+                            {
+                                TimeSpan currentStartTime = dataItem.Item1;
+                                bool isHiting = currentStartTime > lastTime && currentStartTime <= MemoryCurrentTime;
+                                if (!isHiting)
+                                {
+                                    continue;
+                                }
+
+                                //if (clip.CurrentClipMode is ClipMode.Point)
+                                //{
+                                    DataSample(clip.DataList);
+                                    lastTime = clip.StartTime;
+                                //}
+                                //else
+                                //{
+                                //    for (int keyFrameIndex = 0; keyFrameIndex < clip.InnerKeyFrameList.Count; keyFrameIndex++)
+                                //    {
+                                //        ContinuousKeyframeItem keyframeItem = clip.InnerKeyFrameList[keyFrameIndex];
+                                //        DataSample(keyframeItem.DataList);
+                                //        lastTime = keyframeItem.CurrentTime;
+                                //    }
+                                //}
+                            }
+                            if (!isSampling)
+                            {
+                                break;
+                            }
+                        }
+                        if(!isSampling)
+                        {
+                            isSampling = true;
+                            break;
+                        }
+                    }
+                });
+            }
+        }
+
+        public void ReversePlay(bool isPlaying)
+        {
+            lastRenderTime = TimeSpan.Zero;
+            IsPlaying = isPlaying;
+            playDirection = -1;
+            isSampling = IsPlaying;
+            SwitchPlayState();
+        }
+
+        public void Play(bool isPlaying)
+        {
+            lastRenderTime = TimeSpan.Zero;
+            IsPlaying = isPlaying;
+            playDirection = 1;
+            isSampling = IsPlaying;
+            SwitchPlayState();
+        }
+
+        public void MergeClip()
+        {
+            #region 检测是否可以合并
+            if (CurrentTrack.TimelineElementList.Select(item => item.IsChecked is not null && item.IsChecked.Value).Count() < 2)
+            {
+                Message.PushMessage(new GeneratorMessage()
+                {
+                    Message = "合并失败，请选择更多关键帧！",
+                    SubMessage = "盔甲架生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\armor_stand.png", UriKind.RelativeOrAbsolute)),
+                    MessageBrush = Brushes.Red
+                });
+                return;
+            }
+            #endregion
+
+            #region 搜索选中队列里最左侧和最右侧的关键帧并删除它们以及之间的所有关键帧
+
+            #region 字段
+            double currentTimeValue = 0.0;
+            List<double> timePointList = [];
+            List<ObservableCollection<IKeyFrameData>> keyFrameDataCollectionList = [];
+            AnimationTimelineTool animationTimelineTool = new();
+            TimeSpan leftTime = TimeSpan.FromHours(24);
+            TimeSpan rightTime = TimeSpan.Zero;
+            //存储上一个迭代过的时间
+            TimeSpan previousTime = TimeSpan.Zero;
+            int loopCount = CurrentTrack.TimelineElementList.Count;
+            #endregion
+
+            #region 搜索最小和最大的时间点
+            for (int i = 0; i < CurrentTrack.TimelineElementList.Count; i++)
+            {
+                if (CurrentTrack.TimelineElementList[i].IsChecked is bool isChecked && isChecked)
+                {
+                    if (CurrentTrack.TimelineElementList[i].StartTime < leftTime)
+                    {
+                        leftTime = CurrentTrack.TimelineElementList[i].StartTime;
+                    }
+                    if (CurrentTrack.TimelineElementList[i].EndTime > rightTime)
+                    {
+                        rightTime = CurrentTrack.TimelineElementList[i].EndTime;
+                    }
+                }
+            }
+            #endregion
+
+            #region 收集需要的关键帧
+            for (int i = 0; i < CurrentTrack.TimelineElementList.Count; i++)
+            {
+                if (CurrentTrack.TimelineElementList[i].StartTime >= leftTime && CurrentTrack.TimelineElementList[i].EndTime <= rightTime)
+                {
+                    TimelineClip timelineclip = CurrentTrack.TimelineElementList[i];
+
+                    if (timelineclip.CurrentClipMode is ClipMode.Point)
+                    {
+                        currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.StartTime, Ruler);
+                        timePointList.Add(currentTimeValue);
+                        keyFrameDataCollectionList.Add(new(timelineclip.DataList.ToList().Select(item => item.Clone())));
+                        previousTime = timelineclip.EndTime;
+                    }
+                    else
+                    {
+                        double startTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.StartTime, Ruler);
+                        TimeSpan startTime = timelineclip.StartTime;
+                        TimeSpan endTime = timelineclip.EndTime;
+                        for (int j = 0; j < timelineclip.InnerKeyFrameList.Count; j++)
+                        {
+                            if (timelineclip.InnerKeyFrameList[j].CurrentTime + startTime == previousTime)
+                            {
+                                continue;
+                            }
+                            currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.InnerKeyFrameList[j].CurrentTime + startTime, Ruler);
+                            timePointList.Add(currentTimeValue);
+                            keyFrameDataCollectionList.Add(new(timelineclip.DataList.ToList().Select(item => item.Clone())));
+                            if (j == timelineclip.InnerKeyFrameList.Count - 1)
+                            {
+                                previousTime = endTime;
+                            }
+                        }
+                    }
+                    CurrentTrack.TimelineElementList.Remove(timelineclip);
+                    i--;
+                }
+            }
+            #endregion
+
+            #region 从第一个开始整体偏移到0
+            if (timePointList.Count > 0)
+            {
+                double minValue = timePointList.Min();
+                for (int i = 0; i < timePointList.Count; i++)
+                {
+                    timePointList[i] -= minValue;
+                }
+            }
+            #endregion
+
+            #endregion
+
+            //把选区中的关键帧全部放进一个全新的连续模式动画片段实例中
+            AddTimelineClip("连续关键帧", leftTime, rightTime, timePointList, keyFrameDataCollectionList);
+        }
+
+        public void CopyTimelineClip()
+        {
+            List<TimelineClip> timelineClipList = [.. CurrentTrack.TimelineElementList.Where(item => item.IsChecked is bool isChecked && isChecked)];
+            foreach (var selectedClip in timelineClipList)
+            {
+                TimelineClip newClip = selectedClip.Clone() as TimelineClip;
+                CurrentTrack.TimelineElementList.Add(newClip);
+            }
+        }
+
+        /// <summary>
+        /// 磁吸逻辑：将当前时间对齐到最近的 0.05s
+        /// </summary>
+        private void SnapToTick()
+        {
+            double current = CurrentTime.TotalSeconds;
+            // 四舍五入到最近的步进倍数
+            double snapped = Math.Round(current / TickStep) * TickStep;
+
+            // 确保不超出标尺范围
+            if (Ruler is not null)
+            {
+                snapped = Math.Clamp(snapped, 0, Ruler.Maximum);
+            }
+
+            CurrentTime = TimeSpan.FromSeconds(snapped);
         }
         #endregion
 
@@ -492,12 +945,12 @@ namespace CBHK.CustomControl.Container
 
                     if (CurrentTrack is not null)
                     {
-                        foreach (var item in CurrentTrack.TimelineClipList)
+                        foreach (var item in CurrentTrack.TimelineElementList)
                         {
-                            if (item.CurrentClipMode is Model.Common.ClipMode.Rectangle)
+                            if (item is TimelineClip clip)
                             {
-                                item.IsChecked = false;
-                                item.BorderBrush = Brushes.White;
+                                clip.IsChecked = false;
+                                clip.BorderBrush = Brushes.White;
                             }
                         }
                     }
@@ -529,7 +982,7 @@ namespace CBHK.CustomControl.Container
         {
             foreach (var track in TrackList)
             {
-                foreach (var timelineClip in track.TimelineClipList)
+                foreach (var timelineClip in track.TimelineElementList)
                 {
                     timelineClip.IsAdjustingFirstSize = timelineClip.IsAdjustingLastSize = false;
                 }
@@ -602,48 +1055,51 @@ namespace CBHK.CustomControl.Container
         }
 
         /// <summary>
-        /// 根据时间更新播放指针的位置
+        /// 让WPF内置的渲染时钟驱动播放逻辑，计算每一帧的时间差并更新当前时间，从而实现播放指针的移动
         /// </summary>
-        public void UpdateStateByCurrentTime()
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Timeline_Rendering(object sender, EventArgs e)
         {
-            // 每次更新位置前，先确保画布宽度是对的
-            UpdateTotalWidth();
-
-            #region 更新播放指针的位置
-            if (playHeadGrid is not null && Ruler is not null)
+            if(!IsPlaying)
             {
-                double positionX = animationTimelineTool.ConvertTimeToPixel(CurrentTime, Ruler);
-                Canvas.SetLeft(playHeadGrid, positionX);
-                for (int i = 0; i < TrackList.Count; i++)
-                {
-                    for (int j = 0; j < TrackList[i].TimelineClipList.Count; j++)
-                    {
-                        TrackList[i].TimelineClipList[j].UpdateClipByCurrentTime();
-                    }
-                }
+                return;
             }
-            #endregion
 
-            #region 更新内部帧成员的相对位置
-            double offset = 0.0;
-            for (int i = 0; i < TrackList.Count; i++)
+            RenderingEventArgs args = (RenderingEventArgs)e;
+
+            //初始化计时基准
+            if (lastRenderTime == TimeSpan.Zero)
             {
-                for (int j = 0; j < TrackList[i].TimelineClipList.Count; j++)
-                {
-                    for (int k = 0; k < TrackList[i].TimelineClipList[j].InnerKeyFrameList.Count; k++)
-                    {
-                        ContinuousKeyframeItem continuousKeyframeItem = TrackList[i].TimelineClipList[j].InnerKeyFrameList[k];
-                        double currentTimeValue = animationTimelineTool.ConvertTimeToPixel(continuousKeyframeItem.CurrentTime, Ruler);
-                        if(continuousKeyframeItem.CurrentTime.TotalSeconds == 0)
-                        {
-                            offset = currentTimeValue;
-                        }
+                lastRenderTime = args.RenderingTime;
+                return;
+            }
 
-                        Canvas.SetLeft(continuousKeyframeItem, currentTimeValue - offset - (continuousKeyframeItem.Width / 2));
-                    }
-                }
-            } 
-            #endregion
+            //计算两帧之间的时间差 (DeltaTime)
+            double delta = (args.RenderingTime - lastRenderTime).TotalSeconds;
+            lastRenderTime = args.RenderingTime;
+
+            //计算下一帧的时间点
+            double nextSeconds = CurrentTime.TotalSeconds + (delta * playDirection);
+
+            //边界判定
+            if (nextSeconds < 0 && playDirection == -1)
+            {
+                IsPlaying = false;
+                CurrentTime = TimeSpan.Zero;
+                return;
+            }
+
+            if (Ruler is not null && nextSeconds > Ruler.Maximum)
+            {
+                CurrentTime = TimeSpan.FromSeconds(Ruler.Maximum);
+                IsPlaying = false;
+                return;
+            }
+
+            //更新时间
+            CurrentTime = TimeSpan.FromSeconds(nextSeconds);
+            MemoryCurrentTime = CurrentTime;
         }
         #endregion
     }

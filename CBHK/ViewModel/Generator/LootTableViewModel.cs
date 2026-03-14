@@ -27,7 +27,7 @@ namespace CBHK.ViewModel.Generator
     public partial class LootTableViewModel : BaseCustomWorldUnifiedPlan
     {
         #region Property
-        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\LootTable\Data\Rule\";
+        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\LootTable\DataList\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
         [ObservableProperty]

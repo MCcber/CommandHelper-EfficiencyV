@@ -1,14 +1,15 @@
 ﻿using CBHK.CustomControl.Input;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -19,9 +20,41 @@ namespace CBHK.CustomControl.Container
         #region Field
         private Timeline timeline;
         private TimeRulerElement timeRulerElement;
+        Geometry reversePlayGeometry = Geometry.Parse("M160.250617 511.747125L863.749383 0v1024l-703.498766-512.252875z");
+        Geometry playGeometry = Geometry.Parse("M896 512L128 1024V0z");
+        Geometry timelinePauseGeometry = Application.Current.Resources["TimelinePauseIcon"] as Geometry;
         #endregion
 
         #region Property
+        public bool IsPlaying { get; set; }
+
+        public Visibility PlayModeMaskVisibility
+        {
+            get { return (Visibility)GetValue(PlayModeMaskVisibilityProperty); }
+            set { SetValue(PlayModeMaskVisibilityProperty, value); }
+        }
+
+        public static readonly DependencyProperty PlayModeMaskVisibilityProperty =
+            DependencyProperty.Register("PlayModeMaskVisibility", typeof(Visibility), typeof(TimelineToolContainer), new PropertyMetadata(default(Visibility)));
+
+        public Geometry ReversePlayIcon
+        {
+            get { return (Geometry)GetValue(ReversePlayIconProperty); }
+            set { SetValue(ReversePlayIconProperty, value); }
+        }
+
+        public static readonly DependencyProperty ReversePlayIconProperty =
+            DependencyProperty.Register("ReversePlayIcon", typeof(Geometry), typeof(TimelineToolContainer), new PropertyMetadata(default(Geometry)));
+
+        public Geometry PlayIcon
+        {
+            get { return (Geometry)GetValue(PlayIconProperty); }
+            set { SetValue(PlayIconProperty, value); }
+        }
+
+        public static readonly DependencyProperty PlayIconProperty =
+            DependencyProperty.Register("PlayIcon", typeof(Geometry), typeof(TimelineToolContainer), new PropertyMetadata(default(Geometry)));
+
         public double ZoomFactor
         {
             get { return (double)GetValue(ZoomFactorProperty); }
@@ -112,14 +145,14 @@ namespace CBHK.CustomControl.Container
         public static readonly DependencyProperty HorizontalFlipCommandProperty =
             DependencyProperty.Register("HorizontalFlipCommand", typeof(IRelayCommand), typeof(TimelineToolContainer), new PropertyMetadata(default(IRelayCommand)));
 
-        public IRelayCommand ReverseCommand
+        public IRelayCommand ReversePlayCommand
         {
-            get { return (IRelayCommand)GetValue(ReverseCommandProperty); }
-            set { SetValue(ReverseCommandProperty, value); }
+            get { return (IRelayCommand)GetValue(ReversePlayCommandProperty); }
+            set { SetValue(ReversePlayCommandProperty, value); }
         }
 
-        public static readonly DependencyProperty ReverseCommandProperty =
-            DependencyProperty.Register("ReverseCommand", typeof(IRelayCommand), typeof(TimelineToolContainer), new PropertyMetadata(default(IRelayCommand)));
+        public static readonly DependencyProperty ReversePlayCommandProperty =
+            DependencyProperty.Register("ReversePlayCommand", typeof(IRelayCommand), typeof(TimelineToolContainer), new PropertyMetadata(default(IRelayCommand)));
 
         public IRelayCommand AddTrackCommand
         {
@@ -215,7 +248,7 @@ namespace CBHK.CustomControl.Container
             MergeCommand = new RelayCommand(Merge_Click);
             ExtractCommand = new RelayCommand(Extract_Click);
             HorizontalFlipCommand = new RelayCommand(HorizontalFlip_Click);
-            ReverseCommand = new RelayCommand(Reverse_Click);
+            ReversePlayCommand = new RelayCommand(Reverse_Click);
             AddTrackCommand = new RelayCommand(AddTrack_Click);
             DeleteTrackCommand = new RelayCommand(DeleteTrack_Click);
             PlayCommand = new RelayCommand(Play_Click);
@@ -223,6 +256,11 @@ namespace CBHK.CustomControl.Container
             ShrinkCommand = new RelayCommand(Shrink_Click);
             EnlargeCommand = new RelayCommand(Enlarge_Click);
             HideTimelineCommand = new RelayCommand(HideTimeline_Click);
+
+            PlayIcon = playGeometry;
+            ReversePlayIcon = reversePlayGeometry;
+
+            UpdatePlayState();
         }
 
         private void UpdateTotalTimeDisplay()
@@ -251,6 +289,32 @@ namespace CBHK.CustomControl.Container
                 int milliseconds = timeline.CurrentTime.Milliseconds;
                 int frames = (int)(timeline.CurrentTime.TotalSeconds * 20) % 20;
                 CurrentTime = string.Format("{0:D2}s{1:D2}ms{2:D2}f", seconds, milliseconds, frames);
+            }
+        }
+
+        private void SwitchToPlayState()
+        {
+            PlayIcon = playGeometry;
+            ReversePlayIcon = reversePlayGeometry;
+        }
+
+        private void SwitchToPauseState()
+        {
+            PlayIcon = timelinePauseGeometry;
+            ReversePlayIcon = timelinePauseGeometry;
+        }
+
+        private void UpdatePlayState()
+        {
+            if (IsPlaying)
+            {
+                SwitchToPauseState();
+                PlayModeMaskVisibility = Visibility.Visible;
+            }
+            else
+            {
+                SwitchToPlayState();
+                PlayModeMaskVisibility = Visibility.Hidden;
             }
         }
         #endregion
@@ -326,7 +390,16 @@ namespace CBHK.CustomControl.Container
 
         private void Play_Click()
         {
+            IsPlaying = !IsPlaying;
+            UpdatePlayState();
+            timeline.Play(IsPlaying);
+        }
 
+        private void Reverse_Click()
+        {
+            IsPlaying = !IsPlaying;
+            UpdatePlayState();
+            timeline.ReversePlay(IsPlaying);
         }
 
         private void DeleteTrack_Click()
@@ -346,19 +419,14 @@ namespace CBHK.CustomControl.Container
             timeline.AddTrack("测试2");
         }
 
-        private void Reverse_Click()
-        {
-
-        }
-
         private void HorizontalFlip_Click()
         {
-
+            timeline.HorizontalFlip();
         }
 
         private void Extract_Click()
         {
-
+            timeline.ExtractKeyFrameItem();
         }
 
         private void Split_Click()
@@ -368,99 +436,19 @@ namespace CBHK.CustomControl.Container
 
         private void Merge_Click()
         {
-            #region 检测是否可以合并
-            if (timeline.CurrentTrack.TimelineClipList.Select(item => item.IsChecked is not null && item.IsChecked.Value).Count() < 2)
-            {
-                Message.PushMessage(new GeneratorMessage()
-                {
-                    Message = "合并失败，请选择更多关键帧！",
-                    SubMessage = "盔甲架生成器",
-                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\armor_stand.png", UriKind.RelativeOrAbsolute)),
-                    MessageBrush = Brushes.Red
-                });
-                return;
-            } 
-            #endregion
-
-            #region 搜索选中队列里最左侧和最右侧的关键帧并删除它们以及之间的所有关键帧
-            double currentTimeValue = 0.0;
-            List<double> timePointList = [];
-            AnimationTimelineTool animationTimelineTool = new();
-            TimeSpan leftTime = TimeSpan.FromHours(24);
-            TimeSpan rightTime = TimeSpan.Zero;
-            TimelineClip leftClip = new();
-            TimelineClip rightClip = new();
-            int loopCount = timeline.CurrentTrack.TimelineClipList.Count;
-
-            for (int i = 0; i < timeline.CurrentTrack.TimelineClipList.Count; i++)
-            {
-                if (timeline.CurrentTrack.TimelineClipList[i].IsChecked is bool isChecked && isChecked)
-                {
-                    if (timeline.CurrentTrack.TimelineClipList[i].StartTime < leftTime)
-                    {
-                        leftTime = timeline.CurrentTrack.TimelineClipList[i].StartTime;
-                        leftClip = timeline.CurrentTrack.TimelineClipList[i];
-                    }
-                    if (timeline.CurrentTrack.TimelineClipList[i].EndTime > rightTime)
-                    {
-                        rightTime = timeline.CurrentTrack.TimelineClipList[i].EndTime;
-                        rightClip = timeline.CurrentTrack.TimelineClipList[i];
-                    }
-                }
-            }
-
-            while (loopCount > 0)
-            {
-                if (timeline.CurrentTrack.TimelineClipList[0].StartTime >= leftTime && timeline.CurrentTrack.TimelineClipList[0].EndTime <= rightTime)
-                {
-                    TimelineClip timelineclip = timeline.CurrentTrack.TimelineClipList[0];
-
-                    if (timeline.CurrentTrack.TimelineClipList[0].CurrentClipMode is Model.Common.ClipMode.Point)
-                    {
-                        currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.StartTime, timeline.Ruler);
-                        timePointList.Add(currentTimeValue);
-                    }
-                    else
-                    {
-                        double startTimeValue = animationTimelineTool.ConvertTimeToPixel(timeline.CurrentTrack.TimelineClipList[0].StartTime, timeline.Ruler);
-                        TimeSpan startTime = timeline.CurrentTrack.TimelineClipList[0].StartTime;
-                        for (int i = 0; i < timeline.CurrentTrack.TimelineClipList[0].InnerKeyFrameList.Count; i++)
-                        {
-                            currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timeline.CurrentTrack.TimelineClipList[0].InnerKeyFrameList[i].CurrentTime + startTime, timeline.Ruler);
-                            timePointList.Add(currentTimeValue);
-                        }
-                    }
-                    timeline.CurrentTrack.TimelineClipList.Remove(timelineclip);
-                }
-                loopCount--;
-            }
-
-            //从第一个开始整体偏移到0
-            if(timePointList.Count > 0)
-            {
-                double minValue = timePointList.Min();
-                for (int i = 0; i < timePointList.Count; i++)
-                {
-                    timePointList[i] -= minValue;
-                }
-            }
-            #endregion
-
-            #region 把选区中的关键帧全部放进一个全新的连续模式动画片段实例中
-            timeline.AddTimelineClip("连续关键帧", leftTime, rightTime, timePointList);
-            #endregion
+            timeline.MergeClip();
         }
 
         private void Copy_Click()
         {
-
+            timeline.CopyTimelineClip();
         }
 
         private void DeleteFrames_Click()
         {
             if (timeline is not null && timeline.CurrentTrack is not null)
             {
-                timeline.RemoveTimelineClip();
+                timeline.RemoveTimelineElement();
             }
         }
 
@@ -468,7 +456,7 @@ namespace CBHK.CustomControl.Container
         {
             if(timeline is not null && timeline.CurrentTrack is not null)
             {
-                timeline.AddTimelineClip();
+                timeline.AddTimelineElement();
             }
         }
 

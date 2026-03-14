@@ -23,7 +23,7 @@ namespace CBHK.ViewModel.Generator
     public partial class DamageTypeViewModel:BaseCustomWorldUnifiedPlan
     {
         #region Property
-        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DamageType\Data\Rule\";
+        public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\DamageType\DataList\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
         private VectorTextComboBoxItem _currentVersion = new();

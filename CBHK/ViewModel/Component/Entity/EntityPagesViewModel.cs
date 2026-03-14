@@ -46,9 +46,9 @@ namespace CBHK.ViewModel.Component.Entity
         private ImageBrush buttonNormalBrush;
         private ImageBrush buttonPressedBrush;
         private UpdateEntityComponentVersionEvent versionUpdateEvent;
-        private string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\";
-        private string CommonNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\Common";
-        private string DependencyNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\Dependency";
+        private string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\";
+        private string CommonNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\Common";
+        private string DependencyNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\Dependency";
         //专属结果集合
         public Dictionary<string, ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
         /// <summary>
@@ -95,7 +95,7 @@ namespace CBHK.ViewModel.Component.Entity
         /// </summary>
         private Grid CacheGrid = null;
 
-        private string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
+        private string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\SpecialTags.json";
 
         /// <summary>
         /// 特殊实体的共通标签链表
