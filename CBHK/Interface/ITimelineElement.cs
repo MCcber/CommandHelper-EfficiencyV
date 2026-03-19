@@ -6,6 +6,8 @@ namespace CBHK.Interface
     public interface ITimelineElement
     {
         #region Property
+        public bool IsPlayed { get; set; }
+        public bool IsChecked { get; set; }
         public TimeRulerElement Ruler { get; set; }
         public double OriginCanvasTop { get; set; }
         public Timeline ParentTimeline { get; set; }

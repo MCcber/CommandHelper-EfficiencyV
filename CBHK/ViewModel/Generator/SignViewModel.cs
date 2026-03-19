@@ -22,6 +22,7 @@ namespace CBHK.ViewModel.Generator
     public partial class SignViewModel : ObservableObject
     {
         #region Field
+        private MessagePopup messagePopup = new();
         /// <summary>
         /// 主页
         /// </summary>
@@ -135,7 +136,7 @@ namespace CBHK.ViewModel.Generator
                 else
                 {
                     Clipboard.SetText(result.ToString());
-                    Message.PushMessage(new GeneratorMessage()
+                    messagePopup.PushMessage(new GeneratorMessage()
                     {
                         Message = "生成成功！告示牌已进入剪切板",
                         SubMessage = "告示牌生成器",

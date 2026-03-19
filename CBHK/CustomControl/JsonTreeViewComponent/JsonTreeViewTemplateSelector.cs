@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 
-namespace CBHK.CustomControl.JsonTreeViewComponents
+namespace CBHK.CustomControl.JsonTreeViewComponent
 {
     public class JsonTreeViewTemplateSelector:DataTemplateSelector
     {

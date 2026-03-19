@@ -77,13 +77,13 @@
                             <TextBlock
                                 Grid.Row="1"
                                 Grid.Column="1"
+                                Margin="{TemplateBinding Padding}"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Foreground="{TemplateBinding Foreground}"
                                 Text="{TemplateBinding Text}" />
                             <ContentPresenter
                                 x:Name="contentPresenter"
-                                Margin="{TemplateBinding Padding}"
                                 HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                 VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                 Focusable="False"

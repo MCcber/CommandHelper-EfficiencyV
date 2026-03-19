@@ -216,9 +216,9 @@ namespace CBHK.CustomControl.TextElement
         //悬浮事件数据源
         public static ObservableCollection<VectorTextComboBoxItem> hoverEventSource { get; set; } = [];
         //点击事件数据源文件路径
-        string clickEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\DataList\clickEventActions.ini";
+        string clickEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Data\clickEventActions.ini";
         //悬浮事件数据源文件路径
-        string hoverEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\DataList\hoverEventActions.ini";
+        string hoverEventSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Data\hoverEventActions.ini";
         //事件数据库
         private static Dictionary<string, string> EventDataBase = [];
         #endregion
@@ -236,11 +236,11 @@ namespace CBHK.CustomControl.TextElement
             MouseLeftButtonUp += ObfuscateTextMouseLeftButtonUp;
 
             #region 读取混淆文本配置
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\DataList\obfuscateChars.ini"))
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Data\obfuscateChars.ini"))
             {
                 Obfuscates =
                 [
-                    .. File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\DataList\obfuscateChars.ini").ToCharArray(),
+                    .. File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Data\obfuscateChars.ini").ToCharArray(),
                 ];
             }
             #endregion

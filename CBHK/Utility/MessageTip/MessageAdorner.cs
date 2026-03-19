@@ -9,18 +9,34 @@ using System.Windows.Threading;
 
 namespace CBHK.Utility.MessageTip
 {
-    public class MessageAdorner(UIElement adornedElement) : Adorner(adornedElement)
+    public class MessageAdorner : Adorner
     {
         #region Field
         private ListBox listBox;
-        private ObservableCollection<GeneratorMessage> Source { get; set; } = [];
+        DispatcherTimer timer = new()
+        {
+            Interval = TimeSpan.FromSeconds(3)
+        };
         private UIElement _child;
-        private readonly FrameworkElement adornedElement = adornedElement as FrameworkElement;
+        private readonly FrameworkElement adornedElement;
+        #endregion
+
+        #region Property
+        private ObservableCollection<GeneratorMessage> Source { get; set; } = [];
         #endregion
 
         #region Method
-        public void PushMessage(GeneratorMessage generatorMessage)
+        public MessageAdorner(UIElement adornedElement) : base(adornedElement)
         {
+            this.adornedElement = adornedElement as FrameworkElement;
+            timer.Tick += (sender, e) =>
+            {
+                if (Source.Count > 0)
+                {
+                    Source.RemoveAt(Source.Count - 1);
+                }
+            };
+            timer.Start();
             if (listBox is null)
             {
                 listBox = new ListBox
@@ -36,7 +52,10 @@ namespace CBHK.Utility.MessageTip
                 };
                 Child = listBox;
             }
+        }
 
+        public void PushMessage(GeneratorMessage generatorMessage)
+        {
             GeneratorMessage messageData = new()
             {
                 Message = generatorMessage.Message,
@@ -47,21 +66,11 @@ namespace CBHK.Utility.MessageTip
                 SubMessageBrush = generatorMessage.SubMessageBrush,
                 Icon = generatorMessage.Icon
             };
-            DispatcherTimer timer = new()
-            {
-                Interval = TimeSpan.FromSeconds(3)
-            };
-            timer.Tick += (sender, e) =>
-            {
-                Source.Remove(messageData);
-                timer.Stop();
-            };
-            if (Source.Count >= 5)
+            while (Source.Count >= 5)
             {
                 Source.RemoveAt(4);
             }
             Source.Insert(0, messageData);
-            timer.Start();
         }
 
         public UIElement Child
@@ -79,6 +88,7 @@ namespace CBHK.Utility.MessageTip
                 _child = value;
             }
         }
+
         protected override int VisualChildrenCount
         {
             get

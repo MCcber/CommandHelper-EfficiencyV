@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.Utility.Time;
@@ -29,7 +30,7 @@ using System.Windows.Navigation;
 
 namespace CBHK.ViewModel.Component.Datapack.HomePage
 {
-    public partial class HomePageViewModel(IContainerProvider container) : ObservableObject
+    public partial class HomePageViewModel(IContainerProvider container) : ObservableObject, IPageViewModel
     {
         #region Field
         private IContainerProvider container = container;
@@ -45,7 +46,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         /// <summary>
         /// 近期的解决方案
         /// </summary>
-        public string RecentSolutionFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\RecentTemplates";
+        public string RecentSolutionFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\RecentTemplates";
 
         /// <summary>
         /// 近期内容载入逻辑锁
@@ -96,6 +97,8 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         /// </summary>
         [ObservableProperty]
         private Visibility _searchResultViewerVisibility = Visibility.Collapsed;
+
+        public MessagePopup MessagePopup { get; set; }
         #endregion
 
         /// <summary>
@@ -176,9 +179,9 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                                 recentTreeItem.Title.Text = Path.GetFileName(Contents[i]);
                                 recentTreeItem.Path.Text = Contents[i];
                                 recentTreeItem.ModifyDate.Text = File.GetLastWriteTime(Contents[i]).ToString("yyyy/M/d HH:mm");
-                                RichTreeViewItems newNode = new()
+                                RichTreeViewItem newNode = new()
                                 {
-                                    Style = Application.Current.Resources["RichTreeViewItems"] as Style,
+                                    Style = Application.Current.Resources["RichTreeViewItem"] as Style,
                                     Margin = new Thickness(0, 0, 0, 10),
                                     Header = recentTreeItem,
                                     Foreground = whiteBrush,
@@ -234,7 +237,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                         RecentItemSearchResults.Clear();
                         foreach (var headItem in RecentContentDateItemList)
                         {
-                            foreach (RichTreeViewItems contentItem in headItem.Items)
+                            foreach (RichTreeViewItem contentItem in headItem.Items)
                             {
                                 RecentTreeItem recentTreeItem = contentItem.Header as RecentTreeItem;
                                 RecentTreeItem newRecentTreeItem = new();
@@ -247,7 +250,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                                 string currentValue = recentTreeItem.Title.Text;
                                 if (currentValue == SearchText || currentValue.StartsWith(SearchText) || Regex.IsMatch(currentValue, SearchText, RegexOptions.IgnoreCase))
                                 {
-                                    RichTreeViewItems richTreeViewItems = new()
+                                    RichTreeViewItem richTreeViewItems = new()
                                     {
                                         Margin = new Thickness(0, 0, 0, 10),
                                         MinHeight = 35,
@@ -310,7 +313,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                 }
                 else
                 {
-                    Message.PushMessage(new GeneratorMessage()
+                    MessagePopup.PushMessage(new GeneratorMessage()
                     {
                         Message = "目标解决方案不存在",
                         MessageBrush = Brushes.Red,
@@ -322,7 +325,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
             }
             else
             {
-                Message.PushMessage(new GeneratorMessage()
+                MessagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "无法打开！所选解决方案不存在,已删除",
                     MessageBrush = Brushes.Red,
@@ -345,7 +348,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         /// <param name="e"></param>
         public void TreeView_MouseLeave(object sender, MouseEventArgs e)
         {
-            if ((sender as TreeView).SelectedItem is RichTreeViewItems richTreeViewItems)
+            if ((sender as TreeView).SelectedItem is RichTreeViewItem richTreeViewItems)
                 richTreeViewItems.IsSelected = false;
         }
 
@@ -372,7 +375,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                 {
                     for (int j = 0; j < RecentContentDateItemList[i].Items.Count; j++)
                     {
-                        RichTreeViewItems currentItem = RecentContentDateItemList[i].Items[j] as RichTreeViewItems;
+                        RichTreeViewItem currentItem = RecentContentDateItemList[i].Items[j] as RichTreeViewItem;
                         if (currentItem.Uid != currentItem.Tag.ToString())
                             File.Move(currentItem.Tag.ToString(), currentItem.Uid);
                     }

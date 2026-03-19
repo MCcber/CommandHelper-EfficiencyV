@@ -1,0 +1,195 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container">
+
+    <SolidColorBrush x:Key="ListBox.Static.Background" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="ListBox.Static.Border" Color="#FFABADB3" />
+    <SolidColorBrush x:Key="ListBox.Disabled.Background" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="ListBox.Disabled.Border" Color="#FFD9D9D9" />
+    <!--  需要在外部设置ItemTemplate布局  -->
+    <Style x:Key="ListBoxScrollViewerStyle" TargetType="{x:Type ListBox}">
+        <Setter Property="Background" Value="{StaticResource ListBox.Static.Background}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ListBox.Static.Border}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ListBox}">
+                    <Border
+                        x:Name="Bd"
+                        Padding="1"
+                        Background="Transparent"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        SnapsToDevicePixels="true">
+                        <Container:VectorScrollViewer
+                            Focusable="false"
+                            Style="{DynamicResource VectorScrollViewerStyle}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <ItemsPresenter
+                                x:Name="itemPresenter"
+                                RenderOptions.BitmapScalingMode="HighQuality"
+                                RenderOptions.ClearTypeHint="Enabled" />
+                        </Container:VectorScrollViewer>
+                    </Border>
+                    <!--<ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ListBox.Disabled.Background}" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ListBox.Disabled.Border}" />
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsGrouping" Value="true" />
+                                <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="false" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>-->
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="{x:Type ListBox}">
+                    <Style.Setters>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type ComboBoxItem}">
+                                    <Border
+                                        x:Name="Bd"
+                                        Background="{Binding ItemContainerBackground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBox}}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                        <Grid VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid
+                                                x:Name="canvas"
+                                                Grid.Column="1"
+                                                MinWidth="30"
+                                                MinHeight="30"
+                                                Margin="0,15,0,0"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center"
+                                                UseLayoutRounding="True"
+                                                Visibility="Hidden">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="1" />
+                                                    <RowDefinition Height="1" />
+                                                    <RowDefinition Height="1" />
+                                                    <RowDefinition Height="1" />
+                                                    <RowDefinition Height="1" />
+                                                    <RowDefinition Height="1" />
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="1" />
+                                                    <ColumnDefinition Width="1" />
+                                                    <ColumnDefinition Width="1" />
+                                                    <ColumnDefinition Width="1" />
+                                                    <ColumnDefinition Width="1" />
+                                                    <ColumnDefinition Width="1" />
+                                                    <ColumnDefinition Width="1" />
+                                                    <ColumnDefinition Width="1" />
+                                                </Grid.ColumnDefinitions>
+                                                <Rectangle
+                                                    Grid.Row="3"
+                                                    Grid.Column="0"
+                                                    Width="2"
+                                                    Height="2"
+                                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}" />
+                                                <Rectangle
+                                                    Grid.Row="4"
+                                                    Grid.Column="1"
+                                                    Width="2"
+                                                    Height="2"
+                                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}" />
+                                                <Rectangle
+                                                    Grid.Row="5"
+                                                    Grid.Column="2"
+                                                    Width="2"
+                                                    Height="2"
+                                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}" />
+                                                <Rectangle
+                                                    Grid.Row="4"
+                                                    Grid.Column="3"
+                                                    Width="2"
+                                                    Height="2"
+                                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}" />
+                                                <Rectangle
+                                                    Grid.Row="3"
+                                                    Grid.Column="4"
+                                                    Width="2"
+                                                    Height="2"
+                                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}" />
+                                                <Rectangle
+                                                    Grid.Row="2"
+                                                    Grid.Column="5"
+                                                    Width="2"
+                                                    Height="2"
+                                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}" />
+                                                <Rectangle
+                                                    Grid.Row="1"
+                                                    Grid.Column="6"
+                                                    Width="2"
+                                                    Height="2"
+                                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}" />
+                                                <Rectangle
+                                                    Grid.Row="0"
+                                                    Grid.Column="7"
+                                                    Width="2"
+                                                    Height="2"
+                                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}" />
+                                            </Grid>
+                                            <ContentPresenter
+                                                x:Name="ContentPresenter"
+                                                Grid.Column="0"
+                                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="true">
+                                            <Setter TargetName="Bd" Property="Background" Value="#78797A" />
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="false">
+                                            <Setter TargetName="Bd" Property="Background" Value="#A0A0A0" />
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="true">
+                                            <Setter TargetName="Bd" Property="Background" Value="#48494A" />
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="canvas" Property="Visibility" Value="Visible" />
+                                        </Trigger>
+                                        <EventTrigger RoutedEvent="PreviewMouseDown">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation
+                                                            FillBehavior="HoldEnd"
+                                                            Storyboard.TargetName="Bd"
+                                                            Storyboard.TargetProperty="Background.Color"
+                                                            To="#313233"
+                                                            Duration="0:0:0.2" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style.Setters>
+                </Style>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

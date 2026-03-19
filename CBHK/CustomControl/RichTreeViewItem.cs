@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CBHK.CustomControl.Input;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,7 +7,7 @@ using System.Windows.Media;
 
 namespace CBHK.CustomControl
 {
-    public class RichTreeViewItems:TreeViewItem
+    public class RichTreeViewItem:TreeViewItem
     {
         public Visibility TextBlockVisibility
         {
@@ -15,7 +16,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty TextBlockVisibilityProperty =
-            DependencyProperty.Register("TextBlockVisibility", typeof(Visibility), typeof(RichTreeViewItems), new PropertyMetadata(default(Visibility)));
+            DependencyProperty.Register("TextBlockVisibility", typeof(Visibility), typeof(RichTreeViewItem), new PropertyMetadata(default(Visibility)));
 
         public Visibility ToggleButtonVisibility
         {
@@ -24,7 +25,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty ToggleButtonVisibilityProperty =
-            DependencyProperty.Register("ToggleButtonVisibility", typeof(Visibility), typeof(RichTreeViewItems), new PropertyMetadata(default(Visibility)));
+            DependencyProperty.Register("ToggleButtonVisibility", typeof(Visibility), typeof(RichTreeViewItem), new PropertyMetadata(default(Visibility)));
 
         public Visibility TextComboBoxVisibility
         {
@@ -33,7 +34,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty TextComboBoxVisibilityProperty =
-            DependencyProperty.Register("TextComboBoxVisibility", typeof(Visibility), typeof(RichTreeViewItems), new PropertyMetadata(default(Visibility)));
+            DependencyProperty.Register("TextComboBoxVisibility", typeof(Visibility), typeof(RichTreeViewItem), new PropertyMetadata(default(Visibility)));
 
         public Visibility IconComboBoxVisibility
         {
@@ -42,7 +43,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty IconComboBoxVisibilityProperty =
-            DependencyProperty.Register("IconComboBoxVisibility", typeof(Visibility), typeof(RichTreeViewItems), new PropertyMetadata(default(Visibility)));
+            DependencyProperty.Register("IconComboBoxVisibility", typeof(Visibility), typeof(RichTreeViewItem), new PropertyMetadata(default(Visibility)));
 
         public Visibility IconTextButtonVisibility
         {
@@ -51,7 +52,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty IconTextButtonVisibilityProperty =
-            DependencyProperty.Register("IconTextButtonVisibility", typeof(Visibility), typeof(RichTreeViewItems), new PropertyMetadata(default(Visibility)));
+            DependencyProperty.Register("IconTextButtonVisibility", typeof(Visibility), typeof(RichTreeViewItem), new PropertyMetadata(default(Visibility)));
 
         public Visibility ColorNumbericUpDownVisibility
         {
@@ -60,7 +61,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty ColorNumbericUpDownVisibilityProperty =
-            DependencyProperty.Register("ColorNumbericUpDownVisibility", typeof(Visibility), typeof(RichTreeViewItems), new PropertyMetadata(default(Visibility)));
+            DependencyProperty.Register("ColorNumbericUpDownVisibility", typeof(Visibility), typeof(RichTreeViewItem), new PropertyMetadata(default(Visibility)));
 
         public Brush ConnectingLineFill
         {
@@ -69,16 +70,16 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty ConnectingLineFillProperty =
-            DependencyProperty.Register("ConnectingLineFill", typeof(Brush), typeof(RichTreeViewItems), new PropertyMetadata(default(Brush)));
+            DependencyProperty.Register("ConnectingLineFill", typeof(Brush), typeof(RichTreeViewItem), new PropertyMetadata(default(Brush)));
 
-        public Dictionary<string,ObservableCollection<RichTreeViewItems>> SubStructure
+        public Dictionary<string,ObservableCollection<RichTreeViewItem>> SubStructure
         {
-            get { return (Dictionary<string, ObservableCollection<RichTreeViewItems>>)GetValue(SubStructureProperty); }
+            get { return (Dictionary<string, ObservableCollection<RichTreeViewItem>>)GetValue(SubStructureProperty); }
             set { SetValue(SubStructureProperty, value); }
         }
 
         public static readonly DependencyProperty SubStructureProperty =
-            DependencyProperty.Register("SubStructure", typeof(Dictionary<string, ObservableCollection<RichTreeViewItems>>), typeof(RichTreeViewItems), new PropertyMetadata(default(Dictionary<string, ObservableCollection<RichTreeViewItems>>)));
+            DependencyProperty.Register("SubStructure", typeof(Dictionary<string, ObservableCollection<RichTreeViewItem>>), typeof(RichTreeViewItem), new PropertyMetadata(default(Dictionary<string, ObservableCollection<RichTreeViewItem>>)));
 
         public TreeViewRun TextState
         {
@@ -87,6 +88,6 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty TextStateProperty =
-            DependencyProperty.Register("TextState", typeof(TreeViewRun), typeof(RichTreeViewItems), new PropertyMetadata(default(TreeViewRun)));
+            DependencyProperty.Register("TextState", typeof(TreeViewRun), typeof(RichTreeViewItem), new PropertyMetadata(default(TreeViewRun)));
     }
 }

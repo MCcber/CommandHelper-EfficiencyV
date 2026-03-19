@@ -184,7 +184,7 @@
                                                         Height="{Binding Height}"
                                                         HorizontalAlignment="Left"
                                                         Background="{Binding Background}"
-                                                        ItemsSource="{Binding TimelineClipList}">
+                                                        ItemsSource="{Binding TimelineElementList}">
                                                         <behaviors:Interaction.Triggers>
                                                             <behaviors:EventTrigger EventName="Loaded">
                                                                 <behaviors:CallMethodAction MethodName="Track_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />

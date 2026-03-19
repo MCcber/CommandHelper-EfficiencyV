@@ -2,6 +2,7 @@
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
@@ -31,11 +32,11 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Item
 {
-    public partial class ItemPageViewModel : ObservableObject
+    public partial class ItemPageViewModel : ObservableObject, IPageViewModel
     {
         #region Field
         private object obj = new();
-        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Item\DataList\SpecialTags.json";
+        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Item\Data\SpecialTags.json";
         JArray SpecialArray = null;
         private IContainerProvider container;
         private CBHKDataContext context;
@@ -213,6 +214,7 @@ namespace CBHK.ViewModel.Component.Item
         /// 特指结果集合
         /// </summary>
         public Dictionary<string, ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
+        public MessagePopup MessagePopup { get; set; }
 
         #endregion
 
@@ -472,7 +474,7 @@ namespace CBHK.ViewModel.Component.Item
 
             if (UseForTool)
             {
-                //Result = "{id:\"minecraft:" + CurrentItemID + "\",Count:" + data?.ItemCount.Value + "b" + (nbt.ToString().Trim(',').Length > 0 ? ",tag:{" + nbt.ToString().Trim(',') + "}" : "") + "}";
+                //Result = "{id:\"minecraft:" + CurrentItemID + "\",Count:" + data?.ItemCount.LeftValue + "b" + (nbt.ToString().Trim(',').Length > 0 ? ",tag:{" + nbt.ToString().Trim(',') + "}" : "") + "}";
                 ItemView item = Window.GetWindow(SpecialViewer) as ItemView;
                 item.DialogResult = true;
                 return;
@@ -486,9 +488,9 @@ namespace CBHK.ViewModel.Component.Item
             if (!Summon)
             {
                 //if (CurrentMinVersion < 1130)
-                //    Result = "give @p " + CurrentItemID + " " + data?.ItemCount.Value + " " + data?.ItemDamage.Value + " " + nbt;
+                //    Result = "give @p " + CurrentItemID + " " + data?.ItemCount.LeftValue + " " + data?.ItemDamage.LeftValue + " " + nbt;
                 //else
-                //    Result = "give @p " + CurrentItemID + nbt + " " + data?.ItemCount.Value;
+                //    Result = "give @p " + CurrentItemID + nbt + " " + data?.ItemCount.LeftValue;
             }
             else
                 Result = "summon item" + " ~ ~ ~ {ItemView:" + nbt + "}";
@@ -508,7 +510,7 @@ namespace CBHK.ViewModel.Component.Item
             else
             {
                 Clipboard.SetText(Result);
-                Message.PushMessage(new GeneratorMessage()
+                MessagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "物品生成成功!数据已进入剪切板",
                     SubMessage = "物品生成器",

@@ -1,6 +1,7 @@
 ﻿using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
@@ -83,6 +84,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Property
+        public MessagePopup MessagePopup { get; set; } = new();
         /// <summary>
         /// 原版物品库
         /// </summary>
@@ -411,39 +413,66 @@ namespace CBHK.ViewModel.Generator
         {
             MenuItem menu = obj.Parent as MenuItem;
             int index = menu.Items.IndexOf(obj);
-            VectorRichTabItem richTabItems = new()
+            VectorRichTabItem vectorRichTabItem = new()
             {
                 Title = obj.Header.ToString(),
                 Foreground = new SolidColorBrush(Colors.White),
                 Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style
             };
-            RecipeList.Add(richTabItems);
-            richTabItems.FindParent<TabControl>().SelectedItem = richTabItems;
+            RecipeList.Add(vectorRichTabItem);
+            vectorRichTabItem.FindParent<TabControl>().SelectedItem = vectorRichTabItem;
 
+            UserControl subView = null;
             switch (index)
             {
                 default:
-                    richTabItems.Content = new CraftingTableView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        CraftingTableView craftingTableView = new() { FontWeight = FontWeights.Normal };
+                        subView = craftingTableView;
+                        break;
+                    }
                 case 1:
-                    richTabItems.Content = new FurnaceView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        FurnaceView furnaceView = new() { FontWeight = FontWeights.Normal };
+                        subView = furnaceView;
+                        break;
+                    }
                 case 2:
-                    richTabItems.Content = new SmokerView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        SmokerView smokerView = new() { FontWeight = FontWeights.Normal };
+                        subView = smokerView;
+                        break;
+                    }
                 case 3:
-                    richTabItems.Content = new BlastFurnaceView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        BlastFurnaceView blastFurnaceView = new() { FontWeight = FontWeights.Normal };
+                        subView = blastFurnaceView;
+                        break;
+                    }
                 case 4:
-                    richTabItems.Content = new CampfireView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        CampfireView campfireView = new() { FontWeight = FontWeights.Normal };
+                        subView = campfireView;
+                        break;
+                    }
                 case 5:
-                    richTabItems.Content = new SmithingTableView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        SmithingTableView smithingTableView = new() { FontWeight = FontWeights.Normal };
+                        subView = smithingTableView;
+                        break;
+                    }
                 case 6:
-                    richTabItems.Content = new StonecutterView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        StonecutterView stonecutterView = new() { FontWeight = FontWeights.Normal };
+                        subView = stonecutterView;
+                        break;
+                    }
             }
+            if (subView is not null && subView.DataContext is IPageViewModel viewModel)
+            {
+                viewModel.MessagePopup = MessagePopup;
+            }
+            vectorRichTabItem.Content = subView;
         }
 
         [RelayCommand]
@@ -522,7 +551,7 @@ namespace CBHK.ViewModel.Generator
         private void ImportFromClipboard()
         {
             RecipeViewModel context = this;
-            ExternalDataImportManager.ImportRecipeDataHandler(Clipboard.GetText(), ref context,false);
+            ExternalDataImportManager.ImportRecipeDataHandler(Clipboard.GetText(), ref context,MessagePopup,false);
         }
 
         [RelayCommand]
@@ -543,7 +572,7 @@ namespace CBHK.ViewModel.Generator
             if (openFileDialog.ShowDialog().Value)
             {
                 RecipeViewModel context = this;
-                ExternalDataImportManager.ImportRecipeDataHandler(openFileDialog.FileName,ref context);
+                ExternalDataImportManager.ImportRecipeDataHandler(openFileDialog.FileName,ref context,MessagePopup);
             }
         }
 
@@ -644,7 +673,7 @@ namespace CBHK.ViewModel.Generator
                     }
                 }
                 //OpenFolderThenSelectFiles.ExplorerFile(selectedPath);
-                Message.PushMessage(new GeneratorMessage()
+                MessagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "配方全部生成成功！",
                     MessageBrush = Brushes.Red,

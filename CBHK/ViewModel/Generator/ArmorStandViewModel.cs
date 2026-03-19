@@ -27,7 +27,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -36,7 +35,7 @@ using System.Windows.Media.Media3D;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class ArmorStandViewModel : ObservableObject,IGenerator
+    public partial class ArmorStandViewModel : ObservableObject, IGenerator
     {
         #region Field
         /// <summary>
@@ -164,6 +163,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Property
+        public MessagePopup MessagePopup { get; set; }
         /// <summary>
         /// 生成器标题
         /// </summary>
@@ -1381,9 +1381,9 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void NBTCheckboxList_Loaded(object sender, RoutedEventArgs e)
         {
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\DataList\base_nbt.ini"))
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Data\base_nbt.ini"))
             {
-                ArmorStandNBTList = [.. File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\DataList\base_nbt.ini", Encoding.UTF8)];
+                ArmorStandNBTList = [.. File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Data\base_nbt.ini", Encoding.UTF8)];
             }
             NBTList = sender as StackPanel;
 
@@ -1706,7 +1706,7 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString());
-                Message.PushMessage(new GeneratorMessage()
+                MessagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "盔甲架生成成功！数据已进入剪切板",
                     SubMessage = "盔甲架生成器",

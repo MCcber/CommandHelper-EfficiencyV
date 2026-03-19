@@ -22,6 +22,7 @@ namespace CBHK.View.Component.Spawner
     public partial class ReferenceEntity : UserControl
     {
         #region Field
+        private MessagePopup messagePopup = new();
         private ImageSource defaultErrorIcon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\barrier.png", UriKind.Relative));
         #endregion
 
@@ -56,7 +57,7 @@ namespace CBHK.View.Component.Spawner
         {
             Button button = sender as Button;
             SpawnerView spawner = Window.GetWindow(button) as SpawnerView;
-            string data = ExternalDataImportManager.GetEntityDataHandler(Clipboard.GetText(),false);
+            string data = ExternalDataImportManager.GetEntityDataHandler(Clipboard.GetText(),messagePopup,false);
             Tag = data;
 
             try
@@ -72,7 +73,7 @@ namespace CBHK.View.Component.Spawner
             }
             catch
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！剪切板内容与实体无关或内容有误",
                     MessageBrush = Brushes.Red,
@@ -99,7 +100,7 @@ namespace CBHK.View.Component.Spawner
             };
             if (openFileDialog.ShowDialog().Value)
             {
-                string data = ExternalDataImportManager.GetEntityDataHandler(openFileDialog.FileName);
+                string data = ExternalDataImportManager.GetEntityDataHandler(openFileDialog.FileName,messagePopup);
                 Tag = data;
                 if (File.Exists(openFileDialog.FileName))
                 {
@@ -119,7 +120,7 @@ namespace CBHK.View.Component.Spawner
                     {
                         Button button = sender as Button;
                         SpawnerView spawner = Window.GetWindow(button) as SpawnerView;
-                        Message.PushMessage(new GeneratorMessage()
+                        messagePopup.PushMessage(new GeneratorMessage()
                         {
                             Message = "导入失败！文件内容与实体无关或内容有误",
                             MessageBrush = Brushes.Red,
@@ -148,7 +149,7 @@ namespace CBHK.View.Component.Spawner
                 StringBuilder Result = entityPagesDataContext.Create();
                 entityPagesDataContext.CollectionData(Result);
                 entityPagesDataContext.Build(Result);
-                string data = ExternalDataImportManager.GetEntityDataHandler(Result.ToString(), false);
+                string data = ExternalDataImportManager.GetEntityDataHandler(Result.ToString(),messagePopup, false);
                 Tag = data;
                 string entityID = "";
                 JObject json = JObject.Parse(data);

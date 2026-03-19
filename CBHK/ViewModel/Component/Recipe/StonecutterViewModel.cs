@@ -1,4 +1,5 @@
 ﻿using CBHK.Domain;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
@@ -8,9 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,7 +21,7 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Recipe
 {
-    public partial class StonecutterViewModel : ObservableObject
+    public partial class StonecutterViewModel : ObservableObject, IPageViewModel
     {
         #region Field
         private CBHKDataContext context;
@@ -113,6 +112,8 @@ namespace CBHK.ViewModel.Component.Recipe
 
         [ObservableProperty]
         private Visibility _materialMultiItemVisibility = Visibility.Collapsed;
+
+        public MessagePopup MessagePopup { get; set; }
         #endregion
 
         #region Method
@@ -318,7 +319,7 @@ namespace CBHK.ViewModel.Component.Recipe
                 if (saveFileDialog.ShowDialog().Value)
                 {
                     _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
-                    Message.PushMessage(new GeneratorMessage()
+                    MessagePopup.PushMessage(new GeneratorMessage()
                     {
                         Message = "切石机配方生成成功！",
                         MessageBrush = Brushes.Red,

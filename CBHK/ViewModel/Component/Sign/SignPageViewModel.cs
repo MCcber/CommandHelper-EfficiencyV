@@ -1,6 +1,7 @@
 ﻿using CBHK.CustomControl.TextElement;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
@@ -29,7 +30,7 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Sign
 {
-    public partial class SignPageViewModel : ObservableObject
+    public partial class SignPageViewModel : ObservableObject, IPageViewModel
     {
         #region Field
         public string Result = "";
@@ -75,6 +76,7 @@ namespace CBHK.ViewModel.Component.Sign
         #endregion
 
         #region Property
+        public MessagePopup MessagePopup { get; set; }
         [ObservableProperty]
         private RichRun _currentRichRun = null;
         /// <summary>
@@ -998,7 +1000,7 @@ namespace CBHK.ViewModel.Component.Sign
                 bool hanged = CanHanging && IsHanging;
                 string hangingStateString = hanged ?"hanging_":"";
                 string resultTypeString = SelectedSignType.Text + '_' + hangingStateString + "sign";
-                Message.PushMessage(new GeneratorMessage()
+                MessagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "生成成功！告示牌已进入剪切板",
                     SubMessage = "告示牌生成器",

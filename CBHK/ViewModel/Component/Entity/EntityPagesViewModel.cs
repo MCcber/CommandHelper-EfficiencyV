@@ -35,7 +35,7 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Entity
 {
-    public partial class EntityPageViewModel : ObservableObject,IGenerator
+    public partial class EntityPageViewModel : ObservableObject, IGenerator, IPageViewModel
     {
         #region Field
         public bool HaveCustomName = false;
@@ -46,9 +46,9 @@ namespace CBHK.ViewModel.Component.Entity
         private ImageBrush buttonNormalBrush;
         private ImageBrush buttonPressedBrush;
         private UpdateEntityComponentVersionEvent versionUpdateEvent;
-        private string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\";
-        private string CommonNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\Common";
-        private string DependencyNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\Dependency";
+        private string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\";
+        private string CommonNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\Common";
+        private string DependencyNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\Dependency";
         //专属结果集合
         public Dictionary<string, ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
         /// <summary>
@@ -95,7 +95,7 @@ namespace CBHK.ViewModel.Component.Entity
         /// </summary>
         private Grid CacheGrid = null;
 
-        private string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\SpecialTags.json";
+        private string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
 
         /// <summary>
         /// 特殊实体的共通标签链表
@@ -113,6 +113,7 @@ namespace CBHK.ViewModel.Component.Entity
         #endregion
 
         #region Property
+        public MessagePopup MessagePopup { get; set; }
         /// <summary>
         /// 指示是否需要展示生成结果
         /// </summary>
@@ -676,7 +677,7 @@ namespace CBHK.ViewModel.Component.Entity
             {
                 Clipboard.SetText(Result.ToString());
                 string entityID = SelectedEntityId is not null ? SelectedEntityId.Text : "entity";
-                Message.PushMessage(new GeneratorMessage()
+                MessagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "实体生成成功！数据已复制",
                     MessageBrush = Brushes.Red,

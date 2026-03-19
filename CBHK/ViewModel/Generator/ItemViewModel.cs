@@ -28,6 +28,7 @@ namespace CBHK.ViewModel.Generator
     public partial class ItemViewModel(IContainerProvider container, MainView mainView) : ObservableObject
     {
         #region Field
+        private MessagePopup messagePopup = new();
         /// <summary>
         /// 主页引用
         /// </summary>
@@ -187,7 +188,7 @@ namespace CBHK.ViewModel.Generator
             if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
             {
                 ObservableCollection<VectorRichTabItem> result = ItemPageList;
-                ExternalDataImportManager.ImportItemDataHandler(dialog.FileName, ref result);
+                ExternalDataImportManager.ImportItemDataHandler(dialog.FileName, ref result,messagePopup);
             }
         }
 
@@ -198,7 +199,7 @@ namespace CBHK.ViewModel.Generator
         private void ImportItemFromClipboard()
         {
             ObservableCollection<VectorRichTabItem> result = ItemPageList;
-            ExternalDataImportManager.ImportItemDataHandler(Clipboard.GetText(), ref result, false);
+            ExternalDataImportManager.ImportItemDataHandler(Clipboard.GetText(), ref result,messagePopup, false);
         }
 
         [RelayCommand]
@@ -296,7 +297,7 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString());
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "物品全部生成成功！数据已进入剪切板",
                     SubMessage = "物品生成器",

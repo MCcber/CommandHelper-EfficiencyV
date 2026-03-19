@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
@@ -21,7 +22,7 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Spawner
 {
-    public partial class SpawnerPageViewModel(IContainerProvider container) : ObservableObject
+    public partial class SpawnerPageViewModel(IContainerProvider container) : ObservableObject, IPageViewModel
     {
         #region Field
         private IContainerProvider container = container;
@@ -99,6 +100,8 @@ namespace CBHK.ViewModel.Component.Spawner
 
         [ObservableProperty]
         private object _referenceEntityTag = null;
+
+        public MessagePopup MessagePopup { get; set; }
         #endregion
 
         #region  Event
@@ -255,7 +258,7 @@ namespace CBHK.ViewModel.Component.Spawner
             else
             {
                 Clipboard.SetText(Result.Trim(','));
-                Message.PushMessage(new GeneratorMessage()
+                MessagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "生成成功！",
                     SubMessage = "刷怪笼生成器",

@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.CustomControl.JsonTreeViewComponent;
 using CBHK.Domain;
 using CBHK.Utility;
 using CBHK.Utility.TreeViewComponentsHelper;

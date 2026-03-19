@@ -19,6 +19,7 @@
 
     <Container:VectorTabControl
         x:Name="class_tab"
+        Background="Transparent"
         BorderThickness="0"
         SelectedIndex="0"
         Style="{DynamicResource VectorTabControlStyle}">

@@ -2,7 +2,7 @@
     x:Class="CBHK.View.Generator.LootTableView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CompoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponents"
+    xmlns:CompoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponent"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:ConverterSpace="clr-namespace:CBHK.Utility.TreeViewComponentsHelper"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"

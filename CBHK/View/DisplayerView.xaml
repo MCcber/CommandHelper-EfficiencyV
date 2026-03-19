@@ -27,18 +27,18 @@
     </behaviors:Interaction.Triggers>
 
     <Grid>
-        <TabControl
+        <Container:VectorTabControl
             Background="Transparent"
             BorderBrush="#3D3D3D"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             ScrollViewer.VerticalScrollBarVisibility="Auto"
-            Style="{DynamicResource TabControlWithScrollBar}">
+            Style="{DynamicResource VectorTabControlStyle}">
             <behaviors:Interaction.Triggers>
                 <behaviors:EventTrigger EventName="Loaded">
                     <behaviors:CallMethodAction MethodName="ResultTabControl_Loaded" TargetObject="{Binding}" />
                 </behaviors:EventTrigger>
             </behaviors:Interaction.Triggers>
-        </TabControl>
+        </Container:VectorTabControl>
     </Grid>
 
 </Container:VectorWindow>

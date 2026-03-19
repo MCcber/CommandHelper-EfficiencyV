@@ -10,13 +10,7 @@
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/CheckBox.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Icon.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ComboBox.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/TextToolTip.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/CommonTexture.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/ListBoxWithScrollViewer.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Input.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/RichTreeViewItems.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/TreeViewWithScrollBars.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/RichToolTip.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Container.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

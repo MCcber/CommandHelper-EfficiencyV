@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace CBHK.CustomControl.JsonTreeViewComponents
+namespace CBHK.CustomControl.JsonTreeViewComponent
 {
     public partial class JsonTreeViewItem : ObservableObject
     {

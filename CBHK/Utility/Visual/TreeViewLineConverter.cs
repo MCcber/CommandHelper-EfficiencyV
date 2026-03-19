@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Shapes;
 
-namespace CBHK.ControlDataContext
+namespace CBHK.Utility.Visual
 {
     public class TreeViewLineConverter:IMultiValueConverter
     {
@@ -14,7 +14,7 @@ namespace CBHK.ControlDataContext
         {
             double height = (double) values[0];
 
-            RichTreeViewItems item = values[2] as RichTreeViewItems;
+            RichTreeViewItem item = values[2] as RichTreeViewItem;
             ItemsControl ic = ItemsControl.ItemsControlFromItemContainer(item);
             if (ic is null) return null;
             bool isLastOne = ic.ItemContainerGenerator.IndexFromContainer(item) == ic.Items.Count - 1;

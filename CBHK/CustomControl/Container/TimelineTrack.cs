@@ -1,4 +1,5 @@
 ﻿using CBHK.Interface;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -10,6 +11,8 @@ namespace CBHK.CustomControl.Container
     public class TimelineTrack : INotifyPropertyChanged
     {
         #region Property
+        public bool IsStable { get; set; }
+
         private Thickness padding;
         public Thickness Padding
         {

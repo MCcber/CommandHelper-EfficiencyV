@@ -18,7 +18,7 @@ using CBHK.Common.Utility;
 using CBHK.Interface;
 using CBHK.CustomControl.VectorComboBox;
 
-namespace CBHK.CustomControl.JsonTreeViewComponents
+namespace CBHK.CustomControl.JsonTreeViewComponent
 {
     public partial class BaseCompoundJsonTreeViewItem : JsonTreeViewItem
     {

@@ -3,10 +3,14 @@ using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
+using MathNet.Numerics.Interpolation;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,7 +25,9 @@ namespace CBHK.CustomControl.Container
     public class Timeline : Control
     {
         #region Field
-        private bool isSampling = false;
+        private MessagePopup messagePopup = new();
+        private Window win = Application.Current.MainWindow;
+        private CancellationTokenSource isSamplingMarker = new();
         private Line previewLine;
         private Thumb playHeadThumb;
         private Grid playHeadGrid;
@@ -31,11 +37,12 @@ namespace CBHK.CustomControl.Container
         private ScrollViewer contentViewer;
         private TimelineTrack lastSelectedTrack;
         private List<ItemsControl> trackPanelList = [];
-        private Dictionary<ITimelineElement, (TimeSpan, List<IKeyFrameData>)> TimelineElementMarkerMap = [];
         private IComparer<ITimelineElement> timeComparer = Comparer<ITimelineElement>.Create((a, b) => a.StartTime.CompareTo(b.StartTime));
         private List<ITimelineElement> TimelineElementMarkerList = [];
         private List<IKeyFrameData> randomKeyFrameDataList = [];
-        private IProgress<ObservableCollection<IKeyFrameData>> DataSampleProgress = null;
+        private IProgress<(ITimelineElement,TimeSpan)> DataSampleProgress = null;
+        private ContinuousKeyframeItem SampledKeyFrameItem = null;
+        private int SampledKeyFrameItemIndex = -1;
 
         private TimeSpan lastRenderTime = TimeSpan.Zero;
         private int playDirection = 1; // 1 为正向，-1 为倒放
@@ -43,6 +50,7 @@ namespace CBHK.CustomControl.Container
         #endregion
 
         #region Property
+        public IComparer<ContinuousKeyframeItem> KeyFrameMemberComparer { get; set; } = Comparer<ContinuousKeyframeItem>.Create((a, b) => a.CurrentTime.CompareTo(b.CurrentTime));
         public TimeRulerElement Ruler { get; set; }
         public Action TimeUpdateAction { get; set; }
 
@@ -51,6 +59,7 @@ namespace CBHK.CustomControl.Container
         public TimelineClip CurrentSplitTimelineClip { get; set; }
         public bool IsPlaying { get; set; }
         public TimeSpan MemoryCurrentTime { get; set; }
+        public Dictionary<ITimelineElement, (TimeSpan, List<TimeSpan>)> TimelineElementMarkerMap { get; set; } = [];
 
         public ObservableCollection<TimelineTrack> TrackList
         {
@@ -112,11 +121,11 @@ namespace CBHK.CustomControl.Container
         {
             Loaded += Timeline_Loaded;
             CompositionTarget.Rendering += Timeline_Rendering;
-            DataSampleProgress = new Progress<ObservableCollection<IKeyFrameData>>(DataSample);
+            DataSampleProgress = new Progress<(ITimelineElement, TimeSpan)>(DataSample);
             for (int i = 0; i < 100; i++)
             {
-                byte[] bytes = [0,1,2,3,4,5,6,7,8,9,10];
-                randomKeyFrameDataList.Add(new KeyFrameData<byte>() { Easing = InterpolationType.Linear, Value = bytes[Random.Shared.Next(0, 10)] });
+                double[] doubles = [0,1,2,3,4,5,6,7,8,9,10];
+                randomKeyFrameDataList.Add(new KeyFrameData<double>() { RightEasing = InterpolationType.Linear, RightValue = doubles[Random.Shared.Next(0, 10)], RightDeltaValue = 0, RightValueType = KeyFrameValueType.Double, RightInterpolation = LinearSpline.InterpolateSorted(new double[2], new double[2]) });
             }
         }
 
@@ -169,24 +178,27 @@ namespace CBHK.CustomControl.Container
             #endregion
 
             #region 更新内部帧成员的相对位置
-            double offset = 0.0;
+
             for (int i = 0; i < TrackList.Count; i++)
             {
                 for (int j = 0; j < TrackList[i].TimelineElementList.Count; j++)
                 {
-                    if (TrackList[i].TimelineElementList[j] is TimelineClip clip)
+                    ITimelineElement timelineElement = TrackList[i].TimelineElementList[j];
+                    if (timelineElement is TimelineClip clip)
                     {
                         for (int k = 0; k < clip.InnerKeyFrameList.Count; k++)
                         {
                             ContinuousKeyframeItem continuousKeyframeItem = clip.InnerKeyFrameList[k];
                             double currentTimeValue = animationTimelineTool.ConvertTimeToPixel(continuousKeyframeItem.CurrentTime, Ruler);
-                            if (continuousKeyframeItem.CurrentTime.TotalSeconds == 0)
-                            {
-                                offset = currentTimeValue;
-                            }
-
-                            Canvas.SetLeft(continuousKeyframeItem, currentTimeValue - offset - (continuousKeyframeItem.Width / 2));
+                            double offset = Math.Sqrt(Math.Pow(continuousKeyframeItem.Width, 2) + Math.Pow(continuousKeyframeItem.Height, 2)) / -2 + continuousKeyframeItem.BorderThickness.Left + continuousKeyframeItem.BorderThickness.Right;
+                            Canvas.SetLeft(continuousKeyframeItem, currentTimeValue + offset);
                         }
+                    }
+                    else
+                    if (timelineElement is TimelineKeyFrame keyFrame)
+                    {
+                        double currentTimeValue = animationTimelineTool.ConvertTimeToPixel(keyFrame.StartTime, Ruler);
+                        Canvas.SetLeft(keyFrame, currentTimeValue);
                     }
                 }
             }
@@ -236,7 +248,7 @@ namespace CBHK.CustomControl.Container
             CurrentTrack.TimelineElementList.Add(timelineKeyFrame);
 
             timelineKeyFrame.DataList.Add(randomKeyFrameDataList[Random.Shared.Next(0, randomKeyFrameDataList.Count)]);
-            TimelineElementMarkerMap.Add(timelineKeyFrame, (CurrentTime, [.. timelineKeyFrame.DataList]));
+            TimelineElementMarkerMap.Add(timelineKeyFrame, (CurrentTime, null));
             int index = TimelineElementMarkerList.BinarySearch(timelineKeyFrame, timeComparer);
             if (index < 0)
             {
@@ -267,7 +279,7 @@ namespace CBHK.CustomControl.Container
             CurrentTrack.TimelineElementList.Add(timelineKeyFrame);
 
             timelineKeyFrame.DataList.Add(randomKeyFrameDataList[Random.Shared.Next(0, randomKeyFrameDataList.Count)]);
-            TimelineElementMarkerMap.Add(timelineKeyFrame, (time, [.. timelineKeyFrame.DataList]));
+            TimelineElementMarkerMap.Add(timelineKeyFrame, (time, null));
             int index = TimelineElementMarkerList.BinarySearch(timelineKeyFrame, timeComparer);
             if (index < 0)
             {
@@ -315,12 +327,11 @@ namespace CBHK.CustomControl.Container
                     X = timePointList[i],
                     Style = Application.Current.Resources["ContinuousKeyframeItemStyle"] as Style
                 };
-                rectangleTimelineClip.InnerKeyFrameList.Add(continuousKeyframeItem);
+                rectangleTimelineClip.AddKeyFrameItem(continuousKeyframeItem, continuousKeyframeItem.X);
             }
             CurrentTrack.TimelineElementList.Add(rectangleTimelineClip);
+            TimelineElementMarkerMap.Add(rectangleTimelineClip, (start, [.. rectangleTimelineClip.InnerKeyFrameList.Select(item => item.CurrentTime)]));
 
-            //rectangleTimelineClip.DataList.Add(randomKeyFrameDataList[Random.Shared.Next(0, randomKeyFrameDataList.Count)]);
-            //TimelineElementMarkerMap.Add(rectangleTimelineClip, (start, [.. rectangleTimelineClip.DataList]));
             int index = TimelineElementMarkerList.BinarySearch(rectangleTimelineClip, timeComparer);
             if (index < 0)
             {
@@ -333,9 +344,11 @@ namespace CBHK.CustomControl.Container
         {
             for (int j = 0; j < CurrentTrack.TimelineElementList.Count; j++)
             {
-                if (CurrentTrack.TimelineElementList[j] is TimelineClip clip && clip.IsChecked is bool isChecked && isChecked)
+                if (CurrentTrack.TimelineElementList[j].IsChecked)
                 {
                     CurrentTrack.TimelineElementList.RemoveAt(j);
+                    TimelineElementMarkerMap.Remove(CurrentTrack.TimelineElementList[j]);
+                    TimelineElementMarkerList.Remove(CurrentTrack.TimelineElementList[j]);
                     j--;
                 }
             }
@@ -358,7 +371,7 @@ namespace CBHK.CustomControl.Container
 
         public void RemoveTrack()
         {
-            if(CurrentTrack is not null)
+            if(CurrentTrack is not null && !CurrentTrack.IsStable)
             {
                 TrackList.Remove(CurrentTrack);
             }
@@ -514,11 +527,11 @@ namespace CBHK.CustomControl.Container
         public void HorizontalFlip()
         {
             #region 检测是否可以翻转
-            List<ITimelineElement> selectedElementList = [.. CurrentTrack.TimelineElementList.Where(item => item is TimelineClip clip && clip.IsChecked is not null && clip.IsChecked.Value)];
+            List<ITimelineElement> selectedElementList = [.. CurrentTrack.TimelineElementList.Where(item => item is TimelineClip clip && clip.IsChecked)];
 
             if (selectedElementList.Count == 0)
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "翻转失败，请选择至少一个动画片段！",
                     SubMessage = "盔甲架生成器",
@@ -533,31 +546,37 @@ namespace CBHK.CustomControl.Container
             foreach (var selectedElement in selectedElementList)
             {
                 #region 跳过当前片段
-                if(selectedElement.CurrentClipMode is ClipMode.Point)
+                TimelineClip selectedClip = new();
+                if(selectedElement is TimelineKeyFrame)
                 {
                     continue;
+                }
+                else
+                    if(selectedElement is TimelineClip clip)
+                {
+                    selectedClip = clip;
                 }
                 #endregion
 
                 #region 计算中间时间点和一半的时间跨度
-                TimeSpan halfDuration = selectedElement.Duration / 2;
-                TimeSpan middleTimePoint = selectedElement.StartTime + halfDuration; 
+                TimeSpan halfDuration = selectedClip.Duration / 2;
+                TimeSpan middleTimePoint = selectedClip.StartTime + halfDuration;
                 #endregion
 
                 #region 互换左右两侧起始帧成员的数据
-                TimeSpan leftBorderFrameItemTime = selectedElement.LeftBorderFrameItem.CurrentTime;
-                TimeSpan rightBorderFrameItemTime = selectedElement.RightBorderFrameItem.CurrentTime;
-                double leftBorderFrameItemPositionX = selectedElement.LeftBorderFrameItem.X;
-                double rightBorderFrameItemPositionX = selectedElement.RightBorderFrameItem.X;
+                TimeSpan leftBorderFrameItemTime = selectedClip.LeftBorderFrameItem.CurrentTime;
+                TimeSpan rightBorderFrameItemTime = selectedClip.RightBorderFrameItem.CurrentTime;
+                double leftBorderFrameItemPositionX = selectedClip.LeftBorderFrameItem.X;
+                double rightBorderFrameItemPositionX = selectedClip.RightBorderFrameItem.X;
 
-                selectedElement.LeftBorderFrameItem.CurrentTime = rightBorderFrameItemTime;
-                selectedElement.LeftBorderFrameItem.X = rightBorderFrameItemPositionX;
-                selectedElement.RightBorderFrameItem.CurrentTime = leftBorderFrameItemTime;
-                selectedElement.RightBorderFrameItem.X = leftBorderFrameItemPositionX;
+                selectedClip.LeftBorderFrameItem.CurrentTime = rightBorderFrameItemTime;
+                selectedClip.LeftBorderFrameItem.X = rightBorderFrameItemPositionX;
+                selectedClip.RightBorderFrameItem.CurrentTime = leftBorderFrameItemTime;
+                selectedClip.RightBorderFrameItem.X = leftBorderFrameItemPositionX;
                 #endregion
 
                 #region 执行数据翻转并更新帧成员渲染位置
-                foreach (var keyFrameItem in selectedElement.InnerKeyFrameList)
+                foreach (var keyFrameItem in selectedClip.InnerKeyFrameList)
                 {
                     TimeSpan minusTime = TimeSpan.Zero;
                     if (keyFrameItem.IsBorderKeyFrame)
@@ -576,7 +595,7 @@ namespace CBHK.CustomControl.Container
                     }
                     keyFrameItem.X = animationTimelineTool.ConvertTimeToPixel(keyFrameItem.CurrentTime, Ruler);
                 }
-                selectedElement.UpdateInnerKeyFrameList(); 
+                selectedClip.UpdateInnerKeyFrameList(); 
                 #endregion
             }
             #endregion
@@ -587,114 +606,240 @@ namespace CBHK.CustomControl.Container
         /// </summary>
         public void ExtractKeyFrameItem()
         {
-            List<TimelineClip> selectedClipList = [.. CurrentTrack.TimelineElementList.Where(item => item.IsChecked is bool isChecked && isChecked)];
-            foreach (var timelineClip in selectedClipList)
+            List <ITimelineElement> selectedElementList = [.. CurrentTrack.TimelineElementList.Where(item => item is TimelineClip clip && clip.IsChecked is bool isChecked && isChecked)];
+            foreach (var selectedElement in selectedElementList)
             {
-                for (int i = 0; i < timelineClip.InnerKeyFrameList.Count; i++)
+                if (selectedElement is TimelineClip clip)
                 {
-                    ContinuousKeyframeItem keyFrameItem = timelineClip.InnerKeyFrameList[i];
-                    if (keyFrameItem.IsChecked is bool isChecked && isChecked && !keyFrameItem.IsBorderKeyFrame)
+                    for (int i = 0; i < clip.InnerKeyFrameList.Count; i++)
                     {
-                        timelineClip.RemoveKeyFrameItem(keyFrameItem);
-                        AddTimelineElement(keyFrameItem.CurrentTime + timelineClip.StartTime);
-                        i--;
+                        ContinuousKeyframeItem keyFrameItem = clip.InnerKeyFrameList[i];
+                        if (keyFrameItem.IsChecked is bool isChecked && isChecked && !keyFrameItem.IsBorderKeyFrame)
+                        {
+                            clip.RemoveKeyFrameItem(keyFrameItem);
+                            AddTimelineElement(keyFrameItem.CurrentTime + clip.StartTime);
+                            i--;
+                        }
                     }
                 }
             }
         }
 
-        private void DataSample(ObservableCollection<IKeyFrameData> keyFrameDataList)
+        private bool CompareCoupleOfTime(TimeSpan left,TimeSpan right)
         {
-            for (int i = 0; i < keyFrameDataList.Count; i++)
+            if(playDirection == 1)
             {
-                Message.PushMessage(new GeneratorMessage()
+                return left <= right;
+            }
+            else
+            {
+                return left >= right;
+            }
+        }
+
+        private void DataSample((ITimelineElement, TimeSpan) group)
+        {
+            if (group.Item1 is TimelineKeyFrame keyFrame)
+            {
+                for (int i = 0; i < keyFrame.DataList.Count; i++)
                 {
-                    Message = "当前数据为" + keyFrameDataList[i].Value,
-                    SubMessage = "盔甲架生成器",
-                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\armor_stand.png", UriKind.RelativeOrAbsolute))
-                });
+                    win.Title = "当前数据为" + (decimal.Parse(keyFrame.DataList[i].LeftValue.ToString()) + decimal.Parse(keyFrame.DataList[i].RightDeltaValue.ToString()));
+                }
+                keyFrame.IsPlayed = true;
+            }
+            else
+            if(group.Item1 is TimelineClip timelineClip)
+            {
+                int targetIndex = timelineClip.InnerKeyFrameSortedList.BinarySearch(
+                    new ContinuousKeyframeItem { CurrentTime = group.Item2 },
+                    KeyFrameMemberComparer);
+
+                if (targetIndex != -1)
+                {
+                    SampledKeyFrameItemIndex = targetIndex;
+                    SampledKeyFrameItem = timelineClip.InnerKeyFrameSortedList[SampledKeyFrameItemIndex];
+
+                    if((playDirection == -1 && SampledKeyFrameItemIndex > 0) || (playDirection == 1 && SampledKeyFrameItemIndex < timelineClip.InnerKeyFrameSortedList.Count - 1))
+                    {
+                        ContinuousKeyframeItem nearbyKeyFrameItem = playDirection == 1 ? timelineClip.InnerKeyFrameSortedList[SampledKeyFrameItemIndex + 1] : timelineClip.InnerKeyFrameSortedList[SampledKeyFrameItemIndex - 1];
+                        for (int i = 0; i < SampledKeyFrameItem.DataList.Count; i++)
+                        {
+                            SampledKeyFrameItem.DataList[i].RightInterpolation = LinearSpline.InterpolateSorted([SampledKeyFrameItem.CurrentTime.TotalSeconds, nearbyKeyFrameItem.CurrentTime.TotalSeconds], [double.Parse(SampledKeyFrameItem.DataList[i].RightValue.ToString()), double.Parse(SampledKeyFrameItem.DataList[i].RightValue.ToString()) + 1]);
+                        }
+                    }
+
+                    SampledKeyFrameItem.IsPlayed = true;
+                    if ((SampledKeyFrameItem == timelineClip.RightBorderFrameItem && playDirection == 1) || (SampledKeyFrameItem == timelineClip.LeftBorderFrameItem && playDirection == -1))
+                    {
+                        timelineClip.IsPlayed = true;
+                    }
+                }
+
+                if (win is not null && SampledKeyFrameItem is not null)
+                {
+                    for (int j = 0; j < SampledKeyFrameItem.DataList.Count; j++)
+                    {
+                        if (SampledKeyFrameItem.DataList[j].RightInterpolation is not null)
+                        {
+                            double result = SampledKeyFrameItem.DataList[j].RightInterpolation.Interpolate(MemoryCurrentTime.TotalSeconds - (SampledKeyFrameItem.CurrentTime + timelineClip.StartTime).TotalSeconds);
+                            win.Title = "当前数据为:" + result;
+                        }
+                    }
+                }
             }
         }
 
         private void SwitchPlayState()
         {
-            if(!IsPlaying)
+            if (isSamplingMarker.IsCancellationRequested)
             {
                 SnapToTick();
             }
             else
             {
-                Task.Run(() =>
+                #region 并行搜索所有符合当前播放指针位置的时间线元素
+                ConcurrentBag<int> matchedIndices = [];
+                Parallel.For(0, TimelineElementMarkerList.Count, (loopIndex,parallelLoopState) =>
                 {
-                    TimeSpan lastTime = TimeSpan.Zero;
-                    while (true)
+                    if (TimelineElementMarkerList[loopIndex] is TimelineClip timelineClip && TimelineElementMarkerMap.TryGetValue(timelineClip, out (TimeSpan, List<TimeSpan>) clipDataItemList))
                     {
-                        for (int clipIndex = 0; clipIndex < TimelineElementMarkerList.Count; clipIndex++)
+                        TimeSpan startTime = clipDataItemList.Item1;
+                        TimeSpan globalStartTime = clipDataItemList.Item2[0];
+                        TimeSpan globalEndTime = clipDataItemList.Item2[^1];
+                        if (MemoryCurrentTime >= globalStartTime && MemoryCurrentTime <= globalEndTime)
                         {
-                            TimelineClip clip = TimelineElementMarkerList[clipIndex];
-                            if (TimelineElementMarkerMap.TryGetValue(clip, out (TimeSpan, List<IKeyFrameData>) dataItem))
-                            {
-                                TimeSpan currentStartTime = dataItem.Item1;
-                                bool isHiting = currentStartTime > lastTime && currentStartTime <= MemoryCurrentTime;
-                                if (!isHiting)
-                                {
-                                    continue;
-                                }
-
-                                //if (clip.CurrentClipMode is ClipMode.Point)
-                                //{
-                                    DataSample(clip.DataList);
-                                    lastTime = clip.StartTime;
-                                //}
-                                //else
-                                //{
-                                //    for (int keyFrameIndex = 0; keyFrameIndex < clip.InnerKeyFrameList.Count; keyFrameIndex++)
-                                //    {
-                                //        ContinuousKeyframeItem keyframeItem = clip.InnerKeyFrameList[keyFrameIndex];
-                                //        DataSample(keyframeItem.DataList);
-                                //        lastTime = keyframeItem.CurrentTime;
-                                //    }
-                                //}
-                            }
-                            if (!isSampling)
-                            {
-                                break;
-                            }
+                            matchedIndices.Add(loopIndex);
                         }
-                        if(!isSampling)
+                    }
+                    else
+                    if (TimelineElementMarkerList[loopIndex] is TimelineKeyFrame timelineKeyFrame && TimelineElementMarkerMap.TryGetValue(timelineKeyFrame, out (TimeSpan, List<TimeSpan>) keyFrameDataItemList))
+                    {
+                        if((playDirection == -1 && keyFrameDataItemList.Item1 <= MemoryCurrentTime) || (playDirection == 1 && keyFrameDataItemList.Item1 >= MemoryCurrentTime))
                         {
-                            isSampling = true;
-                            break;
+                            matchedIndices.Add(loopIndex);
                         }
                     }
                 });
+                #endregion
+
+                #region 整合数据采样成员，并行执行数据采样
+                List<ITimelineElement> playElementList = [.. matchedIndices.Select(i => TimelineElementMarkerList[i])];
+                Task.Run(async () =>
+                {
+                    while (!isSamplingMarker.IsCancellationRequested)
+                    {
+                        if (playElementList.Count > 0)
+                        {
+                            Parallel.ForEach(playElementList, (timelineElement, parallelLoopState) =>
+                            {
+                                TimelineClip selectedClip = null;
+                                TimelineKeyFrame selectedKeyFrame = null;
+
+                                // 如果元素整体已标记为播放过，跳过（DataSample 内部会对子帧去重）
+                                if (timelineElement.IsPlayed)
+                                {
+                                    return;
+                                }
+
+                                if (timelineElement is TimelineClip clip)
+                                {
+                                    selectedClip = clip;
+                                }
+                                else
+                                if (timelineElement is TimelineKeyFrame keyFrame)
+                                {
+                                    selectedKeyFrame = keyFrame;
+                                }
+
+                                if (TimelineElementMarkerMap.TryGetValue(timelineElement, out (TimeSpan, List<TimeSpan>) dataItemList))
+                                {
+                                    TimeSpan currentStartTime = dataItemList.Item1;
+
+                                    if (selectedKeyFrame is not null && CompareCoupleOfTime(dataItemList.Item1,MemoryCurrentTime))
+                                    {
+                                        // 独立关键帧：只要整体元素已到达，就报告（DataSample 内部会检查 IsPlayed）
+                                        DataSampleProgress.Report((selectedKeyFrame, TimeSpan.Zero));
+                                    }
+                                    else if (selectedClip is not null)
+                                    {
+                                        var subTimeSpanList = dataItemList.Item2; // 子帧相对时间列表
+                                        for (int i = 0; i < subTimeSpanList.Count; i++)
+                                        {
+                                            TimeSpan memberTime = subTimeSpanList[i];
+                                            TimeSpan absTime = currentStartTime + memberTime;
+                                            if (CompareCoupleOfTime(absTime,MemoryCurrentTime))
+                                            {
+                                                DataSampleProgress.Report((selectedClip, memberTime));
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (isSamplingMarker.IsCancellationRequested)
+                                {
+                                    parallelLoopState.Stop();
+                                }
+                            });
+                        }
+
+                        await Task.Delay(100); // 控制频率，避免 UI 过载
+                    }
+                });
+                #endregion
+            }
+        }
+
+        /// <summary>
+        /// 播放进程控制器
+        /// </summary>
+        private void PlayProgressSwitchController()
+        {
+            lastRenderTime = TimeSpan.Zero;
+            if (!IsPlaying)
+            {
+                isSamplingMarker.Cancel();
+                isSamplingMarker.Dispose();
+                MemoryCurrentTime = CurrentTime;
+                Parallel.ForEach(TimelineElementMarkerList, (timelineElement, parallelLoopState) =>
+                {
+                    timelineElement.IsPlayed = false;
+                    if(timelineElement is TimelineClip timelineClip)
+                    {
+                        for (int i = 0; i < timelineClip.InnerKeyFrameList.Count; i++)
+                        {
+                            timelineClip.InnerKeyFrameList[i].IsPlayed = false;
+                        }
+                    }
+                });
+            }
+            else
+            {
+                isSamplingMarker = new();
             }
         }
 
         public void ReversePlay(bool isPlaying)
         {
-            lastRenderTime = TimeSpan.Zero;
             IsPlaying = isPlaying;
             playDirection = -1;
-            isSampling = IsPlaying;
+            PlayProgressSwitchController();
             SwitchPlayState();
         }
 
         public void Play(bool isPlaying)
         {
-            lastRenderTime = TimeSpan.Zero;
             IsPlaying = isPlaying;
             playDirection = 1;
-            isSampling = IsPlaying;
+            PlayProgressSwitchController();
             SwitchPlayState();
         }
 
         public void MergeClip()
         {
             #region 检测是否可以合并
-            if (CurrentTrack.TimelineElementList.Select(item => item.IsChecked is not null && item.IsChecked.Value).Count() < 2)
+            if (CurrentTrack.TimelineElementList.Where(item => item.IsChecked).Count() < 2)
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "合并失败，请选择更多关键帧！",
                     SubMessage = "盔甲架生成器",
@@ -728,9 +873,14 @@ namespace CBHK.CustomControl.Container
                     {
                         leftTime = CurrentTrack.TimelineElementList[i].StartTime;
                     }
-                    if (CurrentTrack.TimelineElementList[i].EndTime > rightTime)
+                    if (CurrentTrack.TimelineElementList[i] is TimelineClip clip && clip.EndTime > rightTime)
                     {
-                        rightTime = CurrentTrack.TimelineElementList[i].EndTime;
+                        rightTime = clip.EndTime;
+                    }
+                    else
+                    if(CurrentTrack.TimelineElementList[i].StartTime > rightTime)
+                    {
+                        rightTime = CurrentTrack.TimelineElementList[i].StartTime;
                     }
                 }
             }
@@ -739,38 +889,43 @@ namespace CBHK.CustomControl.Container
             #region 收集需要的关键帧
             for (int i = 0; i < CurrentTrack.TimelineElementList.Count; i++)
             {
-                if (CurrentTrack.TimelineElementList[i].StartTime >= leftTime && CurrentTrack.TimelineElementList[i].EndTime <= rightTime)
+                ITimelineElement timelineElement = CurrentTrack.TimelineElementList[i];
+                if (timelineElement is TimelineKeyFrame keyFrame && keyFrame.StartTime >= leftTime && keyFrame.StartTime <= rightTime)
                 {
-                    TimelineClip timelineclip = CurrentTrack.TimelineElementList[i];
-
-                    if (timelineclip.CurrentClipMode is ClipMode.Point)
+                    currentTimeValue = animationTimelineTool.ConvertTimeToPixel(keyFrame.StartTime, Ruler);
+                    timePointList.Add(currentTimeValue);
+                    keyFrameDataCollectionList.Add(new(keyFrame.DataList.ToList().Select(item => item.Clone())));
+                    previousTime = keyFrame.StartTime;
+                    CurrentTrack.TimelineElementList.Remove(keyFrame);
+                    TimelineElementMarkerList.Remove(keyFrame);
+                    i--;
+                }
+                else
+                if(timelineElement is TimelineClip timelineclip && timelineclip.StartTime >= leftTime && timelineclip.EndTime <= rightTime)
+                {
+                    double startTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.StartTime, Ruler);
+                    TimeSpan startTime = timelineclip.StartTime;
+                    TimeSpan endTime = timelineclip.EndTime;
+                    for (int j = 0; j < timelineclip.InnerKeyFrameList.Count; j++)
                     {
-                        currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.StartTime, Ruler);
-                        timePointList.Add(currentTimeValue);
-                        keyFrameDataCollectionList.Add(new(timelineclip.DataList.ToList().Select(item => item.Clone())));
-                        previousTime = timelineclip.EndTime;
-                    }
-                    else
-                    {
-                        double startTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.StartTime, Ruler);
-                        TimeSpan startTime = timelineclip.StartTime;
-                        TimeSpan endTime = timelineclip.EndTime;
-                        for (int j = 0; j < timelineclip.InnerKeyFrameList.Count; j++)
+                        if (timelineclip.InnerKeyFrameList[j].CurrentTime + startTime == previousTime)
                         {
-                            if (timelineclip.InnerKeyFrameList[j].CurrentTime + startTime == previousTime)
-                            {
-                                continue;
-                            }
-                            currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.InnerKeyFrameList[j].CurrentTime + startTime, Ruler);
-                            timePointList.Add(currentTimeValue);
-                            keyFrameDataCollectionList.Add(new(timelineclip.DataList.ToList().Select(item => item.Clone())));
-                            if (j == timelineclip.InnerKeyFrameList.Count - 1)
-                            {
-                                previousTime = endTime;
-                            }
+                            continue;
+                        }
+                        currentTimeValue = animationTimelineTool.ConvertTimeToPixel(timelineclip.InnerKeyFrameList[j].CurrentTime + startTime, Ruler);
+                        timePointList.Add(currentTimeValue);
+
+                        for (int k = 0; k < timelineclip.InnerKeyFrameList.Count; k++)
+                        {
+                            keyFrameDataCollectionList.Add(new(timelineclip.InnerKeyFrameList[k].DataList.ToList().Select(item => item.Clone())));
+                        }
+                        if (j == timelineclip.InnerKeyFrameList.Count - 1)
+                        {
+                            previousTime = endTime;
                         }
                     }
                     CurrentTrack.TimelineElementList.Remove(timelineclip);
+                    TimelineElementMarkerList.Remove(timelineclip);
                     i--;
                 }
             }
@@ -795,11 +950,14 @@ namespace CBHK.CustomControl.Container
 
         public void CopyTimelineClip()
         {
-            List<TimelineClip> timelineClipList = [.. CurrentTrack.TimelineElementList.Where(item => item.IsChecked is bool isChecked && isChecked)];
-            foreach (var selectedClip in timelineClipList)
+            List<ITimelineElement> timelineElementList = [.. CurrentTrack.TimelineElementList.Where(item => item.IsChecked)];
+            foreach (var selectedElement in timelineElementList)
             {
-                TimelineClip newClip = selectedClip.Clone() as TimelineClip;
-                CurrentTrack.TimelineElementList.Add(newClip);
+                if (selectedElement is TimelineClip selectedClip)
+                {
+                    TimelineClip newClip = selectedClip.Clone();
+                    CurrentTrack.TimelineElementList.Add(newClip);
+                }
             }
         }
 
@@ -982,9 +1140,12 @@ namespace CBHK.CustomControl.Container
         {
             foreach (var track in TrackList)
             {
-                foreach (var timelineClip in track.TimelineElementList)
+                foreach (var timelineElement in track.TimelineElementList)
                 {
-                    timelineClip.IsAdjustingFirstSize = timelineClip.IsAdjustingLastSize = false;
+                    if (timelineElement is TimelineClip selectedClip)
+                    {
+                        selectedClip.IsAdjustingFirstSize = selectedClip.IsAdjustingLastSize = false;
+                    }
                 }
             }
         }
@@ -1036,6 +1197,7 @@ namespace CBHK.CustomControl.Container
                 double rawSeconds = animationTimelineTool.ConvertPixelToTime(e.GetPosition(canvas).X, Ruler).TotalSeconds;
                 //同样执行吸附
                 CurrentTime = SnapToTick(rawSeconds);
+                MemoryCurrentTime = CurrentTime;
             }
         }
 

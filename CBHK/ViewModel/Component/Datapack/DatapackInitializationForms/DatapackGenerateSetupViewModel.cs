@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View.Component.Datapack.EditPage;
@@ -27,21 +28,23 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
     /// <summary>
     /// 属性设置窗体逻辑处理
     /// </summary>
-    public partial class DatapackGenerateSetupPageViewModel : ObservableObject
+    public partial class DatapackGenerateSetupPageViewModel : ObservableObject, IPageViewModel
     {
         #region Field
-        public string SolutionTemplatePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\SolutionTemplates.json";
+        public string SolutionTemplatePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\SolutionTemplates.json";
         /// <summary>
         /// 历史生成目录
         /// </summary>
-        private readonly string DatapackGeneratorFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\GeneratorPathes.ini";
+        private readonly string DatapackGeneratorFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\GeneratorPathes.ini";
         /// <summary>
         /// 空白解决方案路径
         /// </summary>
-        private readonly string BlankSolutionFolder = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\Template";
+        private readonly string BlankSolutionFolder = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\Template";
         #endregion
 
         #region Property
+
+        public MessagePopup MessagePopup { get; set; }
 
         #region 存储解决方案的名称
         private string solutionName = "DatapackView";
@@ -171,7 +174,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
             #region 解决方案无名称不生成
             if (SolutionName.Trim().Length == 0 || GeneratorPathList.Count == 0)
             {
-                Message.PushMessage(new GeneratorMessage()
+                MessagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "生成失败！解决方案未设置名称",
                     MessageBrush = Brushes.Red,

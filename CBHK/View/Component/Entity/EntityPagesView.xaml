@@ -142,6 +142,7 @@
         </DockPanel>
         <Container:VectorTabControl
             Grid.Row="1"
+            Background="Transparent"
             BorderThickness="0"
             SelectedIndex="0"
             Style="{DynamicResource VectorTabControlStyle}"

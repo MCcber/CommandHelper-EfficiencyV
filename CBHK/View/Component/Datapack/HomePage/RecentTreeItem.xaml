@@ -14,8 +14,8 @@
     mc:Ignorable="d">
 
     <Grid
-        Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=CustomControl:RichTreeViewItems}, Path=ActualWidth}"
-        Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=CustomControl:RichTreeViewItems}, Path=ActualHeight}"
+        Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=CustomControl:RichTreeViewItem}, Path=ActualWidth}"
+        Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=CustomControl:RichTreeViewItem}, Path=ActualHeight}"
         MouseEnter="Grid_MouseEnter"
         MouseLeave="Grid_MouseLeave">
         <Grid.Style>

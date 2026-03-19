@@ -29,6 +29,7 @@ namespace CBHK.ViewModel.Generator
     public partial class TagViewModel : ObservableObject
     {
         #region Field
+        private MessagePopup messagePopup = new();
         ListView TagZone = null;
         SolidColorBrush LightOrangeBrush = new((Color)ColorConverter.ConvertFromString("#F0D08C"));
         private IContainerProvider container = null;
@@ -204,7 +205,7 @@ namespace CBHK.ViewModel.Generator
         {
             ObservableCollection<TagItemTemplate> items = TagItemList;
             TagViewModel context = this;
-            ExternalDataImportManager.ImportTagDataHandler(Clipboard.GetText(),ref items,ref context,false);
+            ExternalDataImportManager.ImportTagDataHandler(Clipboard.GetText(),ref items,ref context,messagePopup,false);
         }
 
         [RelayCommand]
@@ -226,7 +227,7 @@ namespace CBHK.ViewModel.Generator
                 Title = "请选择一个标签文件"
             };
             if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
-                ExternalDataImportManager.ImportTagDataHandler(dialog.FileName, ref items, ref context);
+                ExternalDataImportManager.ImportTagDataHandler(dialog.FileName, ref items, ref context,messagePopup);
         }
 
         /// <summary>
@@ -269,9 +270,9 @@ namespace CBHK.ViewModel.Generator
         public void TagView_Loaded(object sender, RoutedEventArgs e)
         {
             #region 加载过滤类型
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\DataList\TypeFilter.ini"))
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\Data\TypeFilter.ini"))
             {
-                string[] Types = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\DataList\TypeFilter.ini");
+                string[] Types = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\Data\TypeFilter.ini");
                 for (int i = 0; i < Types.Length; i++)
                 {
                     TypeItemSource.Add(new VectorTextComboBoxItem() { Text = Types[i] });
@@ -441,7 +442,7 @@ namespace CBHK.ViewModel.Generator
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
                 File.WriteAllText(saveFileDialog.FileName, result);
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "标签生成成功！",
                     MessageBrush = Brushes.Red,

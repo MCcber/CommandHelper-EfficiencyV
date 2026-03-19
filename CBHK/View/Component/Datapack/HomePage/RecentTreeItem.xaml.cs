@@ -67,7 +67,7 @@ namespace CBHK.View.Component.Datapack.HomePage
             {
                 rotateTransform.Angle = 0;
                 //保存当前内容节点
-                RichTreeViewItems currentContentItem = border.FindParent<RichTreeViewItems>();
+                RichTreeViewItem currentContentItem = border.FindParent<RichTreeViewItem>();
                 //更新动态路径
                 currentContentItem.Uid = context.RecentSolutionFolderPath + "\\" + System.IO.Path.GetFileName(currentContentItem.Tag.ToString());
                 //保存当前时间节点
@@ -83,7 +83,7 @@ namespace CBHK.View.Component.Datapack.HomePage
             {
                 rotateTransform.Angle = 90;
                 //保存当前内容节点
-                RichTreeViewItems currentContentItem = border.FindParent<RichTreeViewItems>();
+                RichTreeViewItem currentContentItem = border.FindParent<RichTreeViewItem>();
                 //更新动态路径
                 currentContentItem.Uid = context.RecentSolutionFolderPath + "\\" + System.IO.Path.GetFileName(currentContentItem.Tag.ToString());
                 context.RecentContentDateItemList[0].Items.Remove(currentContentItem);

@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl.TextElement;
 using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
@@ -29,7 +30,7 @@ using Image = System.Windows.Controls.Image;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class WrittenBookViewModel(IContainerProvider container,MainView mainView) : ObservableObject
+    public partial class WrittenBookViewModel(IContainerProvider container, MainView mainView) : ObservableObject, IPageViewModel
     {
         #region Field
         /// <summary>
@@ -76,7 +77,7 @@ namespace CBHK.ViewModel.Generator
         //取消署名背景文件路径
         string signatureCancelFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Image\cancel_signature.png";
         //混淆文本配置文件路径
-        string obfuscateFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\DataList\obfuscateChars.ini";
+        string obfuscateFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\WrittenBook\Data\obfuscateChars.ini";
         //流文档链表,每个成员代表成书中的一页
         public List<EnabledFlowDocument> WrittenBookPages = [];
 
@@ -126,7 +127,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Property
-
+        public MessagePopup MessagePopup { get; set; }
         /// <summary>
         /// 显示字符超出数量
         /// </summary>
@@ -210,6 +211,7 @@ namespace CBHK.ViewModel.Generator
                 CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
             }
         }
+
         private int CurrentMinVersion = 1205;
         #endregion
 
@@ -693,7 +695,7 @@ namespace CBHK.ViewModel.Generator
                 else
                 {
                     Clipboard.SetText(Result);
-                    Message.PushMessage(new GeneratorMessage()
+                    MessagePopup.PushMessage(new GeneratorMessage()
                     {
                         Message = "生成成功",
                         SubMessage = "成书生成器",

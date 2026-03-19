@@ -27,6 +27,7 @@ namespace CBHK.ViewModel.Generator
     public partial class OnlyOneCommandViewModel(IContainerProvider container, MainView mainView,RegexService RegexService) : ObservableObject
     {
         #region Field
+        private MessagePopup messagePopup = new();
         /// <summary>
         /// 主页引用
         /// </summary>
@@ -128,7 +129,7 @@ namespace CBHK.ViewModel.Generator
                 }
                 catch (Exception e)
                 {
-                    Message.PushMessage(new GeneratorMessage()
+                    messagePopup.PushMessage(new GeneratorMessage()
                     {
                         Message = e.Message,
                         MessageBrush = Brushes.Red,
@@ -244,7 +245,7 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result);
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "Ooc生成成功！数据已进入剪切板",
                     SubMessage = "OOC生成器",

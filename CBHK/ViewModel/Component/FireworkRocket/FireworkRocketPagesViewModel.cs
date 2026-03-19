@@ -2,6 +2,7 @@
 using CBHK.CustomControl.VectorButton;
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.MessageTip;
 using CBHK.View;
@@ -30,7 +31,7 @@ using System.Windows.Media.Media3D;
 
 namespace CBHK.ViewModel.Component.FireworkRocket
 {
-    public partial class FireworkRocketPageViewModel(IContainerProvider container) : ObservableObject
+    public partial class FireworkRocketPageViewModel(IContainerProvider container) : ObservableObject, IPageViewModel
     {
         #region Field
         private bool stateLock = false;
@@ -49,7 +50,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// <summary>
         /// 颜色映射表路径
         /// </summary>
-        string colorTablePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\DataList\structureColorDictionary.ini";
+        string colorTablePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Data\structureColorDictionary.ini";
         /// <summary>
         /// 拾色器
         /// </summary>
@@ -382,6 +383,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// 预览效果的粒子集合
         /// </summary>
         public List<ModelVisual3D> Particles { get; set; } = [];
+        public MessagePopup MessagePopup { get; set; }
         #endregion
 
         #region Method
@@ -1069,7 +1071,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
             else
             {
                 Clipboard.SetText(Result);
-                Message.PushMessage(new GeneratorMessage()
+                MessagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "烟花生成成功！数据已进入剪切板",
                     SubMessage = "烟花火箭生成器",

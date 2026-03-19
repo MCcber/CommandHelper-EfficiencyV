@@ -12,6 +12,7 @@ namespace CBHK.CustomControl.Container
     public class ContinuousKeyframeItem : ToggleButton, ICloneable
     {
         #region Property
+        public bool IsPlayed { get; set; }
         public bool IsBorderKeyFrame { get; set; }
 
         public ObservableCollection<IKeyFrameData> DataList { get; set; } = [];

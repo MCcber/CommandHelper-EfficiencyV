@@ -1,20 +1,38 @@
 ﻿using CBHK.Interface;
+using MathNet.Numerics.Interpolation;
 
 namespace CBHK.Model.Common
 {
-    public struct KeyFrameData<T>(T value, InterpolationType easing = InterpolationType.Linear)
+    public struct KeyFrameData<T>(object targetName, T value,double deltaTime, InterpolationType easing = InterpolationType.Linear)
         : IKeyFrameData
         where T : struct
     {
-        public T Value = value;
-        public InterpolationType Easing = easing;
+        public object TargetName { get; set; } = targetName;
+        public T RightValue { get; set; } = value;
+        public T LeftValue { get; set; }
+        public double RightDeltaValue { get; set; } = deltaTime;
+        public InterpolationType RightEasing { get; set; } = easing;
+        public KeyFrameValueType RightValueType { get; set; }
+        public IInterpolation RightInterpolation { get; set; }
 
-        object IKeyFrameData.Value
+        object IKeyFrameData.RightDeltaValue
         {
-            get => Value;
-            set => Value = (T)value;
+            get => RightDeltaValue;
+            set => RightDeltaValue = (double)value;
         }
 
-        public readonly IKeyFrameData Clone() => new KeyFrameData<T>(Value, Easing);
+        object IKeyFrameData.LeftValue
+        {
+            get => LeftValue;
+            set => LeftValue = (T)value;
+        }
+
+        object IKeyFrameData.RightValue
+        {
+            get => RightValue;
+            set => RightValue = (T)value;
+        }
+
+        public readonly IKeyFrameData Clone() => new KeyFrameData<T>(targetName,RightValue,RightDeltaValue, RightEasing);
     }
 }

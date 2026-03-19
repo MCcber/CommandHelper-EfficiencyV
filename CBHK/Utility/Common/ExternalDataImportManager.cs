@@ -44,7 +44,7 @@ namespace CBHK.Utility.Common
         }
 
         #region 处理导入外部标签
-        public static void ImportTagDataHandler(string filePathOrData, ref ObservableCollection<TagItemTemplate> itemList, ref TagViewModel context, bool IsPath = true)
+        public static void ImportTagDataHandler(string filePathOrData, ref ObservableCollection<TagItemTemplate> itemList, ref TagViewModel context,MessagePopup messagePopup, bool IsPath = true)
         {
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
@@ -88,7 +88,7 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,
@@ -101,7 +101,7 @@ namespace CBHK.Utility.Common
         #endregion
 
         #region 处理导入外部配方
-        public static void ImportRecipeDataHandler(string filePathOrData, ref RecipeViewModel recipeContext, bool IsPath = true)
+        public static void ImportRecipeDataHandler(string filePathOrData, ref RecipeViewModel recipeContext,MessagePopup messagePopup, bool IsPath = true)
         {
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
             try
@@ -181,7 +181,7 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,
@@ -194,7 +194,7 @@ namespace CBHK.Utility.Common
         #endregion
 
         #region 处理导入外部刷怪笼
-        public static void ImportSpawnerDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList, bool IsPath = true)
+        public static void ImportSpawnerDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList,MessagePopup messagePopup, bool IsPath = true)
         {
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
@@ -217,7 +217,7 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,
@@ -354,7 +354,7 @@ namespace CBHK.Utility.Common
         #endregion
 
         #region 处理导入外部实体数据
-        public static string GetEntityDataHandler(string filePathOrData, bool IsPath = true)
+        public static string GetEntityDataHandler(string filePathOrData,MessagePopup messagePopup, bool IsPath = true)
         {
             string result = "";
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
@@ -390,7 +390,7 @@ namespace CBHK.Utility.Common
                 }
                 catch
                 {
-                    Message.PushMessage(new GeneratorMessage()
+                    messagePopup.PushMessage(new GeneratorMessage()
                     {
                         Message = "导入失败！文件内容格式不合法",
                         MessageBrush = Brushes.Red,
@@ -408,7 +408,7 @@ namespace CBHK.Utility.Common
         /// <summary>
         /// 导入村民数据
         /// </summary>
-        public static void ImportVillagerDataHandler(string filePathOrData, VillagerViewModel context, bool IsPath = true)
+        public static void ImportVillagerDataHandler(string filePathOrData, MessagePopup messagePopup, VillagerViewModel context, bool IsPath = true)
         {
             string data = IsPath ? File.ReadAllText(filePathOrData) : filePathOrData;
 
@@ -431,7 +431,7 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,
@@ -641,7 +641,7 @@ namespace CBHK.Utility.Common
         /// <param name="filePathOrData"></param>
         /// <param name="itemPageList"></param>
         /// <param name="IsPath"></param>
-        public static void ImportEntityDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList, bool IsPath = true)
+        public static void ImportEntityDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList, MessagePopup messagePopup, bool IsPath = true)
         {
             bool importFail = false;
             string GeneratorMode = "Summon";
@@ -716,7 +716,7 @@ namespace CBHK.Utility.Common
 
             if (importFail)
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,
@@ -807,7 +807,7 @@ namespace CBHK.Utility.Common
             return result;
             #endregion
         }
-        public static void ImportItemDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList, bool IsPath = true, bool ReferenceMode = false)
+        public static void ImportItemDataHandler(string filePathOrData, ref ObservableCollection<VectorRichTabItem> itemPageList, MessagePopup messagePopup, bool IsPath = true, bool ReferenceMode = false)
         {
             string GeneratorMode = "";
             bool version1_12 = false;
@@ -841,7 +841,7 @@ namespace CBHK.Utility.Common
             else
             if (nbtData.Length == 0)
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,
@@ -863,7 +863,7 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,
@@ -890,7 +890,7 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,
@@ -942,7 +942,7 @@ namespace CBHK.Utility.Common
         #endregion
 
         #region 处理导入外部烟花数据
-        public static void ImportFireworkDataHandler(string filePathOrData, ref ObservableCollection<VectorTextTabItem> itemPageList, bool IsPath = true)
+        public static void ImportFireworkDataHandler(string filePathOrData, ref ObservableCollection<VectorTextTabItem> itemPageList, MessagePopup messagePopup, bool IsPath = true)
         {
             string GeneratorMode;
             bool version1_12 = false;
@@ -972,7 +972,7 @@ namespace CBHK.Utility.Common
             }
             else
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,
@@ -989,7 +989,7 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,
@@ -1009,7 +1009,7 @@ namespace CBHK.Utility.Common
             }
             catch
             {
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "导入失败！文件内容格式不合法",
                     MessageBrush = Brushes.Red,

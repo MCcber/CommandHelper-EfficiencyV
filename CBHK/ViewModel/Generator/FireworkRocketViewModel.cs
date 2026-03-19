@@ -30,6 +30,7 @@ namespace CBHK.ViewModel.Generator
     public partial class FireworkRocketViewModel : ObservableObject
     {
         #region Field
+        private MessagePopup messagePopup = new();
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
@@ -51,7 +52,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 形状路径
         /// </summary>
-        string shapePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\DataList\shapes.ini";
+        string shapePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\FireworkRocket\Data\shapes.ini";
         private IContainerProvider container;
         #endregion
 
@@ -308,7 +309,7 @@ namespace CBHK.ViewModel.Generator
                 if (File.Exists(dialog.FileName))
                 {
                     ObservableCollection<VectorTextTabItem> result = FireworkRocketPageList;
-                    ExternalDataImportManager.ImportFireworkDataHandler(dialog.FileName, ref result);
+                    ExternalDataImportManager.ImportFireworkDataHandler(dialog.FileName, ref result,messagePopup);
                 }
         }
 
@@ -319,7 +320,7 @@ namespace CBHK.ViewModel.Generator
         private void ImportFireworkRocketFromClipboard()
         {
             ObservableCollection<VectorTextTabItem> result = FireworkRocketPageList;
-            ExternalDataImportManager.ImportFireworkDataHandler(Clipboard.GetText(), ref result, false);
+            ExternalDataImportManager.ImportFireworkDataHandler(Clipboard.GetText(), ref result,messagePopup, false);
         }
 
         [RelayCommand]
@@ -364,7 +365,7 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString());
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "烟花全部生成成功！数据已进入剪切板",
                     SubMessage = "烟花火箭生成器",

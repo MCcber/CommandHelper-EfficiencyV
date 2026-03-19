@@ -35,11 +35,11 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// <summary>
         /// 模板存放路径
         /// </summary>
-        private string TemplateDataFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\\SolutionTemplates.json";
+        private string TemplateDataFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\\SolutionTemplates.json";
         /// <summary>
         /// 空白解决方案路径
         /// </summary>
-        private string BlankSolutionFolder = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\Templates";
+        private string BlankSolutionFolder = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\Templates";
         /// <summary>
         /// 解决方案模板数组对象
         /// </summary>
@@ -47,7 +47,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// <summary>
         /// 近期使用的模板存放路径
         /// </summary>
-        private string RecentTemplateDataFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\DataList\RecentTemplates";
+        private string RecentTemplateDataFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\RecentTemplates";
         /// <summary>
         /// 数据库文件路径
         /// </summary>

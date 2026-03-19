@@ -199,7 +199,7 @@ namespace CBHK.CustomControl.Input
             // 计算 Saturation (X轴: 0 -> 1)
             _currentSat = x / w;
 
-            // 计算 Value (Y轴: 1 -> 0) *注意 Y轴向下是增加，但亮度向下是减小
+            // 计算 LeftValue (Y轴: 1 -> 0) *注意 Y轴向下是增加，但亮度向下是减小
             _currentVal = 1 - (y / h);
 
             UpdateFinalColor();
@@ -241,7 +241,7 @@ namespace CBHK.CustomControl.Input
             var hueColor = new HsvColor(_currentHue, 1, 1).ToRgb();
             ColorBase.Fill = new SolidColorBrush(hueColor);
 
-            // 5. 计算并移动调色板中心点 (Saturation & Value)
+            // 5. 计算并移动调色板中心点 (Saturation & LeftValue)
             double paletteX = _currentSat * PaletteArea.ActualWidth;
             double paletteY = (1 - _currentVal) * PaletteArea.ActualHeight;
             Canvas.SetLeft(PaletteThumb, paletteX - (PaletteThumb.ActualWidth / 2));

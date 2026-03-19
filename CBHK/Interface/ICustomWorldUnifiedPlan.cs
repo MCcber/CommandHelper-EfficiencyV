@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.CustomControl.JsonTreeViewComponent;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Common;
 using ICSharpCode.AvalonEdit.Document;

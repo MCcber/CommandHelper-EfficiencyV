@@ -19,10 +19,11 @@ using CBHK.Domain;
 using System.Collections.Generic;
 using CBHK.Utility.MessageTip;
 using CBHK.Utility.Common;
+using CBHK.Interface;
 
 namespace CBHK.ViewModel.Component.Recipe
 {
-    public partial class CampfireViewModel : ObservableObject
+    public partial class CampfireViewModel : ObservableObject, IPageViewModel
     {
         #region Field
         private DataService _dataService = null;
@@ -123,6 +124,8 @@ namespace CBHK.ViewModel.Component.Recipe
         private double _experience = 0;
         [ObservableProperty]
         private Visibility _materialMultiItemVisibility = Visibility.Collapsed;
+
+        public MessagePopup MessagePopup { get; set; }
 
         #endregion
 
@@ -284,7 +287,7 @@ namespace CBHK.ViewModel.Component.Recipe
                 if (saveFileDialog.ShowDialog().Value)
                 {
                     _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
-                    Message.PushMessage(new GeneratorMessage()
+                    MessagePopup.PushMessage(new GeneratorMessage()
                     {
                         Message = "篝火配方生成成功",
                         MessageBrush = Brushes.Red,

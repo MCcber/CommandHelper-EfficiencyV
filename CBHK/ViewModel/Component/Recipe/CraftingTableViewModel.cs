@@ -1,4 +1,5 @@
 ﻿using CBHK.Domain;
+using CBHK.Interface;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.Utility.MessageTip;
@@ -23,7 +24,7 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Recipe
 {
-    public partial class CraftingTableViewModel : ObservableObject
+    public partial class CraftingTableViewModel : ObservableObject, IPageViewModel
     {
         #region Field
         private DataService _dataService = null;
@@ -92,6 +93,7 @@ namespace CBHK.ViewModel.Component.Recipe
         public JObject ExternalData { get; set; } = null;
         #endregion
 
+        public MessagePopup MessagePopup { get; set; }
         /// <summary>
         /// 多选与单选
         /// </summary>
@@ -639,7 +641,7 @@ namespace CBHK.ViewModel.Component.Recipe
                 if (saveFileDialog.ShowDialog().Value)
                 {
                     _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
-                    Message.PushMessage(new GeneratorMessage()
+                    MessagePopup.PushMessage(new GeneratorMessage()
                     {
                         Message = "工作台配方生成成功！",
                         MessageBrush = Brushes.Red,

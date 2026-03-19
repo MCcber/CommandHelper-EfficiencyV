@@ -2,16 +2,16 @@
 using CBHK.Interface;
 using CBHK.Utility.Common;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.Input
 {
-    public class TimelineKeyFrame : ToggleButton, ITimelineElement
+    public class TimelineKeyFrame : Control, ITimelineElement
     {
         #region Field
         private AnimationTimelineTool animationTimelineTool = new();
@@ -31,6 +31,15 @@ namespace CBHK.CustomControl.Input
         public object ParentPanel { get; set; }
         public ObservableCollection<IKeyFrameData> DataList { get; set; } = [];
 
+        public bool IsChecked
+        {
+            get { return (bool)GetValue(IsCheckedProperty); }
+            set { SetValue(IsCheckedProperty, value); }
+        }
+
+        public static readonly DependencyProperty IsCheckedProperty =
+            DependencyProperty.Register("IsChecked", typeof(bool), typeof(TimelineKeyFrame), new PropertyMetadata(default(bool),IsChecked_Changed));
+
         public TimeSpan StartTime
         {
             get { return (TimeSpan)GetValue(StartTimeProperty); }
@@ -38,7 +47,7 @@ namespace CBHK.CustomControl.Input
         }
 
         public static readonly DependencyProperty StartTimeProperty =
-            DependencyProperty.Register("StartTime", typeof(TimeSpan), typeof(ContinuousKeyframeItem), new PropertyMetadata(default(TimeSpan)));
+            DependencyProperty.Register("StartTime", typeof(TimeSpan), typeof(TimelineKeyFrame), new PropertyMetadata(default(TimeSpan), Frame_PropertyChanged));
 
         public TimeRulerElement Ruler
         {
@@ -127,6 +136,8 @@ namespace CBHK.CustomControl.Input
             set { SetValue(BorderCornerBrushProperty, value); }
         }
 
+        public bool IsPlayed { get; set; }
+
         public static readonly DependencyProperty BorderCornerBrushProperty =
             DependencyProperty.Register("BorderCornerBrush", typeof(Brush), typeof(TimelineKeyFrame), new PropertyMetadata(default(Brush)));
         #endregion
@@ -156,6 +167,8 @@ namespace CBHK.CustomControl.Input
             {
                 InnerBorderBrush = OriginInnerBorderBrush;
             }
+
+            Loaded += TimelineKeyFrame_Loaded;
         }
 
         private void UpdateBorderColorByBackgroundColor()
@@ -229,9 +242,36 @@ namespace CBHK.CustomControl.Input
             }
         }
 
+        private static void IsChecked_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TimelineKeyFrame keyFrame)
+            {
+                keyFrame.OnIsChecked_Changed(e);
+            }
+        }
+
+        private void OnIsChecked_Changed(DependencyPropertyChangedEventArgs e)
+        {
+            if (e.NewValue is bool value && value)
+            {
+                OnChecked();
+            }
+            else
+            {
+                OnUnchecked();
+            }
+        }
+
+        /// <summary>
+        /// 根据时间更新关键帧的位置
+        /// </summary>
         public void UpdateKeyFrameByTime()
         {
-
+            if (Ruler is not null)
+            {
+                double startPoint = animationTimelineTool.ConvertTimeToPixel(StartTime, Ruler);
+                Canvas.SetLeft(this, startPoint);
+            }
         }
 
         public TimelineKeyFrame Clone()
@@ -242,19 +282,54 @@ namespace CBHK.CustomControl.Input
         #endregion
 
         #region Event
-        protected override void OnChecked(RoutedEventArgs e)
+        private void OnChecked()
         {
-            base.OnChecked(e);
+            isReFreshingBrush = true;
+            Background = OriginBackground = new BrushConverter().ConvertFromString("#FFFFFF") as Brush;
             InnerBorderBrush = OriginInnerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD7929"));
             UpdateBorderColorByBackgroundColor();
+            isReFreshingBrush = false;
         }
 
-        protected override void OnUnchecked(RoutedEventArgs e)
+        private void OnUnchecked()
         {
-            base.OnUnchecked(e);
+            isReFreshingBrush = true;
             Background = OriginBackground = new BrushConverter().ConvertFromString("#B8BEBA") as Brush;
             InnerBorderBrush = OriginInnerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B8BEBA"));
             UpdateBorderColorByBackgroundColor();
+            isReFreshingBrush = false;
+        }
+
+        private void TimelineKeyFrame_Loaded(object sender, RoutedEventArgs e)
+        {
+            Canvas.SetTop(this, OriginCanvasTop - ActualHeight / 2);
+            // 向上查找父级 Canvas
+            parentCanvas = VisualTreeHelper.GetParent(this) as Canvas;
+            while (parentCanvas == null && VisualTreeHelper.GetParent(this) != null)
+            {
+                parentCanvas = VisualTreeHelper.GetParent(VisualTreeHelper.GetParent(this)) as Canvas;
+            }
+            UpdateBorderColorByBackgroundColor();
+        }
+
+        private static void Frame_PropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TimelineKeyFrame keyFrame)
+            {
+                keyFrame.TimelineClipFrame_Changed(e.Property.Name);
+            }
+        }
+
+        public void TimelineClipFrame_Changed(string PropertyName)
+        {
+            switch (PropertyName)
+            {
+                case "StartTime":
+                    {
+                        UpdateKeyFrameByTime();
+                        break;
+                    }
+            }
         }
 
         #region 调整关键帧位置
@@ -265,22 +340,6 @@ namespace CBHK.CustomControl.Input
                 ParentTimeline.CurrentSplitTimelineClip = null;
             }
             ParentTimeline?.Track_MouseLeftButtonDown(ParentPanel, null);
-            if (e.ClickCount == 1)
-            {
-                if (IsChecked is bool)
-                {
-                    IsChecked = !IsChecked;
-                }
-
-                if (IsChecked is bool result && result)
-                {
-                    BorderBrush = Brushes.Black;
-                }
-                else
-                {
-                    BorderBrush = Brushes.White;
-                }
-            }
             // 获取父级 Canvas (作为计算坐标的绝对参考系)
             if (parentCanvas is not null && e.ClickCount == 2)
             {
@@ -295,26 +354,42 @@ namespace CBHK.CustomControl.Input
             base.OnPreviewMouseLeftButtonDown(e);
         }
 
+        /// <summary>
+        /// 处理关键帧拖拽
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnPreviewMouseMove(MouseEventArgs e)
         {
-            #region 处理动画片段拖拽
             if (IsMouseCaptured && parentCanvas is not null && isDragging)
             {
                 dragPoint = e.GetPosition(parentCanvas);
-                TimeSpan newStartTime = animationTimelineTool.ConvertPixelToTime(dragPoint.X, Ruler);
-                StartTime = newStartTime;
+                TimeSpan timeSpan = animationTimelineTool.ConvertPixelToTime(dragPoint.X, Ruler);
+                if (ParentTimeline is not null && ParentTimeline.TimelineElementMarkerMap.TryGetValue(this, out (TimeSpan, List<TimeSpan>) dataItemList))
+                {
+                    List<TimeSpan> list = dataItemList.Item2;
+                    ParentTimeline.TimelineElementMarkerMap[this] = new(timeSpan, list);
+                }
+                StartTime = timeSpan;
             }
-            #endregion
 
             base.OnPreviewMouseMove(e);
         }
 
         protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
         {
-            if (!isDragging && IsChecked is not null)
+            if (e.ClickCount == 1 && !isDragging)
             {
                 IsChecked = !IsChecked;
+                if (IsChecked)
+                {
+                    BorderBrush = Brushes.Black;
+                }
+                else
+                {
+                    BorderBrush = Brushes.White;
+                }
             }
+
             isDragging = false;
             ReleaseMouseCapture();
 

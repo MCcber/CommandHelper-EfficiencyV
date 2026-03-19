@@ -4,7 +4,7 @@
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:compoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponents">
+    xmlns:compoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponent">
     <HierarchicalDataTemplate x:Key="JsonTreeViewItem" DataType="TreeViewItem">
         <DockPanel LastChildFill="False">
             <Border

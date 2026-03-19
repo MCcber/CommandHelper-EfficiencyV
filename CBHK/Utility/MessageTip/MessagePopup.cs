@@ -7,24 +7,34 @@ using CBHK.Model.Common;
 
 namespace CBHK.Utility.MessageTip
 {
-    public static class Message
+    public class MessagePopup
     {
+        #region Field
+        MessageAdorner messageAdorner = null;
+        #endregion
+
         #region Method
-        public static void PushMessage(GeneratorMessage generatorMessage)
+        public MessagePopup()
         {
-            Window win = null;
+            AdornerLayer adornerLayer = null;
             if (Application.Current.Windows.Count > 0)
             {
-                win = Application.Current.Windows.OfType<Window>().FirstOrDefault(o => o.IsActive);
+                Window win = Application.Current.Windows.OfType<Window>().FirstOrDefault(o => o.IsActive);
+                adornerLayer = GetAdornerLayer(win) ?? throw new Exception("not AdornerLayer is null");
             }
+            if (adornerLayer is not null)
+            {
+                messageAdorner = new(adornerLayer);
+                adornerLayer.Add(messageAdorner);
+            }
+        }
 
-            var layer = GetAdornerLayer(win) ?? throw new Exception("not AdornerLayer is null");
-            MessageAdorner messageAdorner = new(layer);
-            layer.Add(messageAdorner);
+        public void PushMessage(GeneratorMessage generatorMessage)
+        {
             messageAdorner.PushMessage(generatorMessage);
         }
 
-        static AdornerLayer GetAdornerLayer(System.Windows.Media.Visual visual)
+        private AdornerLayer GetAdornerLayer(System.Windows.Media.Visual visual)
         {
             var decorator = visual as AdornerDecorator;
             if (decorator is not null)

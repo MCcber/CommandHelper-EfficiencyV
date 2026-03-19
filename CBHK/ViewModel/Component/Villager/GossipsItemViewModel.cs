@@ -52,7 +52,7 @@ namespace CBHK.ViewModel.Component.Villager
                 string itemData = SelectedTypeItem.Text;
                 string TypeData = itemData.Trim() != "" ? "Type:\"" + itemData + "\"," : "";
                 string gossipValueString = GossipValue.ToString().Trim();
-                string ValueData = gossipValueString != "" ? "Value:" + (gossipValueString.Contains('.') ? gossipValueString.Split('.')[0] : gossipValueString) + "," : "";
+                string ValueData = gossipValueString != "" ? "LeftValue:" + (gossipValueString.Contains('.') ? gossipValueString.Split('.')[0] : gossipValueString) + "," : "";
                 string TargetData = TargetText.Trim() != "" ? "Target:" + TargetText + "," : "";
                 result = TypeData != "" || ValueData != "" || TargetData != "" ? TypeData + ValueData + TargetData : "";
                 result = "{" + result.TrimEnd(',') + "}";

@@ -26,6 +26,7 @@ namespace CBHK.ViewModel.Generator
     public partial class SpawnerViewModel: ObservableObject
     {
         #region Field
+        private MessagePopup messagePopup = new();
         /// <summary>
         /// 存储结果
         /// </summary>
@@ -125,7 +126,7 @@ namespace CBHK.ViewModel.Generator
         private void ImportFromClipboard()
         {
             ObservableCollection<VectorRichTabItem> items = SpawnerPageList;
-            ExternalDataImportManager.ImportSpawnerDataHandler(Clipboard.GetText(),ref items,false);
+            ExternalDataImportManager.ImportSpawnerDataHandler(Clipboard.GetText(),ref items,messagePopup,false);
         }
 
         [RelayCommand]
@@ -147,7 +148,7 @@ namespace CBHK.ViewModel.Generator
             if (openFileDialog.ShowDialog().Value)
             {
                 ObservableCollection<VectorRichTabItem> items = SpawnerPageList;
-                ExternalDataImportManager.ImportSpawnerDataHandler(openFileDialog.FileName,ref items);
+                ExternalDataImportManager.ImportSpawnerDataHandler(openFileDialog.FileName,ref items, messagePopup);
             }
         }
 
@@ -193,7 +194,7 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString().Trim(','));
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "全部生成成功！",
                     SubMessage = "刷怪笼生成器",

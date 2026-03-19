@@ -2,6 +2,7 @@
 using CBHK.Interface;
 using CBHK.Utility.Common;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -13,7 +14,7 @@ using System.Windows.Shapes;
 
 namespace CBHK.CustomControl.Input
 {
-    public class TimelineClip : ToggleButton, ITimelineElement
+    public class TimelineClip : Control, ITimelineElement
     {
         #region Field
         private AnimationTimelineTool animationTimelineTool = new();
@@ -27,12 +28,14 @@ namespace CBHK.CustomControl.Input
         private Canvas innerTimeCanvas;
         private Canvas parentCanvas;
         private TimeRulerElement timeRulerElement;
+        private TimeSpan innerKeyFrameItemDeltaTime = TimeSpan.Zero;
         private bool isTimelineClipLoaded;
         private ContinuousKeyframeItem currentMemberFrameItem;
         private Cursor splitCursor;
         #endregion
 
         #region Property
+        public bool IsPlayed { get; set; }
         public double OriginCanvasTop { get; set; }
         public TimeSpan OriginStartTime { get; set; }
         public TimeSpan OriginEndTime { get; set; }
@@ -43,6 +46,16 @@ namespace CBHK.CustomControl.Input
         public Timeline ParentTimeline { get; set; }
         public object ParentPanel { get; set; }
         public bool IsSplitOut { get; set; }
+        public List<ContinuousKeyframeItem> InnerKeyFrameSortedList { get; set; } = [];
+
+        public bool IsChecked
+        {
+            get { return (bool)GetValue(IsCheckedProperty); }
+            set { SetValue(IsCheckedProperty, value); }
+        }
+
+        public static readonly DependencyProperty IsCheckedProperty =
+            DependencyProperty.Register("IsChecked", typeof(bool), typeof(TimelineClip), new PropertyMetadata(default(bool),IsChecked_Changed));
 
         public Visibility SplitPreviewLineVisibility
         {
@@ -194,6 +207,8 @@ namespace CBHK.CustomControl.Input
         #region Method
         public TimelineClip()
         {
+            BorderThickness = new(1);
+            BorderBrush = Brushes.White;
             SplitPreviewLineVisibility = Visibility.Hidden;
             InnerKeyFrameList = [];
             TitleEditorVisibility = Visibility.Hidden;
@@ -209,34 +224,49 @@ namespace CBHK.CustomControl.Input
             foreach (var keyFrameItem in InnerKeyFrameList)
             {
                 offset = (Math.Sqrt(Math.Pow(keyFrameItem.Width, 2) + Math.Pow(keyFrameItem.Height, 2))) / -2;
-                offset += BorderThickness.Left + Padding.Left;
+                offset += BorderThickness.Left;
                 Canvas.SetLeft(keyFrameItem, keyFrameItem.X + offset);
                 Canvas.SetTop(keyFrameItem, (innerTimeCanvas.ActualHeight / 2) - (keyFrameItem.Width / 2));
             }
         }
 
+        private void OnIsChecked_Changed(DependencyPropertyChangedEventArgs e)
+        {
+            if (e.NewValue is bool value && value)
+            {
+                OnChecked();
+            }
+            else
+            {
+                OnUnchecked();
+            }
+        }
+
         public void AddKeyFrameItem(ContinuousKeyframeItem item,double PositionX)
         {
-            if(innerTimeCanvas is not null)
-            {
-                innerTimeCanvas.Children.Add(item);
-                Canvas.SetLeft(item, PositionX);
-                Canvas.SetTop(item, (innerTimeCanvas.ActualHeight / 2) - (item.Width / 2));
-                if(item.IsBorderKeyFrame)
-                {
-                    item.Cursor = Cursors.SizeWE;
-                    item.IsChecked = true;
-                    item.PreviewMouseLeftButtonDown += BorderKeyFrameItem_PreviewMouseLeftButtonDown;
-                    item.MouseEnter += KeyFrameItem_MouseEnter;
-                    item.MouseLeave += KeyFrameItem_MouseLeave;
-                }
-            }
+            InnerKeyFrameList.Add(item);
+            InnerKeyFrameSortedList.Add(item);
         }
 
         public void RemoveKeyFrameItem(ContinuousKeyframeItem item)
         {
             innerTimeCanvas.Children.Remove(item);
             InnerKeyFrameList.Remove(item);
+            InnerKeyFrameSortedList.Remove(item);
+        }
+
+        private void OnChecked()
+        {
+            isReFreshingBrush = true;
+            Background = new BrushConverter().ConvertFromString("#FFFFFF") as Brush;
+            isReFreshingBrush = false;
+        }
+
+        private void OnUnchecked()
+        {
+            isReFreshingBrush = true;
+            Background = new BrushConverter().ConvertFromString("#B8BEBA") as Brush;
+            isReFreshingBrush = false;
         }
 
         /// <summary>
@@ -249,6 +279,25 @@ namespace CBHK.CustomControl.Input
             RightBorderFrameItem.PreviewMouseLeftButtonDown += BorderKeyFrameItem_PreviewMouseLeftButtonDown;
             RightBorderFrameItem.MouseEnter += KeyFrameItem_MouseEnter;
             RightBorderFrameItem.MouseLeave += KeyFrameItem_MouseLeave;
+        }
+
+        /// <summary>
+        /// 根据时间更新动画片段的位置
+        /// </summary>
+        public void UpdateClipByCurrentTime()
+        {
+            if (Ruler is not null)
+            {
+                double startPoint = animationTimelineTool.ConvertTimeToPixel(StartTime, Ruler);
+                double endPoint = animationTimelineTool.ConvertTimeToPixel(EndTime, Ruler);
+
+                Canvas.SetLeft(this, startPoint - BorderThickness.Left);
+
+                if (endPoint >= startPoint)
+                {
+                    RectangleModeWidth = endPoint - startPoint;
+                }
+            }
         }
 
         public TimelineClip Clone()
@@ -285,8 +334,6 @@ namespace CBHK.CustomControl.Input
 
             StartTime = OriginStartTime;
             EndTime = OriginEndTime;
-
-            BorderBrush = Brushes.White;
             Canvas.SetTop(this, OriginCanvasTop - ActualHeight / 2);
 
             // 向上查找父级 Canvas
@@ -361,11 +408,29 @@ namespace CBHK.CustomControl.Input
                     }
 
                     innerTimeCanvas.Children.Add(keyframeItem);
-                    offset = (Math.Sqrt(Math.Pow(keyframeItem.Width, 2) + Math.Pow(keyframeItem.Height, 2))) / -2;
-                    offset += BorderThickness.Left + Padding.Left;
+
+                    keyframeItem.Cursor = Cursors.SizeWE;
+                    keyframeItem.PreviewMouseLeftButtonDown += BorderKeyFrameItem_PreviewMouseLeftButtonDown;
+                    keyframeItem.MouseEnter += MemberFrameItem_MouseEnter;
+                    keyframeItem.PreviewMouseLeftButtonDown += MemberKeyFrameItem_PreviewMouseLeftButtonDown;
+                    keyframeItem.PreviewMouseLeftButtonUp += MemberKeyFrameItem_PreviewMouseLeftButtonUp;
+
+                    offset = Math.Sqrt(Math.Pow(keyframeItem.Width, 2) + Math.Pow(keyframeItem.Height, 2)) / -2.0 + keyframeItem.BorderThickness.Left + keyframeItem.BorderThickness.Right;
 
                     Canvas.SetLeft(keyframeItem, keyframeItem.X + offset);
                     Canvas.SetTop(keyframeItem, (innerTimeCanvas.ActualHeight / 2) - (keyframeItem.Width / 2));
+                }
+                double startPoint = animationTimelineTool.ConvertTimeToPixel(StartTime, Ruler);
+                double endPoint = animationTimelineTool.ConvertTimeToPixel(EndTime, Ruler);
+                offset = Math.Sqrt(Math.Pow(LeftBorderFrameItem.Width, 2) + Math.Pow(LeftBorderFrameItem.Height, 2)) / -2;
+                offset += BorderThickness.Left;
+                if (LeftBorderFrameItem is not null)
+                {
+                    Canvas.SetLeft(LeftBorderFrameItem, offset);
+                }
+                if(RightBorderFrameItem is not null)
+                {
+                    Canvas.SetLeft(RightBorderFrameItem, endPoint - startPoint + offset);
                 }
                 #endregion
 
@@ -374,17 +439,13 @@ namespace CBHK.CustomControl.Input
                 {
                     if (LeftBorderFrameItem is not null && !LeftBorderFrameItem.IsLoaded)
                     {
-                        LeftBorderFrameItem.Cursor = Cursors.SizeWE;
                         LeftBorderFrameItem.IsChecked = true;
-                        LeftBorderFrameItem.PreviewMouseLeftButtonDown += BorderKeyFrameItem_PreviewMouseLeftButtonDown;
                         LeftBorderFrameItem.MouseEnter += KeyFrameItem_MouseEnter;
                         LeftBorderFrameItem.MouseLeave += KeyFrameItem_MouseLeave;
                     }
                     if (RightBorderFrameItem is not null && !RightBorderFrameItem.IsLoaded)
                     {
-                        RightBorderFrameItem.Cursor = Cursors.SizeWE;
                         RightBorderFrameItem.IsChecked = true;
-                        RightBorderFrameItem.PreviewMouseLeftButtonDown += BorderKeyFrameItem_PreviewMouseLeftButtonDown;
                         RightBorderFrameItem.MouseEnter += KeyFrameItem_MouseEnter;
                         RightBorderFrameItem.MouseLeave += KeyFrameItem_MouseLeave;
                     }
@@ -394,33 +455,16 @@ namespace CBHK.CustomControl.Input
                         PreviewMouseMove += BorderKeyFrameItem_PreviewMouseMove;
                         PreviewMouseMove += MemberKeyFrameItem_PreviewMouseMove;
                     }
-
-                    for (int i = 0; i < InnerKeyFrameList.Count; i++)
-                    {
-                        if (InnerKeyFrameList[i] == LeftBorderFrameItem || InnerKeyFrameList[i] == RightBorderFrameItem)
-                        {
-                            continue;
-                        }
-
-                        if (!InnerKeyFrameList[i].IsLoaded)
-                        {
-                            InnerKeyFrameList[i].PreviewMouseLeftButtonDown += MemberKeyFrameItem_PreviewMouseLeftButtonDown;
-                            InnerKeyFrameList[i].MouseEnter += KeyFrameItem_MouseEnter;
-                            InnerKeyFrameList[i].MouseEnter += MemberFrameItem_MouseEnter;
-                            InnerKeyFrameList[i].MouseLeave += KeyFrameItem_MouseLeave;
-                            InnerKeyFrameList[i].Cursor = Cursors.SizeWE;
-                        }
-                    }
                 }
                 #endregion
             }
         }
 
-        private void MemberFrameItem_MouseEnter(object sender, MouseEventArgs e)
+        private static void IsChecked_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (!IsMoveMemberKeyFrame)
+            if (d is TimelineClip clip)
             {
-                currentMemberFrameItem = sender as ContinuousKeyframeItem;
+                clip.OnIsChecked_Changed(e);
             }
         }
 
@@ -440,6 +484,15 @@ namespace CBHK.CustomControl.Input
             }
         }
 
+        private void MemberFrameItem_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (!IsMoveMemberKeyFrame)
+            {
+                currentMemberFrameItem = sender as ContinuousKeyframeItem;
+                innerKeyFrameItemDeltaTime = currentMemberFrameItem.CurrentTime;
+            }
+        }
+
         /// <summary>
         /// 双击进入移动成员帧模式
         /// </summary>
@@ -447,11 +500,8 @@ namespace CBHK.CustomControl.Input
         /// <param name="e"></param>
         private void MemberKeyFrameItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if(e.ClickCount == 2)
-            {
-                IsMoveMemberKeyFrame = true;
-                dragPoint = e.GetPosition(innerTimeCanvas);
-            }
+            IsMoveMemberKeyFrame = true;
+            dragPoint = e.GetPosition(innerTimeCanvas);
         }
 
         /// <summary>
@@ -466,9 +516,34 @@ namespace CBHK.CustomControl.Input
                 dragPoint = e.GetPosition(innerTimeCanvas);
                 TimeSpan currentTime = animationTimelineTool.ConvertPixelToTime(dragPoint.X, Ruler);
                 double currentTimeValue = animationTimelineTool.ConvertTimeToPixel(currentTime, Ruler);
-                currentMemberFrameItem.CurrentTime = currentTime;
-                Canvas.SetLeft(currentMemberFrameItem, currentTimeValue - (currentMemberFrameItem.Width / 2));
+                innerKeyFrameItemDeltaTime = currentTime;
+                double offset = (Math.Sqrt(Math.Pow(currentMemberFrameItem.Width, 2) + Math.Pow(currentMemberFrameItem.Height, 2))) / -2 + BorderThickness.Left + BorderThickness.Right;
+                Canvas.SetLeft(currentMemberFrameItem, currentTimeValue + offset);
             }
+        }
+
+        /// <summary>
+        /// 鼠标结束拖拽后立刻对帧成员执行排序
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MemberKeyFrameItem_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (ParentTimeline is not null && currentMemberFrameItem is not null)
+            {
+                InnerKeyFrameSortedList.Sort(ParentTimeline.KeyFrameMemberComparer);
+                if(ParentTimeline.TimelineElementMarkerMap.TryGetValue(this,out (TimeSpan, List<TimeSpan>) dataItemList))
+                {
+                    int targetIndex = dataItemList.Item2.IndexOf(currentMemberFrameItem.CurrentTime);
+                    if (targetIndex > 0 && targetIndex < dataItemList.Item2.Count)
+                    {
+                        dataItemList.Item2[targetIndex] = innerKeyFrameItemDeltaTime;
+                        dataItemList.Item2.Sort();
+                    }
+                }
+                currentMemberFrameItem.CurrentTime = innerKeyFrameItemDeltaTime;
+            }
+            IsMoveMemberKeyFrame = false;
         }
 
         #region 拉伸起始/末尾关键帧
@@ -498,6 +573,14 @@ namespace CBHK.CustomControl.Input
                 dragPoint = e.GetPosition(parentCanvas);
 
                 #region 拉伸左右两侧
+                double offset =(Math.Sqrt(Math.Pow(LeftBorderFrameItem.Width, 2) + Math.Pow(LeftBorderFrameItem.Height, 2))) / -2;
+                offset += BorderThickness.Left;
+                double startPoint = animationTimelineTool.ConvertTimeToPixel(StartTime, Ruler);
+                double endPoint = animationTimelineTool.ConvertTimeToPixel(EndTime, Ruler);
+                double lastPoint = endPoint - startPoint;
+                RectangleModeWidth = lastPoint;
+                RightBorderFrameItem.X = lastPoint;
+                Canvas.SetLeft(RightBorderFrameItem, lastPoint + offset + BorderThickness.Right);
                 if (IsAdjustingFirstSize)
                 {
                     StartTime = animationTimelineTool.ConvertPixelToTime(dragPoint.X, Ruler);
@@ -506,39 +589,18 @@ namespace CBHK.CustomControl.Input
                     int milliseconds = timeSpan.Milliseconds;
                     int frames = (int)(timeSpan.TotalSeconds * 20) % 20;
                     DurationText = string.Format("{0:D2}s{1:D2}ms{2:D2}f", seconds, milliseconds, frames);
+                    Canvas.SetLeft(this, startPoint - BorderThickness.Left);
 
-                    double startPoint = animationTimelineTool.ConvertTimeToPixel(StartTime, Ruler);
-                    double endPoint = animationTimelineTool.ConvertTimeToPixel(EndTime, Ruler);
-
-                    double lastPoint = endPoint - startPoint;
-
-                    Canvas.SetLeft(this, startPoint + BorderThickness.Left + Padding.Left);
-                    RectangleModeWidth = endPoint - startPoint - BorderThickness.Left;
-
-                    RightBorderFrameItem.X = lastPoint;
                     RightBorderFrameItem.CurrentTime = timeSpan;
-                    double offset = (Math.Sqrt(Math.Pow(LeftBorderFrameItem.Width, 2) + Math.Pow(LeftBorderFrameItem.Height, 2))) / -2;
-                    offset += BorderThickness.Left + Padding.Left;
 
                     Canvas.SetLeft(LeftBorderFrameItem, offset);
-                    Canvas.SetLeft(RightBorderFrameItem, lastPoint + offset);
                 }
                 else
                 if (IsAdjustingLastSize)
                 {
                     EndTime = animationTimelineTool.ConvertPixelToTime(dragPoint.X, Ruler);
-                    double startPoint = animationTimelineTool.ConvertTimeToPixel(StartTime, Ruler);
-                    double endPoint = animationTimelineTool.ConvertTimeToPixel(EndTime, Ruler);
-                    double lastPoint = endPoint - startPoint + BorderThickness.Left;
-                    RectangleModeWidth = lastPoint;
 
-                    RightBorderFrameItem.X = lastPoint;
                     RightBorderFrameItem.CurrentTime = EndTime - StartTime;
-
-                    double offset = (Math.Sqrt(Math.Pow(RightBorderFrameItem.Width, 2) + Math.Pow(RightBorderFrameItem.Height, 2))) / -2;
-                    offset += BorderThickness.Left + Padding.Left;
-
-                    Canvas.SetLeft(RightBorderFrameItem, lastPoint + offset);
                 }
                 #endregion
             }
@@ -553,22 +615,6 @@ namespace CBHK.CustomControl.Input
                 ParentTimeline.CurrentSplitTimelineClip = this;
             }
             ParentTimeline?.Track_MouseLeftButtonDown(ParentPanel, null);
-            if (e.ClickCount == 1)
-            {
-                if (IsChecked is bool)
-                {
-                    IsChecked = !IsChecked;
-                }
-
-                if(IsChecked is bool result && result)
-                {
-                    BorderBrush = Brushes.Black;
-                }
-                else
-                {
-                    BorderBrush = Brushes.White;
-                }
-            }
             // 获取父级 Canvas (作为计算坐标的绝对参考系)
             if (parentCanvas is not null && !isInKeyFrameItem && e.ClickCount == 2)
             {
@@ -586,20 +632,18 @@ namespace CBHK.CustomControl.Input
         protected override void OnPreviewMouseMove(MouseEventArgs e)
         {
             #region 处理动画片段拖拽
-            if (IsMouseCaptured && parentCanvas is not null && !isInKeyFrameItem && isDragging)
+            if (IsMouseCaptured && parentCanvas is not null && !IsMoveMemberKeyFrame && !isInKeyFrameItem && isDragging)
             {
                 dragPoint = e.GetPosition(parentCanvas);
                 TimeSpan currentDuration = EndTime - StartTime;
                 TimeSpan newStartTime = animationTimelineTool.ConvertPixelToTime(dragPoint.X, Ruler);
+                if(ParentTimeline is not null && ParentTimeline.TimelineElementMarkerMap.TryGetValue(this, out (TimeSpan, List<TimeSpan>) dataItemList))
+                {
+                    List<TimeSpan> list = dataItemList.Item2;
+                    ParentTimeline.TimelineElementMarkerMap[this] = new(newStartTime, list);
+                }
                 StartTime = newStartTime;
-                if (CurrentClipMode is ClipMode.Point)
-                {
-                    EndTime = StartTime;
-                }
-                else
-                {
-                    EndTime = newStartTime + currentDuration;
-                }
+                EndTime = newStartTime + currentDuration;
             }
             #endregion
 
@@ -620,9 +664,18 @@ namespace CBHK.CustomControl.Input
 
         protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
         {
-            if (!isDragging && IsChecked is not null && CurrentClipMode is ClipMode.Point)
+            if (e.ClickCount == 1 && !isDragging)
             {
                 IsChecked = !IsChecked;
+
+                if (IsChecked)
+                {
+                    BorderBrush = Brushes.Black;
+                }
+                else
+                {
+                    BorderBrush = Brushes.White;
+                }
             }
             isDragging = false;
             ReleaseMouseCapture();
@@ -669,11 +722,8 @@ namespace CBHK.CustomControl.Input
             {
                 case "RectangleModeWidth":
                     {
-                        if (CurrentClipMode is ClipMode.Rectangle)
-                        {
-                            double horizontalBorder = BorderThickness.Left + BorderThickness.Right;
-                            InnerCanvasWidth = Math.Max(0, RectangleModeWidth - horizontalBorder);
-                        }
+                        double horizontalBorder = BorderThickness.Left + BorderThickness.Right + 1;
+                        InnerCanvasWidth = Math.Max(0, RectangleModeWidth - horizontalBorder);
                         break;
                     }
             }
@@ -702,58 +752,6 @@ namespace CBHK.CustomControl.Input
                         UpdateClipByCurrentTime();
                         break;
                     }
-            }
-        }
-
-        /// <summary>
-        /// 根据时间更新动画片段的位置
-        /// </summary>
-        public void UpdateClipByCurrentTime()
-        {
-            if (Ruler is not null)
-            {
-                double startPoint = animationTimelineTool.ConvertTimeToPixel(StartTime, Ruler);
-                double endPoint = animationTimelineTool.ConvertTimeToPixel(EndTime, Ruler) - BorderThickness.Left;
-
-                startPoint += -BorderThickness.Left - Padding.Left;
-
-                Canvas.SetLeft(this, startPoint);
-
-                if (CurrentClipMode == ClipMode.Point)
-                {
-                    // 单点模式下，控件外层宽度应与内层视觉宽度保持一致，确保 Transform 生效基准正确
-                    Width = PointModeSize = 16;
-                }
-                else
-                {
-                    // 连续模式（Rectangle）
-                    if (endPoint >= startPoint)
-                    {
-                        RectangleModeWidth = endPoint - startPoint;
-                    }
-                }
-            }
-        }
-
-        protected override void OnChecked(RoutedEventArgs e)
-        {
-            base.OnChecked(e);
-            if (IsChecked is bool)
-            {
-                isReFreshingBrush = true;
-                Background = new BrushConverter().ConvertFromString("#FFFFFF") as Brush;
-                isReFreshingBrush = false;
-            }
-        }
-
-        protected override void OnUnchecked(RoutedEventArgs e)
-        {
-            base.OnUnchecked(e);
-            if (IsChecked is bool)
-            {
-                isReFreshingBrush = true;
-                Background = new BrushConverter().ConvertFromString("#B8BEBA") as Brush;
-                isReFreshingBrush = false;
             }
         }
         #endregion

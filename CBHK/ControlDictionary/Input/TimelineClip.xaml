@@ -18,10 +18,9 @@
                         <Border
                             Background="#6EB5AD"
                             BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="1"
+                            BorderThickness="{TemplateBinding BorderThickness}"
                             ClipToBounds="True"
-                            CornerRadius="5"
-                            Visibility="Hidden">
+                            CornerRadius="5">
                             <!--#region 内容网格-->
                             <Grid>
                                 <TextBlock

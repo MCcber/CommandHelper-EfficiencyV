@@ -30,6 +30,7 @@ namespace CBHK.ViewModel.Generator
     public partial class EntityViewModel(IContainerProvider container,CBHKDataContext Context, MainView mainView) : ObservableObject
     {
         #region Field
+        private MessagePopup messagePopup = new();
         private IContainerProvider container = container;
         private CBHKDataContext context = Context;
         /// <summary>
@@ -38,8 +39,8 @@ namespace CBHK.ViewModel.Generator
         private MainView home = mainView;
         //本生成器的图标路径
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
-        private string ModifierOperationTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\AttributeModifierOperationType.ini";
-        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\DataList\SpecialTags.json";
+        private string ModifierOperationTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\AttributeModifierOperationType.ini";
+        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
         public ObservableCollection<string> ModifierOperationTypeSource = [];
         public JArray SpecialArray = null;
         #endregion
@@ -224,7 +225,7 @@ namespace CBHK.ViewModel.Generator
             if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
             {
                 ObservableCollection<VectorRichTabItem> result = EntityPageList;
-                ExternalDataImportManager.ImportEntityDataHandler(dialog.FileName, ref result);
+                ExternalDataImportManager.ImportEntityDataHandler(dialog.FileName, ref result,messagePopup);
             }
         }
 
@@ -235,7 +236,7 @@ namespace CBHK.ViewModel.Generator
         private void ImportEntityFromClipboard()
         {
             ObservableCollection<VectorRichTabItem> result = EntityPageList;
-            ExternalDataImportManager.ImportEntityDataHandler(Clipboard.GetText(), ref result,false);
+            ExternalDataImportManager.ImportEntityDataHandler(Clipboard.GetText(), ref result,messagePopup,false);
         }
 
         [RelayCommand]
@@ -325,7 +326,7 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString());
-                Message.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "实体全部生成成功！数据已进入剪切板",
                     SubMessage = "实体生成器",

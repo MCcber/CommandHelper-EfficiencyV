@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.JsonTreeViewComponents;
+﻿using CBHK.CustomControl.JsonTreeViewComponent;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
@@ -38,7 +38,7 @@ namespace CBHK.ViewModel.Generator
         private List<string> ConfigDirectoryPathList { get; set; } = [];
         public override string ConfigDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\CustomWorldGenerator\";
 
-        private string EditorPath = @"\DataList\Rule\";
+        private string EditorPath = @"\Data\Rule\";
         public override string CommonCompoundDataDirectoryPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\";
 
         private VectorTextComboBoxItem _currentVersion = new();
