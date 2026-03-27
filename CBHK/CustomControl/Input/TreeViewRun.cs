@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using CBHK.CustomControl.Container;
+using System.Windows;
 using System.Windows.Documents;
 
 namespace CBHK.CustomControl.Input

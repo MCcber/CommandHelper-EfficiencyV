@@ -1,6 +1,6 @@
 ﻿using CBHK.Utility.Common;
-using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -12,6 +12,15 @@ namespace CBHK.CustomControl.VectorComboBox
     public partial class VectorTextComboBox : ComboBox
     {
         #region Property
+        public Visibility SearchBoxVisibility
+        {
+            get { return (Visibility)GetValue(SearchBoxVisibilityProperty); }
+            set { SetValue(SearchBoxVisibilityProperty, value); }
+        }
+
+        public static readonly DependencyProperty SearchBoxVisibilityProperty =
+            DependencyProperty.Register("SearchBoxVisibility", typeof(Visibility), typeof(VectorTextComboBox), new PropertyMetadata(default(Visibility)));
+
         public string Title
         {
             get { return (string)GetValue(TitleProperty); }
@@ -102,6 +111,19 @@ namespace CBHK.CustomControl.VectorComboBox
             ItemSelectedMarkerBrush = Brushes.White;
             ItemContainerBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#58585A"));
             PopupItemPanelBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8C8D90"));
+        }
+
+        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
+        {
+            //base.OnItemsChanged(e);
+            if (Items.Count > 10)
+            {
+                SearchBoxVisibility = Visibility.Visible;
+            }
+            else
+            {
+                SearchBoxVisibility = Visibility.Collapsed;
+            }
         }
 
         private void VectorTextComboBox_DropDownClosed(object sender, System.EventArgs e)

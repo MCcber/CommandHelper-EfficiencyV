@@ -642,7 +642,7 @@
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="35" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Grid Grid.Row="0">
                                         <Grid.ColumnDefinitions>
@@ -706,6 +706,7 @@
                                     </Grid>
                                     <Input:VectorTextBox
                                         Grid.Row="1"
+                                        Height="35"
                                         Padding="2,0,0,0"
                                         HorizontalContentAlignment="Left"
                                         VerticalContentAlignment="Center"
@@ -715,6 +716,7 @@
                                         Foreground="{Binding SearchBoxForeground, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
                                         HorizontalScrollBarVisibility="Auto"
                                         Style="{DynamicResource VectorTextBoxStyle}"
+                                        Visibility="{Binding SearchBoxVisibility, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
                                         WaterMarkerBrush="Gray"
                                         WaterMarkerText="搜索成员" />
                                 </Grid>

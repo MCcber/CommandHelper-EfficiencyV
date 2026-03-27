@@ -1419,17 +1419,18 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <CustomControl:TagRichTextBox
+                    <Input:TagRichTextBox
                         Grid.Row="1"
                         Grid.Column="0"
                         Margin="5"
-                        Result="{Binding TagList, Mode=TwoWay}">
+                        Result="{Binding TagList, Mode=TwoWay}"
+                        Style="{DynamicResource TagRichTextBoxStyle}">
                         <behaviors:Interaction.Triggers>
                             <behaviors:EventTrigger EventName="Loaded">
                                 <behaviors:CallMethodAction MethodName="TagRichTextBox_Loaded" TargetObject="{Binding}" />
                             </behaviors:EventTrigger>
                         </behaviors:Interaction.Triggers>
-                    </CustomControl:TagRichTextBox>
+                    </Input:TagRichTextBox>
                     <Grid Grid.Column="1">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />

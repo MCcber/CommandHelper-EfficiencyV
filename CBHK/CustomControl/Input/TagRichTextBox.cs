@@ -1,23 +1,24 @@
-﻿using System;
+﻿using CBHK.CustomControl.VectorButton;
+using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 
-namespace CBHK.CustomControl
+namespace CBHK.CustomControl.Input
 {
-    /// <summary>
-    /// TagRichTextBox.xaml 的交互逻辑
-    /// </summary>
-    public partial class TagRichTextBox : UserControl
+    public partial class TagRichTextBox:Control
     {
+        #region Field
+        private RichTextBox contentRichTextBox = null;
+        #endregion
+
+        #region Property
         public string Result
         {
             get { return (string)GetValue(ResultProperty); }
@@ -26,29 +27,17 @@ namespace CBHK.CustomControl
 
         public static readonly DependencyProperty ResultProperty =
             DependencyProperty.Register("Result", typeof(string), typeof(TagRichTextBox), new PropertyMetadata(default(string)));
+        #endregion
 
-        public TagRichTextBox()
-        {
-            InitializeComponent();
-        }
-
-        private void TextBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            TextBox textBox = sender as TextBox;
-            if(e.Key == Key.Enter && textBox.Text.Trim().Length > 0)
-            {
-                TagBlock tagBlock = new();
-                tagBlock.TextBlock.Text = textBox.Text;
-                Paragraph paragraph = tagBox.Document.Blocks.FirstBlock as Paragraph;
-                paragraph.Inlines.Add(tagBlock);
-                textBox.Text = "";
-            }
-        }
-
+        #region Method
         public async Task GetResult()
         {
+            if(contentRichTextBox is null)
+            {
+                return;
+            }
             StringBuilder result = new();
-            Paragraph paragraph = tagBox.Document.Blocks.FirstBlock as Paragraph;
+            Paragraph paragraph = contentRichTextBox.Document.Blocks.FirstBlock as Paragraph;
             if (paragraph.Inlines.Count > 0)
             {
                 CancellationTokenSource cts = new();
@@ -60,7 +49,7 @@ namespace CBHK.CustomControl
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            result.Append("\"" + (tagBlocks[i].Child as TagBlock).TextBlock.Text + "\",");
+                            result.Append("\"" + (tagBlocks[i].Child as TagBlock).Text + "\",");
                         });
                         await Task.Delay(0, cts);
                     });
@@ -69,19 +58,32 @@ namespace CBHK.CustomControl
             }
             Result = result.ToString();
         }
-    }
+        #endregion
 
-    public class TagTextBlockWidthConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        #region Event
+        public void ContentRichTextBox_Loaded(object sender,RoutedEventArgs e)
         {
-            double width = (double)value;
-            return width - 25;
+            if(sender is RichTextBox richTextBox)
+            {
+                contentRichTextBox = richTextBox;
+            }
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public void TextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            return null;
+            TextBox textBox = sender as TextBox;
+            if (e.Key == Key.Enter && textBox.Text.Trim().Length > 0 && contentRichTextBox is not null)
+            {
+                TagBlock tagBlock = new()
+                {
+                    Text = textBox.Text,
+                    Style = Application.Current.Resources["TagBlockStyle"] as Style
+                };
+                Paragraph paragraph = contentRichTextBox.Document.Blocks.FirstBlock as Paragraph;
+                paragraph.Inlines.Add(tagBlock);
+                textBox.Text = "";
+            }
         }
+        #endregion
     }
 }

@@ -142,7 +142,7 @@
                                                 <Rectangle
                                                     Grid.Row="1"
                                                     Grid.Column="2"
-                                                    Width="0.5"
+                                                    Width="1"
                                                     Height="4"
                                                     HorizontalAlignment="Left"
                                                     Fill="#242425"
@@ -151,7 +151,7 @@
                                                     Grid.Row="2"
                                                     Grid.Column="1"
                                                     Width="4"
-                                                    Height="0.5"
+                                                    Height="1"
                                                     VerticalAlignment="Top"
                                                     Fill="#242425"
                                                     IsHitTestVisible="False" />

@@ -346,9 +346,10 @@ namespace CBHK.CustomControl.Container
             {
                 if (CurrentTrack.TimelineElementList[j].IsChecked)
                 {
-                    CurrentTrack.TimelineElementList.RemoveAt(j);
-                    TimelineElementMarkerMap.Remove(CurrentTrack.TimelineElementList[j]);
-                    TimelineElementMarkerList.Remove(CurrentTrack.TimelineElementList[j]);
+                    ITimelineElement currentElement = CurrentTrack.TimelineElementList[j];
+                    CurrentTrack.TimelineElementList.Remove(currentElement);
+                    TimelineElementMarkerMap.Remove(currentElement);
+                    TimelineElementMarkerList.Remove(currentElement);
                     j--;
                 }
             }
@@ -898,6 +899,7 @@ namespace CBHK.CustomControl.Container
                     previousTime = keyFrame.StartTime;
                     CurrentTrack.TimelineElementList.Remove(keyFrame);
                     TimelineElementMarkerList.Remove(keyFrame);
+                    TimelineElementMarkerMap.Remove(keyFrame);
                     i--;
                 }
                 else
@@ -926,6 +928,7 @@ namespace CBHK.CustomControl.Container
                     }
                     CurrentTrack.TimelineElementList.Remove(timelineclip);
                     TimelineElementMarkerList.Remove(timelineclip);
+                    TimelineElementMarkerMap.Remove(timelineclip);
                     i--;
                 }
             }

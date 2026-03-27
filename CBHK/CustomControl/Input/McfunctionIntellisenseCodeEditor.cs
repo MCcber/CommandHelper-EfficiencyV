@@ -1,5 +1,7 @@
 ﻿using CBHK.Common.Model;
 using CBHK.Common.Utility;
+using CBHK.Utility.Data;
+using CBHK.Utility.Visual;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.ViewModel.Component.Datapack.EditPage;
 using CBHK.ViewModel.Generator;
@@ -27,7 +29,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Xml;
 
-namespace CBHK.CustomControl
+namespace CBHK.CustomControl.Input
 {
     public partial class McfunctionIntellisenseCodeEditor:TextEditor
     {
@@ -267,7 +269,7 @@ namespace CBHK.CustomControl
         }
         #endregion
 
-        #region Methods
+        #region Method
         /// <summary>
         /// 初始化并显示补全窗体
         /// </summary>
@@ -1552,7 +1554,7 @@ namespace CBHK.CustomControl
         }
         #endregion
 
-        #region Events
+        #region Event
         /// <summary>
         /// 执行快捷键
         /// </summary>

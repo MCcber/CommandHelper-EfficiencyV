@@ -3,10 +3,11 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace CBHK.CustomControl
+namespace CBHK.CustomControl.Container
 {
     public class RichToolTip:ToolTip
     {
+        #region Property
         public ImageSource ContentIcon
         {
             get { return (ImageSource)GetValue(ContentIconProperty); }
@@ -41,6 +42,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty DescriptionProperty =
-            DependencyProperty.Register("Description", typeof(FlowDocument), typeof(RichToolTip), new PropertyMetadata(default(FlowDocument)));
+            DependencyProperty.Register("Description", typeof(FlowDocument), typeof(RichToolTip), new PropertyMetadata(default(FlowDocument))); 
+        #endregion
     }
 }

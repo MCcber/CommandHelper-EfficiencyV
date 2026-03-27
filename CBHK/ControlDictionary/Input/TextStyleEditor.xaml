@@ -561,7 +561,7 @@
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="40" />
+                                        <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="40" />
                                     </Grid.RowDefinitions>
@@ -631,6 +631,7 @@
                                     <Input:VectorTextBox
                                         Grid.Row="1"
                                         Grid.Column="0"
+                                        Height="35"
                                         Padding="2.5,0,0,0"
                                         HorizontalAlignment="Stretch"
                                         utility:TextSizeHelper.AutoFontSize="True"
@@ -639,6 +640,7 @@
                                         Foreground="{Binding SearchBoxForeground, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
                                         HorizontalScrollBarVisibility="Auto"
                                         Style="{DynamicResource VectorTextBoxStyle}"
+                                        Visibility="{Binding SearchBoxVisibility, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
                                         WaterMarkerBrush="{TemplateBinding SearchBoxForeground}"
                                         WaterMarkerMargin="5,0,0,0"
                                         WaterMarkerText="搜索成员" />

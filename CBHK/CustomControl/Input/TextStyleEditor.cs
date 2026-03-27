@@ -3,6 +3,7 @@ using CBHK.Utility.Common;
 using CBHK.Utility.Visual;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -34,6 +35,15 @@ namespace CBHK.CustomControl.Input
         public bool IsSelectionUnderlined { get; private set; }
         public bool IsSelectionStrikethrough { get; private set; }
         public bool IsSelectionObfuscated { get; private set; }
+
+        public Visibility SearchBoxVisibility
+        {
+            get { return (Visibility)GetValue(SearchBoxVisibilityProperty); }
+            set { SetValue(SearchBoxVisibilityProperty, value); }
+        }
+
+        public static readonly DependencyProperty SearchBoxVisibilityProperty =
+            DependencyProperty.Register("SearchBoxVisibility", typeof(Visibility), typeof(TextStyleEditor), new PropertyMetadata(default(Visibility)));
 
         public string Title
         {
@@ -321,6 +331,19 @@ namespace CBHK.CustomControl.Input
 
                 //订阅键盘事件
                 editor.PreviewKeyDown += Editor_PreviewKeyDown;
+            }
+        }
+
+        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
+        {
+            base.OnItemsChanged(e);
+            if (Items.Count > 10)
+            {
+                SearchBoxVisibility = Visibility.Visible;
+            }
+            else
+            {
+                SearchBoxVisibility = Visibility.Collapsed;
             }
         }
 

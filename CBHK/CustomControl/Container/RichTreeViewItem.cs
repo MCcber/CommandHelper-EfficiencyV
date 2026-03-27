@@ -5,10 +5,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace CBHK.CustomControl
+namespace CBHK.CustomControl.Container
 {
     public class RichTreeViewItem:TreeViewItem
     {
+        #region Property
         public Visibility TextBlockVisibility
         {
             get { return (Visibility)GetValue(TextBlockVisibilityProperty); }
@@ -72,7 +73,7 @@ namespace CBHK.CustomControl
         public static readonly DependencyProperty ConnectingLineFillProperty =
             DependencyProperty.Register("ConnectingLineFill", typeof(Brush), typeof(RichTreeViewItem), new PropertyMetadata(default(Brush)));
 
-        public Dictionary<string,ObservableCollection<RichTreeViewItem>> SubStructure
+        public Dictionary<string, ObservableCollection<RichTreeViewItem>> SubStructure
         {
             get { return (Dictionary<string, ObservableCollection<RichTreeViewItem>>)GetValue(SubStructureProperty); }
             set { SetValue(SubStructureProperty, value); }
@@ -88,6 +89,7 @@ namespace CBHK.CustomControl
         }
 
         public static readonly DependencyProperty TextStateProperty =
-            DependencyProperty.Register("TextState", typeof(TreeViewRun), typeof(RichTreeViewItem), new PropertyMetadata(default(TreeViewRun)));
+            DependencyProperty.Register("TextState", typeof(TreeViewRun), typeof(RichTreeViewItem), new PropertyMetadata(default(TreeViewRun))); 
+        #endregion
     }
 }
