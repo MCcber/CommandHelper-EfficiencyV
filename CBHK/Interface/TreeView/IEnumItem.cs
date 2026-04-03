@@ -1,9 +1,13 @@
-﻿using System.Collections.ObjectModel;
+﻿using CBHK.CustomControl.VectorComboBox;
+using System;
+using System.Collections.ObjectModel;
 
 namespace CBHK.Interface.TreeView
 {
     public interface IEnumItem
     {
-        public ObservableCollection<string> ItemList { get; set; }
+        event EventHandler ItemChangedEvent;
+        public VectorTextComboBoxItem SelectedItem { get; set; }
+        public ObservableCollection<VectorTextComboBoxItem> ItemList { get; set; }
     }
 }

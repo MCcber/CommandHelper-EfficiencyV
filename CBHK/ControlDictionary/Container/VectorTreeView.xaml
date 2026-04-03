@@ -20,6 +20,7 @@
             Margin="5,0,0,0"
             Background="{Binding Background}"
             Foreground="{Binding Foreground}"
+            IsHitTestVisible="False"
             Text="{Binding Key}"
             TextAlignment="Left" />
     </DataTemplate>
@@ -30,13 +31,35 @@
                 Margin="5,0,0,0"
                 Background="{Binding Background}"
                 Foreground="{Binding Foreground}"
+                IsHitTestVisible="False"
                 Text="{Binding Key}"
                 TextAlignment="Left" />
             <VectorComboBox:VectorTextComboBox
                 Height="{Binding ActualHeight, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
+                DisplayMemberPath="{Binding Text}"
                 ItemsSource="{Binding ItemList}"
+                SelectedValue="{Binding Text}"
+                SelectedValuePath="{Binding Text}"
                 Style="{DynamicResource VectorTextComboBoxStyle}" />
         </DockPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type model:AddRemoveItem}">
+        <VectorButton:VectorFlatIconButton
+            Width="{Binding Height, RelativeSource={RelativeSource Mode=Self}}"
+            Height="{Binding ActualHeight, ConverterParameter=10, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
+            Background="{Binding Background}"
+            Command="{Binding Command}"
+            Foreground="{Binding Foreground}"
+            Icon="{DynamicResource TreeNodePlusGeometry}"
+            IconBrush="{Binding IconBrush}"
+            IconHeight="10"
+            IconMargin="5"
+            IconWidth="10"
+            Style="{DynamicResource VectorFlatIconButtonStyle}"
+            ToolTip="{Binding Key}"
+            ToolTipService.BetweenShowDelay="1000"
+            ToolTipService.InitialShowDelay="0" />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type model:BoolItem}">
@@ -44,6 +67,7 @@
             <TextBlock
                 Margin="5,0"
                 VerticalAlignment="Center"
+                IsHitTestVisible="False"
                 Text="{Binding Key}"
                 TextAlignment="Left" />
             <VectorButton:VectorToggleTextButton
@@ -68,11 +92,12 @@
                 VerticalAlignment="Center"
                 Background="{Binding Background}"
                 Foreground="{Binding Foreground}"
+                IsHitTestVisible="False"
                 Text="{Binding Key}"
                 TextAlignment="Left" />
             <Input:VectorNumbericUpDown
                 Width="200"
-                Height="{Binding ActualHeight, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
+                Height="{Binding ActualHeight, ConverterParameter=10, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
                 visualUtility:TextSizeHelper.AutoFontSize="True"
                 Style="{DynamicResource VectorNumbericUpDownStyle}"
                 Text="{Binding Value}" />
@@ -84,11 +109,12 @@
             <TextBlock
                 Margin="5,0"
                 VerticalAlignment="Center"
+                IsHitTestVisible="False"
                 Text="{Binding Key}"
                 TextAlignment="Left" />
             <Input:VectorTextBox
                 Width="200"
-                Height="{Binding ActualHeight, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
+                Height="{Binding ActualHeight, ConverterParameter=10, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
                 Padding="5,0,0,0"
                 visualUtility:TextSizeHelper.AutoFontSize="True"
                 Background="#313233"
@@ -103,10 +129,46 @@
             <TextBlock
                 Margin="5,0"
                 VerticalAlignment="Center"
+                IsHitTestVisible="False"
                 Text="{Binding Key}"
                 TextAlignment="Left" />
             <Input:VectorColorPicker SelectedColor="{Binding Value}" Style="{DynamicResource VectorColorPickerStyle}" />
         </DockPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type model:ComboItem}">
+        <DockPanel LastChildFill="False">
+            <TextBlock
+                Margin="5,0,0,0"
+                Background="{Binding Background}"
+                Foreground="{Binding Foreground}"
+                IsHitTestVisible="False"
+                Text="{Binding Key}"
+                TextAlignment="Left" />
+            <VectorComboBox:VectorTextComboBox
+                Height="{Binding ActualHeight, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
+                DisplayMemberPath="{Binding Text}"
+                ItemsSource="{Binding ItemList}"
+                SelectedValue="{Binding Text}"
+                SelectedValuePath="{Binding Text}"
+                Style="{DynamicResource VectorTextComboBoxStyle}" />
+        </DockPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type model:ToolTipItem}">
+        <Viewbox
+            Width="{Binding Height, RelativeSource={RelativeSource Mode=Self}}"
+            Height="{Binding ActualHeight, ConverterParameter=20, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
+            Margin="5,0,0,0"
+            ToolTip="{Binding Key}"
+            ToolTipService.BetweenShowDelay="1000"
+            ToolTipService.InitialShowDelay="0">
+            <Path
+                Data="{Binding Icon}"
+                Fill="{Binding IconBrush}"
+                Stroke="{Binding IconBrush}"
+                StrokeThickness="1" />
+        </Viewbox>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type model:CompositeItem}">

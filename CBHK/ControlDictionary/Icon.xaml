@@ -306,6 +306,10 @@
         </DrawingImage.Drawing>
     </DrawingImage>
 
+    <Geometry x:Key="ExclamationGeometry">
+        M512 512m-512 0a512 512 0 1 0 1024 0 512 512 0 1 0-1024 0Z M512 704a64 64 0 1 1 0 128 64 64 0 0 1 0-128z m0-512a64 64 0 0 1 64 64v320a64 64 0 1 1-128 0V256a64 64 0 0 1 64-64z
+    </Geometry>
+
     <DrawingImage x:Key="ExclamationIcon">
         <DrawingImage.Drawing>
             <DrawingGroup>

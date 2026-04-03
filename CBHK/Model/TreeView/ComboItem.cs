@@ -6,13 +6,14 @@ using System.Windows.Media;
 
 namespace CBHK.Model.TreeView
 {
-    public class EnumParentItem : IBaseItem, IBaseKeyItem, IEnumItem, ITreeViewItem
+    public class ComboItem : IBaseItem, IBaseKeyItem, IEnumItem, ITreeViewItem
     {
+        public Brush Foreground { get; set; }
+        public Brush Background { get; set; }
         public string Key { get; set; }
-        public Brush Foreground { get; set; } = Brushes.White;
-        public Brush Background { get; set; } = Brushes.Transparent;
         public VectorTextComboBoxItem SelectedItem { get; set; }
         public ObservableCollection<VectorTextComboBoxItem> ItemList { get; set; }
+
         public event EventHandler ItemChangedEvent;
     }
 }

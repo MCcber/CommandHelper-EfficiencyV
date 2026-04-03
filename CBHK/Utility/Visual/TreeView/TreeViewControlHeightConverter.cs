@@ -9,7 +9,11 @@ namespace CBHK.Utility.Visual.TreeView
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             double result = double.Parse(value.ToString());
-            return result - 10;
+            if(parameter is string parameterStringValue && double.TryParse(parameterStringValue,out double parameterDoubleValue))
+            {
+                result -= parameterDoubleValue;
+            }
+            return result;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

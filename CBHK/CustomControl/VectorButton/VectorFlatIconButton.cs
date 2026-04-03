@@ -106,7 +106,7 @@ namespace CBHK.CustomControl.VectorButton
                 Foreground = Brushes.White;
             }
             var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style)
+            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style || Background is null)
             {
                 Background = new BrushConverter().ConvertFromString("#48494A") as Brush;
             }

@@ -37,8 +37,15 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border
+                            <TextBlock
                                 Grid.Column="0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Panel.ZIndex="1"
+                                Foreground="{TemplateBinding Foreground}"
+                                Text="{TemplateBinding Text}" />
+                            <Border
+                                Grid.Column="1"
                                 Width="{TemplateBinding BackgroundWidth}"
                                 Height="{TemplateBinding BackgroundHeight}"
                                 Margin="2,0,0,0"
@@ -178,7 +185,7 @@
                                 </Grid>
                             </Border>
                             <Border
-                                Grid.Column="0"
+                                Grid.Column="1"
                                 Width="{TemplateBinding ThumbWidth}"
                                 Height="{TemplateBinding ThumbHeight}"
                                 Margin="{TemplateBinding ThumbMargin}"
@@ -249,13 +256,6 @@
                                         IsHitTestVisible="False" />
                                 </Grid>
                             </Border>
-                            <TextBlock
-                                Grid.Column="1"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Center"
-                                Panel.ZIndex="1"
-                                Foreground="{TemplateBinding Foreground}"
-                                Text="{TemplateBinding Text}" />
                             <ContentPresenter
                                 x:Name="contentPresenter"
                                 Grid.ColumnSpan="3"

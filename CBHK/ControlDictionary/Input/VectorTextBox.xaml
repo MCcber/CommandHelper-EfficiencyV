@@ -41,6 +41,7 @@
                                 Panel.ZIndex="1"
                                 Focusable="false"
                                 HorizontalScrollBarVisibility="Auto"
+                                IsAllowDragToScroll="False"
                                 Style="{DynamicResource VectorScrollViewerStyle}"
                                 VerticalScrollBarVisibility="Auto" />
                             <TextBlock

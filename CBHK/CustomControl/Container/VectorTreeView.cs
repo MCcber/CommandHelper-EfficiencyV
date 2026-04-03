@@ -15,7 +15,7 @@ namespace CBHK.CustomControl.Container
         private Point lastMouseDown;
         private VectorTreeViewItem dragTreeViewItem;
         private BaseTreeViewDataItem lastDataItem;
-        private BaseTreeViewDataItem draggedData;
+        private BaseTreeViewDataItem draggedDataItem;
         #endregion
 
         #region Property
@@ -40,6 +40,34 @@ namespace CBHK.CustomControl.Container
             while (current is not null);
 
             return null;
+        }
+
+        /// <summary>
+        /// 检测当前被拖拽节点是否为目标节点的若干层父级
+        /// </summary>
+        /// <returns></returns>
+        private bool IsAllowDragToParent(BaseTreeViewDataItem currentDraggedData, BaseTreeViewDataItem currentTargetData)
+        {
+            bool result = true;
+            BaseTreeViewDataItem loopParent = currentTargetData.Parent as BaseTreeViewDataItem;
+
+            result = loopParent == currentDraggedData.Parent;
+            if(result)
+            {
+                return result;
+            }
+
+            //后续因个别特殊情况可能需要允许将节点拖拽到其父级节点上
+            while (loopParent is not null)
+            {
+                if (loopParent == currentDraggedData)
+                {
+                    result = false;
+                    break;
+                }
+                loopParent = loopParent.Parent as BaseTreeViewDataItem;
+            }
+            return result;
         }
         #endregion
 
@@ -84,11 +112,11 @@ namespace CBHK.CustomControl.Container
                     if (dragTreeViewItem is not null)
                     {
                         // 拿到绑定的 ViewModel 数据
-                        draggedData = dragTreeViewItem.DataContext as BaseTreeViewDataItem;
+                        draggedDataItem = dragTreeViewItem.DataContext as BaseTreeViewDataItem;
                         Grid grid = dragTreeViewItem.Template.FindName("grid", dragTreeViewItem) as Grid;
                         if (grid is not null)
                         {
-                            DragDropHelper.StartDrag(dragTreeViewItem, draggedData, grid.RowDefinitions[0].Height.Value);
+                            DragDropHelper.StartDrag(dragTreeViewItem, draggedDataItem, grid.RowDefinitions[0].Height.Value);
                         }
                     }
                 }
@@ -102,13 +130,23 @@ namespace CBHK.CustomControl.Container
             var targetItem = FindAncestor<VectorTreeViewItem>((DependencyObject)e.OriginalSource);
 
             // 如果目标是一个节点，且不是自己本身，则允许放置 (Move)
-            if (targetItem is not null && draggedData is not null && targetItem.DataContext != draggedData)
+            if (targetItem is not null && draggedDataItem is not null && targetItem.DataContext != draggedDataItem)
             {
                 e.Effects = DragDropEffects.Move;
 
                 if(targetItem.DataContext is BaseTreeViewDataItem targetDataItem)
                 {
-                    int dragIndex = draggedData.Parent.Children.IndexOf(draggedData);
+                    bool isAllowDragToParent = IsAllowDragToParent(draggedDataItem, targetDataItem);
+                    if (!isAllowDragToParent)
+                    {
+                        targetDataItem.HorizontalTopLineVisibility = targetDataItem.HorizontalBottomLineVisibility = Visibility.Collapsed;
+                        if (lastDataItem is not null)
+                        {
+                            lastDataItem.HorizontalTopLineVisibility = lastDataItem.HorizontalBottomLineVisibility = Visibility.Collapsed;
+                        }
+                        return;
+                    }
+                    int dragIndex = draggedDataItem.Parent.Children.IndexOf(draggedDataItem);
                     int targetIndex = targetDataItem.Parent.Children.IndexOf(targetDataItem);
 
                     if (lastDataItem != targetDataItem)
@@ -151,33 +189,23 @@ namespace CBHK.CustomControl.Container
 
             var targetItem = FindAncestor<VectorTreeViewItem>((DependencyObject)e.OriginalSource);
 
-            if (targetItem is not null && draggedData is not null)
+            if (targetItem is not null && draggedDataItem is not null)
             {
                 var targetData = targetItem.DataContext;
-                if (draggedData != targetData)
+                if (draggedDataItem != targetData)
                 {
-                    if (draggedData is BaseTreeViewDataItem currentDraggedData && targetData is BaseTreeViewDataItem currentTargetData && currentDraggedData.Parent is not null && currentTargetData.Parent is not null)
+                    if (draggedDataItem is BaseTreeViewDataItem currentDraggedData && targetData is BaseTreeViewDataItem currentTargetData && currentDraggedData.Parent is not null && currentTargetData.Parent is not null)
                     {
-                        bool currentIsTargetParent = false;
-                        BaseTreeViewDataItem loopParent = currentTargetData.Parent as BaseTreeViewDataItem;
-
-                        //后续因个别特殊情况可能需要允许将节点拖拽到其父级节点上
-                        #region 检测当前被拖拽节点是否为目标节点的若干层父级
-                        while (!currentIsTargetParent && loopParent is not null)
+                        bool isAllowDragToParent = IsAllowDragToParent(currentDraggedData, currentTargetData);
+                        if(!isAllowDragToParent)
                         {
-                            if (loopParent == currentDraggedData)
+                            currentTargetData.HorizontalTopLineVisibility = currentTargetData.HorizontalBottomLineVisibility = Visibility.Collapsed;
+                            if(lastDataItem is not null)
                             {
-                                currentIsTargetParent = true;
-                                break;
+                                lastDataItem.HorizontalTopLineVisibility = lastDataItem.HorizontalBottomLineVisibility = Visibility.Collapsed;
                             }
-                            loopParent = loopParent.Parent as BaseTreeViewDataItem;
-                        }
-                        if (currentIsTargetParent)
-                        {
                             return;
-                        } 
-                        #endregion
-
+                        }
                         if (currentTargetData.Parent == currentDraggedData.Parent)
                         {
                             IContainerItem parent = currentTargetData.Parent;
@@ -219,7 +247,7 @@ namespace CBHK.CustomControl.Container
                 }
             }
 
-            draggedData = null;
+            draggedDataItem = null;
             e.Handled = true;
         }  
         #endregion

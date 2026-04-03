@@ -56,6 +56,16 @@ namespace CBHK.View
                         {
                             Key = "DoubleItem",
                             Value = 0.0
+                        },
+                        new AddRemoveItem()
+                        {
+                            Key = "添加子级"
+                        },
+                        new ToolTipItem()
+                        {
+                            Key = "提示信息",
+                            Icon = Application.Current.Resources["ExclamationGeometry"] as Geometry,
+                            IconBrush = Brushes.Yellow
                         }
                     ];
                     CompositeItem Test5 = new()

@@ -26,6 +26,15 @@ namespace CBHK.CustomControl.Container
         #endregion
 
         #region Property
+        public bool IsAllowDragToScroll
+        {
+            get { return (bool)GetValue(IsAllowDragToScrollProperty); }
+            set { SetValue(IsAllowDragToScrollProperty, value); }
+        }
+
+        public static readonly DependencyProperty IsAllowDragToScrollProperty =
+            DependencyProperty.Register("IsAllowDragToScroll", typeof(bool), typeof(VectorScrollViewer), new PropertyMetadata(default(bool)));
+
         public Brush BottomBorderBrush
         {
             get { return (Brush)GetValue(BottomBorderBrushProperty); }
@@ -149,6 +158,10 @@ namespace CBHK.CustomControl.Container
         {
             var sv = sender as ScrollViewer;
 
+            if(!IsAllowDragToScroll)
+            {
+                return;
+            }
             _scrollStartPoint = e.GetPosition(sv);
             _scrollStartOffset = new Point(sv.HorizontalOffset, sv.VerticalOffset);
             _isDragging = false;
@@ -156,6 +169,10 @@ namespace CBHK.CustomControl.Container
 
         private void ScrollViewer_PreviewMouseMove(object sender, MouseEventArgs e)
         {
+            if (!IsAllowDragToScroll)
+            {
+                return;
+            }
             var sv = sender as ScrollViewer;
             if (e.LeftButton == MouseButtonState.Pressed && PanningMode is not PanningMode.None)
             {
@@ -186,6 +203,10 @@ namespace CBHK.CustomControl.Container
 
         private void ScrollViewer_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
+            if (!IsAllowDragToScroll)
+            {
+                return;
+            }
             var sv = sender as ScrollViewer;
 
             if (sv.IsMouseCaptured)
