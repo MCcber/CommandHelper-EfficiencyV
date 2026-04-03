@@ -1,6 +1,6 @@
 ﻿using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View.Component.Entity;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Component.Entity;
@@ -157,7 +157,7 @@ namespace CBHK.View.Component.Spawner
                     entityID = entityIDToken.ToString().Replace("minecraft:", "").Replace("_spawn_egg:", "");
                 if (entityID.Length == 0)
                 {
-                    entityIDToken = json.SelectToken("ItemView.id");
+                    entityIDToken = json.SelectToken("itemView.id");
                     if (entityIDToken is not null)
                         entityID = entityIDToken.ToString().Replace("minecraft:", "").Replace("_spawn_egg:", "");
                 }

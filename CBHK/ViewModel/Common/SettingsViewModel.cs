@@ -24,12 +24,10 @@ namespace CBHK.ViewModel.Common
         private CBHKDataContext context;
         private EnvironmentConfig config;
         string fontListDirectory = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Fonts";
+        private VectorTextComboBox currentFontFamilyNameComboBox = null;
         #endregion
 
         #region Property
-        [ObservableProperty]
-        private ObservableCollection<VectorTextComboBoxItem> currentFontFamilyNameList = [];
-
         [ObservableProperty]
         private VectorTextComboBoxItem selectedFontFamilyItem;
 
@@ -61,56 +59,6 @@ namespace CBHK.ViewModel.Common
             context = Context;
             config = context.EnvironmentConfigSet.First();
             #endregion
-
-            #region 获取自定义字体库
-            string[] fontListFolder = Directory.GetFiles(fontListDirectory, "*ttf", SearchOption.AllDirectories);
-            List<string> fontNameList = [];
-            foreach (string fontFile in fontListFolder)
-            {
-                FontFamily family = new(Path.GetFileNameWithoutExtension(fontFile));
-                if(family is null)
-                {
-                    continue;
-                }
-                if (fontNameList.Count > 0 && fontNameList.Contains(family.FamilyNames.First().Value))
-                    continue;
-                fontNameList.Add(family.FamilyNames.First().Value);
-                VectorTextComboBoxItem textComboBoxItem = new()
-                {
-                    Text = new FontFamily(Path.GetFileNameWithoutExtension(fontFile)).FamilyNames.First().Value,
-                    DisplayPanelBrush = Brushes.Black,
-                    MemberBrush = Brushes.White
-                };
-                if (!CurrentFontFamilyNameList.Contains(textComboBoxItem))
-                {
-                    CurrentFontFamilyNameList.Add(textComboBoxItem);
-                    CurrentFontFamilyList.Add(family);
-                    textComboBoxItem.Font = family;
-                }
-            }
-            #endregion
-
-            #region 获取系统自带的字体库
-            foreach (System.Drawing.FontFamily font in SystemFonts.Families)
-            {
-                if(font is null)
-                {
-                    continue;
-                }
-                FontFamily family = new(font.Name);
-                CurrentFontFamilyList.Add(family);
-                VectorTextComboBoxItem textComboBoxItem = new()
-                {
-                    Text = font.Name,
-                    MemberBrush = Brushes.White,
-                    DisplayPanelBrush = Brushes.Black
-                };
-                CurrentFontFamilyNameList.Add(textComboBoxItem);
-                textComboBoxItem.Font = family;
-            }
-            CurrentFontFamilyNameList = [.. CurrentFontFamilyNameList.DistinctBy(item => item.Text)];
-            isLoaded = true;
-            #endregion
         }
         #endregion
 
@@ -123,6 +71,67 @@ namespace CBHK.ViewModel.Common
             SelectedThemeTypeString = config.ThemeType;
             SelectedVisualTypeString = config.VisualType;
             SelectedWindowCornerPreferenceTypeString = config.CornerPreferenceType;
+        }
+
+        public void FontFamilyComboBox_Loaded(object sender,RoutedEventArgs e)
+        {
+            #region Init
+            if(sender is VectorTextComboBox comboBox)
+            {
+                currentFontFamilyNameComboBox = comboBox;
+            }
+            #endregion
+
+            #region 获取自定义字体库
+            string[] fontListFolder = Directory.GetFiles(fontListDirectory, "*ttf", SearchOption.AllDirectories);
+            List<string> fontNameList = [];
+            ObservableCollection<VectorTextComboBoxItem> currentFontFamilySource = [];
+            foreach (string fontFile in fontListFolder)
+            {
+                FontFamily family = new(Path.GetFileNameWithoutExtension(fontFile));
+                if (family is null)
+                {
+                    continue;
+                }
+                if (fontNameList.Count > 0 && fontNameList.Contains(family.FamilyNames.First().Value))
+                    continue;
+                fontNameList.Add(family.FamilyNames.First().Value);
+
+                string currentText = new FontFamily(Path.GetFileNameWithoutExtension(fontFile)).FamilyNames.First().Value;
+
+
+                if (!currentFontFamilySource.Any(item => item.Text == currentText))
+                {
+                    currentFontFamilySource.Add(new VectorTextComboBoxItem()
+                    {
+                        Text = currentText,
+                        FontFamily = family
+                    });
+                    CurrentFontFamilyList.Add(family);
+                }
+            }
+            #endregion
+
+            #region 获取系统自带的字体库
+            foreach (System.Drawing.FontFamily font in SystemFonts.Families)
+            {
+                if (font is null)
+                {
+                    continue;
+                }
+                FontFamily family = new(font.Name);
+                CurrentFontFamilyList.Add(family);
+
+                currentFontFamilySource.Add(new VectorTextComboBoxItem()
+                {
+                    FontFamily = family,
+                    Text = font.Name
+                });
+            }
+            currentFontFamilySource = [.. currentFontFamilySource.DistinctBy(item => item.Text)];
+            currentFontFamilyNameComboBox.DataList = new(currentFontFamilySource);
+            isLoaded = true;
+            #endregion
         }
 
         private void SettingsViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)

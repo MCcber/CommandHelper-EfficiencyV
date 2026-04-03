@@ -121,6 +121,7 @@ namespace CBHK.CustomControl.Container
                 Foreground = Brushes.White;
             }
             var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
+
             if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
             {
                 Background = new BrushConverter().ConvertFromString("#3c8527") as Brush;
@@ -187,6 +188,7 @@ namespace CBHK.CustomControl.Container
                 VectorIconTextTabItem_MouseLeave(null, null);
                 return;
             }
+
             Color color = ColorTool.Lighten((OriginBackground as SolidColorBrush).Color,0.3f);
             Background = new SolidColorBrush(color);
         }

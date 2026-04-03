@@ -6,9 +6,10 @@ namespace CBHK.CustomControl.VectorComboBox
     {
         #region Property
         public string Text { get; set; }
-        public FontFamily Font { get; set; }
-        public Brush MemberBrush { get; set; }
-        public Brush DisplayPanelBrush { get; set; }
+        public bool IsSelected { get; set; }
+        public FontFamily FontFamily { get; set; }
+        public Brush MemberBrush { get; set; } = Brushes.White;
+        public Brush DisplayPanelBrush { get; set; } = Brushes.Black;
         #endregion
     }
 }

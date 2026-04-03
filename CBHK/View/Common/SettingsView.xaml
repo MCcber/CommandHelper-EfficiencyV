@@ -3,13 +3,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:CBHK.CustomControl"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:model="clr-namespace:CBHK.Common.Model;assembly=CBHK.Common"
     xmlns:prism="http://prismlibrary.com/"
@@ -55,10 +53,15 @@
                 VerticalAlignment="Center"
                 ArrowMargin="0 0 10 0"
                 Foreground="White"
-                ItemsSource="{Binding CurrentFontFamilyNameList}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedFontFamilyItem}"
-                Style="{DynamicResource VectorTextComboBoxStyle}" />
+                Style="{DynamicResource VectorTextComboBoxStyle}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Loaded">
+                        <behavior:CallMethodAction MethodName="FontFamilyComboBox_Loaded" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </VectorComboBox:VectorTextComboBox>
             <VectorButton:VectorTextButton
                 Grid.Column="2"
                 Width="35"

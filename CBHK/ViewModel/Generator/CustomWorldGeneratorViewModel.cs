@@ -21,8 +21,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CBHK.Domain;
 using System.Windows.Controls;
 using CBHK.Common.Utility;
-using CBHK.Interface;
 using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface.Data;
 
 namespace CBHK.ViewModel.Generator
 {

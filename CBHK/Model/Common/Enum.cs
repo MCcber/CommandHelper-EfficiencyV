@@ -98,11 +98,24 @@
         Long,
         UnsignedInt,
         UnsignedFloat,
-        UnsignedDouble,
         UnsignedLong,
         // 字符串句柄
         StringId,
         // 布尔
         Boolean
+    }
+
+    public enum NumberType
+    {
+        Byte,
+        Short,
+        Int,
+        Float,
+        Double,
+        Long,
+        UnsignedInt,
+        UnsignedFloat,
+        UnsignedLong,
+        Decimal
     }
 }

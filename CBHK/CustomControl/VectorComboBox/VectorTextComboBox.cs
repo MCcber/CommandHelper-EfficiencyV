@@ -1,9 +1,13 @@
 ﻿using CBHK.Utility.Common;
+using CBHK.Utility.Data;
 using System;
+using System.Collections;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -11,7 +15,29 @@ namespace CBHK.CustomControl.VectorComboBox
 {
     public partial class VectorTextComboBox : ComboBox
     {
+        #region Field
+        private CollectionViewSource itemView = new();
+        #endregion
+
         #region Property
+        public ObservableCollection<VectorTextComboBoxItem> DataList
+        {
+            get { return (ObservableCollection<VectorTextComboBoxItem>)GetValue(DataListProperty); }
+            set { SetValue(DataListProperty, value); }
+        }
+
+        public static readonly DependencyProperty DataListProperty =
+            DependencyProperty.Register("DataList", typeof(ObservableCollection<VectorTextComboBoxItem>), typeof(VectorTextComboBox), new PropertyMetadata(default(ObservableCollection<VectorTextComboBoxItem>), OnDataListChanged));
+
+        public string SearchText
+        {
+            get { return (string)GetValue(SearchTextProperty); }
+            set { SetValue(SearchTextProperty, value); }
+        }
+
+        public static readonly DependencyProperty SearchTextProperty =
+            DependencyProperty.Register("SearchText", typeof(string), typeof(VectorTextComboBox), new PropertyMetadata(default(string)));
+
         public Visibility SearchBoxVisibility
         {
             get { return (Visibility)GetValue(SearchBoxVisibilityProperty); }
@@ -99,6 +125,9 @@ namespace CBHK.CustomControl.VectorComboBox
         {
             Loaded += VectorTextComboBox_Loaded;
             DropDownClosed += VectorTextComboBox_DropDownClosed;
+            itemView.Source = DataList;
+            ItemsSource = itemView.View;
+            itemView.Filter += ItemView_Filter;
         }
         #endregion
 
@@ -113,10 +142,52 @@ namespace CBHK.CustomControl.VectorComboBox
             PopupItemPanelBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8C8D90"));
         }
 
+        private void ItemView_Filter(object sender, FilterEventArgs e)
+        {
+            if (e.Item is VectorTextComboBoxItem vectorTextComboBoxItem)
+            {
+                bool result = StringTool.IsMatchSearchText(vectorTextComboBoxItem.Text, SearchText);
+                e.Accepted = result;
+            }
+        }
+
+        private static void OnDataListChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if(d is VectorTextComboBox vectorTextComboBox)
+            {
+                vectorTextComboBox.OnDataList_Changed(e.NewValue as ObservableCollection<VectorTextComboBoxItem>);
+            }
+        }
+
+        private void OnDataList_Changed(ObservableCollection<VectorTextComboBoxItem> newValue)
+        {
+            if (itemView.Source != newValue)
+            {
+                itemView.Source = newValue;
+                ItemsSource = itemView.View;
+            }
+        }
+
         protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
         {
-            //base.OnItemsChanged(e);
-            if (Items.Count > 10)
+            base.OnItemsChanged(e);
+            int count = 0;
+            if (ItemsSource is IList list)
+            {
+                count = list.Count;
+            }
+            else 
+            if (ItemsSource is ICollection col)
+            {
+                count = col.Count;
+            }
+            else
+            if(ItemsSource is ListCollectionView listCollectionView && listCollectionView.SourceCollection is ICollection subCollection)
+            {
+                count = subCollection.Count;
+            }
+
+            if (count > 10)
             {
                 SearchBoxVisibility = Visibility.Visible;
             }
@@ -138,6 +209,16 @@ namespace CBHK.CustomControl.VectorComboBox
                     RoutedEvent = MouseLeaveEvent
                 };
                 toggleButton.RaiseEvent(args);
+            }
+        }
+
+        public void SearchBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key is Key.Enter && itemView is not null)
+            {
+                e.Handled = true;
+                IsDropDownOpen = true;
+                itemView.View?.Refresh();
             }
         }
         #endregion

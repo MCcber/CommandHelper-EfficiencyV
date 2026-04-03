@@ -1,21 +1,24 @@
 ﻿using CBHK.Model.Common;
 using CBHK.Utility.Common;
+using CBHK.Utility.Data;
 using CBHK.Utility.Visual;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.Input
 {
-    public class TextStyleEditor:ComboBox,INotifyPropertyChanged
+    public class TextStyleEditor : ComboBox, INotifyPropertyChanged
     {
         #region Field
         private Thickness OriginMargin;
@@ -26,6 +29,7 @@ namespace CBHK.CustomControl.Input
         private Style textblockStyle = Application.Current.TryFindResource("DefaultTextStyleEditorTextBlockStyle") as Style;
         private VectorRichTextBox editor = null;
         public event PropertyChangedEventHandler PropertyChanged;
+        private bool isEnterKeyDown = false;
         #endregion
 
         #region Property
@@ -35,6 +39,18 @@ namespace CBHK.CustomControl.Input
         public bool IsSelectionUnderlined { get; private set; }
         public bool IsSelectionStrikethrough { get; private set; }
         public bool IsSelectionObfuscated { get; private set; }
+
+        private ObservableCollection<TextStyleEditorItem> DataList { get; set; } = [];
+        private CollectionViewSource ItemView = null;
+
+        public string SearchText
+        {
+            get { return (string)GetValue(SearchTextProperty); }
+            set { SetValue(SearchTextProperty, value); }
+        }
+
+        public static readonly DependencyProperty SearchTextProperty =
+            DependencyProperty.Register("SearchText", typeof(string), typeof(TextStyleEditor), new PropertyMetadata(default(string)));
 
         public Visibility SearchBoxVisibility
         {
@@ -159,7 +175,6 @@ namespace CBHK.CustomControl.Input
         public TextStyleEditor()
         {
             RoundBorderBrush = Brushes.Black;
-            Loaded += TextStyleEditor_Loaded;
             DropDownClosed += TextStyleEditor_DropDownClosed;
             MouseEnter += TextStyleEditor_MouseEnter;
             MouseLeave += TextStyleEditor_MouseLeave;
@@ -192,17 +207,17 @@ namespace CBHK.CustomControl.Input
 
         public void AddNewItem(List<Run> list,bool isSelected = false)
         {
-            ComboBoxItem comboBoxItem = new()
+            DataList.Add(new TextStyleEditorItem()
             {
+                InlineList = new ObservableCollection<InlineData>(list.Select(run => new InlineData()
+                {
+                    Text = run.Text,
+                    Foreground = run.Foreground,
+                    FontWeight = run.FontWeight,
+                    TextDecorationCollection = run.TextDecorations,
+                })),
                 IsSelected = isSelected
-            };
-            TextBlock textBlock = new()
-            {
-                Style = textblockStyle
-            };
-            textBlock.Inlines.AddRange(list);
-            comboBoxItem.Content = textBlock;
-            Items.Add(comboBoxItem);
+            });
         }
 
         private void UpdateColor(Color color)
@@ -233,9 +248,73 @@ namespace CBHK.CustomControl.Input
         #endregion
 
         #region Event
-        private void TextStyleEditor_Loaded(object sender, EventArgs e)
+        private void ItemView_Filter(object sender, FilterEventArgs e)
         {
+            if(e.Item is TextStyleEditorItem textStyleEditorItem)
+            {
+                bool result = StringTool.IsMatchSearchText(textStyleEditorItem.FullTextCache, SearchText);
+                e.Accepted = result;
+            }
+        }
+
+        public void Editor_Loaded(object sender,RoutedEventArgs e)
+        {
+            if (sender is VectorRichTextBox vectorRichTextBox)
+            {
+                editor = vectorRichTextBox;
+
+                //注入装饰层
+                AdornerLayer layer = AdornerLayer.GetAdornerLayer(editor);
+                layer?.Add(new ObfuscatedAdorner(editor));
+
+                //订阅键盘事件
+                editor.PreviewKeyDown += Editor_PreviewKeyDown;
+                editor.PreviewKeyUp += Editor_PreviewKeyUp;
+            }
+        }
+
+        public void SearchBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key is Key.Enter && sender is TextBox && ItemView is not null)
+            {
+                IsDropDownOpen = true;
+                e.Handled = true;
+                ItemView.View?.Refresh();
+            }
+        }
+
+        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
+        {
+            base.OnItemsChanged(e);
+
+            if (DataList.Count > 10)
+            {
+                SearchBoxVisibility = Visibility.Visible;
+            }
+            else
+            {
+                SearchBoxVisibility = Visibility.Collapsed;
+            }
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            VectorColorPicker vectorColorPicker = GetTemplateChild("colorPicker") as VectorColorPicker;
+            vectorColorPicker.UpdateSelectedColorCallBack = UpdateColor;
+
             OriginMargin = Margin;
+
+            if (ItemView is null)
+            {
+                ItemView = Application.Current.Resources["TextStyleEditorBoxItemView"] as CollectionViewSource;
+                ItemView.Filter += ItemView_Filter;
+                ItemView.Source = DataList;
+                if (DataList.Count > 0)
+                {
+                    SelectedItem = DataList[0];
+                }
+            }
 
             if (Text == "")
             {
@@ -249,7 +328,7 @@ namespace CBHK.CustomControl.Input
 
             SelectionChanged += TextStyleEditor_SelectionChanged;
 
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
+            object extraBottomLine = Template.FindName("extraBottomLine", this);
             if (extraBottomLine is RowDefinition row)
             {
                 row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
@@ -314,55 +393,42 @@ namespace CBHK.CustomControl.Input
                     Text = run
                 }], true);
             }
+            for (int i = 0; i < 10; i++)
+            {
+                AddNewItem([new Run()
+                {
+                    Text = i + ""
+                }]);
+            }
+            if(DataList is not null && DataList.Count > 0)
+            {
+                SelectedItem = DataList[0];
+            }
 
             OriginForegroundBrush = Foreground;
             OriginBackgroundBrush = Background;
-        }
 
-        public void Editor_Loaded(object sender,RoutedEventArgs e)
-        {
-            if (sender is VectorRichTextBox vectorRichTextBox)
+            //强制重新渲染
+            if (GetTemplateChild("contentPresenter") is ContentPresenter contentPresenter && SelectedItem is not null)
             {
-                editor = vectorRichTextBox;
-
-                //注入装饰层
-                AdornerLayer layer = AdornerLayer.GetAdornerLayer(editor);
-                layer?.Add(new ObfuscatedAdorner(editor));
-
-                //订阅键盘事件
-                editor.PreviewKeyDown += Editor_PreviewKeyDown;
+                var temp = SelectedItem;
+                contentPresenter.Content = null;
+                contentPresenter.Content = temp;
             }
-        }
-
-        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
-        {
-            base.OnItemsChanged(e);
-            if (Items.Count > 10)
-            {
-                SearchBoxVisibility = Visibility.Visible;
-            }
-            else
-            {
-                SearchBoxVisibility = Visibility.Collapsed;
-            }
-        }
-
-        public override void OnApplyTemplate()
-        {
-            base.OnApplyTemplate();
-            VectorColorPicker vectorColorPicker = GetTemplateChild("colorPicker") as VectorColorPicker;
-            vectorColorPicker.UpdateSelectedColorCallBack = UpdateColor;
         }
 
         public void AddNewStyleItem_Click(object sender, RoutedEventArgs e) => AddNewStyleItem();
 
         private void Editor_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key is Key.Enter)
+            if (e.Key is Key.Enter && !isEnterKeyDown)
             {
+                isEnterKeyDown = true;
                 AddNewStyleItem();
             }
         }
+
+        private void Editor_PreviewKeyUp(object sender, KeyEventArgs e) => isEnterKeyDown = false;
 
         private void TextStyleEditor_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

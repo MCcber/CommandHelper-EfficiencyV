@@ -15,8 +15,9 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using CBHK.Utility.Common;
 using CBHK.Common.Utility;
-using CBHK.Interface;
 using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface.Data;
+using CBHK.Interface.Utility;
 
 namespace CBHK.CustomControl.JsonTreeViewComponent
 {

@@ -2,11 +2,12 @@
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
-using CBHK.Interface;
+using CBHK.Interface.Utility;
+using CBHK.Interface.Visual;
 using CBHK.Model.Common;
 using CBHK.Model.Generator.Entity;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Entity;
 using CBHK.View.Generator;

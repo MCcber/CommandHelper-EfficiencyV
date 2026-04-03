@@ -179,7 +179,6 @@ namespace CBHK.CustomControl.VectorButton
         #endregion
 
         #region Event
-
         private void VectorToggleTextButton_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             double currentWidth = ActualWidth <= 0 || ActualWidth is double.NaN ? Text.Length : ActualWidth;
@@ -240,6 +239,12 @@ namespace CBHK.CustomControl.VectorButton
             }
 
             UpdateBorderColorByBackgroundColor(sender);
+
+            if (IsChecked is bool value && value)
+            {
+                This_PreviewMouseLeftButtonDown(this, null);
+                IsShowCheckedMarker = Visibility.Visible;
+            }
         }
 
         private void This_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

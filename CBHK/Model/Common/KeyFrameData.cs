@@ -1,4 +1,4 @@
-﻿using CBHK.Interface;
+﻿using CBHK.Interface.Data;
 using MathNet.Numerics.Interpolation;
 
 namespace CBHK.Model.Common

@@ -2,7 +2,8 @@
 using CBHK.CustomControl;
 using CBHK.CustomControl.JsonTreeViewComponent;
 using CBHK.CustomControl.VectorComboBox;
-using CBHK.Interface;
+using CBHK.Interface.Data;
+using CBHK.Interface.Utility;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.ViewModel.Common;

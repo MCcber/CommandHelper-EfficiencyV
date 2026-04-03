@@ -4,7 +4,7 @@ using CBHK.Domain;
 using CBHK.Model.Common;
 using CBHK.Model.Generator.Tag;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -163,13 +163,13 @@ namespace CBHK.ViewModel.Generator
                     CurrentItem.Background = null;
                 if (CurrentItem.BeChecked.Value)
                 {
-                    if (CurrentItem.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
+                    if (CurrentItem.DataType == "itemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
                         Items.Add("\"minecraft:" + itemString + "\",");
                     else
                     if (CurrentItem.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
                         Entities.Add("\"minecraft:" + itemString + "\",");
                     else
-                    if (CurrentItem.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
+                    if (CurrentItem.DataType == "Block&itemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
                         Blocks.Add("\"minecraft:" + itemString + "\",");
                     else
                     if (CurrentItem.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
@@ -180,11 +180,11 @@ namespace CBHK.ViewModel.Generator
                 }
                 else
                 {
-                    if (CurrentItem.DataType == "ItemView" && Items.Contains("\"minecraft:" + itemString + "\","))
+                    if (CurrentItem.DataType == "itemView" && Items.Contains("\"minecraft:" + itemString + "\","))
                         Items.Remove("\"minecraft:" + itemString + "\",");
                     if (CurrentItem.DataType == "EntityView" && Entities.Contains("\"minecraft:" + itemString + "\","))
                         Entities.Remove("\"minecraft:" + itemString + "\",");
-                    if (CurrentItem.DataType == "Block&ItemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
+                    if (CurrentItem.DataType == "Block&itemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
                         Blocks.Remove("\"minecraft:" + itemString + "\",");
                     if (CurrentItem.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
                         Biomes.Remove("\"minecraft:" + itemString + "\",");
@@ -352,7 +352,7 @@ namespace CBHK.ViewModel.Generator
 
                 Parallel.For(0, context.ItemSet.Count, i =>
                 {
-                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, currentPath + IDOrValueList[i], IDOrValueList[i], ItemIDAndNameMap[IDOrValueList[i]], BlockIDList.Contains(IDOrValueList[i]) ? "Block&ItemView" : "ItemView", false));
+                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, currentPath + IDOrValueList[i], IDOrValueList[i], ItemIDAndNameMap[IDOrValueList[i]], BlockIDList.Contains(IDOrValueList[i]) ? "Block&itemView" : "itemView", false));
                 });
                 #endregion
 
@@ -515,13 +515,13 @@ namespace CBHK.ViewModel.Generator
 
                         if (tagItemTemplate.BeChecked.Value)
                         {
-                            if (tagItemTemplate.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "itemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
                                 Items.Add("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
                                 Entities.Add("\"minecraft:" + itemString + "\",");
                             else
-                            if (tagItemTemplate.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "Block&itemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
                                 Blocks.Add("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
@@ -532,11 +532,11 @@ namespace CBHK.ViewModel.Generator
                         }
                         else
                         {
-                            if (tagItemTemplate.DataType == "ItemView" && Items.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "itemView" && Items.Contains("\"minecraft:" + itemString + "\","))
                                 Items.Remove("\"minecraft:" + itemString + "\",");
                             if (tagItemTemplate.DataType == "EntityView" && Entities.Contains("\"minecraft:" + itemString + "\","))
                                 Entities.Remove("\"minecraft:" + itemString + "\",");
-                            if (tagItemTemplate.DataType == "Block&ItemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "Block&itemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
                                 Blocks.Remove("\"minecraft:" + itemString + "\",");
                             if (tagItemTemplate.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
                                 Biomes.Remove("\"minecraft:" + itemString + "\",");
@@ -569,13 +569,13 @@ namespace CBHK.ViewModel.Generator
                             tagItemTemplate.Background = null;
                         if (tagItemTemplate.BeChecked.Value)
                         {
-                            if (tagItemTemplate.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "itemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
                                 Items.Add("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
                                 Entities.Add("\"minecraft:" + itemString + "\",");
                             else
-                            if (tagItemTemplate.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "Block&itemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
                                 Blocks.Add("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
@@ -586,13 +586,13 @@ namespace CBHK.ViewModel.Generator
                         }
                         else
                         {
-                            if (tagItemTemplate.DataType == "ItemView")
+                            if (tagItemTemplate.DataType == "itemView")
                                 Items.Remove("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "EntityView")
                                 Entities.Remove("\"minecraft:" + itemString + "\",");
                             else
-                            if (tagItemTemplate.DataType == "Block&ItemView")
+                            if (tagItemTemplate.DataType == "Block&itemView")
                                 Blocks.Remove("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "Biome")

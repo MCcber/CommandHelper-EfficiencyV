@@ -1,4 +1,4 @@
-﻿using CBHK.Utility.Visual;
+﻿using CBHK.Utility.Visual.Screen;
 using System;
 using System.Windows;
 using System.Windows.Controls;

@@ -5,8 +5,9 @@
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
-    xmlns:utility="clr-namespace:CBHK.Utility.Visual">
+    xmlns:visualUtility="clr-namespace:CBHK.Utility.Visual">
 
     <!--<SolidColorBrush x:Key="TextBox.Static.Background" Color="#FFFFFFFF" />-->
     <!--<Style x:Key="ComboBoxEditableTextBox" TargetType="{x:Type TextBox}">
@@ -72,6 +73,8 @@
     <SolidColorBrush x:Key="ComboBox.Disabled.Editable.Button.Background" Color="Transparent" />
     <SolidColorBrush x:Key="ComboBox.Disabled.Editable.Button.Border" Color="Transparent" />-->
 
+    <!--<CollectionViewSource x:Key="VectorTextComboBoxItemView" Source="{Binding DataList, RelativeSource={RelativeSource AncestorType=VectorComboBox:VectorTextComboBox}}" />-->
+
     <ItemsPanelTemplate x:Key="VectorComboBoxItemsPanelStyle">
         <VirtualizingStackPanel
             ScrollViewer.CanContentScroll="False"
@@ -84,6 +87,7 @@
 
     <DataTemplate x:Key="VectorTextComboBoxItemTemplate">
         <Grid
+            MinHeight="40"
             HorizontalAlignment="Left"
             VerticalAlignment="Center"
             FocusVisualStyle="{x:Null}">
@@ -106,8 +110,8 @@
                 Margin="5,0,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                FontFamily="{Binding Font}"
-                Text="{Binding Text, Mode=OneWay}"
+                FontFamily="{Binding FontFamily}"
+                Text="{Binding Text}"
                 TextAlignment="Center"
                 TextTrimming="CharacterEllipsis"
                 TextWrapping="NoWrap">
@@ -618,7 +622,8 @@
                 AllowsTransparency="true"
                 IsOpen="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource Mode=TemplatedParent}}"
                 Placement="Center"
-                PopupAnimation="{DynamicResource {x:Static SystemParameters.ComboBoxPopupAnimationKey}}">
+                PopupAnimation="{DynamicResource {x:Static SystemParameters.ComboBoxPopupAnimationKey}}"
+                StaysOpen="True">
                 <theme:SystemDropShadowChrome
                     x:Name="shadow"
                     MinWidth="{Binding ActualWidth, ElementName=templateRoot}"
@@ -710,15 +715,22 @@
                                         Padding="2,0,0,0"
                                         HorizontalContentAlignment="Left"
                                         VerticalContentAlignment="Center"
-                                        utility:TextSizeHelper.AutoFontSize="True"
+                                        visualUtility:TextSizeHelper.AutoFontSize="True"
                                         Background="#313233"
                                         BorderBrush="#1E1E1F"
                                         Foreground="{Binding SearchBoxForeground, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
                                         HorizontalScrollBarVisibility="Auto"
                                         Style="{DynamicResource VectorTextBoxStyle}"
+                                        Text="{Binding SearchText, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}, UpdateSourceTrigger=PropertyChanged}"
                                         Visibility="{Binding SearchBoxVisibility, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
                                         WaterMarkerBrush="Gray"
-                                        WaterMarkerText="搜索成员" />
+                                        WaterMarkerText="搜索成员">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="PreviewKeyDown">
+                                                <behaviors:CallMethodAction MethodName="SearchBox_PreviewKeyDown" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorComboBox:VectorTextComboBox}}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </Input:VectorTextBox>
                                 </Grid>
                             </Border>
                             <Container:VectorScrollViewer

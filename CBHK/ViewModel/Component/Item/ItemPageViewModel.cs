@@ -2,10 +2,10 @@
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
-using CBHK.Interface;
+using CBHK.Interface.Visual;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Item;
 using CBHK.View.Generator;
@@ -436,8 +436,8 @@ namespace CBHK.ViewModel.Component.Item
             {
                 if (Directory.Exists(Path.GetDirectoryName(saveFileDialog.FileName)))
                     File.WriteAllText(saveFileDialog.FileName, Result);
-                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\ItemView\\");
-                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\ItemView\\" + Path.GetFileName(saveFileDialog.FileName), Result);
+                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\itemView\\");
+                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\itemView\\" + Path.GetFileName(saveFileDialog.FileName), Result);
             }
         }
 
@@ -493,7 +493,7 @@ namespace CBHK.ViewModel.Component.Item
                 //    Result = "give @p " + CurrentItemID + nbt + " " + data?.ItemCount.LeftValue;
             }
             else
-                Result = "summon item" + " ~ ~ ~ {ItemView:" + nbt + "}";
+                Result = "summon item" + " ~ ~ ~ {itemView:" + nbt + "}";
 
             if (CurrentMinVersion < 1130 /*&& (common.ItemNameValue.Length > 0 || common.ItemLoreValue.Length > 0)*/)
                 Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + Result + @"\\\""}\""}}""}}";

@@ -1,6 +1,7 @@
 ﻿using CBHK.Common.Utility;
 using CBHK.CustomControl.JsonTreeViewComponent;
-using CBHK.Interface;
+using CBHK.Interface.Data;
+using CBHK.Interface.Utility;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.ViewModel.Common;

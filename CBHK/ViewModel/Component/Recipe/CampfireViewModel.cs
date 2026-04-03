@@ -17,9 +17,9 @@ using CBHK.Model.Common;
 using CBHK.View.Component.Recipe;
 using CBHK.Domain;
 using System.Collections.Generic;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.Utility.Common;
-using CBHK.Interface;
+using CBHK.Interface.Visual;
 
 namespace CBHK.ViewModel.Component.Recipe
 {

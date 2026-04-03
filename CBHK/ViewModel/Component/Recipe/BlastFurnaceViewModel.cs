@@ -1,8 +1,8 @@
 ﻿using CBHK.Domain;
-using CBHK.Interface;
+using CBHK.Interface.Visual;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View.Component.Recipe;
 using CBHK.ViewModel.Generator;
 using CommunityToolkit.Mvvm.ComponentModel;

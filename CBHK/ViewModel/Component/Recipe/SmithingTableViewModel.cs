@@ -1,7 +1,7 @@
 ﻿using CBHK.Domain;
-using CBHK.Interface;
+using CBHK.Interface.Visual;
 using CBHK.Model.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;

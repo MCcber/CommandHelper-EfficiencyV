@@ -1,7 +1,7 @@
 ﻿using CBHK.Common.Utility;
 using CBHK.CustomControl.Container;
 using CBHK.Model.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Generator;
 using CommunityToolkit.Mvvm.ComponentModel;

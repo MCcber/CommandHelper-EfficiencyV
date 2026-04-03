@@ -1,5 +1,6 @@
 ﻿using CBHK.CustomControl.Container;
-using CBHK.Interface;
+using CBHK.Interface.Data;
+using CBHK.Interface.Visual;
 using CBHK.Utility.Common;
 using System;
 using System.Collections.Generic;

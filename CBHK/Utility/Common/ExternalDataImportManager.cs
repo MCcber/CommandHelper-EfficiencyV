@@ -2,7 +2,7 @@
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Common;
 using CBHK.Model.Generator.Tag;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View.Component.Entity;
 using CBHK.View.Component.FireworkRocket;
 using CBHK.View.Component.Item;
@@ -66,10 +66,10 @@ namespace CBHK.Utility.Common
                         {
                             switch (item.DataType)
                             {
-                                case "ItemView":
+                                case "itemView":
                                     context.Items.Add(id.ToString());
                                     break;
-                                case "Block&ItemView":
+                                case "Block&itemView":
                                     context.Blocks.Add(id.ToString());
                                     break;
                                 case "EntityView":
@@ -788,7 +788,7 @@ namespace CBHK.Utility.Common
             {
                 #region 插入物品ID
                 JObject resultObj = JObject.Parse(result);
-                if (resultObj.SelectToken("ItemView") is not JObject)
+                if (resultObj.SelectToken("itemView") is not JObject)
                 {
                     if (!data.StartsWith('{') && !data.EndsWith('}'))
                     {
@@ -798,7 +798,7 @@ namespace CBHK.Utility.Common
                     }
                 }
                 else
-                    if (resultObj.SelectToken("ItemView") is JObject itemObj)
+                    if (resultObj.SelectToken("itemView") is JObject itemObj)
                     resultObj = JObject.Parse(itemObj.ToString());
                 result = Regex.Replace(resultObj.ToString(), @"\s+", "");
                 #endregion
@@ -854,7 +854,7 @@ namespace CBHK.Utility.Common
 
             try
             {
-                JToken itemTagID = JObject.Parse(nbtData).SelectToken("ItemView.oldID");
+                JToken itemTagID = JObject.Parse(nbtData).SelectToken("itemView.oldID");
                 itemTagID ??= JObject.Parse(nbtData).SelectToken("oldID");
                 if (itemTagID is not null && itemID.Length == 0)
                     itemID = itemTagID.ToString();
@@ -985,7 +985,7 @@ namespace CBHK.Utility.Common
 
             try
             {
-                JToken itemTagID = JObject.Parse(nbtData).SelectToken("ItemView.oldID");
+                JToken itemTagID = JObject.Parse(nbtData).SelectToken("itemView.oldID");
             }
             catch
             {

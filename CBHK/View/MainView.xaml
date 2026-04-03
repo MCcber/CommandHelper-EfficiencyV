@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Common="clr-namespace:CBHK.View.Common"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:SkeletonScreen="clr-namespace:CBHK.CustomControl.SkeletonScreen"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
@@ -704,8 +703,8 @@
                 <Common:SettingsView />
             </Container:VectorIconTextTabItem>
             <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItemStyle}">
-                <Grid>
-                    <Container:TimelineToolContainer Background="Transparent" Style="{DynamicResource TimelineToolContainerStyle}" />
+                <Grid x:Name="grid">
+                    <!--<Container:TimelineToolContainer Background="Transparent" Style="{DynamicResource TimelineToolContainerStyle}" />-->
                 </Grid>
             </Container:VectorIconTextTabItem>
         </Container:VectorTabControl>

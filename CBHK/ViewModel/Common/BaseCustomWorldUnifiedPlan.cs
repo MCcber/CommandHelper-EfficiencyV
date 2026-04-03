@@ -20,8 +20,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using CBHK.Common.Utility;
-using CBHK.Interface;
 using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface.Data;
 
 namespace CBHK.ViewModel.Common
 {

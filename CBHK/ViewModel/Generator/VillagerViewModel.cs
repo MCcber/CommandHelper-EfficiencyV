@@ -21,7 +21,7 @@ using CBHK.ViewModel.Component.Villager;
 using CBHK.Model.Common;
 using CBHK.View.Component.Villager;
 using CBHK.Domain;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.Utility.Common;
 using CBHK.CustomControl.VectorComboBox;
 

@@ -1,9 +1,9 @@
 ﻿using CBHK.CustomControl.TextElement;
 using CBHK.CustomControl.VectorComboBox;
-using CBHK.Interface;
+using CBHK.Interface.Visual;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Compoment.WrittenBook;
 using CommunityToolkit.Mvvm.ComponentModel;

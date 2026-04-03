@@ -8,7 +8,6 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/VectorSlider.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TimelineClip.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TimelineKeyFrame.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/RichTreeViewItem.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TagRichTextBox.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

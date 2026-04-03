@@ -3,7 +3,7 @@ using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.FireworkRocket;
 using CBHK.View.Generator;

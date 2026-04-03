@@ -2,7 +2,7 @@
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Item;
 using CBHK.ViewModel.Component.Item;
@@ -248,11 +248,11 @@ namespace CBHK.ViewModel.Generator
             {
                 if (Directory.Exists(openFolderDialog.FolderName))
                 {
-                    Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\ItemView\\");
+                    Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\itemView\\");
                     for (int i = 0; i < Result.Count; i++)
                     {
                         _ = File.WriteAllTextAsync(openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
-                        _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\ItemView\\" + FileNameList[i] + ".command", Result[i]);
+                        _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\itemView\\" + FileNameList[i] + ".command", Result[i]);
                     }
                 }
             }

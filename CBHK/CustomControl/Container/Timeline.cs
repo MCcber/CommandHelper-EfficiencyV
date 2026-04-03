@@ -1,10 +1,10 @@
 ﻿using CBHK.CustomControl.Input;
-using CBHK.Interface;
+using CBHK.Interface.Data;
+using CBHK.Interface.Visual;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using MathNet.Numerics.Interpolation;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

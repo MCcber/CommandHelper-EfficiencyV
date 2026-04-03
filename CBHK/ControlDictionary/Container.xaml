@@ -17,7 +17,7 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/MessageTipItemTemplate.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/TextToolTip.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/RichToolTip.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/TreeViewWithScrollBar.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/ListBoxWithScrollViewer.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorTreeView.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorTreeViewItem.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

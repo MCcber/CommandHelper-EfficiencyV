@@ -1,0 +1,189 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:localContext="clr-namespace:CBHK.Utility.Visual.TreeView">
+
+    <!--  层级垂线长度转换器  -->
+    <localContext:TreeViewLineConverter x:Key="LineConverter" />
+
+    <Style x:Key="ExpandCollapseToggleStyle" TargetType="ToggleButton">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid
+                        Width="20"
+                        Height="20"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        SnapsToDevicePixels="False"
+                        UseLayoutRounding="True">
+                        <Viewbox Margin="0,0,0,5" VerticalAlignment="Center">
+                            <Path
+                                x:Name="arrowRight"
+                                VerticalAlignment="Center"
+                                Fill="Black"
+                                RenderOptions.BitmapScalingMode="Unspecified">
+                                <Path.Data>
+                                    M562.005333 512l-211.2-211.2 60.330667-60.288L682.666667 512l-271.530667 271.530667-60.330667-60.373334 211.2-211.2z
+                                </Path.Data>
+                            </Path>
+                        </Viewbox>
+                        <Viewbox Margin="0,0,0,5" VerticalAlignment="Center">
+                            <Path
+                                x:Name="arrowDown"
+                                VerticalAlignment="Center"
+                                Fill="Black"
+                                RenderOptions.BitmapScalingMode="Unspecified"
+                                Visibility="Collapsed">
+                                <Path.Data>
+                                    M512 561.962667l211.2-211.2 60.330667 60.373333L512 682.666667 240.469333 411.136 300.8 350.805333l211.2 211.2z
+                                </Path.Data>
+                            </Path>
+                        </Viewbox>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="arrowRight" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="arrowDown" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="VectorTreeViewItemContainerStyle" TargetType="{x:Type Container:VectorTreeViewItem}">
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+        <Setter Property="Padding" Value="1,0,0,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Container:VectorTreeViewItem}">
+                    <Grid x:Name="grid" Background="{TemplateBinding Background}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="5" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="60" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <!--  Connecting Lines  -->
+                        <Rectangle
+                            Grid.Row="0"
+                            Grid.Column="3"
+                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=TreeView}}"
+                            Height="1"
+                            Margin="0,0,0,0"
+                            VerticalAlignment="Top"
+                            Fill="{TemplateBinding ConnectingLineBrush}"
+                            SnapsToDevicePixels="True"
+                            Stroke="{TemplateBinding ConnectingLineBrush}"
+                            Visibility="{Binding HorizontalTopLineVisibility, Mode=OneWay}" />
+                        <Rectangle
+                            Grid.Row="0"
+                            Grid.Column="3"
+                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=TreeView}}"
+                            Height="1"
+                            Margin="0,0,0,0"
+                            VerticalAlignment="Bottom"
+                            Fill="{TemplateBinding ConnectingLineBrush}"
+                            SnapsToDevicePixels="True"
+                            Stroke="{TemplateBinding ConnectingLineBrush}"
+                            Visibility="{Binding HorizontalBottomLineVisibility, Mode=OneWay}" />
+                        <Rectangle
+                            Grid.RowSpan="2"
+                            Grid.Column="0"
+                            Width="1"
+                            Margin="4,40,0,0"
+                            Fill="{TemplateBinding ConnectingLineBrush}"
+                            SnapsToDevicePixels="true"
+                            Stroke="{TemplateBinding ConnectingLineBrush}">
+                            <Rectangle.Height>
+                                <MultiBinding Converter="{StaticResource LineConverter}">
+                                    <MultiBinding.Bindings>
+                                        <Binding Path="ActualHeight" RelativeSource="{RelativeSource AncestorType=TreeView}" />
+                                        <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=TreeView}" />
+                                        <Binding RelativeSource="{RelativeSource TemplatedParent}" />
+                                        <Binding RelativeSource="{RelativeSource Self}" />
+                                        <Binding ElementName="Expander" Path="IsChecked" />
+                                    </MultiBinding.Bindings>
+                                </MultiBinding>
+                            </Rectangle.Height>
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Children.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <ToggleButton
+                            x:Name="Expander"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            ClickMode="Press"
+                            IsChecked="{Binding Path=IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
+                            Style="{StaticResource ExpandCollapseToggleStyle}" />
+                        <ContentPresenter
+                            x:Name="PART_Header"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="2,0,0,0"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            ContentSource="Header" />
+                        <ItemsPresenter
+                            x:Name="ItemsHost"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsExpanded" Value="false">
+                            <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="HasItems" Value="false">
+                            <Setter TargetName="Expander" Property="Visibility" Value="Hidden" />
+                        </Trigger>
+                        <!--<MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="HasHeader" Value="false" />
+                                <Condition Property="Width" Value="Auto" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="PART_Header" Property="MinWidth" Value="75" />
+                        </MultiTrigger>-->
+                        <!--<MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="HasHeader" Value="false" />
+                                <Condition Property="Height" Value="Auto" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="PART_Header" Property="MinHeight" Value="19" />
+                        </MultiTrigger>-->
+                        <Trigger Property="IsSelected" Value="true">
+                            <Setter TargetName="grid" Property="Background" Value="#8A8A8A" />
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsSelected" Value="true" />
+                                <Condition Property="IsSelectionActive" Value="false" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="Foreground" Value="White" />
+                        </MultiTrigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

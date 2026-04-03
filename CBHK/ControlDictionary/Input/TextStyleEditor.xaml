@@ -5,9 +5,10 @@
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:model="clr-namespace:CBHK.Model.Common"
     xmlns:system="clr-namespace:System;assembly=mscorlib"
     xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
-    xmlns:utility="clr-namespace:CBHK.Utility.Visual">
+    xmlns:visualUtility="clr-namespace:CBHK.Utility.Visual">
 
     <!--<SolidColorBrush x:Key="TextBox.Static.Background" Color="#FFFFFFFF" />-->
     <!--<Style x:Key="ComboBoxEditableTextBox" TargetType="{x:Type TextBox}">
@@ -75,11 +76,63 @@
 
     <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
-    <DataTemplate x:Key="DefaultTextStyleEditorSelectionTemplate">
-        <ContentControl Content="{Binding}">
-            <ContentControl.Resources />
-        </ContentControl>
+    <CollectionViewSource x:Key="TextStyleEditorBoxItemView" Source="{Binding DataList, IsAsync=True}" />
+
+    <DataTemplate x:Key="TextStyleEditorItemTemplate">
+        <TextBlock
+            Margin="5,0,0,0"
+            VerticalAlignment="Center"
+            visualUtility:TextBlockInlineHelper.BindableInlines="{Binding InlineList}"
+            TextAlignment="Left"
+            TextTrimming="CharacterEllipsis"
+            TextWrapping="NoWrap" />
     </DataTemplate>
+
+    <!--<DataTemplate x:Key="TextStyleEditorItemTemplate">
+        <Grid
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            FocusVisualStyle="{x:Null}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.Height>
+                <Binding
+                    FallbackValue="40"
+                    Path="ActualHeight"
+                    RelativeSource="{RelativeSource AncestorType={x:Type Input:TextStyleEditor}}" />
+            </Grid.Height>
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="0"
+                Margin="5,0,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                visualUtility:TextBlockInlineHelper.BindableInlines="{Binding InlineList}"
+                FontFamily="{Binding FontFamily}"
+                TextAlignment="Center"
+                TextTrimming="CharacterEllipsis"
+                TextWrapping="NoWrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{Binding MemberBrush}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type model:TextStyleEditorItem}}}" Value="{x:Null}">
+                                <Setter Property="Foreground" Value="{Binding DisplayPanelBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type model:TextStyleEditorItem}}}" Value="{x:Static DependencyProperty.UnsetValue}">
+                                <Setter Property="Foreground" Value="{Binding DisplayPanelBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
+    </DataTemplate>-->
 
     <system:String x:Key="DefaultInlineTextStylePreset">
         点击选择文本风格
@@ -109,6 +162,7 @@
     <Style x:Key="TextStyleEditorItemContainerStyle" TargetType="{x:Type ComboBoxItem}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="IsSelected" Value="{Binding IsSelected}" />
         <Setter Property="Margin" Value="0.5,0.25,0.5,0.25" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="VerticalContentAlignment" Value="Stretch" />
@@ -634,16 +688,23 @@
                                         Height="35"
                                         Padding="2.5,0,0,0"
                                         HorizontalAlignment="Stretch"
-                                        utility:TextSizeHelper.AutoFontSize="True"
+                                        visualUtility:TextSizeHelper.AutoFontSize="True"
                                         Background="#313233"
                                         BorderBrush="#1E1E1F"
-                                        Foreground="{Binding SearchBoxForeground, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
+                                        Foreground="{Binding SearchBoxForeground, RelativeSource={RelativeSource AncestorType=Input:TextStyleEditor}}"
                                         HorizontalScrollBarVisibility="Auto"
                                         Style="{DynamicResource VectorTextBoxStyle}"
+                                        Text="{Binding SearchText, RelativeSource={RelativeSource AncestorType=Input:TextStyleEditor}, UpdateSourceTrigger=PropertyChanged}"
                                         Visibility="{Binding SearchBoxVisibility, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
                                         WaterMarkerBrush="{TemplateBinding SearchBoxForeground}"
                                         WaterMarkerMargin="5,0,0,0"
-                                        WaterMarkerText="搜索成员" />
+                                        WaterMarkerText="搜索成员">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="PreviewKeyDown">
+                                                <behaviors:CallMethodAction MethodName="SearchBox_PreviewKeyDown" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:TextStyleEditor}}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </Input:VectorTextBox>
                                     <Grid Grid.Row="2" Grid.Column="0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -748,6 +809,7 @@
                                             x:Name="colorPicker"
                                             Title="设置文本颜色"
                                             Grid.Column="6"
+                                            OriginBottomHeight="4"
                                             Style="{DynamicResource VectorColorPickerStyle}" />
                                         <VectorButton:VectorFlatIconTextButton
                                             Grid.Column="7"
@@ -797,7 +859,7 @@
                                             Grid.Column="0"
                                             HorizontalAlignment="Stretch"
                                             Panel.ZIndex="1"
-                                            utility:TextSizeHelper.AutoFontSize="True"
+                                            visualUtility:TextSizeHelper.AutoFontSize="True"
                                             AcceptsReturn="False"
                                             Background="#313233"
                                             Foreground="{TemplateBinding EditorBoxForeground}"
@@ -935,6 +997,8 @@
         <Setter Property="Padding" Value="6,3,5,3" />
         <Setter Property="ScrollViewer.PanningMode" Value="Both" />
         <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
+        <Setter Property="ItemsSource" Value="{Binding Source={StaticResource TextStyleEditorBoxItemView}, IsAsync=True}" />
+        <Setter Property="ItemTemplate" Value="{DynamicResource TextStyleEditorItemTemplate}" />
         <Setter Property="ItemContainerStyle" Value="{DynamicResource TextStyleEditorItemContainerStyle}" />
         <Setter Property="ItemsPanel" Value="{DynamicResource TextStyleEditorItemsPanelStyle}" />
         <Setter Property="Template" Value="{DynamicResource TextStyleEditorTemplate}" />

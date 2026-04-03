@@ -2,9 +2,9 @@
 using CBHK.CustomControl.VectorButton;
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
-using CBHK.Interface;
+using CBHK.Interface.Visual;
 using CBHK.Model.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.FireworkRocket;
 using CBHK.View.Generator;
@@ -522,9 +522,9 @@ namespace CBHK.ViewModel.Component.FireworkRocket
             if (ImportMode)
                 await Task.Run(() =>
             {
-                Give = ExternallyReadEntityData["ItemView"] is null;
-                JObject Explosion = ExternallyReadEntityData.SelectToken("ItemView.tag.Explosion") as JObject;
-                JArray Explosions = ExternallyReadEntityData.SelectToken("ItemView.tag.Fireworks.Explosions") as JArray;
+                Give = ExternallyReadEntityData["itemView"] is null;
+                JObject Explosion = ExternallyReadEntityData.SelectToken("itemView.tag.Explosion") as JObject;
+                JArray Explosions = ExternallyReadEntityData.SelectToken("itemView.tag.Fireworks.Explosions") as JArray;
                 GeneratorFireStar = Explosion is not null;
 
                 if (Give)
@@ -548,13 +548,13 @@ namespace CBHK.ViewModel.Component.FireworkRocket
 
                 colors = Explosion.SelectToken("Colors") as JArray;
                 fadeColors = Explosion.SelectToken("FadeColorList") as JArray;
-                flight = ExternallyReadEntityData.SelectToken("ItemView.Flight");
+                flight = ExternallyReadEntityData.SelectToken("itemView.Flight");
                 flicker = Explosion.SelectToken("Flicker");
                 trail = Explosion.SelectToken("Trail");
                 type = Explosion.SelectToken("Type");
-                life = ExternallyReadEntityData.SelectToken("ItemView.Life");
-                lifeTime = ExternallyReadEntityData.SelectToken("ItemView.LifeTime");
-                shotAtAngle = ExternallyReadEntityData.SelectToken("ItemView.ShotAtAngle");
+                life = ExternallyReadEntityData.SelectToken("itemView.Life");
+                lifeTime = ExternallyReadEntityData.SelectToken("itemView.LifeTime");
+                shotAtAngle = ExternallyReadEntityData.SelectToken("itemView.ShotAtAngle");
 
                 #region 添加主淡入颜色和淡出颜色集合
                 FireworkRocketPageView page = sender as FireworkRocketPageView;
@@ -1050,12 +1050,12 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 if (!GeneratorFireStar)
                 {
                     Result = "oldID:\"minecraft:firework_rocket\",Count:1b,tag:{Fireworks:{" + Result + "}},";
-                    Result = "summon item ~ ~ ~ {ItemView:{" + (LifeTimeString + LifeString + FlyAngleString + Result + FireworkDurationString).Trim(',') + "}}";
+                    Result = "summon item ~ ~ ~ {itemView:{" + (LifeTimeString + LifeString + FlyAngleString + Result + FireworkDurationString).Trim(',') + "}}";
                 }
                 else
                 {
                     Result = "oldID:\"minecraft:firework_star\",Count:1b,tag:{" + Result + "},";
-                    Result = "summon item ~ ~ ~ {ItemView:{" + Result + "}}";
+                    Result = "summon item ~ ~ ~ {itemView:{" + Result + "}}";
                 }
             }
 
@@ -1120,12 +1120,12 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 if (!GeneratorFireStar)
                 {
                     Result = "oldID:\"minecraft:firework_rocket\",Count:1b,tag:{Fireworks:{" + Result + "}},";
-                    Result = "summon item ~ ~ ~ {ItemView:{" + (LifeTimeString + LifeString + FlyAngleString + Result + FireworkDurationString).Trim(',') + "}}";
+                    Result = "summon item ~ ~ ~ {itemView:{" + (LifeTimeString + LifeString + FlyAngleString + Result + FireworkDurationString).Trim(',') + "}}";
                 }
                 else
                 {
                     Result = "oldID:\"minecraft:firework_star\",Count:1b,tag:{" + Result + "},";
-                    Result = "summon item ~ ~ ~ {ItemView:{" + Result + "}}";
+                    Result = "summon item ~ ~ ~ {itemView:{" + Result + "}}";
                 }
             }
 
