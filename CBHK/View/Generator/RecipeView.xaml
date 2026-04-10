@@ -27,6 +27,12 @@
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:CallMethodAction MethodName="RecipeView_Loaded" TargetObject="{Binding}" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+
     <Window.Resources>
         <CollectionViewSource x:Key="OriginalItemView" Source="{Binding OriginalItemList, IsAsync=True}" />
         <CollectionViewSource x:Key="CustomItemView" Source="{Binding CustomItemList, IsAsync=True}" />

@@ -27,6 +27,7 @@
                 <ControlTemplate TargetType="{x:Type VectorButton:VectorFlatTextButton}">
                     <Border
                         x:Name="border"
+                        Height="{TemplateBinding Height}"
                         Background="{TemplateBinding Background}"
                         BorderBrush="Black"
                         BorderThickness="1"

@@ -1,4 +1,6 @@
 ﻿using CBHK.Interface.Data;
+using CBHK.Model.Constant;
+using CBHK.Utility.Common;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -35,38 +37,27 @@ namespace CBHK.CustomControl.Container
         public static readonly DependencyProperty XProperty =
             DependencyProperty.Register("X", typeof(double), typeof(ContinuousKeyframeItem), new PropertyMetadata(default(double)));
 
-        public Brush OriginBackground
+        public Brush ThemeBackground
         {
-            get { return (Brush)GetValue(OriginBackgroundProperty); }
-            set { SetValue(OriginBackgroundProperty, value); }
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
         }
 
-        public static readonly DependencyProperty OriginBackgroundProperty =
-            DependencyProperty.Register("OriginBackground", typeof(Brush), typeof(ContinuousKeyframeItem), new PropertyMetadata(default(Brush)));
-
-        public Brush SelectedBackground
-        {
-            get { return (Brush)GetValue(SelectedBackgroundProperty); }
-            set { SetValue(SelectedBackgroundProperty, value); }
-        }
-
-        public static readonly DependencyProperty SelectedBackgroundProperty =
-            DependencyProperty.Register("SelectedBackground", typeof(Brush), typeof(ContinuousKeyframeItem), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(ContinuousKeyframeItem), new PropertyMetadata(default(Brush)));
         #endregion
 
         #region Method
         public ContinuousKeyframeItem()
         {
-            var originBackgroundBrushSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (originBackgroundBrushSource.BaseValueSource is BaseValueSource.Default || originBackgroundBrushSource.BaseValueSource is BaseValueSource.Style || Background is null)
-            {
-                Background = OriginBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B8BEBA"));
-            }
+            Loaded += ContinuousKeyframeItem_Loaded;
+        }
 
-            var originSelectedBackgroundBrushSource = DependencyPropertyHelper.GetValueSource(this, SelectedBackgroundProperty);
-            if (originSelectedBackgroundBrushSource.BaseValueSource is BaseValueSource.Default || originSelectedBackgroundBrushSource.BaseValueSource is BaseValueSource.Style || SelectedBackground is null)
+        private void UpdateBorderColorByBackgroundColor()
+        {
+            if (ThemeBackground is SolidColorBrush solidColorBrush)
             {
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD7929"));
+                Background = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color, 0.2f));
             }
         }
 
@@ -85,6 +76,33 @@ namespace CBHK.CustomControl.Container
             };
             Canvas.SetTop(result, Canvas.GetTop(this));
             return result;
+        }
+        #endregion
+
+        #region Event
+        private void ContinuousKeyframeItem_Loaded(object sender, RoutedEventArgs e)
+        {
+            SetResourceReference(ThemeBackgroundProperty, Theme.TextButtonBackground);
+            UpdateBorderColorByBackgroundColor();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
+        }
+
+        protected override void OnChecked(RoutedEventArgs e)
+        {
+            base.OnChecked(e);
+        }
+
+        protected override void OnUnchecked(RoutedEventArgs e)
+        {
+            base.OnUnchecked(e);
         }
         #endregion
     }

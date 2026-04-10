@@ -84,7 +84,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Property
-        public MessagePopup MessagePopup { get; set; } = new();
+        public MessagePopup MessagePopup { get; set; }
         /// <summary>
         /// 原版物品库
         /// </summary>
@@ -191,6 +191,7 @@ namespace CBHK.ViewModel.Generator
             );
 
             List<string> HaveNoIImageList = [];
+
             foreach (var item in ItemIDAndNameMap)
             {
                 if (!File.Exists(ImageSetFolderPath + item.Key + ".png") && !File.Exists(ImageSetFolderPath + item.Key + "_spawn_egg.png"))
@@ -353,6 +354,14 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Event
+        public void RecipeView_Loaded(object sender,RoutedEventArgs e)
+        {
+            if(MessagePopup is null && sender is Window window)
+            {
+                MessagePopup = new(window);
+            }
+        }
+
         /// <summary>
         /// 订阅原版物品库过滤事件
         /// </summary>

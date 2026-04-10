@@ -23,9 +23,7 @@ namespace CBHK.Utility.Common
                 .Cast<Enum>()
                 .Select(e => new VectorTextComboBoxItem()
                 {
-                    Text = e.ToString(),
-                    DisplayPanelBrush = DisplayPanelBrushKey,
-                    MemberBrush = MemberBrushKey
+                    Text = e.ToString()
                 }).ToList();
         }
         #endregion

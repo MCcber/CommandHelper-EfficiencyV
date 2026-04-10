@@ -40,9 +40,10 @@ namespace CBHK.ViewModel.Generator
         public ObservableCollection<VectorRichTabItem> _signList = [
             new VectorRichTabItem()
             {
-                Header = "acacia",
+                Title = "acacia",
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style
             }
         ];
 

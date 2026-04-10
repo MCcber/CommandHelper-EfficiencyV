@@ -3,6 +3,8 @@ using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.Domain.Model.Database;
+using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
@@ -10,8 +12,12 @@ using System.Collections.ObjectModel;
 using System.Drawing.Text;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace CBHK.ViewModel.Common
 {
@@ -55,10 +61,101 @@ namespace CBHK.ViewModel.Common
         #region Method
         public SettingsViewModel(CBHKDataContext Context)
         {
-            #region Init
             context = Context;
             config = context.EnvironmentConfigSet.First();
-            #endregion
+
+            if (config is not null)
+            {
+                SelectedStateString = config.Visibility;
+                SelectedVisualTypeString = config.VisualType;
+                SelectedThemeTypeString = config.ThemeType;
+                SelectedWindowCornerPreferenceTypeString = config.CornerPreferenceType;
+            }
+        }
+
+        private async Task SwitchThemeWithAdornerAsync(Window window, string newThemeUri)
+        {
+            // A. 抓拍当前（旧）界面的快照
+            var snapshot = CaptureWindowSnapshot(window);
+
+            // B. 创建并挂载遮罩层
+            var adorner = new ThemeTransitionAdorner(window.Content as UIElement, snapshot);
+            var layer = AdornerLayer.GetAdornerLayer(window.Content as UIElement);
+            layer.Add(adorner);
+
+            // C. 【极其重要】强制让 UI 线程把这个遮罩层画出来
+            // 如果不 await 这一步，ApplyNewTheme 会瞬间修改界面，导致快照还没盖上去界面就变了
+            await Dispatcher.Yield(DispatcherPriority.Render);
+            await Task.Delay(10);
+
+            // D. 启动动画（不加 await），让圆圈开始扩散
+            var animTask = adorner.PlayRevealAnimationAsync(TimeSpan.FromMilliseconds(500));
+
+            // E. 此时底层换肤。虽然会有短暂卡顿，但因为上面盖着旧快照，用户看不见跳变
+            ApplyNewTheme(newThemeUri);
+
+            // F. 等待动画任务彻底完成（圆圈扩散到全屏）
+            await animTask;
+        }
+
+        private static Brush CaptureWindowSnapshot(Window window)
+        {
+            // 1. 获取 DPI 缩放比例，保证在高 DPI 屏幕下截屏不模糊或错位
+            var dpiX = 96.0;
+            var dpiY = 96.0;
+            var presentationSource = PresentationSource.FromVisual(window);
+            if (presentationSource != null && presentationSource.CompositionTarget != null)
+            {
+                dpiX = 96.0 * presentationSource.CompositionTarget.TransformToDevice.M11;
+                dpiY = 96.0 * presentationSource.CompositionTarget.TransformToDevice.M22;
+            }
+
+            // 2. 计算实际的像素尺寸
+            int pixelWidth = (int)(window.ActualWidth * (dpiX / 96.0));
+            int pixelHeight = (int)(window.ActualHeight * (dpiY / 96.0));
+
+            if (pixelWidth <= 0 || pixelHeight <= 0) return Brushes.Transparent;
+
+            // 3. 渲染目标位图 (真正的静态快照)
+            RenderTargetBitmap rtb = new(pixelWidth, pixelHeight, dpiX, dpiY, PixelFormats.Pbgra32);
+            rtb.Render(window);
+
+            // 4. 创建 ImageBrush
+            var brush = new ImageBrush(rtb)
+            {
+                Stretch = Stretch.Fill, // 使用 Fill 铺满窗口
+                AlignmentX = AlignmentX.Left,
+                AlignmentY = AlignmentY.Top
+            };
+
+            // 5. 冻结画刷以提升性能并切断与原 UI 的任何潜在联系
+            brush.Freeze();
+
+            return brush;
+        }
+
+        private static void ApplyNewTheme(string newThemeUri)
+        {
+            var dictionaries = Application.Current.Resources.MergedDictionaries;
+
+            // 1. 找出所有带有 "Theme" 关键字的字典（不分深浅，全部清除）
+            var existingThemes = dictionaries
+                .Where(d => d.Source != null && d.Source.OriginalString.Contains("Theme.xaml"))
+                .ToList();
+
+            foreach (var theme in existingThemes)
+            {
+                dictionaries.Remove(theme);
+            }
+
+            // 2. 添加目标主题
+            if (!string.IsNullOrEmpty(newThemeUri))
+            {
+                dictionaries.Add(new ResourceDictionary
+                {
+                    Source = new Uri(newThemeUri, UriKind.RelativeOrAbsolute)
+                });
+            }
         }
         #endregion
 
@@ -67,10 +164,6 @@ namespace CBHK.ViewModel.Common
         {
             PropertyChanged += SettingsViewModel_PropertyChanged;
             isLoaded = true;
-            SelectedStateString = config.Visibility;
-            SelectedThemeTypeString = config.ThemeType;
-            SelectedVisualTypeString = config.VisualType;
-            SelectedWindowCornerPreferenceTypeString = config.CornerPreferenceType;
         }
 
         public void FontFamilyComboBox_Loaded(object sender,RoutedEventArgs e)
@@ -134,7 +227,7 @@ namespace CBHK.ViewModel.Common
             #endregion
         }
 
-        private void SettingsViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private async void SettingsViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if(!isLoaded || isPropertyChanging)
             {
@@ -165,12 +258,13 @@ namespace CBHK.ViewModel.Common
                                 isPropertyChanging = true;
                                 targetView.ThemeType = windowThemeType;
                                 config.ThemeType = SelectedThemeType.Text;
+                                await SwitchThemeWithAdornerAsync(targetView, SelectedThemeType.Text == "Light" ? Theme.LightTheme : Theme.DarkTheme);
                             }
                             break;
                         }
                     case "SelectedState":
                         {
-                            config.Visibility = SelectedState.Text;
+                            config.Visibility = SelectedState.ToString();
                             break;
                         }
                     case "SelectedWindowCornerPreferenceType":

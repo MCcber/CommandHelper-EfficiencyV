@@ -7,7 +7,7 @@ namespace CBHK.Utility.Data
     public class NumericTemplateSelector : DataTemplateSelector
     {
         #region Field
-        private DataTemplate numericTemplate = Application.Current.Resources["CommonNumberTemplate"] as DataTemplate;
+        private DataTemplate numericTemplate;
         #endregion
 
         #region Method
@@ -16,6 +16,8 @@ namespace CBHK.Utility.Data
         #region Event
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
+            numericTemplate ??= Application.Current.Resources["CommonNumberTemplate"] as DataTemplate;
+
             if (item is INumberItem)
             {
                 return numericTemplate;

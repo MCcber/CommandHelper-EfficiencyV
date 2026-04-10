@@ -16,13 +16,19 @@
     <treeviewVisualUtility:TreeViewControlHeightConverter x:Key="TreeViewControlHeightConverter" />
 
     <DataTemplate DataType="{x:Type model:ParentItem}">
-        <TextBlock
-            Margin="5,0,0,0"
-            Background="{Binding Background}"
-            Foreground="{Binding Foreground}"
-            IsHitTestVisible="False"
-            Text="{Binding Key}"
-            TextAlignment="Left" />
+        <DockPanel LastChildFill="False">
+            <TextBlock
+                Margin="5,0,0,0"
+                Background="{Binding Background}"
+                Foreground="{Binding Foreground}"
+                IsHitTestVisible="False"
+                Text="{Binding Key}"
+                TextAlignment="Left" />
+            <Container:BindableStackPanel
+                ItemTemplateSelector="{StaticResource NumericTemplateSelector}"
+                ItemsSource="{Binding ItemList}"
+                Orientation="Horizontal" />
+        </DockPanel>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type model:EnumParentItem}">
@@ -38,9 +44,17 @@
                 Height="{Binding ActualHeight, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
                 DisplayMemberPath="{Binding Text}"
                 ItemsSource="{Binding ItemList}"
-                SelectedValue="{Binding Text}"
-                SelectedValuePath="{Binding Text}"
+                SelectedIndex="0"
+                SelectedValue="{Binding SelectedItem}"
+                SelectedValuePath="Text"
                 Style="{DynamicResource VectorTextComboBoxStyle}" />
+            <ItemsControl ItemTemplateSelector="{StaticResource NumericTemplateSelector}" ItemsSource="{Binding ItemList}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
         </DockPanel>
     </DataTemplate>
 
@@ -136,23 +150,17 @@
         </DockPanel>
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type model:ComboItem}">
-        <DockPanel LastChildFill="False">
-            <TextBlock
-                Margin="5,0,0,0"
-                Background="{Binding Background}"
-                Foreground="{Binding Foreground}"
-                IsHitTestVisible="False"
-                Text="{Binding Key}"
-                TextAlignment="Left" />
-            <VectorComboBox:VectorTextComboBox
-                Height="{Binding ActualHeight, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
-                DisplayMemberPath="{Binding Text}"
-                ItemsSource="{Binding ItemList}"
-                SelectedValue="{Binding Text}"
-                SelectedValuePath="{Binding Text}"
-                Style="{DynamicResource VectorTextComboBoxStyle}" />
-        </DockPanel>
+    <DataTemplate DataType="{x:Type model:EnumItem}">
+        <VectorComboBox:VectorTextComboBox
+            Title="{Binding Key}"
+            Height="{Binding ActualHeight, Converter={StaticResource TreeViewControlHeightConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorTreeViewItem}}"
+            Background="{Binding Background}"
+            DisplayMemberPath="{Binding Text}"
+            Foreground="{Binding Foreground}"
+            ItemsSource="{Binding ItemList}"
+            SelectedValue="{Binding SelectedItem}"
+            SelectedValuePath="Text"
+            Style="{DynamicResource VectorTextComboBoxStyle}" />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type model:ToolTipItem}">
@@ -169,18 +177,6 @@
                 Stroke="{Binding IconBrush}"
                 StrokeThickness="1" />
         </Viewbox>
-    </DataTemplate>
-
-    <DataTemplate DataType="{x:Type model:CompositeItem}">
-        <StackPanel>
-            <ItemsControl ItemTemplateSelector="{StaticResource NumericTemplateSelector}" ItemsSource="{Binding ItemList}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
-        </StackPanel>
     </DataTemplate>
 
     <HierarchicalDataTemplate

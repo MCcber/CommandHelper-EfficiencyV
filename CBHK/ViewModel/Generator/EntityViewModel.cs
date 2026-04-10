@@ -59,8 +59,9 @@ namespace CBHK.ViewModel.Generator
         public ObservableCollection<VectorRichTabItem> _entityPageList = [
             new VectorRichTabItem()
             {
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                Header = "实体",
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style,
+                Title = "实体",
                 FontWeight = FontWeights.Normal
             } ];
 

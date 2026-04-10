@@ -963,11 +963,11 @@ namespace CBHK.ViewModel.Generator
         #region 版本数据源
         [ObservableProperty]
         public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
-            new VectorTextComboBoxItem() { Text = "1.20.2",DisplayPanelBrush = Brushes.Black,MemberBrush = Brushes.White },
-            new VectorTextComboBoxItem() { Text = "1.13.0",DisplayPanelBrush = Brushes.Black,MemberBrush = Brushes.White },
-            new VectorTextComboBoxItem() { Text = "1.12.0",DisplayPanelBrush = Brushes.Black,MemberBrush = Brushes.White },
-            new VectorTextComboBoxItem() { Text = "1.9.0",DisplayPanelBrush = Brushes.Black,MemberBrush = Brushes.White },
-            new VectorTextComboBoxItem() { Text = "1.8.0",DisplayPanelBrush = Brushes.Black,MemberBrush = Brushes.White }
+            new VectorTextComboBoxItem() { Text = "1.20.2"},
+            new VectorTextComboBoxItem() { Text = "1.13.0"},
+            new VectorTextComboBoxItem() { Text = "1.12.0"},
+            new VectorTextComboBoxItem() { Text = "1.9.0"},
+            new VectorTextComboBoxItem() { Text = "1.8.0"}
             ];
         #endregion
 

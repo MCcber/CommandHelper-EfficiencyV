@@ -11,7 +11,7 @@ namespace CBHK.Model.TreeView
         public string Key { get; set; }
         public Brush Foreground { get; set; } = Brushes.White;
         public Brush Background { get; set; } = Brushes.Transparent;
-        public VectorTextComboBoxItem SelectedItem { get; set; }
+        public string SelectedItem { get; set; }
         public ObservableCollection<VectorTextComboBoxItem> ItemList { get; set; }
         public event EventHandler ItemChangedEvent;
     }

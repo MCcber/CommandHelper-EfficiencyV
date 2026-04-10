@@ -4,7 +4,7 @@ using System.Windows.Media;
 
 namespace CBHK.Model.TreeView
 {
-    public class DoubleItem :IBaseItem,IBaseKeyItem, INumberItem<double>, ITreeViewItem
+    public class DoubleItem : IBaseItem, IBaseKeyItem, INumberItem<double>, ITreeViewItem
     {
         public string Key { get; set; }
         public Brush Foreground { get; set; } = Brushes.Black;

@@ -4,6 +4,8 @@ namespace CBHK.Common.Model
 {
     public enum WindowVisualType
     {
+        [Description("普通")]
+        Default,
         [Description("亚克力")]
         Acrylic,
         [Description("云母")]
@@ -19,7 +21,9 @@ namespace CBHK.Common.Model
         [Description("深色")]
         Dark,
         [Description("跟随系统")]
-        FllowSystem
+        FllowSystem,
+        [Description("自定义")]
+        Custom
     }
 
     public enum WindowCornerPreference

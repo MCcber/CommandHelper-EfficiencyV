@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows;
 using CBHK.Model.Common;
@@ -14,9 +13,14 @@ namespace CBHK.Utility.Visual.MessageTip
         #endregion
 
         #region Method
-        public MessagePopup()
+        public MessagePopup(Window window = null)
         {
             AdornerLayer adornerLayer = null;
+            if(window is not null)
+            {
+                adornerLayer = AdornerLayerHelper.GetAdornerLayer(window) ?? throw new Exception("not AdornerLayer is null");
+            }
+            else
             if (Application.Current.Windows.Count > 0)
             {
                 Window win = Application.Current.Windows.OfType<Window>().FirstOrDefault(o => o.IsActive);

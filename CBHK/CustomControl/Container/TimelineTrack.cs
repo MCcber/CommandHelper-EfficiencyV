@@ -1,9 +1,9 @@
 ﻿using CBHK.Interface.Visual;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.Container
@@ -12,6 +12,17 @@ namespace CBHK.CustomControl.Container
     {
         #region Property
         public bool IsStable { get; set; }
+
+        private Visibility editorBoxVisibility = Visibility.Hidden;
+        public Visibility EditorBoxVisibility
+        {
+            get => editorBoxVisibility;
+            set
+            {
+                editorBoxVisibility = value;
+                OnPropertyChanged();
+            }
+        }
 
         private Thickness padding;
         public Thickness Padding
@@ -79,18 +90,6 @@ namespace CBHK.CustomControl.Container
             }
         }
 
-
-        private double headHeight = 0;
-        public double HeadHeight
-        {
-            get => headHeight;
-            set
-            {
-                headHeight = value;
-                OnPropertyChanged();
-            }
-        }
-
         private double height;
         public double Height
         {
@@ -119,7 +118,40 @@ namespace CBHK.CustomControl.Container
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         #endregion
 
+        #region Method
+        public TimelineTrack()
+        {
+            EditorBoxVisibility = Visibility.Hidden;
+        }
+        #endregion
+
         #region Event
+        public void EditorBox_Click(object sender,RoutedEventArgs e)
+        {
+            EditorBoxVisibility = Visibility.Visible;
+        }
+
+        public void EditorBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if(sender is TextBox textBox)
+            {
+                textBox.CaretIndex = textBox.Text.Length;
+            }
+        }
+
+        public void EditorBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            EditorBoxVisibility = Visibility.Hidden;
+        }
+
+        public void EditorBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key is System.Windows.Input.Key.Enter)
+            {
+                EditorBoxVisibility = Visibility.Hidden;
+            }
+        }
+
         public TimelineTrack Clone()
         {
             TimelineTrack result = new();

@@ -7,7 +7,7 @@ namespace CBHK.Interface.TreeView
     public interface IEnumItem
     {
         event EventHandler ItemChangedEvent;
-        public VectorTextComboBoxItem SelectedItem { get; set; }
+        public string SelectedItem { get; set; }
         public ObservableCollection<VectorTextComboBoxItem> ItemList { get; set; }
     }
 }

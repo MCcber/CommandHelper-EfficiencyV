@@ -33,7 +33,6 @@
             Margin="0,0,35,5"
             HorizontalAlignment="Stretch"
             ArrowMargin="0 0 10 0"
-            DisplayMemberPath="Text"
             ItemsSource="{utility:EnumBinding {x:Type model:LanuchState},
                                               MemberBrushKey=White,
                                               DisplayPanelBrushKey=Black}"
@@ -67,9 +66,8 @@
                 Width="35"
                 Height="40"
                 VerticalAlignment="Top"
-                Background="#D0D1D4"
                 OriginBottomHeight="3"
-                Style="{StaticResource VectorTextButtonStyle}"
+                Style="{DynamicResource VectorTextButtonStyle}"
                 Text="..." />
         </Grid>
         <VectorComboBox:VectorTextComboBox

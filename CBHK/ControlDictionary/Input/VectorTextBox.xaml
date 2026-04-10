@@ -52,7 +52,7 @@
                                 VerticalAlignment="Center"
                                 Panel.ZIndex="0"
                                 Background="Transparent"
-                                Foreground="{Binding WaterMarkerBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorTextBox}}"
+                                Foreground="{Binding WaterMarkerBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Input:VectorTextBox}}}"
                                 Text="{Binding WaterMarkerText, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorTextBox}}"
                                 TextAlignment="Center" />
                         </Grid>

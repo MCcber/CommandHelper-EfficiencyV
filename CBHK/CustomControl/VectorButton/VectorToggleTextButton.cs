@@ -1,4 +1,5 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Common;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -10,15 +11,10 @@ namespace CBHK.CustomControl.VectorButton
     {
         #region Field
         private Thickness OriginMargin;
+        private bool isUserClicking = false;
         private Brush OriginLeftTopBorderBrush;
         private Brush OriginRightBottomBorderBrush;
-        private Brush OriginBottomBorderBrush;
-        private Brush OriginCheckMarkerBrush;
         private Brush OriginBorderCornerBrush;
-        private Brush OriginForegroundBrush;
-        private Brush OriginBackgroundBrush;
-        private bool isUserClicking = false;
-        private bool lastIsCheckedValue = false;
         #endregion
 
         #region Property
@@ -51,6 +47,15 @@ namespace CBHK.CustomControl.VectorButton
 
         public static readonly DependencyProperty SelectedMarkerWidthProperty =
             DependencyProperty.Register("SelectedMarkerWidth", typeof(double), typeof(VectorToggleTextButton), new PropertyMetadata(default(double)));
+
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(VectorToggleTextButton), new PropertyMetadata(default(Brush)));
 
         public Brush CheckedMarkerBrush
         {
@@ -101,71 +106,26 @@ namespace CBHK.CustomControl.VectorButton
         #region Method
         public VectorToggleTextButton()
         {
+            BorderBrush = Brushes.Black;
+            Loaded += VectorToggleTextButton_Loaded;
             Initialized += VectorToggleTextButton_Initialized;
             SizeChanged += VectorToggleTextButton_SizeChanged;
             MouseEnter += VectorToggleTextButton_MouseEnter;
             MouseLeave += VectorToggleTextButton_MouseLeave;
         }
 
-        private void UpdateBorderColorByBackgroundColor(object sender)
+        private void UpdateBorderColorByBackgroundColor()
         {
-            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
-            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Foreground = Brushes.White;
-            }
-            var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Background = new BrushConverter().ConvertFromString("#3c8527") as Brush;
-            }
-            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
-            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                BorderBrush = Brushes.Black;
-            }
-            var originborderCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderCornerBrushProperty);
-            if (originborderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originborderCornerBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.8f);
-                BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(color);
-            }
-            var originLeftTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopBorderBrushProperty);
-            if (originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.6f);
-                LeftTopBorderBrush = OriginLeftTopBorderBrush = new SolidColorBrush(color);
-            }
-            var originRightBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
-            if (originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
-                RightBottomBorderBrush = OriginRightBottomBorderBrush = new SolidColorBrush(color);
-            }
-            var originBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, BottomBorderBrushProperty);
-            if (originBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.5f);
-                BottomBorderBrush = OriginBottomBorderBrush = new SolidColorBrush(color);
-            }
-            var originCheckMarkerBrushSource = DependencyPropertyHelper.GetValueSource(this, CheckedMarkerBrushProperty);
-            if (originCheckMarkerBrushSource.BaseValueSource is BaseValueSource.Default || originCheckMarkerBrushSource.BaseValueSource is BaseValueSource.Style || CheckedMarkerBrush is null)
-            {
-                CheckedMarkerBrush = OriginCheckMarkerBrush = Brushes.White;
-            }
+            Background = new SolidColorBrush((ThemeBackground as SolidColorBrush).Color);
 
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if (extraBottomLine is RowDefinition row)
-            {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
-            }
+            BorderCornerBrush = new SolidColorBrush(ColorTool.Lighten((Background as SolidColorBrush).Color, 0.8f));
+            LeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten((Background as SolidColorBrush).Color, 0.6f));
+            RightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten((Background as SolidColorBrush).Color, 0.4f));
+            BottomBorderBrush = new SolidColorBrush(ColorTool.Darken((Background as SolidColorBrush).Color, 0.5f));
 
-            OriginForegroundBrush ??= Foreground;
-            OriginBackgroundBrush ??= Background;
+            OriginBorderCornerBrush = BorderCornerBrush;
+            OriginLeftTopBorderBrush = LeftTopBorderBrush;
+            OriginRightBottomBorderBrush = RightBottomBorderBrush;
 
             if (IsChecked is bool value && value)
             {
@@ -179,6 +139,24 @@ namespace CBHK.CustomControl.VectorButton
         #endregion
 
         #region Event
+        private void VectorToggleTextButton_Loaded(object sender, RoutedEventArgs e)
+        {
+            SetResourceReference(ThemeBackgroundProperty, Theme.TextButtonBackground);
+            SetResourceReference(ForegroundProperty, Theme.TextBlockForeground);
+            SetResourceReference(CheckedMarkerBrushProperty, Theme.TextBlockForeground);
+
+            UpdateBorderColorByBackgroundColor();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if (e.Property == ThemeBackgroundProperty && ThemeBackground is not null)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
+        }
+
         private void VectorToggleTextButton_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             double currentWidth = ActualWidth <= 0 || ActualWidth is double.NaN ? Text.Length : ActualWidth;
@@ -225,7 +203,6 @@ namespace CBHK.CustomControl.VectorButton
             ApplyTemplate();
             BorderBrush = Brushes.Black;
             OriginMargin = Margin = new(0);
-            OriginForegroundBrush = Foreground;
 
             IsShowCheckedMarker = Visibility.Hidden;
 
@@ -237,8 +214,6 @@ namespace CBHK.CustomControl.VectorButton
             {
                 OriginBottomHeight = 6;
             }
-
-            UpdateBorderColorByBackgroundColor(sender);
 
             if (IsChecked is bool value && value)
             {
@@ -254,8 +229,7 @@ namespace CBHK.CustomControl.VectorButton
             {
                 row.Height = new(0, GridUnitType.Pixel);
             }
-            Color color = ColorTool.Darken((OriginBackgroundBrush as SolidColorBrush).Color, 0.4f);
-            Background = new SolidColorBrush(color);
+            Background = new SolidColorBrush(ColorTool.Darken((ThemeBackground as SolidColorBrush).Color, 0.4f));
             Margin = new(Margin.Left, Margin.Top + MarginTopOffset, Margin.Right, Margin.Bottom);
         }
 
@@ -270,7 +244,7 @@ namespace CBHK.CustomControl.VectorButton
             {
                 row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
-            Background = OriginBackgroundBrush;
+            Background = ThemeBackground;
             LeftTopBorderBrush = OriginLeftTopBorderBrush;
             RightBottomBorderBrush = OriginRightBottomBorderBrush;
             BorderCornerBrush = OriginBorderCornerBrush;
@@ -289,15 +263,12 @@ namespace CBHK.CustomControl.VectorButton
             {
                 row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
-            Color darkColor = ColorTool.Darken((OriginBackgroundBrush as SolidColorBrush).Color, 0.2f);
-            Background = new SolidColorBrush(darkColor);
+
+            Background = new SolidColorBrush(ColorTool.Darken((ThemeBackground as SolidColorBrush).Color, 0.2f));
             Margin = OriginMargin;
-            Color leftToplightBorderColor = ColorTool.Lighten((OriginLeftTopBorderBrush as SolidColorBrush).Color, 0.4f);
-            LeftTopBorderBrush = new SolidColorBrush(leftToplightBorderColor);
-            Color rightBottomlightBorderColor = ColorTool.Lighten((OriginRightBottomBorderBrush as SolidColorBrush).Color, 0.2f);
-            RightBottomBorderBrush = new SolidColorBrush(rightBottomlightBorderColor);
-            Color lightCornerColor = ColorTool.Lighten((OriginBorderCornerBrush as SolidColorBrush).Color, 0.2f);
-            BorderCornerBrush = new SolidColorBrush(lightCornerColor);
+            LeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten((ThemeBackground as SolidColorBrush).Color, 0.4f));
+            RightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten((ThemeBackground as SolidColorBrush).Color, 0.2f));
+            BorderCornerBrush = new SolidColorBrush(ColorTool.Lighten((ThemeBackground as SolidColorBrush).Color, 0.2f));
         }
         #endregion
     }

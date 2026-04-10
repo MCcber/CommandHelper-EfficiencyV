@@ -8,6 +8,7 @@
     <localContext:TreeViewLineConverter x:Key="LineConverter" />
 
     <Style x:Key="ExpandCollapseToggleStyle" TargetType="ToggleButton">
+        <Setter Property="Foreground" Value="Black" />
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
@@ -23,7 +24,7 @@
                             <Path
                                 x:Name="arrowRight"
                                 VerticalAlignment="Center"
-                                Fill="Black"
+                                Fill="{TemplateBinding Foreground}"
                                 RenderOptions.BitmapScalingMode="Unspecified">
                                 <Path.Data>
                                     M562.005333 512l-211.2-211.2 60.330667-60.288L682.666667 512l-271.530667 271.530667-60.330667-60.373334 211.2-211.2z
@@ -34,7 +35,7 @@
                             <Path
                                 x:Name="arrowDown"
                                 VerticalAlignment="Center"
-                                Fill="Black"
+                                Fill="{TemplateBinding Foreground}"
                                 RenderOptions.BitmapScalingMode="Unspecified"
                                 Visibility="Collapsed">
                                 <Path.Data>
@@ -73,7 +74,7 @@
                             <RowDefinition Height="45" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <!--  Connecting Lines  -->
+                        <!--#region Connecting Line And Split Lines-->
                         <Rectangle
                             Grid.Row="0"
                             Grid.Column="3"
@@ -126,6 +127,7 @@
                                 </Style>
                             </Rectangle.Style>
                         </Rectangle>
+                        <!--#endregion-->
                         <ToggleButton
                             x:Name="Expander"
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"

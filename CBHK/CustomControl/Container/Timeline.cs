@@ -359,14 +359,13 @@ namespace CBHK.CustomControl.Container
         {
             SolidColorBrush trackBackground = new((Color)ColorConverter.ConvertFromString("#CCD5F0"));
             SolidColorBrush trackHeadBackground = new((Color)ColorConverter.ConvertFromString("#CCD5F0"));
-            TimelineTrack timelineTrack = new() { Padding = new(5), TrackName = title, Foreground = Brushes.Black, Background = trackBackground,TrackHeadBackground = trackHeadBackground };
+            TimelineTrack timelineTrack = new() { Padding = new(5), TrackName = title, Foreground = Brushes.Black, Background = trackBackground, TrackHeadBackground = trackHeadBackground };
             TrackList.Add(timelineTrack);
-
             double headHeight = GetTrackHeight();
+
             foreach (var item in TrackList)
             {
                 item.Height = headHeight;
-                item.HeadHeight = headHeight;
             }
         }
 
@@ -655,7 +654,7 @@ namespace CBHK.CustomControl.Container
                     new ContinuousKeyframeItem { CurrentTime = group.Item2 },
                     KeyFrameMemberComparer);
 
-                if (targetIndex != -1)
+                if (targetIndex != -1 && SampledKeyFrameItemIndex > 0 && SampledKeyFrameItemIndex < timelineClip.InnerKeyFrameSortedList.Count)
                 {
                     SampledKeyFrameItemIndex = targetIndex;
                     SampledKeyFrameItem = timelineClip.InnerKeyFrameSortedList[SampledKeyFrameItemIndex];

@@ -276,6 +276,19 @@ namespace CBHK.CustomControl.Container
             _ = DwmSetWindowAttribute(handle, 20, ref isDarkMode, sizeof(int));
         }
 
+        private void SetDefaultBackground()
+        {
+            var handle = new WindowInteropHelper(this).Handle;
+
+            int dwmSbtNone = 0;
+            _ = DwmSetWindowAttribute(handle, 38, ref dwmSbtNone, sizeof(int));
+
+            MARGINS margins = new() { cxLeftWidth = 0, cxRightWidth = 0, cyTopHeight = 0, cyBottomHeight = 0 };
+            _ = DwmExtendFrameIntoClientArea(handle, ref margins);
+
+            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
+        }
+
         private void SetAcrylicBackground()
         {
             var handle = new WindowInteropHelper(this).Handle;
@@ -332,6 +345,11 @@ namespace CBHK.CustomControl.Container
                 case WindowVisualType.MicaAlt:
                     {
                         SetMicaAltBackground();
+                        break;
+                    }
+                default:
+                    {
+                        SetDefaultBackground();
                         break;
                     }
             }

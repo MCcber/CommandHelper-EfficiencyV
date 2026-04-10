@@ -703,9 +703,7 @@
                 <Common:SettingsView />
             </Container:VectorIconTextTabItem>
             <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItemStyle}">
-                <Grid x:Name="grid">
-                    <!--<Container:TimelineToolContainer Background="Transparent" Style="{DynamicResource TimelineToolContainerStyle}" />-->
-                </Grid>
+                <Container:TimelineToolContainer Style="{DynamicResource TimelineToolContainerStyle}" />
             </Container:VectorIconTextTabItem>
         </Container:VectorTabControl>
     </Grid>

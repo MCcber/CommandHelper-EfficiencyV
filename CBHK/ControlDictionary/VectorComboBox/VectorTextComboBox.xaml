@@ -111,169 +111,13 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 FontFamily="{Binding FontFamily}"
+                Foreground="{DynamicResource TextBlockForeground}"
                 Text="{Binding Text}"
                 TextAlignment="Center"
                 TextTrimming="CharacterEllipsis"
-                TextWrapping="NoWrap">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Setter Property="Foreground" Value="{Binding MemberBrush}" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ComboBoxItem}}}" Value="{x:Null}">
-                                <Setter Property="Foreground" Value="{Binding DisplayPanelBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ComboBoxItem}}}" Value="{x:Static DependencyProperty.UnsetValue}">
-                                <Setter Property="Foreground" Value="{Binding DisplayPanelBrush}" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
+                TextWrapping="NoWrap" />
         </Grid>
     </DataTemplate>
-
-    <Style x:Key="VectorComboBoxItemContainerStyle" TargetType="{x:Type ComboBoxItem}">
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="SnapsToDevicePixels" Value="True" />
-        <Setter Property="Margin" Value="0.5,0.25,0.5,0.25" />
-        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="VerticalContentAlignment" Value="Stretch" />
-        <Setter Property="Background" Value="#58585A" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type ComboBoxItem}">
-                    <Border
-                        x:Name="Bd"
-                        Background="{Binding ItemContainerBackground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorComboBox:VectorTextComboBox}}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}">
-                        <Grid VerticalAlignment="Center">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Grid
-                                x:Name="canvas"
-                                Grid.Column="1"
-                                MinWidth="30"
-                                MinHeight="30"
-                                Margin="0,15,0,0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                UseLayoutRounding="True"
-                                Visibility="Hidden">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="1" />
-                                    <RowDefinition Height="1" />
-                                    <RowDefinition Height="1" />
-                                    <RowDefinition Height="1" />
-                                    <RowDefinition Height="1" />
-                                    <RowDefinition Height="1" />
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                    <ColumnDefinition Width="1" />
-                                </Grid.ColumnDefinitions>
-                                <Rectangle
-                                    Grid.Row="3"
-                                    Grid.Column="0"
-                                    Width="2"
-                                    Height="2"
-                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}" />
-                                <Rectangle
-                                    Grid.Row="4"
-                                    Grid.Column="1"
-                                    Width="2"
-                                    Height="2"
-                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}" />
-                                <Rectangle
-                                    Grid.Row="5"
-                                    Grid.Column="2"
-                                    Width="2"
-                                    Height="2"
-                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}" />
-                                <Rectangle
-                                    Grid.Row="4"
-                                    Grid.Column="3"
-                                    Width="2"
-                                    Height="2"
-                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}" />
-                                <Rectangle
-                                    Grid.Row="3"
-                                    Grid.Column="4"
-                                    Width="2"
-                                    Height="2"
-                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}" />
-                                <Rectangle
-                                    Grid.Row="2"
-                                    Grid.Column="5"
-                                    Width="2"
-                                    Height="2"
-                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}" />
-                                <Rectangle
-                                    Grid.Row="1"
-                                    Grid.Column="6"
-                                    Width="2"
-                                    Height="2"
-                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}" />
-                                <Rectangle
-                                    Grid.Row="0"
-                                    Grid.Column="7"
-                                    Width="2"
-                                    Height="2"
-                                    Fill="{Binding ItemSelectedMarkerBrush, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}" />
-                            </Grid>
-                            <ContentPresenter
-                                x:Name="ContentPresenter"
-                                Grid.Column="0"
-                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                        </Grid>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsHighlighted" Value="true">
-                            <Setter TargetName="Bd" Property="Background" Value="#78797A" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="false">
-                            <Setter TargetName="Bd" Property="Background" Value="#A0A0A0" />
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="Bd" Property="Background" Value="#48494A" />
-                        </Trigger>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="canvas" Property="Visibility" Value="Visible" />
-                        </Trigger>
-                        <EventTrigger RoutedEvent="PreviewMouseDown">
-                            <EventTrigger.Actions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <ColorAnimation
-                                            FillBehavior="HoldEnd"
-                                            Storyboard.TargetName="Bd"
-                                            Storyboard.TargetProperty="Background.Color"
-                                            To="#313233"
-                                            Duration="0:0:0.2" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger.Actions>
-                        </EventTrigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-        <Style.Triggers>
-            <Trigger Property="ItemsControl.AlternationIndex" Value="0">
-                <Setter Property="Margin" Value="0.5,0.5,0.5,0.25" />
-            </Trigger>
-        </Style.Triggers>
-    </Style>
 
     <Style x:Key="VectorComboBoxToggleButton" TargetType="{x:Type VectorButton:VectorComboBoxToggleTextButton}">
         <Setter Property="OverridesDefaultStyle" Value="true" />
@@ -632,7 +476,7 @@
                     <Border
                         x:Name="dropDownBorder"
                         Background="{Binding PopupItemPanelBackground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
-                        BorderBrush="#1e1e1f"
+                        BorderBrush="Transparent"
                         BorderThickness="1">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -641,8 +485,8 @@
                             </Grid.RowDefinitions>
                             <Border
                                 Grid.Row="0"
-                                Background="#48494A"
-                                BorderBrush="Black"
+                                Background="{TemplateBinding TitleBorderBackground}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="1">
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -657,7 +501,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="2.5" />
-                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
                                             <RowDefinition Height="2.5" />
                                         </Grid.RowDefinitions>
                                         <TextBlock
@@ -671,42 +515,42 @@
                                         <Rectangle
                                             Grid.Row="0"
                                             Grid.Column="0"
-                                            Fill="#6D6D6E"
+                                            Fill="{TemplateBinding TitleLeftTopBorderBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="0"
                                             Grid.Column="1"
-                                            Fill="#6D6D6E"
+                                            Fill="{Binding TitleLeftTopBorderBrush, RelativeSource={RelativeSource AncestorType=VectorComboBox:VectorTextComboBox}}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="0"
                                             Grid.Column="2"
-                                            Fill="#7B7B7C"
+                                            Fill="{TemplateBinding TitleBorderCornerBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="1"
                                             Grid.Column="0"
-                                            Fill="#6D6D6E"
+                                            Fill="{TemplateBinding TitleLeftTopBorderBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="1"
                                             Grid.Column="2"
-                                            Fill="#5A5B5C"
+                                            Fill="{TemplateBinding TitleRightBottomBorderBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            Fill="#7B7B7C"
+                                            Fill="{TemplateBinding TitleBorderCornerBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="2"
                                             Grid.Column="1"
-                                            Fill="#5A5B5C"
+                                            Fill="{TemplateBinding TitleRightBottomBorderBrush}"
                                             IsHitTestVisible="False" />
                                         <Rectangle
                                             Grid.Row="2"
                                             Grid.Column="2"
-                                            Fill="#5A5B5C"
+                                            Fill="{TemplateBinding TitleRightBottomBorderBrush}"
                                             IsHitTestVisible="False" />
                                     </Grid>
                                     <Input:VectorTextBox
@@ -716,14 +560,14 @@
                                         HorizontalContentAlignment="Left"
                                         VerticalContentAlignment="Center"
                                         visualUtility:TextSizeHelper.AutoFontSize="True"
-                                        Background="#313233"
-                                        BorderBrush="#1E1E1F"
+                                        Background="{Binding TitleBorderBackground, RelativeSource={RelativeSource AncestorType=VectorComboBox:VectorTextComboBox}}"
+                                        BorderBrush="Black"
                                         Foreground="{Binding SearchBoxForeground, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
                                         HorizontalScrollBarVisibility="Auto"
                                         Style="{DynamicResource VectorTextBoxStyle}"
                                         Text="{Binding SearchText, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}, UpdateSourceTrigger=PropertyChanged}"
                                         Visibility="{Binding SearchBoxVisibility, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
-                                        WaterMarkerBrush="Gray"
+                                        WaterMarkerBrush="{Binding SearchBoxWaterMarkBrush, RelativeSource={RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}}"
                                         WaterMarkerText="搜索成员">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="PreviewKeyDown">
@@ -830,9 +674,9 @@
         <Setter Property="Padding" Value="6,3,5,3" />
         <Setter Property="ScrollViewer.PanningMode" Value="Both" />
         <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
-        <Setter Property="ItemContainerStyle" Value="{StaticResource VectorComboBoxItemContainerStyle}" />
-        <Setter Property="ItemTemplate" Value="{StaticResource VectorTextComboBoxItemTemplate}" />
-        <Setter Property="ItemsPanel" Value="{StaticResource VectorComboBoxItemsPanelStyle}" />
+        <Setter Property="ItemContainerStyle" Value="{DynamicResource VectorComboBoxItemContainerStyle}" />
+        <Setter Property="ItemTemplate" Value="{DynamicResource VectorTextComboBoxItemTemplate}" />
+        <Setter Property="ItemsPanel" Value="{DynamicResource VectorComboBoxItemsPanelStyle}" />
         <Setter Property="Template" Value="{DynamicResource ComboBoxTemplate}" />
         <!--<Style.Triggers>
             <Trigger Property="IsEditable" Value="true">

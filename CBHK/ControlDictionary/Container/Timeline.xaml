@@ -5,7 +5,8 @@
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
-    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors">
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:visualUtility="clr-namespace:CBHK.Utility.Visual">
     <Geometry x:Key="PlayHeadShape">
         M512 981.53L242.89 751.6V58.23h538.22V751.6L512 981.53zM342.89 705.51L512 850l169.11-144.49V158.23H342.89v547.28z
     </Geometry>
@@ -31,6 +32,54 @@
         </Setter>
     </Style>
 
+    <DataTemplate x:Key="TimelineHeaderStyle" DataType="{x:Type Container:TimelineTrack}">
+        <Grid>
+            <VectorButton:VectorFlatTextButton
+                Height="{Binding Height}"
+                Padding="{Binding Padding}"
+                Panel.ZIndex="0"
+                Background="{Binding TrackHeadBackground}"
+                Foreground="{Binding Foreground}"
+                Style="{DynamicResource VectorFlatTextButtonStyle}"
+                Text="{Binding TrackName}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="Click">
+                        <behaviors:CallMethodAction MethodName="EditorBox_Click" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </VectorButton:VectorFlatTextButton>
+            <Input:VectorTextBox
+                Height="{Binding Height}"
+                Panel.ZIndex="1"
+                Background="#313233"
+                BorderBrush="Black"
+                BorderThickness="1"
+                Text="{Binding TrackName, Mode=TwoWay}"
+                Visibility="{Binding EditorBoxVisibility}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="GotFocus">
+                        <behaviors:CallMethodAction MethodName="EditorBox_GotFocus" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger EventName="LostFocus">
+                        <behaviors:CallMethodAction MethodName="EditorBox_LostFocus" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger EventName="PreviewKeyDown">
+                        <behaviors:CallMethodAction MethodName="EditorBox_PreviewKeyDown" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+                <Input:VectorTextBox.Style>
+                    <Style BasedOn="{StaticResource VectorTextBoxStyle}" TargetType="Input:VectorTextBox">
+                        <Style.Triggers>
+                            <Trigger Property="Visibility" Value="Visible">
+                                <Setter Property="FocusManager.FocusedElement" Value="{Binding RelativeSource={RelativeSource Self}}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Input:VectorTextBox.Style>
+            </Input:VectorTextBox>
+        </Grid>
+    </DataTemplate>
+
     <Style x:Key="TimelineStyle" TargetType="{x:Type Container:Timeline}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Template">
@@ -55,26 +104,10 @@
                                     <behaviors:CallMethodAction MethodName="HeadScrollViewer_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />
                                 </behaviors:EventTrigger>
                             </behaviors:Interaction.Triggers>
-                            <ItemsControl Background="Transparent" ItemsSource="{Binding TrackList, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:Timeline}}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Height="{Binding HeadHeight}">
-                                            <VectorButton:VectorFlatTextButton
-                                                Margin="10,0"
-                                                Padding="{Binding Padding}"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Background="{Binding TrackHeadBackground}"
-                                                Foreground="{Binding Foreground}"
-                                                Style="{DynamicResource VectorFlatTextButtonStyle}"
-                                                Text="{Binding TrackName}" />
-                                            <Input:VectorTextBox
-                                                Style="{DynamicResource VectorTextBoxStyle}"
-                                                Text="{Binding TrackName}"
-                                                Visibility="Hidden" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
+                            <ItemsControl
+                                Background="Transparent"
+                                ItemTemplate="{StaticResource TimelineHeaderStyle}"
+                                ItemsSource="{Binding TrackList, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:Timeline}}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <VirtualizingStackPanel />
@@ -178,10 +211,12 @@
                                         ItemsSource="{Binding TrackList, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:Timeline}}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border BorderBrush="{Binding BorderBrush}" BorderThickness="1">
+                                                <Border
+                                                    Height="{Binding Height}"
+                                                    BorderBrush="{Binding BorderBrush}"
+                                                    BorderThickness="1">
                                                     <ItemsControl
                                                         Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
-                                                        Height="{Binding Height}"
                                                         HorizontalAlignment="Left"
                                                         Background="{Binding Background}"
                                                         ItemsSource="{Binding TimelineElementList}">

@@ -67,8 +67,9 @@ namespace CBHK.ViewModel.Generator
         [
             new VectorRichTabItem()
             {
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                Header = "物品",
+                Title = "物品",
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style,
                 FontWeight = FontWeights.Normal
             }
         ];

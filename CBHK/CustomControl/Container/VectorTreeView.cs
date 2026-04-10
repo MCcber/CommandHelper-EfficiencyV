@@ -48,7 +48,7 @@ namespace CBHK.CustomControl.Container
         /// <returns></returns>
         private bool IsAllowDragToParent(BaseTreeViewDataItem currentDraggedData, BaseTreeViewDataItem currentTargetData)
         {
-            bool result = true;
+            bool result;
             BaseTreeViewDataItem loopParent = currentTargetData.Parent as BaseTreeViewDataItem;
 
             result = loopParent == currentDraggedData.Parent;
@@ -197,6 +197,7 @@ namespace CBHK.CustomControl.Container
                     if (draggedDataItem is BaseTreeViewDataItem currentDraggedData && targetData is BaseTreeViewDataItem currentTargetData && currentDraggedData.Parent is not null && currentTargetData.Parent is not null)
                     {
                         bool isAllowDragToParent = IsAllowDragToParent(currentDraggedData, currentTargetData);
+
                         if(!isAllowDragToParent)
                         {
                             currentTargetData.HorizontalTopLineVisibility = currentTargetData.HorizontalBottomLineVisibility = Visibility.Collapsed;
@@ -206,6 +207,7 @@ namespace CBHK.CustomControl.Container
                             }
                             return;
                         }
+
                         if (currentTargetData.Parent == currentDraggedData.Parent)
                         {
                             IContainerItem parent = currentTargetData.Parent;
@@ -249,7 +251,7 @@ namespace CBHK.CustomControl.Container
 
             draggedDataItem = null;
             e.Handled = true;
-        }  
+        }
         #endregion
 
         #endregion

@@ -51,9 +51,10 @@ namespace CBHK.ViewModel.Generator
         [
             new VectorRichTabItem()
             {
-                Header = "刷怪笼",
+                Title = "刷怪笼",
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style
             }
         ];
 

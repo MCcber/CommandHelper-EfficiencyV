@@ -1,4 +1,5 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Common;
 using CBHK.Utility.Data;
 using System;
 using System.Collections;
@@ -65,32 +66,50 @@ namespace CBHK.CustomControl.VectorComboBox
         public static readonly DependencyProperty ArrowMarginProperty =
             DependencyProperty.Register("ArrowMargin", typeof(Thickness), typeof(VectorTextComboBox), new PropertyMetadata(default(Thickness)));
 
-        public Brush ItemContainerBackground
+        public Brush ThemeTitleBorderBackground
         {
-            get { return (Brush)GetValue(ItemContainerBackgroundProperty); }
-            set { SetValue(ItemContainerBackgroundProperty, value); }
+            get { return (Brush)GetValue(ThemeTitleBorderBackgroundProperty); }
+            set { SetValue(ThemeTitleBorderBackgroundProperty, value); }
         }
 
-        public static readonly DependencyProperty ItemContainerBackgroundProperty =
-            DependencyProperty.Register("ItemContainerBackground", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty ThemeTitleBorderBackgroundProperty =
+            DependencyProperty.Register("ThemeTitleBorderBackground", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
 
-        public Brush ItemSelectedMarkerBrush
+        public Brush TitleBorderBackground
         {
-            get { return (Brush)GetValue(ItemSelectedMarkerBrushProperty); }
-            set { SetValue(ItemSelectedMarkerBrushProperty, value); }
+            get { return (Brush)GetValue(TitleBorderBackgroundProperty); }
+            set { SetValue(TitleBorderBackgroundProperty, value); }
         }
 
-        public static readonly DependencyProperty ItemSelectedMarkerBrushProperty =
-            DependencyProperty.Register("ItemSelectedMarkerBrush", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty TitleBorderBackgroundProperty =
+            DependencyProperty.Register("TitleBorderBackground", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
 
-        public Brush PopupItemPanelBackground
+        public Brush TitleLeftTopBorderBrush
         {
-            get { return (Brush)GetValue(PopupItemPanelBackgroundProperty); }
-            set { SetValue(PopupItemPanelBackgroundProperty, value); }
+            get { return (Brush)GetValue(TitleLeftTopBorderBrushProperty); }
+            set { SetValue(TitleLeftTopBorderBrushProperty, value); }
         }
 
-        public static readonly DependencyProperty PopupItemPanelBackgroundProperty =
-            DependencyProperty.Register("PopupItemPanelBackground", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty TitleLeftTopBorderBrushProperty =
+            DependencyProperty.Register("TitleLeftTopBorderBrush", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
+
+        public Brush TitleRightBottomBorderBrush
+        {
+            get { return (Brush)GetValue(TitleRightBottomBorderBrushProperty); }
+            set { SetValue(TitleRightBottomBorderBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty TitleRightBottomBorderBrushProperty =
+            DependencyProperty.Register("TitleRightBottomBorderBrush", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
+
+        public Brush TitleBorderCornerBrush
+        {
+            get { return (Brush)GetValue(TitleBorderCornerBrushProperty); }
+            set { SetValue(TitleBorderCornerBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty TitleBorderCornerBrushProperty =
+            DependencyProperty.Register("TitleBorderCornerBrush", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
 
         public Brush ArrowBrush
         {
@@ -118,28 +137,70 @@ namespace CBHK.CustomControl.VectorComboBox
 
         public static readonly DependencyProperty SearchBoxForegroundProperty =
             DependencyProperty.Register("SearchBoxForeground", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
+
+        public Brush PopupItemPanelBackground
+        {
+            get { return (Brush)GetValue(PopupItemPanelBackgroundProperty); }
+            set { SetValue(PopupItemPanelBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty PopupItemPanelBackgroundProperty =
+            DependencyProperty.Register("PopupItemPanelBackground", typeof(Brush), typeof(VectorTextComboBox), new PropertyMetadata(default(Brush)));
         #endregion
 
         #region Method
         public VectorTextComboBox()
         {
+            BorderBrush = Brushes.Black;
             Loaded += VectorTextComboBox_Loaded;
             DropDownClosed += VectorTextComboBox_DropDownClosed;
             itemView.Source = DataList;
             ItemsSource = itemView.View;
             itemView.Filter += ItemView_Filter;
         }
+
+        private void UpdateBorderColorByBackgroundColor()
+        {
+            if (ThemeTitleBorderBackground is SolidColorBrush solidColorBrush)
+            {
+                BorderBrush = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color,0.6f));
+                TitleBorderBackground = new SolidColorBrush(solidColorBrush.Color);
+                TitleLeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(solidColorBrush.Color, 0.2f));
+                TitleRightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten(solidColorBrush.Color, 0.2f));
+                TitleBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(solidColorBrush.Color, 0.4f));
+            }
+        }
         #endregion
 
         #region Event
         private void VectorTextComboBox_Loaded(object sender, RoutedEventArgs e)
         {
-            SearchBoxForeground = Brushes.White;
-            TitleBrush = Brushes.White;
-            ArrowBrush = Brushes.Black;
-            ItemSelectedMarkerBrush = Brushes.White;
-            ItemContainerBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#58585A"));
-            PopupItemPanelBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8C8D90"));
+            SetResourceReference(ThemeTitleBorderBackgroundProperty, Theme.TextButtonBackground);
+            SetResourceReference(TitleBrushProperty,Theme.TextBlockForeground);
+            SetResourceReference(ArrowBrushProperty, Theme.TextBlockForeground);
+            SetResourceReference(SearchBoxForegroundProperty,Theme.TextBlockForeground);
+            SetResourceReference(PopupItemPanelBackgroundProperty,Theme.TextButtonBackground);
+
+            UpdateBorderColorByBackgroundColor();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeTitleBorderBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
+        }
+
+        protected override DependencyObject GetContainerForItemOverride()
+        {
+            return new VectorComboBoxItemContainer();
+        }
+
+        protected override bool IsItemItsOwnContainerOverride(object item)
+        {
+            return item is VectorComboBoxItemContainer;
         }
 
         private void ItemView_Filter(object sender, FilterEventArgs e)

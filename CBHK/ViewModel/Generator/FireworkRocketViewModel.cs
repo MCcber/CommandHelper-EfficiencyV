@@ -95,8 +95,8 @@ namespace CBHK.ViewModel.Generator
         #region 版本数据源
         [ObservableProperty]
         public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
-            new VectorTextComboBoxItem() { Text = "1.20.2",MemberBrush = Brushes.White,DisplayPanelBrush = Brushes.Black },
-            new VectorTextComboBoxItem() { Text = "1.12.0",MemberBrush = Brushes.White,DisplayPanelBrush = Brushes.Black }
+            new VectorTextComboBoxItem() { Text = "1.20.2"},
+            new VectorTextComboBoxItem() { Text = "1.12.0"}
             ];
         #endregion
 
@@ -111,7 +111,7 @@ namespace CBHK.ViewModel.Generator
                 string[] shapes = File.ReadAllLines(shapePath);
                 foreach (string shape in shapes)
                 {
-                    ShapeList.Add(new VectorTextComboBoxItem() { Text = shape[(shape.LastIndexOf(':') + 1)..], MemberBrush = Brushes.White, DisplayPanelBrush = Brushes.Black });
+                    ShapeList.Add(new VectorTextComboBoxItem() { Text = shape[(shape.LastIndexOf(':') + 1)..] });
                 }
             }
             #endregion

@@ -7,7 +7,7 @@ namespace CBHK.Model.TreeView
     {
         public Color Value { get; set; }
         public string Key { get; set; }
-        public Brush Foreground { get; set; }
-        public Brush Background { get; set; }
+        public Brush Foreground { get; set; } = Brushes.Black;
+        public Brush Background { get; set; } = Brushes.Transparent;
     }
 }
