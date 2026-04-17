@@ -1,4 +1,5 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -8,11 +9,12 @@ namespace CBHK.CustomControl.Input
 {
     public class VectorSlider : Slider
     {
-        #region Property
-        private double ThumbBottomBorderHeight { get; set; } = 4;
-        private Brush OriginThumbBackground { get; set; }
-        private Brush OriginBackground { get; set; }
+        #region Field
+        private double ThumbBottomBorderHeight = 4;
+        private Brush OriginThumbBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F4F6F9"));
+        #endregion
 
+        #region Property
         public double SlidingAreaHeight
         {
             get { return (double)GetValue(SlidingAreaHeightProperty); }
@@ -21,6 +23,15 @@ namespace CBHK.CustomControl.Input
 
         public static readonly DependencyProperty SlidingAreaHeightProperty =
     DependencyProperty.Register("SlidingAreaHeight", typeof(double), typeof(VectorSlider), new PropertyMetadata(default(double)));
+
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(VectorSlider), new PropertyMetadata(default(Brush)));
 
         public Brush ThumbBackground
         {
@@ -107,90 +118,64 @@ namespace CBHK.CustomControl.Input
         #region Method
         public VectorSlider()
         {
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            ThumbBackground = OriginThumbBackground;
+            BorderBrush = Brushes.Black;
             Loaded += VectorSlider_Loaded;
             MouseEnter += VectorSlider_MouseEnter;
             MouseLeave += VectorSlider_MouseLeave;
             PreviewMouseLeftButtonDown += VectorSlider_PreviewMouseLeftButtonDown;
             PreviewMouseLeftButtonUp += VectorSlider_PreviewMouseLeftButtonUp;
         }
+
+        private void UpdateBorderColorByBackgroundColor()
+        {
+            ThumbBackground = OriginThumbBackground;
+            if (ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
+                BackgroundBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.4f));
+                BackgroundRoundBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
+                BackgroundBottomBorderBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.1f));
+            }
+
+            if (OriginThumbBackground is SolidColorBrush thumbBackgroundBrush)
+            {
+                ThumbBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(thumbBackgroundBrush.Color, 0.4f));
+                ThumbRoundBorderBrush = new SolidColorBrush(ColorTool.Lighten(thumbBackgroundBrush.Color, 0.2f));
+                ThumbBottomBorderBrush = new SolidColorBrush(ColorTool.Darken(thumbBackgroundBrush.Color, 0.6f));
+            }
+        }
         #endregion
 
         #region Event
         private void VectorSlider_Loaded(object sender, RoutedEventArgs e)
         {
-            var trackObject = Template.FindName("PART_Track",sender as FrameworkElement);
-            if (trackObject is Track track && track.Thumb is not null)
+            UpdateBorderColorByBackgroundColor();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
             {
+                UpdateBorderColorByBackgroundColor();
+            }
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            if (GetTemplateChild("PART_Track") is Track track && track.Thumb is not null)
+            {
+                track.Thumb.ApplyTemplate();
                 object extraBottomLine = track.Thumb.Template.FindName("extraBottomLine", track.Thumb);
                 if (extraBottomLine is RowDefinition row)
                 {
                     row.Height = new(ThumbBottomBorderHeight, GridUnitType.Pixel);
                 }
             }
-            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
-            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle)
-            {
-                Foreground = Brushes.White;
-            }
-            var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style || backgroundSource.BaseValueSource is BaseValueSource.Default)
-            {
-                Background = new BrushConverter().ConvertFromString("#3c8527") as Brush;
-            }
-            var thumbBackgroundSource = DependencyPropertyHelper.GetValueSource(this, ThumbBackgroundProperty);
-            if (thumbBackgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || thumbBackgroundSource.BaseValueSource is BaseValueSource.Default)
-            {
-                ThumbBackground = new BrushConverter().ConvertFromString("#D0D1D4") as Brush;
-            }
-            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
-            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                BorderBrush = Brushes.Black;
-            }
-            var originBackgroundBorderCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, BackgroundBorderCornerBrushProperty);
-            if (originBackgroundBorderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originBackgroundBorderCornerBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.6f);
-                BackgroundBorderCornerBrush = new SolidColorBrush(color);
-            }
-            var originBackgroundRoundBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, BackgroundRoundBorderBrushProperty);
-            if (originBackgroundRoundBorderBrushSource.BaseValueSource is BaseValueSource.Default || originBackgroundRoundBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
-                BackgroundRoundBorderBrush = new SolidColorBrush(color);
-            }
-            var originBackgroundBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, BackgroundBottomBorderBrushProperty);
-            if (originBackgroundBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originBackgroundBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
-                BackgroundBottomBorderBrush = new SolidColorBrush(color);
-            }
-            var originThumbBorderCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, ThumbBorderCornerBrushProperty);
-            if (originThumbBorderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originThumbBorderCornerBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = ThumbBackground as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
-                ThumbBorderCornerBrush = new SolidColorBrush(color);
-            }
-            var originThumbRoundBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, ThumbRoundBorderBrushProperty);
-            if (originThumbRoundBorderBrushSource.BaseValueSource is BaseValueSource.Default || originThumbRoundBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = ThumbBackground as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
-                ThumbRoundBorderBrush = new SolidColorBrush(color);
-            }
-            var originThumbBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, ThumbBottomBorderBrushProperty);
-            if (originThumbBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originThumbBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = ThumbBackground as SolidColorBrush;
-                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.6f);
-                ThumbBottomBorderBrush = new SolidColorBrush(color);
-            }
-
-            OriginThumbBackground = ThumbBackground;
         }
 
         private void VectorSlider_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -200,7 +185,10 @@ namespace CBHK.CustomControl.Input
 
         private void VectorSlider_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            VectorSlider_MouseEnter(sender, null);
+            if (OriginThumbBackground is SolidColorBrush solidColorBrush)
+            {
+                ThumbBackground = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color, 0.3f));
+            }
         }
 
         private void VectorSlider_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
@@ -210,8 +198,10 @@ namespace CBHK.CustomControl.Input
 
         private void VectorSlider_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            Color color = ColorTool.Darken((OriginThumbBackground as SolidColorBrush).Color, 0.2f);
-            ThumbBackground = new SolidColorBrush(color);
+            if (OriginThumbBackground is SolidColorBrush solidColorBrush)
+            {
+                ThumbBackground = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color, 0.2f));
+            }
         }
         #endregion
     }

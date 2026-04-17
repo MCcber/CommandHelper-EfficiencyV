@@ -1,5 +1,5 @@
 ﻿using CBHK.Model.Constant;
-using CBHK.Utility.Common;
+using CBHK.Utility.Visual;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -80,8 +80,8 @@ namespace CBHK.CustomControl.VectorComboBox
         #region Event
         private void VectorComboBoxItemContainer_Loaded(object sender, RoutedEventArgs e)
         {
-            SetResourceReference(ThemeItemContainerBackgroundProperty, Theme.TextButtonBackground);
-            SetResourceReference(ItemSelectedMarkerBrushProperty, Theme.TextBlockForeground);
+            SetResourceReference(ThemeItemContainerBackgroundProperty, Theme.CommonBackground);
+            SetResourceReference(ItemSelectedMarkerBrushProperty, Theme.CommonForeground);
 
             if (ThemeItemContainerBackground is SolidColorBrush solidColorBrush)
             {

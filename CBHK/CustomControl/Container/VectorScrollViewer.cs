@@ -1,4 +1,6 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Common;
+using CBHK.Utility.Visual;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,8 +13,6 @@ namespace CBHK.CustomControl.Container
     public class VectorScrollViewer:ScrollViewer
     {
         #region Field
-        private Brush OriginForeground;
-        private Brush OriginBackground;
         private Brush OriginLeftTopBorderBrush;
         private Brush OriginRightTopBorderBrush;
         private Brush OriginBottomBorderBrush;
@@ -70,11 +70,31 @@ namespace CBHK.CustomControl.Container
 
         public static readonly DependencyProperty BorderCornerBrushProperty =
             DependencyProperty.Register("BorderCornerBrush", typeof(Brush), typeof(VectorScrollViewer), new PropertyMetadata(default(Brush)));
+
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(VectorScrollViewer), new PropertyMetadata(default(Brush)));
+
+        public Brush ScrollbarBackground
+        {
+            get { return (Brush)GetValue(ScrollbarBackgroundProperty); }
+            set { SetValue(ScrollbarBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ScrollbarBackgroundProperty =
+            DependencyProperty.Register("ScrollbarBackground", typeof(Brush), typeof(VectorScrollViewer), new PropertyMetadata(default(Brush)));
         #endregion
 
         #region Method
         public VectorScrollViewer()
         {
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            SetResourceReference(ForegroundProperty, Theme.CommonForeground);
             Loaded += VectorScrollViewer_Loaded;
             MouseWheel += VectorScrollViewer_MouseWheel;
             PreviewMouseDown += ScrollViewer_PreviewMouseDown;
@@ -84,45 +104,14 @@ namespace CBHK.CustomControl.Container
 
         private void UpdateBorderColorByBackgroundColor()
         {
-            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
-            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style || Foreground is null)
+            if(ThemeBackground is SolidColorBrush themeBrush)
             {
-                Foreground = OriginForeground = Brushes.White;
-            }
-            var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style || backgroundSource.BaseValueSource is BaseValueSource.Default || Background is null)
-            {
-                Background = OriginBackground = new BrushConverter().ConvertFromString("#48494A") as Brush;
-            }
-            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
-            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style || BorderBrush is null)
-            {
-                BorderBrush = Brushes.Black;
-            }
-            var originLeftTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopBorderBrushProperty);
-            if (originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Style || LeftTopBorderBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
-                LeftTopBorderBrush = OriginLeftTopBorderBrush = new SolidColorBrush(color);
-            }
-            var originRightBottomBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
-            if (originRightBottomBrushSource.BaseValueSource is BaseValueSource.Default || originRightBottomBrushSource.BaseValueSource is BaseValueSource.Style || RightBottomBorderBrush is null)
-            {
-                Color color = ColorTool.Lighten((Background as SolidColorBrush).Color, 0.1f);
-                RightBottomBorderBrush = new SolidColorBrush(color);
-            }
-            var originCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderCornerBrushProperty);
-            if (originCornerBrushSource.BaseValueSource is BaseValueSource.Default || originCornerBrushSource.BaseValueSource is BaseValueSource.Style || BorderCornerBrush is null)
-            {
-                Color color = ColorTool.Lighten((Background as SolidColorBrush).Color, 0.4f);
-                BorderCornerBrush = new SolidColorBrush(color);
-            }
-            var originBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, BottomBorderBrushProperty);
-            if (originBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style || BottomBorderBrush is null)
-            {
-                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.4f);
-                BottomBorderBrush = new SolidColorBrush(color);
+                Background = new SolidColorBrush(themeBrush.Color);
+                ScrollbarBackground = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.6f));
+                LeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
+                RightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.1f));
+                BorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.4f));
+                BottomBorderBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.4f));
             }
         }
         #endregion
@@ -133,6 +122,15 @@ namespace CBHK.CustomControl.Container
             VerticalScrollBar = GetTemplateChild("PART_VerticalScrollBar") as ScrollBar;
             HorizontalScrollBar = GetTemplateChild("PART_HorizontalScrollBar") as ScrollBar;
             UpdateBorderColorByBackgroundColor();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
         }
 
         public void VectorScrollViewer_MouseWheel(object sender, MouseWheelEventArgs e)

@@ -1,5 +1,10 @@
 ﻿using CBHK.Common.Model;
+using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
+using MathNet.Numerics.LinearAlgebra.Factorization;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -14,7 +19,10 @@ namespace CBHK.CustomControl.Container
     {
         #region Field And ExternMethod
         private bool isClosing = false;
+        private readonly Brush commonForeground = Application.Current.Resources[Theme.CommonForeground] as Brush;
         private string restoreGeometryData = "M795.5 230.6v727.2H64V230.6h731.5z m-82.2 78H146.2V880h567V308.6zM228.5 66.2H960v731.5H795.5v-82.2h82.2V148.4h-567v82.2h-82.2V66.2z";
+        private string maximizeGeometryData = "M836.224 917.333333h-644.266667a85.589333 85.589333 0 0 1-85.333333-85.333333V187.733333a85.589333 85.589333 0 0 1 85.333333-85.333333h644.266667a85.589333 85.589333 0 0 1 85.333333 85.333333v644.266667a91.690667 91.690667 0 0 1-85.333333 85.333333zM191.957333 170.666667a22.869333 22.869333 0 0 0-21.333333 21.333333v644.266667a22.869333 22.869333 0 0 0 21.333333 21.333333h644.266667a22.869333 22.869333 0 0 0 21.333333-21.333333V192a22.869333 22.869333 0 0 0-21.333333-21.333333z";
+
         /// <summary>
         /// 设计时基准高度（96 DPI下的高度）
         /// </summary>
@@ -141,6 +149,13 @@ namespace CBHK.CustomControl.Container
         #endregion
 
         #region Property
+        private static readonly Dictionary<WindowThemeType, string> ThemeUriMap = new()
+        {
+            [WindowThemeType.CommandBlockOrange] = Theme.CommandBlockOrangeTheme,
+            [WindowThemeType.CommandBlockBlueGreen] = Theme.CommandBlockBlueGreenTheme,
+            [WindowThemeType.CommandBlockPurple] = Theme.CommandBlockPurpleTheme
+        };
+
         public double TitleBarHeight
         {
             get { return (double)GetValue(TitleBarHeightProperty); }
@@ -186,15 +201,6 @@ namespace CBHK.CustomControl.Container
         public static readonly DependencyProperty RestorePathDataProperty =
             DependencyProperty.Register("RestorePathData", typeof(Geometry), typeof(VectorWindow), new PropertyMetadata(default(Geometry)));
 
-        public Brush RestorePathFillBrush
-        {
-            get { return (Brush)GetValue(RestorePathFillBrushProperty); }
-            set { SetValue(RestorePathFillBrushProperty, value); }
-        }
-
-        public static readonly DependencyProperty RestorePathFillBrushProperty =
-            DependencyProperty.Register("RestorePathFillBrush", typeof(Brush), typeof(VectorWindow), new PropertyMetadata(default(Brush)));
-
         public Geometry MaximizeButtonPathData
         {
             get { return (Geometry)GetValue(MaximizeButtonPathDataProperty); }
@@ -238,17 +244,10 @@ namespace CBHK.CustomControl.Container
             Loaded += VectorWindow_Loaded;
             Activated += VectorWindow_Activated;
             RestorePathData = Geometry.Parse(restoreGeometryData);
-            Rectangle rectangle = new();
-            rectangle.Width = rectangle.Height = 10;
-            rectangle.StrokeThickness = 1;
-            rectangle.Stroke = Brushes.White;
-            RectangleGeometry rectangleGeometry = new(new Rect(0, 0, 10, 10), 0, 0);
-            MaximizePathData = rectangleGeometry;
+            MaximizePathData = Geometry.Parse(maximizeGeometryData);
             MaximizeButtonPathData = MaximizePathData;
             // 强制尝试查找并应用按类型键的样式
-            var style = TryFindResource(typeof(VectorWindow)) as Style
-                        ?? (Style)Application.Current.Resources[typeof(VectorWindow)];
-            if (style != null)
+            if (Application.Current.Resources[typeof(VectorWindow)] is Style style)
             {
                 Style = style;
             }
@@ -267,13 +266,15 @@ namespace CBHK.CustomControl.Container
         }
 
         /// <summary>
-        /// 设置主题模式，深色或浅色
+        /// 设置主题模式
         /// </summary>
         /// <param name="isDarkMode"></param>
-        public void SetThemeMode(int isDarkMode = 1)
+        public void SetThemeMode()
         {
-            var handle = new WindowInteropHelper(this).Handle;
-            _ = DwmSetWindowAttribute(handle, 20, ref isDarkMode, sizeof(int));
+            //var handle = new WindowInteropHelper(this).Handle;
+            //_ = DwmSetWindowAttribute(handle, 20, ref isDarkMode, sizeof(int));
+
+            ThemeManager.ApplyNewTheme(ThemeUriMap[ThemeType]);
         }
 
         private void SetDefaultBackground()
@@ -436,17 +437,17 @@ namespace CBHK.CustomControl.Container
 
         private void UpdateThemeModeBySystem(nint lParam,bool skipParammeter = false)
         {
-            string changedArea = Marshal.PtrToStringAuto(lParam);
-            if (changedArea == "ImmersiveColorSet" || skipParammeter)
-            {
-                bool isDark = IsSystemDarkMode();
-                int darkModeValue = isDark ? 1 : 0;
-                var windowList = Application.Current.Windows.OfType<VectorWindow>();
-                foreach (var window in windowList)
-                {
-                    window.SetThemeMode(darkModeValue);
-                }
-            }
+            //string changedArea = Marshal.PtrToStringAuto(lParam);
+            //if (changedArea == "ImmersiveColorSet" || skipParammeter)
+            //{
+            //    bool isDark = IsSystemDarkMode();
+            //    int darkModeValue = isDark ? 1 : 0;
+            //    var windowList = Application.Current.Windows.OfType<VectorWindow>();
+            //    foreach (var window in windowList)
+            //    {
+            //        window.SetThemeMode(darkModeValue);
+            //    }
+            //}
         }
 
         private static bool IsSystemDarkMode()
@@ -499,13 +500,11 @@ namespace CBHK.CustomControl.Container
             if (command == SC_RESTORE)
             {
                 MaximizeButtonPathData = MaximizePathData;
-                RestorePathFillBrush = Brushes.Transparent;
             }
             // 如果指令是最大化，或者当前准备最大化
             else if (command == SC_MAXIMIZE)
             {
                 MaximizeButtonPathData = RestorePathData;
-                RestorePathFillBrush = Brushes.White;
             }
         }
         #endregion
@@ -531,9 +530,6 @@ namespace CBHK.CustomControl.Container
         /// <param name="e"></param>
         private void VectorWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            // 获取当前DPI缩放因子
-            //var dpiInfo = VisualTreeHelper.GetDpi(this);
-
             // 通过绑定或直接设置CustomTitleBar的高度
             TitleBarHeight = baseTitleBarHeight;
             TitleButtonWidth = baseTitleButtonWidth;
@@ -573,7 +569,7 @@ namespace CBHK.CustomControl.Container
             if (sender is VectorWindow window)
             {
                 // 处理属性变更
-                window.OnThemeType_Changed((WindowThemeType)e.OldValue, (WindowThemeType)e.NewValue);
+                window.SetThemeMode();
             }
         }
 
@@ -595,36 +591,35 @@ namespace CBHK.CustomControl.Container
             }
         }
 
-        private void OnThemeType_Changed(WindowThemeType oldValue, WindowThemeType newValue)
-        {
-            switch (newValue)
-            {
-                case WindowThemeType.Light:
-                    {
-                        SetThemeMode(0);
-                        break;
-                    }
-                case WindowThemeType.Dark:
-                    {
-                        SetThemeMode();
-                        break;
-                    }
-                case WindowThemeType.FllowSystem:
-                    {
-                        UpdateThemeModeBySystem(new IntPtr(), true);
-                        break;
-                    }
-            }
+        //private void OnThemeType_Changed(WindowThemeType oldValue, WindowThemeType newValue)
+        //{
+        //    switch (newValue)
+        //    {
+        //        case WindowThemeType.CommandBlockOrange:
+        //            {
+        //                //SetThemeMode(0);
+        //                break;
+        //            }
+        //        case WindowThemeType.CommandBlockGreen:
+        //            {
+        //                //SetThemeMode();
+        //                break;
+        //            }
+        //        case WindowThemeType.CommandBlockPurple:
+        //            {
+        //                break;
+        //            }
+        //    }
 
-            if (GetType().ToString().EndsWith("MainView"))
-            {
-                var windowList = Application.Current.Windows.OfType<VectorWindow>();
-                foreach (var window in windowList)
-                {
-                    window.ThemeType = newValue;
-                }
-            }
-        }
+        //    if (GetType().ToString().EndsWith("MainView"))
+        //    {
+        //        var windowList = Application.Current.Windows.OfType<VectorWindow>();
+        //        foreach (var window in windowList)
+        //        {
+        //            window.ThemeType = newValue;
+        //        }
+        //    }
+        //}
 
         private void OnVisualType_Changed(WindowVisualType oldValue, WindowVisualType newValue)
         {
@@ -815,13 +810,11 @@ namespace CBHK.CustomControl.Container
                             {
                                 TemporarilyUseCaptionForAction(() => SystemCommands.RestoreWindow(this));
                                 MaximizeButtonPathData = MaximizePathData;
-                                RestorePathFillBrush = Brushes.Transparent;
                             }
                             else
                             {
                                 TemporarilyUseCaptionForAction(() => SystemCommands.MaximizeWindow(this));
                                 MaximizeButtonPathData = RestorePathData;
-                                RestorePathFillBrush = Brushes.White;
                             }
                             handled = true;
                             return IntPtr.Zero;
@@ -854,13 +847,11 @@ namespace CBHK.CustomControl.Container
                             {
                                 TemporarilyUseCaptionForAction(() => SystemCommands.RestoreWindow(this));
                                 MaximizeButtonPathData = MaximizePathData;
-                                RestorePathFillBrush = Brushes.Transparent;
                             }
                             else
                             {
                                 TemporarilyUseCaptionForAction(() => SystemCommands.MaximizeWindow(this));
                                 MaximizeButtonPathData = RestorePathData;
-                                RestorePathFillBrush = Brushes.White;
                             }
                             handled = true;
                             return IntPtr.Zero;
@@ -869,11 +860,11 @@ namespace CBHK.CustomControl.Container
                     }
                 case WM_SETTINGCHANGE:
                     {
-                        if (ThemeType is not WindowThemeType.FllowSystem)
-                        {
-                            return IntPtr.Zero;
-                        }
-                        UpdateThemeModeBySystem(lParam);
+                        //if (ThemeType is not WindowThemeType.FllowSystem)
+                        //{
+                        //    return IntPtr.Zero;
+                        //}
+                        //UpdateThemeModeBySystem(lParam);
                         break;
                     }
                 case WM_GETMINMAXINFO:

@@ -1,17 +1,16 @@
 ﻿using CBHK.Interface.Data;
 using CBHK.Model.Constant;
-using CBHK.Utility.Common;
+using CBHK.Utility.Visual;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.Container
 {
-    public class ContinuousKeyframeItem : ToggleButton, ICloneable
+    public class ContinuousKeyframeItem : BaseVectorToggleButton, ICloneable
     {
         #region Property
         public bool IsPlayed { get; set; }
@@ -36,15 +35,6 @@ namespace CBHK.CustomControl.Container
 
         public static readonly DependencyProperty XProperty =
             DependencyProperty.Register("X", typeof(double), typeof(ContinuousKeyframeItem), new PropertyMetadata(default(double)));
-
-        public Brush ThemeBackground
-        {
-            get { return (Brush)GetValue(ThemeBackgroundProperty); }
-            set { SetValue(ThemeBackgroundProperty, value); }
-        }
-
-        public static readonly DependencyProperty ThemeBackgroundProperty =
-            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(ContinuousKeyframeItem), new PropertyMetadata(default(Brush)));
         #endregion
 
         #region Method
@@ -53,11 +43,12 @@ namespace CBHK.CustomControl.Container
             Loaded += ContinuousKeyframeItem_Loaded;
         }
 
-        private void UpdateBorderColorByBackgroundColor()
+        public override void UpdateBorderColorByBackgroundColor()
         {
+            //base.UpdateBorderColorByBackgroundColor();
             if (ThemeBackground is SolidColorBrush solidColorBrush)
             {
-                Background = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color, 0.2f));
+                Background = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.6f,ModifyMode));
             }
         }
 
@@ -82,7 +73,10 @@ namespace CBHK.CustomControl.Container
         #region Event
         private void ContinuousKeyframeItem_Loaded(object sender, RoutedEventArgs e)
         {
-            SetResourceReference(ThemeBackgroundProperty, Theme.TextButtonBackground);
+            if (Background is null)
+            {
+                SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            }
             UpdateBorderColorByBackgroundColor();
         }
 

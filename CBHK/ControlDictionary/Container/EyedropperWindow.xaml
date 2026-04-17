@@ -33,7 +33,7 @@
                                 Width="114"
                                 Height="114"
                                 Margin="3"
-                                Stroke="Gray"
+                                Stroke="{DynamicResource CommonForeground}"
                                 StrokeThickness="1" />
                             <Border x:Name="PreviewColorBox" Background="Transparent" />
                             <Path

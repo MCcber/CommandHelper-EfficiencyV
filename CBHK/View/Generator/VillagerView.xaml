@@ -533,7 +533,7 @@
                                     </behavior:EventTrigger>
                                 </behavior:Interaction.Triggers>
                             </Input:VectorTextBox>
-                            <ListView
+                            <Container:VectorListView
                                 Grid.Row="1"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
@@ -542,11 +542,11 @@
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                                 SelectedItem="{Binding SelectedItem, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
-                                Style="{DynamicResource ListBoxScrollViewerStyle}"
+                                Style="{DynamicResource VectorListViewStyle}"
                                 VirtualizingPanel.IsVirtualizing="True"
                                 VirtualizingPanel.ScrollUnit="Pixel"
                                 VirtualizingPanel.VirtualizationMode="Recycling">
-                                <ListView.ItemTemplate>
+                                <Container:VectorListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid>
                                             <Image
@@ -575,8 +575,8 @@
                                             </Image>
                                         </Grid>
                                     </DataTemplate>
-                                </ListView.ItemTemplate>
-                                <ListView.ItemsPanel>
+                                </Container:VectorListView.ItemTemplate>
+                                <Container:VectorListView.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <VirtualizingWrapPanel:VirtualizingWrapPanel
                                             Background="#555956"
@@ -586,13 +586,13 @@
                                             VirtualizingPanel.ScrollUnit="Pixel"
                                             VirtualizingPanel.VirtualizationMode="Recycling" />
                                     </ItemsPanelTemplate>
-                                </ListView.ItemsPanel>
+                                </Container:VectorListView.ItemsPanel>
                                 <behavior:Interaction.Triggers>
                                     <behavior:EventTrigger EventName="Loaded">
                                         <behavior:CallMethodAction MethodName="OriginalItemListView_Loaded" TargetObject="{Binding}" />
                                     </behavior:EventTrigger>
                                 </behavior:Interaction.Triggers>
-                            </ListView>
+                            </Container:VectorListView>
                         </Grid>
                     </Container:VectorTextTabItem>
                     <!--  自定义物品库  -->
@@ -624,7 +624,7 @@
                                     </behavior:EventTrigger>
                                 </behavior:Interaction.Triggers>
                             </Input:VectorTextBox>
-                            <ListView
+                            <Container:VectorListView
                                 Grid.Row="1"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
@@ -634,11 +634,11 @@
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
-                                Style="{DynamicResource ListBoxScrollViewerStyle}"
+                                Style="{DynamicResource VectorListViewStyle}"
                                 VirtualizingPanel.IsVirtualizing="true"
                                 VirtualizingPanel.ScrollUnit="Pixel"
                                 VirtualizingPanel.VirtualizationMode="Recycling">
-                                <ListView.ItemTemplate>
+                                <Container:VectorListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid>
                                             <Image
@@ -668,8 +668,8 @@
                                             </Image>
                                         </Grid>
                                     </DataTemplate>
-                                </ListView.ItemTemplate>
-                                <ListView.ItemsPanel>
+                                </Container:VectorListView.ItemTemplate>
+                                <Container:VectorListView.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <VirtualizingWrapPanel:VirtualizingWrapPanel
                                             Background="#555956"
@@ -679,13 +679,13 @@
                                             VirtualizingPanel.ScrollUnit="Pixel"
                                             VirtualizingPanel.VirtualizationMode="Recycling" />
                                     </ItemsPanelTemplate>
-                                </ListView.ItemsPanel>
+                                </Container:VectorListView.ItemsPanel>
                                 <behavior:Interaction.Triggers>
                                     <behavior:EventTrigger EventName="Loaded">
                                         <behavior:CallMethodAction MethodName="CustomItemListView_Loaded" TargetObject="{Binding}" />
                                     </behavior:EventTrigger>
                                 </behavior:Interaction.Triggers>
-                            </ListView>
+                            </Container:VectorListView>
                         </Grid>
                     </Container:VectorTextTabItem>
                     <!--  杂项  -->

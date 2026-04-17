@@ -11,8 +11,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type VectorButton:TagBlock}">
-                    <Border Background="#1E1E1E" CornerRadius="5">
-                        <Grid Height="30">
+                    <Border Background="Transparent" CornerRadius="5">
+                        <Grid Height="30" Background="{TemplateBinding Background}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -23,7 +23,7 @@
                                 Margin="5,0"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
-                                Foreground="White"
+                                Foreground="{DynamicResource CommonForeground}"
                                 Text="{TemplateBinding Text}"
                                 TextWrapping="Wrap" />
                             <VectorButton:VectorFlatIconButton
@@ -33,10 +33,9 @@
                                 Height="25"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                Background="#D0D1D4"
                                 Command="{TemplateBinding Delete}"
                                 Icon="{DynamicResource CloseMark}"
-                                IconBrush="Black"
+                                IconBrush="{DynamicResource CommonForeground}"
                                 IconHeight="20"
                                 IconWidth="20"
                                 Style="{DynamicResource VectorFlatIconButtonStyle}" />

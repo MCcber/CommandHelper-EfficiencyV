@@ -10,7 +10,8 @@
         <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
         <Setter Property="WaterMarkerMargin" Value="5,0,0,0" />
         <Setter Property="MinHeight" Value="0" />
-        <Setter Property="CaretBrush" Value="White" />
+        <Setter Property="Foreground" Value="{DynamicResource CommonForeground}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource CommonForeground}" />
         <Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor" />
         <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
         <Setter Property="UseLayoutRounding" Value="True" />
@@ -25,11 +26,11 @@
                         x:Name="border"
                         HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                         VerticalAlignment="{TemplateBinding VerticalAlignment}"
-                        Background="{TemplateBinding Background}"
+                        Background="Transparent"
                         BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="2"
+                        BorderThickness="1"
                         SnapsToDevicePixels="True">
-                        <Grid>
+                        <Grid Background="{TemplateBinding Background}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="5" />
                                 <RowDefinition Height="*" />
@@ -52,6 +53,7 @@
                                 VerticalAlignment="Center"
                                 Panel.ZIndex="0"
                                 Background="Transparent"
+                                FontSize="{TemplateBinding FontSize}"
                                 Foreground="{Binding WaterMarkerBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Input:VectorTextBox}}}"
                                 Text="{Binding WaterMarkerText, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorTextBox}}"
                                 TextAlignment="Center" />

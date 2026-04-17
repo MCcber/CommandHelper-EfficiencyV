@@ -3,22 +3,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton">
 
-    <SolidColorBrush x:Key="Button.Static.Background" Color="#FFDDDDDD" />
-    <SolidColorBrush x:Key="Button.Static.Border" Color="#FF707070" />
-    <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#FFBEE6FD" />
-    <SolidColorBrush x:Key="Button.MouseOver.Border" Color="#FF3C7FB1" />
-    <SolidColorBrush x:Key="Button.Pressed.Background" Color="#FFC4E5F6" />
-    <SolidColorBrush x:Key="Button.Pressed.Border" Color="#FF2C628B" />
-    <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4" />
-    <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
-    <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
     <Style x:Key="VectorFlatImageButtonStyle" TargetType="{x:Type VectorButton:VectorFlatImageButton}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="UseLayoutRounding" Value="True" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
-        <Setter Property="Background" Value="#48494A" />
-        <Setter Property="BorderBrush" Value="{StaticResource Button.Static.Border}" />
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -28,12 +16,15 @@
                 <ControlTemplate TargetType="{x:Type VectorButton:VectorFlatImageButton}">
                     <Border
                         x:Name="border"
-                        Background="{TemplateBinding Background}"
+                        Background="Transparent"
                         BorderBrush="Black"
                         BorderThickness="1"
                         SnapsToDevicePixels="true"
                         UseLayoutRounding="True">
-                        <Grid SnapsToDevicePixels="true" UseLayoutRounding="True">
+                        <Grid
+                            Background="{TemplateBinding Background}"
+                            SnapsToDevicePixels="true"
+                            UseLayoutRounding="True">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="3.5" />
                                 <ColumnDefinition Width="*" />
@@ -58,7 +49,7 @@
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="2"
-                                Fill="{TemplateBinding CornerBorderBrush}"
+                                Fill="{TemplateBinding BorderCornerBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="1"
@@ -68,7 +59,7 @@
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="0"
-                                Fill="{TemplateBinding CornerBorderBrush}"
+                                Fill="{TemplateBinding BorderCornerBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"

@@ -1,15 +1,16 @@
 ﻿using CBHK.Model.Constant;
-using CBHK.Utility.Common;
+using CBHK.Utility.Visual;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.VectorButton
 {
-    public class VectorToggleTextButton:ToggleButton
+    public class VectorToggleTextButton:BaseVectorToggleButton
     {
         #region Field
+        private bool isNeedUpdateState = true;
         private Thickness OriginMargin;
         private bool isUserClicking = false;
         private Brush OriginLeftTopBorderBrush;
@@ -106,7 +107,10 @@ namespace CBHK.CustomControl.VectorButton
         #region Method
         public VectorToggleTextButton()
         {
-            BorderBrush = Brushes.Black;
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            SetResourceReference(ForegroundProperty, Theme.CommonForeground);
+            SetResourceReference(CheckedMarkerBrushProperty, Theme.CommonForeground);
+
             Loaded += VectorToggleTextButton_Loaded;
             Initialized += VectorToggleTextButton_Initialized;
             SizeChanged += VectorToggleTextButton_SizeChanged;
@@ -114,18 +118,31 @@ namespace CBHK.CustomControl.VectorButton
             MouseLeave += VectorToggleTextButton_MouseLeave;
         }
 
-        private void UpdateBorderColorByBackgroundColor()
+        private void SetBottomHeight(double height)
         {
-            Background = new SolidColorBrush((ThemeBackground as SolidColorBrush).Color);
+            if (GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
+            {
+                rowDefinition.Height = new(height, GridUnitType.Pixel);
+            }
+        }
 
-            BorderCornerBrush = new SolidColorBrush(ColorTool.Lighten((Background as SolidColorBrush).Color, 0.8f));
-            LeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten((Background as SolidColorBrush).Color, 0.6f));
-            RightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten((Background as SolidColorBrush).Color, 0.4f));
-            BottomBorderBrush = new SolidColorBrush(ColorTool.Darken((Background as SolidColorBrush).Color, 0.5f));
+        public override void UpdateBorderColorByBackgroundColor()
+        {
+            base.UpdateBorderColorByBackgroundColor();
 
-            OriginBorderCornerBrush = BorderCornerBrush;
-            OriginLeftTopBorderBrush = LeftTopBorderBrush;
-            OriginRightBottomBorderBrush = RightBottomBorderBrush;
+            if (ThemeBackground is SolidColorBrush solidColorBrush)
+            {
+                Background = new SolidColorBrush(solidColorBrush.Color);
+
+                BorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(solidColorBrush.Color, 0.8f));
+                LeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(solidColorBrush.Color, 0.6f));
+                RightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten(solidColorBrush.Color, 0.4f));
+                BottomBorderBrush = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color, 0.5f));
+
+                OriginBorderCornerBrush = BorderCornerBrush;
+                OriginLeftTopBorderBrush = LeftTopBorderBrush;
+                OriginRightBottomBorderBrush = RightBottomBorderBrush;
+            }
 
             if (IsChecked is bool value && value)
             {
@@ -141,11 +158,18 @@ namespace CBHK.CustomControl.VectorButton
         #region Event
         private void VectorToggleTextButton_Loaded(object sender, RoutedEventArgs e)
         {
-            SetResourceReference(ThemeBackgroundProperty, Theme.TextButtonBackground);
-            SetResourceReference(ForegroundProperty, Theme.TextBlockForeground);
-            SetResourceReference(CheckedMarkerBrushProperty, Theme.TextBlockForeground);
-
             UpdateBorderColorByBackgroundColor();
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            if (IsChecked is bool value && value)
+            {
+                This_PreviewMouseLeftButtonDown(this, null);
+                IsShowCheckedMarker = Visibility.Visible;
+            }
         }
 
         protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
@@ -166,35 +190,28 @@ namespace CBHK.CustomControl.VectorButton
         protected override void OnClick()
         {
             isUserClicking = true;
+            isNeedUpdateState = true;
             base.OnClick();
+            isNeedUpdateState = false;
             isUserClicking = false;
         }
 
         protected override void OnChecked(RoutedEventArgs e)
         {
-            if (IsLoaded)
-            {
-                IsShowCheckedMarker = Visibility.Visible;
-                if (IsChecked is bool value && value)
-                {
-                    This_PreviewMouseLeftButtonDown(this, null);
-                }
-            }
+            IsShowCheckedMarker = Visibility.Visible;
+            This_PreviewMouseLeftButtonDown(this, null);
         }
 
         protected override void OnUnchecked(RoutedEventArgs e)
         {
-            if (IsLoaded)
+            IsShowCheckedMarker = Visibility.Hidden;
+            if (isUserClicking)
             {
-                IsShowCheckedMarker = Visibility.Hidden;
-                if (IsChecked is bool value && !value && isUserClicking)
-                {
-                    VectorToggleTextButton_MouseEnter(this, null);
-                }
-                else
-                {
-                    VectorToggleTextButton_MouseLeave(this, null);
-                }
+                VectorToggleTextButton_MouseEnter(this, null);
+            }
+            else
+            {
+                VectorToggleTextButton_MouseLeave(this, null);
             }
         }
 
@@ -210,39 +227,37 @@ namespace CBHK.CustomControl.VectorButton
             {
                 Text = "Button";
             }
+
             if (OriginBottomHeight == 0)
             {
                 OriginBottomHeight = 6;
             }
-
-            if (IsChecked is bool value && value)
-            {
-                This_PreviewMouseLeftButtonDown(this, null);
-                IsShowCheckedMarker = Visibility.Visible;
-            }
         }
 
-        private void This_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void This_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if (extraBottomLine is RowDefinition row)
+            if(!isNeedUpdateState)
             {
-                row.Height = new(0, GridUnitType.Pixel);
+                return;
             }
-            Background = new SolidColorBrush(ColorTool.Darken((ThemeBackground as SolidColorBrush).Color, 0.4f));
-            Margin = new(Margin.Left, Margin.Top + MarginTopOffset, Margin.Right, Margin.Bottom);
+            SetBottomHeight(0);
+            if (ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.4f));
+            }
+            Margin = new(Margin.Left, MarginTopOffset, Margin.Right, Margin.Bottom);
         }
 
-        private void VectorToggleTextButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        private void VectorToggleTextButton_MouseLeave(object sender, MouseEventArgs e)
         {
             if(IsChecked.Value)
             {
                 return;
             }
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if (extraBottomLine is RowDefinition row)
+
+            if(GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
             {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
+                rowDefinition.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
             Background = ThemeBackground;
             LeftTopBorderBrush = OriginLeftTopBorderBrush;
@@ -251,18 +266,14 @@ namespace CBHK.CustomControl.VectorButton
             Margin = OriginMargin;
         }
 
-        private void VectorToggleTextButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        private void VectorToggleTextButton_MouseEnter(object sender, MouseEventArgs e)
         {
             if(IsChecked.Value)
             {
                 return;
             }
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
 
-            if (extraBottomLine is RowDefinition row)
-            {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
-            }
+            SetBottomHeight(OriginBottomHeight);
 
             Background = new SolidColorBrush(ColorTool.Darken((ThemeBackground as SolidColorBrush).Color, 0.2f));
             Margin = OriginMargin;

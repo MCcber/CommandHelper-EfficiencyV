@@ -1,29 +1,18 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Utility.Visual;
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.VectorButton
 {
-    public class VectorToggleIconTextButton : ToggleButton
+    public class VectorToggleIconTextButton : BaseVectorToggleButton
     {
         #region Field
         private int OriginBottomHeight;
         private Thickness OriginThumbMargin;
-        private Brush OriginThumbBackground;
-        private Brush OriginForegroundBrush;
-        private Brush OriginBottomBorderBrush;
-        private Brush OriginLeftSideBorderCornerBrush;
-        private Brush OriginLeftTopSelectedBorderBrush;
         private Brush OriginLeftTopBorderBrush;
-        private Brush OriginLeftSideBottomBorderBrush;
         private Brush OriginRightBottomBorderBrush;
-        private Brush OriginRightTopUnSelectedBorderBrush;
-        private Brush OriginRightSideBottomBorderBrush;
-        private Brush OriginRightSideBorderCornerBrush;
-        private Brush OriginBorderCornerBrush;
         #endregion
 
         #region Property
@@ -206,121 +195,40 @@ namespace CBHK.CustomControl.VectorButton
         #region Method
         public VectorToggleIconTextButton()
         {
+            UnSelectedBackground = new BrushConverter().ConvertFromString("#8C8D90") as SolidColorBrush;
+            Background = ThumbBackground = new BrushConverter().ConvertFromString("#F4F6F9") as SolidColorBrush;
             Loaded += VectorToggleIconTextButton_Loaded;
             PreviewMouseLeftButtonUp += VectorToggleIconTextButton_PreviewMouseLeftButtonUp;
             PreviewMouseLeftButtonDown += VectorToggleIconTextButton_PreviewMouseLeftButtonDown;
             MouseLeave += VectorToggleIconTextButton_MouseLeave;
             MouseEnter += VectorToggleIconTextButton_MouseEnter;
-            Click += VectorToggleIconTextButton_Click;
-            Checked += VectorToggleIconTextButton_Checked;
-            Unchecked += VectorToggleIconTextButton_Unchecked;
         }
 
-        private void UpdateBorderColorByBackgroundColor(object sender)
+        public override void UpdateBorderColorByBackgroundColor()
         {
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if (extraBottomLine is RowDefinition row)
+            //base.UpdateBorderColorByBackgroundColor();
+
+            if(ThemeBackground is SolidColorBrush themeBrush)
             {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
+                SelectedBackground = new SolidColorBrush(themeBrush.Color);
+                LeftSideSelectedBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.3f));
+                LeftSideBottomSelectedBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
+                LeftTopSelectedBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
             }
 
-            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
-            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style || Foreground is null)
+            if (ThumbBackground is SolidColorBrush thumbBrush)
             {
-                Foreground = OriginForegroundBrush = Brushes.White;
+                BorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(thumbBrush.Color, 0.4f));
+                LeftTopBorderBrush = OriginLeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(thumbBrush.Color, 0.2f));
+                RightBottomBorderBrush = OriginRightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten(thumbBrush.Color, 0.3f));
+                BottomBorderBrush = new SolidColorBrush(ColorTool.Darken(thumbBrush.Color, 0.6f));
             }
 
-            var selectedbackgroundSource = DependencyPropertyHelper.GetValueSource(this, SelectedBackgroundProperty);
-            if (selectedbackgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || selectedbackgroundSource.BaseValueSource is BaseValueSource.Style || SelectedBackground is null)
+            if(UnSelectedBackground is SolidColorBrush unSelectedBackgroundBrush)
             {
-                SelectedBackground = new BrushConverter().ConvertFromString("#3C8527") as Brush;
-            }
-            var unSelectedbackgroundSource = DependencyPropertyHelper.GetValueSource(this, UnSelectedBackgroundProperty);
-            if (unSelectedbackgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || unSelectedbackgroundSource.BaseValueSource is BaseValueSource.Style || UnSelectedBackground is null)
-            {
-                UnSelectedBackground = new BrushConverter().ConvertFromString("#8C8D90") as Brush;
-            }
-            var thumbBackgroundSource = DependencyPropertyHelper.GetValueSource(this, ThumbBackgroundProperty);
-            if (thumbBackgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || thumbBackgroundSource.BaseValueSource is BaseValueSource.Style || ThumbBackground is null)
-            {
-                ThumbBackground = OriginThumbBackground = new BrushConverter().ConvertFromString("#D0D1D4") as Brush;
-            }
-            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
-            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                BorderBrush = Brushes.Black;
-            }
-
-            var borderCornerBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderCornerBrushProperty);
-            if (borderCornerBorderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderCornerBorderBrushSource.BaseValueSource is BaseValueSource.Style || borderCornerBorderBrushSource.BaseValueSource is BaseValueSource.Default || BorderCornerBrush is null)
-            {
-                SolidColorBrush solidColorBrush = ThumbBackground as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidColorBrush.Color, 0.4f);
-                BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(color);
-            }
-
-            var originleftBorderCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftSideSelectedBorderCornerBrushProperty);
-            if (originleftBorderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originleftBorderCornerBrushSource.BaseValueSource is BaseValueSource.Style || LeftSideSelectedBorderCornerBrush is null)
-            {
-                SolidColorBrush solidColorBrush = SelectedBackground as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidColorBrush.Color, 0.15f);
-                LeftSideSelectedBorderCornerBrush = OriginLeftSideBorderCornerBrush = new SolidColorBrush(color);
-            }
-            var originLeftSideBottomBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftSideBottomSelectedBorderBrushProperty);
-            if (originLeftSideBottomBrushSource.BaseValueSource is BaseValueSource.Default || originLeftSideBottomBrushSource.BaseValueSource is BaseValueSource.Style || LeftSideBottomSelectedBorderBrush is null)
-            {
-                Color color = ColorTool.Darken((SelectedBackground as SolidColorBrush).Color, 0.1f);
-                LeftSideBottomSelectedBorderBrush = OriginLeftSideBottomBorderBrush = new SolidColorBrush(color);
-            }
-            var originLeftTopSelectedBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopSelectedBorderBrushProperty);
-            if (originLeftTopSelectedBorderBrushSource.BaseValueSource is BaseValueSource.Default || originLeftTopSelectedBorderBrushSource.BaseValueSource is BaseValueSource.Style || LeftTopSelectedBorderBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = SelectedBackground as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.1f);
-                LeftTopSelectedBorderBrush = OriginLeftTopSelectedBorderBrush = new SolidColorBrush(color);
-            }
-
-            var originRightTopSelectedBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, RightTopUnSelectedBorderBrushProperty);
-            if (originRightTopSelectedBorderBrushSource.BaseValueSource is BaseValueSource.Default || originRightTopSelectedBorderBrushSource.BaseValueSource is BaseValueSource.Style || RightTopUnSelectedBorderBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = UnSelectedBackground as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.1f);
-                RightTopUnSelectedBorderBrush = OriginRightTopUnSelectedBorderBrush = new SolidColorBrush(color);
-            }
-            var originRightBottomSelectedBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, RightSideBottomUnSelectedBorderBrushProperty);
-            if (originRightBottomSelectedBorderBrushSource.BaseValueSource is BaseValueSource.Default || originRightBottomSelectedBorderBrushSource.BaseValueSource is BaseValueSource.Style || RightSideBottomUnSelectedBorderBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = UnSelectedBackground as SolidColorBrush;
-                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.1f);
-                RightSideBottomUnSelectedBorderBrush = OriginRightSideBottomBorderBrush = new SolidColorBrush(color);
-            }
-            var originRightBorderCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, RightSideUnSelectedBorderCornerBrushProperty);
-            if (originRightBorderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originRightBorderCornerBrushSource.BaseValueSource is BaseValueSource.Style || RightSideUnSelectedBorderCornerBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = UnSelectedBackground as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.15f);
-                RightSideUnSelectedBorderCornerBrush = OriginRightSideBorderCornerBrush = new SolidColorBrush(color);
-            }
-            var originLeftTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopBorderBrushProperty);
-            if (originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Style || LeftTopBorderBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = ThumbBackground as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
-                LeftTopBorderBrush = OriginLeftTopBorderBrush = new SolidColorBrush(color);
-            }
-            var originRightBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
-            if (originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style || LeftTopBorderBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = ThumbBackground as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.3f);
-                RightBottomBorderBrush = OriginRightBottomBorderBrush = new SolidColorBrush(color);
-            }
-            var originBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, BottomBorderBrushProperty);
-            if (originBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style || BottomBorderBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = ThumbBackground as SolidColorBrush;
-                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.6f);
-                BottomBorderBrush = OriginBottomBorderBrush = new SolidColorBrush(color);
+                RightTopUnSelectedBorderBrush = new SolidColorBrush(ColorTool.Lighten(unSelectedBackgroundBrush.Color, 0.2f));
+                RightSideBottomUnSelectedBorderBrush = new SolidColorBrush(ColorTool.Lighten(unSelectedBackgroundBrush.Color, 0.2f));
+                RightSideUnSelectedBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(unSelectedBackgroundBrush.Color, 0.3f));
             }
         }
         #endregion
@@ -339,21 +247,30 @@ namespace CBHK.CustomControl.VectorButton
             {
                 BackgroundWidth = 70;
             }
+
             if (BackgroundHeight == 0)
             {
                 BackgroundHeight = 35;
             }
+
             if(ThumbWidth == 0)
             {
                 ThumbWidth = BackgroundWidth / 2 + 2;
             }
+
             if(ThumbHeight == 0)
             {
                 ThumbHeight = BackgroundHeight + 5;
             }
-            OriginThumbMargin = ThumbMargin = new(0, -5, 0, 0);
 
-            UpdateBorderColorByBackgroundColor(sender);
+            OriginThumbMargin = ThumbMargin = new(2, -5, 0, 0);
+
+            if (GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
+            {
+                rowDefinition.Height = new GridLength(OriginBottomHeight);
+            }
+
+            UpdateBorderColorByBackgroundColor();
         }
 
         private void VectorToggleIconTextButton_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -363,53 +280,45 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorToggleIconTextButton_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            Color thumbColor = ColorTool.Darken((OriginThumbBackground as SolidColorBrush).Color, 0.4f);
-            ThumbBackground = new SolidColorBrush(thumbColor);
+            if (Background is SolidColorBrush solidColorBrush)
+            {
+                ThumbBackground = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color, 0.4f));
+            }
         }
 
         private void VectorToggleIconTextButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            ThumbBackground = OriginThumbBackground;
+            ThumbBackground = Background;
             LeftTopBorderBrush = OriginLeftTopBorderBrush;
             RightBottomBorderBrush = OriginRightBottomBorderBrush;
         }
 
         private void VectorToggleIconTextButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            Color darkColor = ColorTool.Darken((OriginThumbBackground as SolidColorBrush).Color, 0.2f);
-            ThumbBackground = new SolidColorBrush(darkColor);
-            Color leftTopColor = ColorTool.Lighten((OriginLeftTopBorderBrush as SolidColorBrush).Color, 0.3f);
-            LeftTopBorderBrush = new SolidColorBrush(leftTopColor);
-            Color rightBottomColor = ColorTool.Lighten((OriginRightBottomBorderBrush as SolidColorBrush).Color, 0.4f);
-            RightBottomBorderBrush = new SolidColorBrush(rightBottomColor);
-        }
-
-        private void VectorToggleIconTextButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (IsChecked is bool value && value)
+            if (Background is SolidColorBrush backgroundBrush)
             {
-                VectorToggleIconTextButton_Checked(sender, null);
+                ThumbBackground = new SolidColorBrush(ColorTool.Darken(backgroundBrush.Color, 0.2f));
             }
-            else
+            if (OriginLeftTopBorderBrush is SolidColorBrush leftTopBorderBrush)
             {
-                VectorToggleIconTextButton_Unchecked(sender,null);
+                LeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(leftTopBorderBrush.Color, 0.3f));
+            }
+            if (OriginRightBottomBorderBrush is SolidColorBrush rightBottomBorderBrush)
+            {
+                RightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten(rightBottomBorderBrush.Color, 0.4f));
             }
         }
 
-        private void VectorToggleIconTextButton_Unchecked(object sender, RoutedEventArgs e)
+        protected override void OnChecked(RoutedEventArgs e)
         {
-            if (IsChecked is not null)
-            {
-                ThumbMargin = OriginThumbMargin;
-            }
+            base.OnChecked(e);
+            ThumbMargin = new(BackgroundWidth / 2, -5, 0, 0);
         }
 
-        private void VectorToggleIconTextButton_Checked(object sender, RoutedEventArgs e)
+        protected override void OnUnchecked(RoutedEventArgs e)
         {
-            if (IsChecked is not null)
-            {
-                ThumbMargin = new(BackgroundWidth / 2, -5, 0, 0);
-            }
+            base.OnUnchecked(e);
+            ThumbMargin = OriginThumbMargin;
         }
         #endregion
     }

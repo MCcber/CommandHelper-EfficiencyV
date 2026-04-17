@@ -3,23 +3,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton">
 
-    <SolidColorBrush x:Key="Button.Static.Background" Color="#FFDDDDDD" />
-    <SolidColorBrush x:Key="Button.Static.Border" Color="#FF707070" />
-    <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#FFBEE6FD" />
-    <SolidColorBrush x:Key="Button.MouseOver.Border" Color="#FF3C7FB1" />
-    <SolidColorBrush x:Key="Button.Pressed.Background" Color="#FFC4E5F6" />
-    <SolidColorBrush x:Key="Button.Pressed.Border" Color="#FF2C628B" />
-    <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4" />
-    <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
-    <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
-
     <Style x:Key="VectorToggleIconTextButtonStyle" TargetType="{x:Type VectorButton:VectorToggleIconTextButton}">
         <Setter Property="ClipToBounds" Value="False" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="UseLayoutRounding" Value="True" />
-        <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="1" />
@@ -42,7 +31,7 @@
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
                                 Panel.ZIndex="1"
-                                Foreground="{TemplateBinding Foreground}"
+                                Foreground="{DynamicResource CommonForeground}"
                                 Text="{TemplateBinding Text}" />
                             <Border
                                 Grid.Column="1"
@@ -210,11 +199,7 @@
                                     <Rectangle
                                         Grid.Row="0"
                                         Grid.Column="0"
-                                        Fill="{TemplateBinding LeftTopBorderBrush}"
-                                        IsHitTestVisible="False" />
-                                    <Rectangle
-                                        Grid.Row="0"
-                                        Grid.Column="1"
+                                        Grid.ColumnSpan="2"
                                         Fill="{TemplateBinding LeftTopBorderBrush}"
                                         IsHitTestVisible="False" />
                                     <Rectangle
@@ -240,11 +225,7 @@
                                     <Rectangle
                                         Grid.Row="2"
                                         Grid.Column="1"
-                                        Fill="{TemplateBinding RightBottomBorderBrush}"
-                                        IsHitTestVisible="False" />
-                                    <Rectangle
-                                        Grid.Row="2"
-                                        Grid.Column="2"
+                                        Grid.ColumnSpan="2"
                                         Fill="{TemplateBinding RightBottomBorderBrush}"
                                         IsHitTestVisible="False" />
                                     <Rectangle
@@ -268,24 +249,6 @@
                                 SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                         </Grid>
                     </Border>
-                    <!--<ControlTemplate.Triggers>
-                        <Trigger Property="Button.IsDefaulted" Value="true">
-                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource Button.MouseOver.Background}" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.MouseOver.Border}" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="true">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource Button.Pressed.Background}" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.Pressed.Border}" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="false">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource Button.Disabled.Background}" />
-                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.Disabled.Border}" />
-                            <Setter TargetName="contentPresenter" Property="TextElement.Foreground" Value="{StaticResource Button.Disabled.Foreground}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>-->
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

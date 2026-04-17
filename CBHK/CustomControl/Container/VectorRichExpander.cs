@@ -1,4 +1,5 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -8,10 +9,9 @@ namespace CBHK.CustomControl.Container
     public class VectorRichExpander : Expander
     {
         #region Field
-        private Brush OriginBackground;
         private Brush OriginLeftTopBorderBrush;
         private Brush OriginRightBottomBorderBrush;
-        private Brush OriginCornerBorderBrush;
+        private Brush OriginBorderCornerBrush;
         #endregion
 
         #region Property
@@ -60,14 +60,14 @@ namespace CBHK.CustomControl.Container
         public static readonly DependencyProperty RightBottomBorderBrushProperty =
             DependencyProperty.Register("RightBottomBorderBrush", typeof(Brush), typeof(VectorRichExpander), new PropertyMetadata(default(Brush)));
 
-        public Brush CornerBorderBrush
+        public Brush BorderCornerBrush
         {
-            get { return (Brush)GetValue(CornerBorderBrushProperty); }
-            set { SetValue(CornerBorderBrushProperty, value); }
+            get { return (Brush)GetValue(BorderCornerBrushProperty); }
+            set { SetValue(BorderCornerBrushProperty, value); }
         }
 
-        public static readonly DependencyProperty CornerBorderBrushProperty =
-            DependencyProperty.Register("CornerBorderBrush", typeof(Brush), typeof(VectorRichExpander), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty BorderCornerBrushProperty =
+            DependencyProperty.Register("BorderCornerBrush", typeof(Brush), typeof(VectorRichExpander), new PropertyMetadata(default(Brush)));
 
         public Brush ArrowBrush
         {
@@ -86,11 +86,23 @@ namespace CBHK.CustomControl.Container
 
         public static readonly DependencyProperty ArrowMarginProperty =
             DependencyProperty.Register("ArrowMargin", typeof(Thickness), typeof(VectorRichExpander), new PropertyMetadata(default(Thickness)));
+
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(VectorRichExpander), new PropertyMetadata(default(Brush)));
         #endregion
 
         #region Method
         public VectorRichExpander()
         {
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            SetResourceReference(ForegroundProperty,Theme.CommonForeground);
+            SetResourceReference(ArrowBrushProperty, Theme.CommonForeground);
             Loaded += VectorRichExpander_Loaded;
             MouseEnter += VectorRichExpander_MouseEnter;
             MouseLeave += VectorRichExpander_MouseLeave;
@@ -102,56 +114,12 @@ namespace CBHK.CustomControl.Container
 
         private void UpdateBorderColorByBackgroundColor()
         {
-            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
-            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
+            if(ThemeBackground is SolidColorBrush themeBrush)
             {
-                Foreground = Brushes.White;
-            }
-            var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Background = new BrushConverter().ConvertFromString("#48494A") as Brush;
-            }
-            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
-            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                BorderBrush = Brushes.Black;
-            }
-            var originLeftTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopBorderBrushProperty);
-            if (originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
-                LeftTopBorderBrush = new SolidColorBrush(color);
-            }
-            var originRightBottomBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
-            if (originRightBottomBrushSource.BaseValueSource is BaseValueSource.Default || originRightBottomBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.4f);
-                RightBottomBorderBrush = new SolidColorBrush(color);
-            }
-            var originCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, CornerBorderBrushProperty);
-            if (originCornerBrushSource.BaseValueSource is BaseValueSource.Default || originCornerBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.2f);
-                CornerBorderBrush = new SolidColorBrush(color);
-            }
-
-            if (OriginBackground is null && Background is not null)
-            {
-                OriginBackground = Background;
-            }
-            if (OriginLeftTopBorderBrush is null && LeftTopBorderBrush is not null)
-            {
-                OriginLeftTopBorderBrush = LeftTopBorderBrush;
-            }
-            if (OriginRightBottomBorderBrush is null && RightBottomBorderBrush is not null)
-            {
-                OriginRightBottomBorderBrush = RightBottomBorderBrush;
-            }
-            if (OriginCornerBorderBrush is null && CornerBorderBrush is not null)
-            {
-                OriginCornerBorderBrush = CornerBorderBrush;
+                Background = new SolidColorBrush(themeBrush.Color);
+                LeftTopBorderBrush = OriginLeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
+                RightBottomBorderBrush = OriginRightBottomBorderBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.4f));
+                BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
             }
         }
         #endregion
@@ -162,6 +130,15 @@ namespace CBHK.CustomControl.Container
             UpdateBorderColorByBackgroundColor();
         }
 
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
+        }
+
         private void VectorRichExpander_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             VectorRichExpander_MouseEnter(sender, null);
@@ -169,37 +146,52 @@ namespace CBHK.CustomControl.Container
 
         private void VectorRichExpander_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            Color lightBackgroundColor = ColorTool.Darken((OriginBackground as SolidColorBrush).Color, 0.2f);
-            Background = new SolidColorBrush(lightBackgroundColor);
-            Color lightLeftTopBorderColor = ColorTool.Darken((OriginLeftTopBorderBrush as SolidColorBrush).Color, 0.4f);
-            LeftTopBorderBrush = new SolidColorBrush(lightLeftTopBorderColor);
-            Color lightRightBottomBorderColor = ColorTool.Darken((RightBottomBorderBrush as SolidColorBrush).Color, 0.2f);
-            RightBottomBorderBrush = new SolidColorBrush(lightRightBottomBorderColor);
-            Color lightCornerColor = ColorTool.Darken((OriginCornerBorderBrush as SolidColorBrush).Color, 0.2f);
-            CornerBorderBrush = new SolidColorBrush(lightCornerColor);
+            if(ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
+            }
+            if(OriginLeftTopBorderBrush is SolidColorBrush originLeftTopBorderBrush)
+            {
+                LeftTopBorderBrush = new SolidColorBrush(ColorTool.Darken(originLeftTopBorderBrush.Color, 0.4f));
+            }
+            if(OriginRightBottomBorderBrush is SolidColorBrush originRightBottomBorderBrush)
+            {
+                RightBottomBorderBrush = new SolidColorBrush(ColorTool.Darken(originRightBottomBorderBrush.Color, 0.2f));
+            }
+            if(OriginBorderCornerBrush is SolidColorBrush originBorderCornerBrush)
+            {
+                BorderCornerBrush = new SolidColorBrush(ColorTool.Darken(originBorderCornerBrush.Color, 0.2f));
+            }
         }
 
         private void VectorRichExpander_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            Background = OriginBackground;
             LeftTopBorderBrush = OriginLeftTopBorderBrush;
             RightBottomBorderBrush = OriginRightBottomBorderBrush;
-            CornerBorderBrush = OriginCornerBorderBrush;
+            BorderCornerBrush = OriginBorderCornerBrush;
         }
 
         private void VectorRichExpander_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            Color lightBackgroundColor = ColorTool.Lighten((OriginBackground as SolidColorBrush).Color, 0.1f);
-            Background = new SolidColorBrush(lightBackgroundColor);
-            Color lightLeftTopBorderColor = ColorTool.Lighten((OriginLeftTopBorderBrush as SolidColorBrush).Color, 0.1f);
-            LeftTopBorderBrush = new SolidColorBrush(lightLeftTopBorderColor);
-            Color lightRightBottomBorderColor = ColorTool.Lighten((OriginRightBottomBorderBrush as SolidColorBrush).Color, 0.1f);
-            RightBottomBorderBrush = new SolidColorBrush(lightRightBottomBorderColor);
-            Color lightCornerColor = ColorTool.Lighten((OriginCornerBorderBrush as SolidColorBrush).Color, 0.1f);
-            CornerBorderBrush = new SolidColorBrush(lightCornerColor);
+            if (ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.1f));
+            }
+            if (OriginLeftTopBorderBrush is SolidColorBrush originLeftTopBorderBrush)
+            {
+                LeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(originLeftTopBorderBrush.Color, 0.1f));
+            }
+            if (OriginRightBottomBorderBrush is SolidColorBrush originRightBottomBorderBrush)
+            {
+                RightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten(originRightBottomBorderBrush.Color, 0.1f));
+            }
+            if (OriginBorderCornerBrush is SolidColorBrush originBorderCornerBrush)
+            {
+                BorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(originBorderCornerBrush.Color, 0.1f));
+            }
         }
 
-        private void VectorRichExpander_Expanded(object sender, System.Windows.RoutedEventArgs e) => RotationAngle = 180;
+        private void VectorRichExpander_Expanded(object sender, RoutedEventArgs e) => RotationAngle = 180;
 
         private void VectorRichExpander_Collapsed(object sender, RoutedEventArgs e) => RotationAngle = 0;
         #endregion

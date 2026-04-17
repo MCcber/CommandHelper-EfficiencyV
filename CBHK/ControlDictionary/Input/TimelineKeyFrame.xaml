@@ -34,7 +34,7 @@
                                 <Border
                                     Grid.Row="1"
                                     Grid.Column="1"
-                                    BorderBrush="{TemplateBinding InnerBorderBrush}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="1">
                                     <Grid>
                                         <Grid.RowDefinitions>

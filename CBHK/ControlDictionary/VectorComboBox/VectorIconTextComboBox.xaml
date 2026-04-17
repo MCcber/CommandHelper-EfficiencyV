@@ -39,31 +39,19 @@
                 Margin="5,0,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
+                Background="Transparent"
+                Foreground="{DynamicResource CommonForeground}"
                 Text="{Binding Text, Mode=OneWay}"
                 TextAlignment="Center"
                 TextTrimming="CharacterEllipsis"
-                TextWrapping="NoWrap">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Setter Property="Foreground" Value="{Binding MemberBrush}" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ComboBoxItem}}}" Value="{x:Null}">
-                                <Setter Property="Foreground" Value="{Binding DisplayPanelBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ComboBoxItem}}}" Value="{x:Static DependencyProperty.UnsetValue}">
-                                <Setter Property="Foreground" Value="{Binding DisplayPanelBrush}" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
+                TextWrapping="NoWrap" />
         </Grid>
     </DataTemplate>
 
     <Style
         x:Key="VectorIconTextComboBoxStyle"
-        BasedOn="{StaticResource VectorTextComboBoxStyle}"
+        BasedOn="{DynamicResource VectorTextComboBoxStyle}"
         TargetType="{x:Type VectorComboBox:VectorIconTextComboBox}">
-        <Setter Property="ItemTemplate" Value="{StaticResource VectorIconTextComboBoxItemTemplate}" />
+        <Setter Property="ItemTemplate" Value="{DynamicResource VectorIconTextComboBoxItemTemplate}" />
     </Style>
 </ResourceDictionary>

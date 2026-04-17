@@ -62,6 +62,10 @@
                                             Width="{TemplateBinding TitleButtonWidth}"
                                             Height="{TemplateBinding TitleBarHeight}"
                                             DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                            Icon="M65.23884 456.152041 958.760137 456.152041l0 111.695918L65.23884 567.847959 65.23884 456.152041z"
+                                            IconHeight="10"
+                                            IconMargin="0 0 0 5"
+                                            IconWidth="10"
                                             Style="{DynamicResource VectorSolidIconButtonStyle}"
                                             WindowChrome.IsHitTestVisibleInChrome="True">
                                             <behavior:Interaction.Triggers>
@@ -69,15 +73,6 @@
                                                     <behavior:CallMethodAction MethodName="MinimizeButton_Loaded" TargetObject="{Binding}" />
                                                 </behavior:EventTrigger>
                                             </behavior:Interaction.Triggers>
-                                            <Line
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Stroke="White"
-                                                StrokeThickness="1"
-                                                X1="0"
-                                                X2="10"
-                                                Y1="0"
-                                                Y2="0" />
                                         </VectorButton:VectorSolidIconButton>
                                         <VectorButton:VectorSolidIconButton
                                             Grid.Column="1"
@@ -85,9 +80,7 @@
                                             Height="{TemplateBinding TitleBarHeight}"
                                             DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
                                             Icon="{TemplateBinding MaximizeButtonPathData}"
-                                            IconFillColor="{TemplateBinding RestorePathFillBrush}"
                                             IconHeight="10"
-                                            IconStrokeColor="White"
                                             IconWidth="10"
                                             Style="{DynamicResource VectorSolidIconButtonStyle}"
                                             WindowChrome.IsHitTestVisibleInChrome="True">
@@ -103,7 +96,6 @@
                                             Height="{TemplateBinding TitleBarHeight}"
                                             DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
                                             Icon="{DynamicResource CloseMark}"
-                                            IconFillColor="White"
                                             IconHeight="10"
                                             IconWidth="10"
                                             Style="{DynamicResource VectorSolidIconButtonStyle}"

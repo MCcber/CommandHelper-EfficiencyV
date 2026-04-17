@@ -396,6 +396,10 @@ namespace CBHK.ViewModel.Generator
             }
         }
 
+        public void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+        }
+
         /// <summary>
         /// 搜索文本更新
         /// </summary>

@@ -1,8 +1,7 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
-    xmlns:VectorScrollBar="clr-namespace:CBHK.CustomControl.VectorScrollBar">
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container">
 
     <ControlTemplate x:Key="VerticalThumbStyle" TargetType="{x:Type Thumb}">
         <Border BorderBrush="Black" BorderThickness="2">
@@ -56,22 +55,74 @@
         </Border>
     </ControlTemplate>
 
-    <Style x:Key="VectorVerticalScrollBarStyle" TargetType="{x:Type VectorScrollBar:VectorScrollBar}">
+    <ControlTemplate x:Key="HorizontalThumbStyle" TargetType="{x:Type Thumb}">
+        <Border BorderBrush="Black" BorderThickness="2">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="2" MinHeight="1" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="2" MinHeight="1" />
+                    <RowDefinition Height="2" MinHeight="0" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="2" />
+                </Grid.ColumnDefinitions>
+                <Rectangle
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Fill="{Binding BorderCornerBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorScrollViewer}}" />
+                <Rectangle
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Fill="{Binding BorderCornerBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorScrollViewer}}" />
+                <Rectangle
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Fill="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorScrollViewer}}" />
+                <Rectangle
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Fill="{Binding LeftTopBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorScrollViewer}}" />
+                <Rectangle
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Fill="{Binding LeftTopBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorScrollViewer}}" />
+                <Rectangle
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Fill="{Binding RightBottomBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorScrollViewer}}" />
+                <Rectangle
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2"
+                    Fill="{Binding RightBottomBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorScrollViewer}}" />
+                <Rectangle
+                    Grid.Row="3"
+                    Grid.ColumnSpan="3"
+                    Fill="{Binding BottomBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorScrollViewer}}" />
+            </Grid>
+        </Border>
+    </ControlTemplate>
+
+    <Style x:Key="VectorVerticalScrollBarStyle" TargetType="{x:Type ScrollBar}">
         <Style.Setters>
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="UseLayoutRounding" Value="true" />
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type VectorScrollBar:VectorScrollBar}">
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
                         <Grid
                             MinWidth="12"
-                            MinHeight="20"
+                            MinHeight="12"
                             ClipToBounds="False">
                             <Rectangle
                                 Width="4"
                                 HorizontalAlignment="Center"
                                 Panel.ZIndex="0"
-                                Fill="#313233" />
+                                Fill="{Binding ScrollbarBackground, RelativeSource={RelativeSource AncestorType=Container:VectorScrollViewer}}" />
                             <Track
                                 x:Name="PART_Track"
                                 Panel.ZIndex="1"
@@ -115,52 +166,55 @@
         </Style.Setters>
     </Style>
 
-    <Style x:Key="VectorHorizontalScrollBarStyle" TargetType="{x:Type VectorScrollBar:VectorScrollBar}">
+    <Style x:Key="VectorHorizontalScrollBarStyle" TargetType="{x:Type ScrollBar}">
         <Style.Setters>
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="UseLayoutRounding" Value="true" />
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type VectorScrollBar:VectorScrollBar}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="2" />
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="2" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="2" />
-                            </Grid.ColumnDefinitions>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid
+                            MinWidth="12"
+                            MinHeight="12"
+                            ClipToBounds="False">
                             <Rectangle
-                                Grid.Row="0"
-                                Grid.Column="2"
-                                Fill="#F9FAFA" />
-                            <Rectangle
-                                Grid.Row="2"
-                                Grid.Column="0"
-                                Fill="#F9FAFA" />
-                            <Rectangle
-                                Grid.RowSpan="3"
-                                Grid.Column="1"
-                                Fill="#E6E8EB" />
-                            <Rectangle
-                                Grid.Row="0"
-                                Grid.Column="0"
-                                Grid.ColumnSpan="2"
-                                Fill="#F5F6F7" />
-                            <Rectangle
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                Fill="#F5F6F7" />
-                            <Rectangle
-                                Grid.Row="2"
-                                Grid.Column="1"
-                                Grid.ColumnSpan="2"
-                                Fill="#F5F6F7" />
-                            <Rectangle
-                                Grid.Row="1"
-                                Grid.Column="2"
-                                Fill="#F5F6F7" />
+                                Width="4"
+                                HorizontalAlignment="Center"
+                                Panel.ZIndex="0"
+                                Fill="{Binding ScrollbarBackground, RelativeSource={RelativeSource AncestorType=Container:VectorScrollViewer}}" />
+                            <Track x:Name="PART_Track" Panel.ZIndex="1">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton
+                                        BorderThickness="0"
+                                        Command="ScrollBar.PageLeftCommand"
+                                        FocusVisualStyle="{x:Null}">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="Transparent" BorderThickness="0">
+                                                    <ContentPresenter />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Template="{DynamicResource HorizontalThumbStyle}" />
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton
+                                        BorderThickness="0"
+                                        Command="ScrollBar.PageRightCommand"
+                                        FocusVisualStyle="{x:Null}">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="Transparent" BorderThickness="0">
+                                                    <ContentPresenter />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -175,7 +229,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Container:VectorScrollViewer}">
-                    <Grid Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                    <Grid Background="Transparent" SnapsToDevicePixels="True">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <!--<ColumnDefinition Width="Auto" />-->
@@ -190,7 +244,7 @@
                             Grid.Column="0"
                             Margin="{TemplateBinding Padding}"
                             CanContentScroll="{TemplateBinding CanContentScroll}" />
-                        <VectorScrollBar:VectorScrollBar
+                        <ScrollBar
                             x:Name="PART_VerticalScrollBar"
                             Grid.Row="0"
                             Grid.Column="0"
@@ -201,7 +255,7 @@
                             Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
                             Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
 
-                        <VectorScrollBar:VectorScrollBar
+                        <ScrollBar
                             x:Name="PART_HorizontalScrollBar"
                             Grid.Row="0"
                             Grid.Column="0"
@@ -210,6 +264,7 @@
                             VerticalAlignment="Bottom"
                             Maximum="{TemplateBinding ScrollableWidth}"
                             Orientation="Horizontal"
+                            Style="{DynamicResource VectorHorizontalScrollBarStyle}"
                             ViewportSize="{TemplateBinding ViewportWidth}"
                             Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
                             Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource Mode=TemplatedParent}}" />

@@ -20,9 +20,9 @@
         </Style.Triggers>
     </Style>-->
 
-    <SolidColorBrush x:Key="TextBox.Static.Border" Color="#FFABAdB3" />
+    <!--<SolidColorBrush x:Key="TextBox.Static.Border" Color="#FFABAdB3" />
     <SolidColorBrush x:Key="TextBox.MouseOver.Border" Color="#FF7EB4EA" />
-    <SolidColorBrush x:Key="TextBox.Focus.Border" Color="#FF569DE5" />
+    <SolidColorBrush x:Key="TextBox.Focus.Border" Color="#FF569DE5" />-->
     <!--<Style x:Key="{x:Type TextBoxBase}" TargetType="{x:Type TextBoxBase}">
         <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
         <Setter Property="BorderBrush" Value="{StaticResource TextBox.Static.Border}" />
@@ -92,7 +92,6 @@
             </Style>-->
         </Style.Resources>
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="BorderBrush" Value="Black" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Input:VectorRichTextBox">
@@ -104,7 +103,7 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="2"
                         SnapsToDevicePixels="True">
-                        <Grid>
+                        <Grid Background="Transparent">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="5" />
                                 <RowDefinition Height="*" />
@@ -116,6 +115,7 @@
                                 Panel.ZIndex="1"
                                 Focusable="false"
                                 HorizontalScrollBarVisibility="Auto"
+                                IsAllowDragToScroll="False"
                                 Style="{DynamicResource VectorScrollViewerStyle}"
                                 VerticalScrollBarVisibility="Auto" />
                             <TextBlock
@@ -126,6 +126,7 @@
                                 VerticalAlignment="Center"
                                 Panel.ZIndex="0"
                                 Background="Transparent"
+                                FontSize="{TemplateBinding FontSize}"
                                 Foreground="{Binding WaterMarkerBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorRichTextBox}}"
                                 Text="{Binding WaterMarkerText, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Input:VectorRichTextBox}}"
                                 TextAlignment="Center" />

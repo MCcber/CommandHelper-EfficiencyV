@@ -28,7 +28,7 @@
                                 VerticalContentAlignment="Center"
                                 Background="#313233"
                                 BorderBrush="#242425"
-                                Foreground="{TemplateBinding Foreground}"
+                                Foreground="{DynamicResource CommonForeground}"
                                 LocateLineBrush="{TemplateBinding LocateLineBrush}"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding Text, RelativeSource={RelativeSource Mode=TemplatedParent}, UpdateSourceTrigger=PropertyChanged}"

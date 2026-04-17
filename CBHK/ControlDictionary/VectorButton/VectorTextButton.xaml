@@ -12,7 +12,7 @@
                     <Border
                         x:Name="templateRoot"
                         Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding RoundBorderBrush}"
+                        BorderBrush="Black"
                         BorderThickness="1">
                         <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                             <Grid.ColumnDefinitions>
@@ -29,12 +29,8 @@
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="0"
-                                Fill="{TemplateBinding TopBorderBrush}"
-                                IsHitTestVisible="False" />
-                            <Rectangle
-                                Grid.Row="0"
-                                Grid.Column="1"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Grid.ColumnSpan="2"
+                                Fill="{TemplateBinding RoundBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="0"
@@ -44,12 +40,12 @@
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="0"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding RoundBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="1"
                                 Grid.Column="2"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Fill="{TemplateBinding RoundBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="2"
@@ -59,12 +55,8 @@
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="1"
-                                Fill="{TemplateBinding TopBorderBrush}"
-                                IsHitTestVisible="False" />
-                            <Rectangle
-                                Grid.Row="2"
-                                Grid.Column="2"
-                                Fill="{TemplateBinding TopBorderBrush}"
+                                Grid.ColumnSpan="2"
+                                Fill="{TemplateBinding RoundBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
                                 Grid.Row="3"
@@ -85,7 +77,7 @@
                                 FontFamily="{TemplateBinding FontFamily}"
                                 FontStyle="{TemplateBinding FontStyle}"
                                 FontWeight="{TemplateBinding FontWeight}"
-                                Foreground="{TemplateBinding Foreground}"
+                                Foreground="{DynamicResource CommonForeground}"
                                 IsHitTestVisible="False"
                                 Text="{TemplateBinding Text}"
                                 TextAlignment="Center"

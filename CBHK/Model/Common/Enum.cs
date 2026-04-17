@@ -18,6 +18,12 @@
         Down
     }
 
+    public enum ColorModifyMode
+    {
+        Darken,
+        Lighten
+    }
+
     public enum ChangeType
     {
         None,

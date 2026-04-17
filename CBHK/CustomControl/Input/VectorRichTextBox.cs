@@ -1,6 +1,9 @@
-﻿using System.Windows;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.Input
@@ -46,6 +49,15 @@ namespace CBHK.CustomControl.Input
         public static readonly DependencyProperty WaterMarkerMarginProperty =
             DependencyProperty.Register("WaterMarkerMargin", typeof(Thickness), typeof(VectorRichTextBox), new PropertyMetadata(default(Thickness)));
 
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(VectorRichTextBox), new PropertyMetadata(default(Brush)));
+
         public bool HasText => (bool)GetValue(HasTextPropertyKey.DependencyProperty);
 
         private static readonly DependencyPropertyKey HasTextPropertyKey =
@@ -55,7 +67,8 @@ namespace CBHK.CustomControl.Input
         #region Method
         public VectorRichTextBox()
         {
-            Foreground = Brushes.White;
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            SetResourceReference(ForegroundProperty, Theme.CommonForeground);
             WaterMarkerBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D6D6D6"));
             LocateLineBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#242425"));
             Loaded += VectorRichTextBox_Loaded;
@@ -72,16 +85,26 @@ namespace CBHK.CustomControl.Input
             }
         }
 
+        private void UpdateBorderColorByBackgroundColor()
+        {
+            if(ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.1f));
+                BorderBrush = LocateLineBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
+                WaterMarkerBrush = ColorTool.GetWatermarkBrush(themeBrush);
+            }
+        }
+
         public bool IsEmpty()
         {
             var blocks = Document.Blocks;
 
             if (blocks.Count == 0) return true;
 
-            if (blocks.Count == 1 && blocks.FirstBlock is Paragraph p)
+            if (blocks.FirstBlock is Paragraph paragraph)
             {
-                if (p.Inlines.Count == 0) return true;
-                if (p.Inlines.Count == 1 && p.Inlines.FirstInline is Run run)
+                if (paragraph.Inlines.Count == 0) return true;
+                if (paragraph.Inlines.Count == 1 && paragraph.Inlines.FirstInline is Run run)
                 {
                     return string.IsNullOrWhiteSpace(run.Text);
                 }
@@ -93,10 +116,15 @@ namespace CBHK.CustomControl.Input
         #region Event
         private void VectorRichTextBox_Loaded(object sender, RoutedEventArgs e)
         {
-            var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style || Background is null)
+            UpdateBorderColorByBackgroundColor();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
             {
-                Background = new BrushConverter().ConvertFromString("#313233") as Brush;
+                UpdateBorderColorByBackgroundColor();
             }
         }
 
@@ -104,6 +132,24 @@ namespace CBHK.CustomControl.Input
         {
             base.OnTextChanged(e);
             SetValue(HasTextPropertyKey, !IsEmpty());
+        }
+
+        protected override void OnMouseEnter(MouseEventArgs e)
+        {
+            base.OnMouseEnter(e);
+            if (!IsFocused && ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.1f));
+            }
+        }
+
+        protected override void OnMouseLeave(MouseEventArgs e)
+        {
+            base.OnMouseLeave(e);
+            if (ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(themeBrush.Color);
+            }
         }
         #endregion
     }

@@ -10,70 +10,6 @@
     xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
     xmlns:visualUtility="clr-namespace:CBHK.Utility.Visual">
 
-    <!--<SolidColorBrush x:Key="TextBox.Static.Background" Color="#FFFFFFFF" />-->
-    <!--<Style x:Key="ComboBoxEditableTextBox" TargetType="{x:Type TextBox}">
-        <Setter Property="OverridesDefaultStyle" Value="true" />
-        <Setter Property="AllowDrop" Value="true" />
-        <Setter Property="MinWidth" Value="0" />
-        <Setter Property="MinHeight" Value="0" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="VectorScrollViewer.PanningMode" Value="VerticalFirst" />
-        <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type TextBox}">
-                    <VectorScrollViewer
-                        x:Name="PART_ContentHost"
-                        Background="Transparent"
-                        Focusable="false"
-                        HorizontalScrollBarVisibility="Hidden"
-                        VerticalScrollBarVisibility="Hidden" />
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>-->
-    <SolidColorBrush x:Key="ComboBox.Static.Background" Color="#D0D1D4" />
-    <SolidColorBrush x:Key="ComboBox.Static.Border" Color="Black" />
-    <!--<SolidColorBrush x:Key="VectorTextComboBox.Static.Glyph" Color="Black" />-->
-    <!--<SolidColorBrush x:Key="VectorTextComboBox.ItemContainer.Background" Color="#8C8D90" />-->
-    <!--<SolidColorBrush x:Key="ComboBox.Static.Editable.Background" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="ComboBox.Static.Editable.Border" Color="#FFABADB3" />
-    <SolidColorBrush x:Key="ComboBox.Static.Editable.Button.Background" Color="Transparent" />
-    <SolidColorBrush x:Key="ComboBox.Static.Editable.Button.Border" Color="Transparent" />-->
-    <!--<LinearGradientBrush x:Key="ComboBox.MouseOver.Background" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0.0" Color="#FFECF4FC" />
-        <GradientStop Offset="1.0" Color="#FFDCECFC" />
-    </LinearGradientBrush>-->
-    <SolidColorBrush x:Key="ComboBox.MouseOver.Border" Color="#FF7EB4EA" />
-    <SolidColorBrush x:Key="ComboBox.MouseOver.Glyph" Color="#FF000000" />
-    <!--<SolidColorBrush x:Key="ComboBox.MouseOver.Editable.Background" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="ComboBox.MouseOver.Editable.Border" Color="#FF7EB4EA" />-->
-    <!--<LinearGradientBrush x:Key="ComboBox.MouseOver.Editable.Button.Background" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0.0" Color="#FFEBF4FC" />
-        <GradientStop Offset="1.0" Color="#FFDCECFC" />
-    </LinearGradientBrush>-->
-    <SolidColorBrush x:Key="ComboBox.MouseOver.Editable.Button.Border" Color="#FF7EB4EA" />
-    <!--<LinearGradientBrush x:Key="ComboBox.Pressed.Background" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0.0" Color="#FFDAECFC" />
-        <GradientStop Offset="1.0" Color="#FFC4E0FC" />
-    </LinearGradientBrush>-->
-    <SolidColorBrush x:Key="ComboBox.Pressed.Border" Color="#FF569DE5" />
-    <SolidColorBrush x:Key="ComboBox.Pressed.Glyph" Color="#FF000000" />
-    <!--<SolidColorBrush x:Key="ComboBox.Pressed.Editable.Background" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="ComboBox.Pressed.Editable.Border" Color="#FF569DE5" />-->
-    <!--<LinearGradientBrush x:Key="ComboBox.Pressed.Editable.Button.Background" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0.0" Color="#FFDAEBFC" />
-        <GradientStop Offset="1.0" Color="#FFC4E0FC" />
-    </LinearGradientBrush>-->
-    <!--<SolidColorBrush x:Key="ComboBox.Pressed.Editable.Button.Border" Color="#FF569DE5" />-->
-    <SolidColorBrush x:Key="ComboBox.Disabled.Background" Color="#FFF0F0F0" />
-    <SolidColorBrush x:Key="ComboBox.Disabled.Border" Color="#FFD9D9D9" />
-    <SolidColorBrush x:Key="ComboBox.Disabled.Glyph" Color="#FFBFBFBF" />
-    <!--<SolidColorBrush x:Key="ComboBox.Disabled.Editable.Background" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="ComboBox.Disabled.Editable.Border" Color="#FFBFBFBF" />
-    <SolidColorBrush x:Key="ComboBox.Disabled.Editable.Button.Background" Color="Transparent" />
-    <SolidColorBrush x:Key="ComboBox.Disabled.Editable.Button.Border" Color="Transparent" />-->
-
     <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
     <CollectionViewSource x:Key="TextStyleEditorBoxItemView" Source="{Binding DataList, IsAsync=True}" />
@@ -159,14 +95,13 @@
             VirtualizingPanel.VirtualizationMode="Recycling" />
     </ItemsPanelTemplate>
 
-    <Style x:Key="TextStyleEditorItemContainerStyle" TargetType="{x:Type ComboBoxItem}">
+    <!--<Style x:Key="TextStyleEditorItemContainerStyle" TargetType="{x:Type ComboBoxItem}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="IsSelected" Value="{Binding IsSelected}" />
         <Setter Property="Margin" Value="0.5,0.25,0.5,0.25" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="VerticalContentAlignment" Value="Stretch" />
-        <Setter Property="Background" Value="#58585A" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ComboBoxItem}">
@@ -274,34 +209,6 @@
                                 SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                         </Grid>
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsHighlighted" Value="true">
-                            <Setter TargetName="Bd" Property="Background" Value="#78797A" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="false">
-                            <Setter TargetName="Bd" Property="Background" Value="#A0A0A0" />
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="Bd" Property="Background" Value="#48494A" />
-                        </Trigger>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="canvas" Property="Visibility" Value="Visible" />
-                        </Trigger>
-                        <EventTrigger RoutedEvent="PreviewMouseDown">
-                            <EventTrigger.Actions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <ColorAnimation
-                                            FillBehavior="HoldEnd"
-                                            Storyboard.TargetName="Bd"
-                                            Storyboard.TargetProperty="Background.Color"
-                                            To="#313233"
-                                            Duration="0:0:0.2" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger.Actions>
-                        </EventTrigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -310,7 +217,7 @@
                 <Setter Property="Margin" Value="0.5,0.5,0.5,0.25" />
             </Trigger>
         </Style.Triggers>
-    </Style>
+    </Style>-->
 
     <Style x:Key="TextStyleEditorToggleButton" TargetType="{x:Type VectorButton:VectorComboBoxToggleTextButton}">
         <Setter Property="OverridesDefaultStyle" Value="true" />
@@ -324,8 +231,8 @@
                     <Border
                         x:Name="templateRoot"
                         Background="{TemplateBinding Background}"
-                        BorderBrush="{StaticResource ComboBox.Static.Border}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
+                        BorderBrush="Black"
+                        BorderThickness="1"
                         SnapsToDevicePixels="true"
                         UseLayoutRounding="True">
                         <!--  F1 M 0,0 L 2.667,2.66665 L 5.3334,0 L 5.3334,-1.78168 L 2.6667,0.88501 L0,-1.78168 L0,0 Z  -->
@@ -400,182 +307,10 @@
                                 IsHitTestVisible="False" />
                         </Grid>
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <!--<MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}" Value="true" />
-                                <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Mode=Self}}" Value="false" />
-                                <Condition Binding="{Binding IsPressed, RelativeSource={RelativeSource Mode=Self}}" Value="false" />
-                                <Condition Binding="{Binding IsEnabled, RelativeSource={RelativeSource Mode=Self}}" Value="true" />
-                            </MultiDataTrigger.Conditions>
-                            <Setter TargetName="templateRoot" Property="Background" Value="{StaticResource ComboBox.Static.Editable.Background}" />
-                            <Setter TargetName="templateRoot" Property="BorderBrush" Value="{StaticResource ComboBox.Static.Editable.Border}" />
-                            <Setter TargetName="splitBorder" Property="Background" Value="{StaticResource ComboBox.Static.Editable.Button.Background}" />
-                            <Setter TargetName="splitBorder" Property="BorderBrush" Value="{StaticResource ComboBox.Static.Editable.Button.Border}" />
-                        </MultiDataTrigger>-->
-                        <!--<Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="arrow" Property="Fill" Value="{StaticResource ComboBox.MouseOver.Glyph}" />
-                        </Trigger>-->
-                        <!--<MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Mode=Self}}" Value="true" />
-                                <Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}" Value="false" />
-                            </MultiDataTrigger.Conditions>
-                            <Setter TargetName="templateRoot" Property="Background" Value="{StaticResource ComboBox.MouseOver.Background}" />
-                            <Setter TargetName="templateRoot" Property="BorderBrush" Value="{StaticResource ComboBox.MouseOver.Border}" />
-                        </MultiDataTrigger>-->
-                        <!--<MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Mode=Self}}" Value="true" />
-                                <Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}" Value="true" />
-                            </MultiDataTrigger.Conditions>
-                            <Setter TargetName="templateRoot" Property="Background" Value="{StaticResource ComboBox.MouseOver.Editable.Background}" />
-                            <Setter TargetName="templateRoot" Property="BorderBrush" Value="{StaticResource ComboBox.MouseOver.Editable.Border}" />
-                            <Setter TargetName="splitBorder" Property="Background" Value="{StaticResource ComboBox.MouseOver.Editable.Button.Background}" />
-                            <Setter TargetName="splitBorder" Property="BorderBrush" Value="{StaticResource ComboBox.MouseOver.Editable.Button.Border}" />
-                        </MultiDataTrigger>
-                        <Trigger Property="IsPressed" Value="true">
-                            <Setter TargetName="arrow" Property="Fill" Value="{StaticResource ComboBox.Pressed.Glyph}" />
-                        </Trigger>-->
-                        <!--<MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsPressed, RelativeSource={RelativeSource Mode=Self}}" Value="true" />
-                                <Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}" Value="false" />
-                            </MultiDataTrigger.Conditions>
-                            <Setter TargetName="templateRoot" Property="Background" Value="{StaticResource ComboBox.Pressed.Background}" />
-                            <Setter TargetName="templateRoot" Property="BorderBrush" Value="{StaticResource ComboBox.Pressed.Border}" />
-                        </MultiDataTrigger>-->
-                        <!--<MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsPressed, RelativeSource={RelativeSource Mode=Self}}" Value="true" />
-                                <Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}" Value="true" />
-                            </MultiDataTrigger.Conditions>
-                            <Setter TargetName="templateRoot" Property="Background" Value="{StaticResource ComboBox.Pressed.Editable.Background}" />
-                            <Setter TargetName="templateRoot" Property="BorderBrush" Value="{StaticResource ComboBox.Pressed.Editable.Border}" />
-                            <Setter TargetName="splitBorder" Property="Background" Value="{StaticResource ComboBox.Pressed.Editable.Button.Background}" />
-                            <Setter TargetName="splitBorder" Property="BorderBrush" Value="{StaticResource ComboBox.Pressed.Editable.Button.Border}" />
-                        </MultiDataTrigger>
-                        <Trigger Property="IsEnabled" Value="false">
-                            <Setter TargetName="arrow" Property="Fill" Value="{StaticResource ComboBox.Disabled.Glyph}" />
-                        </Trigger>-->
-                        <!--<MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsEnabled, RelativeSource={RelativeSource Mode=Self}}" Value="false" />
-                                <Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}" Value="false" />
-                            </MultiDataTrigger.Conditions>
-                            <Setter TargetName="templateRoot" Property="Background" Value="{StaticResource ComboBox.Disabled.Background}" />
-                            <Setter TargetName="templateRoot" Property="BorderBrush" Value="{StaticResource ComboBox.Disabled.Border}" />
-                        </MultiDataTrigger>-->
-                        <!--<MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsEnabled, RelativeSource={RelativeSource Mode=Self}}" Value="false" />
-                                <Condition Binding="{Binding IsEditable, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}" Value="true" />
-                            </MultiDataTrigger.Conditions>
-                            <Setter TargetName="templateRoot" Property="Background" Value="{StaticResource ComboBox.Disabled.Editable.Background}" />
-                            <Setter TargetName="templateRoot" Property="BorderBrush" Value="{StaticResource ComboBox.Disabled.Editable.Border}" />
-                            <Setter TargetName="splitBorder" Property="Background" Value="{StaticResource ComboBox.Disabled.Editable.Button.Background}" />
-                            <Setter TargetName="splitBorder" Property="BorderBrush" Value="{StaticResource ComboBox.Disabled.Editable.Button.Border}" />
-                        </MultiDataTrigger>-->
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-
-    <!--<ControlTemplate x:Key="ComboBoxEditableTemplate" TargetType="{x:Type ComboBox}">
-        <Grid x:Name="templateRoot" SnapsToDevicePixels="true">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="0" MinWidth="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}" />
-            </Grid.ColumnDefinitions>
-            <Popup
-                x:Name="PART_Popup"
-                Grid.ColumnSpan="2"
-                AllowsTransparency="true"
-                IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource Mode=TemplatedParent}}"
-                Placement="Center"
-                PopupAnimation="{DynamicResource {x:Static SystemParameters.ComboBoxPopupAnimationKey}}">
-                <theme:SystemDropShadowChrome
-                    x:Name="shadow"
-                    MinWidth="{Binding ActualWidth, ElementName=templateRoot}"
-                    MaxHeight="{TemplateBinding MaxDropDownHeight}"
-                    Color="Transparent">
-                    <Border
-                        x:Name="dropDownBorder"
-                        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
-                        BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}"
-                        BorderThickness="1">
-                        <VectorScrollViewer x:Name="DropDownScrollViewer">
-                            <Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
-                                <Canvas
-                                    x:Name="canvas"
-                                    Width="0"
-                                    Height="0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Top">
-                                    <Rectangle
-                                        x:Name="opaqueRect"
-                                        Width="{Binding ActualWidth, ElementName=dropDownBorder}"
-                                        Height="{Binding ActualHeight, ElementName=dropDownBorder}"
-                                        Fill="{Binding Background, ElementName=dropDownBorder}" />
-                                </Canvas>
-                                <ItemsPresenter
-                                    x:Name="ItemsPresenter"
-                                    KeyboardNavigation.DirectionalNavigation="Contained"
-                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                            </Grid>
-                        </VectorScrollViewer>
-                    </Border>
-                </theme:SystemDropShadowChrome>
-            </Popup>
-            <VectorButton:VectorComboBoxToggleTextButton
-                x:Name="toggleButton"
-                Grid.ColumnSpan="2"
-                Background="{TemplateBinding Background}"
-                BorderBrush="{TemplateBinding BorderBrush}"
-                BorderThickness="{TemplateBinding BorderThickness}"
-                IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource Mode=TemplatedParent}}"
-                Style="{StaticResource TextStyleEditorToggleButton}" />
-            <Border
-                x:Name="border"
-                Margin="{TemplateBinding BorderThickness}"
-                Background="{StaticResource TextBox.Static.Background}">
-                <TextBox
-                    x:Name="PART_EditableTextBox"
-                    Margin="{TemplateBinding Padding}"
-                    HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                    VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                    IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource Mode=TemplatedParent}}"
-                    Style="{StaticResource ComboBoxEditableTextBox}" />
-            </Border>
-        </Grid>
-        <ControlTemplate.Triggers>
-            <Trigger Property="IsEnabled" Value="false">
-                <Setter TargetName="border" Property="Opacity" Value="0.56" />
-            </Trigger>
-            <Trigger Property="IsKeyboardFocusWithin" Value="true">
-                <Setter Property="Foreground" Value="Black" />
-            </Trigger>
-            <Trigger SourceName="PART_Popup" Property="HasDropShadow" Value="true">
-                <Setter TargetName="shadow" Property="Margin" Value="0,0,5,5" />
-                <Setter TargetName="shadow" Property="Color" Value="#71000000" />
-            </Trigger>
-            <Trigger Property="HasItems" Value="false">
-                <Setter TargetName="dropDownBorder" Property="Height" Value="95" />
-            </Trigger>
-            <MultiTrigger>
-                <MultiTrigger.Conditions>
-                    <Condition Property="IsGrouping" Value="true" />
-                    <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="false" />
-                </MultiTrigger.Conditions>
-                <Setter Property="VectorScrollViewer.CanContentScroll" Value="false" />
-            </MultiTrigger>
-            <Trigger SourceName="DropDownScrollViewer" Property="VectorScrollViewer.CanContentScroll" Value="false">
-                <Setter TargetName="opaqueRect" Property="Canvas.Top" Value="{Binding VerticalOffset, ElementName=DropDownScrollViewer}" />
-                <Setter TargetName="opaqueRect" Property="Canvas.Left" Value="{Binding HorizontalOffset, ElementName=DropDownScrollViewer}" />
-            </Trigger>
-        </ControlTemplate.Triggers>
-    </ControlTemplate>-->
 
     <ControlTemplate x:Key="TextStyleEditorTemplate" TargetType="{x:Type Input:TextStyleEditor}">
         <Grid x:Name="templateRoot" SnapsToDevicePixels="true">
@@ -597,106 +332,265 @@
                     MinWidth="{Binding ActualWidth, ElementName=templateRoot}"
                     MaxHeight="{TemplateBinding MaxDropDownHeight}"
                     Color="Transparent">
-                    <!--
-                        BorderBrush="#1e1e1f"
-                        BorderThickness="1"
-                    -->
-                    <Border x:Name="dropDownBorder" Background="{Binding PopupItemPanelBackground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Input:TextStyleEditor}}}">
-                        <Grid>
+
+                    <Border
+                        x:Name="dropDownBorder"
+                        Background="{Binding PopupItemPanelBackground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Input:TextStyleEditor}}}"
+                        BorderBrush="Black"
+                        BorderThickness="1">
+                        <Grid Background="Transparent">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <Border
-                                Grid.Row="0"
-                                Background="#48494A"
-                                BorderBrush="Black"
-                                BorderThickness="1">
-                                <Grid>
+                            <Grid Grid.Row="0" Background="Transparent">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Background="{TemplateBinding Background}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2.5" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="2.5" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="2.5" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="2.5" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Background="Transparent"
+                                        FontSize="15"
+                                        Foreground="{Binding TitleBrush, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
+                                        Text="{TemplateBinding Title}"
+                                        TextAlignment="Center" />
+                                    <Rectangle
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="2"
+                                        Fill="{Binding TitleLeftTopBorderBrush, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="0"
+                                        Grid.Column="2"
+                                        Fill="{Binding TitleBorderCornerBrush, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Fill="{Binding TitleLeftTopBorderBrush, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="1"
+                                        Grid.Column="2"
+                                        Fill="{Binding TitleRightBottomBorderBrush, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="2"
+                                        Grid.Column="0"
+                                        Fill="{Binding TitleBorderCornerBrush, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
+                                        IsHitTestVisible="False" />
+                                    <Rectangle
+                                        Grid.Row="2"
+                                        Grid.Column="1"
+                                        Grid.ColumnSpan="2"
+                                        Fill="{Binding TitleRightBottomBorderBrush, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
+                                        IsHitTestVisible="False" />
+                                </Grid>
+                                <Grid Grid.Row="1" Grid.Column="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <VectorButton:VectorTextButton
+                                        Grid.Column="0"
+                                        Padding="5"
+                                        FontWeight="Bold"
+                                        OriginBottomHeight="4"
+                                        Style="{DynamicResource VectorTextButtonStyle}"
+                                        Text="Bold">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="Click">
+                                                <behaviors:CallMethodAction MethodName="SetBold_Click" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </VectorButton:VectorTextButton>
+                                    <VectorButton:VectorTextButton
+                                        Grid.Column="1"
+                                        Padding="5"
+                                        FontStyle="Italic"
+                                        OriginBottomHeight="4"
+                                        Style="{DynamicResource VectorTextButtonStyle}"
+                                        Text="Italic">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="Click">
+                                                <behaviors:CallMethodAction MethodName="SetItalic_Click" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </VectorButton:VectorTextButton>
+                                    <VectorButton:VectorTextButton
+                                        Grid.Column="2"
+                                        Padding="5"
+                                        OriginBottomHeight="4"
+                                        Style="{DynamicResource VectorTextButtonStyle}"
+                                        Text="Underlined"
+                                        TextDecoration="Underline">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="Click">
+                                                <behaviors:CallMethodAction MethodName="SetUnderlined_Click" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </VectorButton:VectorTextButton>
+                                    <VectorButton:VectorTextButton
+                                        Grid.Column="3"
+                                        Padding="5"
+                                        OriginBottomHeight="4"
+                                        Style="{DynamicResource VectorTextButtonStyle}"
+                                        Text="Strikethrough"
+                                        TextDecoration="Strikethrough">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="Click">
+                                                <behaviors:CallMethodAction MethodName="SetStrikethrough_Click" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </VectorButton:VectorTextButton>
+                                    <VectorButton:VectorTextButton
+                                        Grid.Column="4"
+                                        Padding="5"
+                                        OriginBottomHeight="4"
+                                        Style="{DynamicResource VectorTextButtonStyle}"
+                                        Text="Obfuscated">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="Click">
+                                                <behaviors:CallMethodAction MethodName="SetObfuscated_Click" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </VectorButton:VectorTextButton>
+                                    <VectorButton:VectorTextButton
+                                        Grid.Column="5"
+                                        Padding="5"
+                                        OriginBottomHeight="4"
+                                        Style="{DynamicResource VectorTextButtonStyle}"
+                                        Text="Reset">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="Click">
+                                                <behaviors:CallMethodAction MethodName="ResetStyle_Click" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </VectorButton:VectorTextButton>
+                                    <Input:VectorColorPicker
+                                        x:Name="colorPicker"
+                                        Title="设置文本颜色"
+                                        Grid.Column="6"
+                                        OriginBottomHeight="4"
+                                        Style="{DynamicResource VectorColorPickerStyle}" />
+                                    <VectorButton:VectorFlatIconTextButton
+                                        Grid.Column="7"
+                                        Icon="{DynamicResource CloseMark}"
+                                        IconFillBrush="{DynamicResource CommonForeground}"
+                                        IconHeight="15"
+                                        IconMargin="5"
+                                        IconWidth="15"
+                                        Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                        Text="删除当前样式">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="Click">
+                                                <behaviors:CallMethodAction MethodName="RemoveCurrentItem_Click" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </VectorButton:VectorFlatIconTextButton>
+                                    <VectorButton:VectorFlatIconTextButton
+                                        Grid.Column="8"
+                                        Icon="{DynamicResource DeleteMark}"
+                                        IconFillBrush="{DynamicResource CommonForeground}"
+                                        IconHeight="15"
+                                        IconMargin="5"
+                                        IconWidth="15"
+                                        Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                        Text="删除所有样式">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="Click">
+                                                <behaviors:CallMethodAction MethodName="ClearItem_Click" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </VectorButton:VectorFlatIconTextButton>
+                                </Grid>
+                                <Grid Grid.Row="2" Grid.Column="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="40" />
                                     </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid Grid.Row="0" Grid.Column="0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="2.5" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="2.5" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="2.5" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="2.5" />
-                                        </Grid.RowDefinitions>
-                                        <TextBlock
-                                            Grid.Row="1"
-                                            Grid.Column="1"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            FontSize="15"
-                                            Foreground="{Binding TitleBrush, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
-                                            Text="{TemplateBinding Title}" />
-                                        <Rectangle
-                                            Grid.Row="0"
-                                            Grid.Column="0"
-                                            Fill="#6D6D6E"
-                                            IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="0"
-                                            Grid.Column="1"
-                                            Fill="#6D6D6E"
-                                            IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="0"
-                                            Grid.Column="2"
-                                            Fill="#7B7B7C"
-                                            IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="1"
-                                            Grid.Column="0"
-                                            Fill="#6D6D6E"
-                                            IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="1"
-                                            Grid.Column="2"
-                                            Fill="#5A5B5C"
-                                            IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="2"
-                                            Grid.Column="0"
-                                            Fill="#7B7B7C"
-                                            IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="2"
-                                            Grid.Column="1"
-                                            Fill="#5A5B5C"
-                                            IsHitTestVisible="False" />
-                                        <Rectangle
-                                            Grid.Row="2"
-                                            Grid.Column="2"
-                                            Fill="#5A5B5C"
-                                            IsHitTestVisible="False" />
-                                    </Grid>
+                                    <Input:VectorRichTextBox
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Height="40"
+                                        HorizontalAlignment="Stretch"
+                                        Panel.ZIndex="1"
+                                        visualUtility:TextSizeHelper.AutoFontSize="True"
+                                        AcceptsReturn="False"
+                                        Style="{DynamicResource VectorRichTextBoxStyle}"
+                                        WaterMarkerMargin="5 0 0 0"
+                                        WaterMarkerText="编辑风格化文字">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="Loaded">
+                                                <behaviors:CallMethodAction MethodName="Editor_Loaded" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                            <behaviors:EventTrigger EventName="MouseLeave">
+                                                <behaviors:CallMethodAction MethodName="Editor_MouseLeave" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                        <FlowDocument PageWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=RichTextBox}}" />
+                                    </Input:VectorRichTextBox>
+                                    <VectorButton:VectorFlatIconTextButton
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        Height="40"
+                                        Foreground="{DynamicResource CommonForeground}"
+                                        Icon="M853.323294 124.235294c14.576941 0 26.352941 11.806118 26.352941 26.352941v702.735059a26.352941 26.352941 0 0 1-26.352941 26.352941H150.588235a26.352941 26.352941 0 0 1-26.352941-26.352941v-421.647059c0-14.546824 11.806118-26.352941 26.352941-26.352941h324.99953V150.588235c0-13.432471 10.059294-24.515765 23.070117-26.142117l3.312942-0.210824h351.35247z m-497.242353 531.275294a26.142118 26.142118 0 0 0 1.566118 2.499765l0.331294 0.421647 0.602353 0.783059a26.503529 26.503529 0 0 0 1.114353 1.264941l0.662588 0.662588 70.264471 70.264471a26.352941 26.352941 0 0 0 37.255529 0l2.379294-2.710588a26.352941 26.352941 0 0 0-2.379294-34.544942l-25.268706-25.298823H677.647059a26.352941 26.352941 0 0 0 26.142117-23.04l0.210824-3.312941v-158.117647a26.352941 26.352941 0 0 0-26.352941-26.352942l-3.312941 0.210824a26.352941 26.352941 0 0 0-23.04 26.142118v131.764706h-208.715294l25.298823-25.298824a26.352941 26.352941 0 0 0 2.379294-34.544941l-2.379294-2.710588a26.352941 26.352941 0 0 0-37.255529 0l-70.264471 70.294588a26.834824 26.834824 0 0 0-6.354823 10.24 26.473412 26.473412 0 0 0 0.903529 19.124706l0.813176 1.65647z"
+                                        IconFillBrush="{DynamicResource CommonForeground}"
+                                        IconHeight="25"
+                                        IconMargin="5"
+                                        IconWidth="25"
+                                        Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                        Text="保存">
+                                        <behaviors:Interaction.Triggers>
+                                            <behaviors:EventTrigger EventName="Click">
+                                                <behaviors:CallMethodAction MethodName="AddNewStyleItem_Click" TargetObject="{Binding}" />
+                                            </behaviors:EventTrigger>
+                                        </behaviors:Interaction.Triggers>
+                                    </VectorButton:VectorFlatIconTextButton>
                                     <Input:VectorTextBox
                                         Grid.Row="1"
                                         Grid.Column="0"
+                                        Grid.ColumnSpan="2"
                                         Height="35"
                                         Padding="2.5,0,0,0"
                                         HorizontalAlignment="Stretch"
                                         visualUtility:TextSizeHelper.AutoFontSize="True"
-                                        Background="#313233"
-                                        BorderBrush="#1E1E1F"
-                                        Foreground="{Binding SearchBoxForeground, RelativeSource={RelativeSource AncestorType=Input:TextStyleEditor}}"
                                         HorizontalScrollBarVisibility="Auto"
                                         Style="{DynamicResource VectorTextBoxStyle}"
                                         Text="{Binding SearchText, RelativeSource={RelativeSource AncestorType=Input:TextStyleEditor}, UpdateSourceTrigger=PropertyChanged}"
                                         Visibility="{Binding SearchBoxVisibility, RelativeSource={RelativeSource AncestorType={x:Type Input:TextStyleEditor}}}"
-                                        WaterMarkerBrush="{TemplateBinding SearchBoxForeground}"
                                         WaterMarkerMargin="5,0,0,0"
                                         WaterMarkerText="搜索成员">
                                         <behaviors:Interaction.Triggers>
@@ -705,200 +599,8 @@
                                             </behaviors:EventTrigger>
                                         </behaviors:Interaction.Triggers>
                                     </Input:VectorTextBox>
-                                    <Grid Grid.Row="2" Grid.Column="0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <VectorButton:VectorTextButton
-                                            Grid.Column="0"
-                                            Padding="5"
-                                            Background="#D0D1D4"
-                                            FontWeight="Bold"
-                                            Foreground="{TemplateBinding Foreground}"
-                                            OriginBottomHeight="4"
-                                            Style="{DynamicResource VectorTextButtonStyle}"
-                                            Text="Bold">
-                                            <behaviors:Interaction.Triggers>
-                                                <behaviors:EventTrigger EventName="Click">
-                                                    <behaviors:CallMethodAction MethodName="SetBold_Click" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                            </behaviors:Interaction.Triggers>
-                                        </VectorButton:VectorTextButton>
-                                        <VectorButton:VectorTextButton
-                                            Grid.Column="1"
-                                            Padding="5"
-                                            Background="#D0D1D4"
-                                            FontStyle="Italic"
-                                            Foreground="{TemplateBinding Foreground}"
-                                            OriginBottomHeight="4"
-                                            Style="{DynamicResource VectorTextButtonStyle}"
-                                            Text="Italic">
-                                            <behaviors:Interaction.Triggers>
-                                                <behaviors:EventTrigger EventName="Click">
-                                                    <behaviors:CallMethodAction MethodName="SetItalic_Click" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                            </behaviors:Interaction.Triggers>
-                                        </VectorButton:VectorTextButton>
-                                        <VectorButton:VectorTextButton
-                                            Grid.Column="2"
-                                            Padding="5"
-                                            Background="#D0D1D4"
-                                            Foreground="{TemplateBinding Foreground}"
-                                            OriginBottomHeight="4"
-                                            Style="{DynamicResource VectorTextButtonStyle}"
-                                            Text="Underlined"
-                                            TextDecoration="Underline">
-                                            <behaviors:Interaction.Triggers>
-                                                <behaviors:EventTrigger EventName="Click">
-                                                    <behaviors:CallMethodAction MethodName="SetUnderlined_Click" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                            </behaviors:Interaction.Triggers>
-                                        </VectorButton:VectorTextButton>
-                                        <VectorButton:VectorTextButton
-                                            Grid.Column="3"
-                                            Padding="5"
-                                            Background="#D0D1D4"
-                                            Foreground="{TemplateBinding Foreground}"
-                                            OriginBottomHeight="4"
-                                            Style="{DynamicResource VectorTextButtonStyle}"
-                                            Text="Strikethrough"
-                                            TextDecoration="Strikethrough">
-                                            <behaviors:Interaction.Triggers>
-                                                <behaviors:EventTrigger EventName="Click">
-                                                    <behaviors:CallMethodAction MethodName="SetStrikethrough_Click" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                            </behaviors:Interaction.Triggers>
-                                        </VectorButton:VectorTextButton>
-                                        <VectorButton:VectorTextButton
-                                            Grid.Column="4"
-                                            Padding="5"
-                                            Background="#D0D1D4"
-                                            Foreground="{TemplateBinding Foreground}"
-                                            OriginBottomHeight="4"
-                                            Style="{DynamicResource VectorTextButtonStyle}"
-                                            Text="Obfuscated">
-                                            <behaviors:Interaction.Triggers>
-                                                <behaviors:EventTrigger EventName="Click">
-                                                    <behaviors:CallMethodAction MethodName="SetObfuscated_Click" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                            </behaviors:Interaction.Triggers>
-                                        </VectorButton:VectorTextButton>
-                                        <VectorButton:VectorTextButton
-                                            Grid.Column="5"
-                                            Padding="5"
-                                            Background="#D0D1D4"
-                                            Foreground="{TemplateBinding Foreground}"
-                                            OriginBottomHeight="4"
-                                            Style="{DynamicResource VectorTextButtonStyle}"
-                                            Text="Reset">
-                                            <behaviors:Interaction.Triggers>
-                                                <behaviors:EventTrigger EventName="Click">
-                                                    <behaviors:CallMethodAction MethodName="ResetStyle_Click" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                            </behaviors:Interaction.Triggers>
-                                        </VectorButton:VectorTextButton>
-                                        <Input:VectorColorPicker
-                                            x:Name="colorPicker"
-                                            Title="设置文本颜色"
-                                            Grid.Column="6"
-                                            OriginBottomHeight="4"
-                                            Style="{DynamicResource VectorColorPickerStyle}" />
-                                        <VectorButton:VectorFlatIconTextButton
-                                            Grid.Column="7"
-                                            Background="#D0D1D4"
-                                            Foreground="Black"
-                                            Icon="{DynamicResource CloseMark}"
-                                            IconFillBrush="Black"
-                                            IconHeight="15"
-                                            IconMargin="5"
-                                            IconWidth="15"
-                                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
-                                            Text="删除当前样式">
-                                            <behaviors:Interaction.Triggers>
-                                                <behaviors:EventTrigger EventName="Click">
-                                                    <behaviors:CallMethodAction MethodName="RemoveCurrentItem_Click" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                            </behaviors:Interaction.Triggers>
-                                        </VectorButton:VectorFlatIconTextButton>
-                                        <VectorButton:VectorFlatIconTextButton
-                                            Grid.Column="8"
-                                            Background="#D0D1D4"
-                                            Foreground="Black"
-                                            Icon="{DynamicResource DeleteMark}"
-                                            IconFillBrush="Black"
-                                            IconHeight="15"
-                                            IconMargin="5"
-                                            IconWidth="15"
-                                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
-                                            Text="删除所有样式">
-                                            <behaviors:Interaction.Triggers>
-                                                <behaviors:EventTrigger EventName="Click">
-                                                    <behaviors:CallMethodAction MethodName="ClearItem_Click" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                            </behaviors:Interaction.Triggers>
-                                        </VectorButton:VectorFlatIconTextButton>
-                                    </Grid>
-                                    <Grid Grid.Row="3" Grid.Column="0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="*" />
-                                        </Grid.RowDefinitions>
-                                        <Input:VectorRichTextBox
-                                            Grid.Row="0"
-                                            Grid.Column="0"
-                                            HorizontalAlignment="Stretch"
-                                            Panel.ZIndex="1"
-                                            visualUtility:TextSizeHelper.AutoFontSize="True"
-                                            AcceptsReturn="False"
-                                            Background="#313233"
-                                            Foreground="{TemplateBinding EditorBoxForeground}"
-                                            Style="{DynamicResource VectorRichTextBoxStyle}"
-                                            WaterMarkerBrush="{TemplateBinding EditorBoxForeground}"
-                                            WaterMarkerMargin="5 0 0 0"
-                                            WaterMarkerText="编辑风格化文字">
-                                            <behaviors:Interaction.Triggers>
-                                                <behaviors:EventTrigger EventName="Loaded">
-                                                    <behaviors:CallMethodAction MethodName="Editor_Loaded" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                                <behaviors:EventTrigger EventName="MouseLeave">
-                                                    <behaviors:CallMethodAction MethodName="Editor_MouseLeave" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                            </behaviors:Interaction.Triggers>
-                                            <FlowDocument PageWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=RichTextBox}}" />
-                                        </Input:VectorRichTextBox>
-                                        <VectorButton:VectorFlatIconTextButton
-                                            Grid.Row="0"
-                                            Grid.Column="1"
-                                            Width="80"
-                                            Background="#D0D1D4"
-                                            Foreground="Black"
-                                            Icon="M853.323294 124.235294c14.576941 0 26.352941 11.806118 26.352941 26.352941v702.735059a26.352941 26.352941 0 0 1-26.352941 26.352941H150.588235a26.352941 26.352941 0 0 1-26.352941-26.352941v-421.647059c0-14.546824 11.806118-26.352941 26.352941-26.352941h324.99953V150.588235c0-13.432471 10.059294-24.515765 23.070117-26.142117l3.312942-0.210824h351.35247z m-497.242353 531.275294a26.142118 26.142118 0 0 0 1.566118 2.499765l0.331294 0.421647 0.602353 0.783059a26.503529 26.503529 0 0 0 1.114353 1.264941l0.662588 0.662588 70.264471 70.264471a26.352941 26.352941 0 0 0 37.255529 0l2.379294-2.710588a26.352941 26.352941 0 0 0-2.379294-34.544942l-25.268706-25.298823H677.647059a26.352941 26.352941 0 0 0 26.142117-23.04l0.210824-3.312941v-158.117647a26.352941 26.352941 0 0 0-26.352941-26.352942l-3.312941 0.210824a26.352941 26.352941 0 0 0-23.04 26.142118v131.764706h-208.715294l25.298823-25.298824a26.352941 26.352941 0 0 0 2.379294-34.544941l-2.379294-2.710588a26.352941 26.352941 0 0 0-37.255529 0l-70.264471 70.294588a26.834824 26.834824 0 0 0-6.354823 10.24 26.473412 26.473412 0 0 0 0.903529 19.124706l0.813176 1.65647z"
-                                            IconFillBrush="Black"
-                                            IconHeight="25"
-                                            IconMargin="5"
-                                            IconWidth="25"
-                                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
-                                            Text="保存">
-                                            <behaviors:Interaction.Triggers>
-                                                <behaviors:EventTrigger EventName="Click">
-                                                    <behaviors:CallMethodAction MethodName="AddNewStyleItem_Click" TargetObject="{Binding}" />
-                                                </behaviors:EventTrigger>
-                                            </behaviors:Interaction.Triggers>
-                                        </VectorButton:VectorFlatIconTextButton>
-                                    </Grid>
                                 </Grid>
-                            </Border>
+                            </Grid>
                             <Container:VectorScrollViewer
                                 x:Name="DropDownScrollViewer"
                                 Grid.Row="1"
@@ -913,7 +615,7 @@
                                     </Grid.RowDefinitions>
                                     <Border
                                         Grid.Row="0"
-                                        Background="#8C8D90"
+                                        Background="Transparent"
                                         BorderBrush="Black"
                                         BorderThickness="1" />
                                     <!--<Canvas
@@ -945,8 +647,6 @@
             <VectorButton:VectorComboBoxToggleTextButton
                 x:Name="toggleButton"
                 Grid.ColumnSpan="2"
-                Background="{TemplateBinding Background}"
-                BorderBrush="{TemplateBinding BorderBrush}"
                 BorderThickness="{TemplateBinding BorderThickness}"
                 IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource Mode=TemplatedParent}}"
                 Style="{DynamicResource TextStyleEditorToggleButton}" />
@@ -987,8 +687,6 @@
     <Style x:Key="TextStyleEditorStyle" TargetType="{x:Type Input:TextStyleEditor}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
-        <Setter Property="BorderBrush" Value="{StaticResource ComboBox.Static.Border}" />
-        <Setter Property="Foreground" Value="White" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="BorderThickness" Value="1" />
@@ -999,7 +697,7 @@
         <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
         <Setter Property="ItemsSource" Value="{Binding Source={StaticResource TextStyleEditorBoxItemView}, IsAsync=True}" />
         <Setter Property="ItemTemplate" Value="{DynamicResource TextStyleEditorItemTemplate}" />
-        <Setter Property="ItemContainerStyle" Value="{DynamicResource TextStyleEditorItemContainerStyle}" />
+        <Setter Property="ItemContainerStyle" Value="{DynamicResource VectorComboBoxItemContainerStyle}" />
         <Setter Property="ItemsPanel" Value="{DynamicResource TextStyleEditorItemsPanelStyle}" />
         <Setter Property="Template" Value="{DynamicResource TextStyleEditorTemplate}" />
         <!--<Style.Triggers>

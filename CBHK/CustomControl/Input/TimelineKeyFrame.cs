@@ -2,6 +2,7 @@
 using CBHK.Interface.Data;
 using CBHK.Interface.Visual;
 using CBHK.Utility.Common;
+using CBHK.Utility.Visual;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,14 +13,13 @@ using System.Windows.Media;
 
 namespace CBHK.CustomControl.Input
 {
-    public class TimelineKeyFrame : Control, ITimelineElement
+    public class TimelineKeyFrame : BaseVectorControl, ITimelineElement
     {
         #region Field
         private AnimationTimelineTool animationTimelineTool = new();
+        private Brush OriginInnerBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B8BEBA"));
         private bool isReFreshingBrush = false;
         private double defaultSize = 16.0;
-        private Brush OriginInnerBorderBrush;
-        private Brush OriginBackground;
         private Canvas parentCanvas;
         private bool isDragging = false;
         private Point dragPoint;
@@ -67,15 +67,6 @@ namespace CBHK.CustomControl.Input
 
         public static readonly DependencyProperty TitleProperty =
             DependencyProperty.Register("Title", typeof(string), typeof(TimelineKeyFrame), new PropertyMetadata(default(string)));
-
-        public Brush InnerBorderBrush
-        {
-            get { return (Brush)GetValue(InnerBorderBrushProperty); }
-            set { SetValue(InnerBorderBrushProperty, value); }
-        }
-
-        public static readonly DependencyProperty InnerBorderBrushProperty =
-            DependencyProperty.Register("InnerBorderBrush", typeof(Brush), typeof(TimelineKeyFrame), new PropertyMetadata(default(Brush)));
 
         public Brush InnerLeftTopBackground
         {
@@ -147,99 +138,25 @@ namespace CBHK.CustomControl.Input
         public TimelineKeyFrame()
         {
             Width = Height = defaultSize;
-            if (IsChecked is bool value && value)
-            {
-                OriginBackground = new BrushConverter().ConvertFromString("#FFFFFF") as Brush;
-                OriginInnerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD7929"));
-            }
-            else
-            {
-                OriginBackground = new BrushConverter().ConvertFromString("#B8BEBA") as Brush;
-                OriginInnerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B8BEBA"));
-            }
-
-            var originBackgroundBrushSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (originBackgroundBrushSource.BaseValueSource is BaseValueSource.Default || originBackgroundBrushSource.BaseValueSource is BaseValueSource.Style || Background is null)
-            {
-                Background = OriginBackground;
-            }
-            var originInnerBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, InnerBorderBrushProperty);
-            if (originInnerBorderBrushSource.BaseValueSource is BaseValueSource.Default || originInnerBorderBrushSource.BaseValueSource is BaseValueSource.Style || InnerBorderBrush is null)
-            {
-                InnerBorderBrush = OriginInnerBorderBrush;
-            }
-
             Loaded += TimelineKeyFrame_Loaded;
         }
 
-        private void UpdateBorderColorByBackgroundColor()
+        public override void UpdateBorderColorByBackgroundColor()
         {
-            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
-            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Foreground = Brushes.White;
-            }
+            base.UpdateBorderColorByBackgroundColor();
 
-            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
-            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style || BorderBrush is null)
-            {
-                BorderBrush = Brushes.Black;
-            }
+            SolidColorBrush solidColorBrush = IsChecked is bool value && value ? ThemeBackground as SolidColorBrush : OriginInnerBrush as SolidColorBrush;
 
-            var originborderCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderCornerBrushProperty);
-            if (originborderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originborderCornerBrushSource.BaseValueSource is BaseValueSource.Style || BorderCornerBrush is null || isReFreshingBrush)
+            if (solidColorBrush is not null)
             {
-                SolidColorBrush solidBorderBrush = OriginInnerBorderBrush as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
-                BorderCornerBrush = new SolidColorBrush(color);
-            }
-
-            var originLeftTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopBorderBrushProperty);
-            if (originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Style || LeftTopBorderBrush is null || isReFreshingBrush)
-            {
-                SolidColorBrush solidBorderBrush = OriginInnerBorderBrush as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.3f);
-                LeftTopBorderBrush = new SolidColorBrush(color);
-            }
-
-            var originRightBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
-            if (originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style || RightBottomBorderBrush is null || isReFreshingBrush)
-            {
-                SolidColorBrush solidBorderBrush = OriginInnerBorderBrush as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
-                RightBottomBorderBrush = new SolidColorBrush(color);
-            }
-
-            var originInnerLeftTopBackgroundSource = DependencyPropertyHelper.GetValueSource(this, InnerLeftTopBackgroundProperty);
-            if (originInnerLeftTopBackgroundSource.BaseValueSource is BaseValueSource.Default || originInnerLeftTopBackgroundSource.BaseValueSource is BaseValueSource.Style || InnerLeftTopBackground is null || isReFreshingBrush)
-            {
-                SolidColorBrush solidBorderBrush = OriginBackground as SolidColorBrush;
-                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.02f);
-                InnerLeftTopBackground = new SolidColorBrush(color);
-            }
-
-            var originInnerRightTopBackgroundSource = DependencyPropertyHelper.GetValueSource(this, InnerRightTopBackgroundProperty);
-            if (originInnerRightTopBackgroundSource.BaseValueSource is BaseValueSource.Default || originInnerRightTopBackgroundSource.BaseValueSource is BaseValueSource.Style || InnerRightTopBackground is null || isReFreshingBrush)
-            {
-                SolidColorBrush solidBorderBrush = OriginBackground as SolidColorBrush;
-                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.05f);
-                InnerRightTopBackground = new SolidColorBrush(color);
-            }
-
-            var originInnerLeftBottomBackgroundSource = DependencyPropertyHelper.GetValueSource(this, InnerLeftBottomBackgroundProperty);
-            if (originInnerLeftBottomBackgroundSource.BaseValueSource is BaseValueSource.Default || originInnerLeftBottomBackgroundSource.BaseValueSource is BaseValueSource.Style || InnerLeftBottomBackground is null || isReFreshingBrush)
-            {
-                SolidColorBrush solidBorderBrush = OriginBackground as SolidColorBrush;
-                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.05f);
-                InnerLeftBottomBackground = new SolidColorBrush(color);
-            }
-
-            var originInnerRightBottomBackgroundSource = DependencyPropertyHelper.GetValueSource(this, InnerRightBottomBackgroundProperty);
-            if (originInnerRightBottomBackgroundSource.BaseValueSource is BaseValueSource.Default || originInnerRightBottomBackgroundSource.BaseValueSource is BaseValueSource.Style || InnerRightBottomBackground is null || isReFreshingBrush)
-            {
-                SolidColorBrush solidBorderBrush = OriginBackground as SolidColorBrush;
-                Color color = ColorTool.Darken(solidBorderBrush.Color, 0.08f);
-                InnerRightBottomBackground = new SolidColorBrush(color);
+                BorderBrush = new SolidColorBrush(solidColorBrush.Color);
+                BorderCornerBrush = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.4f, Model.Common.ColorModifyMode.Lighten));
+                LeftTopBorderBrush = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.3f, Model.Common.ColorModifyMode.Lighten));
+                RightBottomBorderBrush = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.2f, Model.Common.ColorModifyMode.Lighten));
+                InnerLeftTopBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.02f, Model.Common.ColorModifyMode.Darken));
+                InnerRightTopBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.05f, Model.Common.ColorModifyMode.Darken));
+                InnerLeftBottomBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.05f, Model.Common.ColorModifyMode.Darken));
+                InnerRightBottomBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.08f, Model.Common.ColorModifyMode.Darken));
             }
         }
 
@@ -286,8 +203,6 @@ namespace CBHK.CustomControl.Input
         private void OnChecked()
         {
             isReFreshingBrush = true;
-            Background = OriginBackground = new BrushConverter().ConvertFromString("#FFFFFF") as Brush;
-            InnerBorderBrush = OriginInnerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD7929"));
             UpdateBorderColorByBackgroundColor();
             isReFreshingBrush = false;
         }
@@ -295,8 +210,6 @@ namespace CBHK.CustomControl.Input
         private void OnUnchecked()
         {
             isReFreshingBrush = true;
-            Background = OriginBackground = new BrushConverter().ConvertFromString("#B8BEBA") as Brush;
-            InnerBorderBrush = OriginInnerBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B8BEBA"));
             UpdateBorderColorByBackgroundColor();
             isReFreshingBrush = false;
         }
@@ -381,14 +294,6 @@ namespace CBHK.CustomControl.Input
             if (e.ClickCount == 1 && !isDragging)
             {
                 IsChecked = !IsChecked;
-                if (IsChecked)
-                {
-                    BorderBrush = Brushes.Black;
-                }
-                else
-                {
-                    BorderBrush = Brushes.White;
-                }
             }
 
             isDragging = false;

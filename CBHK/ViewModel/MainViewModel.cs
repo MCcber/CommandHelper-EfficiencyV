@@ -10,13 +10,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using System;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel
@@ -73,7 +71,6 @@ namespace CBHK.ViewModel
                 {
                     GeneratorVectorButton button = new()
                     {
-                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2E2E2E")),
                         Style = Application.Current.Resources["GeneratorVectorButtonStyle"] as Style
                     };
                     string currentId = data.ID;

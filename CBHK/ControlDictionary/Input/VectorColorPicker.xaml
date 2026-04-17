@@ -30,8 +30,8 @@
                         <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
                             <VectorButton:VectorTextButton
                                 x:Name="PickerToggle"
-                                Background="#D0D1D4"
-                                Foreground="Black"
+                                Background="{TemplateBinding Background}"
+                                Foreground="{DynamicResource CommonForeground}"
                                 Style="{DynamicResource VectorTextButtonStyle}"
                                 Text="{TemplateBinding Title}" />
                             <Popup
@@ -42,10 +42,10 @@
                                 StaysOpen="True">
                                 <Border
                                     Padding="5"
-                                    Background="#2D2D2D"
-                                    BorderBrush="Gray"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="Black"
                                     BorderThickness="1">
-                                    <Grid Background="Transparent">
+                                    <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="200" />
                                             <RowDefinition Height="Auto" />

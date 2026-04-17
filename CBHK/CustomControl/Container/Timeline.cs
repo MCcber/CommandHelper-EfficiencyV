@@ -2,7 +2,9 @@
 using CBHK.Interface.Data;
 using CBHK.Interface.Visual;
 using CBHK.Model.Common;
+using CBHK.Model.Constant;
 using CBHK.Utility.Common;
+using CBHK.Utility.Visual;
 using CBHK.Utility.Visual.MessageTip;
 using MathNet.Numerics.Interpolation;
 using System;
@@ -51,6 +53,7 @@ namespace CBHK.CustomControl.Container
 
         #region Property
         public IComparer<ContinuousKeyframeItem> KeyFrameMemberComparer { get; set; } = Comparer<ContinuousKeyframeItem>.Create((a, b) => a.CurrentTime.CompareTo(b.CurrentTime));
+
         public TimeRulerElement Ruler { get; set; }
         public Action TimeUpdateAction { get; set; }
 
@@ -114,11 +117,21 @@ namespace CBHK.CustomControl.Container
 
         public static readonly DependencyProperty IsShowPreviewLineProperty =
             DependencyProperty.Register("IsShowPreviewLine", typeof(bool), typeof(Timeline), new PropertyMetadata(default(bool)));
+
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(Timeline), new PropertyMetadata(default(Brush)));
         #endregion
 
         #region Method
         public Timeline()
         {
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
             Loaded += Timeline_Loaded;
             CompositionTarget.Rendering += Timeline_Rendering;
             DataSampleProgress = new Progress<(ITimelineElement, TimeSpan)>(DataSample);
@@ -129,9 +142,12 @@ namespace CBHK.CustomControl.Container
             }
         }
 
-        private void Timeline_Loaded(object sender, RoutedEventArgs e)
+        private void UpdateBorderColorByBackgroundColor()
         {
-            TrackPanelMargin = new(0, 30, 0, 0);
+            if (ThemeBackground is SolidColorBrush solidColorBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.Lighten(solidColorBrush.Color, 0.1f));
+            }
         }
 
         public void UpdateTotalWidth()
@@ -358,8 +374,7 @@ namespace CBHK.CustomControl.Container
         public void AddTrack(string title)
         {
             SolidColorBrush trackBackground = new((Color)ColorConverter.ConvertFromString("#CCD5F0"));
-            SolidColorBrush trackHeadBackground = new((Color)ColorConverter.ConvertFromString("#CCD5F0"));
-            TimelineTrack timelineTrack = new() { Padding = new(5), TrackName = title, Foreground = Brushes.Black, Background = trackBackground, TrackHeadBackground = trackHeadBackground };
+            TimelineTrack timelineTrack = new() { Padding = new(5), TrackName = title };
             TrackList.Add(timelineTrack);
             double headHeight = GetTrackHeight();
 
@@ -983,6 +998,11 @@ namespace CBHK.CustomControl.Container
         #endregion
 
         #region Event
+        private void Timeline_Loaded(object sender, RoutedEventArgs e)
+        {
+            TrackPanelMargin = new(0, 30, 0, 0);
+        }
+
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
@@ -1025,6 +1045,15 @@ namespace CBHK.CustomControl.Container
             }
 
             UpdateTotalWidth();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
         }
 
         public void HorizontalScrollViewer_Loaded(object sender,RoutedEventArgs e)
@@ -1114,12 +1143,15 @@ namespace CBHK.CustomControl.Container
                             }
                         }
                     }
-                    timelineTrack.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EAEAF2"));
                     if (lastSelectedTrack is not null)
                     {
-                        lastSelectedTrack.BorderBrush = Brushes.Transparent;
+                        lastSelectedTrack.BorderBrush = Brushes.Black;
                     }
                     CurrentTrack = timelineTrack;
+                    if (ThemeBackground is SolidColorBrush solidColorBrush)
+                    {
+                        CurrentTrack.BorderBrush = new SolidColorBrush(solidColorBrush.Color);
+                    }
                     lastSelectedTrack = CurrentTrack;
                 }
                 #endregion

@@ -3,7 +3,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:TextElement="clr-namespace:CBHK.CustomControl.TextElement"
-    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors">
+    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:utility="clr-namespace:CBHK.Utility.Visual">
     <Style x:Key="TagRichTextBoxStyle" TargetType="{x:Type Input:TagRichTextBox}">
         <Setter Property="Template">
             <Setter.Value>
@@ -16,14 +17,9 @@
                         <Input:VectorTextBox
                             Grid.Row="0"
                             HorizontalAlignment="Stretch"
-                            Background="#323334"
-                            BorderBrush="#424242"
                             BorderThickness="1"
-                            CaretBrush="White"
                             FontSize="15"
-                            Foreground="White"
                             Style="{DynamicResource VectorTextBoxStyle}"
-                            WaterMarkerBrush="Gray"
                             WaterMarkerMargin="5 0 0 0"
                             WaterMarkerText="输入后按下回车创建标签">
                             <behaviors:Interaction.Triggers>
@@ -32,15 +28,13 @@
                                 </behaviors:EventTrigger>
                             </behaviors:Interaction.Triggers>
                         </Input:VectorTextBox>
-                        <RichTextBox
+                        <Input:VectorRichTextBox
                             x:Name="tagBox"
                             Grid.Row="1"
-                            Background="#565A57"
                             BorderThickness="0"
-                            CaretBrush="White"
-                            Foreground="White"
                             HorizontalScrollBarVisibility="Auto"
                             IsReadOnly="True"
+                            Style="{DynamicResource VectorRichTextBoxStyle}"
                             VerticalScrollBarVisibility="Auto">
                             <behaviors:Interaction.Triggers>
                                 <behaviors:EventTrigger EventName="Loaded">
@@ -50,7 +44,7 @@
                             <TextElement:EnabledFlowDocument>
                                 <Paragraph />
                             </TextElement:EnabledFlowDocument>
-                        </RichTextBox>
+                        </Input:VectorRichTextBox>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

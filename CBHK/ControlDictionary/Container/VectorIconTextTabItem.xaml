@@ -6,7 +6,6 @@
     <Style x:Key="VectorIconTextTabItemStyle" TargetType="{x:Type Container:VectorIconTextTabItem}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="UseLayoutRounding" Value="True" />
-        <Setter Property="Background" Value="#312D2C" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Container:VectorIconTextTabItem}">

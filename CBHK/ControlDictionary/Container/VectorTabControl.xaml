@@ -3,20 +3,17 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container">
 
-    <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC" />
     <Style x:Key="VectorTabControlStyle" TargetType="{x:Type Container:VectorTabControl}">
         <Setter Property="Padding" Value="2" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="BorderBrush" Value="{StaticResource TabItem.Selected.Border}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Container:VectorTabControl}">
                     <Grid
                         x:Name="templateRoot"
+                        Background="{TemplateBinding Background}"
                         ClipToBounds="true"
                         KeyboardNavigation.TabNavigation="Local"
                         SnapsToDevicePixels="true">
@@ -29,6 +26,7 @@
                             <RowDefinition x:Name="RowDefinition1" Height="*" />
                         </Grid.RowDefinitions>
                         <Container:VectorScrollViewer
+                            x:Name="contentViewer"
                             Grid.Row="0"
                             Grid.Column="0"
                             Background="{TemplateBinding Background}"
@@ -37,13 +35,12 @@
                             VerticalScrollBarVisibility="Auto">
                             <Border
                                 x:Name="Line"
-                                BorderBrush="{TemplateBinding Foreground}"
+                                BorderBrush="{TemplateBinding ContentSplitLineBrush}"
                                 BorderThickness="0,0,0,2">
                                 <TabPanel
-                                    x:Name="headerPanel"
                                     Grid.Row="0"
                                     Grid.Column="0"
-                                    Margin="2,2,2,0"
+                                    Margin="2"
                                     Panel.ZIndex="1"
                                     Background="{TemplateBinding Background}"
                                     IsItemsHost="true"
@@ -69,33 +66,36 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="TabStripPlacement" Value="Bottom">
-                            <Setter TargetName="headerPanel" Property="Grid.Row" Value="1" />
+                            <Setter TargetName="Line" Property="Grid.Row" Value="1" />
+                            <Setter TargetName="Line" Property="BorderThickness" Value="0,0,0,2" />
                             <Setter TargetName="contentPanel" Property="Grid.Row" Value="0" />
                             <Setter TargetName="RowDefinition0" Property="Height" Value="*" />
                             <Setter TargetName="RowDefinition1" Property="Height" Value="Auto" />
-                            <Setter TargetName="headerPanel" Property="Margin" Value="2,0,2,2" />
+                            <Setter TargetName="Line" Property="Margin" Value="2,0,2,2" />
                         </Trigger>
                         <Trigger Property="TabStripPlacement" Value="Left">
-                            <Setter TargetName="headerPanel" Property="Grid.Row" Value="0" />
+                            <Setter TargetName="Line" Property="Grid.Row" Value="0" />
+                            <Setter TargetName="Line" Property="BorderThickness" Value="0,0,2,0" />
                             <Setter TargetName="contentPanel" Property="Grid.Row" Value="0" />
-                            <Setter TargetName="headerPanel" Property="Grid.Column" Value="0" />
+                            <Setter TargetName="Line" Property="Grid.Column" Value="0" />
                             <Setter TargetName="contentPanel" Property="Grid.Column" Value="1" />
                             <Setter TargetName="ColumnDefinition0" Property="Width" Value="Auto" />
                             <Setter TargetName="ColumnDefinition1" Property="Width" Value="*" />
                             <Setter TargetName="RowDefinition0" Property="Height" Value="*" />
                             <Setter TargetName="RowDefinition1" Property="Height" Value="0" />
-                            <Setter TargetName="headerPanel" Property="Margin" Value="2,2,0,2" />
+                            <Setter TargetName="Line" Property="Margin" Value="2,2,0,2" />
                         </Trigger>
                         <Trigger Property="TabStripPlacement" Value="Right">
-                            <Setter TargetName="headerPanel" Property="Grid.Row" Value="0" />
+                            <Setter TargetName="Line" Property="Grid.Row" Value="0" />
+                            <Setter TargetName="Line" Property="BorderThickness" Value="2,0,0,0" />
                             <Setter TargetName="contentPanel" Property="Grid.Row" Value="0" />
-                            <Setter TargetName="headerPanel" Property="Grid.Column" Value="1" />
+                            <Setter TargetName="Line" Property="Grid.Column" Value="1" />
                             <Setter TargetName="contentPanel" Property="Grid.Column" Value="0" />
                             <Setter TargetName="ColumnDefinition0" Property="Width" Value="*" />
                             <Setter TargetName="ColumnDefinition1" Property="Width" Value="Auto" />
                             <Setter TargetName="RowDefinition0" Property="Height" Value="*" />
                             <Setter TargetName="RowDefinition1" Property="Height" Value="0" />
-                            <Setter TargetName="headerPanel" Property="Margin" Value="0,2,2,2" />
+                            <Setter TargetName="Line" Property="Margin" Value="0,2,2,2" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
                             <Setter TargetName="templateRoot" Property="TextElement.Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />

@@ -1,4 +1,5 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -8,8 +9,6 @@ namespace CBHK.CustomControl.Container
     public class VectorIconTextTabItem : TabItem
     {
         #region Field
-        private Brush OriginBackground;
-        private Brush OriginForeground;
         private Brush OriginLeftTopBrush;
         private Brush OriginRightBottomBrush;
         #endregion
@@ -42,6 +41,15 @@ namespace CBHK.CustomControl.Container
         public static readonly DependencyProperty SelectedMarkerVisibilityProperty =
             DependencyProperty.Register("SelectedMarkerVisibility", typeof(Visibility), typeof(VectorIconTextTabItem), new PropertyMetadata(default(Visibility)));
 
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(VectorIconTextTabItem), new PropertyMetadata(default(Brush)));
+
         public Brush SelectedMarkerBrush
         {
             get { return (Brush)GetValue(SelectedMarkerBrushProperty); }
@@ -73,17 +81,29 @@ namespace CBHK.CustomControl.Container
         #region Method
         public VectorIconTextTabItem()
         {
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            SetResourceReference(ForegroundProperty, Theme.CommonForeground);
             Loaded += VectorIconTextTabItem_Loaded;
             Unloaded += VectorIconTextTabItem_Unloaded;
             MouseEnter += VectorIconTextTabItem_MouseEnter;
             MouseLeave += VectorIconTextTabItem_MouseLeave;
         }
 
+        public void UpdateBorderColorByBackgroundColor()
+        {
+            if(ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(themeBrush.Color);
+                SelectedMarkerBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.6f));
+                LeftTopBorderBrush = OriginLeftTopBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.4f));
+                RightBottomBorderBrush = OriginRightBottomBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.4f));
+            }
+        }
+
         private bool IsElementInTabItem(DependencyObject element, TabItem tab)
         {
             if (element == null || tab == null) return false;
-            var tabControl = ItemsControl.ItemsControlFromItemContainer(tab) as TabControl;
-            if (tabControl != null)
+            if (ItemsControl.ItemsControlFromItemContainer(tab) is TabControl tabControl)
             {
                 var container = ItemsControl.ContainerFromElement(tabControl, element) as TabItem;
                 if (container == tab) return true;
@@ -110,63 +130,38 @@ namespace CBHK.CustomControl.Container
                 parent.SelectionChanged += Parent_SelectionChanged;
             }
 
-            if (HeaderText == "" || HeaderText is null)
+            if (string.IsNullOrEmpty(HeaderText))
             {
                 HeaderText = "Button";
             }
 
-            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
-            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Foreground = Brushes.White;
-            }
-            var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-
-            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Background = new BrushConverter().ConvertFromString("#3c8527") as Brush;
-            }
-            var selectedMarkerSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (selectedMarkerSource.BaseValueSource is BaseValueSource.DefaultStyle || selectedMarkerSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SelectedMarkerBrush = Brushes.White;
-            }
-            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
-            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                BorderBrush = Brushes.Black;
-            }
-            var leftTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopBorderBrushProperty);
-            if (leftTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || leftTopBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
-                LeftTopBorderBrush = new SolidColorBrush(color);
-            }
-            var rightBottomBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
-            if (rightBottomBrushSource.BaseValueSource is BaseValueSource.Default || rightBottomBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.4f);
-                RightBottomBorderBrush ??= new SolidColorBrush(color);
-            }
-
-            OriginLeftTopBrush = LeftTopBorderBrush;
-            OriginRightBottomBrush = RightBottomBorderBrush;
-            OriginBackground = Background;
-            OriginForeground = Foreground;
-
             Parent_SelectionChanged(sender, null);
+
+            UpdateBorderColorByBackgroundColor();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
         }
 
         private void Parent_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (IsSelected)
             {
-                SolidColorBrush leftTopBrush = new((OriginLeftTopBrush as SolidColorBrush).Color);
-                SolidColorBrush rightBottomBrush = new((OriginRightBottomBrush as SolidColorBrush).Color);
-                Background = rightBottomBrush;
-                LeftTopBorderBrush = rightBottomBrush;
-                RightBottomBorderBrush = leftTopBrush;
+                if(OriginLeftTopBrush is SolidColorBrush originLeftTopBrush)
+                {
+                    RightBottomBorderBrush = new SolidColorBrush(originLeftTopBrush.Color);
+                }
+                if(OriginRightBottomBrush is SolidColorBrush originRightBottomBrush)
+                {
+                    Background = new SolidColorBrush(originRightBottomBrush.Color);
+                    LeftTopBorderBrush = new SolidColorBrush(originRightBottomBrush.Color);
+                }
                 SelectedMarkerVisibility = Visibility.Visible;
             }
             else
@@ -174,7 +169,7 @@ namespace CBHK.CustomControl.Container
                 SelectedMarkerVisibility = Visibility.Hidden;
                 LeftTopBorderBrush = OriginLeftTopBrush;
                 RightBottomBorderBrush = OriginRightBottomBrush;
-                Background = OriginBackground;
+                Background = ThemeBackground;
             }
         }
 
@@ -189,19 +184,22 @@ namespace CBHK.CustomControl.Container
                 return;
             }
 
-            Color color = ColorTool.Lighten((OriginBackground as SolidColorBrush).Color,0.3f);
-            Background = new SolidColorBrush(color);
+            if (ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.3f));
+            }
         }
 
         private void VectorIconTextTabItem_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            if (!IsSelected)
+            if (!IsSelected && ThemeBackground is SolidColorBrush themeBrush)
             {
-                Background = OriginBackground;
+                Background = new SolidColorBrush(themeBrush.Color);
             }
             else
+            if(OriginRightBottomBrush is SolidColorBrush originRightBottomBrush)
             {
-                SolidColorBrush rightBottomBrush = new((OriginRightBottomBrush as SolidColorBrush).Color);
+                SolidColorBrush rightBottomBrush = new(originRightBottomBrush.Color);
                 Background = rightBottomBrush;
             }
         }

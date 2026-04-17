@@ -14,7 +14,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:tb="http://www.hardcodet.net/taskbar"
-    Title="CommandHelper-EfficiencyV v1.20.4"
+    Title="CommandHelper-EfficiencyV v1.20.5"
     Width="1020"
     Height="800"
     MinWidth="1020"
@@ -56,8 +56,8 @@
                 Style="{StaticResource VectorIconTextTabItemStyle}">
                 <Grid>
                     <Container:VectorScrollViewer
-                        Background="Transparent"
                         HorizontalScrollBarVisibility="Auto"
+                        Style="{DynamicResource VectorScrollViewerStyle}"
                         VerticalScrollBarVisibility="Auto">
                         <Grid FocusVisualStyle="{x:Null}" Visibility="Collapsed">
                             <behaviors:Interaction.Triggers>

@@ -1,6 +1,8 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.VectorButton
@@ -60,11 +62,20 @@ namespace CBHK.CustomControl.VectorButton
         public static readonly DependencyProperty SideBorderBrushProperty =
             DependencyProperty.Register("SideBorderBrush", typeof(Brush), typeof(GeneratorVectorButton), new PropertyMetadata(default(Brush)));
 
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(GeneratorVectorButton), new PropertyMetadata(default(Brush)));
         #endregion
 
         #region Method
         public GeneratorVectorButton()
         {
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
             Loaded += VectorTextButton_Loaded;
             MouseEnter += VectorTextButton_MouseEnter;
             MouseLeave += VectorTextButton_MouseLeave;
@@ -72,91 +83,79 @@ namespace CBHK.CustomControl.VectorButton
             PreviewMouseLeftButtonUp += VectorTextButton_PreviewMouseLeftButtonUp;
         }
 
+        private void UpdateBorderColorByBackgroundColor()
+        {
+            BorderBrush = Brushes.Black;
+            if(ThemeBackground is SolidColorBrush themeBrush)
+            {
+                OriginBackgroundBrush = new SolidColorBrush(themeBrush.Color);
+                Color startColor = ColorTool.Lighten(themeBrush.Color, 0.1f);
+                Color endColor = ColorTool.Darken(themeBrush.Color, 0.1f);
+                LinearGradientBrush linearGradientBrush = new(startColor, endColor, 90);
+                Background = linearGradientBrush;
+
+                TopBottomBorderBrush = OriginTopBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.1f));
+                SideBorderBrush = OriginSideBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.1f));
+            }
+        }
         #endregion
 
         #region Event
         private void VectorTextButton_Loaded(object sender, RoutedEventArgs e)
         {
-            if (Title == "")
+            if (string.IsNullOrEmpty(Title))
             {
                 Title = "Button";
             }
-            if(SubTitle == "")
+            if(string.IsNullOrEmpty(SubTitle))
             {
                 SubTitle = "Description";
             }
 
-            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
-            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Foreground = Brushes.White;
-            }
-            var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (backgroundSource.BaseValueSource is BaseValueSource.Style || backgroundSource.BaseValueSource is BaseValueSource.Default)
-            {
-                Background = OriginBackgroundBrush = new BrushConverter().ConvertFromString("#48494A") as Brush;
-            }
-            else
-            if(OriginBackgroundBrush is null)
-            {
-                OriginBackgroundBrush = Background;
-            }
-            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
-            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                BorderBrush = Brushes.Black;
-            }
-            var originTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, TopBottomBorderBrushProperty);
-            if (originTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originTopBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.1f);
-                TopBottomBorderBrush = new SolidColorBrush(color);
-            }
-            var originSideBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, SideBorderBrushProperty);
-            if (originSideBorderBrushSource.BaseValueSource is BaseValueSource.Default || originSideBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.1f);
-                SideBorderBrush = new SolidColorBrush(color);
-            }
-
-            SolidColorBrush solidColorBrush = OriginBackgroundBrush as SolidColorBrush;
-            Color startColor = ColorTool.Lighten(solidColorBrush.Color, 0.1f);
-            Color endColor = ColorTool.Darken(solidColorBrush.Color, 0.1f);
-            LinearGradientBrush linearGradientBrush = new(startColor, endColor, 90);
-            Background = linearGradientBrush;
-            OriginTopBottomBorderBrush = TopBottomBorderBrush;
-            OriginSideBorderBrush = SideBorderBrush;
+            UpdateBorderColorByBackgroundColor();
         }
 
-        private void GeneratorVectorButton_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
+        }
+
+        private void GeneratorVectorButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             BorderBrush = Brushes.White;
         }
 
-        private void VectorTextButton_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void VectorTextButton_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             VectorTextButton_MouseEnter(sender, null);
         }
 
-        private void VectorTextButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        private void VectorTextButton_MouseLeave(object sender, MouseEventArgs e)
         {
             BorderBrush = Brushes.Black;
-            SolidColorBrush solidColorBrush = OriginBackgroundBrush as SolidColorBrush;
-            Color startColor = ColorTool.Lighten(solidColorBrush.Color, 0.1f);
-            Color endColor = ColorTool.Darken(solidColorBrush.Color, 0.1f);
-            LinearGradientBrush linearGradientBrush = new(startColor, endColor, 90);
-            Background = linearGradientBrush;
+
+            if(OriginBackgroundBrush is SolidColorBrush solidColorBrush)
+            {
+                Color startColor = ColorTool.Lighten(solidColorBrush.Color, 0.1f);
+                Color endColor = ColorTool.Darken(solidColorBrush.Color, 0.1f);
+                LinearGradientBrush linearGradientBrush = new(startColor, endColor, 90);
+                Background = linearGradientBrush;
+            }
         }
 
-        private void VectorTextButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        private void VectorTextButton_MouseEnter(object sender, MouseEventArgs e)
         {
-            SolidColorBrush solidColorBrush = OriginBackgroundBrush as SolidColorBrush;
-            Color startColor = ColorTool.Lighten(solidColorBrush.Color, 0.2f);
-            Color endColor = ColorTool.Darken(solidColorBrush.Color, 0.2f);
-            LinearGradientBrush result = new(startColor, endColor, 90);
-            Background = result;
+            if(OriginBackgroundBrush is SolidColorBrush solidColorBrush)
+            {
+                Color startColor = ColorTool.Lighten(solidColorBrush.Color, 0.2f);
+                Color endColor = ColorTool.Darken(solidColorBrush.Color, 0.2f);
+                LinearGradientBrush result = new(startColor, endColor, 90);
+                Background = result;
+            }
         }
         #endregion
     }

@@ -1,20 +1,20 @@
 ﻿using CBHK.CustomControl.Container;
 using CBHK.Interface.Visual;
+using CBHK.Model.Constant;
 using CBHK.Utility.Common;
+using CBHK.Utility.Visual;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
 namespace CBHK.CustomControl.Input
 {
-    public class TimelineClip : Control, ITimelineElement
+    public class TimelineClip : BaseVectorControl, ITimelineElement
     {
         #region Field
         private AnimationTimelineTool animationTimelineTool = new();
@@ -22,12 +22,9 @@ namespace CBHK.CustomControl.Input
         public ContinuousKeyframeItem RightBorderFrameItem;
         private bool isDragging = false;
         private Point dragPoint;
-        private Point dragStartPoint;
         private bool isInKeyFrameItem = false;
-        private bool isReFreshingBrush = false;
         private Canvas innerTimeCanvas;
         private Canvas parentCanvas;
-        private TimeRulerElement timeRulerElement;
         private TimeSpan innerKeyFrameItemDeltaTime = TimeSpan.Zero;
         private bool isTimelineClipLoaded;
         private ContinuousKeyframeItem currentMemberFrameItem;
@@ -120,14 +117,14 @@ namespace CBHK.CustomControl.Input
         public static readonly DependencyProperty MinDurationProperty =
             DependencyProperty.Register("MinDuration", typeof(double), typeof(TimelineClip), new PropertyMetadata(default(double)));
 
-        public Brush ClipColor
+        public Brush ThemeBackground
         {
-            get { return (Brush)GetValue(ClipColorProperty); }
-            set { SetValue(ClipColorProperty, value); }
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
         }
 
-        public static readonly DependencyProperty ClipColorProperty =
-            DependencyProperty.Register("ClipColor", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(TimelineClip), new PropertyMetadata(default(Brush)));
 
         public TimeSpan StartTime
         {
@@ -207,7 +204,7 @@ namespace CBHK.CustomControl.Input
         #region Method
         public TimelineClip()
         {
-            BorderThickness = new(1);
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
             BorderBrush = Brushes.White;
             SplitPreviewLineVisibility = Visibility.Hidden;
             InnerKeyFrameList = [];
@@ -223,22 +220,11 @@ namespace CBHK.CustomControl.Input
             double offset = 0.0;
             foreach (var keyFrameItem in InnerKeyFrameList)
             {
-                offset = (Math.Sqrt(Math.Pow(keyFrameItem.Width, 2) + Math.Pow(keyFrameItem.Height, 2))) / -2;
+                //offset = (Math.Sqrt(Math.Pow(keyFrameItem.Width, 2) + Math.Pow(keyFrameItem.Height, 2))) / -2;
+                offset = keyFrameItem.Width / -2;
                 offset += BorderThickness.Left;
                 Canvas.SetLeft(keyFrameItem, keyFrameItem.X + offset);
                 Canvas.SetTop(keyFrameItem, (innerTimeCanvas.ActualHeight / 2) - (keyFrameItem.Width / 2));
-            }
-        }
-
-        private void OnIsChecked_Changed(DependencyPropertyChangedEventArgs e)
-        {
-            if (e.NewValue is bool value && value)
-            {
-                OnChecked();
-            }
-            else
-            {
-                OnUnchecked();
             }
         }
 
@@ -253,20 +239,6 @@ namespace CBHK.CustomControl.Input
             innerTimeCanvas.Children.Remove(item);
             InnerKeyFrameList.Remove(item);
             InnerKeyFrameSortedList.Remove(item);
-        }
-
-        private void OnChecked()
-        {
-            isReFreshingBrush = true;
-            Background = new BrushConverter().ConvertFromString("#FFFFFF") as Brush;
-            isReFreshingBrush = false;
-        }
-
-        private void OnUnchecked()
-        {
-            isReFreshingBrush = true;
-            Background = new BrushConverter().ConvertFromString("#B8BEBA") as Brush;
-            isReFreshingBrush = false;
         }
 
         /// <summary>
@@ -298,6 +270,25 @@ namespace CBHK.CustomControl.Input
                     RectangleModeWidth = endPoint - startPoint;
                 }
             }
+        }
+
+        public override void UpdateBorderColorByBackgroundColor()
+        {
+            //base.UpdateBorderColorByBackgroundColor();
+            if(ThemeBackground is SolidColorBrush solidColorBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.4f, ModifyMode));
+            }
+        }
+
+        private void OnChecked()
+        {
+            BorderBrush = Brushes.Black;
+        }
+
+        private void OnUnchecked()
+        {
+            BorderBrush = Brushes.White;
         }
 
         public TimelineClip Clone()
@@ -360,6 +351,8 @@ namespace CBHK.CustomControl.Input
             geometry.Transform = new RotateTransform(45);
             splitCursor = CursorHelper.CreateCursor(viewbox, 0, 0);
 
+            UpdateBorderColorByBackgroundColor();
+
             isTimelineClipLoaded = true;
         }
 
@@ -415,19 +408,23 @@ namespace CBHK.CustomControl.Input
                     keyframeItem.PreviewMouseLeftButtonDown += MemberKeyFrameItem_PreviewMouseLeftButtonDown;
                     keyframeItem.PreviewMouseLeftButtonUp += MemberKeyFrameItem_PreviewMouseLeftButtonUp;
 
-                    offset = Math.Sqrt(Math.Pow(keyframeItem.Width, 2) + Math.Pow(keyframeItem.Height, 2)) / -2.0 + keyframeItem.BorderThickness.Left + keyframeItem.BorderThickness.Right;
+                    //offset = Math.Sqrt(Math.Pow(keyframeItem.Width, 2) + Math.Pow(keyframeItem.Height, 2)) / -2.0 + keyframeItem.BorderThickness.Left + keyframeItem.BorderThickness.Right;
+                    offset = keyframeItem.Width / -2.0;
 
                     Canvas.SetLeft(keyframeItem, keyframeItem.X + offset);
                     Canvas.SetTop(keyframeItem, (innerTimeCanvas.ActualHeight / 2) - (keyframeItem.Width / 2));
                 }
                 double startPoint = animationTimelineTool.ConvertTimeToPixel(StartTime, Ruler);
                 double endPoint = animationTimelineTool.ConvertTimeToPixel(EndTime, Ruler);
-                offset = Math.Sqrt(Math.Pow(LeftBorderFrameItem.Width, 2) + Math.Pow(LeftBorderFrameItem.Height, 2)) / -2;
+                //offset = Math.Sqrt(Math.Pow(LeftBorderFrameItem.Width, 2) + Math.Pow(LeftBorderFrameItem.Height, 2)) / -2;
+                offset = LeftBorderFrameItem.Width / -2;
                 offset += BorderThickness.Left;
                 if (LeftBorderFrameItem is not null)
                 {
                     Canvas.SetLeft(LeftBorderFrameItem, offset);
                 }
+                offset = RightBorderFrameItem.Width / -2;
+                offset += BorderThickness.Right;
                 if(RightBorderFrameItem is not null)
                 {
                     Canvas.SetLeft(RightBorderFrameItem, endPoint - startPoint + offset);
@@ -457,6 +454,18 @@ namespace CBHK.CustomControl.Input
                     }
                 }
                 #endregion
+            }
+        }
+
+        private void OnIsChecked_Changed(DependencyPropertyChangedEventArgs e)
+        {
+            if (e.NewValue is bool value && value)
+            {
+                OnChecked();
+            }
+            else
+            {
+                OnUnchecked();
             }
         }
 
@@ -517,7 +526,8 @@ namespace CBHK.CustomControl.Input
                 TimeSpan currentTime = animationTimelineTool.ConvertPixelToTime(dragPoint.X, Ruler);
                 double currentTimeValue = animationTimelineTool.ConvertTimeToPixel(currentTime, Ruler);
                 innerKeyFrameItemDeltaTime = currentTime;
-                double offset = (Math.Sqrt(Math.Pow(currentMemberFrameItem.Width, 2) + Math.Pow(currentMemberFrameItem.Height, 2))) / -2 + BorderThickness.Left + BorderThickness.Right;
+                //double offset = (Math.Sqrt(Math.Pow(currentMemberFrameItem.Width, 2) + Math.Pow(currentMemberFrameItem.Height, 2))) / -2 + BorderThickness.Left + BorderThickness.Right;
+                double offset = currentMemberFrameItem.Width / -2;
                 Canvas.SetLeft(currentMemberFrameItem, currentTimeValue + offset);
             }
         }
@@ -552,7 +562,7 @@ namespace CBHK.CustomControl.Input
             // 获取父级 Canvas (作为计算坐标的绝对参考系)
             if (parentCanvas is not null && !isDragging)
             {
-                dragPoint = dragStartPoint = e.GetPosition(parentCanvas);
+                dragPoint = e.GetPosition(parentCanvas);
                 IsAdjustingFirstSize = IsAdjustingLastSize = false;
                 if (sender == LeftBorderFrameItem)
                 {
@@ -573,7 +583,8 @@ namespace CBHK.CustomControl.Input
                 dragPoint = e.GetPosition(parentCanvas);
 
                 #region 拉伸左右两侧
-                double offset =(Math.Sqrt(Math.Pow(LeftBorderFrameItem.Width, 2) + Math.Pow(LeftBorderFrameItem.Height, 2))) / -2;
+                //double offset =(Math.Sqrt(Math.Pow(LeftBorderFrameItem.Width, 2) + Math.Pow(LeftBorderFrameItem.Height, 2))) / -2;
+                double offset = LeftBorderFrameItem.Width / -2;
                 offset += BorderThickness.Left;
                 double startPoint = animationTimelineTool.ConvertTimeToPixel(StartTime, Ruler);
                 double endPoint = animationTimelineTool.ConvertTimeToPixel(EndTime, Ruler);
@@ -618,7 +629,7 @@ namespace CBHK.CustomControl.Input
             // 获取父级 Canvas (作为计算坐标的绝对参考系)
             if (parentCanvas is not null && !isInKeyFrameItem && e.ClickCount == 2)
             {
-                dragPoint = dragStartPoint = e.GetPosition(parentCanvas);
+                dragPoint = e.GetPosition(parentCanvas);
                 isDragging = true;
                 // 【最关键的一句】强制控件捕获鼠标！
                 // 这样即使拖拽速度过快，鼠标箭头移出了控件范围，它依然能持续触发 MouseMove。
@@ -679,6 +690,8 @@ namespace CBHK.CustomControl.Input
             }
             isDragging = false;
             ReleaseMouseCapture();
+            //最后再对齐一次坐标
+            BorderKeyFrameItem_PreviewMouseMove(currentMemberFrameItem, e);
             IsAdjustingFirstSize = IsAdjustingLastSize = IsMoveMemberKeyFrame = false;
 
             base.OnPreviewMouseLeftButtonUp(e);

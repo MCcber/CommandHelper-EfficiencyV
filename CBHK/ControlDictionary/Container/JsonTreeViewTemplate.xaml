@@ -5,6 +5,7 @@
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:compoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponent">
+    <!--  准备删除，以mcdoc格式为数据文件重构整个Json编辑器  -->
     <HierarchicalDataTemplate x:Key="JsonTreeViewItem" DataType="TreeViewItem">
         <DockPanel LastChildFill="False">
             <Border

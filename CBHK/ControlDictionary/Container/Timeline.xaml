@@ -38,8 +38,6 @@
                 Height="{Binding Height}"
                 Padding="{Binding Padding}"
                 Panel.ZIndex="0"
-                Background="{Binding TrackHeadBackground}"
-                Foreground="{Binding Foreground}"
                 Style="{DynamicResource VectorFlatTextButtonStyle}"
                 Text="{Binding TrackName}">
                 <behaviors:Interaction.Triggers>
@@ -51,9 +49,6 @@
             <Input:VectorTextBox
                 Height="{Binding Height}"
                 Panel.ZIndex="1"
-                Background="#313233"
-                BorderBrush="Black"
-                BorderThickness="1"
                 Text="{Binding TrackName, Mode=TwoWay}"
                 Visibility="{Binding EditorBoxVisibility}">
                 <behaviors:Interaction.Triggers>
@@ -85,7 +80,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Container:Timeline}">
-                    <Grid Background="{TemplateBinding Background}">
+                    <Grid Background="Transparent">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
@@ -97,8 +92,10 @@
                             Grid.Column="0"
                             Margin="{Binding TrackPanelMargin, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:Timeline}}"
                             Background="Transparent"
+                            IsAllowDragToScroll="False"
                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                            ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                            Style="{DynamicResource VectorScrollViewerStyle}">
                             <behaviors:Interaction.Triggers>
                                 <behaviors:EventTrigger EventName="Loaded">
                                     <behaviors:CallMethodAction MethodName="HeadScrollViewer_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />
@@ -121,7 +118,8 @@
                         <Container:VectorScrollViewer
                             Grid.Column="1"
                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                            ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                            ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                            Style="{DynamicResource VectorScrollViewerStyle}">
                             <behaviors:Interaction.Triggers>
                                 <behaviors:EventTrigger EventName="Loaded">
                                     <behaviors:CallMethodAction MethodName="HorizontalScrollViewer_Loaded" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Container:Timeline}}}" />
@@ -170,12 +168,12 @@
                                         <Line
                                             Margin="0,25,0,0"
                                             Panel.ZIndex="1"
-                                            Stroke="Gray"
+                                            Stroke="White"
                                             StrokeThickness="1"
                                             X1="0"
                                             X2="0"
                                             Y1="0"
-                                            Y2="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ActualHeight}" />
+                                            Y2="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=ActualHeight}" />
                                     </Grid>
                                     <Line
                                         x:Name="previewLine"

@@ -98,216 +98,231 @@
                 BorderThickness="0"
                 FontSize="15"
                 RenderOptions.BitmapScalingMode="NearestNeighbor">
-                <MenuItem
+                <Container:VectorTextMenuItem
                     Uid="knowledge_book"
                     Background="Transparent"
                     Foreground="Black"
-                    Header="添加配方">
+                    Header="添加配方"
+                    Style="{DynamicResource VectorTextMenuItemStyle}">
                     <behavior:Interaction.Triggers>
                         <behavior:EventTrigger EventName="Loaded">
                             <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                         </behavior:EventTrigger>
                     </behavior:Interaction.Triggers>
-                    <MenuItem
+                    <Container:VectorTextMenuItem
                         Uid="crafting_table"
-                        Background="#424242"
                         Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                        Foreground="White"
-                        Header="工作台">
+                        Header="工作台"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="furnace"
                         Background="#424242"
                         Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="熔炉">
+                        Header="熔炉"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="smoker"
                         Background="#424242"
                         Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="烟熏炉">
+                        Header="烟熏炉"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="blast_furnace"
                         Background="#424242"
                         Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="高炉">
+                        Header="高炉"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="campfire"
                         Background="#424242"
                         Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="篝火">
+                        Header="篝火"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="smithing_table"
                         Background="#424242"
                         Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="锻造台">
+                        Header="锻造台"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="stonecutter"
                         Background="#424242"
                         Command="{Binding AddRecipeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="切石机">
+                        Header="切石机"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                </MenuItem>
-                <MenuItem
+                    </Container:VectorTextMenuItem>
+                </Container:VectorTextMenuItem>
+                <Container:VectorTextMenuItem
                     Uid="knowledge_book"
                     Background="Transparent"
                     Foreground="Black"
-                    Header="清空配方">
+                    Header="清空配方"
+                    Style="{DynamicResource VectorTextMenuItemStyle}">
                     <behavior:Interaction.Triggers>
                         <behavior:EventTrigger EventName="Loaded">
                             <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                         </behavior:EventTrigger>
                     </behavior:Interaction.Triggers>
-                    <MenuItem
+                    <Container:VectorTextMenuItem
                         Background="#424242"
                         Command="{Binding ClearRecipesCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="全部" />
-                    <MenuItem
+                        Header="全部"
+                        Style="{DynamicResource VectorTextMenuItemStyle}" />
+                    <Container:VectorTextMenuItem
                         Uid="crafting_table"
                         Background="#424242"
                         Command="{Binding ClearRecipesCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="工作台">
+                        Header="工作台"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="furnace"
                         Background="#424242"
                         Command="{Binding ClearRecipesCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="熔炉">
+                        Header="熔炉"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="smoker"
                         Background="#424242"
                         Command="{Binding ClearRecipesCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="烟熏炉">
+                        Header="烟熏炉"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="blast_furnace"
                         Background="#424242"
                         Command="{Binding ClearRecipesCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="高炉">
+                        Header="高炉"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="campfire"
                         Background="#424242"
                         Command="{Binding ClearRecipesCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="篝火">
+                        Header="篝火"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="smithing_table"
                         Background="#424242"
                         Command="{Binding ClearRecipesCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="锻造台">
+                        Header="锻造台"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                    <MenuItem
+                    </Container:VectorTextMenuItem>
+                    <Container:VectorTextMenuItem
                         Uid="stonecutter"
                         Background="#424242"
                         Command="{Binding ClearRecipesCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
                         Foreground="White"
-                        Header="切石机">
+                        Header="切石机"
+                        Style="{DynamicResource VectorTextMenuItemStyle}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="AddRecipeMenuIconLoaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </MenuItem>
-                </MenuItem>
+                    </Container:VectorTextMenuItem>
+                </Container:VectorTextMenuItem>
             </Menu>
             <VectorButton:VectorTextButton
                 Background="#EFF2F1"
@@ -381,18 +396,18 @@
                     Foreground="White"
                     SelectedBackground="#CC6B23"
                     Style="{DynamicResource VectorTextTabItemStyle}">
-                    <ListView
+                    <Container:VectorListView
                         HorizontalAlignment="Stretch"
                         BorderBrush="Black"
                         ItemsSource="{Binding Source={StaticResource OriginalItemView}, IsAsync=True}"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectedItem="{Binding SelectedItem, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
-                        Style="{DynamicResource ListBoxScrollViewerStyle}"
+                        Style="{DynamicResource VectorListViewStyle}"
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.ScrollUnit="Pixel"
                         VirtualizingPanel.VirtualizationMode="Recycling">
-                        <ListView.ItemTemplate>
+                        <Container:VectorListView.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel>
                                     <Grid>
@@ -421,8 +436,8 @@
                                     </Grid>
                                 </DockPanel>
                             </DataTemplate>
-                        </ListView.ItemTemplate>
-                        <ListView.ItemsPanel>
+                        </Container:VectorListView.ItemTemplate>
+                        <Container:VectorListView.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingWrapPanel:VirtualizingWrapPanel
                                     Background="#555956"
@@ -432,13 +447,13 @@
                                     VirtualizingPanel.ScrollUnit="Pixel"
                                     VirtualizingPanel.VirtualizationMode="Recycling" />
                             </ItemsPanelTemplate>
-                        </ListView.ItemsPanel>
+                        </Container:VectorListView.ItemsPanel>
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="OriginalListView_Loaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </ListView>
+                    </Container:VectorListView>
                 </Container:VectorTextTabItem>
                 <Container:VectorTextTabItem
                     Title="自定义物品库"
@@ -446,18 +461,18 @@
                     Foreground="White"
                     SelectedBackground="#CC6B23"
                     Style="{DynamicResource VectorTextTabItemStyle}">
-                    <ListView
+                    <Container:VectorListView
                         HorizontalAlignment="Stretch"
                         BorderBrush="Black"
                         ItemsSource="{Binding Source={StaticResource CustomItemView}, IsAsync=True}"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                         SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        Style="{DynamicResource ListBoxScrollViewerStyle}"
+                        Style="{DynamicResource VectorListViewStyle}"
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.ScrollUnit="Pixel"
                         VirtualizingPanel.VirtualizationMode="Recycling">
-                        <ListView.ItemsPanel>
+                        <Container:VectorListView.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingWrapPanel:VirtualizingWrapPanel
                                     Background="#555956"
@@ -467,8 +482,8 @@
                                     VirtualizingPanel.ScrollUnit="Pixel"
                                     VirtualizingPanel.VirtualizationMode="Recycling" />
                             </ItemsPanelTemplate>
-                        </ListView.ItemsPanel>
-                        <ListView.ItemTemplate>
+                        </Container:VectorListView.ItemsPanel>
+                        <Container:VectorListView.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel>
                                     <Grid>
@@ -498,13 +513,13 @@
                                     </Grid>
                                 </DockPanel>
                             </DataTemplate>
-                        </ListView.ItemTemplate>
+                        </Container:VectorListView.ItemTemplate>
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="Loaded">
                                 <behavior:CallMethodAction MethodName="CustomListView_Loaded" TargetObject="{Binding}" />
                             </behavior:EventTrigger>
                         </behavior:Interaction.Triggers>
-                    </ListView>
+                    </Container:VectorListView>
                 </Container:VectorTextTabItem>
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="Loaded">

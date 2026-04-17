@@ -2,9 +2,10 @@
 {
     public class Theme
     {
-        public const string LightTheme = "pack://application:,,,/CBHK;component/ControlDictionary/LightTheme.xaml";
-        public const string DarkTheme = "pack://application:,,,/CBHK;component/ControlDictionary/DarkTheme.xaml";
-        public const string TextBlockForeground = "TextBlockForeground";
-        public const string TextButtonBackground = "TextButtonBackground";
+        public const string CommandBlockOrangeTheme = "pack://application:,,,/CBHK;component/ControlDictionary/CommandBlockOrangeTheme.xaml";
+        public const string CommandBlockBlueGreenTheme = "pack://application:,,,/CBHK;component/ControlDictionary/CommandBlockBlueGreenTheme.xaml";
+        public const string CommandBlockPurpleTheme = "pack://application:,,,/CBHK;component/ControlDictionary/CommandBlockPurpleTheme.xaml";
+        public const string CommonForeground = "CommonForeground";
+        public const string CommonBackground = "CommonBackground";
     }
 }

@@ -16,12 +16,12 @@ namespace CBHK.Common.Model
 
     public enum WindowThemeType
     {
-        [Description("浅色")]
-        Light,
-        [Description("深色")]
-        Dark,
-        [Description("跟随系统")]
-        FllowSystem,
+        [Description("命令方块橙")]
+        CommandBlockOrange,
+        [Description("命令方块绿")]
+        CommandBlockBlueGreen,
+        [Description("命令方块紫")]
+        CommandBlockPurple,
         [Description("自定义")]
         Custom
     }

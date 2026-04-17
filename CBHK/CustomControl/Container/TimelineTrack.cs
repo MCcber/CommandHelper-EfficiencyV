@@ -35,7 +35,7 @@ namespace CBHK.CustomControl.Container
             }
         }
 
-        private Brush borderBrush;
+        private Brush borderBrush = Brushes.Black;
         public Brush BorderBrush
         {
             get => borderBrush;
@@ -53,39 +53,6 @@ namespace CBHK.CustomControl.Container
             set
             {
                 trackName = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public Brush foreground = Brushes.Transparent;
-        public Brush Foreground
-        {
-            get => foreground;
-            set
-            {
-                foreground = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private Brush background = Brushes.Transparent;
-        public Brush Background 
-        {
-            get => background; 
-            set
-            {
-                background = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private Brush trackHeadBackground = Brushes.Transparent;
-        public Brush TrackHeadBackground
-        {
-            get => trackHeadBackground;
-            set
-            {
-                trackHeadBackground = value;
                 OnPropertyChanged();
             }
         }

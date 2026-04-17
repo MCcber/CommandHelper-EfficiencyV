@@ -29,7 +29,7 @@
                             Panel.ZIndex="-1"
                             Background="{TemplateBinding TopBottomBorderBrush}"
                             BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="1" />
+                            BorderThickness="{TemplateBinding BorderThickness}" />
                         <Border
                             Grid.Row="1"
                             Grid.Column="0"
@@ -37,7 +37,7 @@
                             Panel.ZIndex="-1"
                             Background="{TemplateBinding SideBorderBrush}"
                             BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="1" />
+                            BorderThickness="{TemplateBinding BorderThickness}" />
                         <Rectangle
                             Grid.Row="1"
                             Grid.Column="1"
@@ -88,7 +88,7 @@
                                 VerticalAlignment="Center"
                                 Background="Transparent"
                                 FontWeight="Bold"
-                                Foreground="{TemplateBinding Foreground}"
+                                Foreground="{DynamicResource CommonForeground}"
                                 Text="{TemplateBinding Title}" />
                             <TextBlock
                                 Grid.Row="1"
@@ -97,7 +97,7 @@
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
                                 Background="Transparent"
-                                Foreground="{TemplateBinding Foreground}"
+                                Foreground="{DynamicResource CommonForeground}"
                                 Text="{TemplateBinding SubTitle}" />
                         </Grid>
                         <ContentPresenter

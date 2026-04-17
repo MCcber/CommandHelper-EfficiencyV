@@ -1,7 +1,9 @@
-﻿using CBHK.Utility.Common;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.VectorButton
@@ -13,13 +15,20 @@ namespace CBHK.CustomControl.VectorButton
         private Brush OriginLeftTopBorderBrush;
         private Brush OriginRightBottomBorderBrush;
         private Brush OriginBorderCornerBrush;
-        private Brush OriginBottomBrush;
-        private Brush OriginForegroundBrush;
-        private Brush OriginBackgroundBrush;
         #endregion
 
         #region Property
         public int OriginBottomHeight { get; set; }
+
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(VectorIconRepeatButton), new PropertyMetadata(default(Brush)));
+
         public Brush IconBrush
         {
             get { return (Brush)GetValue(IconBrushProperty); }
@@ -78,6 +87,7 @@ namespace CBHK.CustomControl.VectorButton
         #region Method
         public VectorIconRepeatButton()
         {
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
             Loaded += VectorIconRepeatButton_Loaded;
             MouseEnter += VectorIconRepeatButton_MouseEnter;
             MouseLeave += VectorIconRepeatButton_MouseLeave;
@@ -85,55 +95,24 @@ namespace CBHK.CustomControl.VectorButton
             PreviewMouseLeftButtonUp += VectorIconRepeatButton_PreviewMouseLeftButtonUp;
         }
 
-        private void UpdateBorderColorByBackgroundColor(object sender)
+        private void SetBottomHeight(double height)
         {
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
+            object extraBottomLine = GetTemplateChild("extraBottomLine");
             if (extraBottomLine is RowDefinition row)
             {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
+                row.Height = new(height, GridUnitType.Pixel);
             }
+        }
 
-            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
-            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.ParentTemplate || foregroundSource.BaseValueSource is BaseValueSource.Style || Foreground is null)
+        private void UpdateBorderColorByBackgroundColor()
+        {
+            if (ThemeBackground is SolidColorBrush themeBrush)
             {
-                Foreground = Brushes.White;
-            }
-            var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || Background is null)
-            {
-                Background = new BrushConverter().ConvertFromString("#3c8527") as Brush;
-            }
-            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
-            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style || BorderBrush is null)
-            {
-                BorderBrush = Brushes.Black;
-            }
-            var originborderCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderCornerBrushProperty);
-            if (originborderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originborderCornerBrushSource.BaseValueSource is BaseValueSource.Style || BorderCornerBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
-                BorderCornerBrush = new SolidColorBrush(color);
-            }
-            var originLeftTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, LeftTopBorderBrushProperty);
-            if (originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originLeftTopBorderBrushSource.BaseValueSource is BaseValueSource.Style || LeftTopBorderBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
-                LeftTopBorderBrush = new SolidColorBrush(color);
-            }
-            var originRightBottomBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, RightBottomBorderBrushProperty);
-            if (originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Default || originRightBottomBorderBrushSource.BaseValueSource is BaseValueSource.Style || RightBottomBorderBrush is null)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.3f);
-                RightBottomBorderBrush = new SolidColorBrush(color);
-            }
-            var originBottomBrushSource = DependencyPropertyHelper.GetValueSource(this, BottomBorderBrushProperty);
-            if (originBottomBrushSource.BaseValueSource is BaseValueSource.Default || originBottomBrushSource.BaseValueSource is BaseValueSource.Style || BottomBorderBrush is null)
-            {
-                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.4f);
-                BottomBorderBrush ??= new SolidColorBrush(color);
+                Background = new SolidColorBrush(themeBrush.Color);
+                BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.4f));
+                LeftTopBorderBrush = OriginLeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
+                RightBottomBorderBrush = OriginRightBottomBorderBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
+                BottomBorderBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.6f));
             }
         }
         #endregion
@@ -141,66 +120,80 @@ namespace CBHK.CustomControl.VectorButton
         #region Event
         private void VectorIconRepeatButton_Loaded(object sender, RoutedEventArgs e)
         {
+            UpdateBorderColorByBackgroundColor();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if (e.Property == ThemeBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
             OriginMargin = Margin;
             if (OriginBottomHeight == 0)
             {
                 OriginBottomHeight = 6;
             }
-
-            UpdateBorderColorByBackgroundColor(sender);
-
-            OriginBorderCornerBrush = BorderCornerBrush;
-            OriginLeftTopBorderBrush = LeftTopBorderBrush;
-            OriginRightBottomBorderBrush = RightBottomBorderBrush;
-            OriginForegroundBrush = Foreground;
-            OriginBackgroundBrush = Background;
+            SetBottomHeight(OriginBottomHeight);
         }
 
-        private void VectorIconRepeatButton_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void VectorIconRepeatButton_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             VectorIconRepeatButton_MouseEnter(sender, null);
         }
 
-        private void VectorIconRepeatButton_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void VectorIconRepeatButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.4f);
-            Background = new SolidColorBrush(color);
-            if (extraBottomLine is RowDefinition row)
+            SetBottomHeight(0);
+
+            if (ThemeBackground is SolidColorBrush backgroundBrush)
             {
-                row.Height = new(0, GridUnitType.Pixel);
+                Background = new SolidColorBrush(ColorTool.Darken(backgroundBrush.Color, 0.2f));
+                LeftTopBorderBrush = new SolidColorBrush(ColorTool.Darken(((SolidColorBrush)OriginLeftTopBorderBrush).Color, 0.2f));
+                RightBottomBorderBrush = new SolidColorBrush(ColorTool.Darken(((SolidColorBrush)OriginRightBottomBorderBrush).Color, 0.2f));
+                BorderCornerBrush = new SolidColorBrush(ColorTool.Darken(((SolidColorBrush)OriginBorderCornerBrush).Color, 0.2f));
             }
+
             Margin = new(Margin.Left, Margin.Top + 2, Margin.Right, Margin.Bottom);
         }
 
-        private void VectorIconRepeatButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        private void VectorIconRepeatButton_MouseLeave(object sender, MouseEventArgs e)
         {
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            Background = OriginBackgroundBrush;
-            if (extraBottomLine is RowDefinition row)
-            {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
-            }
+            SetBottomHeight(OriginBottomHeight);
+            Background = ThemeBackground;
             LeftTopBorderBrush = OriginLeftTopBorderBrush;
+            RightBottomBorderBrush = OriginRightBottomBorderBrush;
             BorderCornerBrush = OriginBorderCornerBrush;
             Margin = OriginMargin;
         }
 
-        private void VectorIconRepeatButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        private void VectorIconRepeatButton_MouseEnter(object sender, MouseEventArgs e)
         {
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
+            SetBottomHeight(OriginBottomHeight);
 
-            Color darkColor = ColorTool.Darken((Background as SolidColorBrush).Color, 0.2f);
-            Background = new SolidColorBrush(darkColor);
-            if (extraBottomLine is RowDefinition row)
-            {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
-            }
             Margin = OriginMargin;
-            Color lightBorderColor = ColorTool.Lighten((OriginLeftTopBorderBrush as SolidColorBrush).Color, 0.4f);
-            LeftTopBorderBrush = new SolidColorBrush(lightBorderColor);
-            Color lightCornerColor = ColorTool.Lighten((OriginBorderCornerBrush as SolidColorBrush).Color, 0.6f);
-            BorderCornerBrush = new SolidColorBrush(lightCornerColor);
+            if(ThemeBackground is SolidColorBrush backgroundBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.Darken(backgroundBrush.Color, 0.2f));
+            }
+            if(OriginLeftTopBorderBrush is SolidColorBrush originLeftTopBorderBrush)
+            {
+                LeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(originLeftTopBorderBrush.Color, 0.2f));
+            }
+            if(OriginRightBottomBorderBrush is SolidColorBrush originRightBottomBorderBrush)
+            {
+                RightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten(originRightBottomBorderBrush.Color, 0.2f));
+            }
+            if(OriginBorderCornerBrush is SolidColorBrush originBorderCornerBrush)
+            {
+                BorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(originBorderCornerBrush.Color, 0.4f));
+            }
         }
         #endregion
     }

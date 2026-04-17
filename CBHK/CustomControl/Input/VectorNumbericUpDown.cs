@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
@@ -56,6 +58,15 @@ namespace CBHK.CustomControl.Input
         public static readonly DependencyProperty LocateLineBrushProperty =
             DependencyProperty.Register("LocateLineBrush", typeof(Brush), typeof(VectorNumbericUpDown), new PropertyMetadata(default(Brush)));
 
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(VectorNumbericUpDown), new PropertyMetadata(default(Brush)));
+
         public bool HasText => (bool)GetValue(HasTextPropertyKey.DependencyProperty);
 
         private static readonly DependencyPropertyKey HasTextPropertyKey =
@@ -65,13 +76,29 @@ namespace CBHK.CustomControl.Input
         #region Method
         public VectorNumbericUpDown()
         {
-            Foreground = Brushes.White;
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            Loaded += VectorNumbericUpDown_Loaded;
             WaterMarkerBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D6D6D6"));
             LocateLineBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#242425"));
+        }
+
+        public void UpdateBorderColorByBackgroundColor()
+        {
+            if (ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(themeBrush.Color);
+                WaterMarkerBrush = ColorTool.GetWatermarkBrush(themeBrush);
+                BorderBrush = LocateLineBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
+            }
         }
         #endregion
 
         #region Event
+        private void VectorNumbericUpDown_Loaded(object sender, RoutedEventArgs e)
+        {
+            UpdateBorderColorByBackgroundColor();
+        }
+
         public void VectorNumbericUpDownTextBox_Loaded(object sender, RoutedEventArgs e)
         {
             if (double.TryParse(Text, out double result))
@@ -79,6 +106,15 @@ namespace CBHK.CustomControl.Input
                 originText = result.ToString();
             }
             VectorNumbericUpDown_LostFocus(sender, e);
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
         }
 
         public void VectorNumbericUpDown_GotFocus(object sender, RoutedEventArgs e)

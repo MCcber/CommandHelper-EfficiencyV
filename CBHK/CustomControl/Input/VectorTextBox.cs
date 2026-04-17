@@ -1,5 +1,8 @@
-﻿using System.Windows;
+﻿using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.Input
@@ -34,6 +37,15 @@ namespace CBHK.CustomControl.Input
         public static readonly DependencyProperty LocateLineBrushProperty =
             DependencyProperty.Register("LocateLineBrush", typeof(Brush), typeof(VectorTextBox), new PropertyMetadata(default(Brush)));
 
+        public Brush ThemeBackground
+        {
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(VectorTextBox), new PropertyMetadata(default(Brush)));
+
         public Thickness WaterMarkerMargin
         {
             get { return (Thickness)GetValue(WaterMarkerMarginProperty); }
@@ -52,17 +64,58 @@ namespace CBHK.CustomControl.Input
         #region Method
         public VectorTextBox()
         {
-            Foreground = Brushes.White;
-            WaterMarkerBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D6D6D6"));
-            LocateLineBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#242425"));
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            Loaded += VectorTextBox_Loaded;
+        }
+
+        public void UpdateBorderColorByBackgroundColor()
+        {
+            if (ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(themeBrush.Color);
+                WaterMarkerBrush = ColorTool.GetWatermarkBrush(themeBrush);
+                BorderBrush = LocateLineBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
+            }
         }
         #endregion
 
         #region Event
+        private void VectorTextBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            UpdateBorderColorByBackgroundColor();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
+        }
+
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
             base.OnTextChanged(e);
             SetValue(HasTextPropertyKey, Text is not null && Text.Length > 0);
+        }
+
+        protected override void OnMouseEnter(MouseEventArgs e)
+        {
+            base.OnMouseEnter(e);
+            if(!IsFocused && ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.1f));
+            }
+        }
+
+        protected override void OnMouseLeave(MouseEventArgs e)
+        {
+            base.OnMouseLeave(e);
+            if (ThemeBackground is SolidColorBrush themeBrush)
+            {
+                Background = new SolidColorBrush(themeBrush.Color);
+            }
         }
         #endregion
     }

@@ -16,9 +16,9 @@
                         HorizontalAlignment="Left"
                         Background="Transparent">
                         <Border
-                            Background="#6EB5AD"
+                            Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
+                            BorderThickness="1"
                             ClipToBounds="True"
                             CornerRadius="5">
                             <!--#region 内容网格-->
@@ -28,15 +28,13 @@
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
                                     Background="Transparent"
-                                    Foreground="{TemplateBinding Foreground}"
+                                    Foreground="{DynamicResource CommonForeground}"
                                     Text="{TemplateBinding Title}" />
                                 <Input:VectorTextBox
                                     Margin="10,0,0,0"
                                     VerticalAlignment="Top"
                                     AcceptsReturn="False"
                                     AcceptsTab="True"
-                                    Background="Transparent"
-                                    Foreground="{TemplateBinding Foreground}"
                                     Style="{DynamicResource VectorTextBoxStyle}"
                                     Text="{TemplateBinding Title}"
                                     Visibility="{TemplateBinding TitleEditorVisibility}" />

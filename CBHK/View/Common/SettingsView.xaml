@@ -33,9 +33,7 @@
             Margin="0,0,35,5"
             HorizontalAlignment="Stretch"
             ArrowMargin="0 0 10 0"
-            ItemsSource="{utility:EnumBinding {x:Type model:LanuchState},
-                                              MemberBrushKey=White,
-                                              DisplayPanelBrushKey=Black}"
+            ItemsSource="{utility:EnumBinding {x:Type model:LanuchState}}"
             SelectedItem="{Binding SelectedState}"
             SelectedValue="{Binding SelectedStateString}"
             SelectedValuePath="Text"
@@ -81,9 +79,7 @@
             ArrowMargin="0 0 10 0"
             Background="#D0D1D4"
             Foreground="White"
-            ItemsSource="{utility:EnumBinding {x:Type model:WindowThemeType},
-                                              DisplayPanelBrushKey=Black,
-                                              MemberBrushKey=White}"
+            ItemsSource="{utility:EnumBinding {x:Type model:WindowThemeType}}"
             SelectedItem="{Binding SelectedThemeType}"
             SelectedValue="{Binding SelectedThemeTypeString}"
             SelectedValuePath="Text"
@@ -99,9 +95,7 @@
             ArrowMargin="0 0 10 0"
             DisplayMemberPath="Text"
             Foreground="White"
-            ItemsSource="{utility:EnumBinding {x:Type model:WindowVisualType},
-                                              DisplayPanelBrushKey=Black,
-                                              MemberBrushKey=White}"
+            ItemsSource="{utility:EnumBinding {x:Type model:WindowVisualType}}"
             SelectedItem="{Binding SelectedVisualType}"
             SelectedValue="{Binding SelectedVisualTypeString}"
             SelectedValuePath="Text"
@@ -117,9 +111,7 @@
             ArrowMargin="0 0 10 0"
             DisplayMemberPath="Text"
             Foreground="White"
-            ItemsSource="{utility:EnumBinding {x:Type model:WindowCornerPreference},
-                                              DisplayPanelBrushKey=Black,
-                                              MemberBrushKey=White}"
+            ItemsSource="{utility:EnumBinding {x:Type model:WindowCornerPreference}}"
             SelectedItem="{Binding SelectedWindowCornerPreferenceType}"
             SelectedValue="{Binding SelectedWindowCornerPreferenceTypeString}"
             SelectedValuePath="Text"

@@ -4,24 +4,11 @@
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton">
 
-    <SolidColorBrush x:Key="Expander.Static.Circle.Stroke" Color="#FF333333" />
-    <SolidColorBrush x:Key="Expander.Static.Circle.Fill" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="Expander.Static.Arrow.Stroke" Color="#FF333333" />
-    <SolidColorBrush x:Key="Expander.MouseOver.Circle.Stroke" Color="#FF5593FF" />
-    <SolidColorBrush x:Key="Expander.MouseOver.Circle.Fill" Color="#FFF3F9FF" />
-    <SolidColorBrush x:Key="Expander.MouseOver.Arrow.Stroke" Color="#FF000000" />
-    <SolidColorBrush x:Key="Expander.Pressed.Circle.Stroke" Color="#FF3C77DD" />
-    <SolidColorBrush x:Key="Expander.Pressed.Circle.Fill" Color="#FFD9ECFF" />
-    <SolidColorBrush x:Key="Expander.Pressed.Arrow.Stroke" Color="#FF000000" />
-    <SolidColorBrush x:Key="Expander.Disabled.Circle.Stroke" Color="#FFBCBCBC" />
-    <SolidColorBrush x:Key="Expander.Disabled.Circle.Fill" Color="#FFE6E6E6" />
-    <SolidColorBrush x:Key="Expander.Disabled.Arrow.Stroke" Color="#FF707070" />
-
     <Style x:Key="ExpanderDownHeaderStyle" TargetType="{x:Type ToggleButton}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ToggleButton}">
-                    <Border>
+                    <Border BorderBrush="Transparent" BorderThickness="0">
                         <Grid Background="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorRichExpander}}" SnapsToDevicePixels="True">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -29,14 +16,14 @@
                             </Grid.ColumnDefinitions>
                             <Grid Grid.Column="0" Grid.ColumnSpan="2">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="2" />
+                                    <ColumnDefinition Width="3.5" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="2" />
+                                    <ColumnDefinition Width="3.5" />
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="2" />
+                                    <RowDefinition Height="3.5" />
                                     <RowDefinition Height="*" />
-                                    <RowDefinition Height="2" />
+                                    <RowDefinition Height="3.5" />
                                 </Grid.RowDefinitions>
                                 <Rectangle
                                     Grid.Row="0"
@@ -51,7 +38,7 @@
                                 <Rectangle
                                     Grid.Row="0"
                                     Grid.Column="2"
-                                    Fill="{Binding CornerBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorRichExpander}}"
+                                    Fill="{Binding BorderCornerBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorRichExpander}}"
                                     IsHitTestVisible="False" />
                                 <Rectangle
                                     Grid.Row="1"
@@ -66,7 +53,7 @@
                                 <Rectangle
                                     Grid.Row="2"
                                     Grid.Column="0"
-                                    Fill="{Binding CornerBorderBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorRichExpander}}"
+                                    Fill="{Binding BorderCornerBrush, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorRichExpander}}"
                                     IsHitTestVisible="False" />
                                 <Rectangle
                                     Grid.Row="2"
@@ -154,33 +141,13 @@
                                 SnapsToDevicePixels="True" />
                         </Grid>
                     </Border>
-                    <!--<ControlTemplate.Triggers>
-                        <Trigger Property="IsChecked" Value="true">
-                            <Setter TargetName="arrow" Property="Data" Value="M 1,4.5  L 4.5,1  L 8,4.5" />
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="circle" Property="Stroke" Value="{StaticResource Expander.MouseOver.Circle.Stroke}" />
-                            <Setter TargetName="circle" Property="Fill" Value="{StaticResource Expander.MouseOver.Circle.Fill}" />
-                            <Setter TargetName="arrow" Property="Stroke" Value="{StaticResource Expander.MouseOver.Arrow.Stroke}" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="true">
-                            <Setter TargetName="circle" Property="Stroke" Value="{StaticResource Expander.Pressed.Circle.Stroke}" />
-                            <Setter TargetName="circle" Property="StrokeThickness" Value="1.5" />
-                            <Setter TargetName="circle" Property="Fill" Value="{StaticResource Expander.Pressed.Circle.Fill}" />
-                            <Setter TargetName="arrow" Property="Stroke" Value="{StaticResource Expander.Pressed.Arrow.Stroke}" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="false">
-                            <Setter TargetName="circle" Property="Stroke" Value="{StaticResource Expander.Disabled.Circle.Stroke}" />
-                            <Setter TargetName="circle" Property="Fill" Value="{StaticResource Expander.Disabled.Circle.Fill}" />
-                            <Setter TargetName="arrow" Property="Stroke" Value="{StaticResource Expander.Disabled.Arrow.Stroke}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>-->
+                    <ControlTemplate.Triggers />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-    <Style x:Key="ExpanderUpHeaderStyle" TargetType="{x:Type ToggleButton}">
+    <!--<Style x:Key="ExpanderUpHeaderStyle" TargetType="{x:Type ToggleButton}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ToggleButton}">
@@ -250,9 +217,9 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
+    </Style>-->
 
-    <Style x:Key="ExpanderLeftHeaderStyle" TargetType="{x:Type ToggleButton}">
+    <!--<Style x:Key="ExpanderLeftHeaderStyle" TargetType="{x:Type ToggleButton}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ToggleButton}">
@@ -322,9 +289,9 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
+    </Style>-->
 
-    <Style x:Key="ExpanderRightHeaderStyle" TargetType="{x:Type ToggleButton}">
+    <!--<Style x:Key="ExpanderRightHeaderStyle" TargetType="{x:Type ToggleButton}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ToggleButton}">
@@ -394,20 +361,18 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
+    </Style>-->
 
     <Style x:Key="VectorRichExpanderStyle" TargetType="{x:Type Container:VectorRichExpander}">
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="VerticalContentAlignment" Value="Stretch" />
-        <Setter Property="BorderBrush" Value="Black" />
-        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Container:VectorRichExpander}">
                     <Border
                         Background="Transparent"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
+                        BorderBrush="Black"
+                        BorderThickness="1"
                         SnapsToDevicePixels="true">
                         <Grid VerticalAlignment="Top">
                             <Grid.RowDefinitions>
@@ -448,7 +413,6 @@
                                 Grid.Column="1"
                                 MinWidth="0"
                                 MinHeight="0"
-                                Margin="1"
                                 HorizontalAlignment="Right"
                                 Content="{TemplateBinding HeaderContent}"
                                 ContentTemplate="{TemplateBinding HeaderContentTemplate}"
@@ -458,7 +422,9 @@
                             <Border
                                 Grid.Row="1"
                                 Grid.ColumnSpan="2"
-                                Background="{TemplateBinding Background}">
+                                Background="Transparent"
+                                BorderBrush="Black"
+                                BorderThickness="1">
                                 <ContentPresenter
                                     x:Name="ExpandSite"
                                     Margin="{TemplateBinding Padding}"
@@ -474,7 +440,7 @@
                         <Trigger Property="IsExpanded" Value="true">
                             <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible" />
                         </Trigger>
-                        <Trigger Property="ExpandDirection" Value="Right">
+                        <!--<Trigger Property="ExpandDirection" Value="Right">
                             <Setter TargetName="ExpandSite" Property="DockPanel.Dock" Value="Right" />
                             <Setter TargetName="HeaderSite" Property="DockPanel.Dock" Value="Left" />
                             <Setter TargetName="HeaderSite" Property="Style" Value="{StaticResource ExpanderRightHeaderStyle}" />
@@ -488,10 +454,7 @@
                             <Setter TargetName="ExpandSite" Property="DockPanel.Dock" Value="Left" />
                             <Setter TargetName="HeaderSite" Property="DockPanel.Dock" Value="Right" />
                             <Setter TargetName="HeaderSite" Property="Style" Value="{StaticResource ExpanderLeftHeaderStyle}" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="false">
-                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Trigger>
+                        </Trigger>-->
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

@@ -1,29 +1,18 @@
 ﻿using CBHK.Model.Constant;
-using CBHK.Utility.Common;
-using System;
+using CBHK.Utility.Visual;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace CBHK.CustomControl.VectorButton
 {
-    public class VectorTextButton : Button
+    public class VectorTextButton : BaseVectorTextButton
     {
         #region Property
         public double OriginBottomHeight { get; set; }
         private Thickness OriginMargin { get; set; }
-        private Brush OriginTopBorderBrush { get; set; }
+        private Brush OriginRoundBorderBrush { get; set; }
         private Brush OriginBorderCornerBrush { get; set; }
-        private Brush OriginBackgroundBrush { get; set; }
-
-        public Brush ThemeBackground
-        {
-            get { return (Brush)GetValue(ThemeBackgroundProperty); }
-            set { SetValue(ThemeBackgroundProperty, value); }
-        }
-
-        public static readonly DependencyProperty ThemeBackgroundProperty =
-            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(VectorTextButton), new PropertyMetadata(default(Brush)));
 
         public string Text
         {
@@ -42,15 +31,6 @@ namespace CBHK.CustomControl.VectorButton
 
         public static readonly DependencyProperty RoundBorderBrushProperty =
             DependencyProperty.Register("RoundBorderBrush", typeof(Brush), typeof(VectorTextButton), new PropertyMetadata(default(Brush)));
-
-        public Brush TopBorderBrush
-        {
-            get { return (Brush)GetValue(TopBorderBrushProperty); }
-            set { SetValue(TopBorderBrushProperty, value); }
-        }
-
-        public static readonly DependencyProperty TopBorderBrushProperty =
-            DependencyProperty.Register("TopBorderBrush", typeof(Brush), typeof(VectorTextButton), new PropertyMetadata(default(Brush)));
 
         public Brush BorderCornerBrush
         {
@@ -83,34 +63,32 @@ namespace CBHK.CustomControl.VectorButton
         #region Method
         public VectorTextButton()
         {
-            RoundBorderBrush = Brushes.Black;
-            Initialized += VectorTextButton_Initalized;
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            SetResourceReference(ForegroundProperty, Theme.CommonForeground);
+
             MouseEnter += VectorTextButton_MouseEnter;
             MouseLeave += VectorTextButton_MouseLeave;
             PreviewMouseLeftButtonDown += VectorTextButton_PreviewMouseLeftButtonDown;
             PreviewMouseLeftButtonUp += VectorTextButton_PreviewMouseLeftButtonUp;
         }
 
-        private void UpdateBorderColorByBackgroundColor()
+        public override void UpdateBorderColorByBackgroundColor()
         {
-            BorderBrush = Brushes.Black;
+            base.UpdateBorderColorByBackgroundColor();
 
-            Color backgroundColor = ColorTool.Lighten((Background as SolidColorBrush).Color, 0.4f);
-            BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(backgroundColor);
-
-            Color topBorderColor = ColorTool.Lighten((Background as SolidColorBrush).Color, 0.2f);
-            TopBorderBrush = OriginTopBorderBrush = new SolidColorBrush(topBorderColor);
-
-            Color bottomBordercolor = ColorTool.Darken((Background as SolidColorBrush).Color, 0.5f);
-            BottomBorderBrush = new SolidColorBrush(bottomBordercolor);
+            if (ThemeBackground is SolidColorBrush themeBrush)
+            {
+                BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.4f));
+                RoundBorderBrush = OriginRoundBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
+                BottomBorderBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.5f));
+            }
         }
         #endregion
 
         #region Event
-
-        private void VectorTextButton_Initalized(object sender, EventArgs e)
+        public override void OnApplyTemplate()
         {
-            ApplyTemplate();
+            base.OnApplyTemplate();
             OriginMargin = Margin;
 
             if (Text == "")
@@ -123,34 +101,12 @@ namespace CBHK.CustomControl.VectorButton
                 OriginBottomHeight = 6;
             }
 
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            if (extraBottomLine is RowDefinition row)
+            if(GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
             {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
+                rowDefinition.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
 
-            SetResourceReference(ThemeBackgroundProperty, Theme.TextButtonBackground);
-            SetResourceReference(ForegroundProperty, Theme.TextBlockForeground);
             UpdateBorderColorByBackgroundColor();
-
-            if (Background is SolidColorBrush backgroundBrush)
-            {
-                OriginBackgroundBrush = new SolidColorBrush(backgroundBrush.Color);
-            }
-        }
-
-        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
-        {
-            base.OnPropertyChanged(e);
-            if (e.Property == ThemeBackgroundProperty)
-            {
-                if (ThemeBackground is SolidColorBrush brush)
-                {
-                    Background = new SolidColorBrush(brush.Color);
-                    OriginBackgroundBrush = new SolidColorBrush(brush.Color);
-                    UpdateBorderColorByBackgroundColor();
-                }
-            }
         }
 
         private void VectorTextButton_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -160,44 +116,51 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorTextButton_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            Color color = ColorTool.Darken((OriginBackgroundBrush as SolidColorBrush).Color, 0.4f);
-            Background = new SolidColorBrush(color);
-            if (extraBottomLine is RowDefinition row)
+            if (ThemeBackground is SolidColorBrush solidColorBrush)
             {
-                row.Height = new(0, GridUnitType.Pixel);
+                Background = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color, 0.4f));
+            }
+            if (GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
+            {
+                rowDefinition.Height = new(0, GridUnitType.Pixel);
             }
             Margin = new(Margin.Left, Margin.Top + 2, Margin.Right, Margin.Bottom);
         }
 
         private void VectorTextButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-            Background = OriginBackgroundBrush;
-            if (extraBottomLine is RowDefinition row)
+            if (ThemeBackground is SolidColorBrush solidColorBrush)
             {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
+                Background = new SolidColorBrush(solidColorBrush.Color);
             }
-            TopBorderBrush = OriginTopBorderBrush;
+            if (GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
+            {
+                rowDefinition.Height = new(OriginBottomHeight, GridUnitType.Pixel);
+            }
+            RoundBorderBrush = OriginRoundBorderBrush;
             BorderCornerBrush = OriginBorderCornerBrush;
             Margin = OriginMargin;
         }
 
         private void VectorTextButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            object extraBottomLine = Template.FindName("extraBottomLine", sender as FrameworkElement);
-
-            Color darkColor = ColorTool.Darken((OriginBackgroundBrush as SolidColorBrush).Color, 0.2f);
-            Background = new SolidColorBrush(darkColor);
-            if (extraBottomLine is RowDefinition row)
+            if (ThemeBackground is SolidColorBrush solidColorBrush)
             {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
+                Background = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color, 0.2f));
+            }
+            if (GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
+            {
+                rowDefinition.Height = new(OriginBottomHeight, GridUnitType.Pixel);
+            }
+            if(OriginRoundBorderBrush is SolidColorBrush originRoundBorderBrush)
+            {
+                RoundBorderBrush = new SolidColorBrush(ColorTool.Lighten(originRoundBorderBrush.Color, 0.4f));
+            }
+            if (OriginBorderCornerBrush is SolidColorBrush originBorderCornerBrush)
+            {
+                BorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(originBorderCornerBrush.Color, 0.6f));
             }
             Margin = OriginMargin;
-            Color lightBorderColor = ColorTool.Lighten((OriginTopBorderBrush as SolidColorBrush).Color, 0.4f);
-            TopBorderBrush = new SolidColorBrush(lightBorderColor);
-            Color lightCornerColor = ColorTool.Lighten((OriginBorderCornerBrush as SolidColorBrush).Color, 0.6f);
-            BorderCornerBrush = new SolidColorBrush(lightCornerColor);
         }
         #endregion
     }

@@ -73,7 +73,7 @@ namespace CBHK.ViewModel.Common
             }
         }
 
-        private async Task SwitchThemeWithAdornerAsync(Window window, string newThemeUri)
+        private static async Task SwitchThemeWithAdornerAsync(Window window, string newThemeUri)
         {
             // A. 抓拍当前（旧）界面的快照
             var snapshot = CaptureWindowSnapshot(window);
@@ -92,7 +92,7 @@ namespace CBHK.ViewModel.Common
             var animTask = adorner.PlayRevealAnimationAsync(TimeSpan.FromMilliseconds(500));
 
             // E. 此时底层换肤。虽然会有短暂卡顿，但因为上面盖着旧快照，用户看不见跳变
-            ApplyNewTheme(newThemeUri);
+            ThemeManager.ApplyNewTheme(newThemeUri);
 
             // F. 等待动画任务彻底完成（圆圈扩散到全屏）
             await animTask;
@@ -132,30 +132,6 @@ namespace CBHK.ViewModel.Common
             brush.Freeze();
 
             return brush;
-        }
-
-        private static void ApplyNewTheme(string newThemeUri)
-        {
-            var dictionaries = Application.Current.Resources.MergedDictionaries;
-
-            // 1. 找出所有带有 "Theme" 关键字的字典（不分深浅，全部清除）
-            var existingThemes = dictionaries
-                .Where(d => d.Source != null && d.Source.OriginalString.Contains("Theme.xaml"))
-                .ToList();
-
-            foreach (var theme in existingThemes)
-            {
-                dictionaries.Remove(theme);
-            }
-
-            // 2. 添加目标主题
-            if (!string.IsNullOrEmpty(newThemeUri))
-            {
-                dictionaries.Add(new ResourceDictionary
-                {
-                    Source = new Uri(newThemeUri, UriKind.RelativeOrAbsolute)
-                });
-            }
         }
         #endregion
 
@@ -257,8 +233,15 @@ namespace CBHK.ViewModel.Common
                             {
                                 isPropertyChanging = true;
                                 targetView.ThemeType = windowThemeType;
-                                config.ThemeType = SelectedThemeType.Text;
-                                await SwitchThemeWithAdornerAsync(targetView, SelectedThemeType.Text == "Light" ? Theme.LightTheme : Theme.DarkTheme);
+                                config.ThemeType = windowThemeType.ToString();
+                                string themePath = windowThemeType switch
+                                {
+                                    WindowThemeType.CommandBlockOrange => Theme.CommandBlockOrangeTheme,
+                                    WindowThemeType.CommandBlockBlueGreen => Theme.CommandBlockBlueGreenTheme,
+                                    WindowThemeType.CommandBlockPurple => Theme.CommandBlockPurpleTheme,
+                                    _ => Theme.CommandBlockOrangeTheme
+                                };
+                                await SwitchThemeWithAdornerAsync(targetView, themePath);
                             }
                             break;
                         }

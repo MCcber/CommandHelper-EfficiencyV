@@ -1,4 +1,6 @@
-﻿using CBHK.Model.Common;
+﻿using CBHK.CustomControl.VectorComboBox;
+using CBHK.Model.Common;
+using CBHK.Model.Constant;
 using CBHK.Utility.Common;
 using CBHK.Utility.Data;
 using CBHK.Utility.Visual;
@@ -6,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,17 +19,16 @@ using System.Windows.Media;
 
 namespace CBHK.CustomControl.Input
 {
-    public class TextStyleEditor : ComboBox, INotifyPropertyChanged
+    public class TextStyleEditor : ComboBox
     {
         #region Field
         private Thickness OriginMargin;
-        private Brush OriginTopBorderBrush;
+        private Brush OriginLeftTopBorderBrush;
         private Brush OriginBorderCornerBrush;
-        private Brush OriginForegroundBrush;
-        private Brush OriginBackgroundBrush;
+        private Brush OriginBottomBrush;
+        private Brush OriginRightBottomBorderBrush;
         private Style textblockStyle = Application.Current.TryFindResource("DefaultTextStyleEditorTextBlockStyle") as Style;
         private VectorRichTextBox editor = null;
-        public event PropertyChangedEventHandler PropertyChanged;
         private bool isEnterKeyDown = false;
         #endregion
 
@@ -79,23 +79,59 @@ namespace CBHK.CustomControl.Input
         public static readonly DependencyProperty SelectionFormattingStateProperty =
             DependencyProperty.Register("SelectionFormattingState", typeof(FormattingState), typeof(TextStyleEditor), new PropertyMetadata(default(FormattingState)));
 
-        public Brush RoundBorderBrush
+        public Brush ThemeBackground
         {
-            get { return (Brush)GetValue(RoundBorderBrushProperty); }
-            set { SetValue(RoundBorderBrushProperty, value); }
+            get { return (Brush)GetValue(ThemeBackgroundProperty); }
+            set { SetValue(ThemeBackgroundProperty, value); }
         }
 
-        public static readonly DependencyProperty RoundBorderBrushProperty =
-            DependencyProperty.Register("RoundBorderBrush", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty ThemeBackgroundProperty =
+            DependencyProperty.Register("ThemeBackground", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
 
-        public Brush TopBorderBrush
+        public Brush TitleLeftTopBorderBrush
         {
-            get { return (Brush)GetValue(TopBorderBrushProperty); }
-            set { SetValue(TopBorderBrushProperty, value); }
+            get { return (Brush)GetValue(TitleLeftTopBorderBrushProperty); }
+            set { SetValue(TitleLeftTopBorderBrushProperty, value); }
         }
 
-        public static readonly DependencyProperty TopBorderBrushProperty =
-            DependencyProperty.Register("TopBorderBrush", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
+        public static readonly DependencyProperty TitleLeftTopBorderBrushProperty =
+            DependencyProperty.Register("TitleLeftTopBorderBrush", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
+
+        public Brush TitleRightBottomBorderBrush
+        {
+            get { return (Brush)GetValue(TitleRightBottomBorderBrushProperty); }
+            set { SetValue(TitleRightBottomBorderBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty TitleRightBottomBorderBrushProperty =
+            DependencyProperty.Register("TitleRightBottomBorderBrush", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
+
+        public Brush TitleBorderCornerBrush
+        {
+            get { return (Brush)GetValue(TitleBorderCornerBrushProperty); }
+            set { SetValue(TitleBorderCornerBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty TitleBorderCornerBrushProperty =
+            DependencyProperty.Register("TitleBorderCornerBrush", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
+
+        public Brush LeftTopBorderBrush
+        {
+            get { return (Brush)GetValue(LeftTopBorderBrushProperty); }
+            set { SetValue(LeftTopBorderBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty LeftTopBorderBrushProperty =
+            DependencyProperty.Register("LeftTopBorderBrush", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
+
+        public Brush RightBottomBorderBrush
+        {
+            get { return (Brush)GetValue(RightBottomBorderBrushProperty); }
+            set { SetValue(RightBottomBorderBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty RightBottomBorderBrushProperty =
+            DependencyProperty.Register("RightBottomBorderBrush", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
 
         public Brush BorderCornerBrush
         {
@@ -105,7 +141,6 @@ namespace CBHK.CustomControl.Input
 
         public static readonly DependencyProperty BorderCornerBrushProperty =
             DependencyProperty.Register("BorderCornerBrush", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
-        private SolidColorBrush OriginBottomBrush;
 
         public Brush BottomBorderBrush
         {
@@ -151,30 +186,15 @@ namespace CBHK.CustomControl.Input
 
         public static readonly DependencyProperty TitleBrushProperty =
             DependencyProperty.Register("TitleBrush", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
-
-        public Brush SearchBoxForeground
-        {
-            get { return (Brush)GetValue(SearchBoxForegroundProperty); }
-            set { SetValue(SearchBoxForegroundProperty, value); }
-        }
-
-        public static readonly DependencyProperty SearchBoxForegroundProperty =
-            DependencyProperty.Register("SearchBoxForeground", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
-
-        public Brush EditorBoxForeground
-        {
-            get { return (Brush)GetValue(EditorBoxForegroundProperty); }
-            set { SetValue(EditorBoxForegroundProperty, value); }
-        }
-
-        public static readonly DependencyProperty EditorBoxForegroundProperty =
-            DependencyProperty.Register("EditorBoxForeground", typeof(Brush), typeof(TextStyleEditor), new PropertyMetadata(default(Brush)));
         #endregion
 
         #region Method
         public TextStyleEditor()
         {
-            RoundBorderBrush = Brushes.Black;
+            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            SetResourceReference(ForegroundProperty, Theme.CommonForeground);
+            SetResourceReference(TitleBrushProperty, Theme.CommonForeground);
+
             DropDownClosed += TextStyleEditor_DropDownClosed;
             MouseEnter += TextStyleEditor_MouseEnter;
             MouseLeave += TextStyleEditor_MouseLeave;
@@ -182,27 +202,24 @@ namespace CBHK.CustomControl.Input
             PreviewMouseLeftButtonUp += TextStyleEditor_PreviewMouseLeftButtonUp;
         }
 
-        private TextBlock CloneTextBlock(TextBlock source)
+        public void UpdateBorderColorByBackgroundColor()
         {
-            TextBlock target = new()
+            if (ThemeBackground is SolidColorBrush themeBrush)
             {
-                Style = textblockStyle
-            };
+                Background = new SolidColorBrush(themeBrush.Color);
+                PopupItemPanelBackground = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
 
-            foreach (var inline in source.Inlines)
-            {
-                target.Inlines.Add(CloneInline(inline));
-            }
-            return target;
-        }
+                BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.4f));
+                TitleBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.4f));
 
-        private Inline CloneInline(Inline source)
-        {
-            if (source is Run run)
-            {
-                return new Run { Text = run.Text, Foreground = run.Foreground, FontSize = run.FontSize, FontWeight = run.FontWeight };
+                LeftTopBorderBrush = OriginLeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
+                TitleLeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
+
+                RightBottomBorderBrush = OriginRightBottomBorderBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
+                TitleRightBottomBorderBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.3f));
+
+                BottomBorderBrush = OriginBottomBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.6f));
             }
-            return null;
         }
 
         public void AddNewItem(List<Run> list,bool isSelected = false)
@@ -245,18 +262,22 @@ namespace CBHK.CustomControl.Input
                 AddNewItem(runList, true);
             }
         }
+
+        /// <summary>
+        /// 强制重新渲染
+        /// </summary>
+        private void ForceRenderUpdate()
+        {
+            if (GetTemplateChild("contentPresenter") is ContentPresenter contentPresenter && SelectedItem is not null)
+            {
+                var temp = SelectedItem;
+                contentPresenter.Content = null;
+                contentPresenter.Content = temp;
+            }
+        }
         #endregion
 
         #region Event
-        private void ItemView_Filter(object sender, FilterEventArgs e)
-        {
-            if(e.Item is TextStyleEditorItem textStyleEditorItem)
-            {
-                bool result = StringTool.IsMatchSearchText(textStyleEditorItem.FullTextCache, SearchText);
-                e.Accepted = result;
-            }
-        }
-
         public void Editor_Loaded(object sender,RoutedEventArgs e)
         {
             if (sender is VectorRichTextBox vectorRichTextBox)
@@ -270,6 +291,34 @@ namespace CBHK.CustomControl.Input
                 //订阅键盘事件
                 editor.PreviewKeyDown += Editor_PreviewKeyDown;
                 editor.PreviewKeyUp += Editor_PreviewKeyUp;
+            }
+        }
+
+        protected override DependencyObject GetContainerForItemOverride()
+        {
+            return new VectorComboBoxItemContainer();
+        }
+
+        protected override bool IsItemItsOwnContainerOverride(object item)
+        {
+            return item is VectorComboBoxItemContainer; 
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if(e.Property == ThemeBackgroundProperty)
+            {
+                UpdateBorderColorByBackgroundColor();
+            }
+        }
+
+        private void ItemView_Filter(object sender, FilterEventArgs e)
+        {
+            if(e.Item is TextStyleEditorItem textStyleEditorItem)
+            {
+                bool result = StringTool.IsMatchSearchText(textStyleEditorItem.FullTextCache, SearchText);
+                e.Accepted = result;
             }
         }
 
@@ -300,8 +349,11 @@ namespace CBHK.CustomControl.Input
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
-            VectorColorPicker vectorColorPicker = GetTemplateChild("colorPicker") as VectorColorPicker;
-            vectorColorPicker.UpdateSelectedColorCallBack = UpdateColor;
+
+            if (GetTemplateChild("colorPicker") is VectorColorPicker vectorColorPicker)
+            {
+                vectorColorPicker.UpdateSelectedColorCallBack = UpdateColor;
+            }
 
             OriginMargin = Margin;
 
@@ -316,7 +368,7 @@ namespace CBHK.CustomControl.Input
                 }
             }
 
-            if (Text == "")
+            if (string.IsNullOrEmpty(Text))
             {
                 Text = "Button";
             }
@@ -328,62 +380,9 @@ namespace CBHK.CustomControl.Input
 
             SelectionChanged += TextStyleEditor_SelectionChanged;
 
-            object extraBottomLine = Template.FindName("extraBottomLine", this);
-            if (extraBottomLine is RowDefinition row)
+            if(GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
             {
-                row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
-            }
-
-            var titleBrushSource = DependencyPropertyHelper.GetValueSource(this, TitleBrushProperty);
-            if (titleBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || titleBrushSource.BaseValueSource is BaseValueSource.Style || titleBrushSource.BaseValueSource is BaseValueSource.Default || TitleBrush is null)
-            {
-                TitleBrush = Brushes.White;
-            }
-            var foregroundSource = DependencyPropertyHelper.GetValueSource(this, ForegroundProperty);
-            if (foregroundSource.BaseValueSource is BaseValueSource.DefaultStyle || foregroundSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Foreground = Brushes.White;
-            }
-            var backgroundSource = DependencyPropertyHelper.GetValueSource(this, BackgroundProperty);
-            if (backgroundSource.BaseValueSource is BaseValueSource.DefaultStyle || backgroundSource.BaseValueSource is BaseValueSource.Style || Background is null)
-            {
-                Background = new BrushConverter().ConvertFromString("#3c8527") as Brush;
-            }
-            var searchBoxforegroundSource = DependencyPropertyHelper.GetValueSource(this, SearchBoxForegroundProperty);
-            if (searchBoxforegroundSource.BaseValueSource is BaseValueSource.DefaultStyle || searchBoxforegroundSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SearchBoxForeground = Brushes.Gray;
-            }
-            var editorBoxforegroundSource = DependencyPropertyHelper.GetValueSource(this, EditorBoxForegroundProperty);
-            if (editorBoxforegroundSource.BaseValueSource is BaseValueSource.DefaultStyle || editorBoxforegroundSource.BaseValueSource is BaseValueSource.Style || EditorBoxForeground is null)
-            {
-                EditorBoxForeground = Brushes.White;
-            }
-            var borderBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderBrushProperty);
-            if (borderBrushSource.BaseValueSource is BaseValueSource.DefaultStyle || borderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                BorderBrush = Brushes.Black;
-            }
-            var originborderCornerBrushSource = DependencyPropertyHelper.GetValueSource(this, BorderCornerBrushProperty);
-            if (originborderCornerBrushSource.BaseValueSource is BaseValueSource.Default || originborderCornerBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.4f);
-                BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(color);
-            }
-            var originTopBorderBrushSource = DependencyPropertyHelper.GetValueSource(this, TopBorderBrushProperty);
-            if (originTopBorderBrushSource.BaseValueSource is BaseValueSource.Default || originTopBorderBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                SolidColorBrush solidBorderBrush = Background as SolidColorBrush;
-                Color color = ColorTool.Lighten(solidBorderBrush.Color, 0.2f);
-                TopBorderBrush = OriginTopBorderBrush = new SolidColorBrush(color);
-            }
-            var originBottomBrushSource = DependencyPropertyHelper.GetValueSource(this, BottomBorderBrushProperty);
-            if (originBottomBrushSource.BaseValueSource is BaseValueSource.Default || originBottomBrushSource.BaseValueSource is BaseValueSource.Style)
-            {
-                Color color = ColorTool.Darken((Background as SolidColorBrush).Color, 0.5f);
-                OriginBottomBrush ??= new SolidColorBrush(color);
-                BottomBorderBrush = OriginBottomBrush;
+                rowDefinition.Height = new(OriginBottomHeight, GridUnitType.Pixel);
             }
 
             if (Application.Current.TryFindResource("DefaultInlineTextStylePreset") is string run)
@@ -393,6 +392,7 @@ namespace CBHK.CustomControl.Input
                     Text = run
                 }], true);
             }
+
             for (int i = 0; i < 10; i++)
             {
                 AddNewItem([new Run()
@@ -400,21 +400,15 @@ namespace CBHK.CustomControl.Input
                     Text = i + ""
                 }]);
             }
+            
             if(DataList is not null && DataList.Count > 0)
             {
                 SelectedItem = DataList[0];
             }
 
-            OriginForegroundBrush = Foreground;
-            OriginBackgroundBrush = Background;
+            ForceRenderUpdate();
 
-            //强制重新渲染
-            if (GetTemplateChild("contentPresenter") is ContentPresenter contentPresenter && SelectedItem is not null)
-            {
-                var temp = SelectedItem;
-                contentPresenter.Content = null;
-                contentPresenter.Content = temp;
-            }
+            UpdateBorderColorByBackgroundColor();
         }
 
         public void AddNewStyleItem_Click(object sender, RoutedEventArgs e) => AddNewStyleItem();
@@ -430,20 +424,7 @@ namespace CBHK.CustomControl.Input
 
         private void Editor_PreviewKeyUp(object sender, KeyEventArgs e) => isEnterKeyDown = false;
 
-        private void TextStyleEditor_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (SelectedItem is ComboBoxItem comboBoxItem && comboBoxItem.Content is TextBlock sourceTb)
-            {
-                if (GetTemplateChild("contentPresenter") is ContentPresenter contentPresenter)
-                {
-                    ComboBoxItem displayItem = new()
-                    {
-                        Content = CloneTextBlock(sourceTb)
-                    };
-                    contentPresenter.Content = CloneTextBlock(sourceTb);
-                }
-            }
-        }
+        private void TextStyleEditor_SelectionChanged(object sender, SelectionChangedEventArgs e) => ForceRenderUpdate();
 
         public void Editor_MouseLeave(object sender, MouseEventArgs e)
         {
@@ -473,11 +454,7 @@ namespace CBHK.CustomControl.Input
 
         private void TextStyleEditor_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            Color color = ColorTool.Darken((OriginBackgroundBrush as SolidColorBrush).Color, 0.4f);
-            Background = new SolidColorBrush(color);
-
-            var toggleButton = Template.FindName("toggleButton", sender as FrameworkElement);
-            if (toggleButton is Control button)
+            if(GetTemplateChild("toggleButton") is Control button)
             {
                 object extraBottomLine = button.Template.FindName("extraBottomLine", button as FrameworkElement);
                 if (extraBottomLine is RowDefinition row)
@@ -490,7 +467,6 @@ namespace CBHK.CustomControl.Input
 
         private void TextStyleEditor_MouseLeave(object sender, MouseEventArgs e)
         {
-            Background = OriginBackgroundBrush;
             var toggleButton = Template.FindName("toggleButton", sender as FrameworkElement);
             if (toggleButton is Control button)
             {
@@ -500,17 +476,15 @@ namespace CBHK.CustomControl.Input
                     row.Height = new(OriginBottomHeight, GridUnitType.Pixel);
                 }
             }
-            TopBorderBrush = OriginTopBorderBrush;
+            LeftTopBorderBrush = OriginLeftTopBorderBrush;
+            RightBottomBorderBrush = OriginRightBottomBorderBrush;
             BorderCornerBrush = OriginBorderCornerBrush;
             Margin = OriginMargin;
         }
 
         private void TextStyleEditor_MouseEnter(object sender, MouseEventArgs e)
         {
-            Color darkColor = ColorTool.Darken((OriginBackgroundBrush as SolidColorBrush).Color, 0.2f);
-            Background = new SolidColorBrush(darkColor);
-            var toggleButton = Template.FindName("toggleButton", sender as FrameworkElement);
-            if (toggleButton is Control button)
+            if (GetTemplateChild("toggleButton") is Control button)
             {
                 object extraBottomLine = button.Template.FindName("extraBottomLine", button as FrameworkElement);
                 if (extraBottomLine is RowDefinition row)
@@ -519,10 +493,15 @@ namespace CBHK.CustomControl.Input
                 }
             }
             Margin = OriginMargin;
-            Color lightBorderColor = ColorTool.Lighten((OriginTopBorderBrush as SolidColorBrush).Color, 0.4f);
-            TopBorderBrush = new SolidColorBrush(lightBorderColor);
-            Color lightCornerColor = ColorTool.Lighten((OriginBorderCornerBrush as SolidColorBrush).Color, 0.6f);
-            BorderCornerBrush = new SolidColorBrush(lightCornerColor);
+
+            if(OriginLeftTopBorderBrush is SolidColorBrush originLeftTopBorderBrush)
+            {
+                LeftTopBorderBrush = new SolidColorBrush(ColorTool.Lighten(originLeftTopBorderBrush.Color, 0.4f));
+            }
+            if(OriginBorderCornerBrush is SolidColorBrush originBorderCornerBrush)
+            {
+                BorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(originBorderCornerBrush.Color, 0.6f));
+            }
         }
 
         public void SetBold_Click(object sender,RoutedEventArgs e)
@@ -583,24 +562,26 @@ namespace CBHK.CustomControl.Input
             RichTextFormattingHelper.ApplyCustomPropertyToSelection(selection, ObfuscatedProvider.IsObfuscatedProperty, false);
             selection.ApplyPropertyValue(System.Windows.Documents.TextElement.FontWeightProperty, FontWeights.Normal);
             selection.ApplyPropertyValue(System.Windows.Documents.TextElement.FontStyleProperty, FontStyles.Normal);
-            selection.ApplyPropertyValue(System.Windows.Documents.TextElement.ForegroundProperty, EditorBoxForeground);
             selection.ApplyPropertyValue(System.Windows.Documents.TextElement.FontFamilyProperty, editor.FontFamily);
             selection.ApplyPropertyValue(Inline.TextDecorationsProperty, null);
         }
 
         public void RemoveCurrentItem_Click(object sender,RoutedEventArgs e)
         {
-            if (SelectedIndex > 0)
+            if (SelectedIndex > 0 && ItemsSource is ListCollectionView listCollectionView)
             {
-                Items.RemoveAt(SelectedIndex);
+                listCollectionView.RemoveAt(SelectedIndex);
             }
         }
 
         public void ClearItem_Click(object sender,RoutedEventArgs e)
         {
-            while (Items.Count > 1)
+            if (ItemsSource is ListCollectionView listCollectionView)
             {
-                Items.RemoveAt(1);
+                while (listCollectionView.Count > 1)
+                {
+                    listCollectionView.RemoveAt(1);
+                }
             }
         }
         #endregion

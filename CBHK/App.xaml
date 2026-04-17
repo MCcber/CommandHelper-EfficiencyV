@@ -6,7 +6,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/LightTheme.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/CommandBlockOrangeTheme.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Button.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/CheckBox.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Icon.xaml" />

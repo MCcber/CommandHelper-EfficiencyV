@@ -1,10 +1,27 @@
-﻿using System;
+﻿using CBHK.Model.Common;
+using System;
 using System.Windows.Media;
 
-namespace CBHK.Utility.Common
+namespace CBHK.Utility.Visual
 {
     public static class ColorTool
     {
+        public static Color ModifyColorBrightness(Color color, float factor, ColorModifyMode mode)
+        {
+            switch (mode)
+            {
+                default:
+                case ColorModifyMode.Lighten:
+                    {
+                        return Lighten(color, factor);
+                    }
+                case ColorModifyMode.Darken:
+                    {
+                        return Darken(color, factor);
+                    }
+            }
+        }
+
         /// <summary>
         /// 调亮颜色 (支持纯黑色变亮)
         /// </summary>
@@ -41,13 +58,51 @@ namespace CBHK.Utility.Common
 
             // 2. 降低亮度
             // 对于变暗，乘法是没问题的 (向 0 靠近)
-            l *= (1.0 - factor);
+            l *= 1.0 - factor;
 
             // 3. 限制范围
             l = Math.Min(1.0, Math.Max(0.0, l));
 
             // 4. 转回 RGB
             return HslToRgb(h, s, l, color.A);
+        }
+
+        /// <summary>
+        /// 淡化颜色（降低饱和度）
+        /// </summary>
+        /// <param name="color">原始颜色</param>
+        /// <param name="factor">程度 (0.0 到 1.0)，1.0 会完全变成灰色</param>
+        /// <returns>淡化后的颜色</returns>
+        public static Color Desaturate(Color color, float factor)
+        {
+            // 转换为 HSL
+            RgbToHsl(color, out double h, out double s, out double l);
+
+            // 降低饱和度：factor 为 1 时，s 变为 0（完全灰色）
+            s = s * (1.0 - factor);
+            s = Math.Min(1.0, Math.Max(0.0, s));
+
+            // 转回 RGB
+            return HslToRgb(h, s, l, color.A);
+        }
+
+        // 基于同色系生成水印色（非纯灰）
+        public static SolidColorBrush GetWatermarkBrush(SolidColorBrush backgroundBrush)
+        {
+            var color = backgroundBrush.Color;
+
+            // 1. 转为 HSL 计算亮度（Lightness）
+            RgbToHsl(color, out double h, out double s, out double l);
+
+            // 2. 依然依靠亮度判断是变深还是变浅
+            // 背景亮(L > 0.5) -> 水印变暗(L * 0.4)
+            // 背景暗(L <= 0.5) -> 水印变亮(L + (1-L) * 0.4)
+            double targetL = l > 0.5 ? l * 0.4 : l + (1 - l) * 0.4;
+
+            // 3. 保持色相(H)和饱和度(S)，只改亮度(L)
+            Color result = HslToRgb(h, s, targetL, color.A);
+
+            return new SolidColorBrush(result);
         }
 
         public static bool IsDarkColor(string hexColor)
@@ -57,7 +112,7 @@ namespace CBHK.Utility.Common
 
             // 2. 计算亮度 (YIQ 算法)
             // 权重：Red 29.9%, Green 58.7%, Blue 11.4%
-            double brightness = (color.R * 0.299) + (color.G * 0.587) + (color.B * 0.114);
+            double brightness = color.R * 0.299 + color.G * 0.587 + color.B * 0.114;
 
             // 3. 返回结果：亮度小于 128 则视为深色
             return brightness < 128;

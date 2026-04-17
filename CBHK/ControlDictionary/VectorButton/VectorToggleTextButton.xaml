@@ -17,7 +17,7 @@
                     <Border
                         x:Name="templateRoot"
                         Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderBrush="Black"
                         BorderThickness="1">
                         <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                             <Grid.ColumnDefinitions>
@@ -34,11 +34,7 @@
                             <Rectangle
                                 Grid.Row="0"
                                 Grid.Column="0"
-                                Fill="{TemplateBinding LeftTopBorderBrush}"
-                                IsHitTestVisible="False" />
-                            <Rectangle
-                                Grid.Row="0"
-                                Grid.Column="1"
+                                Grid.ColumnSpan="2"
                                 Fill="{TemplateBinding LeftTopBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
@@ -64,11 +60,7 @@
                             <Rectangle
                                 Grid.Row="2"
                                 Grid.Column="1"
-                                Fill="{TemplateBinding RightBottomBorderBrush}"
-                                IsHitTestVisible="False" />
-                            <Rectangle
-                                Grid.Row="2"
-                                Grid.Column="2"
+                                Grid.ColumnSpan="2"
                                 Fill="{TemplateBinding RightBottomBorderBrush}"
                                 IsHitTestVisible="False" />
                             <Rectangle
@@ -99,7 +91,7 @@
                                 FontFamily="{TemplateBinding FontFamily}"
                                 FontStyle="{TemplateBinding FontStyle}"
                                 FontWeight="{TemplateBinding FontWeight}"
-                                Foreground="{TemplateBinding Foreground}"
+                                Foreground="{DynamicResource CommonForeground}"
                                 IsHitTestVisible="False"
                                 Text="{TemplateBinding Text}"
                                 TextAlignment="Center" />

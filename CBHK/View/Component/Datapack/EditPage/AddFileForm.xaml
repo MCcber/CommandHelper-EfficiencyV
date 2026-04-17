@@ -214,7 +214,7 @@
             BorderThickness="0"
             ItemsSource="{Binding Source={StaticResource NewItemSourceCollection}, IsAsync=True}"
             SelectedItem="{Binding SelectedNewFile, Mode=TwoWay}"
-            Style="{DynamicResource ListBoxScrollViewerStyle}">
+            Style="{DynamicResource VectorListViewStyle}">
             <behaviors:Interaction.Triggers>
                 <behaviors:EventTrigger EventName="Loaded">
                     <behaviors:CallMethodAction MethodName="NewFileViewer_Loaded" TargetObject="{Binding}" />

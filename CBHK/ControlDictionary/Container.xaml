@@ -1,23 +1,25 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorRichExpander.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorIconTextTabItem.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorTextTabItem.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorRichTabItem.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorScrollViewer.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorTextMenuItem.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorTabControl.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/ContextMenu.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/JsonTreeViewTemplate.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorWindow.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/EyedropperWindow.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/TimelineToolContainer.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/ContinuousKeyframeItem.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/Timeline.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/MessageTipItemTemplate.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/TextToolTip.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/RichToolTip.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorTreeView.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Container/VectorTreeViewItem.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorRichExpander.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorIconTextTabItem.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorTextTabItem.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorRichTabItem.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorScrollViewer.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorTextMenuItem.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorTabControl.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorContextMenu.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/JsonTreeViewTemplate.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorWindow.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/EyedropperWindow.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/TimelineToolContainer.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/ContinuousKeyframeItem.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/Timeline.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/MessageTipItemTemplate.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/TextToolTip.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/RichToolTip.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorTreeView.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorTreeViewItem.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorListViewItemContainer.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorListView.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

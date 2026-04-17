@@ -1,6 +1,7 @@
 ﻿using CBHK.Model.Constant;
 using CBHK.Utility.Common;
 using CBHK.Utility.Data;
+using CBHK.Utility.Visual;
 using System;
 using System.Collections;
 using System.Collections.ObjectModel;
@@ -175,11 +176,11 @@ namespace CBHK.CustomControl.VectorComboBox
         #region Event
         private void VectorTextComboBox_Loaded(object sender, RoutedEventArgs e)
         {
-            SetResourceReference(ThemeTitleBorderBackgroundProperty, Theme.TextButtonBackground);
-            SetResourceReference(TitleBrushProperty,Theme.TextBlockForeground);
-            SetResourceReference(ArrowBrushProperty, Theme.TextBlockForeground);
-            SetResourceReference(SearchBoxForegroundProperty,Theme.TextBlockForeground);
-            SetResourceReference(PopupItemPanelBackgroundProperty,Theme.TextButtonBackground);
+            SetResourceReference(ThemeTitleBorderBackgroundProperty, Theme.CommonBackground);
+            SetResourceReference(TitleBrushProperty,Theme.CommonForeground);
+            SetResourceReference(ArrowBrushProperty, Theme.CommonForeground);
+            SetResourceReference(SearchBoxForegroundProperty,Theme.CommonForeground);
+            SetResourceReference(PopupItemPanelBackgroundProperty,Theme.CommonBackground);
 
             UpdateBorderColorByBackgroundColor();
         }
