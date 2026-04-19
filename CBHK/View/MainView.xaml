@@ -5,7 +5,6 @@
     xmlns:Common="clr-namespace:CBHK.View.Common"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
-    xmlns:SkeletonScreen="clr-namespace:CBHK.CustomControl.SkeletonScreen"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
@@ -93,594 +92,678 @@
                                 <behaviors:InvokeCommandAction Command="{Binding SkeletonGridLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
                             </behaviors:EventTrigger>
                         </behaviors:Interaction.Triggers>
-                        <SkeletonScreen:Blocks
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,5,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="0"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="1"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="2"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="3"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="4"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="5"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonBlockStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
+                        <Rectangle
                             Grid.Row="6"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left" />
+                            HorizontalAlignment="Left"
+                            Style="{DynamicResource SkeletonLineStyle}" />
                     </Grid>
                 </Grid>
             </Container:VectorIconTextTabItem>

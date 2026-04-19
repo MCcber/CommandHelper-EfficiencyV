@@ -1,16 +1,16 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/GeneratorVectorButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorTextButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorToggleTextButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorToggleIconTextButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorIconRepeatButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorTextRepeatButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorFlatIconButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorFlatTextButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorFlatIconTextButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorSolidIconButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/VectorFlatImageButton.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/VectorButton/TagBlock.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/GeneratorVectorButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorTextButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorToggleTextButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorToggleIconTextButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorIconRepeatButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorTextRepeatButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorFlatIconButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorFlatTextButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorFlatIconTextButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorSolidIconButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorFlatImageButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/TagBlock.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>
