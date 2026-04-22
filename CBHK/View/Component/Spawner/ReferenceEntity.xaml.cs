@@ -1,5 +1,6 @@
-﻿using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+﻿using CBHK.Model.Common;
+using CBHK.Utility.Common;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View.Component.Entity;
 using CBHK.View.Generator;
 using CBHK.ViewModel.Component.Entity;
@@ -20,6 +21,11 @@ namespace CBHK.View.Component.Spawner
     /// </summary>
     public partial class ReferenceEntity : UserControl
     {
+        #region Field
+        private MessagePopup messagePopup = new();
+        private ImageSource defaultErrorIcon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\barrier.png", UriKind.Relative));
+        #endregion
+
         public ReferenceEntity()
         {
             InitializeComponent();
@@ -51,7 +57,7 @@ namespace CBHK.View.Component.Spawner
         {
             Button button = sender as Button;
             SpawnerView spawner = Window.GetWindow(button) as SpawnerView;
-            string data = ExternalDataImportManager.GetEntityDataHandler(Clipboard.GetText(),false);
+            string data = ExternalDataImportManager.GetEntityDataHandler(Clipboard.GetText(),messagePopup,false);
             Tag = data;
 
             try
@@ -67,7 +73,14 @@ namespace CBHK.View.Component.Spawner
             }
             catch
             {
-                Message.PushMessage("导入失败！剪切板内容与实体无关或内容有误");
+                messagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！剪切板内容与实体无关或内容有误",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "引用实体",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = defaultErrorIcon
+                });
             }
         }
 
@@ -87,7 +100,7 @@ namespace CBHK.View.Component.Spawner
             };
             if (openFileDialog.ShowDialog().Value)
             {
-                string data = ExternalDataImportManager.GetEntityDataHandler(openFileDialog.FileName);
+                string data = ExternalDataImportManager.GetEntityDataHandler(openFileDialog.FileName,messagePopup);
                 Tag = data;
                 if (File.Exists(openFileDialog.FileName))
                 {
@@ -107,7 +120,14 @@ namespace CBHK.View.Component.Spawner
                     {
                         Button button = sender as Button;
                         SpawnerView spawner = Window.GetWindow(button) as SpawnerView;
-                        Message.PushMessage("导入失败！剪切板内容与实体无关或内容有误");
+                        messagePopup.PushMessage(new GeneratorMessage()
+                        {
+                            Message = "导入失败！文件内容与实体无关或内容有误",
+                            MessageBrush = Brushes.Red,
+                            SubMessage = "引用实体",
+                            SubMessageBrush = Brushes.DarkGray,
+                            Icon = defaultErrorIcon
+                        });
                     }
                 }
             }
@@ -129,7 +149,7 @@ namespace CBHK.View.Component.Spawner
                 StringBuilder Result = entityPagesDataContext.Create();
                 entityPagesDataContext.CollectionData(Result);
                 entityPagesDataContext.Build(Result);
-                string data = ExternalDataImportManager.GetEntityDataHandler(Result.ToString(), false);
+                string data = ExternalDataImportManager.GetEntityDataHandler(Result.ToString(),messagePopup, false);
                 Tag = data;
                 string entityID = "";
                 JObject json = JObject.Parse(data);
@@ -137,7 +157,7 @@ namespace CBHK.View.Component.Spawner
                     entityID = entityIDToken.ToString().Replace("minecraft:", "").Replace("_spawn_egg:", "");
                 if (entityID.Length == 0)
                 {
-                    entityIDToken = json.SelectToken("ItemView.id");
+                    entityIDToken = json.SelectToken("itemView.id");
                     if (entityIDToken is not null)
                         entityID = entityIDToken.ToString().Replace("minecraft:", "").Replace("_spawn_egg:", "");
                 }

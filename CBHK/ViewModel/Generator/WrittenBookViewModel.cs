@@ -1,10 +1,11 @@
-﻿using CBHK.CustomControl;
-using CBHK.CustomControl.ColorPickerComponents;
+﻿using CBHK.CustomControl.TextElement;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface.Visual;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Compoment.WrittenBook;
-using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
@@ -29,13 +30,13 @@ using Image = System.Windows.Controls.Image;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class WrittenBookViewModel(IContainerProvider container,MainView mainView) : ObservableObject
+    public partial class WrittenBookViewModel(IContainerProvider container, MainView mainView) : ObservableObject, IPageViewModel
     {
         #region Field
         /// <summary>
         /// 拾色器
         /// </summary>
-        ColorPickers colorPicker = null;
+        //ColorPickers colorPicker = null;
         /// <summary>
         /// 成书编辑框引用
         /// </summary>
@@ -99,9 +100,11 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 事件设置控件
         /// </summary>
-        TextEvent EventComponent = new();
+        //TextEvent EventComponent = new();
         //本生成器的图标路径
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png";
+
+        private ImageSource defaultSuccessIcon = new BitmapImage(new Uri("pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png", UriKind.RelativeOrAbsolute));
 
         //当前光标选中的文本对象链表
         List<RichRun> CurrentSelectedRichRunList = [];
@@ -124,7 +127,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Property
-
+        public MessagePopup MessagePopup { get; set; }
         /// <summary>
         /// 显示字符超出数量
         /// </summary>
@@ -193,13 +196,13 @@ namespace CBHK.ViewModel.Generator
 
         #region 版本数据源与已选择版本
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionSource = [
-            new TextComboBoxItem() { Text = "1.20.5+" },
-            new TextComboBoxItem() { Text = "1.12" }
+        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+            new VectorTextComboBoxItem() { Text = "1.20.5+" },
+            new VectorTextComboBoxItem() { Text = "1.12" }
             ];
-        private TextComboBoxItem selectedVersion;
+        private VectorTextComboBoxItem selectedVersion;
 
-        public TextComboBoxItem SelectedVersion
+        public VectorTextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
             set
@@ -208,6 +211,7 @@ namespace CBHK.ViewModel.Generator
                 CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
             }
         }
+
         private int CurrentMinVersion = 1205;
         #endregion
 
@@ -337,20 +341,20 @@ namespace CBHK.ViewModel.Generator
                     };
                     #endregion
 
-                    BindingOperations.SetBinding(EventComponent.EnableClickEvent, ToggleButton.IsCheckedProperty, HaveClickEventBinder);
-                    BindingOperations.SetBinding(EventComponent.EnableHoverEvent, ToggleButton.IsCheckedProperty, HaveHoverEventBinder);
-                    BindingOperations.SetBinding(EventComponent.EnableInsertion, ToggleButton.IsCheckedProperty, HaveInsertionBinder);
+                    //BindingOperations.SetBinding(EventComponent.EnableClickEvent, ToggleButton.IsCheckedProperty, HaveClickEventBinder);
+                    //BindingOperations.SetBinding(EventComponent.EnableHoverEvent, ToggleButton.IsCheckedProperty, HaveHoverEventBinder);
+                    //BindingOperations.SetBinding(EventComponent.EnableInsertion, ToggleButton.IsCheckedProperty, HaveInsertionBinder);
 
-                    EventComponent.ClickEventPanel.Visibility = CurrentRichRun.HasClickEvent ? Visibility.Visible : Visibility.Collapsed;
-                    EventComponent.HoverEventPanel.Visibility = CurrentRichRun.HasHoverEvent ? Visibility.Visible : Visibility.Collapsed;
-                    EventComponent.InsertionPanel.Visibility = CurrentRichRun.HasInsertion ? Visibility.Visible : Visibility.Collapsed;
+                    //EventComponent.ClickEventPanel.Visibility = CurrentRichRun.HasClickEvent ? Visibility.Visible : Visibility.Collapsed;
+                    //EventComponent.HoverEventPanel.Visibility = CurrentRichRun.HasHoverEvent ? Visibility.Visible : Visibility.Collapsed;
+                    //EventComponent.InsertionPanel.Visibility = CurrentRichRun.HasInsertion ? Visibility.Visible : Visibility.Collapsed;
 
-                    BindingOperations.SetBinding(EventComponent.ClickEventActionBox, Selector.SelectedItemProperty, ClickEventActionBinder);
-                    BindingOperations.SetBinding(EventComponent.HoverEventActionBox, Selector.SelectedItemProperty, HoverEventActionBinder);
+                    //BindingOperations.SetBinding(EventComponent.ClickEventActionBox, Selector.SelectedItemProperty, ClickEventActionBinder);
+                    //BindingOperations.SetBinding(EventComponent.HoverEventActionBox, Selector.SelectedItemProperty, HoverEventActionBinder);
 
-                    BindingOperations.SetBinding(EventComponent.ClickEventValueBox, TextBox.TextProperty, ClickEventValueBinder);
-                    BindingOperations.SetBinding(EventComponent.HoverEventValueBox, TextBox.TextProperty, HoverEventValueBinder);
-                    BindingOperations.SetBinding(EventComponent.InsertionValueBox, TextBox.TextProperty, InsertionValueBinder);
+                    //BindingOperations.SetBinding(EventComponent.ClickEventValueBox, TextBox.TextProperty, ClickEventValueBinder);
+                    //BindingOperations.SetBinding(EventComponent.HoverEventValueBox, TextBox.TextProperty, HoverEventValueBinder);
+                    //BindingOperations.SetBinding(EventComponent.InsertionValueBox, TextBox.TextProperty, InsertionValueBinder);
                     #endregion
                 }
                 else//选区首尾文本块不同则更新它们之间的所有文本块
@@ -369,10 +373,11 @@ namespace CBHK.ViewModel.Generator
         /// <returns></returns>
         private async Task<string> GetTitle()
         {
-            StringBuilder Title = signaturePage.title.Create();
-            signaturePage.title.CollectionData(Title);
-            signaturePage.title.Build(Title);
-            string result = Title.ToString();
+            //StringBuilder Title = signaturePage.title.Create();
+            //signaturePage.title.CollectionData(Title);
+            //signaturePage.title.Build(Title);
+            //string result = Title.ToString();
+            string result = "";
             string quotation = CurrentMinVersion < 113 ? "\"" : "'";
             return "title:" + quotation + result.TrimEnd(',') + quotation + ",";
         }
@@ -383,10 +388,11 @@ namespace CBHK.ViewModel.Generator
         /// <returns></returns>
         private async Task<string> GetAuthor()
         {
-            StringBuilder Author = signaturePage.author.Create();
-            signaturePage.author.CollectionData(Author);
-            signaturePage.author.Build(Author);
-            string result = Author.ToString();
+            //StringBuilder Author = signaturePage.author.Create();
+            //signaturePage.author.CollectionData(Author);
+            //signaturePage.author.Build(Author);
+            //string result = Author.ToString();
+            string result = "";
             string quotation = CurrentMinVersion < 113 ? "\"" : "'";
             return "author:" + quotation + result.TrimEnd(',') + quotation + ",";
         }
@@ -626,7 +632,7 @@ namespace CBHK.ViewModel.Generator
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void Return(CommonWindow win)
+        private void Return(Window win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -689,7 +695,12 @@ namespace CBHK.ViewModel.Generator
                 else
                 {
                     Clipboard.SetText(Result);
-                    Message.PushMessage("成书生成成功！", MessageBoxImage.Information);
+                    MessagePopup.PushMessage(new GeneratorMessage()
+                    {
+                        Message = "生成成功",
+                        SubMessage = "成书生成器",
+                        Icon = defaultSuccessIcon
+                    });
                 }
             }
             else//作为内部工具被调用
@@ -719,7 +730,7 @@ namespace CBHK.ViewModel.Generator
 
                 page_string = page_string.TrimEnd(',').Trim('\'');
                 result = page_string;
-                CommonWindow window = Window.GetWindow(WrittenBookEditor) as CommonWindow;
+                Window window = Window.GetWindow(WrittenBookEditor) as Window;
                 window.DialogResult = true;
             }
         }
@@ -872,9 +883,9 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void SetSelectionColor(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            ColorPickers colorPickers = sender as ColorPickers;
-            TextRange textRange = new TextRange(WrittenBookEditor.Selection.Start, WrittenBookEditor.Selection.End);
-            textRange.ApplyPropertyValue(TextBlock.ForegroundProperty, colorPickers.SelectColor);
+            //ColorPickers colorPickers = sender as ColorPickers;
+            //TextRange textRange = new TextRange(WrittenBookEditor.Selection.Start, WrittenBookEditor.Selection.End);
+            //textRange.ApplyPropertyValue(TextBlock.ForegroundProperty, colorPickers.SelectColor);
         }
 
         /// <summary>
@@ -913,7 +924,7 @@ namespace CBHK.ViewModel.Generator
                 WrittenBookEditor.Document = WrittenBookPages[CurrentPageIndex];
 
             #region 初始化事件菜单
-            popup.Child = EventComponent;
+            //popup.Child = EventComponent;
             popup.PlacementTarget = WrittenBookEditor;
             #endregion
         }
@@ -935,7 +946,7 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void ColorPickerLoaded(object sender, RoutedEventArgs e)
         {
-            colorPicker = sender as ColorPickers;
+            //colorPicker = sender as ColorPickers;
         }
 
         /// <summary>

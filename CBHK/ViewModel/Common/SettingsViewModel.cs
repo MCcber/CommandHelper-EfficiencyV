@@ -1,93 +1,182 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.Common.Model;
+using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Domain;
+using CBHK.Domain.Model.Database;
+using CBHK.Model.Constant;
+using CBHK.Utility.Visual;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing.Text;
-using System;
-using System.Windows.Media;
 using System.IO;
 using System.Linq;
-using System.Windows.Controls;
-using CBHK.Domain;
-using CBHK.Domain.Model.Database;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Documents;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace CBHK.ViewModel.Common
 {
     public partial class SettingsViewModel: ObservableObject
     {
         #region Field
+        private bool isLoaded = false;
+        private bool isPropertyChanging = false;
         private InstalledFontCollection SystemFonts = new();
         private CBHKDataContext context;
-        private EnvironmentConfig _config = null;
-        string fontListDirectory = AppDomain.CurrentDomain.BaseDirectory + "Resource\\Fonts";
+        private EnvironmentConfig config;
+        string fontListDirectory = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Fonts";
+        private VectorTextComboBox currentFontFamilyNameComboBox = null;
         #endregion
 
         #region Property
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _currentFontFamilyNameList = [];
-        [ObservableProperty]
-        private TextComboBoxItem _selectVisibleItem = null;
-
-        [ObservableProperty]
-        private int _selectFontIndex = 0;
-
-        [ObservableProperty]
-        private TextComboBoxItem _selectedFontFamilyItem;
-
-        [ObservableProperty]
-        private FontFamily _selectedFontFamily;
+        private VectorTextComboBoxItem selectedFontFamilyItem;
 
         List<FontFamily> CurrentFontFamilyList { get; set; } = [];
 
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _stateList = [
-                new() { Text = "保持不变" },
-                new() { Text = "最小化" },
-                new() { Text = "关闭" }
-            ];
+        private VectorTextComboBoxItem selectedState;
+        [ObservableProperty]
+        private VectorTextComboBoxItem selectedVisualType;
+        [ObservableProperty]
+        private VectorTextComboBoxItem selectedThemeType;
+        [ObservableProperty]
+        private VectorTextComboBoxItem selectedWindowCornerPreferenceType;
 
-        private bool _closeToTray = false;
-        public bool CloseToTray
-        {
-            get => _closeToTray;
-            set
-            {
-                SetProperty(ref _closeToTray, value);
-                _config.CloseToTray = value.ToString().ToLower();
-            }
-        }
-
+        [ObservableProperty]
+        private string selectedStateString;
+        [ObservableProperty]
+        private string selectedVisualTypeString;
+        [ObservableProperty]
+        private string selectedThemeTypeString;
+        [ObservableProperty]
+        private string selectedWindowCornerPreferenceTypeString;
         #endregion
 
         #region Method
         public SettingsViewModel(CBHKDataContext Context)
         {
             context = Context;
-            _config = context.EnvironmentConfigSet.First();
-            TextComboBoxItem visibilityItem = StateList.Where(item=>item.Text == _config.Visibility).First();
-            if(visibilityItem is not null)
+            config = context.EnvironmentConfigSet.First();
+
+            if (config is not null)
             {
-                SelectVisibleItem = visibilityItem;
+                SelectedStateString = config.Visibility;
+                SelectedVisualTypeString = config.VisualType;
+                SelectedThemeTypeString = config.ThemeType;
+                SelectedWindowCornerPreferenceTypeString = config.CornerPreferenceType;
             }
+        }
+
+        private static async Task SwitchThemeWithAdornerAsync(Window window, string newThemeUri)
+        {
+            // A. 抓拍当前（旧）界面的快照
+            var snapshot = CaptureWindowSnapshot(window);
+
+            // B. 创建并挂载遮罩层
+            var adorner = new ThemeTransitionAdorner(window.Content as UIElement, snapshot);
+            var layer = AdornerLayer.GetAdornerLayer(window.Content as UIElement);
+            layer.Add(adorner);
+
+            // C. 【极其重要】强制让 UI 线程把这个遮罩层画出来
+            // 如果不 await 这一步，ApplyNewTheme 会瞬间修改界面，导致快照还没盖上去界面就变了
+            await Dispatcher.Yield(DispatcherPriority.Render);
+            await Task.Delay(10);
+
+            // D. 启动动画（不加 await），让圆圈开始扩散
+            var animTask = adorner.PlayRevealAnimationAsync(TimeSpan.FromMilliseconds(500));
+
+            // E. 此时底层换肤。虽然会有短暂卡顿，但因为上面盖着旧快照，用户看不见跳变
+            ThemeManager.ApplyNewTheme(newThemeUri);
+
+            // F. 等待动画任务彻底完成（圆圈扩散到全屏）
+            await animTask;
+        }
+
+        private static Brush CaptureWindowSnapshot(Window window)
+        {
+            // 1. 获取 DPI 缩放比例，保证在高 DPI 屏幕下截屏不模糊或错位
+            var dpiX = 96.0;
+            var dpiY = 96.0;
+            var presentationSource = PresentationSource.FromVisual(window);
+            if (presentationSource != null && presentationSource.CompositionTarget != null)
+            {
+                dpiX = 96.0 * presentationSource.CompositionTarget.TransformToDevice.M11;
+                dpiY = 96.0 * presentationSource.CompositionTarget.TransformToDevice.M22;
+            }
+
+            // 2. 计算实际的像素尺寸
+            int pixelWidth = (int)(window.ActualWidth * (dpiX / 96.0));
+            int pixelHeight = (int)(window.ActualHeight * (dpiY / 96.0));
+
+            if (pixelWidth <= 0 || pixelHeight <= 0) return Brushes.Transparent;
+
+            // 3. 渲染目标位图 (真正的静态快照)
+            RenderTargetBitmap rtb = new(pixelWidth, pixelHeight, dpiX, dpiY, PixelFormats.Pbgra32);
+            rtb.Render(window);
+
+            // 4. 创建 ImageBrush
+            var brush = new ImageBrush(rtb)
+            {
+                Stretch = Stretch.Fill, // 使用 Fill 铺满窗口
+                AlignmentX = AlignmentX.Left,
+                AlignmentY = AlignmentY.Top
+            };
+
+            // 5. 冻结画刷以提升性能并切断与原 UI 的任何潜在联系
+            brush.Freeze();
+
+            return brush;
+        }
+        #endregion
+
+        #region Event
+        public void Settings_Loaded(object sender,RoutedEventArgs e)
+        {
+            PropertyChanged += SettingsViewModel_PropertyChanged;
+            isLoaded = true;
+        }
+
+        public void FontFamilyComboBox_Loaded(object sender,RoutedEventArgs e)
+        {
+            #region Init
+            if(sender is VectorTextComboBox comboBox)
+            {
+                currentFontFamilyNameComboBox = comboBox;
+            }
+            #endregion
 
             #region 获取自定义字体库
             string[] fontListFolder = Directory.GetFiles(fontListDirectory, "*ttf", SearchOption.AllDirectories);
             List<string> fontNameList = [];
+            ObservableCollection<VectorTextComboBoxItem> currentFontFamilySource = [];
             foreach (string fontFile in fontListFolder)
             {
                 FontFamily family = new(Path.GetFileNameWithoutExtension(fontFile));
+                if (family is null)
+                {
+                    continue;
+                }
                 if (fontNameList.Count > 0 && fontNameList.Contains(family.FamilyNames.First().Value))
                     continue;
                 fontNameList.Add(family.FamilyNames.First().Value);
-                TextComboBoxItem textComboBoxItem = new()
+
+                string currentText = new FontFamily(Path.GetFileNameWithoutExtension(fontFile)).FamilyNames.First().Value;
+
+
+                if (!currentFontFamilySource.Any(item => item.Text == currentText))
                 {
-                    Text = new FontFamily(Path.GetFileNameWithoutExtension(fontFile)).FamilyNames.First().Value
-                };
-                if (!CurrentFontFamilyNameList.Contains(textComboBoxItem))
-                {
-                    CurrentFontFamilyNameList.Add(textComboBoxItem);
+                    currentFontFamilySource.Add(new VectorTextComboBoxItem()
+                    {
+                        Text = currentText,
+                        FontFamily = family
+                    });
                     CurrentFontFamilyList.Add(family);
-                    textComboBoxItem.ItemFont = family;
                 }
             }
             #endregion
@@ -95,30 +184,87 @@ namespace CBHK.ViewModel.Common
             #region 获取系统自带的字体库
             foreach (System.Drawing.FontFamily font in SystemFonts.Families)
             {
+                if (font is null)
+                {
+                    continue;
+                }
                 FontFamily family = new(font.Name);
                 CurrentFontFamilyList.Add(family);
-                TextComboBoxItem textComboBoxItem = new() { Text = font.Name };
-                CurrentFontFamilyNameList.Add(textComboBoxItem);
-                textComboBoxItem.ItemFont = family;
+
+                currentFontFamilySource.Add(new VectorTextComboBoxItem()
+                {
+                    FontFamily = family,
+                    Text = font.Name
+                });
             }
-            #endregion
-
-            #region 设置默认字体
-            CloseToTray = _config.CloseToTray.ToLower() == "true";
-            SelectedFontFamilyItem = CurrentFontFamilyNameList[0];
+            currentFontFamilySource = [.. currentFontFamilySource.DistinctBy(item => item.Text)];
+            currentFontFamilyNameComboBox.DataList = new(currentFontFamilySource);
+            isLoaded = true;
             #endregion
         }
-        #endregion
 
-        #region Event
-        public void ViewState_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void SettingsViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            _config.Visibility = SelectVisibleItem.Text;
-        }
-
-        public void FontComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            SelectedFontFamily = CurrentFontFamilyList[SelectFontIndex];
+            if(!isLoaded || isPropertyChanging)
+            {
+                return;
+            }
+            if (e.PropertyName is not null && e.PropertyName.Length > 0)
+            {
+                switch (e.PropertyName)
+                {
+                    case "SelectedVisualType":
+                        {
+                            WindowVisualType windowVisualType = (WindowVisualType)Enum.Parse(typeof(WindowVisualType), SelectedVisualType.Text);
+                            var targetView = Application.Current.Windows.OfType<VectorWindow>().FirstOrDefault(item=>item.GetType().ToString().EndsWith("MainView"));
+                            if (targetView is not null)
+                            {
+                                isPropertyChanging = true;
+                                targetView.VisualType = windowVisualType;
+                                config.VisualType = SelectedVisualType.Text;
+                            }
+                            break;
+                        }
+                    case "SelectedThemeType":
+                        {
+                            WindowThemeType windowThemeType = (WindowThemeType)Enum.Parse(typeof(WindowThemeType), SelectedThemeType.Text);
+                            var targetView = Application.Current.Windows.OfType<VectorWindow>().FirstOrDefault(item => item.GetType().ToString().EndsWith("MainView"));
+                            if (targetView is not null)
+                            {
+                                isPropertyChanging = true;
+                                targetView.ThemeType = windowThemeType;
+                                config.ThemeType = windowThemeType.ToString();
+                                string themePath = windowThemeType switch
+                                {
+                                    WindowThemeType.CommandBlockOrange => Theme.CommandBlockOrangeTheme,
+                                    WindowThemeType.CommandBlockBlueGreen => Theme.CommandBlockBlueGreenTheme,
+                                    WindowThemeType.CommandBlockPurple => Theme.CommandBlockPurpleTheme,
+                                    _ => Theme.CommandBlockOrangeTheme
+                                };
+                                await SwitchThemeWithAdornerAsync(targetView, themePath);
+                            }
+                            break;
+                        }
+                    case "SelectedState":
+                        {
+                            config.Visibility = SelectedState.ToString();
+                            break;
+                        }
+                    case "SelectedWindowCornerPreferenceType":
+                        {
+                            WindowCornerPreference preference = (WindowCornerPreference)Enum.Parse(typeof(WindowCornerPreference), SelectedWindowCornerPreferenceType.Text);
+                            var targetView = Application.Current.Windows.OfType<VectorWindow>().FirstOrDefault(item => item.GetType().ToString().EndsWith("MainView"));
+                            if (targetView is not null)
+                            {
+                                isPropertyChanging = true;
+                                targetView.CornerPreference = preference;
+                                config.CornerPreferenceType = preference.ToString();
+                            }
+                            break;
+                        }
+                }
+                isPropertyChanging = false;
+            }
         }
         #endregion
     }

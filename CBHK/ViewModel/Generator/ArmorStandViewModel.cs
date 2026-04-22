@@ -1,11 +1,21 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.AnimationComponents;
+using CBHK.CustomControl.Input;
+using CBHK.CustomControl.VectorCheckBox;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface.Utility;
+using CBHK.Model.Common;
+using CBHK.Utility.Common;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
+using CBHK.View.Component.Item;
+using CBHK.View.Generator;
+using CBHK.ViewModel.Component.Item;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DryIoc;
 using HelixToolkit.Wpf;
 using Newtonsoft.Json.Linq;
+using Prism.Events;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
@@ -17,23 +27,15 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using CBHK.View.Generator;
-using CBHK.ViewModel.Component.Item;
-using CBHK.View.Component.Item;
-using CBHK.Utility.MessageTip;
-using CBHK.Utility.Common;
-using CBHK.Interface;
-using Prism.Events;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class ArmorStandViewModel : ObservableObject,IGenerator
+    public partial class ArmorStandViewModel : ObservableObject, IGenerator
     {
         #region Field
         /// <summary>
@@ -47,6 +49,7 @@ namespace CBHK.ViewModel.Generator
         private ArmorStandCameraMovementType _armorStandCameraMovementType;
         private ArmorStandCameraOverTheShoulderType _armorStandCameraOverTheShoulderType;
         private bool IsLeftShoulder = false;
+        private bool isSelectedAll = false;
         //右上角Gizimo中圆锥的底面半径
         double ConeBaseRadius = 0.8;
         //右上角Gizimo中圆锥的高
@@ -63,15 +66,12 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private Viewport3D ArmorStandViewer = null;
         private ModelVisual3D ModelGroup = null;
+        private TextStyleEditor textStyleEditor = null;
 
         /// <summary>
         /// ArmorStand的所有NBT项
         /// </summary>
         private List<string> ArmorStandNBTList = [];
-        /// <summary>
-        /// 动画容器
-        /// </summary>
-        private AnimationContainer animationContainer = null;
 
         /// <summary>
         /// 超出三轴合一按钮范围
@@ -103,11 +103,6 @@ namespace CBHK.ViewModel.Generator
         StackPanel NBTList = null;
 
         private readonly IContainerProvider container;
-
-        /// <summary>
-        /// 样式化文本框引用
-        /// </summary>
-        StylizedTextBox stylizedTextBox = null;
         /// <summary>
         /// 标签文本框
         /// </summary>
@@ -122,13 +117,6 @@ namespace CBHK.ViewModel.Generator
 
         //版本切换锁,防止属性之间无休止更新
         private bool permission_switch_lock = false;
-
-        #region 重置动作的按钮前景颜色对象
-        //灰色
-        private SolidColorBrush GrayBrush = new((Color)ColorConverter.ConvertFromString("#8F8F8F"));
-        //白色
-        private SolidColorBrush BlackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
-        #endregion
 
         #region 所有3D视图对象
         public PerspectiveCamera MainCamera = new();
@@ -175,6 +163,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Property
+        public MessagePopup MessagePopup { get; set; }
         /// <summary>
         /// 生成器标题
         /// </summary>
@@ -339,7 +328,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetAllPose, value);
-                ResetAllPoseButtonForeground = CanResetAllPose ? BlackBrush : GrayBrush;
+                ResetAllPoseButtonForeground = CanResetAllPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -358,7 +347,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetHeadPose, value);
-                ResetHeadPoseButtonForeground = CanResetHeadPose ? BlackBrush : GrayBrush;
+                ResetHeadPoseButtonForeground = CanResetHeadPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -376,7 +365,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetBodyPose, value);
-                ResetBodyPoseButtonForeground = CanResetBodyPose ? BlackBrush : GrayBrush;
+                ResetBodyPoseButtonForeground = CanResetBodyPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -393,7 +382,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetLarmPose, value);
-                ResetLArmPoseButtonForeground = CanResetLArmPose ? BlackBrush : GrayBrush;
+                ResetLArmPoseButtonForeground = CanResetLArmPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -411,7 +400,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetRArmPose, value);
-                ResetRArmPoseButtonForeground = CanResetRArmPose ? BlackBrush : GrayBrush;
+                ResetRArmPoseButtonForeground = CanResetRArmPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -429,7 +418,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetLLegPose, value);
-                ResetLLegPoseButtonForeground = CanResetLLegPose ? BlackBrush : GrayBrush;
+                ResetLLegPoseButtonForeground = CanResetLLegPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -447,7 +436,7 @@ namespace CBHK.ViewModel.Generator
             set
             {
                 SetProperty(ref canResetRLegPose, value);
-                ResetRLegPoseButtonForeground = CanResetRLegPose ? BlackBrush : GrayBrush;
+                ResetRLegPoseButtonForeground = CanResetRLegPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
@@ -973,18 +962,18 @@ namespace CBHK.ViewModel.Generator
 
         #region 版本数据源
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionSource = [
-            new TextComboBoxItem() { Text = "1.20.2" },
-            new TextComboBoxItem() { Text = "1.13.0" },
-            new TextComboBoxItem() { Text = "1.12.0" },
-            new TextComboBoxItem() { Text = "1.9.0" },
-            new TextComboBoxItem() { Text = "1.8.0" }
+        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+            new VectorTextComboBoxItem() { Text = "1.20.2"},
+            new VectorTextComboBoxItem() { Text = "1.13.0"},
+            new VectorTextComboBoxItem() { Text = "1.12.0"},
+            new VectorTextComboBoxItem() { Text = "1.9.0"},
+            new VectorTextComboBoxItem() { Text = "1.8.0"}
             ];
         #endregion
 
         #region 已选择的版本
-        private TextComboBoxItem selectedVersion;
-        public TextComboBoxItem SelectedVersion
+        private VectorTextComboBoxItem selectedVersion;
+        public VectorTextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
             set
@@ -995,6 +984,7 @@ namespace CBHK.ViewModel.Generator
         }
 
         private int currentMinVersion = 1202;
+
         public int CurrentMinVersion
         {
             get => currentMinVersion;
@@ -1019,10 +1009,10 @@ namespace CBHK.ViewModel.Generator
             YAxis.DataContext = this;
             ZAxis.DataContext = this;
 
-            container = container;
+            this.container = container;
             home = mainView;
 
-            ResetAllPoseButtonForeground = ResetHeadPoseButtonForeground = ResetLArmPoseButtonForeground = ResetRArmPoseButtonForeground = ResetBodyPoseButtonForeground = ResetLLegPoseButtonForeground = ResetRLegPoseButtonForeground = GrayBrush;
+            ResetAllPoseButtonForeground = ResetHeadPoseButtonForeground = ResetLArmPoseButtonForeground = ResetRArmPoseButtonForeground = ResetBodyPoseButtonForeground = ResetLLegPoseButtonForeground = ResetRLegPoseButtonForeground = Brushes.White;
         }
 
         private ImageSource CreateColoredImage(BitmapImage originalImage, Color overlayColor)
@@ -1349,7 +1339,13 @@ namespace CBHK.ViewModel.Generator
             #endregion
         }
 
-        public void AnimationContainer_Loaded(object sender, RoutedEventArgs e) => animationContainer = sender as AnimationContainer;
+        public void CustomNameBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if(sender is TextStyleEditor editor)
+            {
+                textStyleEditor = editor;
+            }
+        }
 
         /// <summary>
         /// 切换运镜模式
@@ -1369,16 +1365,6 @@ namespace CBHK.ViewModel.Generator
             };
             PreviewModeText = "预览-" + type.ToString();
             action?.Invoke();
-        }
-
-        /// <summary>
-        /// 载入名称文本框
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void CustomNameBox_Loaded(object sender, RoutedEventArgs e)
-        {
-            stylizedTextBox = sender as StylizedTextBox;
         }
 
         /// <summary>
@@ -1405,17 +1391,15 @@ namespace CBHK.ViewModel.Generator
             {
                 foreach (string item in ArmorStandNBTList)
                 {
-                    TextCheckBoxs textCheckBox = new()
+                    VectorTextCheckBox textCheckBox = new()
                     {
-                        Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-                        Margin = new Thickness(0, 0, 0, 10),
-                        HeaderText = item,
-                        HeaderHeight = 20,
+                        Foreground = Brushes.White,
+                        Text = item,
+                        Margin = new Thickness(10, 0, 0, 10),
                         FontSize = 15,
-                        HeaderWidth = 20,
                         HorizontalAlignment = HorizontalAlignment.Stretch,
                         VerticalAlignment = VerticalAlignment.Center,
-                        Style = Application.Current.Resources["TextCheckBox"] as Style
+                        Style = Application.Current.Resources["VectorTextCheckBoxStyle"] as Style
                     };
                     NBTList.Children.Add(textCheckBox);
                     textCheckBox.Checked += NBTChecked;
@@ -1444,34 +1428,9 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public async void Version_SelectionChanged(object sender, RoutedEventArgs e) { }
-
-        /// <summary>
-        /// 检测名称文本框内容为空
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void StylizedTextBox_PreviewKeyUp(object sender, KeyEventArgs e)
+        public void Version_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            if ((e.Key == Key.Back || e.Key == Key.Delete))
-            {
-                if (stylizedTextBox.richTextBox.Document.Blocks.FirstBlock is null)
-                    stylizedTextBox.richTextBox.Document.Blocks.Add(new RichParagraph());
-                else
-                {
-                    Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
-                    if (paragraph.Inlines.Count == 1)
-                    {
-                        Run run = paragraph.Inlines.FirstInline as Run;
-                        run = new RichRun() { Text = run.Text };
-                    }
-                    else
-                    if (paragraph.Inlines.Count == 0)
-                    {
-                        paragraph.Inlines.Add(new RichRun());
-                    }
-                }
-            }
+
         }
 
         [RelayCommand]
@@ -1566,7 +1525,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "Head":
                 //        if (HeadItem is not null && HeadItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(HeadItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string HeadData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1576,7 +1535,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "Body":
                 //        if (BodyItem is not null && BodyItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(BodyItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string BodyData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1586,7 +1545,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "LeftHand":
                 //        if (LeftHandItem is not null && LeftHandItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(LeftHandItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string LeftHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1596,7 +1555,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "RightHand":
                 //        if (RightHandItem is not null && RightHandItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(RightHandItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string RightHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1606,7 +1565,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "Legs":
                 //        if (LegsItem is not null && LegsItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(LegsItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string LegsData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1616,7 +1575,7 @@ namespace CBHK.ViewModel.Generator
                 //    case "Feet":
                 //        if (FeetItem is not null && FeetItem.Length > 0)
                 //        {
-                //            ObservableCollection<RichTabItems> richTabItems = itemContext.ItemPageList;
+                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
                 //            ExternalDataImportManager.ImportItemDataHandler(FeetItem, ref richTabItems, false);
                 //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
                 //            string FeetData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
@@ -1675,7 +1634,8 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         public void ReverseAllNBT()
         {
-            foreach (TextCheckBoxs item in NBTList.Children)
+            isSelectedAll = false;
+            foreach (VectorTextCheckBox item in NBTList.Children)
             {
                 item.IsChecked = !item.IsChecked.Value;
             }
@@ -1688,10 +1648,10 @@ namespace CBHK.ViewModel.Generator
         /// <param name="obj"></param>
         public void SelectAllNBT(FrameworkElement frameworkElement)
         {
-            bool currentValue = (frameworkElement as TextCheckBoxs).IsChecked.Value;
-            foreach (TextCheckBoxs item in NBTList.Children)
+            isSelectedAll = !isSelectedAll;
+            foreach (VectorTextCheckBox item in NBTList.Children)
             {
-                item.IsChecked = currentValue;
+                item.IsChecked = isSelectedAll;
             }
         }
 
@@ -1703,11 +1663,12 @@ namespace CBHK.ViewModel.Generator
         {
             StringBuilder Result = new();
             CustomName = "";
-            //await stylizedTextBox.Upgrade(CurrentMinVersion);
+            //await textStyleEditor.Upgrade(CurrentMinVersion);
             await tagRichTextBox.GetResult();
-            StringBuilder customnameResult = stylizedTextBox.Create();
-            stylizedTextBox.CollectionData(customnameResult);
-            stylizedTextBox.Build(customnameResult);
+            StringBuilder customnameResult = new();
+            //StringBuilder customnameResult = textStyleEditor.Create();
+            //textStyleEditor.CollectionData(customnameResult);
+            //textStyleEditor.Build(customnameResult);
             string CustomNameValue = customnameResult.ToString();
             if (CustomNameValue.Trim().Length > 0)
             {
@@ -1745,7 +1706,12 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString());
-                Message.PushMessage("盔甲架生成成功！数据已进入剪切板", MessageBoxImage.Information);
+                MessagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "盔甲架生成成功！数据已进入剪切板",
+                    SubMessage = "盔甲架生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\armor_stand.png", UriKind.RelativeOrAbsolute))
+                });
             }
             #endregion
         }
@@ -2180,8 +2146,8 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         private void NBTUnchecked(object sender, RoutedEventArgs e)
         {
-            TextCheckBoxs current = sender as TextCheckBoxs;
-            BoolTypeNBT.Remove(current.HeaderText);
+            VectorTextCheckBox current = sender as VectorTextCheckBox;
+            BoolTypeNBT.Remove(current.Text);
         }
 
         /// <summary>
@@ -2191,8 +2157,8 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         private void NBTChecked(object sender, RoutedEventArgs e)
         {
-            TextCheckBoxs current = sender as TextCheckBoxs;
-            BoolTypeNBT.Add(current.HeaderText);
+            VectorTextCheckBox current = sender as VectorTextCheckBox;
+            BoolTypeNBT.Add(current.Text);
         }
 
         #region 处理3D模型

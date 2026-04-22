@@ -1,15 +1,15 @@
-﻿<localWindow:CommonWindow
+﻿<Container:VectorWindow
     x:Class="CBHK.View.Generator.CustomWorldGeneratorView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CompoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponents"
+    xmlns:CompoundItem="clr-namespace:CBHK.CustomControl.JsonTreeViewComponent"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:ConverterSpace="clr-namespace:CBHK.Utility.TreeViewComponentsHelper"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Generator"
-    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="自定义世界编辑器"
@@ -17,6 +17,7 @@
     Height="700"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#1B1B1B"
+    IconMargin="5"
     mc:Ignorable="d">
 
     <Window.Resources>
@@ -41,32 +42,32 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <CustomControl:TextComboBoxs
+            <VectorComboBox:VectorTextComboBox
                 Grid.Column="0"
                 Height="30"
                 ItemsSource="{Binding VersionList}"
                 SelectedIndex="0"
                 SelectedItem="{Binding CurrentVersion}"
-                Style="{StaticResource TextComboBoxStyle}">
+                Style="{StaticResource VectorTextComboBoxStyle}">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="SelectionChanged">
                         <behaviors:CallMethodAction MethodName="Version_SelectionChanged" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
-            </CustomControl:TextComboBoxs>
-            <CustomControl:TextComboBoxs
+            </VectorComboBox:VectorTextComboBox>
+            <VectorComboBox:VectorTextComboBox
                 Grid.Column="1"
                 Height="30"
                 ItemsSource="{Binding GeneratorList}"
                 SelectedIndex="0"
                 SelectedItem="{Binding CurrentGenerator}"
-                Style="{StaticResource TextComboBoxStyle}">
+                Style="{StaticResource VectorTextComboBoxStyle}">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="SelectionChanged">
                         <behaviors:CallMethodAction MethodName="Generator_SelectionChanged" TargetObject="{Binding}" />
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
-            </CustomControl:TextComboBoxs>
+            </VectorComboBox:VectorTextComboBox>
         </Grid>
         <TreeView
             Grid.Row="1"
@@ -111,4 +112,4 @@
             </behaviors:Interaction.Triggers>
         </avalonedit:TextEditor>
     </Grid>
-</localWindow:CommonWindow>
+</Container:VectorWindow>

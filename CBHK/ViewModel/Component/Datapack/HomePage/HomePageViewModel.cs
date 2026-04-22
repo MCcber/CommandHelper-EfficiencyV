@@ -1,5 +1,7 @@
-﻿using CBHK.CustomControl;
-using CBHK.Utility.MessageTip;
+﻿using CBHK.CustomControl.Container;
+using CBHK.Interface.Visual;
+using CBHK.Model.Common;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.Utility.Time;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.View.Component.Datapack.HomePage;
@@ -23,11 +25,12 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 
 namespace CBHK.ViewModel.Component.Datapack.HomePage
 {
-    public partial class HomePageViewModel(IContainerProvider container) : ObservableObject
+    public partial class HomePageViewModel(IContainerProvider container) : ObservableObject, IPageViewModel
     {
         #region Field
         private IContainerProvider container = container;
@@ -94,6 +97,8 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         /// </summary>
         [ObservableProperty]
         private Visibility _searchResultViewerVisibility = Visibility.Collapsed;
+
+        public MessagePopup MessagePopup { get; set; }
         #endregion
 
         /// <summary>
@@ -174,9 +179,9 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                                 recentTreeItem.Title.Text = Path.GetFileName(Contents[i]);
                                 recentTreeItem.Path.Text = Contents[i];
                                 recentTreeItem.ModifyDate.Text = File.GetLastWriteTime(Contents[i]).ToString("yyyy/M/d HH:mm");
-                                RichTreeViewItems newNode = new()
+                                VectorTreeViewItem newNode = new()
                                 {
-                                    Style = Application.Current.Resources["RichTreeViewItems"] as Style,
+                                    Style = Application.Current.Resources["VectorTreeViewItem"] as Style,
                                     Margin = new Thickness(0, 0, 0, 10),
                                     Header = recentTreeItem,
                                     Foreground = whiteBrush,
@@ -232,7 +237,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                         RecentItemSearchResults.Clear();
                         foreach (var headItem in RecentContentDateItemList)
                         {
-                            foreach (RichTreeViewItems contentItem in headItem.Items)
+                            foreach (VectorTreeViewItem contentItem in headItem.Items)
                             {
                                 RecentTreeItem recentTreeItem = contentItem.Header as RecentTreeItem;
                                 RecentTreeItem newRecentTreeItem = new();
@@ -245,7 +250,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                                 string currentValue = recentTreeItem.Title.Text;
                                 if (currentValue == SearchText || currentValue.StartsWith(SearchText) || Regex.IsMatch(currentValue, SearchText, RegexOptions.IgnoreCase))
                                 {
-                                    RichTreeViewItems richTreeViewItems = new()
+                                    VectorTreeViewItem richTreeViewItems = new()
                                     {
                                         Margin = new Thickness(0, 0, 0, 10),
                                         MinHeight = 35,
@@ -308,12 +313,26 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                 }
                 else
                 {
-                    Message.PushMessage("目标解决方案不存在");
+                    MessagePopup.PushMessage(new GeneratorMessage()
+                    {
+                        Message = "目标解决方案不存在",
+                        MessageBrush = Brushes.Red,
+                        SubMessage = "数据包编辑器",
+                        SubMessageBrush = Brushes.DarkGray,
+                        Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\command_block.png", UriKind.Relative))
+                    });
                 }
             }
             else
             {
-                Message.PushMessage("无法打开！所选解决方案不存在,已删除");
+                MessagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "无法打开！所选解决方案不存在,已删除",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "数据包编辑器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\command_block.png", UriKind.Relative))
+                });
                 File.Delete(RecentSolutionFolderPath + "\\" + recentTreeItem.Title.Text);
                 TreeViewItem timeMarkerItem = treeViewItem.Parent as TreeViewItem;
                 timeMarkerItem.Items.Remove(treeViewItem);
@@ -329,7 +348,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         /// <param name="e"></param>
         public void TreeView_MouseLeave(object sender, MouseEventArgs e)
         {
-            if ((sender as TreeView).SelectedItem is RichTreeViewItems richTreeViewItems)
+            if ((sender as TreeView).SelectedItem is VectorTreeViewItem richTreeViewItems)
                 richTreeViewItems.IsSelected = false;
         }
 
@@ -356,7 +375,7 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
                 {
                     for (int j = 0; j < RecentContentDateItemList[i].Items.Count; j++)
                     {
-                        RichTreeViewItems currentItem = RecentContentDateItemList[i].Items[j] as RichTreeViewItems;
+                        VectorTreeViewItem currentItem = RecentContentDateItemList[i].Items[j] as VectorTreeViewItem;
                         if (currentItem.Uid != currentItem.Tag.ToString())
                             File.Move(currentItem.Tag.ToString(), currentItem.Uid);
                     }

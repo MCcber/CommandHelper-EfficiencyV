@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControl;
-using CBHK.CustomControl.JsonTreeViewComponents;
+using CBHK.CustomControl.JsonTreeViewComponent;
 using CBHK.Domain;
 using CBHK.Utility;
 using CBHK.Utility.TreeViewComponentsHelper;
@@ -19,9 +19,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using static CBHK.Model.Common.Enums;
 using CBHK.Common.Utility;
-using CBHK.Interface;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface.Data;
 
 namespace CBHK.ViewModel.Common
 {
@@ -39,9 +39,9 @@ namespace CBHK.ViewModel.Common
         protected virtual IContainerProvider Container { get; set; }
         protected virtual JsonTreeViewItemExtension JsonTool { get; set; }
 
-        public virtual TextComboBoxItem CurrentVersion { get; set; }
+        public virtual VectorTextComboBoxItem CurrentVersion { get; set; }
 
-        public virtual ObservableCollection<TextComboBoxItem> VersionList { get; set; } = [];
+        public virtual ObservableCollection<VectorTextComboBoxItem> VersionList { get; set; } = [];
 
         public virtual ObservableCollection<JsonTreeViewItem> TreeViewItemList { get; set; } = [];
 

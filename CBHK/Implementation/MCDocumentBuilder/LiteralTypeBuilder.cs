@@ -7,7 +7,7 @@ namespace CBHK.Implementation.MCDocumentBuilder
     {
         public List<IComponent> Build(object model)
         {
-            
+            return [];
         }
     }
 }

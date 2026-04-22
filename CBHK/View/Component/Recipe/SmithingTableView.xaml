@@ -2,7 +2,8 @@
     x:Class="CBHK.View.Component.Recipe.SmithingTableView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VirtualizingWrapPanel="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -138,39 +139,24 @@
             Margin="0,0,0,0"
             HorizontalAlignment="Right"
             VerticalAlignment="Center">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="180" />
-            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <TextBlock
+            <Input:VectorTextBox
                 Grid.Row="0"
-                Grid.Column="0"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Foreground="Black"
-                Text="文件名" />
-            <TextBox
-                Grid.Row="0"
-                Grid.Column="1"
                 Height="25"
                 Margin="0,0,5,0"
                 VerticalContentAlignment="Center"
                 BorderBrush="Black"
                 BorderThickness="1"
                 Foreground="White"
-                Text="{Binding FileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBlock
-                Grid.Row="1"
-                Grid.Column="0"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Foreground="Black"
-                Text="结果数量" />
-            <Slider
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding FileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="文件名" />
+            <Input:VectorNumbericUpDown
                 Grid.Row="1"
                 Grid.Column="1"
                 Height="25"
@@ -179,29 +165,30 @@
                 BorderBrush="Black"
                 BorderThickness="1"
                 Foreground="White"
-                Maximum="2147483647"
-                Minimum="1"
-                Style="{DynamicResource NumberBoxStyle}"
-                Value="{Binding Count, Mode=TwoWay}" />
+                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                Text="{Binding Count, Mode=TwoWay}"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="结果数量" />
         </Grid>
-        <CustomControl:IconTextButtons
+        <VectorButton:VectorFlatImageButton
             Width="25"
             Height="25"
             Margin="0,20,230,0"
             HorizontalAlignment="Right"
             VerticalAlignment="Center"
-            Background="{DynamicResource RightArrow}"
             Command="{Binding RunCommand}"
-            Style="{DynamicResource IconTextButton}"
+            Image="{DynamicResource RightArrow}"
+            Style="{DynamicResource VectorFlatImageButtonStyle}"
             ToolTipService.BetweenShowDelay="0"
             ToolTipService.InitialShowDelay="0">
-            <CustomControl:IconTextButtons.ToolTip>
+            <VectorButton:VectorFlatImageButton.ToolTip>
                 <ToolTip
                     Background="#484848"
                     Content="F5:运行"
                     Foreground="White" />
-            </CustomControl:IconTextButtons.ToolTip>
-        </CustomControl:IconTextButtons>
+            </VectorButton:VectorFlatImageButton.ToolTip>
+        </VectorButton:VectorFlatImageButton>
         <Image
             Width="85"
             Height="85"

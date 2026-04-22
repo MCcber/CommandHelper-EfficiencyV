@@ -7,6 +7,7 @@ using CBHK.ViewModel.Component.Datapack.HomePage;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.View.Component.Datapack.HomePage;
 using CBHK.View.Component.Datapack.DatapackInitializationForms;
+using System.IO;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -61,7 +62,10 @@ namespace CBHK.ViewModel.Generator
         public DatapackViewModel()
         {
             startInfo.FileName = AppDomain.CurrentDomain.BaseDirectory + "AutoCompleteServer.exe";
-            serverProcess = Process.Start(startInfo);
+            if (File.Exists(startInfo.FileName))
+            {
+                serverProcess = Process.Start(startInfo);
+            }
         }
 
         /// <summary>

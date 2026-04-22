@@ -1,8 +1,10 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorComboBox;
+using CBHK.Model.Common;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Sign;
 using CBHK.ViewModel.Component.Sign;
-using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
@@ -20,6 +22,7 @@ namespace CBHK.ViewModel.Generator
     public partial class SignViewModel : ObservableObject
     {
         #region Field
+        private MessagePopup messagePopup = new();
         /// <summary>
         /// 主页
         /// </summary>
@@ -34,22 +37,13 @@ namespace CBHK.ViewModel.Generator
         /// 告示牌数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<RichTabItems> _signList = [
-            new RichTabItems()
+        public ObservableCollection<VectorRichTabItem> _signList = [
+            new VectorRichTabItem()
             {
-                Header = "acacia",
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                Title = "acacia",
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
+                Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style
             }
         ];
 
@@ -57,27 +51,27 @@ namespace CBHK.ViewModel.Generator
         /// 已选中的告示牌
         /// </summary>
         [ObservableProperty]
-        public RichTabItems _selectedItem;
+        public VectorRichTabItem _selectedItem;
 
         [ObservableProperty]
         private bool _showResult;
 
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionSource = [
-            new TextComboBoxItem() { Text = "1.20.0" },
-            new TextComboBoxItem() { Text = "1.19.4" },
-            new TextComboBoxItem() { Text = "1.19.3" },
-            new TextComboBoxItem() { Text = "1.17.0" },
-            new TextComboBoxItem() { Text = "1.16.0" },
-            new TextComboBoxItem() { Text = "1.14.0" },
-            new TextComboBoxItem() { Text = "1.13.0" }
+        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+            new VectorTextComboBoxItem() { Text = "1.20.0" },
+            new VectorTextComboBoxItem() { Text = "1.19.4" },
+            new VectorTextComboBoxItem() { Text = "1.19.3" },
+            new VectorTextComboBoxItem() { Text = "1.17.0" },
+            new VectorTextComboBoxItem() { Text = "1.16.0" },
+            new VectorTextComboBoxItem() { Text = "1.14.0" },
+            new VectorTextComboBoxItem() { Text = "1.13.0" }
         ];
         #endregion
 
         #region Method
-        public SignViewModel(IContainerProvider container,MainView mainView)
+        public SignViewModel(IContainerProvider Container,MainView mainView)
         {
-            container = container;
+            container = Container;
             home = mainView;
             Task.Run(async () =>
             {
@@ -102,7 +96,7 @@ namespace CBHK.ViewModel.Generator
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void Return(CommonWindow win)
+        private void Return(Window win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -137,9 +131,19 @@ namespace CBHK.ViewModel.Generator
                     });
                 });
                 if (ShowResult)
+                {
                     displayer.Show();
+                }
                 else
+                {
                     Clipboard.SetText(result.ToString());
+                    messagePopup.PushMessage(new GeneratorMessage()
+                    {
+                        Message = "生成成功！告示牌已进入剪切板",
+                        SubMessage = "告示牌生成器",
+                        Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\sign.png", UriKind.RelativeOrAbsolute))
+                    });
+                }
             }
         }
 
@@ -154,21 +158,11 @@ namespace CBHK.ViewModel.Generator
             SignPageView signPage = container.Resolve<SignPageView>();
             SignPageViewModel pageContext = signPage.DataContext as SignPageViewModel;
             pageContext.SignPanelSource = new BitmapImage(new Uri(signPanelPath, UriKind.Absolute));
-            RichTabItems richTabItems = new()
+            VectorRichTabItem richTabItems = new()
             {
                 Content = signPage,
                 Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                Header = "acacia",
-                IsContentSaved = true,
-                BorderThickness = new(4, 3, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as ImageBrush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as ImageBrush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as ImageBrush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as ImageBrush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as ImageBrush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as ImageBrush
+                Header = "acacia"
             };
             SignList.Add(richTabItems);
         }

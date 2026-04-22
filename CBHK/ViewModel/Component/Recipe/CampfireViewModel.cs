@@ -17,12 +17,13 @@ using CBHK.Model.Common;
 using CBHK.View.Component.Recipe;
 using CBHK.Domain;
 using System.Collections.Generic;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.Utility.Common;
+using CBHK.Interface.Visual;
 
 namespace CBHK.ViewModel.Component.Recipe
 {
-    public partial class CampfireViewModel : ObservableObject
+    public partial class CampfireViewModel : ObservableObject, IPageViewModel
     {
         #region Field
         private DataService _dataService = null;
@@ -123,6 +124,8 @@ namespace CBHK.ViewModel.Component.Recipe
         private double _experience = 0;
         [ObservableProperty]
         private Visibility _materialMultiItemVisibility = Visibility.Collapsed;
+
+        public MessagePopup MessagePopup { get; set; }
 
         #endregion
 
@@ -284,7 +287,14 @@ namespace CBHK.ViewModel.Component.Recipe
                 if (saveFileDialog.ShowDialog().Value)
                 {
                     _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
-                    Message.PushMessage("篝火配方生成成功！", MessageBoxImage.Information);
+                    MessagePopup.PushMessage(new GeneratorMessage()
+                    {
+                        Message = "篝火配方生成成功",
+                        MessageBrush = Brushes.Red,
+                        SubMessage = "配方生成器",
+                        SubMessageBrush = Brushes.DarkGray,
+                        Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                    });
                     //OpenFolderThenSelectFiles.ExplorerFile(saveFileDialog.FileName);
                 }
             }

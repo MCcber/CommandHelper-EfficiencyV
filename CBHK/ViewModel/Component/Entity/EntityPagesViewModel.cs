@@ -1,10 +1,13 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorCheckBox;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
-using CBHK.Interface;
+using CBHK.Interface.Utility;
+using CBHK.Interface.Visual;
 using CBHK.Model.Common;
 using CBHK.Model.Generator.Entity;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Entity;
 using CBHK.View.Generator;
@@ -18,24 +21,22 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
-using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Entity
 {
-    public partial class EntityPageViewModel : ObservableObject,IGenerator
+    public partial class EntityPageViewModel : ObservableObject, IGenerator, IPageViewModel
     {
         #region Field
         public bool HaveCustomName = false;
@@ -108,11 +109,12 @@ namespace CBHK.ViewModel.Component.Entity
         /// <summary>
         /// 特殊标签面板
         /// </summary>
-        ScrollViewer SpecialViewer = null;
+        VectorScrollViewer SpecialViewer = null;
 
         #endregion
 
         #region Property
+        public MessagePopup MessagePopup { get; set; }
         /// <summary>
         /// 指示是否需要展示生成结果
         /// </summary>
@@ -127,12 +129,12 @@ namespace CBHK.ViewModel.Component.Entity
         /// 实体ID
         /// </summary>
         [ObservableProperty]
-        private IconComboBoxItem _selectedEntityId = null;
+        private VectorTextComboBoxItem _selectedEntityId = null;
         /// <summary>
         /// 实体数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<IconComboBoxItem> _entityIDList = [];
+        public ObservableCollection<VectorIconTextComboBoxItem> _entityIDList = [];
 
         /// <summary>
         /// 属性数据
@@ -170,13 +172,13 @@ namespace CBHK.ViewModel.Component.Entity
         /// 版本数据源
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionSource = [];
+        private ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
 
         /// <summary>
         /// 已选版本
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem _selectedVersion;
 
         #region 作为工具或引用
         [ObservableProperty]
@@ -315,12 +317,12 @@ namespace CBHK.ViewModel.Component.Entity
             Binding widthBinding = new()
             {
                 Path = new PropertyPath("ActualWidth"),
-                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor,typeof(ScrollViewer),1)
+                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor,typeof(VectorScrollViewer),1)
             };
             Binding heightBinding = new()
             {
                 Path = new PropertyPath("ActualHeight"),
-                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(ScrollViewer), 1)
+                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(VectorScrollViewer), 1)
             };
             BindingOperations.SetBinding(contentGrid, FrameworkElement.WidthProperty, widthBinding);
             BindingOperations.SetBinding(contentGrid, FrameworkElement.HeightProperty, heightBinding);
@@ -374,7 +376,7 @@ namespace CBHK.ViewModel.Component.Entity
                 string reference = referenceObj is not null ? referenceObj.ToString() : "";
 
                 TextBlock displayText = null;
-                Accordion accordion = null;
+                VectorRichExpander accordion = null;
                 if(tag != "Array" && tag != "List" && tag != "Compound")
                 {
                     displayText = new()
@@ -403,7 +405,7 @@ namespace CBHK.ViewModel.Component.Entity
                 {
                     case "Boolean":
                         {
-                            TextCheckBoxs textCheckBoxs = new()
+                            VectorTextCheckBox textCheckBoxs = new()
                             {
                                 Style = textCheckBoxStyle
                             };
@@ -436,7 +438,7 @@ namespace CBHK.ViewModel.Component.Entity
         /// <summary>
         /// 根据当前切换的实体ID来动态切换UI元素的显隐
         /// </summary>
-        public async Task UpdateUILayOut(Task task = null)
+        public void UpdateUILayOut(Task task = null)
         {
             SelectedEntityId ??= EntityIDList[0];
             string data = File.ReadAllText(SpecialNBTStructureFilePath);
@@ -444,13 +446,13 @@ namespace CBHK.ViewModel.Component.Entity
             //更新标签页显示文本
             if (currentEntityPage.Parent is TabItem currentTab)
             {
-                currentTab.Header = SelectedEntityId.ComboBoxItemId + ":" + SelectedEntityId.ComboBoxItemText;
+                currentTab.Header = SelectedEntityId.Text + ":" + SelectedEntityId.Text;
             }
 
             #region 搜索当前实体ID对应的JSON对象
             JToken targetEntityObject = specialDataArray.First(item =>
             {
-                return item["Type"] is not null && item["Type"].ToString() == SelectedEntityId.ComboBoxItemId;
+                return item["Type"] is not null && item["Type"].ToString() == SelectedEntityId.Text;
             });
             #endregion
 
@@ -462,7 +464,7 @@ namespace CBHK.ViewModel.Component.Entity
                 List<string> closedCommonTagList = specialEntityCommonTagList.Except(commonTagList).ToList();
 
                 #region 处理专属NBT
-                if (!SpecialDataDictionary.TryGetValue(SelectedEntityId.ComboBoxItemId, out Grid newGrid))
+                if (!SpecialDataDictionary.TryGetValue(SelectedEntityId.Text, out Grid newGrid))
                 {
                     JArray children = JArray.Parse(targetEntityObject["Children"].ToString());
                     CacheGrid = new();
@@ -483,7 +485,7 @@ namespace CBHK.ViewModel.Component.Entity
                 Type currentClassType = GetType();
 
                 #region 需要隐藏的共通标签
-                TabControl tabControl = (SpecialViewer?.Parent as TextTabItems).Parent as TabControl;
+                TabControl tabControl = (SpecialViewer?.Parent as VectorTextTabItem).Parent as TabControl;
                 foreach (var item in closedCommonTagList)
                 {
                     PropertyInfo visibilityPropertyInfo = currentClassType.GetProperty(item + "Visibility");
@@ -563,11 +565,10 @@ namespace CBHK.ViewModel.Component.Entity
                 if (item is not null)
                 {
                     string iconPath = File.Exists(entityImageFolderPath + item + "_spawn_egg.png") ? entityImageFolderPath + item + "_spawn_egg.png" : entityImageFolderPath + item + ".png";
-                    IconComboBoxItem iconComboBoxItem = new()
+                    VectorIconTextComboBoxItem iconComboBoxItem = new()
                     {
-                        ComboBoxItemIcon = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
-                        ComboBoxItemText = item ?? "",
-                        ComboBoxItemId = item
+                        Image = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
+                        Text = item ?? ""
                     };
                     EntityIDList.Add(iconComboBoxItem);
                 }
@@ -585,9 +586,9 @@ namespace CBHK.ViewModel.Component.Entity
             //更新专属和共通标签、额外字段
             Task.Run(async () =>
             {
-                await currentEntityPage.Dispatcher.InvokeAsync(async () =>
+                await currentEntityPage.Dispatcher.InvokeAsync(() =>
                 {
-                    await UpdateUILayOut();
+                    UpdateUILayOut();
                 });
             });
         }
@@ -609,11 +610,11 @@ namespace CBHK.ViewModel.Component.Entity
 
             #region 处理版本实体ID的更新
             EntityIDList.Clear();
-            foreach (var pair in dataService.EntityGroupByVersionDictionary)
+            foreach (var pair in dataService.GetEntityIDAndNameGroupByVersionMap())
             {
                 if(CurrentMinVersion >= pair.Key)
                 {
-                    EntityIDList.AddRange(pair.Value.Select(item => new IconComboBoxItem() { ComboBoxItemId = item.Key, ComboBoxItemText = item.Value }));
+                    EntityIDList.AddRange(pair.Value.Select(item => new VectorIconTextComboBoxItem() { Text = item.Value }));
                 }
             }
             SelectedEntityId = EntityIDList[0];
@@ -676,7 +677,15 @@ namespace CBHK.ViewModel.Component.Entity
             else
             {
                 Clipboard.SetText(Result.ToString());
-                Message.PushMessage("实体生成成功！数据已复制",MessageBoxImage.Information);
+                string entityID = SelectedEntityId is not null ? SelectedEntityId.Text : "entity";
+                MessagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "实体生成成功！数据已复制",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "实体生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\" + entityID + ".png", UriKind.Relative))
+                });
             }
         }
 
@@ -687,12 +696,12 @@ namespace CBHK.ViewModel.Component.Entity
         /// <param name="e"></param>
         public void AccordionVisibilitylLoaded(object sender, RoutedEventArgs e)
         {
-            Accordion accordion = sender as Accordion;
-            if(accordion.ModifyVisibility == Visibility.Collapsed)
-            {
-                accordion.ModifyVisibility = Visibility.Hidden;
-                accordion.ModifyName = "";
-            }
+            VectorRichExpander accordion = sender as VectorRichExpander;
+            //if(accordion.ModifyVisibility == Visibility.Collapsed)
+            //{
+            //    accordion.ModifyVisibility = Visibility.Hidden;
+            //    accordion.ModifyName = "";
+            //}
             Binding visibilityBinder = new()
             {
                 Path = new PropertyPath(accordion.Uid + "Visibility"),
@@ -711,7 +720,7 @@ namespace CBHK.ViewModel.Component.Entity
             TabControl tabControl = sender as TabControl;
             foreach (TabItem item in tabControl.Items)
                 item.DataContext = this;
-            SpecialViewer = (tabControl.Items[0] as TabItem).Content as ScrollViewer;
+            SpecialViewer = (tabControl.Items[0] as TabItem).Content as VectorScrollViewer;
             if (SpecialViewer.Content is Grid grid && grid.Children.Count == 0)
                 SpecialViewer.Content = CacheGrid;
         }
@@ -724,9 +733,9 @@ namespace CBHK.ViewModel.Component.Entity
         public void TagsTab_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             TabControl tabControl = sender as TabControl;
-            if (tabControl.SelectedItem is not TextTabItems textTabItem) return;
+            if (tabControl.SelectedItem is not VectorTextTabItem textTabItem) return;
             string currentUID = textTabItem.Uid;
-            ScrollViewer tabContent = textTabItem.Content as ScrollViewer;
+            VectorScrollViewer tabContent = textTabItem.Content as VectorScrollViewer;
             Grid subGrid = tabContent.Content as Grid;
             if (subGrid.Children.Count > 0) return;
             Grid newGrid = new();
@@ -752,7 +761,7 @@ namespace CBHK.ViewModel.Component.Entity
             JArray array = JArray.Parse(data);
             JToken targetObj = array.First(item =>
             {
-                return item["Type"].ToString() == SelectedEntityId.ComboBoxItemId;
+                return item["Type"].ToString() == SelectedEntityId.Text;
             });
             string type = targetObj["Type"].ToString();
             string commonTagData = targetObj["Common"].ToString();
@@ -775,14 +784,14 @@ namespace CBHK.ViewModel.Component.Entity
         /// <param name="ele"></param>
         private void ReverseAllBoolNBTs(FrameworkElement ele)
         {
-            Accordion accordion = ele as Accordion;
-            ScrollViewer scrollViewer = accordion.Content as ScrollViewer;
+            VectorRichExpander accordion = ele as VectorRichExpander;
+            VectorScrollViewer scrollViewer = accordion.Content as VectorScrollViewer;
             Grid grid = scrollViewer.Content as Grid;
             foreach (var item in grid.Children)
             {
-                if (item is TextCheckBoxs)
+                if (item is VectorTextCheckBox)
                 {
-                    TextCheckBoxs textCheckBoxs = item as TextCheckBoxs;
+                    VectorTextCheckBox textCheckBoxs = item as VectorTextCheckBox;
                     textCheckBoxs.Focus();
                     textCheckBoxs.IsChecked = !textCheckBoxs.IsChecked.Value;
                 }
@@ -795,14 +804,14 @@ namespace CBHK.ViewModel.Component.Entity
         /// </summary>
         private void SelectAllBoolNBTs(FrameworkElement ele)
         {
-            Accordion accordion = ele as Accordion;
-            ScrollViewer scrollViewer = accordion.Content as ScrollViewer;
+            VectorRichExpander accordion = ele as VectorRichExpander;
+            VectorScrollViewer scrollViewer = accordion.Content as VectorScrollViewer;
             Grid grid = scrollViewer.Content as Grid;
             foreach (var item in grid.Children)
             {
-                if(item is TextCheckBoxs)
+                if(item is VectorTextCheckBox)
                 {
-                    TextCheckBoxs textCheckBoxs = item as TextCheckBoxs;
+                    VectorTextCheckBox textCheckBoxs = item as VectorTextCheckBox;
                     textCheckBoxs.Focus();
                     textCheckBoxs.IsChecked = true;
                 }
@@ -822,7 +831,7 @@ namespace CBHK.ViewModel.Component.Entity
             List<JToken> result = [.. array.Where(item =>
             {
                 JObject currentObj = item as JObject;
-                if (currentObj["Type"].ToString() == SelectedEntityId.ComboBoxItemId)
+                if (currentObj["Type"].ToString() == SelectedEntityId.Text)
                     return true;
                 return false;
             })];
@@ -838,7 +847,7 @@ namespace CBHK.ViewModel.Component.Entity
 
         public void Build(StringBuilder Result)
         {
-            Result = new((SpecialTagsResult.TryGetValue(SelectedEntityId.ComboBoxItemId, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
+            Result = new((SpecialTagsResult.TryGetValue(SelectedEntityId.Text, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
             {
                 if (item is not null && item.Result.Length > 0)
                     return item.Result;
@@ -857,7 +866,7 @@ namespace CBHK.ViewModel.Component.Entity
 
             if (UseForTool)
             {
-                Result = new("{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result is not null && Result.Length > 0 ? "," + Result : "") + "}");
+                Result = new("{id:\"minecraft:" + SelectedEntityId.Text + "\"" + (Result is not null && Result.Length > 0 ? "," + Result : "") + "}");
                 EntityView entity = Window.GetWindow(currentEntityPage) as EntityView;
                 entity.DialogResult = true;
                 return;
@@ -866,9 +875,9 @@ namespace CBHK.ViewModel.Component.Entity
             if (!Give)
             {
                 if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""Right Click To Run\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""newGrid\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Length > 0 ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~") + @"\\\""}\""}}""}}");
+                    Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""Right Click To Run\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""newGrid\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Length > 0 ? "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~") + @"\\\""}\""}}""}}");
                 else
-                    Result = new(Result.ToString().Trim() != "" ? "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.ComboBoxItemId + " ~ ~ ~");
+                    Result = new(Result.ToString().Trim() != "" ? "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~");
             }
             else
             {
@@ -876,15 +885,15 @@ namespace CBHK.ViewModel.Component.Entity
                 {
                     if (!HaveCustomName)
                     {
-                        Result = new("give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}");
+                        Result = new("give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.Text + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}");
                     }
                     else
                     {
-                        Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""Right Click To Run\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""newGrid\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.ComboBoxItemId + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}");
+                        Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""Right Click To Run\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""newGrid\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.Text + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}");
                     }
                 }
                 else
-                    Result = new("give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.ComboBoxItemId + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1");
+                    Result = new("give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.Text + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1");
             }
 
             if (SyncToFile && ExternFilePath.Length > 0 && File.Exists(ExternFilePath))

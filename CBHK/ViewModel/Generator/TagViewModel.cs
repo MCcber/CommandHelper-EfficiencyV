@@ -1,10 +1,11 @@
 ﻿using CBHK.CustomControl;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
+using CBHK.Model.Common;
 using CBHK.Model.Generator.Tag;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
-using CBHK.WindowDictionaries;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -21,12 +22,14 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Generator
 {
     public partial class TagViewModel : ObservableObject
     {
         #region Field
+        private MessagePopup messagePopup = new();
         ListView TagZone = null;
         SolidColorBrush LightOrangeBrush = new((Color)ColorConverter.ConvertFromString("#F0D08C"));
         private IContainerProvider container = null;
@@ -60,7 +63,7 @@ namespace CBHK.ViewModel.Generator
         /// 标签生成器的过滤类型数据源
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _typeItemSource = [];
+        private ObservableCollection<VectorTextComboBoxItem> _typeItemSource = [];
         /// <summary>
         /// 是否替换
         /// </summary>
@@ -75,12 +78,12 @@ namespace CBHK.ViewModel.Generator
         /// 版本列表
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionList = [new TextComboBoxItem() { Text = "1.20.4" }];
+        private ObservableCollection<VectorTextComboBoxItem> _versionList = [new VectorTextComboBoxItem() { Text = "1.20.4" }];
         /// <summary>
         /// 已选中版本
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedVersion = null;
+        private VectorTextComboBoxItem _selectedVersion = null;
         /// <summary>
         /// 当前选中的值成员
         /// </summary>
@@ -95,7 +98,7 @@ namespace CBHK.ViewModel.Generator
         /// 当前选中的类型成员
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedTypeItem = null;
+        private VectorTextComboBoxItem _selectedTypeItem = null;
         /// <summary>
         /// 全选
         /// </summary>
@@ -160,13 +163,13 @@ namespace CBHK.ViewModel.Generator
                     CurrentItem.Background = null;
                 if (CurrentItem.BeChecked.Value)
                 {
-                    if (CurrentItem.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
+                    if (CurrentItem.DataType == "itemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
                         Items.Add("\"minecraft:" + itemString + "\",");
                     else
                     if (CurrentItem.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
                         Entities.Add("\"minecraft:" + itemString + "\",");
                     else
-                    if (CurrentItem.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
+                    if (CurrentItem.DataType == "Block&itemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
                         Blocks.Add("\"minecraft:" + itemString + "\",");
                     else
                     if (CurrentItem.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
@@ -177,11 +180,11 @@ namespace CBHK.ViewModel.Generator
                 }
                 else
                 {
-                    if (CurrentItem.DataType == "ItemView" && Items.Contains("\"minecraft:" + itemString + "\","))
+                    if (CurrentItem.DataType == "itemView" && Items.Contains("\"minecraft:" + itemString + "\","))
                         Items.Remove("\"minecraft:" + itemString + "\",");
                     if (CurrentItem.DataType == "EntityView" && Entities.Contains("\"minecraft:" + itemString + "\","))
                         Entities.Remove("\"minecraft:" + itemString + "\",");
-                    if (CurrentItem.DataType == "Block&ItemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
+                    if (CurrentItem.DataType == "Block&itemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
                         Blocks.Remove("\"minecraft:" + itemString + "\",");
                     if (CurrentItem.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
                         Biomes.Remove("\"minecraft:" + itemString + "\",");
@@ -202,7 +205,7 @@ namespace CBHK.ViewModel.Generator
         {
             ObservableCollection<TagItemTemplate> items = TagItemList;
             TagViewModel context = this;
-            ExternalDataImportManager.ImportTagDataHandler(Clipboard.GetText(),ref items,ref context,false);
+            ExternalDataImportManager.ImportTagDataHandler(Clipboard.GetText(),ref items,ref context,messagePopup,false);
         }
 
         [RelayCommand]
@@ -224,7 +227,7 @@ namespace CBHK.ViewModel.Generator
                 Title = "请选择一个标签文件"
             };
             if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
-                ExternalDataImportManager.ImportTagDataHandler(dialog.FileName, ref items, ref context);
+                ExternalDataImportManager.ImportTagDataHandler(dialog.FileName, ref items, ref context,messagePopup);
         }
 
         /// <summary>
@@ -272,7 +275,7 @@ namespace CBHK.ViewModel.Generator
                 string[] Types = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\Data\TypeFilter.ini");
                 for (int i = 0; i < Types.Length; i++)
                 {
-                    TypeItemSource.Add(new TextComboBoxItem() { Text = Types[i] });
+                    TypeItemSource.Add(new VectorTextComboBoxItem() { Text = Types[i] });
                 }
             }
             #endregion
@@ -290,8 +293,8 @@ namespace CBHK.ViewModel.Generator
                 return [];
             })];
             int EntityIDCount = _dataService.GetEntityIDList().Count;
-            int BiomeIDCount = context.BiomeIDSet.Count();
-            int GameEventValueCount = context.GameEventTagSet.Count();
+            int BiomeIDCount = context.BiomeIDSet.Count;
+            int GameEventValueCount = context.GameEventTagSet.Count;
             List<string> IDOrValueList = [.. context.ItemSet.SelectMany(item =>
             {
                 if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
@@ -337,7 +340,7 @@ namespace CBHK.ViewModel.Generator
                 #region 物品
                 string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
 
-                Dictionary<string, string> ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+                Dictionary<string, string> ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap()
                 .SelectMany(pair => pair.Value)
                 .ToDictionary(
                     pair => pair.Key,
@@ -347,14 +350,14 @@ namespace CBHK.ViewModel.Generator
                 List<string> ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
                 ItemKeyList.Sort();
 
-                Parallel.For(0, context.ItemSet.Count(), i =>
+                Parallel.For(0, context.ItemSet.Count, i =>
                 {
-                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, currentPath + IDOrValueList[i], IDOrValueList[i], ItemIDAndNameMap[IDOrValueList[i]], BlockIDList.Contains(IDOrValueList[i]) ? "Block&ItemView" : "ItemView", false));
+                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, currentPath + IDOrValueList[i], IDOrValueList[i], ItemIDAndNameMap[IDOrValueList[i]], BlockIDList.Contains(IDOrValueList[i]) ? "Block&itemView" : "itemView", false));
                 });
                 #endregion
 
                 #region 实体
-                Dictionary<string, string> EntityIDAndNameMap = _dataService.EntityGroupByVersionDictionary
+                Dictionary<string, string> EntityIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap()
                 .SelectMany(pair => pair.Value)
                 .ToDictionary(
                     pair => pair.Key,
@@ -406,7 +409,7 @@ namespace CBHK.ViewModel.Generator
         /// 返回主页
         /// </summary>
         /// <param name="win"></param>
-        private void Return(CommonWindow win)
+        private void Return(Window win)
         {
             home.WindowState = WindowState.Normal;
             home.Show();
@@ -439,7 +442,14 @@ namespace CBHK.ViewModel.Generator
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
                 File.WriteAllText(saveFileDialog.FileName, result);
-                Message.PushMessage("标签生成成功！", MessageBoxImage.Information);
+                messagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "标签生成成功！",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "标签生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                });
                 //OpenFolderThenSelectFiles.ExplorerFile(saveFileDialog.FileName);
             }
         }
@@ -505,13 +515,13 @@ namespace CBHK.ViewModel.Generator
 
                         if (tagItemTemplate.BeChecked.Value)
                         {
-                            if (tagItemTemplate.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "itemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
                                 Items.Add("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
                                 Entities.Add("\"minecraft:" + itemString + "\",");
                             else
-                            if (tagItemTemplate.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "Block&itemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
                                 Blocks.Add("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
@@ -522,11 +532,11 @@ namespace CBHK.ViewModel.Generator
                         }
                         else
                         {
-                            if (tagItemTemplate.DataType == "ItemView" && Items.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "itemView" && Items.Contains("\"minecraft:" + itemString + "\","))
                                 Items.Remove("\"minecraft:" + itemString + "\",");
                             if (tagItemTemplate.DataType == "EntityView" && Entities.Contains("\"minecraft:" + itemString + "\","))
                                 Entities.Remove("\"minecraft:" + itemString + "\",");
-                            if (tagItemTemplate.DataType == "Block&ItemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "Block&itemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
                                 Blocks.Remove("\"minecraft:" + itemString + "\",");
                             if (tagItemTemplate.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
                                 Biomes.Remove("\"minecraft:" + itemString + "\",");
@@ -559,13 +569,13 @@ namespace CBHK.ViewModel.Generator
                             tagItemTemplate.Background = null;
                         if (tagItemTemplate.BeChecked.Value)
                         {
-                            if (tagItemTemplate.DataType == "ItemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "itemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
                                 Items.Add("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
                                 Entities.Add("\"minecraft:" + itemString + "\",");
                             else
-                            if (tagItemTemplate.DataType == "Block&ItemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
+                            if (tagItemTemplate.DataType == "Block&itemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
                                 Blocks.Add("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
@@ -576,13 +586,13 @@ namespace CBHK.ViewModel.Generator
                         }
                         else
                         {
-                            if (tagItemTemplate.DataType == "ItemView")
+                            if (tagItemTemplate.DataType == "itemView")
                                 Items.Remove("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "EntityView")
                                 Entities.Remove("\"minecraft:" + itemString + "\",");
                             else
-                            if (tagItemTemplate.DataType == "Block&ItemView")
+                            if (tagItemTemplate.DataType == "Block&itemView")
                                 Blocks.Remove("\"minecraft:" + itemString + "\",");
                             else
                             if (tagItemTemplate.DataType == "Biome")

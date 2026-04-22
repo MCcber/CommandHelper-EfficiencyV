@@ -1,4 +1,5 @@
 ﻿using CBHK.CustomControl;
+using CBHK.CustomControl.VectorButton;
 using CBHK.Utility.Common;
 using CBHK.ViewModel.Component.Spawner;
 using System.Windows;
@@ -23,22 +24,23 @@ namespace CBHK.View.Component.Spawner
                 if(!UseDefaultBlockLightValue.IsChecked.Value)
                 {
                     if (BlockLightValue.Visibility == Visibility.Visible)
-                        BlockLight = "block_light_limit:" + int.Parse(BlockLightValue.Value.ToString()) + ",";
+                        BlockLight = "block_light_limit:" + int.Parse(BlockLightValue.Text.ToString()) + ",";
                     else
                     {
-                        BlockLight = "block_light_limit:[" + int.Parse(BlockLightMinValue.Value.ToString()) + "," + int.Parse(BlockLightMaxValue.Value.ToString()) + "],";
+                        BlockLight = "block_light_limit:[" + int.Parse(BlockLightMinValue.Text.ToString()) + "," + int.Parse(BlockLightMaxValue.Text.ToString()) + "],";
                     }
                 }
                 #endregion
+
                 #region SkyLight
                 string SkyLight = "";
                 if(!UseDefaultSkyLightValue.IsChecked.Value)
                 {
                     if (SkyLightValue.Visibility == Visibility.Visible)
-                        SkyLight = "sky_light_limit:" + int.Parse(SkyLightValue.Value.ToString()) + ",";
+                        SkyLight = "sky_light_limit:" + int.Parse(SkyLightValue.Text.ToString()) + ",";
                     else
                     {
-                        SkyLight = "sky_light_limit:[" + int.Parse(SkyLightMinValue.Value.ToString()) + "," + int.Parse(SkyLightMaxValue.Value.ToString()) + "],";
+                        SkyLight = "sky_light_limit:[" + int.Parse(SkyLightMinValue.Text.ToString()) + "," + int.Parse(SkyLightMaxValue.Text.ToString()) + "],";
                     }
                 }
                 #endregion
@@ -46,7 +48,7 @@ namespace CBHK.View.Component.Spawner
                 string custom_spawn_rules = (BlockLight.Length + SkyLight.Length) > 0 ? "custom_spawn_rules:{" + (BlockLight + SkyLight).Trim(',')+ "}," : "";
                 string entityData = entity.Tag is not null ?"entity:"+entity.Tag.ToString():"";
                 string data = "data:{"+ (custom_spawn_rules + entityData).Trim(',') + "},";
-                result = "{weight:" + (int.Parse(weight.Value.ToString()) + "," + data).TrimEnd(',') + "}";
+                result = "{weight:" + (int.Parse(weight.Text.ToString()) + "," + data).TrimEnd(',') + "}";
                 return result;
             }
         }
@@ -64,7 +66,7 @@ namespace CBHK.View.Component.Spawner
         /// <param name="e"></param>
         private void BlockLight_Click(object sender, RoutedEventArgs e)
         {
-            RadiusToggleButtons radiusToggleButtons = sender as RadiusToggleButtons;
+            VectorToggleTextButton radiusToggleButtons = sender as VectorToggleTextButton;
             if(radiusToggleButtons.IsChecked.Value)
             {
                 BlockLightValue.Visibility = Visibility.Visible;
@@ -84,7 +86,7 @@ namespace CBHK.View.Component.Spawner
         /// <param name="e"></param>
         private void SkyLight_Click(object sender, RoutedEventArgs e)
         {
-            RadiusToggleButtons radiusToggleButtons = sender as RadiusToggleButtons;
+            VectorToggleTextButton radiusToggleButtons = sender as VectorToggleTextButton;
             if (radiusToggleButtons.IsChecked.Value)
             {
                 SkyLightValue.Visibility = Visibility.Visible;
@@ -104,7 +106,7 @@ namespace CBHK.View.Component.Spawner
         /// <param name="e"></param>
         private void IconTextButtons_Click(object sender, RoutedEventArgs e)
         {
-            IconTextButtons iconTextButtons = sender as IconTextButtons;
+            Button iconTextButtons = sender as Button;
             SpawnerPageViewModel context = iconTextButtons.FindParent<SpawnerPageView>().DataContext as SpawnerPageViewModel;
             context.SpawnPotentialList.Remove(this);
         }

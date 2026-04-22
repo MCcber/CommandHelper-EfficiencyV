@@ -1,8 +1,10 @@
 ﻿using CBHK.Common.Utility;
 using CBHK.Domain;
-using CBHK.Model;
+using CBHK.Model.Constant;
 using CBHK.Utility.Common;
+using CBHK.Utility.Visual;
 using CBHK.View;
+using DryIoc;
 using Microsoft.EntityFrameworkCore;
 using Prism.DryIoc;
 using Prism.Ioc;
@@ -13,6 +15,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
+using System.Windows.Media;
 
 namespace CBHK
 {
@@ -22,9 +25,8 @@ namespace CBHK
     public partial class App : PrismApplication
     {
         #region Field
-        private static string StartUpTimeString = "";
 
-        public static IServiceProvider ServiceProvider { get; private set; }
+        private static string StartUpTimeString = "";
 
 #pragma warning disable IDE0052
         private Mutex _mutex;
@@ -32,6 +34,7 @@ namespace CBHK
         #endregion
 
         #region Event
+
         /// <summary>
         /// 初始化数据与主窗体
         /// </summary>
@@ -64,6 +67,7 @@ namespace CBHK
 
             //订阅异常处理
             SetupExceptionHandling();
+
             base.OnStartup(e);
         }
 
@@ -77,8 +81,10 @@ namespace CBHK
                 return new CBHKDataContext(options);
             });
 
+            containerRegistry.RegisterSingleton<MainView>();
             containerRegistry.RegisterSingleton<DataService>();
             containerRegistry.RegisterSingleton<RegexService>();
+
         }
 
         protected override void ConfigureViewModelLocator()
@@ -90,7 +96,7 @@ namespace CBHK
             {
                 var viewName = viewType.FullName;
 
-                var viewModelName = viewName.Replace("CBHK.View", "CBHK.ViewModel") + "Model";
+                var viewModelName = viewName.Replace("view", "ViewModel").Replace("View", "ViewModel");
 
                 return Type.GetType(viewModelName);
             });

@@ -2,7 +2,9 @@
     x:Class="CBHK.View.Component.Recipe.CampfireView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VirtualizingWrapPanel="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -174,7 +176,7 @@
                 </CustomControl:IconTextButtons.ToolTip>
             </CustomControl:IconTextButtons>-->
         <!--
-            <ScrollViewer
+            <VectorScrollViewer
                 Grid.Row="2"
                 Grid.ColumnSpan="3"
                 HorizontalAlignment="Stretch"
@@ -186,8 +188,8 @@
                 <ListView
                     BorderThickness="0"
                     ItemsSource="{Binding Source={StaticResource MultiModeItemViewSource}}"
-                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                    ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    VectorScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    VectorScrollViewer.VerticalScrollBarVisibility="Auto">
                     <behaviors:Interaction.Triggers>
                         <behaviors:EventTrigger EventName="Loaded">
                             <behaviors:CallMethodAction MethodName="MultiMaterialViewer_Loaded" TargetObject="{Binding}" />
@@ -203,7 +205,7 @@
                         <ItemsPanelTemplate>
                             <VirtualizingWrapPanel:VirtualizingWrapPanel
                                 Background="#555956"
-                                ScrollViewer.CanContentScroll="True"
+                                VectorScrollViewer.CanContentScroll="True"
                                 VirtualizingPanel.CacheLength="200 200"
                                 VirtualizingPanel.CacheLengthUnit="Pixel"
                                 VirtualizingPanel.IsVirtualizing="True" />
@@ -231,54 +233,33 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-            </ScrollViewer>
+            </VectorScrollViewer>
         </Grid>-->
-        <CustomControl:RadiusToggleButtons
+        <VectorButton:VectorToggleIconTextButton
             Margin="5,20,0,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Command="{Binding SwitchMultipleModeCommand}"
             IsChecked="{Binding MultiSelect, Mode=TwoWay}"
-            SelectedToggleText="多选"
-            Style="{DynamicResource RadiusToggleButton}"
-            ToggleHeight="26"
-            ToggleWidth="46"
+            Style="{DynamicResource VectorToggleIconTextButtonStyle}"
+            Text="多选"
             ToolTipService.BetweenShowDelay="0"
-            ToolTipService.InitialShowDelay="0"
-            UnSelectedToggleText="单选">
-            <CustomControl:RadiusToggleButtons.ToolTip>
+            ToolTipService.InitialShowDelay="0">
+            <VectorButton:VectorToggleIconTextButton.ToolTip>
                 <ToolTip
                     Background="#484848"
                     Content="开启多选后，同一个槽中只需满足一个成员即可匹配"
                     Foreground="White" />
-            </CustomControl:RadiusToggleButtons.ToolTip>
-        </CustomControl:RadiusToggleButtons>
+            </VectorButton:VectorToggleIconTextButton.ToolTip>
+        </VectorButton:VectorToggleIconTextButton>
         <Grid HorizontalAlignment="Right" VerticalAlignment="Top">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="180" />
-            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="0"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Foreground="Black"
-                Text="组标识符">
-                <TextBlock.ToolTip>
-                    <ToolTip
-                        Background="#484848"
-                        Content="组标识符"
-                        Foreground="White" />
-                </TextBlock.ToolTip>
-            </TextBlock>
-            <TextBox
+            <Input:VectorTextBox
                 Grid.Row="0"
                 Grid.Column="1"
                 Height="25"
@@ -287,78 +268,66 @@
                 BorderBrush="Black"
                 BorderThickness="1"
                 Foreground="White"
-                Text="{Binding GroupName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBlock
-                Grid.Row="2"
-                Grid.Column="0"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Foreground="Black"
-                Text="经验" />
-            <Slider
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding GroupName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="组标识符" />
+            <Input:VectorNumbericUpDown
                 Grid.Row="2"
                 Grid.Column="1"
                 VerticalContentAlignment="Center"
                 BorderBrush="Black"
                 BorderThickness="1"
                 Foreground="White"
-                Maximum="2147483647"
-                Minimum="1"
-                Style="{DynamicResource NumberBoxStyle}"
-                Value="{Binding Experience, Mode=TwoWay}" />
-            <TextBlock
+                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                Text="{Binding Experience, Mode=TwoWay}"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="经验" />
+            <Input:VectorTextBox
                 Grid.Row="1"
-                Grid.Column="0"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Foreground="Black"
-                Text="文件名" />
-            <TextBox
-                Grid.Row="1"
-                Grid.Column="1"
                 Height="25"
                 VerticalContentAlignment="Center"
                 BorderBrush="Black"
                 BorderThickness="1"
                 Foreground="White"
-                Text="{Binding FileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBlock
-                Grid.Row="3"
-                Grid.Column="0"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Foreground="Black"
-                Text="烧制时间" />
-            <Slider
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding FileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="文件名" />
+            <Input:VectorNumbericUpDown
                 Grid.Row="3"
                 Grid.Column="1"
                 VerticalContentAlignment="Center"
                 BorderBrush="Black"
                 BorderThickness="1"
                 Foreground="White"
-                Maximum="2147483647"
-                Minimum="1"
-                Style="{DynamicResource NumberBoxStyle}"
-                Value="{Binding Cookingtime, Mode=TwoWay}" />
+                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                Text="{Binding Cookingtime, Mode=TwoWay}"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="烧制时间" />
         </Grid>
-        <CustomControl:IconTextButtons
+        <VectorButton:VectorFlatImageButton
             Width="25"
             Height="25"
             Margin="75,15,0,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
-            Background="{DynamicResource RightArrow}"
             Command="{Binding RunCommand}"
-            Style="{DynamicResource IconTextButton}"
+            Image="{DynamicResource RightArrow}"
+            Style="{DynamicResource VectorFlatImageButtonStyle}"
             ToolTipService.BetweenShowDelay="0"
             ToolTipService.InitialShowDelay="0">
-            <CustomControl:IconTextButtons.ToolTip>
+            <VectorButton:VectorFlatImageButton.ToolTip>
                 <ToolTip
                     Background="#484848"
                     Content="F5:运行"
                     Foreground="White" />
-            </CustomControl:IconTextButtons.ToolTip>
-        </CustomControl:IconTextButtons>
+            </VectorButton:VectorFlatImageButton.ToolTip>
+        </VectorButton:VectorFlatImageButton>
         <Image
             Width="120"
             Height="115"
@@ -471,25 +440,24 @@
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </TextBox>
-            <CustomControl:IconTextButtons
+            <VectorButton:VectorFlatImageButton
                 Grid.Row="0"
                 Grid.Column="2"
                 Width="25"
                 Height="25"
-                Background="{StaticResource CloseWhite}"
                 Command="{Binding UpdateAndCloseSlotGridCommand}"
-                PressedBackground="{StaticResource CloseWhiteHover}"
-                Style="{DynamicResource IconTextButton}"
+                Image="{StaticResource CloseWhite}"
+                Style="{DynamicResource VectorFlatImageButtonStyle}"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <CustomControl:IconTextButtons.ToolTip>
+                <VectorButton:VectorFlatImageButton.ToolTip>
                     <ToolTip
                         Background="#484848"
                         Content="关闭并更新多选数据"
                         Foreground="White" />
-                </CustomControl:IconTextButtons.ToolTip>
-            </CustomControl:IconTextButtons>
-            <ScrollViewer
+                </VectorButton:VectorFlatImageButton.ToolTip>
+            </VectorButton:VectorFlatImageButton>
+            <Container:VectorScrollViewer
                 Grid.Row="2"
                 Grid.ColumnSpan="3"
                 HorizontalAlignment="Stretch"
@@ -546,7 +514,7 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-            </ScrollViewer>
+            </Container:VectorScrollViewer>
         </Grid>
     </Grid>
 

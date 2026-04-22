@@ -1,4 +1,5 @@
-﻿namespace CBHK.View
+﻿
+namespace CBHK.View
 {
     /// <summary>
     /// DisplayerView.xaml 的交互逻辑

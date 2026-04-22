@@ -6,14 +6,15 @@ using System.Text.RegularExpressions;
 
 namespace CBHK.Utility.Modifier
 {
-    public class IntegerRangeModifier : IComponentModifier
+    public class IntegerRangeModifier(RegexService regexService) : IComponentModifier
     {
         #region Field
         private string range = string.Empty;
+        private RegexService RegexService = regexService;
         #endregion
 
         #region Property
-        public Enums.ModiferType ModiferType { get; set; } = Enums.ModiferType.Range;
+        public ModiferType ModiferType { get; set; } = ModiferType.Range;
         #endregion
 
         public void SetRawdata(string data)

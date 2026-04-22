@@ -1,6 +1,7 @@
 ﻿using CBHK.Common.Utility;
-using CBHK.CustomControl.JsonTreeViewComponents;
-using CBHK.Interface;
+using CBHK.CustomControl.JsonTreeViewComponent;
+using CBHK.Interface.Data;
+using CBHK.Interface.Utility;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
 using CBHK.ViewModel.Common;
@@ -11,7 +12,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
-using static CBHK.Model.Common.Enums;
 
 namespace CBHK.Utility.TreeViewComponentsHelper
 {
@@ -331,11 +331,11 @@ namespace CBHK.Utility.TreeViewComponentsHelper
             //当可以是多种数据类型时，采用当前选择的类型
             if(currentItemType is ItemType.MultiType)
             {
-                currentItemType = (ItemType)Enum.Parse(typeof(ItemType), compoundJsonTreeViewItem.SelectedValueType.Text);
+                currentItemType = (ItemType)System.Enum.Parse(typeof(ItemType), compoundJsonTreeViewItem.SelectedValueType.Text);
             }
             if(parentItemType is ItemType.MultiType && compoundJsonTreeViewItem.Parent is not null)
             {
-                parentItemType = (ItemType)Enum.Parse(typeof(ItemType), compoundJsonTreeViewItem.Parent.SelectedValueType.Text);
+                parentItemType = (ItemType)System.Enum.Parse(typeof(ItemType), compoundJsonTreeViewItem.Parent.SelectedValueType.Text);
             }
             bool currentIsList = currentItemType is ItemType.List ||currentItemType is ItemType.Array;
 

@@ -12,7 +12,7 @@ namespace CBHK.Utility.Common
         /// <param name="viewer">滚动视图</param>
         public static void Scroll(FrameworkElement target,ScrollViewer viewer)
         {
-            // 获取要定位之前 ScrollViewer 目前的滚动位置
+            // 获取要定位之前 VectorScrollViewer 目前的滚动位置
             var currentScrollPosition = viewer.VerticalOffset;
             var point = new Point(0, currentScrollPosition);
 

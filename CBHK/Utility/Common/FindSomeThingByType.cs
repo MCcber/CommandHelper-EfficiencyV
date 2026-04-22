@@ -11,7 +11,7 @@ namespace CBHK.Utility.Common
         /// <typeparam name="T"></typeparam>
         /// <param name="depObj"></param>
         /// <returns></returns>
-        public static T FindChild<T>(this DependencyObject depObj,string targetUid = "") where T : DependencyObject
+        public static T FindVisualChildByUID<T>(this DependencyObject depObj,string targetUid = "") where T : DependencyObject
         {
             if (depObj is null) return null;
 
@@ -19,8 +19,23 @@ namespace CBHK.Utility.Common
             {
                 var child = VisualTreeHelper.GetChild(depObj, i);
 
-                var result = child as T ?? child.FindChild<T>(targetUid);
+                var result = child as T ?? child.FindVisualChildByUID<T>(targetUid);
                 if (result is not null && (targetUid.Length == 0 || (result as FrameworkElement).Uid == targetUid)) return result;
+            }
+            return null;
+        }
+
+        public static T FindVisualChildByName<T>(DependencyObject parent, string name) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T result)
+                    return result;
+
+                var childResult = FindVisualChildByName<T>(child, name);
+                if (childResult != null)
+                    return childResult;
             }
             return null;
         }

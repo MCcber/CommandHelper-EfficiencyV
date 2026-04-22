@@ -1,6 +1,8 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.VectorComboBox;
+using CBHK.Interface.Visual;
+using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Spawner;
 using CBHK.ViewModel.Generator;
@@ -15,10 +17,12 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Spawner
 {
-    public partial class SpawnerPageViewModel(IContainerProvider container) : ObservableObject
+    public partial class SpawnerPageViewModel(IContainerProvider container) : ObservableObject, IPageViewModel
     {
         #region Field
         private IContainerProvider container = container;
@@ -51,9 +55,9 @@ namespace CBHK.ViewModel.Component.Spawner
         /// 选中版本以及版本数据源
         /// </summary>
         [ObservableProperty]
-        private TextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem _selectedVersion;
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionSource = [];
+        private ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
         /// <summary>
         /// 潜在实体数据源
         /// </summary>
@@ -96,6 +100,8 @@ namespace CBHK.ViewModel.Component.Spawner
 
         [ObservableProperty]
         private object _referenceEntityTag = null;
+
+        public MessagePopup MessagePopup { get; set; }
         #endregion
 
         #region  Event
@@ -252,7 +258,12 @@ namespace CBHK.ViewModel.Component.Spawner
             else
             {
                 Clipboard.SetText(Result.Trim(','));
-                Message.PushMessage("刷怪笼生成成功！", MessageBoxImage.Information);
+                MessagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "生成成功！",
+                    SubMessage = "刷怪笼生成器",
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\spawner.png", UriKind.RelativeOrAbsolute))
+                });
             }
             #endregion
         }

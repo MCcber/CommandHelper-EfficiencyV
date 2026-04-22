@@ -1,4 +1,5 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.TextElement;
 using CBHK.Utility.Common;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.ViewModel.Component.Datapack.EditPage;
@@ -180,7 +181,7 @@ namespace CBHK.ViewModel.Component.Datapack
                                 {
                                     DatapackTreeItem datapackHeaderItems = new();
                                     datapackHeaderItems.HeadText.Text = datapackPath[(datapackPath.LastIndexOf("\\") + 1)..];
-                                    RichTreeViewItems datapackItem = new()
+                                    VectorTreeViewItem datapackItem = new()
                                     {
                                         Margin = new Thickness(0, 2, 0, 2),
                                         Header = datapackHeaderItems,
@@ -190,7 +191,7 @@ namespace CBHK.ViewModel.Component.Datapack
                                     };
                                     //添加一个空节点当作展开的引子
                                     if (Directory.Exists(datapackPath) && Directory.GetFileSystemEntries(datapackPath).Length > 0)
-                                        datapackItem.Items.Add(new RichTreeViewItems());
+                                        datapackItem.Items.Add(new VectorTreeViewItem());
                                     datapackItem.Expanded += DatapackTreeItems_Expanded;
                                     if (Directory.Exists(datapackPath))
                                         folderResult.Add(datapackItem);
@@ -205,7 +206,7 @@ namespace CBHK.ViewModel.Component.Datapack
                     {
                         DatapackTreeItem datapackHeaderItems = new();
                         datapackHeaderItems.HeadText.Text = targetPath[(targetPath.LastIndexOf("\\") + 1)..];
-                        RichTreeViewItems datapackItem = new()
+                        VectorTreeViewItem datapackItem = new()
                         {
                             Margin = new Thickness(0, 2, 0, 2),
                             Header = datapackHeaderItems,
@@ -214,7 +215,7 @@ namespace CBHK.ViewModel.Component.Datapack
                         };
                         //添加一个空节点当作展开的引子
                         if (Directory.Exists(targetPath) && Directory.GetFileSystemEntries(targetPath).Length > 0)
-                            datapackItem.Items.Add(new RichTreeViewItems());
+                            datapackItem.Items.Add(new VectorTreeViewItem());
                         datapackItem.Expanded += DatapackTreeItems_Expanded;
                         if (Directory.Exists(targetPath))
                             folderResult.Add(datapackItem);
@@ -236,7 +237,7 @@ namespace CBHK.ViewModel.Component.Datapack
                             headerItems.Icon.Visibility = Visibility.Visible;
                             if (Directory.Exists(item))
                                 headerItems.Icon.Source = Application.Current.Resources["FolderClosed"] as ImageSource;
-                            RichTreeViewItems richTreeViewItems = new()
+                            VectorTreeViewItem richTreeViewItems = new()
                             {
                                 Margin = new Thickness(0, 2, 0, 2),
                                 Foreground = whiteBrush,
@@ -245,7 +246,7 @@ namespace CBHK.ViewModel.Component.Datapack
                             //添加一个空节点当作展开的引子
                             if (Directory.Exists(item) && Directory.GetFileSystemEntries(item).Length > 0)
                             {
-                                richTreeViewItems.Items.Add(new RichTreeViewItems());
+                                richTreeViewItems.Items.Add(new VectorTreeViewItem());
                                 richTreeViewItems.Expanded += DatapackTreeItems_Expanded;
                             }
                             if (Directory.Exists(item))
@@ -276,7 +277,7 @@ namespace CBHK.ViewModel.Component.Datapack
                             if (extersionIndex != -1)
                                 headerItems.Icon.Source = Application.Current.Resources[ReadableFileExtensionList[extersionIndex]] as ImageSource;
                         }
-                        RichTreeViewItems richTreeViewItems = new()
+                        VectorTreeViewItem richTreeViewItems = new()
                         {
                             Margin = new Thickness(0, 2, 0, 2),
                             Header = headerItems,

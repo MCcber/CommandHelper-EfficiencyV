@@ -1,8 +1,10 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
+using CBHK.Interface.Visual;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Recipe;
 using CBHK.ViewModel.Component.Recipe;
@@ -23,7 +25,6 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using static CBHK.Model.Common.Enums;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -68,7 +69,7 @@ namespace CBHK.ViewModel.Generator
 
         private CBHKDataContext context = null;
         private IContainerProvider container = null;
-        private DataService _dataService = null;
+        private DataService dataService = null;
 
         private IProgress<ItemStructure> AddOriginalItemProgress = null;
         private IProgress<(int, string, string, string)> SetOriginalItemProgress = null;
@@ -83,6 +84,7 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Property
+        public MessagePopup MessagePopup { get; set; }
         /// <summary>
         /// 原版物品库
         /// </summary>
@@ -115,29 +117,19 @@ namespace CBHK.ViewModel.Generator
         /// 配方标签页数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<RichTabItems> _recipeList = 
+        public ObservableCollection<VectorRichTabItem> _recipeList = 
             [ 
-                new RichTabItems()
+                new VectorRichTabItem()
                 {
-                    Header = "工作台",
-                    IsContentSaved = true,
-                    BorderThickness = new(4, 4, 4, 0),
-                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                    SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                    Title = "工作台",
                     Foreground = new SolidColorBrush(Colors.White),
-                    Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                    LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                    RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                    TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                    SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                    SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                    SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                    Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style
                 }
             ];
 
         #region 已选择的版本
-        private TextComboBoxItem selectedVersion;
-        public TextComboBoxItem SelectedVersion
+        private VectorTextComboBoxItem selectedVersion;
+        public VectorTextComboBoxItem SelectedVersion
         {
             get => selectedVersion;
             set
@@ -152,9 +144,9 @@ namespace CBHK.ViewModel.Generator
 
         #region 版本数据源
         [ObservableProperty]
-        private ObservableCollection<TextComboBoxItem> _versionSource =
+        private ObservableCollection<VectorTextComboBoxItem> _versionSource =
             [
-                new TextComboBoxItem()
+                new VectorTextComboBoxItem()
                 {
                     Text = "1.20.4"
                 }
@@ -164,11 +156,11 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public RecipeViewModel(IContainerProvider container,DataService dataService,MainView mainView,CBHKDataContext context)
+        public RecipeViewModel(IContainerProvider Container,DataService DataService,MainView mainView,CBHKDataContext Context)
         {
-            context = context;
-            container = container;
-            _dataService = dataService;
+            context = Context;
+            container = Container;
+            dataService = DataService;
 
             home = mainView;
 
@@ -190,7 +182,7 @@ namespace CBHK.ViewModel.Generator
                 CustomItemList[item.Item1].NBT = item.Item5;
             });
 
-            ItemIDAndNameMap = _dataService.ItemGroupByVersionDicionary
+            ItemIDAndNameMap = dataService.GetItemIDAndNameGroupByVersionMap()
             .Where(pair => pair.Key <= CurrentMinVersion)
             .SelectMany(pair => pair.Value)
             .ToDictionary(
@@ -199,6 +191,7 @@ namespace CBHK.ViewModel.Generator
             );
 
             List<string> HaveNoIImageList = [];
+
             foreach (var item in ItemIDAndNameMap)
             {
                 if (!File.Exists(ImageSetFolderPath + item.Key + ".png") && !File.Exists(ImageSetFolderPath + item.Key + "_spawn_egg.png"))
@@ -261,10 +254,10 @@ namespace CBHK.ViewModel.Generator
             ParallelOptions parallelOptions = new();
             await Parallel.ForAsync(0, itemFileList.Length, parallelOptions, (i, cancellationToken) =>
             {
-                if (File.Exists(ImageSetFolderPath + ItemKeyList[i] + ".png") || File.Exists(ImageSetFolderPath + ItemKeyList[i] + "_spawn_egg.png"))
-                {
-                    AddCustomItemProgress.Report(new ItemStructure());
-                }
+                //if (File.Exists(ImageSetFolderPath + ItemKeyList[i] + ".png") || File.Exists(ImageSetFolderPath + ItemKeyList[i] + "_spawn_egg.png"))
+                //{
+                //    AddCustomItemProgress.Report(new ItemStructure());
+                //}
                 return new ValueTask();
             });
 
@@ -289,34 +282,24 @@ namespace CBHK.ViewModel.Generator
                         imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
                     }
 
-                    if (imagePath.Length > 0)
+                    if (imagePath.Length > 0 && ItemIDAndNameMap.TryGetValue(currentKey,out string value))
                     {
-                        SetCustomItemProgress.Report(new ValueTuple<int, string, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath, nbt));
+                        SetCustomItemProgress.Report(new ValueTuple<int, string, string, string, string>(i, currentKey, value, imagePath, nbt));
                     }
                 }
             });
         }
 
         /// <summary>
-        /// 外部添加配方
+        /// 添加外部配方
         /// </summary>
         public object AddExternRecipe(RecipeType recipeType)
         {
             object result = "";
-            RichTabItems richTabItems = new()
+            VectorRichTabItem richTabItems = new()
             {
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Style = Application.Current.Resources["RichTabItemStyle"] as Style
             };
             RecipeList.Add(richTabItems);
             richTabItems.FindParent<TabControl>().SelectedItem = richTabItems;
@@ -371,6 +354,14 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Event
+        public void RecipeView_Loaded(object sender,RoutedEventArgs e)
+        {
+            if(MessagePopup is null && sender is Window window)
+            {
+                MessagePopup = new(window);
+            }
+        }
+
         /// <summary>
         /// 订阅原版物品库过滤事件
         /// </summary>
@@ -405,6 +396,10 @@ namespace CBHK.ViewModel.Generator
             }
         }
 
+        public void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+        }
+
         /// <summary>
         /// 搜索文本更新
         /// </summary>
@@ -431,49 +426,66 @@ namespace CBHK.ViewModel.Generator
         {
             MenuItem menu = obj.Parent as MenuItem;
             int index = menu.Items.IndexOf(obj);
-            RichTabItems richTabItems = new()
+            VectorRichTabItem vectorRichTabItem = new()
             {
-                Header = obj.Header,
-                IsContentSaved = true,
-                BorderThickness = new(4, 4, 4, 0),
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
-                SelectedBackground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CC6B23")),
+                Title = obj.Header.ToString(),
                 Foreground = new SolidColorBrush(Colors.White),
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                LeftBorderTexture = Application.Current.Resources["TabItemLeft"] as Brush,
-                RightBorderTexture = Application.Current.Resources["TabItemRight"] as Brush,
-                TopBorderTexture = Application.Current.Resources["TabItemTop"] as Brush,
-                SelectedLeftBorderTexture = Application.Current.Resources["SelectedTabItemLeft"] as Brush,
-                SelectedRightBorderTexture = Application.Current.Resources["SelectedTabItemRight"] as Brush,
-                SelectedTopBorderTexture = Application.Current.Resources["SelectedTabItemTop"] as Brush,
+                Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style
             };
-            RecipeList.Add(richTabItems);
-            richTabItems.FindParent<TabControl>().SelectedItem = richTabItems;
+            RecipeList.Add(vectorRichTabItem);
+            vectorRichTabItem.FindParent<TabControl>().SelectedItem = vectorRichTabItem;
 
+            UserControl subView = null;
             switch (index)
             {
                 default:
-                    richTabItems.Content = new CraftingTableView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        CraftingTableView craftingTableView = new() { FontWeight = FontWeights.Normal };
+                        subView = craftingTableView;
+                        break;
+                    }
                 case 1:
-                    richTabItems.Content = new FurnaceView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        FurnaceView furnaceView = new() { FontWeight = FontWeights.Normal };
+                        subView = furnaceView;
+                        break;
+                    }
                 case 2:
-                    richTabItems.Content = new SmokerView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        SmokerView smokerView = new() { FontWeight = FontWeights.Normal };
+                        subView = smokerView;
+                        break;
+                    }
                 case 3:
-                    richTabItems.Content = new BlastFurnaceView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        BlastFurnaceView blastFurnaceView = new() { FontWeight = FontWeights.Normal };
+                        subView = blastFurnaceView;
+                        break;
+                    }
                 case 4:
-                    richTabItems.Content = new CampfireView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        CampfireView campfireView = new() { FontWeight = FontWeights.Normal };
+                        subView = campfireView;
+                        break;
+                    }
                 case 5:
-                    richTabItems.Content = new SmithingTableView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        SmithingTableView smithingTableView = new() { FontWeight = FontWeights.Normal };
+                        subView = smithingTableView;
+                        break;
+                    }
                 case 6:
-                    richTabItems.Content = new StonecutterView() { FontWeight = FontWeights.Normal };
-                    break;
+                    {
+                        StonecutterView stonecutterView = new() { FontWeight = FontWeights.Normal };
+                        subView = stonecutterView;
+                        break;
+                    }
             }
+            if (subView is not null && subView.DataContext is IPageViewModel viewModel)
+            {
+                viewModel.MessagePopup = MessagePopup;
+            }
+            vectorRichTabItem.Content = subView;
         }
 
         [RelayCommand]
@@ -552,7 +564,7 @@ namespace CBHK.ViewModel.Generator
         private void ImportFromClipboard()
         {
             RecipeViewModel context = this;
-            ExternalDataImportManager.ImportRecipeDataHandler(Clipboard.GetText(), ref context,false);
+            ExternalDataImportManager.ImportRecipeDataHandler(Clipboard.GetText(), ref context,MessagePopup,false);
         }
 
         [RelayCommand]
@@ -573,7 +585,7 @@ namespace CBHK.ViewModel.Generator
             if (openFileDialog.ShowDialog().Value)
             {
                 RecipeViewModel context = this;
-                ExternalDataImportManager.ImportRecipeDataHandler(openFileDialog.FileName,ref context);
+                ExternalDataImportManager.ImportRecipeDataHandler(openFileDialog.FileName,ref context,MessagePopup);
             }
         }
 
@@ -674,7 +686,14 @@ namespace CBHK.ViewModel.Generator
                     }
                 }
                 //OpenFolderThenSelectFiles.ExplorerFile(selectedPath);
-                Message.PushMessage("配方全部生成成功！", MessageBoxImage.Information);
+                MessagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "配方全部生成成功！",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "配方生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                });
             }
         }
 
@@ -709,7 +728,7 @@ namespace CBHK.ViewModel.Generator
             TabControl tabControl = sender as TabControl;
 
             #region 原版物品库
-            originalItemViewer = (tabControl.Items[0] as TextTabItems).Content as ListView;
+            originalItemViewer = (tabControl.Items[0] as VectorTextTabItem).Content as ListView;
             originalItemViewer.DataContext = this;
             originalItemViewer.MouseMove += Bag_MouseMove;
             originalItemViewer.PreviewMouseLeftButtonDown += SelectItemClickDown;
@@ -717,7 +736,7 @@ namespace CBHK.ViewModel.Generator
             #endregion
 
             #region 自定义物品库
-            customItemViewer = (tabControl.Items[1] as TextTabItems).Content as ListView;
+            customItemViewer = (tabControl.Items[1] as VectorTextTabItem).Content as ListView;
             customItemViewer.DataContext = this;
             customItemViewer.MouseMove += Bag_MouseMove;
             customItemViewer.PreviewMouseLeftButtonDown += SelectItemClickDown;

@@ -1,5 +1,6 @@
 ﻿using CBHK.Common.Utility;
 using CBHK.CustomControl;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.View.Component.Datapack.TemplateSelectPage;
 using CBHK.View.Generator;
@@ -82,17 +83,17 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         /// 存放版本列表
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _versionList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _versionList = [];
         /// <summary>
         /// 存放模板类型列表
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _developerNameList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _developerNameList = [];
         /// <summary>
         /// 包功能类型列表
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TextComboBoxItem> _functionTypeList = [];
+        public ObservableCollection<VectorTextComboBoxItem> _functionTypeList = [];
 
         /// <summary>
         /// 清除过滤参数可见性
@@ -102,7 +103,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
 
         #region 存储已选择的版本
         [ObservableProperty]
-        private TextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem _selectedVersion;
 
         [ObservableProperty]
         private int _selectedVersionIndex = 0;
@@ -114,8 +115,8 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         #endregion
 
         #region 存储已选择的开发者名称
-        private TextComboBoxItem selectedDeveloperName;
-        public TextComboBoxItem SelectedDeveloperName
+        private VectorTextComboBoxItem selectedDeveloperName;
+        public VectorTextComboBoxItem SelectedDeveloperName
         {
             get => selectedDeveloperName;
             set
@@ -132,8 +133,8 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         #endregion
 
         #region 存储已选择的功能类型
-        private TextComboBoxItem selectedFunctionType;
-        public TextComboBoxItem SelectedFunctionType
+        private VectorTextComboBoxItem selectedFunctionType;
+        public VectorTextComboBoxItem SelectedFunctionType
         {
             get => selectedFunctionType;
             set
@@ -191,19 +192,19 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         {
             await Task.Run(() =>
             {
-                dataPack.Dispatcher.InvokeAsync(async () =>
+                dataPack.Dispatcher.InvokeAsync(() =>
                 {
-                    DatapackViewModel viewModel = dataPack.DataContext as DatapackViewModel;
-                    SolutionTemplateSource = viewModel.TemplateSelectPage.FindResource("SolutionTemplateSource") as CollectionViewSource;
+                    DatapackViewModel CBHK = dataPack.DataContext as DatapackViewModel;
+                    SolutionTemplateSource = CBHK.TemplateSelectPage.FindResource("SolutionTemplateSource") as CollectionViewSource;
 
                     #region 清除数据
                     VersionList.Clear();
                     SolutionTemplateList.Clear();
                     DeveloperNameList.Clear();
                     FunctionTypeList.Clear();
-                    VersionList.Add(new TextComboBoxItem() { Text = "全部" });
-                    DeveloperNameList.Add(new TextComboBoxItem() { Text = "全部" });
-                    FunctionTypeList.Add(new TextComboBoxItem() { Text = "全部" });
+                    VersionList.Add(new VectorTextComboBoxItem() { Text = "全部" });
+                    DeveloperNameList.Add(new VectorTextComboBoxItem() { Text = "全部" });
+                    FunctionTypeList.Add(new VectorTextComboBoxItem() { Text = "全部" });
                     #endregion
 
                     #region 载入版本
@@ -212,85 +213,88 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
                         List<string> versionList = [];
                         foreach (var item in versionList)
                         {
-                            VersionList.Add(new TextComboBoxItem() { Text = item });
+                            VersionList.Add(new VectorTextComboBoxItem() { Text = item });
                         }
                     }
                     #endregion
-                    
+
                     #region 载入解决方案模板
-                    string solutionTemplateContent = File.ReadAllText(TemplateDataFilePath);
-                    List<string> BlankSolutions = Directory.GetFiles(BlankSolutionFolder).ToList();
-                    BlankSolutions.Sort(new Utility.Common.SolutionNameComparer());
-                    for (int i = 0; i < BlankSolutions.Count; i++)
-                        SolutionTemplateArray.Add(BlankSolutions[i]);
-                    if (solutionTemplateContent.Length > 0)
-                        SolutionTemplateArray = JArray.Parse(solutionTemplateContent);
-                    if (SolutionTemplateArray is not null)
+                    if (Directory.Exists(BlankSolutionFolder))
                     {
-                        //读取空白解决方案
-                        foreach (var item in SolutionTemplateArray.Cast<JValue>())
+                        string solutionTemplateContent = File.ReadAllText(TemplateDataFilePath);
+                        List<string> BlankSolutions = Directory.GetFiles(BlankSolutionFolder).ToList();
+                        BlankSolutions.Sort(new Utility.Common.SolutionNameComparer());
+                        for (int i = 0; i < BlankSolutions.Count; i++)
+                            SolutionTemplateArray.Add(BlankSolutions[i]);
+                        if (solutionTemplateContent.Length > 0)
+                            SolutionTemplateArray = JArray.Parse(solutionTemplateContent);
+                        if (SolutionTemplateArray is not null)
                         {
-                            string path = item.ToString();
-                            JObject data = JObject.Parse(File.ReadAllText(path));
-                            string iconPath = Path.GetDirectoryName(path) + "\\" + Path.GetFileNameWithoutExtension(path) + ".png";
-                            if (File.Exists(path))
+                            //读取空白解决方案
+                            foreach (var item in SolutionTemplateArray.Cast<JValue>())
                             {
-                                SolutionTemplateItems solutionTemplateItems = new()
+                                string path = item.ToString();
+                                JObject data = JObject.Parse(File.ReadAllText(path));
+                                string iconPath = Path.GetDirectoryName(path) + "\\" + Path.GetFileNameWithoutExtension(path) + ".png";
+                                if (File.Exists(path))
                                 {
-                                    Margin = new Thickness(0, 0, -10, 10),
-                                    Uid = path
-                                };
-                                SolutionTemplateList.Add(solutionTemplateItems);
-                                if (File.Exists(iconPath))
-                                {
-                                    Uri iconUri = new(iconPath, UriKind.Absolute);
-                                    solutionTemplateItems.Icon.Source = new BitmapImage(iconUri);
-                                }
-                                if (data is not null)
-                                {
-                                    if (data.SelectToken("Name") is JToken name)
-                                        solutionTemplateItems.SolutionName.Text = name.ToString();
-                                    if (data.SelectToken("Description") is JToken description)
-                                        solutionTemplateItems.Description.Text = description.ToString();
-                                    string versionData = "";
-                                    if (data.SelectToken("Version") is JToken version)
-                                        versionData += "包版本-"+ version.ToString();
-                                    if (data.SelectToken("SolutionVersion") is JToken solutionVersion)
-                                        versionData += " 方案版本-" + solutionVersion.ToString();
-                                    solutionTemplateItems.Version.Text = versionData;
-                                    if (data.SelectToken("Developer") is JToken developer)
+                                    SolutionTemplateItems solutionTemplateItems = new()
                                     {
-                                        solutionTemplateItems.Developer.Text = developer.ToString();
-                                        if (!DeveloperNameList.Any(item => item.Text == developer.ToString()))
-                                            DeveloperNameList.Add(new TextComboBoxItem() { Text = developer.ToString() });
+                                        Margin = new Thickness(0, 0, -10, 10),
+                                        Uid = path
+                                    };
+                                    SolutionTemplateList.Add(solutionTemplateItems);
+                                    if (File.Exists(iconPath))
+                                    {
+                                        Uri iconUri = new(iconPath, UriKind.Absolute);
+                                        solutionTemplateItems.Icon.Source = new BitmapImage(iconUri);
                                     }
-                                    if (data.SelectToken("Type") is JToken type)
+                                    if (data is not null)
                                     {
-                                        if (!FunctionTypeList.Any(item=>item.Text == type.ToString()))
-                                            FunctionTypeList.Add(new TextComboBoxItem() { Text = type.ToString() });
-                                        TextBlock textBlock = new()
+                                        if (data.SelectToken("Name") is JToken name)
+                                            solutionTemplateItems.SolutionName.Text = name.ToString();
+                                        if (data.SelectToken("Description") is JToken description)
+                                            solutionTemplateItems.Description.Text = description.ToString();
+                                        string versionData = "";
+                                        if (data.SelectToken("Version") is JToken version)
+                                            versionData += "包版本-" + version.ToString();
+                                        if (data.SelectToken("SolutionVersion") is JToken solutionVersion)
+                                            versionData += " 方案版本-" + solutionVersion.ToString();
+                                        solutionTemplateItems.Version.Text = versionData;
+                                        if (data.SelectToken("Developer") is JToken developer)
                                         {
-                                            VerticalAlignment = VerticalAlignment.Center,
-                                            Text = type.ToString(),
-                                            Foreground = whiteBrush,
-                                            Padding = new Thickness(5, 2, 5, 2)
-                                        };
-                                        Border border = new()
+                                            solutionTemplateItems.Developer.Text = developer.ToString();
+                                            if (!DeveloperNameList.Any(item => item.Text == developer.ToString()))
+                                                DeveloperNameList.Add(new VectorTextComboBoxItem() { Text = developer.ToString() });
+                                        }
+                                        if (data.SelectToken("Type") is JToken type)
                                         {
-                                            Margin = new Thickness(0, 2, 0, 0),
-                                            CornerRadius = new CornerRadius(5),
-                                            HorizontalAlignment = HorizontalAlignment.Left,
-                                            BorderThickness = new Thickness(1),
-                                            BorderBrush = blackBrush,
-                                            Background = grayBrush,
-                                            Child = textBlock
-                                        };
-                                        solutionTemplateItems.TypePanel.Children.Add(border);
+                                            if (!FunctionTypeList.Any(item => item.Text == type.ToString()))
+                                                FunctionTypeList.Add(new VectorTextComboBoxItem() { Text = type.ToString() });
+                                            TextBlock textBlock = new()
+                                            {
+                                                VerticalAlignment = VerticalAlignment.Center,
+                                                Text = type.ToString(),
+                                                Foreground = whiteBrush,
+                                                Padding = new Thickness(5, 2, 5, 2)
+                                            };
+                                            Border border = new()
+                                            {
+                                                Margin = new Thickness(0, 2, 0, 0),
+                                                CornerRadius = new CornerRadius(5),
+                                                HorizontalAlignment = HorizontalAlignment.Left,
+                                                BorderThickness = new Thickness(1),
+                                                BorderBrush = blackBrush,
+                                                Background = grayBrush,
+                                                Child = textBlock
+                                            };
+                                            solutionTemplateItems.TypePanel.Children.Add(border);
+                                        }
                                     }
                                 }
                             }
+                            SelectedVersionIndex = SelectedDeveloperNameIndex = SelectedFunctionTypeIndex = 0;
                         }
-                        SelectedVersionIndex = SelectedDeveloperNameIndex = SelectedFunctionTypeIndex = 0;
                     }
                     #endregion
                     
@@ -365,7 +369,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
         private void TemplateLastStep(Page page)
         {
             DatapackViewModel context = dataPack.DataContext as DatapackViewModel;
-            NavigationService.GetNavigationService(context.Frame).Navigate(context.EditPage);
+            NavigationService.GetNavigationService(context.Frame).Navigate(context.HomePage);
         }
 
         [RelayCommand]

@@ -7,7 +7,7 @@ using System.Windows.Controls;
 
 namespace CBHK.CustomControl.MCDocument
 {
-    public class ColorButton : Button, IComponent
+    public class ColorButton : System.Windows.Controls.Button, IComponent
     {
         public IEventAggregator EventAggregator { get; set; }
 

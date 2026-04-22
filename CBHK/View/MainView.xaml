@@ -1,130 +1,77 @@
-﻿<localWindow:CommonWindow
+﻿<Container:VectorWindow
     x:Class="CBHK.View.MainView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Common="clr-namespace:CBHK.View.Common"
-    xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
-    xmlns:SkeletonScreen="clr-namespace:CBHK.CustomControl.SkeletonScreen"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:tb="http://www.hardcodet.net/taskbar"
-    Title="CommandHelper-EfficiencyV v1.20.4 Release1.0"
-    Width="910"
-    Height="652"
-    MinWidth="910"
-    MinHeight="652"
+    xmlns:utility="clr-namespace:CBHK.Utility.Visual"
+    Title="CommandHelper-EfficiencyV v1.20.5"
+    Width="1020"
+    Height="800"
+    MinWidth="1020"
+    MinHeight="800"
     prism:ViewModelLocator.AutoWireViewModel="True"
-    Background="#2F2F2F"
+    Background="Transparent"
+    FocusVisualStyle="{x:Null}"
+    Icon="/cb.ico"
+    IconMargin="5"
     RenderOptions.BitmapScalingMode="NearestNeighbor"
     RenderOptions.CachingHint="Cache"
-    ResizeMode="CanResizeWithGrip"
     ShowInTaskbar="{Binding ShowInTaskBar}"
     WindowStartupLocation="CenterScreen"
     WindowState="{Binding WindowState}"
     mc:Ignorable="d">
 
     <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="Activated">
+            <behaviors:InvokeCommandAction Command="{Binding MainWindowActivatedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}" />
+        </behaviors:EventTrigger>
         <behaviors:EventTrigger EventName="Loaded">
-            <behaviors:CallMethodAction MethodName="MainWindow_Loaded" TargetObject="{Binding}" />
+            <behaviors:InvokeCommandAction Command="{Binding MainWindowLoadedCommand}" />
         </behaviors:EventTrigger>
         <behaviors:EventTrigger EventName="Closing">
-            <behaviors:CallMethodAction MethodName="MainWindow_Closing" TargetObject="{Binding}" />
+            <behaviors:InvokeCommandAction Command="{Binding MainWindowClosingCommand}" />
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
 
-    <Window.Resources>
-        <ContextMenu
-            x:Key="SysTrayMenu"
-            BorderBrush="#424242"
-            BorderThickness="1">
-            <MenuItem
-                Background="#2F2F2F"
-                BorderBrush="Transparent"
-                BorderThickness="1"
-                Command="{Binding ExitApplicationCommand}"
-                Foreground="White"
-                Header="退出" />
-        </ContextMenu>
-
-        <VisualBrush
-            x:Key="BackgroundBrush"
-            AlignmentX="Center"
-            AlignmentY="Center"
-            Stretch="None">
-            <VisualBrush.Visual>
-                <Grid>
-                    <TextBlock
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Background="Transparent"
-                        FontSize="12"
-                        Foreground="#D6D6D6"
-                        Text="正以开发者模式运行"
-                        TextAlignment="Center" />
-                </Grid>
-            </VisualBrush.Visual>
-        </VisualBrush>
-
-    </Window.Resources>
-
     <Grid>
-        <tb:TaskbarIcon
-            ContextMenu="{StaticResource SysTrayMenu}"
-            DoubleClickCommand="{Binding ShowMainWindowCommand}"
-            DoubleClickCommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-            IconSource="pack://application:,,,/CBHK;component/cb.ico"
-            ToolTipText="命令管家"
-            Visibility="Collapsed">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:CallMethodAction MethodName="TaskBarIcon_Loaded" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger EventName="MouseLeftButtonUp">
-                    <behaviors:CallMethodAction MethodName="TaskbarIcon_MouseLeftButtonUp" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
-        </tb:TaskbarIcon>
-        <TabControl
+        <Container:VectorTabControl
+            Background="Transparent"
             BorderThickness="0"
             SelectedIndex="0"
-            Style="{DynamicResource TabControlWithScrollBar}"
+            Style="{DynamicResource VectorTabControlStyle}"
             TabStripPlacement="Left">
-            <CustomControl:IconTabItems
-                Width="45"
-                Height="45"
-                Background="#2F2F2F"
-                BorderThickness="0"
-                Selectedbackground="#595959"
-                Style="{DynamicResource IconTabItems}">
-                <TabItem.HeaderTemplate>
-                    <ItemContainerTemplate>
-                        <Image
-                            Width="35"
-                            Height="35"
-                            RenderOptions.BitmapScalingMode="NearestNeighbor"
-                            Source="/CBHK;component/Resource/CBHK/Image/IconHome.png" />
-                    </ItemContainerTemplate>
-                </TabItem.HeaderTemplate>
-                <Grid Background="#2F2F2F">
-                    <ScrollViewer
-                        Background="#2F2F2F"
+            <Container:VectorIconTextTabItem
+                HeaderImage="/CBHK;component/Resource/CBHK/Image/IconHome.png"
+                HeaderText="主页"
+                Style="{StaticResource VectorIconTextTabItemStyle}">
+                <Grid>
+                    <Container:VectorScrollViewer
                         HorizontalScrollBarVisibility="Auto"
+                        Style="{DynamicResource VectorScrollViewerStyle}"
                         VerticalScrollBarVisibility="Auto">
-                        <Grid Background="Transparent" Visibility="Collapsed">
+                        <Grid FocusVisualStyle="{x:Null}" Visibility="Collapsed">
                             <behaviors:Interaction.Triggers>
                                 <behaviors:EventTrigger EventName="Loaded">
-                                    <behaviors:CallMethodAction MethodName="GeneratorTable_Loaded" TargetObject="{Binding}" />
+                                    <behaviors:InvokeCommandAction Command="{Binding GeneratorTableLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
                                 </behaviors:EventTrigger>
                             </behaviors:Interaction.Triggers>
                         </Grid>
-                    </ScrollViewer>
+                    </Container:VectorScrollViewer>
                     <Grid
                         Margin="0,0,0,0"
                         Panel.ZIndex="1"
-                        Background="#2F2F2F"
+                        Background="Transparent"
+                        FocusVisualStyle="{x:Null}"
                         Visibility="Visible">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
@@ -143,591 +90,675 @@
                         </Grid.ColumnDefinitions>
                         <behaviors:Interaction.Triggers>
                             <behaviors:EventTrigger EventName="Loaded">
-                                <behaviors:CallMethodAction MethodName="SkeletonGrid_Loaded" TargetObject="{Binding}" />
+                                <behaviors:InvokeCommandAction Command="{Binding SkeletonGridLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
                             </behaviors:EventTrigger>
                         </behaviors:Interaction.Triggers>
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="0"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,5,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="0"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="0"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="0"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="1"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="1"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="1"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="1"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="2"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="2"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="2"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="2"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="3"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="3"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="3"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="3"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="4"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="4"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="4"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="4"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="5"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="5"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="5"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="5"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="6"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="6"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="6"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Blocks
+                        <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="6"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
                             HorizontalAlignment="Left" />
-                        <SkeletonScreen:Lines
+                        <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="3"
                             Width="120"
@@ -736,142 +767,28 @@
                             HorizontalAlignment="Left" />
                     </Grid>
                 </Grid>
-            </CustomControl:IconTabItems>
-            <CustomControl:IconTabItems
-                Width="45"
-                Height="45"
-                Background="#2F2F2F"
-                BorderThickness="0"
-                Selectedbackground="#595959"
-                Style="{DynamicResource IconTabItems}">
-                <TabItem.HeaderTemplate>
-                    <ItemContainerTemplate>
-                        <Image
-                            Width="35"
-                            Height="35"
-                            Source="/CBHK;component/Resource/CBHK/Image/IconTeach.png" />
-                    </ItemContainerTemplate>
-                </TabItem.HeaderTemplate>
+            </Container:VectorIconTextTabItem>
+            <Container:VectorIconTextTabItem
+                HeaderImage="/CBHK;component/Resource/CBHK/Image/IconTeach.png"
+                HeaderText="教程"
+                Style="{StaticResource VectorIconTextTabItemStyle}">
                 <Common:TutorialsView />
-            </CustomControl:IconTabItems>
-            <CustomControl:IconTabItems
-                Width="45"
-                Height="45"
-                Background="#2F2F2F"
-                BorderThickness="0"
-                Selectedbackground="#595959"
-                Style="{DynamicResource IconTabItems}">
-                <TabItem.HeaderTemplate>
-                    <ItemContainerTemplate>
-                        <Image
-                            Width="35"
-                            Height="35"
-                            Source="/CBHK;component/Resource/CBHK/Image/IconMore.png" />
-                    </ItemContainerTemplate>
-                </TabItem.HeaderTemplate>
+            </Container:VectorIconTextTabItem>
+            <Container:VectorIconTextTabItem
+                HeaderImage="/CBHK;component/Resource/CBHK/Image/IconMore.png"
+                HeaderText="更多"
+                Style="{StaticResource VectorIconTextTabItemStyle}">
                 <Common:MoreView />
-            </CustomControl:IconTabItems>
-            <CustomControl:IconTabItems
-                Width="45"
-                Height="45"
-                Background="#2F2F2F"
-                BorderThickness="0"
-                Selectedbackground="#595959"
-                Style="{DynamicResource IconTabItems}">
-                <TabItem.HeaderTemplate>
-                    <ItemContainerTemplate>
-                        <Image
-                            Width="35"
-                            Height="35"
-                            Source="/CBHK;component/Resource/CBHK/Image/IconSetting.png" />
-                    </ItemContainerTemplate>
-                </TabItem.HeaderTemplate>
+            </Container:VectorIconTextTabItem>
+            <Container:VectorIconTextTabItem
+                HeaderImage="/CBHK;component/Resource/CBHK/Image/IconSetting.png"
+                HeaderText="设置"
+                Style="{StaticResource VectorIconTextTabItemStyle}">
                 <Common:SettingsView />
-            </CustomControl:IconTabItems>
-            <CustomControl:IconTabItems
-                Width="45"
-                Height="45"
-                Background="#2F2F2F"
-                BorderThickness="0"
-                Selectedbackground="#595959"
-                Style="{DynamicResource IconTabItems}">
-                <TabItem.HeaderTemplate>
-                    <ItemContainerTemplate>
-                        <Image
-                            Width="35"
-                            Height="35"
-                            Source="/CBHK;component/Resource/CBHK/Image/IconUser.png" />
-                    </ItemContainerTemplate>
-                </TabItem.HeaderTemplate>
-                <Grid Margin="5">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="50" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="50" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Image
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        Panel.ZIndex="1"
-                        Cursor="Hand"
-                        RenderOptions.BitmapScalingMode="HighQuality"
-                        Source="{Binding UserHead}">
-                        <Image.Clip>
-                            <EllipseGeometry
-                                Center="25,25"
-                                RadiusX="30"
-                                RadiusY="30" />
-                        </Image.Clip>
-                    </Image>
-                    <Image
-                        Grid.Row="0"
-                        Grid.RowSpan="3"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="3"
-                        VerticalAlignment="Top"
-                        Panel.ZIndex="0"
-                        RenderOptions.BitmapScalingMode="HighQuality"
-                        Source="{Binding UserBackground}"
-                        Stretch="Uniform" />
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Margin="5,0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        FontSize="30"
-                        Foreground="White"
-                        Text="{Binding UserID}"
-                        TextAlignment="Left" />
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="2"
-                        Margin="10,0,0,0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        FontSize="30"
-                        Foreground="White"
-                        Text="{Binding UserName}" />
-                    <TextBlock
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="3"
-                        Margin="10,0,0,0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        FontSize="25"
-                        Foreground="White"
-                        Text="{Binding UserDescription}"
-                        TextTrimming="CharacterEllipsis" />
-                </Grid>
-            </CustomControl:IconTabItems>
-        </TabControl>
+            </Container:VectorIconTextTabItem>
+            <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItemStyle}">
+                <Container:TimelineToolContainer Style="{DynamicResource TimelineToolContainerStyle}" />
+            </Container:VectorIconTextTabItem>
+        </Container:VectorTabControl>
     </Grid>
-</localWindow:CommonWindow>
+</Container:VectorWindow>

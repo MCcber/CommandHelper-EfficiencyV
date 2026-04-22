@@ -1,4 +1,6 @@
-﻿namespace CBHK.View.Generator
+﻿using System.Windows;
+
+namespace CBHK.View.Generator
 {
     /// <summary>
     /// EntityView.xaml 的交互逻辑

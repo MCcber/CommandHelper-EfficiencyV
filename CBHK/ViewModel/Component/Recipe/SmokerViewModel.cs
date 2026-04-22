@@ -1,16 +1,15 @@
 ﻿using CBHK.Domain;
+using CBHK.Interface.Visual;
 using CBHK.Model.Common;
 using CBHK.Utility.Common;
-using CBHK.Utility.MessageTip;
+using CBHK.Utility.Visual.MessageTip;
 using CBHK.View.Component.Recipe;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,7 +21,7 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Recipe
 {
-    public partial class SmokerViewModel : ObservableObject
+    public partial class SmokerViewModel : ObservableObject, IPageViewModel
     {
         #region Field
         private CBHKDataContext context;
@@ -120,6 +119,8 @@ namespace CBHK.ViewModel.Component.Recipe
 
         [ObservableProperty]
         private Visibility _materialMultiItemVisibility = Visibility.Collapsed;
+
+        public MessagePopup MessagePopup { get; set; }
         #endregion
 
         #region Method
@@ -273,7 +274,14 @@ namespace CBHK.ViewModel.Component.Recipe
                 if (saveFileDialog.ShowDialog().Value)
                 {
                     _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
-                    Message.PushMessage("烟熏炉配方生成成功！", MessageBoxImage.Information);
+                    MessagePopup.PushMessage(new GeneratorMessage()
+                    {
+                        Message = "烟熏炉配方生成成功！",
+                        MessageBrush = Brushes.Red,
+                        SubMessage = "配方生成器",
+                        SubMessageBrush = Brushes.DarkGray,
+                        Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                    });
                     //OpenFolderThenSelectFiles.ExplorerFile(saveFileDialog.FileName);
                 }
             }

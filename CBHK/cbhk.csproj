@@ -51,24 +51,50 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Common\**" />
+    <Compile Remove="CustomControl\VectorTabItem\**" />
     <Compile Remove="Utility\Displayer\**" />
     <Compile Remove="Model\CustomControl\**" />
     <Compile Remove="纹理\**" />
     <EmbeddedResource Remove="Common\**" />
+    <EmbeddedResource Remove="CustomControl\VectorTabItem\**" />
     <EmbeddedResource Remove="Utility\Displayer\**" />
     <EmbeddedResource Remove="Model\CustomControl\**" />
     <EmbeddedResource Remove="纹理\**" />
     <None Remove="Common\**" />
+    <None Remove="CustomControl\VectorTabItem\**" />
     <None Remove="Utility\Displayer\**" />
     <None Remove="Model\CustomControl\**" />
     <None Remove="纹理\**" />
     <Page Remove="Common\**" />
+    <Page Remove="CustomControl\VectorTabItem\**" />
     <Page Remove="Utility\Displayer\**" />
     <Page Remove="Model\CustomControl\**" />
     <Page Remove="纹理\**" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="cb.ico" />
+    <Resource Include="Resource\CBHK\Image\Generator\advancement.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\armorstand.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\datapack.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\dimension.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\entity.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\firework.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\item.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\loottable.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\ooc.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\recipe.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\spawner.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\tag.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\villager.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\writtenbook.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\customWorld.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\damageType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\分类.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\sign.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\itemModifier.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\dimensionType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\chatType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\predicate.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command1.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command2.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command3.png" />
@@ -98,7 +124,6 @@
     </Resource>
     <Resource Include="Resource\CBHK\Image\eyeHide.png" />
     <Resource Include="Resource\CBHK\Image\eyeShow.png" />
-    <Resource Include="Resource\CBHK\Image\GeneratorButtonBackground.png" />
     <Resource Include="Resource\CBHK\Image\IconMore.png" />
     <Resource Include="Resource\CBHK\Image\IconSetting.png" />
     <Resource Include="Resource\CBHK\Image\IconTeach.png" />
@@ -106,12 +131,7 @@
     <Resource Include="Resource\CBHK\Image\Info.png">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resource\CBHK\Image\login.jpg" />
-    <Resource Include="Resource\CBHK\Image\LoginMinimize.png" />
-    <Resource Include="Resource\CBHK\Image\LoginText.png" />
-    <Resource Include="Resource\CBHK\Image\LoginX.png" />
     <Resource Include="Resource\CBHK\Image\More\github.png" />
-    <Resource Include="Resource\CBHK\Image\SignInBackground.png" />
     <Resource Include="Resource\Common\Fonts\MinecraftAE.ttf" />
   </ItemGroup>
   <ItemGroup>
@@ -155,15 +175,13 @@
   <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="CommunityToolkit.Mvvm">
-      <Version>8.4.0</Version>
-    </PackageReference>
-    <PackageReference Include="Hardcodet.NotifyIcon.Wpf">
-      <Version>2.0.1</Version>
+      <Version>8.4.1</Version>
     </PackageReference>
     <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.27.3" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.135</Version>
+      <Version>1.1.142</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.4</Version>
@@ -171,14 +189,12 @@
     <PackageReference Include="Prism.Core" Version="9.0.537" />
     <PackageReference Include="Prism.DryIoc" Version="9.0.537" />
     <PackageReference Include="Prism.Wpf" Version="9.0.537" />
-    <PackageReference Include="Serilog" Version="4.3.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="SharpNBT" Version="1.3.1" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
-    <PackageReference Include="Svg.Skia" Version="3.2.1" />
-    <PackageReference Include="System.Management" Version="9.0.10" />
-    <PackageReference Include="VirtualizingWrapPanel" Version="2.3.2" />
+    <PackageReference Include="VirtualizingWrapPanel" Version="2.5.1" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resource\CBHK\Image\empty.png" />
@@ -374,16 +390,6 @@
     <Resource Include="Resource\Common\Image\Issue.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resource\CBHK\Image\Bottom.png" />
-    <Resource Include="Resource\CBHK\Image\BottomLeft.png" />
-    <Resource Include="Resource\CBHK\Image\BottomRight.png" />
-    <Resource Include="Resource\CBHK\Image\Left.png" />
-    <Resource Include="Resource\CBHK\Image\Right.png" />
-    <Resource Include="Resource\CBHK\Image\Top.png" />
-    <Resource Include="Resource\CBHK\Image\TopLeft.png" />
-    <Resource Include="Resource\CBHK\Image\TopRight.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconDataPack.png" />
   </ItemGroup>
   <ItemGroup>
@@ -425,7 +431,6 @@
     <Resource Include="Resource\Common\Image\Datapack\editedIcon.png" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Utility\ScrollViewerHelper\ScrollToControlAction.cs" />
     <Compile Remove="Utility\TreeViewComponentsHelper\HeaderToJson.cs" />
     <Compile Remove="Utility\TreeViewComponentsHelper\ReturnTargetComponents.cs" />
     <Compile Remove="Utility\TreeViewComponentsHelper\TagToHeader.cs" />
@@ -440,6 +445,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="cb.ico" />
+    <None Remove="Resource\CBHK\Image\Generator\advancement.png" />
+    <None Remove="Resource\CBHK\Image\Generator\armorstand.png" />
+    <None Remove="Resource\CBHK\Image\Generator\datapack.png" />
+    <None Remove="Resource\CBHK\Image\Generator\dimension.png" />
+    <None Remove="Resource\CBHK\Image\Generator\entity.png" />
+    <None Remove="Resource\CBHK\Image\Generator\firework.png" />
+    <None Remove="Resource\CBHK\Image\Generator\item.png" />
+    <None Remove="Resource\CBHK\Image\Generator\loottable.png" />
+    <None Remove="Resource\CBHK\Image\Generator\ooc.png" />
+    <None Remove="Resource\CBHK\Image\Generator\recipe.png" />
+    <None Remove="Resource\CBHK\Image\Generator\spawner.png" />
+    <None Remove="Resource\CBHK\Image\Generator\tag.png" />
+    <None Remove="Resource\CBHK\Image\Generator\villager.png" />
+    <None Remove="Resource\CBHK\Image\Generator\writtenbook.png" />
+    <None Remove="Resource\CBHK\Image\Generator\分类.png" />
     <None Remove="Utility\jsonReader - v1.3.js" />
     <None Remove="Resource\CBHK\Image\Error.png" />
     <None Remove="Resource\CBHK\Image\eyeHide.png" />
@@ -522,9 +542,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Utility\ScrollViewerHelper\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CBHK.Common\CBHK.Common.csproj" />

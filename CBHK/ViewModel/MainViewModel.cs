@@ -1,12 +1,15 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.Common.Model;
+using CBHK.CustomControl.Container;
+using CBHK.CustomControl.VectorButton;
 using CBHK.Domain;
 using CBHK.Domain.Model.Database;
+using CBHK.Model.Constant;
 using CBHK.Utility;
+using CBHK.Utility.Visual;
 using CBHK.View.Common;
 using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Hardcodet.Wpf.TaskbarNotification;
 using Prism.Ioc;
 using System;
 using System.IO;
@@ -16,18 +19,20 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace CBHK.ViewModel
 {
-    public partial class MainViewModel(IContainerProvider container,CBHKDataContext context) : ObservableObject
+    public partial class MainViewModel(IContainerProvider container, CBHKDataContext context) : ObservableObject
     {
         #region Field
         private IContainerProvider container = container;
         private readonly CBHKDataContext context = context;
+        private bool isContextMenuCloseCommand = false;
         /// <summary>
         /// 主页可见性
         /// </summary>
-        public EnvironmentConfig _config = null;
+        public EnvironmentConfig config = null;
         private Grid SkeletonGrid = null;
         private Grid GeneratorTable = null;
         private IProgress<byte> SetGeneratorButtonProgress = null;
@@ -38,8 +43,6 @@ namespace CBHK.ViewModel
         #endregion
 
         #region Property
-        [ObservableProperty]
-        public TaskbarIcon _taskBarIcon = null;
         [ObservableProperty]
         public WindowState _windowState = WindowState.Normal;
         [ObservableProperty]
@@ -52,55 +55,61 @@ namespace CBHK.ViewModel
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        [RelayCommand]
+        private void MainWindowLoaded()
         {
+            #region 设置生成器按钮面板
             SetGeneratorButtonProgress = new Progress<byte>((state) =>
+    {
+        DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
+        string baseImagePath = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/";
+        int rowIndex = 0;
+        int columnIndex = 0;
+
+        GeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
+        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+
+        foreach (var data in context.GeneratorSet)
+        {
+            GeneratorVectorButton button = new()
             {
-                DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
-                string baseImagePath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                int rowIndex = 0;
-                int columnIndex = 0;
-
+                Style = Application.Current.Resources["GeneratorVectorButtonStyle"] as Style
+            };
+            string currentId = data.ID;
+            currentId = currentId[0].ToString().ToUpper() + currentId[1..];
+            string currentName = data.ZH;
+            string imagePath = baseImagePath + currentId + ".png";
+            Uri uri = new(imagePath, UriKind.Absolute);
+            if (Application.GetResourceStream(uri) is not null)
+            {
+                button.Icon = new BitmapImage(uri);
+            }
+            if (currentId is not null)
+            {
+                button.Title = currentName;
+            }
+            if (currentName is not null)
+            {
+                button.SubTitle = currentId;
+            }
+            IRelayCommand behavior = generatorFunction.GetGeneratorClickCommand(currentId);
+            button.Command = behavior;
+            GeneratorTable.Children.Add(button);
+            if (columnIndex > GeneratorTable.ColumnDefinitions.Count - 1)
+            {
                 GeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
-                GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-
-                foreach (var data in context.GeneratorSet)
-                {
-                    GeneratorButtons button = new()
-                    {
-                        Style = Application.Current.Resources["GeneratorButtons"] as Style,
-                        BorderThickness = new Thickness(0)
-                    };
-                    string currentId = data.ID;
-                    currentId = currentId[0].ToString().ToUpper() + currentId[1..];
-                    string currentName = data.ZH;
-                    string imagePath = baseImagePath + currentId + ".png";
-                    BitmapImage bitmapImage = new(new Uri("pack://application:,,,/CBHK;component/Resource/CBHK/Image/GeneratorButtonBackground.png", UriKind.RelativeOrAbsolute));
-                    if (bitmapImage is not null)
-                        button.Background = new ImageBrush(bitmapImage);
-                    if (File.Exists(imagePath))
-                        button.Icon = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
-                    if (currentId is not null)
-                        button.Title = currentName;
-                    if (currentName is not null)
-                        button.SubTitle = currentId;
-                    IRelayCommand behavior = GeneratorClickEvent.Set(currentId, generatorFunction);
-                    button.Command = behavior;
-                    GeneratorTable.Children.Add(button);
-                    if (columnIndex > GeneratorTable.ColumnDefinitions.Count - 1)
-                    {
-                        GeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
-                        columnIndex = 0;
-                        rowIndex++;
-                    }
-                    Grid.SetColumn(button, columnIndex);
-                    Grid.SetRow(button, rowIndex);
-                    columnIndex++;
-                }
-            });
+                columnIndex = 0;
+                rowIndex++;
+            }
+            Grid.SetColumn(button, columnIndex);
+            Grid.SetRow(button, rowIndex);
+            columnIndex++;
+        }
+    }); 
+            #endregion
 
             InitUIDataProgress = new Progress<byte>((number) =>
             {
@@ -124,91 +133,86 @@ namespace CBHK.ViewModel
                 }
                 #endregion
 
-                StopSkeletonScreen(Task.CompletedTask);
+                StopSkeletonScreen();
             });
 
-            _config = context.EnvironmentConfigSet.FirstOrDefault();
             ReadDataSource();
         }
 
-        public void GeneratorTable_Loaded(object sender, RoutedEventArgs e) => GeneratorTable = sender as Grid;
+        [RelayCommand]
+        private void MainWindowClosing() => context.SaveChanges();
 
-        public void SkeletonGrid_Loaded(object sender, RoutedEventArgs e) => SkeletonGrid = sender as Grid;
-
-        public void TaskBarIcon_Loaded(object sender, RoutedEventArgs e)
+        [RelayCommand]
+        private void MainWindowActivated(object sender)
         {
-            TaskBarIcon = sender as TaskbarIcon;
-            TaskBarIcon.Visibility = Visibility.Visible;
-        }
-
-        /// <summary>
-        /// 主窗体关闭事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            e.Cancel = bool.Parse(_config.CloseToTray);
-            await context.SaveChangesAsync();
-            if (e.Cancel)
-            {
-                WindowState = WindowState.Minimized;
-                ShowInTaskBar = false;
-            }
-            else
-            {
-                WindowState = WindowState.Minimized;
-                TaskBarIcon.Dispose();
-                Environment.Exit(0);
-            }
+            var window = sender as VectorWindow;
+            config = context.EnvironmentConfigSet.FirstOrDefault();
+            window.ThemeType = (WindowThemeType)Enum.Parse(typeof(WindowThemeType), config.ThemeType);
+            window.VisualType = (WindowVisualType)Enum.Parse(typeof(WindowVisualType), config.VisualType);
+            window.CornerPreference = (WindowCornerPreference)Enum.Parse(typeof(WindowCornerPreference), config.CornerPreferenceType);
         }
 
         [RelayCommand]
-        /// <summary>
-        /// 显示管家
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ShowMainWindow(object sender)
-        {
-            Window window = sender as Window;
-            window.ShowInTaskbar = true;
-            window.WindowState = WindowState.Normal;
-            window.Show();
-            window.Focus();
-        }
+        private void GeneratorTableLoaded(object sender) => GeneratorTable = sender as Grid;
 
-        /// <summary>
-        /// 关闭管家
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         [RelayCommand]
-        public void ExitApplication()
+        private void SkeletonGridLoaded(object sender)
         {
-            TaskBarIcon.Dispose();
-            Environment.Exit(0);
+            SkeletonGrid = sender as Grid;
+            InitSkeletonScreen();
         }
         #endregion
 
         #region Method
         /// <summary>
+        /// 初始化骨架屏画刷
+        /// </summary>
+        private void InitSkeletonScreen()
+        {
+            if (Application.Current.Resources[Theme.CommonBackground] is SolidColorBrush commonBackgroundBrush)
+            {
+                Color darken = ColorTool.Darken(commonBackgroundBrush.Color, 0.4f);
+                Color SkeletonLighterColor = ColorTool.Lighten(commonBackgroundBrush.Color, 0.4f);
+                Color SkeletonDarkerColor = darken;
+
+                if (SkeletonGrid is not null)
+                {
+                    for (int i = 0; i < SkeletonGrid.Children.Count; i++)
+                    {
+                        if (SkeletonGrid.Children[i] is Rectangle rectangle)
+                        {
+                            if (SkeletonGrid.Children[i].Uid == "SkeletonBlock")
+                            {
+                                rectangle.ApplyBreathAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
+                            }
+                            else
+                            if (SkeletonGrid.Children[i].Uid == "SkeletonLine")
+                            {
+                                rectangle.ApplySweepAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 骨架屏持续时间
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void StopSkeletonScreen(Task task)
+        private void StopSkeletonScreen()
         {
             SkeletonGrid.Visibility = Visibility.Collapsed;
             GeneratorTable.Visibility = Visibility.Visible;
-            if (bool.TryParse(_config.ShowNotice,out bool showNotice) && showNotice)
+            if (bool.TryParse(config.ShowNotice, out bool showNotice) && showNotice)
             {
                 NoticeToUsersView noticeToUsers = container.Resolve<NoticeToUsersView>();
                 noticeToUsers.Topmost = true;
                 NoticeToUsersViewModel notichViewModel = noticeToUsers.DataContext as NoticeToUsersViewModel;
                 if (noticeToUsers.ShowDialog().Value)
                 {
-                    _config.ShowNotice = (!notichViewModel.DonotShowNextTime).ToString();
+                    config.ShowNotice = (!notichViewModel.DonotShowNextTime).ToString();
                 }
             }
         }
@@ -216,12 +220,7 @@ namespace CBHK.ViewModel
         /// <summary>
         /// 读取启动器配置
         /// </summary>
-        private void ReadDataSource()
-        {
-            _config = context.EnvironmentConfigSet.FirstOrDefault();
-
-            InitUIDataProgress.Report(0);
-        }
+        private void ReadDataSource() => InitUIDataProgress.Report(0);
         #endregion
     }
 }

@@ -1,10 +1,10 @@
-﻿<localWindow:CommonWindow
+﻿<Container:VectorWindow
     x:Class="CBHK.View.DisplayerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:localWindow="clr-namespace:CBHK.WindowDictionaries"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="生成结果"
@@ -14,6 +14,7 @@
     MinHeight="560"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
+    IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
@@ -26,18 +27,18 @@
     </behaviors:Interaction.Triggers>
 
     <Grid>
-        <TabControl
+        <Container:VectorTabControl
             Background="Transparent"
             BorderBrush="#3D3D3D"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             ScrollViewer.VerticalScrollBarVisibility="Auto"
-            Style="{DynamicResource TabControlWithScrollBar}">
+            Style="{DynamicResource VectorTabControlStyle}">
             <behaviors:Interaction.Triggers>
                 <behaviors:EventTrigger EventName="Loaded">
                     <behaviors:CallMethodAction MethodName="ResultTabControl_Loaded" TargetObject="{Binding}" />
                 </behaviors:EventTrigger>
             </behaviors:Interaction.Triggers>
-        </TabControl>
+        </Container:VectorTabControl>
     </Grid>
 
-</localWindow:CommonWindow>
+</Container:VectorWindow>
