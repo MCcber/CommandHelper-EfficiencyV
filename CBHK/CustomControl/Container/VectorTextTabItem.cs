@@ -76,8 +76,8 @@ namespace CBHK.CustomControl.Container
         {
             if (ThemeBackground is SolidColorBrush themeBrush)
             {
-                UnSelectedBackground = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
-                SelectedBackground = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
+                UnSelectedBackground = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.4f));
+                SelectedBackground = new SolidColorBrush(themeBrush.Color);
                 UpdateSelectedColor();
             }
         }

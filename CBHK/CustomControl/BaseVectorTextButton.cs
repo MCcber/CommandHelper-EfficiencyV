@@ -11,12 +11,11 @@ namespace CBHK.CustomControl
     public class BaseVectorTextButton : Button
     {
         #region Field
-        private Brush OriginLeftTopBrush;
-        private Brush OriginRightBottomBrush;
-        private Brush OriginBorderCornerBrush;
+        protected Brush OriginBackground;
         #endregion
 
         #region Property
+        public bool IsManualBackground { get; set; }
         /// <summary>
         /// 背景颜色渐变率
         /// </summary>
@@ -40,12 +39,11 @@ namespace CBHK.CustomControl
         public BaseVectorTextButton()
         {
             SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
-            Loaded += BaseVectorTextButton_Loaded;
         }
 
         public virtual void UpdateBorderColorByBackgroundColor()
         {
-            if (ThemeBackground is SolidColorBrush solidColorBrush)
+            if (ThemeBackground is SolidColorBrush solidColorBrush && !IsManualBackground)
             {
                 Background = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, ModifyRate, ModifyMode));
             }
@@ -53,9 +51,6 @@ namespace CBHK.CustomControl
         #endregion
 
         #region Event
-        private void BaseVectorTextButton_Loaded(object sender, RoutedEventArgs e)
-        {
-        }
 
         protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
         {

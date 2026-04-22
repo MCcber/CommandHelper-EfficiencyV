@@ -3,7 +3,9 @@ using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorButton;
 using CBHK.Domain;
 using CBHK.Domain.Model.Database;
+using CBHK.Model.Constant;
 using CBHK.Utility;
+using CBHK.Utility.Visual;
 using CBHK.View.Common;
 using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -15,11 +17,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace CBHK.ViewModel
 {
-    public partial class MainViewModel(IContainerProvider container,CBHKDataContext context) : ObservableObject
+    public partial class MainViewModel(IContainerProvider container, CBHKDataContext context) : ObservableObject
     {
         #region Field
         private IContainerProvider container = container;
@@ -54,56 +58,58 @@ namespace CBHK.ViewModel
         [RelayCommand]
         private void MainWindowLoaded()
         {
+            #region 设置生成器按钮面板
             SetGeneratorButtonProgress = new Progress<byte>((state) =>
+    {
+        DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
+        string baseImagePath = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/";
+        int rowIndex = 0;
+        int columnIndex = 0;
+
+        GeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
+        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+
+        foreach (var data in context.GeneratorSet)
+        {
+            GeneratorVectorButton button = new()
             {
-                DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
-                string baseImagePath = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/";
-                int rowIndex = 0;
-                int columnIndex = 0;
-
+                Style = Application.Current.Resources["GeneratorVectorButtonStyle"] as Style
+            };
+            string currentId = data.ID;
+            currentId = currentId[0].ToString().ToUpper() + currentId[1..];
+            string currentName = data.ZH;
+            string imagePath = baseImagePath + currentId + ".png";
+            Uri uri = new(imagePath, UriKind.Absolute);
+            if (Application.GetResourceStream(uri) is not null)
+            {
+                button.Icon = new BitmapImage(uri);
+            }
+            if (currentId is not null)
+            {
+                button.Title = currentName;
+            }
+            if (currentName is not null)
+            {
+                button.SubTitle = currentId;
+            }
+            IRelayCommand behavior = generatorFunction.GetGeneratorClickCommand(currentId);
+            button.Command = behavior;
+            GeneratorTable.Children.Add(button);
+            if (columnIndex > GeneratorTable.ColumnDefinitions.Count - 1)
+            {
                 GeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
-                GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-
-                foreach (var data in context.GeneratorSet)
-                {
-                    GeneratorVectorButton button = new()
-                    {
-                        Style = Application.Current.Resources["GeneratorVectorButtonStyle"] as Style
-                    };
-                    string currentId = data.ID;
-                    currentId = currentId[0].ToString().ToUpper() + currentId[1..];
-                    string currentName = data.ZH;
-                    string imagePath = baseImagePath + currentId + ".png";
-                    Uri uri = new(imagePath, UriKind.Absolute);
-                    if (Application.GetResourceStream(uri) is not null)
-                    {
-                        button.Icon = new BitmapImage(uri);
-                    }
-                    if (currentId is not null)
-                    {
-                        button.Title = currentName;
-                    }
-                    if (currentName is not null)
-                    {
-                        button.SubTitle = currentId;
-                    }
-                    IRelayCommand behavior = generatorFunction.GetGeneratorClickCommand(currentId);
-                    button.Command = behavior;
-                    GeneratorTable.Children.Add(button);
-                    if (columnIndex > GeneratorTable.ColumnDefinitions.Count - 1)
-                    {
-                        GeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
-                        columnIndex = 0;
-                        rowIndex++;
-                    }
-                    Grid.SetColumn(button, columnIndex);
-                    Grid.SetRow(button, rowIndex);
-                    columnIndex++;
-                }
-            });
+                columnIndex = 0;
+                rowIndex++;
+            }
+            Grid.SetColumn(button, columnIndex);
+            Grid.SetRow(button, rowIndex);
+            columnIndex++;
+        }
+    }); 
+            #endregion
 
             InitUIDataProgress = new Progress<byte>((number) =>
             {
@@ -127,7 +133,7 @@ namespace CBHK.ViewModel
                 }
                 #endregion
 
-                StopSkeletonScreen(Task.CompletedTask);
+                StopSkeletonScreen();
             });
 
             ReadDataSource();
@@ -150,17 +156,52 @@ namespace CBHK.ViewModel
         private void GeneratorTableLoaded(object sender) => GeneratorTable = sender as Grid;
 
         [RelayCommand]
-        private void SkeletonGridLoaded(object sender) => SkeletonGrid = sender as Grid;
+        private void SkeletonGridLoaded(object sender)
+        {
+            SkeletonGrid = sender as Grid;
+            InitSkeletonScreen();
+        }
         #endregion
 
         #region Method
+        /// <summary>
+        /// 初始化骨架屏画刷
+        /// </summary>
+        private void InitSkeletonScreen()
+        {
+            if (Application.Current.Resources[Theme.CommonBackground] is SolidColorBrush commonBackgroundBrush)
+            {
+                Color darken = ColorTool.Darken(commonBackgroundBrush.Color, 0.4f);
+                Color SkeletonLighterColor = ColorTool.Lighten(commonBackgroundBrush.Color, 0.4f);
+                Color SkeletonDarkerColor = darken;
+
+                if (SkeletonGrid is not null)
+                {
+                    for (int i = 0; i < SkeletonGrid.Children.Count; i++)
+                    {
+                        if (SkeletonGrid.Children[i] is Rectangle rectangle)
+                        {
+                            if (SkeletonGrid.Children[i].Uid == "SkeletonBlock")
+                            {
+                                rectangle.ApplyBreathAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
+                            }
+                            else
+                            if (SkeletonGrid.Children[i].Uid == "SkeletonLine")
+                            {
+                                rectangle.ApplySweepAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 骨架屏持续时间
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void StopSkeletonScreen(Task task)
+        private void StopSkeletonScreen()
         {
             SkeletonGrid.Visibility = Visibility.Collapsed;
             GeneratorTable.Visibility = Visibility.Visible;

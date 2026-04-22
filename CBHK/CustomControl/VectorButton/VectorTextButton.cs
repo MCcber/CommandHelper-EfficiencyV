@@ -8,11 +8,14 @@ namespace CBHK.CustomControl.VectorButton
 {
     public class VectorTextButton : BaseVectorTextButton
     {
+        #region Field
+        private Thickness OriginMargin;
+        private Brush OriginRoundBorderBrush;
+        private Brush OriginBorderCornerBrush;
+        #endregion
+
         #region Property
         public double OriginBottomHeight { get; set; }
-        private Thickness OriginMargin { get; set; }
-        private Brush OriginRoundBorderBrush { get; set; }
-        private Brush OriginBorderCornerBrush { get; set; }
 
         public string Text
         {
@@ -63,8 +66,11 @@ namespace CBHK.CustomControl.VectorButton
         #region Method
         public VectorTextButton()
         {
-            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
-            SetResourceReference(ForegroundProperty, Theme.CommonForeground);
+            if (!IsManualBackground)
+            {
+                SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+                SetResourceReference(ForegroundProperty, Theme.CommonForeground);
+            }
 
             MouseEnter += VectorTextButton_MouseEnter;
             MouseLeave += VectorTextButton_MouseLeave;
@@ -75,12 +81,14 @@ namespace CBHK.CustomControl.VectorButton
         public override void UpdateBorderColorByBackgroundColor()
         {
             base.UpdateBorderColorByBackgroundColor();
-
-            if (ThemeBackground is SolidColorBrush themeBrush)
+            OriginBackground = Background;
+            SolidColorBrush targetBrush = !IsManualBackground ? ThemeBackground as SolidColorBrush : Background as SolidColorBrush;
+            if (targetBrush is not null)
             {
-                BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.4f));
-                RoundBorderBrush = OriginRoundBorderBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.2f));
-                BottomBorderBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.5f));
+                Foreground = new SolidColorBrush(ColorTool.GetOptimalForeground(targetBrush.Color));
+                BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(targetBrush.Color, 0.4f));
+                RoundBorderBrush = OriginRoundBorderBrush = new SolidColorBrush(ColorTool.Lighten(targetBrush.Color, 0.2f));
+                BottomBorderBrush = new SolidColorBrush(ColorTool.Darken(targetBrush.Color, 0.5f));
             }
         }
         #endregion
@@ -116,9 +124,13 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorTextButton_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (ThemeBackground is SolidColorBrush solidColorBrush)
+            if (ThemeBackground is SolidColorBrush solidColorBrush && !IsManualBackground)
             {
                 Background = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color, 0.4f));
+            }
+            if (OriginBackground is SolidColorBrush originBackground)
+            {
+                Background = new SolidColorBrush(ColorTool.Darken(originBackground.Color, 0.4f));
             }
             if (GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
             {
@@ -129,9 +141,13 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorTextButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            if (ThemeBackground is SolidColorBrush solidColorBrush)
+            if (ThemeBackground is SolidColorBrush solidColorBrush && !IsManualBackground)
             {
                 Background = new SolidColorBrush(solidColorBrush.Color);
+            }
+            else
+            {
+                Background = OriginBackground;
             }
             if (GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
             {
@@ -144,9 +160,14 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorTextButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            if (ThemeBackground is SolidColorBrush solidColorBrush)
+            if (ThemeBackground is SolidColorBrush solidColorBrush && !IsManualBackground)
             {
                 Background = new SolidColorBrush(ColorTool.Darken(solidColorBrush.Color, 0.2f));
+            }
+            else
+            if (OriginBackground is SolidColorBrush originBackground)
+            {
+                Background = new SolidColorBrush(ColorTool.Darken(originBackground.Color, 0.2f));
             }
             if (GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
             {

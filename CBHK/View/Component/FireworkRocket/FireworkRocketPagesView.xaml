@@ -355,28 +355,22 @@
                         Grid.Row="3"
                         Grid.ColumnSpan="2"
                         HorizontalAlignment="Stretch"
-                        Background="#D0D1D4"
                         Style="{DynamicResource VectorNumbericUpDownStyle}"
                         Text="{Binding Duration, Mode=TwoWay}"
-                        WaterMarkerBrush="Gray"
                         WaterMarkerMargin="5 0 0 0"
                         WaterMarkerText="飞行时长" />
                     <Input:VectorNumbericUpDown
                         Grid.Row="4"
                         Grid.ColumnSpan="2"
-                        Background="#D0D1D4"
                         Style="{DynamicResource VectorNumbericUpDownStyle}"
                         Text="{Binding Life, Mode=TwoWay}"
-                        WaterMarkerBrush="Gray"
                         WaterMarkerMargin="5 0 0 0"
                         WaterMarkerText="生命值" />
                     <Input:VectorNumbericUpDown
                         Grid.Row="5"
                         Grid.ColumnSpan="2"
-                        Background="#D0D1D4"
                         Style="{DynamicResource VectorNumbericUpDownStyle}"
                         Text="{Binding LifeTime, Mode=TwoWay}"
-                        WaterMarkerBrush="Gray"
                         WaterMarkerMargin="5 0 0 0"
                         WaterMarkerText="生存时长" />
                 </Grid>

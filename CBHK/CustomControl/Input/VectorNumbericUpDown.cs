@@ -78,8 +78,6 @@ namespace CBHK.CustomControl.Input
         {
             SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
             Loaded += VectorNumbericUpDown_Loaded;
-            WaterMarkerBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D6D6D6"));
-            LocateLineBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#242425"));
         }
 
         public void UpdateBorderColorByBackgroundColor()

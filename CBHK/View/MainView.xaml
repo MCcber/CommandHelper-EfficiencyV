@@ -13,6 +13,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:tb="http://www.hardcodet.net/taskbar"
+    xmlns:utility="clr-namespace:CBHK.Utility.Visual"
     Title="CommandHelper-EfficiencyV v1.20.5"
     Width="1020"
     Height="800"
@@ -69,7 +70,7 @@
                     <Grid
                         Margin="0,0,0,0"
                         Panel.ZIndex="1"
-                        Background="#2F2F2F"
+                        Background="Transparent"
                         FocusVisualStyle="{x:Null}"
                         Visibility="Visible">
                         <Grid.RowDefinitions>
@@ -93,677 +94,677 @@
                             </behaviors:EventTrigger>
                         </behaviors:Interaction.Triggers>
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="0"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,5,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="0"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="0"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="0"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="0"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="1"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="1"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="1"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="1"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="1"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="2"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="2"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="2"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="2"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="2"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="3"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="3"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="3"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="3"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="3"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="4"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="4"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="4"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="4"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="4"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="5"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="5"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="5"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="5"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="5"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="6"
                             Grid.Column="0"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="0"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="0"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="6"
                             Grid.Column="1"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="1"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="1"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="6"
                             Grid.Column="2"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="2"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="2"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonBlock"
                             Grid.Row="6"
                             Grid.Column="3"
                             Width="55"
                             Height="55"
                             Margin="2,0,0,10"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonBlockStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="3"
                             Width="120"
                             Height="30"
                             Margin="65,0,5,35"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                         <Rectangle
+                            Uid="SkeletonLine"
                             Grid.Row="6"
                             Grid.Column="3"
                             Width="120"
                             Height="15"
                             Margin="65,20,0,0"
-                            HorizontalAlignment="Left"
-                            Style="{DynamicResource SkeletonLineStyle}" />
+                            HorizontalAlignment="Left" />
                     </Grid>
                 </Grid>
             </Container:VectorIconTextTabItem>

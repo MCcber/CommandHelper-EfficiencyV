@@ -11,6 +11,7 @@ namespace CBHK.CustomControl.Container
         #region Field
         private Brush OriginLeftTopBrush;
         private Brush OriginRightBottomBrush;
+        private Brush OriginForeground;
         #endregion
 
         #region Property
@@ -76,13 +77,26 @@ namespace CBHK.CustomControl.Container
 
         public static readonly DependencyProperty RightBottomBorderBrushProperty =
             DependencyProperty.Register("RightBottomBorderBrush", typeof(Brush), typeof(VectorIconTextTabItem), new PropertyMetadata(default(Brush)));
+
+        public Brush SelectedForeground
+        {
+            get { return (Brush)GetValue(SelectedForegroundProperty); }
+            set { SetValue(SelectedForegroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty SelectedForegroundProperty =
+            DependencyProperty.Register(nameof(SelectedForeground), typeof(Brush), typeof(VectorIconTextTabItem), new PropertyMetadata(default(Brush)));
         #endregion
 
         #region Method
         public VectorIconTextTabItem()
         {
             SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
-            SetResourceReference(ForegroundProperty, Theme.CommonForeground);
+            Foreground = Application.Current.Resources[Theme.CommonForeground] as Brush;
+            if (Foreground is SolidColorBrush foreground)
+            {
+                OriginForeground = new SolidColorBrush(foreground.Color);
+            }
             Loaded += VectorIconTextTabItem_Loaded;
             Unloaded += VectorIconTextTabItem_Unloaded;
             MouseEnter += VectorIconTextTabItem_MouseEnter;
@@ -97,6 +111,17 @@ namespace CBHK.CustomControl.Container
                 SelectedMarkerBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.6f));
                 LeftTopBorderBrush = OriginLeftTopBrush = new SolidColorBrush(ColorTool.Lighten(themeBrush.Color, 0.4f));
                 RightBottomBorderBrush = OriginRightBottomBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.4f));
+
+                if (RightBottomBorderBrush is SolidColorBrush rightBottomBorderBrush)
+                {
+                    SelectedForeground = new SolidColorBrush(ColorTool.GetOptimalForeground(rightBottomBorderBrush.Color));
+                }
+                if (IsSelected && SelectedForeground is SolidColorBrush selectedForeground)
+                {
+                    Foreground = new SolidColorBrush(selectedForeground.Color);
+                }
+
+                Parent_SelectionChanged(this, null);
             }
         }
 
@@ -153,6 +178,10 @@ namespace CBHK.CustomControl.Container
         {
             if (IsSelected)
             {
+                if (SelectedForeground is SolidColorBrush selectedForeground)
+                {
+                    Foreground = new SolidColorBrush(selectedForeground.Color);
+                }
                 if(OriginLeftTopBrush is SolidColorBrush originLeftTopBrush)
                 {
                     RightBottomBorderBrush = new SolidColorBrush(originLeftTopBrush.Color);
@@ -166,6 +195,10 @@ namespace CBHK.CustomControl.Container
             }
             else
             {
+                if(OriginForeground is not null)
+                {
+                    Foreground = OriginForeground;
+                }
                 SelectedMarkerVisibility = Visibility.Hidden;
                 LeftTopBorderBrush = OriginLeftTopBrush;
                 RightBottomBorderBrush = OriginRightBottomBrush;

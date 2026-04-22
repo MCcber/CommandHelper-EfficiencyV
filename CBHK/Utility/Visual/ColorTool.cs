@@ -198,5 +198,50 @@ namespace CBHK.Utility.Visual
             if (t < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
             return p;
         }
+
+        private static double GetLuminance(Color color)
+        {
+            double[] c = [color.R / 255.0, color.G / 255.0, color.B / 255.0];
+            for (int i = 0; i < 3; i++)
+            {
+                c[i] = c[i] <= 0.03928 ? c[i] / 12.92 : Math.Pow((c[i] + 0.055) / 1.055, 2.4);
+            }
+            return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+        }
+
+        private static double GetContrastRatio(Color color1, Color color2)
+        {
+            double lum1 = GetLuminance(color1);
+            double lum2 = GetLuminance(color2);
+            double lighter = Math.Max(lum1, lum2);
+            double darker = Math.Min(lum1, lum2);
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+
+        /// <summary>
+        /// 将前景色与背景色混合（假设背景为白色）
+        /// </summary>
+        private static Color BlendWithWhite(Color color)
+        {
+            if (color.A == 255) return color;
+
+            double alpha = color.A / 255.0;
+            // 混合公式：混合后 = 前景 * Alpha + 背景 * (1 - Alpha)
+            byte r = (byte)(color.R * alpha + 255 * (1 - alpha));
+            byte g = (byte)(color.G * alpha + 255 * (1 - alpha));
+            byte b = (byte)(color.B * alpha + 255 * (1 - alpha));
+            return Color.FromRgb(r, g, b);
+        }
+
+        public static Color GetOptimalForeground(Color backgroundColor)
+        {
+            // 关键修复：将半透明颜色混合到白色背景上
+            Color solidColor = BlendWithWhite(backgroundColor);
+
+            double contrastWithWhite = GetContrastRatio(solidColor, Colors.White);
+            double contrastWithBlack = GetContrastRatio(solidColor, Colors.Black);
+
+            return contrastWithWhite > contrastWithBlack ? Colors.White : Colors.Black;
+        }
     }
 }

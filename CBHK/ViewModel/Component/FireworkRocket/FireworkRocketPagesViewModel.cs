@@ -4,6 +4,7 @@ using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Interface.Visual;
 using CBHK.Model.Common;
+using CBHK.Utility.Visual;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.FireworkRocket;
@@ -640,15 +641,10 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                     {
                         backgroundBrush = existBrush as SolidColorBrush;
                     }
-                    SolidColorBrush foregroundBrush = Brushes.Black;
-                    if(colorName == "Black")
-                    {
-                        foregroundBrush = Brushes.White;
-                    }
 
                     VectorTextButton button = new()
                     {
-                        Foreground = foregroundBrush,
+                        IsManualBackground = true,
                         Background = backgroundBrush,
                         SnapsToDevicePixels = true,
                         Height = 40,

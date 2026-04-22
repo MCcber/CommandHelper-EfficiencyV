@@ -13,15 +13,14 @@
                     <ControlTemplate TargetType="{x:Type Input:VectorNumbericUpDown}">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="*" />
+                                <RowDefinition MinHeight="40" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="3*" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <Input:VectorTextBox
-                                Grid.RowSpan="2"
                                 Grid.Column="0"
                                 Padding="2,0,0,0"
                                 HorizontalContentAlignment="Left"
@@ -51,29 +50,28 @@
                                 </behaviors:Interaction.Triggers>
                             </Input:VectorTextBox>
                             <VectorButton:VectorIconRepeatButton
-                                Grid.Row="0"
                                 Grid.Column="1"
                                 Background="{TemplateBinding Background}"
-                                IconAngle="180"
-                                IconBrush="Black"
-                                OriginBottomHeight="3"
-                                Style="{DynamicResource VectorIconRepeatButtonStyle}">
-                                <behaviors:Interaction.Triggers>
-                                    <behaviors:EventTrigger EventName="Click">
-                                        <behaviors:CallMethodAction MethodName="OnIncrease_Click" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />
-                                    </behaviors:EventTrigger>
-                                </behaviors:Interaction.Triggers>
-                            </VectorButton:VectorIconRepeatButton>
-                            <VectorButton:VectorIconRepeatButton
-                                Grid.Row="1"
-                                Grid.Column="1"
-                                Background="{TemplateBinding Background}"
-                                IconBrush="Black"
+                                IconAngle="90"
+                                IconBrush="{DynamicResource CommonForeground}"
                                 OriginBottomHeight="3"
                                 Style="{DynamicResource VectorIconRepeatButtonStyle}">
                                 <behaviors:Interaction.Triggers>
                                     <behaviors:EventTrigger EventName="Click">
                                         <behaviors:CallMethodAction MethodName="OnDecrease_Click" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                                    </behaviors:EventTrigger>
+                                </behaviors:Interaction.Triggers>
+                            </VectorButton:VectorIconRepeatButton>
+                            <VectorButton:VectorIconRepeatButton
+                                Grid.Column="2"
+                                Background="{TemplateBinding Background}"
+                                IconAngle="-90"
+                                IconBrush="{DynamicResource CommonForeground}"
+                                OriginBottomHeight="3"
+                                Style="{DynamicResource VectorIconRepeatButtonStyle}">
+                                <behaviors:Interaction.Triggers>
+                                    <behaviors:EventTrigger EventName="Click">
+                                        <behaviors:CallMethodAction MethodName="OnIncrease_Click" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" />
                                     </behaviors:EventTrigger>
                                 </behaviors:Interaction.Triggers>
                             </VectorButton:VectorIconRepeatButton>

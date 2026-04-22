@@ -1,6 +1,8 @@
 ﻿using CBHK.Common.Utility;
 using CBHK.Domain;
+using CBHK.Model.Constant;
 using CBHK.Utility.Common;
+using CBHK.Utility.Visual;
 using CBHK.View;
 using DryIoc;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
+using System.Windows.Media;
 
 namespace CBHK
 {
@@ -31,6 +34,7 @@ namespace CBHK
         #endregion
 
         #region Event
+
         /// <summary>
         /// 初始化数据与主窗体
         /// </summary>
@@ -63,6 +67,7 @@ namespace CBHK
 
             //订阅异常处理
             SetupExceptionHandling();
+
             base.OnStartup(e);
         }
 

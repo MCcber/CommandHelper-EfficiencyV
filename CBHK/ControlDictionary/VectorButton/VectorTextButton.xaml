@@ -77,7 +77,6 @@
                                 FontFamily="{TemplateBinding FontFamily}"
                                 FontStyle="{TemplateBinding FontStyle}"
                                 FontWeight="{TemplateBinding FontWeight}"
-                                Foreground="{DynamicResource CommonForeground}"
                                 IsHitTestVisible="False"
                                 Text="{TemplateBinding Text}"
                                 TextAlignment="Center"
