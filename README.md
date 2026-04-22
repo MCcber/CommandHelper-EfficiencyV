@@ -12,10 +12,10 @@ This is a software for the Windows platform that is about to be developed. The c
 - 这是本应用的主页，这里陈列着团队和生成器的所有信息
 
 - https://s41.ax1x.com/2026/04/22/pe2z7Yq.png
-https://s41.ax1x.com/2026/04/22/pe2zITs.png
-https://s41.ax1x.com/2026/04/22/pe2z5wj.png
-https://s41.ax1x.com/2026/04/22/pe2z4mQ.png
-https://s41.ax1x.com/2026/04/22/pe2zW6S.png
-https://s41.ax1x.com/2026/04/22/pe2zcfP.png
-https://s41.ax1x.com/2026/04/22/pe2zaQO.png
-https://s41.ax1x.com/2026/04/22/pe2zYJx.png
+- https://s41.ax1x.com/2026/04/22/pe2zITs.png
+- https://s41.ax1x.com/2026/04/22/pe2z5wj.png
+- https://s41.ax1x.com/2026/04/22/pe2z4mQ.png
+- https://s41.ax1x.com/2026/04/22/pe2zW6S.png
+- https://s41.ax1x.com/2026/04/22/pe2zcfP.png
+- https://s41.ax1x.com/2026/04/22/pe2zaQO.png
+- https://s41.ax1x.com/2026/04/22/pe2zYJx.png
