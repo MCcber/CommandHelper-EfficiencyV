@@ -5,17 +5,14 @@
 
 This is a software for the Windows platform that is about to be developed. The core function is to help Minecraft Java Edition players solve the efficiency problems encountered when developing the related functions of the original version. Below is some screenshot of the homepage and functions.
 
----https://github.com/MCcber/CommandHelper-EfficiencyV/tree/main
-
-![Home](https://github.com/MCcber/CommandHelper-EfficiencyV/assets/45808036/dda6f413-7930-45ba-ad67-7090e48362cd)
+[![主页](https://s41.ax1x.com/2026/04/22/pe2zYJx.png)](https://imgchr.com/i/pe2zYJx)
 
 - 这是本应用的主页，这里陈列着团队和生成器的所有信息
 
-https://imgchr.com/i/pe2z7Yq
-https://imgchr.com/i/pe2zITs
-https://imgchr.com/i/pe2z5wj
-https://imgchr.com/i/pe2z4mQ
-https://imgchr.com/i/pe2zW6S
-https://imgchr.com/i/pe2zcfP
-https://imgchr.com/i/pe2zaQO
-https://imgchr.com/i/pe2zYJx
+[![Villager](https://s41.ax1x.com/2026/04/22/pe2z7Yq.png)](https://imgchr.com/i/pe2z7Yq)
+[![Signer](https://s41.ax1x.com/2026/04/22/pe2zITs.png)](https://imgchr.com/i/pe2zITs)
+[![Recipe](https://s41.ax1x.com/2026/04/22/pe2z5wj.png)](https://imgchr.com/i/pe2z5wj)
+[![OOC](https://s41.ax1x.com/2026/04/22/pe2z4mQ.png)](https://imgchr.com/i/pe2z4mQ)
+[![FireworkRocket](https://s41.ax1x.com/2026/04/22/pe2zW6S.png)](https://imgchr.com/i/pe2zW6S)
+[![Datapack](https://s41.ax1x.com/2026/04/22/pe2zcfP.png)](https://imgchr.com/i/pe2zcfP)
+[![ArmorStand](https://s41.ax1x.com/2026/04/22/pe2zaQO.png)](https://imgchr.com/i/pe2zaQO)
