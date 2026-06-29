@@ -5,31 +5,14 @@
 
 This is a software for the Windows platform that is about to be developed. The core function is to help Minecraft Java Edition players solve the efficiency problems encountered when developing the related functions of the original version. Below is some screenshot of the homepage and functions.
 
----
-
-![Home](https://github.com/MCcber/CommandHelper-EfficiencyV/assets/45808036/dda6f413-7930-45ba-ad67-7090e48362cd)
+[![主页](https://s41.ax1x.com/2026/04/22/pe2zYJx.png)](https://imgchr.com/i/pe2zYJx)
 
 - 这是本应用的主页，这里陈列着团队和生成器的所有信息
 
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdnQrq.png)
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdnMMn.png)
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdmjUO.png)
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdmo8J.png)
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdmIC4.png)
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdm45F.png)
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdmhUU.png)
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdmfET.png)
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdmRbV.png)
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdm2D0.png)
-
-![enter image description here](https://s1.ax1x.com/2023/08/29/pPdmguq.png)
+[![Villager](https://s41.ax1x.com/2026/04/22/pe2z7Yq.png)](https://imgchr.com/i/pe2z7Yq)
+[![Signer](https://s41.ax1x.com/2026/04/22/pe2zITs.png)](https://imgchr.com/i/pe2zITs)
+[![Recipe](https://s41.ax1x.com/2026/04/22/pe2z5wj.png)](https://imgchr.com/i/pe2z5wj)
+[![OOC](https://s41.ax1x.com/2026/04/22/pe2z4mQ.png)](https://imgchr.com/i/pe2z4mQ)
+[![FireworkRocket](https://s41.ax1x.com/2026/04/22/pe2zW6S.png)](https://imgchr.com/i/pe2zW6S)
+[![Datapack](https://s41.ax1x.com/2026/04/22/pe2zcfP.png)](https://imgchr.com/i/pe2zcfP)
+[![ArmorStand](https://s41.ax1x.com/2026/04/22/pe2zaQO.png)](https://imgchr.com/i/pe2zaQO)
