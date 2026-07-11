@@ -9,7 +9,7 @@
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:model="clr-namespace:CBHK.Common.Model;assembly=CBHK.Common"
+    xmlns:model="clr-namespace:CBHK.Model.Data"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:utility="clr-namespace:CBHK.Utility.Common"
     d:DesignHeight="450"

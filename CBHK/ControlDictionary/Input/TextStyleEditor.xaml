@@ -5,12 +5,10 @@
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:model="clr-namespace:CBHK.Model.Common"
+    xmlns:model="clr-namespace:CBHK.Model.Data"
     xmlns:system="clr-namespace:System;assembly=mscorlib"
     xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
     xmlns:visualUtility="clr-namespace:CBHK.Utility.Visual">
-
-    <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
     <CollectionViewSource x:Key="TextStyleEditorBoxItemView" Source="{Binding DataList, IsAsync=True}" />
 

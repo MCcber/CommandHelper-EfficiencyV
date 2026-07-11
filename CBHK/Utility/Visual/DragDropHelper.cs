@@ -20,7 +20,7 @@ namespace CBHK.Utility.Visual
         public static void StartDrag(UIElement source, object data,double height = 35)
         {
             targetWindow = Window.GetWindow(source);
-            if (targetWindow == null)
+            if (targetWindow == null || data is null)
             {
                 return;
             }

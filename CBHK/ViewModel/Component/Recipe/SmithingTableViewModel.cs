@@ -1,6 +1,6 @@
 ﻿using CBHK.Domain;
 using CBHK.Interface.Visual;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Visual.MessageTip;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;

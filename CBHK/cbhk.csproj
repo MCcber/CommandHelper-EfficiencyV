@@ -175,14 +175,11 @@
   <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="CommunityToolkit.Mvvm">
-      <Version>8.4.1</Version>
+      <Version>8.4.2</Version>
     </PackageReference>
     <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.27.3" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.142</Version>
-    </PackageReference>
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.4</Version>
     </PackageReference>
@@ -431,10 +428,6 @@
     <Resource Include="Resource\Common\Image\Datapack\editedIcon.png" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Utility\TreeViewComponentsHelper\HeaderToJson.cs" />
-    <Compile Remove="Utility\TreeViewComponentsHelper\ReturnTargetComponents.cs" />
-    <Compile Remove="Utility\TreeViewComponentsHelper\TagToHeader.cs" />
-    <Compile Remove="Utility\TreeViewComponentsHelper\TreeViewConveter.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell2.cs" />
     <Compile Remove="IWshRuntimeLibrary\IWshShell3.cs" />
@@ -544,7 +537,10 @@
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CBHK.Common\CBHK.Common.csproj" />
+    <ProjectReference Include="..\..\MinecraftLanguageModelLibrary\MinecraftLanguageModelLibrary.csproj" />
     <ProjectReference Include="..\CBHK.Domain\CBHK.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ViewModel\Component\Villager\" />
   </ItemGroup>
 </Project>

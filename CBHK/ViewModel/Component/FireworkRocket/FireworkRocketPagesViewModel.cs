@@ -3,7 +3,7 @@ using CBHK.CustomControl.VectorButton;
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Interface.Visual;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Visual;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
@@ -43,7 +43,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconFireworks.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconFireworks.png";
         /// <summary>
         /// 原版颜色库路径
         /// </summary>

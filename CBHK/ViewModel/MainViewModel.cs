@@ -1,20 +1,22 @@
-﻿using CBHK.Common.Model;
-using CBHK.CustomControl.Container;
+﻿using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorButton;
 using CBHK.Domain;
 using CBHK.Domain.Model.Database;
 using CBHK.Model.Constant;
+using CBHK.Model.Data;
 using CBHK.Utility;
 using CBHK.Utility.Visual;
 using CBHK.View.Common;
 using CBHK.ViewModel.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ICSharpCode.AvalonEdit;
+using MinecraftLanguageModelLibrary.Data;
 using Prism.Ioc;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -23,18 +25,21 @@ using System.Windows.Shapes;
 
 namespace CBHK.ViewModel
 {
-    public partial class MainViewModel(IContainerProvider container, CBHKDataContext context) : ObservableObject
+    public partial class MainViewModel(IContainerProvider container, CBHKDataContext context,Resource resource) : ObservableObject
     {
         #region Field
-        private IContainerProvider container = container;
+        private readonly IContainerProvider container = container;
         private readonly CBHKDataContext context = context;
-        private bool isContextMenuCloseCommand = false;
+        private readonly Resource resource = resource;
+        private Color SkeletonLighterColor = new();
+        private Color SkeletonDarkerColor = new();
         /// <summary>
         /// 主页可见性
         /// </summary>
         public EnvironmentConfig config = null;
-        private Grid SkeletonGrid = null;
-        private Grid GeneratorTable = null;
+        private Grid SkeletonGrid;
+        private Grid GeneratorTable;
+        private Grid InnerGeneratorTable = new();
         private IProgress<byte> SetGeneratorButtonProgress = null;
         /// <summary>
         /// 初始化界面数据
@@ -44,9 +49,11 @@ namespace CBHK.ViewModel
 
         #region Property
         [ObservableProperty]
+        private ObservableCollection<MetaTypeEditorFieldDTO> metaTypeDTOList = [];
+        [ObservableProperty]
         public WindowState _windowState = WindowState.Normal;
         [ObservableProperty]
-        private bool _showInTaskBar = true;
+        private bool showInTaskBar = true;
         #endregion
 
         #region Event
@@ -60,59 +67,61 @@ namespace CBHK.ViewModel
         {
             #region 设置生成器按钮面板
             SetGeneratorButtonProgress = new Progress<byte>((state) =>
-    {
-        DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
-        string baseImagePath = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/";
-        int rowIndex = 0;
-        int columnIndex = 0;
+            {
+                DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
+                string baseImagePath = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/";
+                int rowIndex = 0;
+                int columnIndex = 0;
 
-        GeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
-        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-        GeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+                InnerGeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
+                InnerGeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+                InnerGeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+                InnerGeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+                InnerGeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
-        foreach (var data in context.GeneratorSet)
-        {
-            GeneratorVectorButton button = new()
-            {
-                Style = Application.Current.Resources["GeneratorVectorButtonStyle"] as Style
-            };
-            string currentId = data.ID;
-            currentId = currentId[0].ToString().ToUpper() + currentId[1..];
-            string currentName = data.ZH;
-            string imagePath = baseImagePath + currentId + ".png";
-            Uri uri = new(imagePath, UriKind.Absolute);
-            if (Application.GetResourceStream(uri) is not null)
-            {
-                button.Icon = new BitmapImage(uri);
-            }
-            if (currentId is not null)
-            {
-                button.Title = currentName;
-            }
-            if (currentName is not null)
-            {
-                button.SubTitle = currentId;
-            }
-            IRelayCommand behavior = generatorFunction.GetGeneratorClickCommand(currentId);
-            button.Command = behavior;
-            GeneratorTable.Children.Add(button);
-            if (columnIndex > GeneratorTable.ColumnDefinitions.Count - 1)
-            {
-                GeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
-                columnIndex = 0;
-                rowIndex++;
-            }
-            Grid.SetColumn(button, columnIndex);
-            Grid.SetRow(button, rowIndex);
-            columnIndex++;
-        }
-    }); 
+                foreach (var data in context.GeneratorSet)
+                {
+                    GeneratorVectorButton button = new()
+                    {
+                        Style = Application.Current.Resources["GeneratorVectorButtonStyle"] as Style
+                    };
+                    string currentId = data.ID;
+                    currentId = currentId[0].ToString().ToUpper() + currentId[1..];
+                    string currentName = data.ZH;
+                    string imagePath = baseImagePath + currentId + ".png";
+                    Uri uri = new(imagePath, UriKind.Absolute);
+                    if (Application.GetResourceStream(uri) is not null)
+                    {
+                        button.Icon = new BitmapImage(uri);
+                    }
+                    if (currentId is not null)
+                    {
+                        button.Title = currentName;
+                    }
+                    if (currentName is not null)
+                    {
+                        button.SubTitle = currentId;
+                    }
+                    IRelayCommand behavior = generatorFunction.GetGeneratorClickCommand(currentId);
+                    button.Command = behavior;
+                    InnerGeneratorTable.Children.Add(button);
+                    if (columnIndex > InnerGeneratorTable.ColumnDefinitions.Count - 1)
+                    {
+                        InnerGeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
+                        columnIndex = 0;
+                        rowIndex++;
+                    }
+                    Grid.SetColumn(button, columnIndex);
+                    Grid.SetRow(button, rowIndex);
+                    columnIndex++;
+                }
+            });
             #endregion
 
-            InitUIDataProgress = new Progress<byte>((number) =>
+            InitUIDataProgress = new Progress<byte>(async (number) =>
             {
+                await resource.Init();
+
                 #region 加载用户数据
                 //if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png"))
                 //{
@@ -139,6 +148,33 @@ namespace CBHK.ViewModel
             ReadDataSource();
         }
 
+        public void TreeView_Loaded(object sender,RoutedEventArgs e)
+        {
+            if(sender is VectorTreeView vectorTreeView)
+            {
+                //treeView = vectorTreeView;
+                //treeView.AddHandler(TreeViewItem.ExpandedEvent, new RoutedEventHandler(OnTreeViewItemExpanded));
+                //MCDocumentTreeViewTemplateSelector dataTemplate = Application.Current.Resources["MCDocumentTreeViewTemplateSelector"] as MCDocumentTreeViewTemplateSelector;
+            }
+        }
+
+        public async void TextEditor_Loaded(object sender,RoutedEventArgs e)
+        {
+            if (sender is TextEditor editor)
+            {
+                //textEditor = editor;
+                //textEditor.Document.Changed += Document_Changed;
+            }
+        }
+
+        private void OnTreeViewItemExpanded(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource is TreeViewItem item && item.DataContext is MetaTypeEditorFieldDTO dto)
+            {
+
+            }
+        }
+
         [RelayCommand]
         private void MainWindowClosing() => context.SaveChanges();
 
@@ -153,48 +189,44 @@ namespace CBHK.ViewModel
         }
 
         [RelayCommand]
-        private void GeneratorTableLoaded(object sender) => GeneratorTable = sender as Grid;
+        private void GeneratorTableLoaded(object sender)
+        {
+            GeneratorTable = sender as Grid;
+            //将内部
+            if (!GeneratorTable.Children.Contains(InnerGeneratorTable))
+            {
+                GeneratorTable.Children.Add(InnerGeneratorTable);
+            }
+        }
 
         [RelayCommand]
         private void SkeletonGridLoaded(object sender)
         {
             SkeletonGrid = sender as Grid;
-            InitSkeletonScreen();
-        }
-        #endregion
-
-        #region Method
-        /// <summary>
-        /// 初始化骨架屏画刷
-        /// </summary>
-        private void InitSkeletonScreen()
-        {
             if (Application.Current.Resources[Theme.CommonBackground] is SolidColorBrush commonBackgroundBrush)
             {
                 Color darken = ColorTool.Darken(commonBackgroundBrush.Color, 0.4f);
-                Color SkeletonLighterColor = ColorTool.Lighten(commonBackgroundBrush.Color, 0.4f);
-                Color SkeletonDarkerColor = darken;
-
-                if (SkeletonGrid is not null)
+                SkeletonLighterColor = ColorTool.Lighten(commonBackgroundBrush.Color, 0.4f);
+                SkeletonDarkerColor = darken;
+                for (int i = 0; i < SkeletonGrid.Children.Count; i++)
                 {
-                    for (int i = 0; i < SkeletonGrid.Children.Count; i++)
+                    if (SkeletonGrid.Children[i] is Rectangle rectangle)
                     {
-                        if (SkeletonGrid.Children[i] is Rectangle rectangle)
+                        if (SkeletonGrid.Children[i].Uid == "SkeletonBlock")
                         {
-                            if (SkeletonGrid.Children[i].Uid == "SkeletonBlock")
-                            {
-                                rectangle.ApplyBreathAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
-                            }
-                            else
-                            if (SkeletonGrid.Children[i].Uid == "SkeletonLine")
-                            {
-                                rectangle.ApplySweepAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
-                            }
+                            rectangle.ApplyBreathAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
+                        }
+                        else if (SkeletonGrid.Children[i].Uid == "SkeletonLine")
+                        {
+                            rectangle.ApplySweepAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
                         }
                     }
                 }
             }
         }
+        #endregion
+
+        #region Method
 
         /// <summary>
         /// 骨架屏持续时间

@@ -1,4 +1,4 @@
-﻿using CBHK.Model.Common;
+﻿using CBHK.Model.Data;
 using CBHK.Model.Constant;
 using CBHK.Utility.Visual;
 using System.Windows;

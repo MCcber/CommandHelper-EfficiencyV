@@ -10,7 +10,6 @@ namespace CBHK.CustomControl.VectorButton
     public class VectorToggleTextButton:BaseVectorToggleButton
     {
         #region Field
-        private bool isNeedUpdateState = true;
         private Thickness OriginMargin;
         private bool isUserClicking = false;
         private Brush OriginLeftTopBorderBrush;
@@ -190,9 +189,7 @@ namespace CBHK.CustomControl.VectorButton
         protected override void OnClick()
         {
             isUserClicking = true;
-            isNeedUpdateState = true;
             base.OnClick();
-            isNeedUpdateState = false;
             isUserClicking = false;
         }
 
@@ -236,7 +233,7 @@ namespace CBHK.CustomControl.VectorButton
 
         private void This_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if(!isNeedUpdateState)
+            if(!isUserClicking && (IsChecked is bool isChecked && !isChecked))
             {
                 return;
             }
@@ -250,7 +247,7 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorToggleTextButton_MouseLeave(object sender, MouseEventArgs e)
         {
-            if(IsChecked.Value)
+            if(IsChecked is null || IsChecked.Value)
             {
                 return;
             }
@@ -268,7 +265,7 @@ namespace CBHK.CustomControl.VectorButton
 
         private void VectorToggleTextButton_MouseEnter(object sender, MouseEventArgs e)
         {
-            if(IsChecked.Value)
+            if(IsChecked is null || IsChecked.Value)
             {
                 return;
             }

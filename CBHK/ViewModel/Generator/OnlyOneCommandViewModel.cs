@@ -1,6 +1,6 @@
-﻿using CBHK.Common.Utility;
+﻿using MinecraftLanguageModelLibrary.Utility;
 using CBHK.CustomControl.Container;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Generator;
@@ -37,7 +37,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconCommandBlock.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconCommandBlock.png";
         SolidColorBrush tranparentBrush = Brushes.Transparent;
         SolidColorBrush textBrush = Brushes.White;
         SolidColorBrush caretBrush = Brushes.White;

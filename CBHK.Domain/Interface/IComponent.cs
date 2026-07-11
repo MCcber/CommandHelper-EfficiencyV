@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using Prism.Events;
 using System.Text;
 
 namespace CBHK.Domain.Interface

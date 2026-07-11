@@ -295,10 +295,7 @@
                                         FontSize="20"
                                         Foreground="White"
                                         Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                        Text="{Binding Path=HeadX, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                        WaterMarkerBrush="Gray"
-                                        WaterMarkerMargin="5 0 0 0"
-                                        WaterMarkerText="头部X轴" />
+                                        Text="{Binding Path=HeadX, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         HorizontalAlignment="Left"
                                         Foreground="White"

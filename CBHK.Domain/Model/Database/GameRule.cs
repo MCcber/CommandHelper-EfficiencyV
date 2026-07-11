@@ -5,9 +5,9 @@ namespace CBHK.Domain.Model.Database
     public class GameRule
     {
         [Key]
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string DefaultValue { get; set; }
-        public string DataType { get; set; }
+        public required string Name { get; set; }
+        public required string Description { get; set; }
+        public required string DefaultValue { get; set; }
+        public required string DataType { get; set; }
     }
 }

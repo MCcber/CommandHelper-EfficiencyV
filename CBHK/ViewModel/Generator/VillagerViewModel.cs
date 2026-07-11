@@ -16,19 +16,21 @@ using Newtonsoft.Json.Linq;
 using System.Data;
 using CBHK.View;
 using Prism.Ioc;
-using CBHK.ViewModel.Component.Villager;
-using CBHK.Model.Common;
-using CBHK.View.Component.Villager;
+using CBHK.Model.Data;
 using CBHK.Domain;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.Utility.Common;
 using CBHK.CustomControl.VectorComboBox;
+using CBHK.Model.Constant;
+using CBHK.CustomControl.Container;
+using CBHK.CustomControl.Input;
 
 namespace CBHK.ViewModel.Generator
 {
     public partial class VillagerViewModel:ObservableObject
     {
         #region Field
+        private Resource resource;
         private MessagePopup messagePopup = new();
         private CBHKDataContext context = null;
         int CurrentMinVersion = 0;
@@ -43,7 +45,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconVillagers.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconVillagers.png";
         string VillagerTypeSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\VillagerTypes.ini";
         string VillagerProfessionsSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\VillagerProfessionTypes.ini";
         string VillagerLevelSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\VillagerLevels.ini";
@@ -56,8 +58,8 @@ namespace CBHK.ViewModel.Generator
         private readonly SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private readonly SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
 
-        private Dictionary<string, string> ItemIDAndNameMap = [];
-        private List<string> ItemKeyList = [];
+        //private Dictionary<string, string> ItemIDAndNameMap = [];
+        //private List<string> ItemKeyList = [];
 
         private IProgress<ItemStructure> AddOriginalItemProgress = null;
         private IProgress<(int, string, string, string)> SetOriginalItemProgress = null;
@@ -67,7 +69,6 @@ namespace CBHK.ViewModel.Generator
         private DataService dataService = null;
         private IContainerProvider container;
 
-        private string ImageSetFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
         /// <summary>
         /// 加载物品集合
         /// </summary>
@@ -136,17 +137,17 @@ namespace CBHK.ViewModel.Generator
         /// 左侧交易项数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TransactionItemView> _transactionItemList = [];
+        public ObservableCollection<TransactionItem> _transactionItemList = [];
         /// <summary>
         /// 言论数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<GossipsItemView> _gossipItemList = [];
+        public ObservableCollection<GossipsItem> _gossipItemList = [];
         /// <summary>
         /// 当前选中的交易项
         /// </summary>
         [ObservableProperty]
-        private TransactionItemView _currentItem = null;
+        private TransactionItem _currentItem = null;
         /// <summary>
         /// 主项数量
         /// </summary>
@@ -332,7 +333,7 @@ namespace CBHK.ViewModel.Generator
             {
                 if (TransactionItemList.Count == 0) return "";
                 string result = "Offers:{Recipes:[";
-                string transactionItemData = string.Join("", TransactionItemList.Select(item => (item.DataContext as TransactionItemViewModel).TransactionItemData + ","));
+                string transactionItemData = string.Join("", TransactionItemList.Select(item => (item.DataContext as TransactionItem).TransactionItemData + ","));
                 result += transactionItemData.TrimEnd(',') + "]},";
                 return result;
             }
@@ -349,7 +350,7 @@ namespace CBHK.ViewModel.Generator
                     return "";
                 }
                 string result = "Gossips:[";
-                result += string.Join(",", GossipItemList.Select(item => (item.DataContext as GossipsItemViewModel).GossipData));
+                result += string.Join(",", GossipItemList.Select(item => (item.DataContext as GossipsItem).GossipData));
                 result = result.TrimEnd(',') + "],";
                 return result;
             }
@@ -555,12 +556,15 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public VillagerViewModel(IContainerProvider Container,MainView mainView,CBHKDataContext Context,DataService DataService)
+        public VillagerViewModel(IContainerProvider Container,MainView mainView,CBHKDataContext Context,DataService DataService,Resource resource)
         {
+            #region Inject
+            this.resource = resource;
             dataService = DataService;
             context = Context;
             container = Container;
-            home = mainView;
+            home = mainView; 
+            #endregion
 
             #region 初始化主、副、结果空图像
             BuyItemIcon = BuyBItemIcon = SellItemIcon = new BitmapImage(new Uri(emptyIcon));
@@ -640,7 +644,7 @@ namespace CBHK.ViewModel.Generator
             {
                 if (File.Exists(item.Item4))
                 {
-                    OriginalItemList[item.Item1].IDAndName = item.Item2 + ':' + item.Item3;
+                    OriginalItemList[item.Item1].IDAndName = item.Item2 /*+ ':' + item.Item3*/;
                     OriginalItemList[item.Item1].ImagePath = new BitmapImage(new Uri(item.Item4, UriKind.Absolute));
                 }
             });
@@ -650,36 +654,36 @@ namespace CBHK.ViewModel.Generator
             {
                 if (File.Exists(item.Item4))
                 {
-                    CustomItemList[item.Item1].IDAndName = item.Item2 + ':' + item.Item3;
+                    CustomItemList[item.Item1].IDAndName = item.Item2/* + ':' + item.Item3*/;
                     CustomItemList[item.Item1].NBT = item.Item5;
                     CustomItemList[item.Item1].ImagePath = new BitmapImage(new Uri(item.Item4, UriKind.Absolute));
                 }
             });
 
-            ItemIDAndNameMap = dataService.GetItemIDAndNameGroupByVersionMap()
-            .Where(pair => pair.Key <= CurrentMinVersion)
-            .SelectMany(pair => pair.Value)
-            .ToDictionary(
-                pair => pair.Key,
-                pair => pair.Value
-            );
+            //ItemIDAndNameMap = dataService.GetItemIDAndNameGroupByVersionMap()
+            //.Where(pair => pair.Key <= CurrentMinVersion)
+            //.SelectMany(pair => pair.Value)
+            //.ToDictionary(
+            //    pair => pair.Key,
+            //    pair => pair.Value
+            //);
 
-            List<string> HaveNoIImageList = [];
-            foreach (var item in ItemIDAndNameMap)
-            {
-                if (!File.Exists(ImageSetFolderPath + item.Key + ".png") && !File.Exists(ImageSetFolderPath + item.Key + "_spawn_egg.png"))
-                {
-                    HaveNoIImageList.Add(item.Key);
-                }
-            }
+            //List<string> HaveNoIImageList = [];
+            //foreach (var item in ItemIDAndNameMap)
+            //{
+            //    if (!File.Exists(resource.ImageSetDirectoryPath + item.Key + ".png") && !File.Exists(resource.ImageSetDirectoryPath + item.Key + "_spawn_egg.png"))
+            //    {
+            //        HaveNoIImageList.Add(item.Key);
+            //    }
+            //}
 
-            foreach (var item in HaveNoIImageList)
-            {
-                ItemIDAndNameMap.Remove(item);
-            }
+            //foreach (var item in HaveNoIImageList)
+            //{
+            //    ItemIDAndNameMap.Remove(item);
+            //}
 
-            ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
-            ItemKeyList.Sort();
+            //ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
+            //ItemKeyList.Sort();
         }
 
         /// <summary>
@@ -692,27 +696,32 @@ namespace CBHK.ViewModel.Generator
             Task.Run(async () =>
             {
                 ParallelOptions parallelOptions = new();
-                await Parallel.ForAsync(0, ItemKeyList.Count, parallelOptions, (i, cancellationToken) =>
+                if (resource.RunningDataObject["1.20.5"]["item"] is JArray itemArray)
                 {
-                    AddOriginalItemProgress.Report(new());
-                    return new ValueTask();
-                });
+                    await Parallel.ForAsync(0, itemArray.Count, parallelOptions, (i, cancellationToken) =>
+                    {
+                        AddOriginalItemProgress.Report(new());
+                        return new ValueTask();
+                    });
 
-                Parallel.For(0, ItemKeyList.Count, (i) =>
-                {
-                    string currentKey = ItemKeyList[i];
                     string imagePath = "";
-                    if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
+                    string basePath = AppDomain.CurrentDomain.BaseDirectory;
+                    Parallel.For(0, itemArray.Count, (i) =>
                     {
-                        imagePath = ImageSetFolderPath + currentKey + ".png";
-                    }
-                    else
-                    if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
-                    {
-                        imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
-                    }
-                    SetOriginalItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath));
-                });
+                        string currentKey = itemArray[i].Value<string>();
+                        if (File.Exists(resource.ImageSetDirectoryPath + currentKey + ".png"))
+                        {
+                            imagePath = basePath + resource.ImageSetDirectoryPath + currentKey + ".png";
+                        }
+                        else
+                        if (File.Exists(resource.ImageSetDirectoryPath + currentKey + "_spawn_egg.png"))
+                        {
+                            imagePath = basePath + resource.ImageSetDirectoryPath + currentKey + ".png";
+                            imagePath = basePath + resource.ImageSetDirectoryPath + currentKey + "_spawn_egg.png";
+                        }
+                        SetOriginalItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, "", imagePath));
+                    });
+                }
             });
         }
 
@@ -729,9 +738,18 @@ namespace CBHK.ViewModel.Generator
                 ParallelOptions parallelOptions = new();
                 await Parallel.ForAsync(0, itemFileList.Length, parallelOptions, (i, cancellationToken) =>
                 {
-                    if (File.Exists(ImageSetFolderPath + ItemKeyList[i] + ".png") || File.Exists(ImageSetFolderPath + ItemKeyList[i] + "_spawn_egg.png"))
+                    if (File.Exists(itemFileList[i]))
                     {
-                        AddCustomItemProgress.Report(new ItemStructure());
+                        string nbt = ExternalDataImportManager.GetItemDataHandler(itemFileList[i], true);
+                        string currentKey = "";
+                        if (JObject.Parse(nbt)["oldID"] is JToken IDToken)
+                        {
+                            currentKey = IDToken.Value<string>().Replace("minecraft:", "");
+                            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + ".png") || File.Exists(AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + "_spawn_egg.png"))
+                            {
+                                AddCustomItemProgress.Report(new ItemStructure());
+                            }
+                        }
                     }
                     return new ValueTask();
                 });
@@ -747,18 +765,18 @@ namespace CBHK.ViewModel.Generator
                             currentKey = IDToken.Value<string>().Replace("minecraft:", "");
                         }
                         string imagePath = "";
-                        if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
+                        if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + ".png"))
                         {
-                            imagePath = ImageSetFolderPath + currentKey + ".png";
+                            imagePath = AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + ".png";
                         }
                         else
-                        if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
+                        if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + "_spawn_egg.png"))
                         {
-                            imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
+                            imagePath = AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + "_spawn_egg.png";
                         }
                         if (imagePath.Length > 0)
                         {
-                            SetCustomItemProgress.Report(new ValueTuple<int, string, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath, nbt));
+                            SetCustomItemProgress.Report(new ValueTuple<int, string, string, string, string>(i, currentKey, "", imagePath, nbt));
                         }
                     }
                 });
@@ -826,7 +844,7 @@ namespace CBHK.ViewModel.Generator
             {
                 Window parent = Window.GetWindow(sender as ListView);
                 CustomViewSource = parent.FindResource("CustomItemView") as CollectionViewSource;
-                //InitCustomItemList();
+                InitCustomItemList();
                 CustomViewSource.Filter += CollectionViewSource_Filter;
             }
         }
@@ -847,11 +865,11 @@ namespace CBHK.ViewModel.Generator
             //恢复所有交易项的价格
             if (!CanEditGossip)
             {
-                TransactionItemList.All(item => { (item.DataContext as TransactionItemViewModel).HideDiscountData(); return true; });
+                TransactionItemList.All(item => { (item.DataContext as TransactionItem).HideDiscountData(); return true; });
             }
             else
             {
-                TransactionItemList.All(item => { (item.DataContext as TransactionItemViewModel).HideDiscountData(false); return true; });
+                TransactionItemList.All(item => { (item.DataContext as TransactionItem).HideDiscountData(false); return true; });
             }
             OnlyEditItem = !CanEditBrain && !CanEditGossip ? Visibility.Collapsed : Visibility.Visible;
         }
@@ -891,18 +909,18 @@ namespace CBHK.ViewModel.Generator
         public void CloseTransactionDataGrid()
         {
             TransactionDataGridVisibility = Visibility.Collapsed;
-            TransactionItemViewModel transactionItemsViewModel = CurrentItem.DataContext as TransactionItemViewModel;
+            TransactionItem transactionItemsView = CurrentItem.DataContext as TransactionItem;
             //更新当前交易项的数量显示
-            transactionItemsViewModel.RewardExp = RewardExp is not null ? RewardExp.Value : false;
-            transactionItemsViewModel.BuyCountDisplayText = "x" + BuyCount.ToString();
-            transactionItemsViewModel.BuyBCountDisplayText = "x" + BuyBCount.ToString();
-            transactionItemsViewModel.SellCountDisplayText = "x" + SellCount.ToString();
-            transactionItemsViewModel.MaxUses = MaxUses;
-            transactionItemsViewModel.Uses = Uses;
-            transactionItemsViewModel.Xp = VillagerGetXp;
-            transactionItemsViewModel.Demand = Demand;
-            transactionItemsViewModel.SpecialPrice = SpecialPrice;
-            transactionItemsViewModel.PriceMultiplier = PriceMultiplier;
+            transactionItemsView.RewardExp = RewardExp is not null ? RewardExp.Value : false;
+            transactionItemsView.BuyCountDisplayText = "x" + BuyCount.ToString();
+            transactionItemsView.BuyBCountDisplayText = "x" + BuyBCount.ToString();
+            transactionItemsView.SellCountDisplayText = "x" + SellCount.ToString();
+            transactionItemsView.MaxUses = MaxUses;
+            transactionItemsView.Uses = Uses;
+            transactionItemsView.Xp = VillagerGetXp;
+            transactionItemsView.Demand = Demand;
+            transactionItemsView.SpecialPrice = SpecialPrice;
+            transactionItemsView.PriceMultiplier = PriceMultiplier;
         }
 
         [RelayCommand]
@@ -973,7 +991,11 @@ namespace CBHK.ViewModel.Generator
                 if (itemStructure.IDAndName is not null && itemStructure.ImagePath is not null)
                 {
                     string currentItemID = Path.GetFileNameWithoutExtension(itemStructure.ImagePath.ToString());
-                    string currentItemName = itemStructure.IDAndName.Split(':')[1];
+                    string currentItemName = "";
+                    if (itemStructure.IDAndName.Contains(':'))
+                    {
+                        currentItemName = itemStructure.IDAndName.Split(':')[1];
+                    }
 
                     if (currentItemID.StartsWith(SearchText) || currentItemName.StartsWith(SearchText))
                     {
@@ -1050,10 +1072,7 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void AddTransactionItem()
         {
-            TransactionItemView transaction = new()
-            {
-                HorizontalAlignment = HorizontalAlignment.Stretch
-            };
+            TransactionItem transaction = new(context, dataService);
             TransactionItemList.Add(transaction);
         }
 
@@ -1074,11 +1093,12 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void AddGossipItem()
         {
-            GossipsItemView gossipsItem = new()
+            GossipsItem gossipsItem = new()
             {
                 Margin = new Thickness(12, 0, 0, 5),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
+                VerticalAlignment = VerticalAlignment.Stretch,
+                Style = Application.Current.Resources["GossipsItemStyle"] as Style
             };
             GossipItemList.Add(gossipsItem);
         }
@@ -1132,9 +1152,9 @@ namespace CBHK.ViewModel.Generator
             if(CanEditGossip)
             {
                 string current_type = SelectedSearchGossipItem.Text;
-                List<GossipsItemView> target_gossip = GossipItemList.Where(gossip =>
+                List<GossipsItem> target_gossip = GossipItemList.Where(gossip =>
                 {
-                    GossipsItemViewModel gossipsItemsViewModel = gossip.DataContext as GossipsItemViewModel;
+                    GossipsItem gossipsItemsViewModel = gossip.DataContext as GossipsItem;
                     string type = gossipsItemsViewModel.SelectedTypeItem.Text;
                     if (gossipsItemsViewModel.TargetText == GossipSearchTarget.Text.Trim() && type == current_type)
                         return true;

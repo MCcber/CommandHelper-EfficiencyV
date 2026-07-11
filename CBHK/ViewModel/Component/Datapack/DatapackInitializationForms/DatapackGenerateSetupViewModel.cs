@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Interface.Visual;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.View.Generator;

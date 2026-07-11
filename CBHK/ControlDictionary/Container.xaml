@@ -1,4 +1,8 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:data="clr-namespace:CBHK.Utility.Data"
+    xmlns:treeviewVisualUtility="clr-namespace:CBHK.Utility.Visual.TreeView">
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/ControlDictionary/Container/VectorRichExpander.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorIconTextTabItem.xaml" />
@@ -8,7 +12,6 @@
         <ResourceDictionary Source="/ControlDictionary/Container/VectorTextMenuItem.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorTabControl.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorContextMenu.xaml" />
-        <ResourceDictionary Source="/ControlDictionary/Container/JsonTreeViewTemplate.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorWindow.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/EyedropperWindow.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/TimelineToolContainer.xaml" />
@@ -17,9 +20,30 @@
         <ResourceDictionary Source="/ControlDictionary/Container/MessageTipItemTemplate.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/TextToolTip.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/RichToolTip.xaml" />
-        <ResourceDictionary Source="/ControlDictionary/Container/VectorTreeView.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorTreeViewItem.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorListViewItemContainer.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorListView.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/TransactionItem.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/VectorTreeView.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/TreeViewCommon.xaml" />
+        <ResourceDictionary>
+            <data:MCDocumentTreeViewTemplateSelector
+                x:Key="MCDocumentTreeViewTemplateSelector"
+                AddButtonTemlate="{StaticResource AddButtonItem}"
+                ArrayTemplate="{StaticResource TreeViewArrayItem}"
+                BoolTemplate="{StaticResource TreeViewBoolItem}"
+                ColorTemplate="{StaticResource TreeViewColorItem}"
+                CompositeTemplate="{StaticResource TreeViewCompositeItem}"
+                DefinitionTemplate="{StaticResource TreeViewDefinitionItem}"
+                EntryTemplate="{StaticResource TreeViewEntryItem}"
+                EnumTemplate="{StaticResource TreeViewEnumItem}"
+                ListTemplate="{StaticResource TreeViewListItem}"
+                NumberTemplate="{StaticResource TreeViewNumberTemplate}"
+                RemoveTemplate="{StaticResource RemoveButtonItem}"
+                StringTemplate="{StaticResource TreeViewStringItem}"
+                StructTemplate="{StaticResource TreeViewStructItem}"
+                UUIDTemplate="{StaticResource TreeViewUUIDItem}"
+                UnionTemplate="{StaticResource TreeViewUnionItem}" />
+        </ResourceDictionary>
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

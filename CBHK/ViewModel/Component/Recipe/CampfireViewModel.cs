@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using CommunityToolkit.Mvvm.Input;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.View.Component.Recipe;
 using CBHK.Domain;
 using System.Collections.Generic;

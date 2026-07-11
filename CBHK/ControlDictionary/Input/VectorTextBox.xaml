@@ -39,6 +39,7 @@
                             <Container:VectorScrollViewer
                                 x:Name="PART_ContentHost"
                                 Grid.Row="1"
+                                VerticalAlignment="Stretch"
                                 Panel.ZIndex="1"
                                 Focusable="false"
                                 HorizontalScrollBarVisibility="Auto"

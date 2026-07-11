@@ -1,5 +1,6 @@
-﻿using CBHK.Common.Model;
+﻿using MinecraftLanguageModelLibrary.Data;
 using CBHK.Model.Constant;
+using CBHK.Model.Data;
 using CBHK.Utility.Visual;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 using System;

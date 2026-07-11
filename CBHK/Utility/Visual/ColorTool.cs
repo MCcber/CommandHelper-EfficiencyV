@@ -1,4 +1,4 @@
-﻿using CBHK.Model.Common;
+﻿using CBHK.Model.Data;
 using System;
 using System.Windows.Media;
 

@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 
 namespace CBHK.Utility.Visual
 {

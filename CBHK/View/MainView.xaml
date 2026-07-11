@@ -8,11 +8,11 @@
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
+    xmlns:avalon="clr-namespace:ICSharpCode.AvalonEdit;assembly=ICSharpCode.AvalonEdit"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
-    xmlns:tb="http://www.hardcodet.net/taskbar"
     xmlns:utility="clr-namespace:CBHK.Utility.Visual"
     Title="CommandHelper-EfficiencyV v1.20.5"
     Width="1020"
@@ -61,7 +61,7 @@
                         VerticalScrollBarVisibility="Auto">
                         <Grid FocusVisualStyle="{x:Null}" Visibility="Collapsed">
                             <behaviors:Interaction.Triggers>
-                                <behaviors:EventTrigger EventName="Loaded">
+                                <behaviors:EventTrigger>
                                     <behaviors:InvokeCommandAction Command="{Binding GeneratorTableLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
                                 </behaviors:EventTrigger>
                             </behaviors:Interaction.Triggers>
@@ -73,6 +73,11 @@
                         Background="Transparent"
                         FocusVisualStyle="{x:Null}"
                         Visibility="Visible">
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:EventTrigger>
+                                <behaviors:InvokeCommandAction Command="{Binding SkeletonGridLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
+                            </behaviors:EventTrigger>
+                        </behaviors:Interaction.Triggers>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="*" />
@@ -88,11 +93,6 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <behaviors:Interaction.Triggers>
-                            <behaviors:EventTrigger EventName="Loaded">
-                                <behaviors:InvokeCommandAction Command="{Binding SkeletonGridLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
-                            </behaviors:EventTrigger>
-                        </behaviors:Interaction.Triggers>
                         <Rectangle
                             Uid="SkeletonBlock"
                             Grid.Row="0"
@@ -787,7 +787,20 @@
                 <Common:SettingsView />
             </Container:VectorIconTextTabItem>
             <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItemStyle}">
-                <Container:TimelineToolContainer Style="{DynamicResource TimelineToolContainerStyle}" />
+                <!--<Container:TimelineToolContainer Style="{DynamicResource TimelineToolContainerStyle}" />-->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="35" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <VectorButton:VectorTextButton
+                        Grid.Row="0"
+                        Command="{Binding GetFlowTreeViewData}"
+                        OriginBottomHeight="4"
+                        Style="{DynamicResource VectorTextButtonStyle}"
+                        Text="点击导入文档数据" />
+                    <!--<ItemsControl ItemTemplateSelector="{DynamicResource MetaTypeTemplateSelector}" ItemsSource="{Binding MetaTypeList}" />-->
+                </Grid>
             </Container:VectorIconTextTabItem>
         </Container:VectorTabControl>
     </Grid>

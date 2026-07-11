@@ -1,11 +1,11 @@
-﻿using CBHK.Common.Utility;
-using CBHK.Domain;
+﻿using CBHK.Domain;
 using CBHK.Model.Constant;
 using CBHK.Utility.Common;
-using CBHK.Utility.Visual;
+using CBHK.Utility.Data;
 using CBHK.View;
 using DryIoc;
 using Microsoft.EntityFrameworkCore;
+using MinecraftLanguageModelLibrary.Utility;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Mvvm;
@@ -15,7 +15,6 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
-using System.Windows.Media;
 
 namespace CBHK
 {
@@ -42,6 +41,7 @@ namespace CBHK
         protected override Window CreateShell()
         {
             ExternalDataImportManager.Init();
+
             return Container.Resolve<MainView>();
         }
 
@@ -81,9 +81,12 @@ namespace CBHK
                 return new CBHKDataContext(options);
             });
 
+            containerRegistry.RegisterSingleton<Resource>();
             containerRegistry.RegisterSingleton<MainView>();
             containerRegistry.RegisterSingleton<DataService>();
             containerRegistry.RegisterSingleton<RegexService>();
+            containerRegistry.Register<MCDocumentMetaTypeDTOHelper>();
+            containerRegistry.Register<MetaTypeDTOValidator>();
 
         }
 

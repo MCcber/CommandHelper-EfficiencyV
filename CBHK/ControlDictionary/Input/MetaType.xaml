@@ -1,0 +1,279 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
+    xmlns:mcdocument="clr-namespace:MinecraftLanguageModelLibrary.Data;assembly=MinecraftLanguageModelLibrary"
+    xmlns:visualUtility="clr-namespace:CBHK.Utility.Visual">
+
+    <!--<DataTemplate x:Key="DispatchItem">
+        <StackPanel Margin="5,0,0,0">
+            <TextBlock Foreground="{DynamicResource CommonForeground}" Text="{Binding FieldName}" />
+            <ItemsControl ItemsSource="{Binding Children}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type mcdocument:MetaTypeEditorFieldDTO}">
+                        <ContentControl Content="{Binding}" ContentTemplateSelector="{DynamicResource MetaTypeTemplateSelector}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </DataTemplate>-->
+
+    <DataTemplate x:Key="StructItem" DataType="{x:Type mcdocument:MetaTypeEditorFieldDTO}">
+        <StackPanel Margin="5,0,0,0">
+            <TextBlock Foreground="{DynamicResource CommonForeground}" Text="{Binding FieldName}" />
+            <ItemsControl ItemsSource="{Binding Children}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type mcdocument:MetaTypeEditorFieldDTO}">
+                        <DockPanel LastChildFill="False">
+                            <TextBlock Text="*必选" Visibility="{Binding IsRequired, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBlock Margin="4,0" Text="{Binding FieldName}" />
+                            <ContentControl Content="{Binding Children}" ContentTemplateSelector="{DynamicResource MetaTypeTemplateSelector}" />
+                        </DockPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="UnionItem" DataType="{x:Type mcdocument:MetaTypeEditorFieldDTO}">
+        <Border
+            Margin="0,2"
+            Background="Transparent"
+            BorderBrush="{DynamicResource CommonBackground}"
+            BorderThickness="1"
+            CornerRadius="2.5">
+            <StackPanel>
+                <VectorComboBox:VectorTextComboBox
+                    Title="{Binding FieldName}"
+                    Height="35"
+                    ArrowMargin="0 0 8 0"
+                    ItemsSource="{Binding UnionTypeNameList, Converter={StaticResource MetaTypeToComboBoxItemsConverter}}"
+                    Style="{DynamicResource VectorTextComboBoxStyle}" />
+                <ContentControl Content="{Binding SelectedUnionChildren}" ContentTemplateSelector="{DynamicResource MetaTypeTemplateSelector}" />
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ArrayItem">
+        <Border
+            Margin="0,2"
+            Background="Transparent"
+            BorderBrush="{DynamicResource CommonBackground}"
+            BorderThickness="1"
+            CornerRadius="2.5">
+            <StackPanel>
+                <TextBlock
+                    Margin="5,0,0,0"
+                    Background="Transparent"
+                    FontSize="20"
+                    Foreground="{DynamicResource CommonForeground}"
+                    IsHitTestVisible="False"
+                    Text="{Binding FieldName}"
+                    TextAlignment="Left" />
+                <ItemsControl ItemTemplateSelector="{DynamicResource MetaTypeTemplateSelector}" ItemsSource="{Binding Items}" />
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ListItem">
+        <Border
+            Margin="0,2"
+            Background="Transparent"
+            BorderBrush="{DynamicResource CommonBackground}"
+            BorderThickness="1"
+            CornerRadius="2.5">
+            <StackPanel>
+                <DockPanel LastChildFill="False">
+                    <TextBlock
+                        Margin="5,0,0,0"
+                        Background="Transparent"
+                        FontSize="20"
+                        Foreground="{DynamicResource CommonForeground}"
+                        IsHitTestVisible="False"
+                        Text="{Binding FieldName}"
+                        TextAlignment="Left" />
+                    <VectorButton:VectorFlatIconButton
+                        Command="{Binding AddItemCommand}"
+                        CommandParameter="{Binding}"
+                        Icon="{DynamicResource TreeNodePlusGeometry}"
+                        IconBrush="{DynamicResource CommonForeground}"
+                        IconHeight="15"
+                        IconMargin="5"
+                        IconWidth="15"
+                        Style="{DynamicResource VectorFlatIconButtonStyle}" />
+                    <VectorButton:VectorFlatIconButton
+                        Command="{Binding ClearItemCommand}"
+                        CommandParameter="{Binding}"
+                        Icon="{DynamicResource TreeNodeMinusGeometry}"
+                        IconBrush="{DynamicResource CommonForeground}"
+                        IconHeight="15"
+                        IconMargin="5"
+                        IconWidth="15"
+                        Style="{DynamicResource VectorFlatIconButtonStyle}" />
+                </DockPanel>
+                <ItemsControl ItemTemplateSelector="{DynamicResource MetaTypeTemplateSelector}" ItemsSource="{Binding Items}" />
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="NumberItem">
+        <Grid Margin="0,2" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Input:VectorNumbericUpDown
+                Grid.Column="0"
+                Margin="0,2"
+                HorizontalAlignment="Stretch"
+                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                Text="{Binding Value}"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="{Binding Watermark}" />
+            <Viewbox
+                Grid.Column="1"
+                Width="20"
+                Height="20"
+                Margin="5,0,0,0"
+                ToolTip="{Binding LiteralValue}"
+                ToolTipService.BetweenShowDelay="1000"
+                ToolTipService.InitialShowDelay="0"
+                Visibility="Collapsed">
+                <Path
+                    Data="{Binding Icon}"
+                    Fill="{Binding IconBrush}"
+                    Stroke="{Binding IconBrush}"
+                    StrokeThickness="1" />
+            </Viewbox>
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="StringItem">
+        <Grid Margin="0,2" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Input:VectorTextBox
+                Grid.Column="0"
+                HorizontalAlignment="Stretch"
+                visualUtility:TextSizeHelper.AutoFontSize="True"
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
+            <Viewbox
+                Grid.Column="1"
+                Width="20"
+                Height="20"
+                Margin="5,0,0,0"
+                ToolTip="{Binding LiteralValue}"
+                ToolTipService.BetweenShowDelay="1000"
+                ToolTipService.InitialShowDelay="0"
+                Visibility="Collapsed">
+                <Path
+                    Data="{Binding Icon}"
+                    Fill="{Binding IconBrush}"
+                    Stroke="{Binding IconBrush}"
+                    StrokeThickness="1" />
+            </Viewbox>
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="UUIDItem">
+        <Grid Margin="0,2" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Input:VectorTextBox
+                Grid.Column="0"
+                visualUtility:TextSizeHelper.AutoFontSize="True"
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
+            <VectorButton:VectorFlatImageButton
+                Grid.Column="1"
+                Width="30"
+                Height="30"
+                Command="{Binding ReFreshCommand}"
+                CommandParameter="{Binding}"
+                Image="{DynamicResource IconFresh}"
+                Style="{DynamicResource VectorFlatImageButtonStyle}" />
+            <Viewbox
+                Grid.Column="2"
+                Width="20"
+                Height="20"
+                Margin="5,0,0,0"
+                VerticalAlignment="Center"
+                ToolTip="{Binding LiteralValue}"
+                ToolTipService.BetweenShowDelay="1000"
+                ToolTipService.InitialShowDelay="0"
+                Visibility="Collapsed">
+                <Path
+                    Data="{Binding Icon}"
+                    Fill="{Binding IconBrush}"
+                    Stroke="{Binding IconBrush}"
+                    StrokeThickness="1" />
+            </Viewbox>
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="BoolItem">
+        <Grid Margin="0,2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                Grid.Column="0"
+                Margin="0,0,2,0"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                Foreground="{DynamicResource CommonForeground}"
+                IsHitTestVisible="False"
+                Text="{Binding FieldName}"
+                TextAlignment="Left" />
+            <VectorButton:VectorToggleTextButton
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                IsChecked="{Binding IsTrue, Mode=TwoWay}"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="True" />
+            <VectorButton:VectorToggleTextButton
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                IsChecked="{Binding IsFalse, Mode=TwoWay}"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="False" />
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ColorItem">
+        <DockPanel LastChildFill="False">
+            <TextBlock
+                Margin="5,0"
+                VerticalAlignment="Center"
+                IsHitTestVisible="False"
+                Text="{Binding Key}"
+                TextAlignment="Left" />
+            <Input:VectorColorPicker SelectedColor="{Binding Value}" Style="{DynamicResource VectorColorPickerStyle}" />
+        </DockPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="EnumItem">
+        <VectorComboBox:VectorTextComboBox
+            Title="{Binding FieldName}"
+            Height="35"
+            Margin="0,2"
+            DisplayMemberPath="{Binding Text}"
+            Foreground="{DynamicResource CommonForeground}"
+            ItemsSource="{Binding EnumOptionList, Converter={StaticResource MetaTypeToComboBoxItemsConverter}}"
+            SelectedValue="{Binding Value}"
+            SelectedValuePath="Text"
+            Style="{DynamicResource VectorTextComboBoxStyle}" />
+    </DataTemplate>
+
+</ResourceDictionary>

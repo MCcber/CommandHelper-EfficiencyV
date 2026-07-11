@@ -1,4 +1,7 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:selector="clr-namespace:CBHK.Utility.Data">
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/VectorNumbericUpDown.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TextStyleEditor.xaml" />
@@ -9,5 +12,23 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TimelineClip.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TimelineKeyFrame.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TagRichTextBox.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/GossipsItem.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/MetaType.xaml" />
+        <ResourceDictionary>
+            <selector:MetaTypeTemplateSelector
+                x:Key="MetaTypeTemplateSelector"
+                AddButtonTemlate="{StaticResource AddButtonItem}"
+                ArrayTemplate="{StaticResource ArrayItem}"
+                BoolTemplate="{StaticResource BoolItem}"
+                ColorTemplate="{StaticResource ColorItem}"
+                EnumTemplate="{StaticResource EnumItem}"
+                ListTemplate="{StaticResource ListItem}"
+                NumberTemplate="{StaticResource NumberItem}"
+                RemoveTemplate="{StaticResource RemoveButtonItem}"
+                StringTemplate="{StaticResource StringItem}"
+                StructTemplate="{StaticResource StructItem}"
+                UUIDTemplate="{StaticResource UUIDItem}"
+                UnionTemplate="{StaticResource UnionItem}" />
+        </ResourceDictionary>
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

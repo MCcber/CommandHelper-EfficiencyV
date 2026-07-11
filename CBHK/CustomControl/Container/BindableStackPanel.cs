@@ -37,6 +37,7 @@ namespace CBHK.CustomControl.Container
             {
                 var contentPresenter = new ContentPresenter
                 {
+                    DataContext = DataContext,
                     Content = item,
                     ContentTemplateSelector = ItemTemplateSelector
                 };

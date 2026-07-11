@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorComboBox;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Sign;

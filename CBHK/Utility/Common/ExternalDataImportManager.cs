@@ -1,6 +1,7 @@
 ﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.Input;
 using CBHK.CustomControl.VectorComboBox;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Model.Generator.Tag;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View.Component.Entity;
@@ -13,7 +14,6 @@ using CBHK.ViewModel.Component.FireworkRocket;
 using CBHK.ViewModel.Component.Item;
 using CBHK.ViewModel.Component.Recipe;
 using CBHK.ViewModel.Component.Spawner;
-using CBHK.ViewModel.Component.Villager;
 using CBHK.ViewModel.Generator;
 using Newtonsoft.Json.Linq;
 using System;
@@ -486,7 +486,7 @@ namespace CBHK.Utility.Common
                     {
                         ExistItem = true;
                         context.AddTransactionItem();
-                        TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItemViewModel;
+                        TransactionItem transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItem;
                         string iconPath = rootPath + buyID + ".png";
                         if (File.Exists(iconPath))
                             transactionItemsViewModel.Buy.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
@@ -514,7 +514,7 @@ namespace CBHK.Utility.Common
                         if (buyBID.Length > 0)
                         {
                             string iconPath = rootPath + buyBID + ".png";
-                            TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItemViewModel;
+                            TransactionItem transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItem;
                             if (File.Exists(iconPath))
                                 transactionItemsViewModel.BuyB.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
@@ -542,7 +542,7 @@ namespace CBHK.Utility.Common
                         if (sellID.Length > 0)
                         {
                             string iconPath = rootPath + sellID + ".png";
-                            TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItemViewModel;
+                            TransactionItem transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItem;
                             if (File.Exists(iconPath))
                                 transactionItemsViewModel.Sell.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
@@ -565,7 +565,7 @@ namespace CBHK.Utility.Common
                     #region other
                     if (ExistItem)
                     {
-                        TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItemViewModel;
+                        TransactionItem transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItem;
                         transactionItemsViewModel.Demand = int.Parse(demand.ToString());
                         transactionItemsViewModel.MaxUses = int.Parse(maxUses.ToString());
                         transactionItemsViewModel.PriceMultiplier = int.Parse(priceMultiplier.ToString());
@@ -587,7 +587,7 @@ namespace CBHK.Utility.Common
                 {
                     context.AddGossipItem();
                     JToken value = gossip.SelectToken("Text");
-                    GossipsItemViewModel gossipsItemsViewModel = context.GossipItemList[^1].DataContext as GossipsItemViewModel;
+                    GossipsItem gossipsItemsViewModel = context.GossipItemList[^1].DataContext as GossipsItem;
                     if (gossip.SelectToken("Target") is JArray targetUID)
                         gossipsItemsViewModel.TargetText = targetUID[0].ToString() + "," + targetUID[1].ToString() + "," + targetUID[2].ToString() + "," + targetUID[3].ToString();
                     if (gossip.SelectToken("Type") is JObject type)

@@ -1,6 +1,5 @@
-﻿using CBHK.Common.Model;
-using CBHK.Common.Utility;
-using CBHK.CustomControl;
+﻿using MinecraftLanguageModelLibrary.Data;
+using MinecraftLanguageModelLibrary.Utility;
 using CBHK.CustomControl.Container;
 using CBHK.CustomControl.Input;
 using CBHK.Domain;
@@ -53,7 +52,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// <summary>
         /// 符号结构文件
         /// </summary>
-        private string symbolStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"\Resource\Configs\Common\SymbolStructure.json";
+        private string symbolStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"\Resource\Configs\Data\SymbolStructure.json";
         /// <summary>
         /// 语法字典
         /// </summary>
@@ -75,7 +74,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         private SolidColorBrush darkGrayBrush = new((Color)ColorConverter.ConvertFromString("#1E1E1E"));
         private CBHKDataContext context = null;
         private RegexService regexService;
-        private DataService _dataService = null;
+        private DataService dataService = null;
         private IContainerProvider container;
         private MainView home;
         /// <summary>
@@ -177,16 +176,16 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         #endregion
 
         #region Method
-        public EditPageViewModel(IContainerProvider container,MainView mainView,CBHKDataContext Context,DataService dataService,RegexService RegexService)
+        public EditPageViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context,DataService dataService,RegexService regexService)
         {
             #region 客户端连接语言服务器
             client.Connect(new IPEndPoint(IPAddress.Parse(ipString), port));
             #endregion
 
-            regexService = regexService;
-            _dataService = dataService;
-            context = context;
-            container = container;
+            this.regexService = regexService;
+            this.dataService = dataService;
+            this.context = context;
+            this.container = container;
             home = mainView;
         }
 
@@ -477,47 +476,47 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
             Task.Run(() =>
             {
                 //添加物品槽位编号
-                ItemSlotList = _dataService.GetItemSlotList();
+                ItemSlotList = dataService.GetItemSlotList();
                 //添加附魔ID
-                EnchantmentIDAndNameGroupByVersionMap = _dataService.GetEnchantmentIDAndNameGroupByVersionMap();
+                EnchantmentIDAndNameGroupByVersionMap = dataService.GetEnchantmentIDAndNameGroupByVersionMap();
                 //添加伤害类型
-                DamageTypeList = _dataService.GetDamageTypeList();
+                DamageTypeList = dataService.GetDamageTypeList();
                 //添加维度
-                DimensionIDList = _dataService.GetDimensionList();
+                DimensionIDList = dataService.GetDimensionList();
                 //添加选择器参数
-                SelectorParameterList = _dataService.GetSelectorParameterList();
+                SelectorParameterList = dataService.GetSelectorParameterList();
                 //添加选择器参数值
-                SelectorParameterValueList = _dataService.GetSelectorParameterValueList();
+                SelectorParameterValueList = dataService.GetSelectorParameterValueList();
                 //添加游戏规则名称
-                GameRuleMap = _dataService.GetGameRuleMap();
+                GameRuleMap = dataService.GetGameRuleMap();
                 //添加队伍颜色
-                TeamColorList = _dataService.GetTeamColorList();
+                TeamColorList = dataService.GetTeamColorList();
                 //添加Bossbar颜色
-                BossbarColorList = _dataService.GetBossbarColorList();
+                BossbarColorList = dataService.GetBossbarColorList();
                 //添加Bossbar样式
-                BossbarStyles = _dataService.GetBossbarColorList();
+                BossbarStyles = dataService.GetBossbarColorList();
                 //添加物品ID
-                ItemIDList = _dataService.GetItemIDList();
+                ItemIDList = dataService.GetItemIDList();
                 //添加方块Id
-                BlockIDList = _dataService.GetBlockIDList();
+                BlockIDList = dataService.GetBlockIDList();
                 //添加实体Id
-                EntityIDList = _dataService.GetEntityIDList();
+                EntityIDList = dataService.GetEntityIDList();
                 //添加粒子路径
-                ParticleIDList = _dataService.GetParticleIDList();
+                ParticleIDList = dataService.GetParticleIDList();
                 //添加音效路径
-                SoundIDAndNameMap = _dataService.SoundIDAndNameMap();
+                SoundIDAndNameMap = dataService.SoundIDAndNameMap();
                 //添加生物属性
-                MobAttributeIDList = _dataService.GetMobAttributeIDList();
+                MobAttributeIDList = dataService.GetMobAttributeIDList();
                 //添加药水id/生物状态
-                EffectIDList = _dataService.GetMobEffectIDList();
+                EffectIDList = dataService.GetMobEffectIDList();
                 //添加进度列表
-                ResourceFilePathes["advancementValue"].AddRange(_dataService.GetAdvancementList());
+                ResourceFilePathes["advancementValue"].AddRange(dataService.GetAdvancementList());
                 //添加战利品表工具
-                LootToolList = _dataService.GetLootToolList();
+                LootToolList = dataService.GetLootToolList();
                 //添加记分板准则
-                ScoreboardTypeList = _dataService.GetScoreboardTypeList();
+                ScoreboardTypeList = dataService.GetScoreboardTypeList();
                 //添加Custom命令空间下的ID
-                ScoreboardCustomIDList = _dataService.GetScoreboardCustomIDList();
+                ScoreboardCustomIDList = dataService.GetScoreboardCustomIDList();
             });
             #endregion
 

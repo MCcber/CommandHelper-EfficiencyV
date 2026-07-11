@@ -2,9 +2,9 @@
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
-using CBHK.Interface.Utility;
+using CBHK.Interface.Data;
 using CBHK.Interface.Visual;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Model.Generator.Entity;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;
@@ -41,14 +41,14 @@ namespace CBHK.ViewModel.Component.Entity
         #region Field
         public bool HaveCustomName = false;
         public int CurrentMinVersion = 1202;
-        private string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
-        private string buttonNormalImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonNormal.png";
-        private string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonPressed.png";
+        private string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconEntities.png";
+        private string buttonNormalImage = "pack://application:,,,/CBHK;component/Resource/Data/Image/ButtonNormal.png";
+        private string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Data/Image/ButtonPressed.png";
         private ImageBrush buttonNormalBrush;
         private ImageBrush buttonPressedBrush;
         private UpdateEntityComponentVersionEvent versionUpdateEvent;
         private string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\";
-        private string CommonNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\Common";
+        private string CommonNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\Data";
         private string DependencyNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\Dependency";
         //专属结果集合
         public Dictionary<string, ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
@@ -458,7 +458,7 @@ namespace CBHK.ViewModel.Component.Entity
 
             if (targetEntityObject is not null)
             {
-                JArray commonTags = JArray.Parse(targetEntityObject["Common"].ToString());
+                JArray commonTags = JArray.Parse(targetEntityObject["Data"].ToString());
                 List<string> commonTagList = commonTags.ToList().ConvertAll(item => item.ToString());
                 //计算本次与上次共通标签的差集,关闭指定菜单，而不是全部关闭再依次判断打开
                 List<string> closedCommonTagList = specialEntityCommonTagList.Except(commonTagList).ToList();
@@ -764,7 +764,7 @@ namespace CBHK.ViewModel.Component.Entity
                 return item["Type"].ToString() == SelectedEntityId.Text;
             });
             string type = targetObj["Type"].ToString();
-            string commonTagData = targetObj["Common"].ToString();
+            string commonTagData = targetObj["Data"].ToString();
             JArray commonTagArray = JArray.Parse(commonTagData);
             #endregion
 
@@ -842,7 +842,7 @@ namespace CBHK.ViewModel.Component.Entity
             JObject targetObj = result[0] as JObject;
 
             CurrentCommonTags.Clear();
-            CurrentCommonTags = JArray.Parse(targetObj["Common"].ToString()).ToList().ConvertAll(item => item.ToString());
+            CurrentCommonTags = JArray.Parse(targetObj["Data"].ToString()).ToList().ConvertAll(item => item.ToString());
         }
 
         public void Build(StringBuilder Result)

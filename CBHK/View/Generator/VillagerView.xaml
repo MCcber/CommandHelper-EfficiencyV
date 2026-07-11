@@ -515,13 +515,8 @@
                                 Grid.Row="0"
                                 HorizontalAlignment="Stretch"
                                 utility:TextSizeHelper.AutoFontSize="True"
-                                Background="#424242"
-                                BorderBrush="Black"
-                                CaretBrush="White"
-                                Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
-                                WaterMarkerBrush="Gray"
                                 WaterMarkerMargin="5 0 0 0"
                                 WaterMarkerText="搜索物品">
                                 <behavior:Interaction.Triggers>
@@ -576,7 +571,7 @@
                                 <Container:VectorListView.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <VirtualizingWrapPanel:VirtualizingWrapPanel
-                                            Background="#555956"
+                                            Background="Transparent"
                                             VirtualizingPanel.CacheLengthUnit="Pixel"
                                             VirtualizingPanel.IsContainerVirtualizable="True"
                                             VirtualizingPanel.IsVirtualizing="True"

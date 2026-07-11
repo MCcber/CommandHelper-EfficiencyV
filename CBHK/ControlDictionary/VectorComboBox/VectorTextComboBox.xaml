@@ -45,7 +45,8 @@
 
     <DataTemplate x:Key="VectorTextComboBoxItemTemplate">
         <Grid
-            MinHeight="40"
+            MinHeight="30"
+            MaxHeight="40"
             HorizontalAlignment="Left"
             VerticalAlignment="Center"
             FocusVisualStyle="{x:Null}">
@@ -59,7 +60,7 @@
             <Grid.Height>
                 <Binding
                     FallbackValue="40"
-                    Path="ActualHeight"
+                    Path="Height"
                     RelativeSource="{RelativeSource AncestorType={x:Type VectorComboBox:VectorTextComboBox}}" />
             </Grid.Height>
             <TextBlock

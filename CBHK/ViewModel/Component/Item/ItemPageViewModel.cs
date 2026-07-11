@@ -3,7 +3,7 @@ using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.Interface.Visual;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
@@ -59,8 +59,8 @@ namespace CBHK.ViewModel.Component.Item
         //存储外部读取进来的实体数据
         public JObject ExternallyReadEntityData { get; set; } = null;
 
-        string buttonNormalImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonNormal.png";
-        string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Common/Image/ButtonPressed.png";
+        string buttonNormalImage = "pack://application:,,,/CBHK;component/Resource/Data/Image/ButtonNormal.png";
+        string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Data/Image/ButtonPressed.png";
         ImageBrush buttonNormalBrush;
         ImageBrush buttonPressedBrush;
 
@@ -68,14 +68,14 @@ namespace CBHK.ViewModel.Component.Item
         public string Result { get; set; }
 
         //本生成器的图标路径
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItems.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconItems.png";
         private string ImageSetFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
         //Data页
         //public DataList data = null;
         //Function页
         //public Function function = null;
         //Common页
-        //public View.Component.Item.Common common = null;
+        //public View.Component.Item.Data common = null;
         //特指标签页视图容器
         VectorScrollViewer SpecialViewer = null;
         /// <summary>

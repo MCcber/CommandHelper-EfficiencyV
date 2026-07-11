@@ -1,6 +1,4 @@
-﻿using CBHK.Common.Model;
-using CBHK.Common.Utility;
-using CBHK.Utility.Data;
+﻿using CBHK.Utility.Data;
 using CBHK.Utility.Visual;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.ViewModel.Component.Datapack.EditPage;
@@ -11,6 +9,8 @@ using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using MinecraftLanguageModelLibrary.Data;
+using MinecraftLanguageModelLibrary.Utility;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -172,7 +172,7 @@ namespace CBHK.CustomControl.Input
             //为代码编辑器安装大纲管理器
             foldingManager = FoldingManager.Install(TextArea);
             XshdSyntaxDefinition xshdSyntaxDefinition = new();
-            xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Common\" + "Mcfunction.xshd"));
+            xshdSyntaxDefinition = HighlightingLoader.LoadXshd(new XmlTextReader(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Data\" + "Mcfunction.xshd"));
             IHighlightingDefinition mcfunctionHighlighting = HighlightingLoader.Load(xshdSyntaxDefinition, HighlightingManager.Instance);
             SyntaxHighlighting = mcfunctionHighlighting;
             #region 初始化补全框

@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControl.Input;
 using CBHK.Interface.Data;
 using CBHK.Interface.Visual;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Model.Constant;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual;

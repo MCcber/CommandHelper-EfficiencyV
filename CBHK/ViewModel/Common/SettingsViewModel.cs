@@ -1,5 +1,4 @@
-﻿using CBHK.Common.Model;
-using CBHK.CustomControl.Container;
+﻿using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.Domain.Model.Database;
@@ -18,6 +17,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using CBHK.Model.Data;
 
 namespace CBHK.ViewModel.Common
 {

@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl.VectorComboBox;
 using CBHK.Interface.Visual;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
@@ -42,7 +42,7 @@ namespace CBHK.ViewModel.Component.Spawner
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconSpawner.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconSpawner.png";
         #endregion
 
         #region Property

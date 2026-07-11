@@ -1,6 +1,6 @@
 ﻿using CBHK.CustomControl.Container;
 using CBHK.Interface.Visual;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.Utility.Time;
 using CBHK.View.Component.Datapack.EditPage;

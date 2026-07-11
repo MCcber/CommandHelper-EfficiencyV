@@ -2,8 +2,8 @@
 using CBHK.CustomControl.Input;
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
-using CBHK.Interface.Utility;
-using CBHK.Model.Common;
+using CBHK.Interface.Data;
+using CBHK.Model.Data;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
@@ -41,7 +41,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconArmorStand.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconArmorStand.png";
         /// <summary>
         /// 开始三轴合一
         /// </summary>
@@ -744,16 +744,16 @@ namespace CBHK.ViewModel.Generator
         private ImageSource _rightHandItemImage;
 
         [ObservableProperty]
-        private ImageSource _headItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Helmet.png", UriKind.RelativeOrAbsolute));
+        private ImageSource _headItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Helmet.png", UriKind.RelativeOrAbsolute));
 
         [ObservableProperty]
-        private ImageSource _chestItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Chestplate.png", UriKind.RelativeOrAbsolute));
+        private ImageSource _chestItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Chestplate.png", UriKind.RelativeOrAbsolute));
 
         [ObservableProperty]
-        private ImageSource _legItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Leggings.png", UriKind.RelativeOrAbsolute));
+        private ImageSource _legItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Leggings.png", UriKind.RelativeOrAbsolute));
 
         [ObservableProperty]
-        private ImageSource _feetItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Common/Image/Boots.png", UriKind.RelativeOrAbsolute));
+        private ImageSource _feetItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Boots.png", UriKind.RelativeOrAbsolute));
         #endregion
 
         #region 禁止移除或改变头部、身体、手部、腿部、脚部装备
@@ -1668,7 +1668,7 @@ namespace CBHK.ViewModel.Generator
             StringBuilder customnameResult = new();
             //StringBuilder customnameResult = textStyleEditor.Create();
             //textStyleEditor.CollectionData(customnameResult);
-            //textStyleEditor.Build(customnameResult);
+            //textStyleEditor.BuildResource(customnameResult);
             string CustomNameValue = customnameResult.ToString();
             if (CustomNameValue.Trim().Length > 0)
             {

@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControl.TextElement;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Interface.Visual;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
@@ -375,7 +375,7 @@ namespace CBHK.ViewModel.Generator
         {
             //StringBuilder Title = signaturePage.title.Create();
             //signaturePage.title.CollectionData(Title);
-            //signaturePage.title.Build(Title);
+            //signaturePage.title.BuildResource(Title);
             //string result = Title.ToString();
             string result = "";
             string quotation = CurrentMinVersion < 113 ? "\"" : "'";
@@ -390,7 +390,7 @@ namespace CBHK.ViewModel.Generator
         {
             //StringBuilder Author = signaturePage.author.Create();
             //signaturePage.author.CollectionData(Author);
-            //signaturePage.author.Build(Author);
+            //signaturePage.author.BuildResource(Author);
             //string result = Author.ToString();
             string result = "";
             string quotation = CurrentMinVersion < 113 ? "\"" : "'";

@@ -1,5 +1,5 @@
-﻿using CBHK.Common.Model;
-using CBHK.Common.Utility;
+﻿using MinecraftLanguageModelLibrary.Data;
+using MinecraftLanguageModelLibrary.Utility;
 
 namespace CBHK.Domain
 {
@@ -7,7 +7,7 @@ namespace CBHK.Domain
     {
         #region Field
         private CBHKDataContext context;
-        private RegexService regexService = null;
+        private RegexService regexService;
         private List<string> ItemSlotList = [];
         private List<string> Enchantments = [];
         private List<string> DamageTypeList = [];
@@ -331,10 +331,7 @@ namespace CBHK.Domain
         /// 获取物品ID与名称的字典(根据版本号分组)
         /// </summary>
         /// <returns></returns>
-        public Dictionary<int, Dictionary<string, string>> GetItemIDAndNameGroupByVersionMap()
-        {
-            return ItemGroupByVersionDicionary;
-        }
+        public Dictionary<int, Dictionary<string, string>> GetItemIDAndNameGroupByVersionMap() => ItemGroupByVersionDicionary;
 
         /// <summary>
         /// 获取实体ID与名称的字典(根据版本号分组)

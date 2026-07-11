@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.2.32630.192
+# Visual Studio Version 18
+VisualStudioVersion = 18.5.11723.231
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CBHK", "CBHK\CBHK.csproj", "{A235137C-4DF1-4A25-8C24-629B5383AB24}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBHK.Domain", "CBHK.Domain\CBHK.Domain.csproj", "{B2BA9649-030E-422F-AD74-8B1B66815818}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBHK.Common", "CBHK.Common\CBHK.Common.csproj", "{5215D376-6563-40BD-BB29-34362D0EE3D9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinecraftLanguageModelLibrary", "..\MinecraftLanguageModelLibrary\MinecraftLanguageModelLibrary.csproj", "{895087A9-BC65-1149-1BFF-1AAD50314301}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinecraftLanguageServer", "..\MinecraftLanguageServer\MinecraftLanguageServer.csproj", "{C471B3CD-9B81-BA81-37C9-F261E9614D39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,18 +45,30 @@ Global
 		{B2BA9649-030E-422F-AD74-8B1B66815818}.Release|x64.Build.0 = Release|Any CPU
 		{B2BA9649-030E-422F-AD74-8B1B66815818}.Release|x86.ActiveCfg = Release|Any CPU
 		{B2BA9649-030E-422F-AD74-8B1B66815818}.Release|x86.Build.0 = Release|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Debug|x64.Build.0 = Debug|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Debug|x86.Build.0 = Debug|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Release|x64.ActiveCfg = Release|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Release|x64.Build.0 = Release|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Release|x86.ActiveCfg = Release|Any CPU
-		{5215D376-6563-40BD-BB29-34362D0EE3D9}.Release|x86.Build.0 = Release|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Debug|x64.Build.0 = Debug|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Debug|x86.Build.0 = Debug|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Release|Any CPU.Build.0 = Release|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Release|x64.ActiveCfg = Release|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Release|x64.Build.0 = Release|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Release|x86.ActiveCfg = Release|Any CPU
+		{895087A9-BC65-1149-1BFF-1AAD50314301}.Release|x86.Build.0 = Release|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Debug|x64.Build.0 = Debug|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Debug|x86.Build.0 = Debug|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Release|x64.ActiveCfg = Release|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Release|x64.Build.0 = Release|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Release|x86.ActiveCfg = Release|Any CPU
+		{C471B3CD-9B81-BA81-37C9-F261E9614D39}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

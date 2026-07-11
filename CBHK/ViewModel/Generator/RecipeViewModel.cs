@@ -2,7 +2,7 @@
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.Interface.Visual;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;

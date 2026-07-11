@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Windows.Documents;
 using System.Windows;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 
 namespace CBHK.Utility.Visual.MessageTip
 {

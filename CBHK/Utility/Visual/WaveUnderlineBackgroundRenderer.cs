@@ -1,65 +1,94 @@
-﻿using ICSharpCode.AvalonEdit;
+﻿using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Rendering;
+using System;
 using System.Windows;
 using System.Windows.Media;
 
 namespace CBHK.Utility.Visual
 {
-    /// <summary>
-    /// 用于在指定位置的文本下方渲染波浪线
-    /// </summary>
-    /// <param name="textView">目标文本视图</param>
-    /// <param name="startOffset"></param>
-    /// <param name="endOffset"></param>
-    /// <param name="underlineColor">波浪线颜色</param>
-    public class WaveUnderlineBackgroundRenderer(int startOffset, int endOffset, SolidColorBrush underlineColor) : IBackgroundRenderer
+    public class WaveUnderlineBackgroundRenderer(ITextAnchor startAnchor, ITextAnchor endAnchor, SolidColorBrush underlineColor) : IBackgroundRenderer
     {
+        #region Field
         public KnownLayer Layer => KnownLayer.Selection;
 
-        private readonly int startOffset = startOffset;
-        private readonly int endOffset = endOffset;
-        private readonly SolidColorBrush underlineColor = underlineColor;
+        /// <summary>
+        /// 辅助 ISegment 实现
+        /// </summary>
+        private readonly struct SimpleSegment(int offset, int length) : ISegment
+        {
+            public int Offset { get; } = offset;
+            public int Length { get; } = length;
+            public int EndOffset => Offset + Length;
+        }
+        #endregion
 
+        #region Method
         public void Draw(TextView textView, DrawingContext drawingContext)
         {
+            if (startAnchor.Offset >= endAnchor.Offset) return;
             textView.EnsureVisualLines();
-            var visualLines = textView.VisualLines;
-            if (visualLines.Count == 0)
-                return;
+            var document = textView.Document;
 
-            var startPoint = textView.GetVisualPosition(new TextViewPosition(textView.Document.GetLocation(startOffset)), VisualYPosition.LineBottom) - textView.ScrollOffset;
-            var endPoint = textView.GetVisualPosition(new TextViewPosition(textView.Document.GetLocation(endOffset)), VisualYPosition.LineBottom) - textView.ScrollOffset;
+            int startLine = document.GetLocation(startAnchor.Offset).Line;
+            int endLine = document.GetLocation(endAnchor.Offset).Line;
 
-            Pen pen = new(underlineColor, 1);
-            double offset = 2.5;
-            double waveLength = offset * 2;
-            StreamGeometry geometry = new();
-            using (StreamGeometryContext ctx = geometry.Open())
+            for (int lineNum = startLine; lineNum <= endLine; lineNum++)
             {
-                double x = startPoint.X;
+                var line = document.GetLineByNumber(lineNum);
+                int segStart = Math.Max(line.Offset, startAnchor.Offset);
+                int segEnd = Math.Min(line.EndOffset, endAnchor.Offset);
+                if (segStart >= segEnd) continue;
 
-                while (x < endPoint.X)
+                var segment = new SimpleSegment(segStart, segEnd - segStart);
+                foreach (var rect in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment))
                 {
-                    double nextX = x + waveLength; // 下一个波段的结束x坐标
-                    if (nextX > endPoint.X)
-                    {
-                        nextX = endPoint.X; //如果下一个波段会超过endPoint.X，调整它，使得不会绘制过界
-                    }
-
-                    double midX = (x + nextX) / 2; // 当前波段的中点x坐标
-
-                    // 绘制从当前开始点到下一个波段的顶点
-                    ctx.BeginFigure(new Point(x, startPoint.Y), false, false);
-                    ctx.QuadraticBezierTo(
-                        new Point(midX, startPoint.Y - offset), // 波谷在中点上方offset个单位
-                        new Point(nextX, startPoint.Y), true, false);
-
-                    x = nextX; // 更新x到下一个波段的开始点
+                    if (rect.IsEmpty) continue;
+                    DrawAdaptiveWave(drawingContext, rect.Left, rect.Right, rect.Bottom - 1, underlineColor);
                 }
             }
-
-            geometry.Freeze();
-            drawingContext.DrawGeometry(null, pen, geometry);
         }
+
+        private static void DrawAdaptiveWave(DrawingContext dc, double x1, double x2, double y, SolidColorBrush brush)
+        {
+            double width = x2 - x1;
+            if (width <= 0) return;
+
+            const double baseAmplitude = 2.5;
+            const double baseWaveLength = 4.0;
+            const double transitionWidth = 50.0;
+            const double minimumAmplitudeThreshold = 0.3;
+
+            // 平滑因子 t ∈ [0, 1]，宽度超过 transitionWidth 后开始线性上升
+            double t = Math.Clamp((width - transitionWidth) / 600.0, 0.0, 1.0);
+            // 振幅：从 baseAmplitude 平滑过渡到 0
+            double amplitude = baseAmplitude * (1.0 - t);
+            // 波长：从 baseWaveLength 平滑过渡到更长的周期
+            double waveLength = baseWaveLength + t * 12.0;
+
+            // 极平缓时直接画直线，性能最优
+            if (amplitude < minimumAmplitudeThreshold)
+            {
+                dc.DrawLine(new Pen(brush, 1), new Point(x1, y), new Point(x2, y));
+                return;
+            }
+
+            var pen = new Pen(brush, 1);
+            var geometry = new StreamGeometry();
+            using (var ctx = geometry.Open())
+            {
+                double x = x1;
+                while (x < x2)
+                {
+                    double nx = Math.Min(x + waveLength, x2);
+                    double mx = (x + nx) / 2;
+                    ctx.BeginFigure(new Point(x, y), false, false);
+                    ctx.QuadraticBezierTo(new Point(mx, y - amplitude), new Point(nx, y), true, false);
+                    x = nx;
+                }
+            }
+            geometry.Freeze();
+            dc.DrawGeometry(null, pen, geometry);
+        } 
+        #endregion
     }
 }

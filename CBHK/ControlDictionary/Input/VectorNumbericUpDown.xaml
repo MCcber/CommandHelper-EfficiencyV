@@ -11,7 +11,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Input:VectorNumbericUpDown}">
-                        <Grid>
+                        <Grid HorizontalAlignment="{TemplateBinding HorizontalAlignment}" VerticalAlignment="{TemplateBinding VerticalAlignment}">
                             <Grid.RowDefinitions>
                                 <RowDefinition MinHeight="40" />
                             </Grid.RowDefinitions>

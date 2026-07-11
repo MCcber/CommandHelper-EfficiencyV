@@ -150,13 +150,13 @@ namespace CBHK.CustomControl.Input
             if (solidColorBrush is not null)
             {
                 BorderBrush = new SolidColorBrush(solidColorBrush.Color);
-                BorderCornerBrush = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.4f, Model.Common.ColorModifyMode.Lighten));
-                LeftTopBorderBrush = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.3f, Model.Common.ColorModifyMode.Lighten));
-                RightBottomBorderBrush = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.2f, Model.Common.ColorModifyMode.Lighten));
-                InnerLeftTopBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.02f, Model.Common.ColorModifyMode.Darken));
-                InnerRightTopBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.05f, Model.Common.ColorModifyMode.Darken));
-                InnerLeftBottomBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.05f, Model.Common.ColorModifyMode.Darken));
-                InnerRightBottomBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.08f, Model.Common.ColorModifyMode.Darken));
+                BorderCornerBrush = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.4f, Model.Data.ColorModifyMode.Lighten));
+                LeftTopBorderBrush = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.3f, Model.Data.ColorModifyMode.Lighten));
+                RightBottomBorderBrush = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.2f, Model.Data.ColorModifyMode.Lighten));
+                InnerLeftTopBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.02f, Model.Data.ColorModifyMode.Darken));
+                InnerRightTopBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.05f, Model.Data.ColorModifyMode.Darken));
+                InnerLeftBottomBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.05f, Model.Data.ColorModifyMode.Darken));
+                InnerRightBottomBackground = new SolidColorBrush(ColorTool.ModifyColorBrightness(solidColorBrush.Color, 0.08f, Model.Data.ColorModifyMode.Darken));
             }
         }
 

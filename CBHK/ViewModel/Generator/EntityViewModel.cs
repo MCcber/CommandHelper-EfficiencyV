@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
@@ -38,7 +38,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private MainView home = mainView;
         //本生成器的图标路径
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconEntities.png";
         private string ModifierOperationTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\AttributeModifierOperationType.ini";
         string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
         public ObservableCollection<string> ModifierOperationTypeSource = [];

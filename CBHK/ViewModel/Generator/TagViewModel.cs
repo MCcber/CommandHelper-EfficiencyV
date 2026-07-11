@@ -1,7 +1,7 @@
 ﻿using CBHK.CustomControl;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using CBHK.Model.Generator.Tag;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;

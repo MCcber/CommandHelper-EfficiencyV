@@ -2,10 +2,12 @@
     x:Class="CBHK.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:prism="http://prismlibrary.com/">
+    xmlns:prism="http://prismlibrary.com/"
+    ShutdownMode="OnMainWindowClose">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Common.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/CommandBlockOrangeTheme.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/Button.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/CBHK;component/ControlDictionary/CheckBox.xaml" />

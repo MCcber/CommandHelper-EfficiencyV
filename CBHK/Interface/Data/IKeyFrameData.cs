@@ -1,5 +1,5 @@
 ﻿using CBHK.CustomControl.Input;
-using CBHK.Model.Common;
+using CBHK.Model.Data;
 using MathNet.Numerics.Interpolation;
 
 namespace CBHK.Interface.Data

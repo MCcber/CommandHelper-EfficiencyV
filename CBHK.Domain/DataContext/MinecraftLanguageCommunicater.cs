@@ -1,42 +1,58 @@
-﻿using MinecraftLanguageModelLibrary.Model.MCDocument;
-using Newtonsoft.Json;
+﻿using MinecraftLanguageModelLibrary.Data;
 using System.IO.Pipes;
 using System.Text;
+using System.Text.Json;
 
 namespace CBHK.Domain.DataContext
 {
     public class MinecraftLanguageCommunicater
     {
-        #region Field
-        public NamedPipeClientStream mcdocumentPiperClientStream = new(".", "MCDocumentLanguageServerPipe", PipeDirection.InOut);
-        public NamedPipeClientStream mcfunctionPiperClientStream = new(".", "MCFunctionLanguageServerPipe", PipeDirection.InOut);
-        #endregion
-
         #region Method
-        public MinecraftLanguageCommunicater()
-        {
-            Task.Run(mcdocumentPiperClientStream.ConnectAsync);
-            Task.Run(mcfunctionPiperClientStream.ConnectAsync);
-        }
 
-        public async Task<MCDocumentFileModel?> AnalysisMCDocumentFileOrContent(string filePathOrContent)
+        public static async Task<MCDocumentFile?> AnalysisMCDocumentFileOrContent(string filePathOrContent)
         {
-            byte[] dataArray = Encoding.Default.GetBytes(filePathOrContent);
-            await mcdocumentPiperClientStream.WriteAsync(dataArray);
-            byte[] resultArray = new byte[2048];
-            await mcdocumentPiperClientStream.ReadAsync(resultArray);
-            MCDocumentFileModel? result = JsonConvert.DeserializeObject<MCDocumentFileModel>(Encoding.Default.GetString(resultArray));
+            NamedPipeClientStream mcdocumentPiperClientStream = new(".", "MCDocumentLanguageServerPipe", PipeDirection.InOut);
+            await mcdocumentPiperClientStream.ConnectAsync();
+
+            byte[] pathBytes = Encoding.UTF8.GetBytes(filePathOrContent);
+            byte[] lengthBytes = BitConverter.GetBytes(pathBytes.Length);
+
+            // 先发长度
+            await mcdocumentPiperClientStream.WriteAsync(lengthBytes);
+            // 再发数据
+            await mcdocumentPiperClientStream.WriteAsync(pathBytes);
+
+            // 读取长度前缀
+            byte[] lenBuf = new byte[4];
+            await mcdocumentPiperClientStream.ReadExactlyAsync(lenBuf, 0, 4);
+            int resultLength = BitConverter.ToInt32(lenBuf, 0);
+
+            byte[] resultArray = new byte[resultLength];
+            await mcdocumentPiperClientStream.ReadExactlyAsync(resultArray, 0, resultLength);
+
+            string json = Encoding.UTF8.GetString(resultArray);
+            MCDocumentFile? result = JsonSerializer.Deserialize<MCDocumentFile>(json);
             return result;
         }
 
-        public async Task<string?> AnalysisMCFunctionFileOrContent(string filePathOrContent)
+        public static async Task<string> AnalysisMCFunctionFileOrContent(string filePathOrContent)
         {
+            NamedPipeClientStream mcfunctionPiperClientStream = new(".", "MCFunctionLanguageServerPipe", PipeDirection.InOut);
             byte[] dataArray = Encoding.Default.GetBytes(filePathOrContent);
             await mcfunctionPiperClientStream.WriteAsync(dataArray);
-            byte[] resultArray = new byte[2048];
+
+            // 先读取 4 字节长度
+            byte[] lenBuf = new byte[4];
+            await mcfunctionPiperClientStream.ReadAsync(lenBuf, 0, 4);
+            int resultLength = BitConverter.ToInt32(lenBuf, 0);
+
+            // 再读取数据
+            byte[] resultArray = new byte[resultLength];
             await mcfunctionPiperClientStream.ReadAsync(resultArray);
-            string? result = Encoding.Default.GetString(resultArray);
-            return result;
+
+            string json = Encoding.UTF8.GetString(resultArray, 0, resultLength);
+            string? result = JsonSerializer.Deserialize<string>(json);
+            return result ?? "";
         }
         #endregion
     }

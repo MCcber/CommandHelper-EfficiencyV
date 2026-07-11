@@ -4,8 +4,10 @@ using CBHK.Utility.Data;
 using CBHK.Utility.Visual;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -155,8 +157,6 @@ namespace CBHK.CustomControl.VectorComboBox
             BorderBrush = Brushes.Black;
             Loaded += VectorTextComboBox_Loaded;
             DropDownClosed += VectorTextComboBox_DropDownClosed;
-            itemView.Source = DataList;
-            ItemsSource = itemView.View;
             itemView.Filter += ItemView_Filter;
         }
 
@@ -183,6 +183,18 @@ namespace CBHK.CustomControl.VectorComboBox
             SetResourceReference(PopupItemPanelBackgroundProperty,Theme.CommonBackground);
 
             UpdateBorderColorByBackgroundColor();
+
+            //只有未通过XAML绑定ItemsSource时才启用DataList路径
+            if (ItemsSource is null && DataList is not null)
+            {
+                itemView.Source = DataList;
+                ItemsSource = itemView.View;
+            }
+            else if(ItemsSource is not null && DataList is null)
+            {
+                itemView.Source = ItemsSource;
+                ItemsSource = itemView.View;
+            }
         }
 
         protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
@@ -206,16 +218,18 @@ namespace CBHK.CustomControl.VectorComboBox
 
         private void ItemView_Filter(object sender, FilterEventArgs e)
         {
-            if (e.Item is VectorTextComboBoxItem vectorTextComboBoxItem)
+            string text = e.Item switch
             {
-                bool result = StringTool.IsMatchSearchText(vectorTextComboBoxItem.Text, SearchText);
-                e.Accepted = result;
-            }
+                VectorTextComboBoxItem v => v.Text,
+                string s => s,
+                _ => e.Item?.ToString() ?? ""
+            };
+            e.Accepted = StringTool.IsMatchSearchText(text, SearchText);
         }
 
         private static void OnDataListChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if(d is VectorTextComboBox vectorTextComboBox)
+            if (d is VectorTextComboBox vectorTextComboBox)
             {
                 vectorTextComboBox.OnDataList_Changed(e.NewValue as ObservableCollection<VectorTextComboBoxItem>);
             }
@@ -227,6 +241,30 @@ namespace CBHK.CustomControl.VectorComboBox
             {
                 itemView.Source = newValue;
                 ItemsSource = itemView.View;
+            }
+        }
+
+        protected override void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue)
+        {
+            base.OnItemsSourceChanged(oldValue, newValue);
+
+            // 当外部 XAML 绑定设置 ItemsSource 时，将过滤器挂到 WPF 自动创建的 CollectionView 上
+            if (newValue is not null && newValue != itemView.View)
+            {
+                var defaultView = CollectionViewSource.GetDefaultView(newValue);
+                if (defaultView is not null)
+                {
+                    defaultView.Filter = item =>
+                    {
+                        string text = item switch
+                        {
+                            VectorTextComboBoxItem v => v.Text,
+                            string s => s,
+                            _ => item?.ToString() ?? ""
+                        };
+                        return StringTool.IsMatchSearchText(text, SearchText);
+                    };
+                }
             }
         }
 
@@ -276,11 +314,17 @@ namespace CBHK.CustomControl.VectorComboBox
 
         public void SearchBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if(e.Key is Key.Enter && itemView is not null)
+            if(e.Key is Key.Enter)
             {
                 e.Handled = true;
                 IsDropDownOpen = true;
-                itemView.View?.Refresh();
+                // 刷新当前生效的视图
+                if (ItemsSource == itemView.View)
+                    itemView.View?.Refresh();
+                else if (ItemsSource is not null)
+                {
+                    CollectionViewSource.GetDefaultView(ItemsSource)?.Refresh();
+                }
             }
         }
         #endregion
