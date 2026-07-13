@@ -5,9 +5,9 @@
 
 This is a software for the Windows platform that is about to be developed. The core function is to help Minecraft Java Edition players solve the efficiency problems encountered when developing the related functions of the original version. Below is some screenshot of the homepage and functions.
 
-[![主页](https://s41.ax1x.com/2026/04/22/pe2zYJx.png)](https://imgchr.com/i/pe2zYJx)
-
 - 这是本应用的主页，这里陈列着团队和生成器的所有信息
+
+[![主页](https://s41.ax1x.com/2026/04/22/pe2zYJx.png)](https://imgchr.com/i/pe2zYJx)
 
 [![Villager](https://s41.ax1x.com/2026/04/22/pe2z7Yq.png)](https://imgchr.com/i/pe2z7Yq)
 [![Signer](https://s41.ax1x.com/2026/04/22/pe2zITs.png)](https://imgchr.com/i/pe2zITs)
