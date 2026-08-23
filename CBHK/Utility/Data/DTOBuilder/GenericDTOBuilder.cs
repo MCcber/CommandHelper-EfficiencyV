@@ -2,10 +2,10 @@
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
 using MinecraftLanguageModelLibrary.Data;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 
 namespace CBHK.Utility.Data.DTOBuilder
 {
@@ -17,27 +17,46 @@ namespace CBHK.Utility.Data.DTOBuilder
         private readonly DocumentDTOBuildStrategyRegistry registry = registry;
         #endregion
 
-        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, StringBuilder documentItemPath, Dictionary<string, KeyValueAnchors> anchorMap)
+        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
         {
-            string targetTypeName = target.TypeName ?? "";
-            KeyValuePair<string, MetaTypeEditorFieldDTO> pair = resource.DocumentItemMap.FirstOrDefault(pair => pair.Key.EndsWith("::" + targetTypeName));
-            if (pair.Value is MetaTypeEditorFieldDTO targetTypeDTO)
+            //为可选则直接返回
+            if (target.IsRequired)
             {
-                List<string> formalParamList = [.. targetTypeDTO.TypeParameterNameList];
-                List<string> actualArgList = [.. target.TypeParameterNameList];
-                if (formalParamList.Count == actualArgList.Count)
+                if (target.Parent is not null)
                 {
-                    var substituteResult = helper.SubstituteGenericIterative(targetTypeDTO, formalParamList, actualArgList, version);
+                    target.Parent.Value = target.FieldName ?? target.Value;
+                }
+            }
+
+            string targetTypeName = target.TypeName ?? typeName;
+            //需要精确搜索目标
+            if(documentPath is null)
+            {
+                return;
+            }
+            var targetContext = UsePathParser.Parse(resource,documentPath, targetTypeName);
+            string documentItemPathString = documentPath.TargetPath.ToString();
+
+            if (targetContext.DTO is MetaTypeEditorFieldDTO targetTypeDTO)
+            {
+                List<Tuple<string, MetaValue>> formalParamMap = targetTypeDTO.TypeParameterNameList;
+                List<Tuple<string, MetaValue>> actualArgMap = [];
+                if(target.TypeParameterNameList is not null)
+                {
+                    actualArgMap = target.TypeParameterNameList;
+                }
+                if (formalParamMap.Count == actualArgMap.Count)
+                {
+                    var substituteResult = helper.SubstituteGenericIterative(targetTypeDTO, formalParamMap, actualArgMap, version);
                     MCDocumentMetaTypeDTOHelper.VerifyVersion(substituteResult, version);
                     List<MetaTypeEditorFieldDTO> expandedChildrenList = [..substituteResult.Where(item => item.IsVisible)];
 
                     for (int i = 0; i < expandedChildrenList.Count; i++)
                     {
-                        //优先解析资源数据
                         MCDocumentResourceBuilder.BaseDataHandler(expandedChildrenList[i]);
-                        MCDocumentResourceBuilder.BuildResource(expandedChildrenList[i], expandedChildrenList[i], version, documentItemPath, resource, helper);
+                        MCDocumentResourceBuilder.BuildResource(expandedChildrenList[i], expandedChildrenList[i], version, documentPath, resource, helper);
                         var childRegistry = registry.Get(expandedChildrenList[i].TypeKind);
-                        childRegistry.Build(expandedChildrenList[i], expandedChildrenList[i], version, documentItemPath, anchorMap);
+                        childRegistry.Build(expandedChildrenList[i], expandedChildrenList[i], version, documentPath, anchorMap, justSetView, targetTypeName);
                     }
 
                     List<MetaTypeEditorFieldDTO> verifiedDTOList = expandedChildrenList;

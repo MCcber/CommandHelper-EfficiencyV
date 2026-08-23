@@ -4,10 +4,7 @@ using CBHK.Utility.Data;
 using CBHK.Utility.Visual;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -24,15 +21,6 @@ namespace CBHK.CustomControl.VectorComboBox
         #endregion
 
         #region Property
-        public ObservableCollection<VectorTextComboBoxItem> DataList
-        {
-            get { return (ObservableCollection<VectorTextComboBoxItem>)GetValue(DataListProperty); }
-            set { SetValue(DataListProperty, value); }
-        }
-
-        public static readonly DependencyProperty DataListProperty =
-            DependencyProperty.Register("DataList", typeof(ObservableCollection<VectorTextComboBoxItem>), typeof(VectorTextComboBox), new PropertyMetadata(default(ObservableCollection<VectorTextComboBoxItem>), OnDataListChanged));
-
         public string SearchText
         {
             get { return (string)GetValue(SearchTextProperty); }
@@ -184,13 +172,15 @@ namespace CBHK.CustomControl.VectorComboBox
 
             UpdateBorderColorByBackgroundColor();
 
-            //只有未通过XAML绑定ItemsSource时才启用DataList路径
-            if (ItemsSource is null && DataList is not null)
+            // Loaded 可能多次触发（控件重新挂载/换父级时），第二次 ItemsSource 已经是 itemView.View，
+            // 直接跳过避免重复包装（重复包装会让 ItemsSource 变成视图再赋给 Source 而抛异常，也会破坏选择）。
+            if (ReferenceEquals(ItemsSource, itemView.View))
             {
-                itemView.Source = DataList;
-                ItemsSource = itemView.View;
+                return;
             }
-            else if(ItemsSource is not null && DataList is null)
+
+            // 将 ItemsSource 包装进 itemView，以便搜索框按 SearchText 过滤
+            if (ItemsSource is not null)
             {
                 itemView.Source = ItemsSource;
                 ItemsSource = itemView.View;
@@ -225,23 +215,6 @@ namespace CBHK.CustomControl.VectorComboBox
                 _ => e.Item?.ToString() ?? ""
             };
             e.Accepted = StringTool.IsMatchSearchText(text, SearchText);
-        }
-
-        private static void OnDataListChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (d is VectorTextComboBox vectorTextComboBox)
-            {
-                vectorTextComboBox.OnDataList_Changed(e.NewValue as ObservableCollection<VectorTextComboBoxItem>);
-            }
-        }
-
-        private void OnDataList_Changed(ObservableCollection<VectorTextComboBoxItem> newValue)
-        {
-            if (itemView.Source != newValue)
-            {
-                itemView.Source = newValue;
-                ItemsSource = itemView.View;
-            }
         }
 
         protected override void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue)

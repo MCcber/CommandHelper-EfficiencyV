@@ -12,13 +12,9 @@ namespace CBHK.Utility.Data
         /// </summary>
         /// <param name="anchorList"></param>
         /// <returns></returns>
-        public static (List<MetaTypeEditorFieldDTO>, Dictionary<string, KeyValueAnchors>) BuildDTOTree(List<KeyValueAnchors> anchorList)
+        public static DTOInstanceContext BuildDTOTree(List<KeyValueAnchors> anchorList)
         {
-            (List<MetaTypeEditorFieldDTO>, Dictionary<string, KeyValueAnchors>) rootTuple = new()
-            {
-                Item1 = [],
-                Item2 = []
-            };
+            DTOInstanceContext result = new([], []);
 
             // 栈中存放 (容器 dto, 容器的结束偏移量)
             Stack<(MetaTypeEditorFieldDTO DTO, int EndOffset)> stack = new();
@@ -29,7 +25,7 @@ namespace CBHK.Utility.Data
                 string guid = Guid.NewGuid().ToString();
 
                 //为roots的字典增加成员
-                rootTuple.Item2.Add(guid, anchorList[i]);
+                result.anchorMap.Add(guid, anchorList[i]);
 
                 // 闭合所有已结束的容器
                 while (stack.Count > 0 && anchorList[i].ValueStart.Offset >= stack.Peek().EndOffset)
@@ -41,30 +37,13 @@ namespace CBHK.Utility.Data
                 MetaTypeEditorFieldDTO dto = new()
                 {
                     ID = guid,
-                    DocumentItemPath = new(),
+                    Path = new(""),
                     FieldName = anchorList[i].Key,
                     TypeKind = (anchorList[i].IsContainer
                         ? (anchorList[i].IsArray ? MetaTypeKind.List : MetaTypeKind.Struct)
                         : MetaTypeKind.String),   // 简单类型先统一视为 String，后续可由模板修正
                 };
                 anchorList[i].Key = null;
-
-                #region 检测是否为定义类节点
-                //if (dto.FeatureMap.TryGetValue("definition", out MetaValue definitionKey) && definitionKey is not null)
-                //{
-                //    dto.FieldName = "";
-                //    dto.Children ??= [];
-                //    MetaTypeEditorFieldDTO inputSubItem = new()
-                //    {
-                //        ItemID = "input",
-                //        Parent = dto,
-                //        TypeKind = MetaTypeKind.String,
-                //        FieldName = "",
-                //        Value = ""
-                //    };
-                //    dto.Children.Insert(0, inputSubItem);
-                //}
-                #endregion
 
                 // 挂到父节点下
                 if (stack.Count > 0)
@@ -88,7 +67,7 @@ namespace CBHK.Utility.Data
                 }
                 else
                 {
-                    rootTuple.Item1.Add(dto);
+                    result.dtoInstanceList.Add(dto);
                 }
 
                 // 若是容器，压入栈中（记录其结束偏移）
@@ -98,7 +77,7 @@ namespace CBHK.Utility.Data
                 }
             }
 
-            return rootTuple;
+            return result;
         }
     }
 }

@@ -12,8 +12,21 @@ namespace CBHK.CustomControl.VectorComboBox
         #endregion
 
         #region Method
-        public override bool Equals(object obj) =>
-            obj is VectorTextComboBoxItem other && other.ItemID == ItemID;
+        public override bool Equals(object obj)
+        {
+            if(obj is VectorTextComboBoxItem other)
+            {
+                if(!string.IsNullOrEmpty(ItemID))
+                {
+                    return other.ItemID == ItemID;
+                }
+                else
+                {
+                    return other.ItemID == Text;
+                }
+            }
+            return false;
+        }
         public override int GetHashCode() => ItemID?.GetHashCode() ?? 0;
         #endregion
     }

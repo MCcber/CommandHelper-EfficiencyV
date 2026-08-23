@@ -366,7 +366,6 @@
         </Grid>
     </HierarchicalDataTemplate>
 
-    <!--  , Converter={StaticResource MetaTypeToComboBoxItemsConverter}  -->
     <HierarchicalDataTemplate x:Key="TreeViewEnumItem">
         <Grid Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid.ColumnDefinitions>
@@ -395,6 +394,11 @@
         </Grid>
     </HierarchicalDataTemplate>
 
+    <!--
+        注意：不能在 HierarchicalDataTemplate 上设置 ItemTemplateSelector（StaticResource 跨字典不可见；
+        DynamicResource 又因 HierarchicalDataTemplate 非 DependencyObject 而抛异常）。
+        子节点模板选择已改由 VectorTreeViewItemContainerStyle 的 ItemTemplateSelector Setter 提供。
+    -->
     <HierarchicalDataTemplate x:Key="TreeViewCompositeItem" ItemsSource="{Binding SelectedUnionChildren}">
         <Border Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">
             <Container:BindableStackPanel

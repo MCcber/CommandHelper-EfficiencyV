@@ -16,9 +16,9 @@ namespace CBHK.Utility.Data.DTOBuilder
         private readonly DocumentDTOBuildStrategyRegistry registry = registry;
         #endregion
 
-        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, StringBuilder documentItemPath, Dictionary<string, KeyValueAnchors> anchorMap)
+        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
         {
-            target.DocumentItemPath = new(documentItemPath.ToString());
+            target.Path = new(documentPath.TargetPath);
             target.AddItemCommand = helper.CreateAddItemCommand(target, version);
             target.RemoveItemCommand = helper.CreateRemoveItemCommand(target);
             target.Items ??= [];

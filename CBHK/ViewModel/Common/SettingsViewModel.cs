@@ -173,6 +173,7 @@ namespace CBHK.ViewModel.Common
                 {
                     currentFontFamilySource.Add(new VectorTextComboBoxItem()
                     {
+                        ItemID = currentText,
                         Text = currentText,
                         FontFamily = family
                     });
@@ -193,12 +194,18 @@ namespace CBHK.ViewModel.Common
 
                 currentFontFamilySource.Add(new VectorTextComboBoxItem()
                 {
+                    ItemID = font.Name,
                     FontFamily = family,
                     Text = font.Name
                 });
             }
             currentFontFamilySource = [.. currentFontFamilySource.DistinctBy(item => item.Text)];
-            currentFontFamilyNameComboBox.DataList = new(currentFontFamilySource);
+            currentFontFamilyNameComboBox.ItemsSource = currentFontFamilySource;
+            // 设置初始选中（替代 XAML 中的 SelectedIndex="0"，避免与 SelectedItem 双向绑定冲突）
+            if (SelectedFontFamilyItem is null && currentFontFamilySource.Count > 0)
+            {
+                SelectedFontFamilyItem = currentFontFamilySource[0];
+            }
             isLoaded = true;
             #endregion
         }

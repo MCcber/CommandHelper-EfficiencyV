@@ -16,8 +16,14 @@ namespace CBHK.Utility.Data.DTOBuilder
         private readonly DocumentDTOBuildStrategyRegistry registry = registry;
         #endregion
 
-        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, StringBuilder documentItemPath, Dictionary<string, KeyValueAnchors> anchorMap)
+        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
         {
+            //必选数组仅占位，由后续懒加载处理
+            if (target.IsRequired)
+            {
+                target.ID = "placeHolder";
+                return;
+            }
             //没元素则直接返回
             if (target.ElementType is null)
             {
@@ -33,13 +39,13 @@ namespace CBHK.Utility.Data.DTOBuilder
                 return;
             }
 
-            target.DocumentItemPath = new(documentItemPath.ToString());
+            target.Path = new(documentPath.TargetPath.ToString());
             target.Items ??= [];
             // 将现有的子节点列表传给递归方法
             var elementTypeCopy = helper.InstantiateDTO(target.ElementType, version);
 
             var elementRegistry = registry.Get(elementTypeCopy.TypeKind);
-            elementRegistry.Build(elementTypeCopy, target.ElementType, version, documentItemPath, anchorMap);
+            elementRegistry.Build(elementTypeCopy, target.ElementType, version, documentPath, anchorMap, justSetView);
             if ((target.Items.Count > 0 && target.Items[0].ID != "placeHolder") || target.Items.Count == 0)
             {
                 target.Items = [elementTypeCopy];

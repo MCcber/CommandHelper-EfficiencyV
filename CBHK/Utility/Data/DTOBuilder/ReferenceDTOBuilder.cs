@@ -3,7 +3,6 @@ using CBHK.Model.Constant;
 using CBHK.Model.Data;
 using MinecraftLanguageModelLibrary.Data;
 using System.Collections.Generic;
-using System.Text;
 
 namespace CBHK.Utility.Data.DTOBuilder
 {
@@ -15,12 +14,12 @@ namespace CBHK.Utility.Data.DTOBuilder
         private readonly DocumentDTOBuildStrategyRegistry registry = registry;
         #endregion
 
-        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, StringBuilder documentItemPath, Dictionary<string, KeyValueAnchors> anchorMap)
+        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
         {
             if (target.Value is not null)
             {
                 string targetReferenceValue = target.Value.ToString();
-                string basePath = target.DocumentItemPath?.ToString() ?? "";
+                string basePath = target.Path?.ToString() ?? "";
                 if (!string.IsNullOrEmpty(basePath))
                 {
                     int lastSeparatorIndex = basePath.LastIndexOf("::");
@@ -31,9 +30,9 @@ namespace CBHK.Utility.Data.DTOBuilder
                         {
                             var instanceDTO = helper.InstantiateDTO(referencedDTO, version);
                             MCDocumentResourceBuilder.BaseDataHandler(instanceDTO);
-                            MCDocumentResourceBuilder.BuildResource(instanceDTO, referencedDTO, version, documentItemPath, resource, helper);
+                            MCDocumentResourceBuilder.BuildResource(instanceDTO, referencedDTO, version, documentPath, resource, helper);
                             var instanceRegistry = registry.Get(referencedDTO.TypeKind);
-                            instanceRegistry.Build(instanceDTO, referencedDTO, version, documentItemPath, anchorMap);
+                            instanceRegistry.Build(instanceDTO, referencedDTO, version, documentPath, anchorMap, justSetView);
                             target.Children ??= [];
                             target.Children.Add(instanceDTO);
                         }

@@ -377,7 +377,7 @@ namespace CBHK.ViewModel.Component.Entity
 
                 TextBlock displayText = null;
                 VectorRichExpander accordion = null;
-                if(tag != "Array" && tag != "List" && tag != "Compound")
+                if(tag != "List" && tag != "List" && tag != "Compound")
                 {
                     displayText = new()
                     {
@@ -425,8 +425,8 @@ namespace CBHK.ViewModel.Component.Entity
                             break;
                         }
                     case "Compound":
-                    case "Array":
                     case "List":
+                    case "Array":
                         {
                             JArray children = nbt["Children"] as JArray;
                             break;

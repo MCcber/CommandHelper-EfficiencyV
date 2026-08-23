@@ -1,9 +1,10 @@
 ﻿using CBHK.Interface.Data;
 using CBHK.Model.Constant;
+using CBHK.Utility.Data.DTOBuilder;
 using MinecraftLanguageModelLibrary.Data;
 using System.Collections.Generic;
 
-namespace CBHK.Utility.Data.DTOBuilder
+namespace CBHK.Utility.Data
 {
     public class DocumentDTOBuildStrategyRegistry
     {
@@ -15,8 +16,6 @@ namespace CBHK.Utility.Data.DTOBuilder
         public IDocumentDTOBuildStrategy Get(MetaTypeKind kind)
             => _strategies.TryGetValue(kind, out var s) ? s : _strategies[MetaTypeKind.Any];
 
-        private DocumentDTOBuildStrategyRegistry() { }
-
         /// <summary>
         /// 分配构造策略
         /// </summary>
@@ -26,7 +25,6 @@ namespace CBHK.Utility.Data.DTOBuilder
         public static DocumentDTOBuildStrategyRegistry Create(Resource resource, MCDocumentMetaTypeDTOHelper helper)
         {
             DocumentDTOBuildStrategyRegistry registry = new();
-
             registry.Register(MetaTypeKind.Struct, new StructDTOBuilder(resource, helper, registry));
             registry.Register(MetaTypeKind.Union, new UnionDTOBuilder(resource, helper, registry));
             registry.Register(MetaTypeKind.Literal, new LiteralDTOBuilder(resource, helper, registry));
@@ -37,7 +35,9 @@ namespace CBHK.Utility.Data.DTOBuilder
             registry.Register(MetaTypeKind.List, new ListDTOBuilder(resource, helper, registry));
             registry.Register(MetaTypeKind.Generic, new GenericDTOBuilder(resource, helper, registry));
             registry.Register(MetaTypeKind.Reference, new ReferenceDTOBuilder(resource, helper, registry));
-            registry.Register(MetaTypeKind.Dispatch, new DispatchDTOBuilder(resource, helper, registry));
+            // 注意：Dispatch 不注册策略。调度器在树中作为驻留锚点，
+            // 子树由 Helper 的 GetDispatchResource / SelectedEnumItemUpdated 根据上下文动态生成。
+            // 因此 registry.Get(Dispatch) 会走 Any 兜底（无操作），与原空壳 DispatchDTOBuilder 行为一致。
             registry.Register(MetaTypeKind.Any, new AnyDTOBuilder(resource, helper, registry));
 
             return registry;

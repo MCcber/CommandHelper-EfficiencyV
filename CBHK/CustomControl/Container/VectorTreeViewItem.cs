@@ -59,11 +59,14 @@ namespace CBHK.CustomControl.Container
             //自动展开必选项
             if (sender is VectorTreeViewItem vectorTreeViewItem && vectorTreeViewItem.Header is MetaTypeEditorFieldDTO headerDTO)
             {
-                IsExpanded = headerDTO.IsRequired || headerDTO.TypeKind is MetaTypeKind.Entry;
                 //返回VectorTreeViewItem
-                if (headerDTO.AddItemCommand is not null || headerDTO.RemoveItemCommand is not null)
+                if (headerDTO.IsRequired && (headerDTO.Children?.Count > 0 || headerDTO.SelectedUnionChildren?.Count > 0))
                 {
-                    headerDTO.GetCommandParameter = () => this;
+                    IsExpanded = true;
+                }
+                if(headerDTO.TypeKind is MetaTypeKind.Dispatch && string.IsNullOrEmpty(headerDTO.FieldName) && !headerDTO.IsVisible)
+                {
+                    vectorTreeViewItem.Visibility = Visibility.Collapsed;
                 }
                 //自定义节点按下回车事件
                 if(headerDTO.TypeKind is MetaTypeKind.Definition)

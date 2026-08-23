@@ -1,8 +1,6 @@
-﻿using CBHK.CustomControl.Container;
-using CBHK.CustomControl.VectorComboBox;
+﻿using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
-using CBHK.Utility.Data.DTOBuilder;
 using CommunityToolkit.Mvvm.Input;
 using DryIoc.ImTools;
 using MinecraftLanguageModelLibrary.Data;
@@ -25,8 +23,8 @@ namespace CBHK.Utility.Data
         public ICommand CreateAddItemCommand(MetaTypeEditorFieldDTO dto, string version)
             => new RelayCommand(() => ExecuteAddItem(dto, version));
 
-        public ICommand CreateRemoveItemCommand(MetaTypeEditorFieldDTO dto)
-            => new RelayCommand(() => ExecuteRemoveItem(dto));
+        public ICommand CreateRemoveItemCommand(MetaTypeEditorFieldDTO dto, MetaTypeEditorFieldDTO item = null)
+            => new RelayCommand(() => ExecuteRemoveItem(dto, item));
 
         public ICommand CreateReFreshCommand(MetaTypeEditorFieldDTO dto, string version)
             => new RelayCommand(() => ExecuteReFreshItem(dto, version));
@@ -49,7 +47,7 @@ namespace CBHK.Utility.Data
         /// <summary>
         /// 联合体成员更新事件
         /// </summary>
-        public void SelectedUnionItemUpdated(MetaTypeEditorFieldDTO unionDTO,string version)
+        public void SelectedUnionItemUpdated(MetaTypeEditorFieldDTO unionDTO, string version)
         {
             MetaTypeEditorFieldDTO targetDTO;
             if (unionDTO.Parent.Children?.Count > 0)
@@ -60,65 +58,91 @@ namespace CBHK.Utility.Data
             {
                 targetDTO = unionDTO;
             }
-            if (targetDTO.Children is not null && unionDTO.SelectedUnionItemIndex > -1 && unionDTO.SelectedUnionItemIndex < targetDTO.Children.Count)
+            if (unionDTO.Children is not null && unionDTO.SelectedUnionItemIndex > -1 && unionDTO.SelectedUnionItemIndex <= unionDTO.Children.Count)
             {
-                MetaTypeEditorFieldDTO targetChildTemplate = targetDTO.Children[unionDTO.SelectedUnionItemIndex];
-                MetaTypeEditorFieldDTO targetChildInstance = InstantiateDTO(targetChildTemplate,version);
-                Validator.Verify(([targetChildInstance], []), [targetChildTemplate], version, targetChildInstance.DocumentItemPath ?? targetDTO.DocumentItemPath);
-                // 对当前节点执行展平/提升，去除内部可能残留的 Literal、Generic 或单子 Union
-                HierarchicallyUpdateTreeStructuredData(targetChildInstance, version);
-                //处理容器类枚举
-                if ((IsContainerType(targetChildInstance.TypeKind) || IsIndirectType(targetChildInstance.TypeKind)) && targetChildInstance.Children is not null)
+                #region 提取目标分支、发送给验证器、执行剥壳
+                int index = unionDTO.SelectedUnionItemIndex;
+                if (!targetDTO.IsRequired)
                 {
-                    targetDTO.SelectedUnionChildren ??= [];
+                    index--;
+                }
+                if (index < 0)
+                {
+                    index = 0;
+                }
+                if(index < 0 || index >= targetDTO.Children.Count)
+                {
+                    return;
+                }
+                MetaTypeEditorFieldDTO targetChildTemplate = targetDTO.Children[index];
+                MetaTypeEditorFieldDTO targetChildInstance = InstantiateDTO(targetChildTemplate, version);
+                DTOInstanceContext context = new([targetChildInstance], []);
+                Validator.Verify(context, [targetChildTemplate], version, targetChildInstance.Path ?? targetDTO.Path, false);
+                // 对当前节点执行展平/提升，去除内部可能残留的 Literal、Generic 或单子 Union
+                HierarchicallyUpdateTreeStructuredData(context.dtoInstanceList[0], version); 
+                #endregion
+
+                //处理容器类枚举
+                if ((IsContainerType(context.dtoInstanceList[0].TypeKind) || IsIndirectType(context.dtoInstanceList[0].TypeKind)) && context.dtoInstanceList[0].Children is not null)
+                {
+                    #region 更换分支
                     targetDTO.SelectedUnionChildren.Clear();
-                    while (targetDTO.Items.Count > 1)
+                    for (int i = 0; i < targetDTO.Items.Count; i++)
                     {
-                        targetDTO.Items.RemoveAt(1);
+                        if(!IsContainerType(targetDTO.Items[i].TypeKind) || targetDTO.Items[i].TypeKind is not MetaTypeKind.Union)
+                        {
+                            targetDTO.Items.RemoveAt(i);
+                            i--;
+                        }
                     }
-                    targetDTO.SelectedUnionChildren.AddRange(targetChildInstance.Children);
+
+                    targetDTO.SelectedUnionChildren.AddRange([.. context.dtoInstanceList[0].Children]);
+                    #endregion
                 }
                 //处理值类枚举
-                else if(targetDTO.TypeKind is MetaTypeKind.Composite || targetDTO.Parent?.TypeKind is MetaTypeKind.Composite)
+                else
                 {
-                    targetDTO.Items ??= [];
-                    while (targetDTO.Items.Count > 1)
+                    #region 锁定处理目标并清除它的子级
+                    MetaTypeEditorFieldDTO compositeDTO = null;
+                    if (targetDTO.TypeKind is MetaTypeKind.Composite)
                     {
-                        targetDTO.Items.RemoveAt(1);
+                        compositeDTO = targetDTO;
                     }
+                    else if (targetDTO.Parent?.TypeKind is MetaTypeKind.Composite)
+                    {
+                        compositeDTO = targetDTO.Parent;
+                    }
+                    compositeDTO.Items ??= [];
+                    var valueDTO = compositeDTO.Items.FirstOrDefault(item => !IsContainerType(item.TypeKind) && !IsIndirectType(item.TypeKind) && item.TypeKind is not MetaTypeKind.Remove);
+                    if (valueDTO is not null)
+                    {
+                        compositeDTO.Items.Remove(valueDTO);
+                    }
+                    #endregion
 
                     #region 若切换为列表则给当前Composite容器赋值并给予容器添加按钮，否则视为值类型分支添加给Items列表
                     if (targetChildInstance.TypeKind is MetaTypeKind.List)
                     {
-                        if (targetDTO.TemplateReference is not null)
-                        {
-                            targetDTO.TemplateReference.ElementType = targetChildInstance.ElementType;
-                        }
-
-                        MetaTypeEditorFieldDTO compositeDTO = null;
-                        if(targetDTO.TypeKind is MetaTypeKind.Composite)
-                        {
-                            compositeDTO = targetDTO;
-                        }
-                        else if(targetDTO.Parent?.TypeKind is MetaTypeKind.Composite)
-                        {
-                            compositeDTO = targetDTO.Parent;
-                        }
                         compositeDTO.Items.Add(new()
                         {
                             ID = "placeHolder",
                             TypeKind = MetaTypeKind.Add,
-                            Parent = targetDTO,
-                            AddItemCommand = CreateAddItemCommand(targetDTO, version),
-                            RemoveItemCommand = CreateRemoveItemCommand(targetDTO)
+                            Parent = compositeDTO,
+                            AddItemCommand = CreateAddItemCommand(compositeDTO, version),
+                            RemoveItemCommand = CreateRemoveItemCommand(compositeDTO)
                         });
+                        if (compositeDTO.ElementType is null)
+                        {
+                            var listDTO = compositeDTO.Children.FirstOrDefault(item => item.TypeKind is MetaTypeKind.List);
+                            compositeDTO.ElementType = listDTO.ElementType;
+                        }
                     }
                     else
                     {
-                        targetDTO.Items.Add(targetChildInstance);
-                    } 
+                        compositeDTO.Items.Add(targetChildInstance);
+                    }
+                    compositeDTO.SelectedUnionChildren?.Clear();
                     #endregion
-                    targetDTO.SelectedUnionChildren?.Clear();
                 }
             }
         }
@@ -126,9 +150,159 @@ namespace CBHK.Utility.Data
         /// <summary>
         /// 枚举成员更新事件
         /// </summary>
-        public static void SelectedEnumItemUpdated(MetaTypeEditorFieldDTO enumDTO)
+        public void SelectedEnumItemUpdated(MetaTypeEditorFieldDTO enumDTO, string version)
         {
+            #region 更新同层的所有动态调度器
 
+            #region Field
+            MetaTypeEditorFieldDTO parentDTO = enumDTO.Parent;
+            if (parentDTO is null)
+            {
+                return;
+            }
+
+            int removeIndex = -1;
+            List<int> dynamicDispatchIndexList = [];
+            #endregion
+
+            #region 搜索动态调度器的同时删除遗留的调度器解释后出现的节点
+            for (int i = 0; i < parentDTO.Children.Count; i++)
+            {
+                //筛选出符合条件的调度器
+                if (parentDTO.Children[i] != enumDTO && parentDTO.Children[i].TypeKind is MetaTypeKind.Dispatch && string.IsNullOrEmpty(parentDTO.Children[i].FieldName) && parentDTO.Children[i].FeatureMap.TryGetValue("Index", out MetaValue metaValue) && metaValue.LiteralValue?.ToString() == enumDTO.FieldName)
+                {
+                    removeIndex = i;
+                    dynamicDispatchIndexList.Add(i);
+                }
+                //删除调度器之后带标记的节点
+                if (removeIndex > -1 && i > removeIndex && parentDTO.Children[i].IsInterpretFromDispatch)
+                {
+                    parentDTO.Children.RemoveAt(i);
+                    i--;
+                }
+            }
+            #endregion
+
+            #region 处理调度器
+            string selectedEnumValue = enumDTO.SelectedEnumOption.Value?.LiteralValue?.ToString() ?? "";
+            string fieldName = enumDTO.FieldName;
+            int currentInsertIndex;
+            for (int i = 0; i < dynamicDispatchIndexList.Count; i++)
+            {
+                MetaTypeEditorFieldDTO currentDTO = parentDTO.Children[dynamicDispatchIndexList[i]];
+                currentInsertIndex = parentDTO.Children.IndexOf(currentDTO) + 1;
+                //Index只有一个与当前枚举节点字段名相同的值，则识别为当前层的动态调度器
+                if (currentDTO.FeatureMap.TryGetValue("Index", out MetaValue indexValue) &&
+                    indexValue.Kind is MetaValueKind.Literal && indexValue.LiteralValue is not null &&
+                    indexValue.LiteralValue.ToString() == fieldName)
+                {
+                    //筛选出当前调度器节点使用枚举值后所对应的池中的调度器资源
+                    if (currentDTO.FeatureMap.TryGetValue("Resource", out MetaValue resourceValue) && resourceValue.LiteralValue is not null)
+                    {
+                        #region 过滤出Resource符合要求的调度器集合
+                        string resourceString = resourceValue.LiteralValue.ToString();
+                        var dispatchDTOEnumerable = resource.DocumentItemMap.Where(item => item.Value.TypeKind is MetaTypeKind.Dispatch || item.Value.OriginKind is MetaTypeKind.Dispatch);
+                        List<MetaTypeEditorFieldDTO> targetDispatchList = [..dispatchDTOEnumerable.Where(item=> item.Value.FeatureMap is not null && item.Value.FeatureMap.TryGetValue("Resource",out MetaValue currentResourceValue) &&
+                        currentResourceValue?.LiteralValue is not null && currentResourceValue.LiteralValue.ToString() == resourceString).Select(item=>item.Value)];
+                        MetaTypeEditorFieldDTO targetDispatchDTO = null;
+                        #endregion
+
+                        #region 从过滤出来的调度器中根据当前选中的枚举值精准搜索指定调度器
+                        for (int j = 0; j < targetDispatchList.Count; j++)
+                        {
+                            if (targetDispatchList[j].FeatureMap.TryGetValue("Index", out MetaValue currentIndexValue))
+                            {
+                                if (currentIndexValue.Kind is MetaValueKind.Literal && currentIndexValue.LiteralValue?.ToString() == selectedEnumValue)
+                                {
+                                    targetDispatchDTO = targetDispatchList[j];
+                                    break;
+                                }
+                                else if (currentIndexValue.Kind is MetaValueKind.List)
+                                {
+                                    bool haveTargetValue = currentIndexValue.Items.Any(item => item.LiteralValue?.ToString() == selectedEnumValue);
+                                    if (haveTargetValue)
+                                    {
+                                        targetDispatchDTO = targetDispatchList[j];
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        #endregion
+
+                        #region 将筛选出的目标调度器传入调度器的构造器并添加回当前父级
+                        if (targetDispatchDTO is null)
+                        {
+                            return;
+                        }
+                        var targetDispatchDTOInstance = InstantiateDTO(targetDispatchDTO, version, parentDTO);
+                        var registry = DocumentDTOBuildStrategyRegistry.Create(resource, this);
+                        List<MetaTypeEditorFieldDTO> resultList = [];
+
+                        if (!string.IsNullOrEmpty(targetDispatchDTOInstance.TypeName) && targetDispatchDTO.Children?.Count > 0)
+                        {
+                            resultList = SubstituteGenericIterative(targetDispatchDTOInstance, version);
+                            for (int j = 0; j < resultList.Count; j++)
+                            {
+                                resultList[j].IsInterpretFromDispatch = true;
+                                if (resultList[j].IsRequired)
+                                {
+                                    resultList[j].TypeKind = MetaTypeKind.Struct;
+                                    var childBuilder = registry.Get(resultList[j].TypeKind);
+                                    childBuilder.Build(resultList[j], resultList[j], version, resultList[j].Path ?? enumDTO.Path, [], resultList[j].TypeKind is MetaTypeKind.Struct);
+                                }
+                                else
+                                {
+                                    resultList[j].Value = new ObservableCollection<MetaTypeEditorFieldDTO>(resultList[j].Children);
+                                    resultList[j].OriginKind = MetaTypeKind.Dispatch;
+                                    resultList[j].Children =
+                                    [
+                                        new MetaTypeEditorFieldDTO()
+                                        {
+                                            ID = "placeHolder",
+                                            TypeKind = MetaTypeKind.Any
+                                        }
+                                    ];
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (int j = 0; j < targetDispatchDTO.Children?.Count; j++)
+                            {
+                                if (targetDispatchDTO.Children[j].IsRequired)
+                                {
+                                    var instance = InstantiateDTO(targetDispatchDTO.Children[j], version, parentDTO);
+                                    instance.IsInterpretFromDispatch = true;
+                                    var childBuilder = registry.Get(instance.TypeKind);
+                                    childBuilder.Build(instance, targetDispatchDTO.Children[j], version, targetDispatchDTO.Children[j].Path ?? enumDTO.Path, [], targetDispatchDTO.Children[j].TypeKind is MetaTypeKind.Struct);
+                                    resultList.Add(instance);
+                                }
+                            }
+                        }
+
+                        //剥壳
+                        for (int j = 0; j < resultList.Count; j++)
+                        {
+                            HierarchicallyUpdateTreeStructuredData(resultList[j], version);
+                            if (resultList[j].OriginKind is MetaTypeKind.Dispatch && resultList[j].Value is IEnumerable<MetaTypeEditorFieldDTO>)
+                            {
+                                resultList[j].IsVisible = true;
+                            }
+                            parentDTO.Children.Insert(currentInsertIndex, resultList[j]);
+                            currentInsertIndex++;
+                        }
+                        #endregion
+                    }
+                }
+            }
+            #endregion
+
+            #endregion
+
+            #region 更新代码编辑器
+
+            #endregion
         }
 
         /// <summary>
@@ -138,132 +312,140 @@ namespace CBHK.Utility.Data
         /// <param name="resource"></param>
         /// <param name="anchorMap"></param>
         /// <param name="version"></param>
-        public void DefinitionEnterKeyDown(MetaTypeEditorFieldDTO definitionDTO,Resource resource,Dictionary<string,KeyValueAnchors> anchorMap,string version)
+        public void DefinitionEnterKeyDown(MetaTypeEditorFieldDTO definitionDTO, Resource resource, Dictionary<string, KeyValueAnchors> anchorMap, string version)
         {
-            if(!string.IsNullOrEmpty(definitionDTO.FieldName) && definitionDTO.DocumentItemPath?.Length > 0 && definitionDTO.Parent is MetaTypeEditorFieldDTO definitionParent)
+            #region Field
+            bool haveDefinitionData = !string.IsNullOrEmpty(definitionDTO.FieldName) && definitionDTO.Path?.TargetPath.Length > 0;
+            if (!haveDefinitionData)
             {
-                #region Field
-                string fieldName = definitionDTO.FieldName;
-                string documentItemPath = definitionDTO.DocumentItemPath.ToString(); 
-                #endregion
+                return;
+            }
+            MetaTypeEditorFieldDTO definitionParent = definitionDTO.Parent;
+            if (definitionParent is null)
+            {
+                return;
+            }
 
-                #region 搜索内部资源
-                int lastDoubleColonIndex = documentItemPath.LastIndexOf("::");
-                string baseDocumentItemPath = documentItemPath[..lastDoubleColonIndex];
-                string targetDocumentItemPath = baseDocumentItemPath + "::" + fieldName;
-                bool isInnerDTO = resource.DocumentItemMap.TryGetValue(targetDocumentItemPath, out MetaTypeEditorFieldDTO targetDTO);
-                #endregion
+            string fieldName = definitionDTO.FieldName;
+            string documentItemPath = definitionDTO.Path.TargetPath.ToString();
+            #endregion
 
-                #region 搜索外部资源
-                if (!isInnerDTO && resource.DocumentPathItemMap.TryGetValue(baseDocumentItemPath,out List<string> usePathList) && usePathList?.Count > 0)
+            #region 搜索内部资源
+            int lastDoubleColonIndex = documentItemPath.LastIndexOf("::");
+            string baseDocumentItemPath = documentItemPath[..lastDoubleColonIndex];
+            string targetDocumentItemPath = baseDocumentItemPath + "::" + fieldName;
+            bool isInnerDTO = resource.DocumentItemMap.TryGetValue(targetDocumentItemPath, out MetaTypeEditorFieldDTO targetDTO);
+            #endregion
+
+            #region 搜索外部资源
+            if (!isInnerDTO && resource.DocumentPathItemMap.TryGetValue(baseDocumentItemPath, out List<string> usePathList) && usePathList?.Count > 0)
+            {
+                targetDocumentItemPath = usePathList.FirstOrDefault(item => item.EndsWith(fieldName));
+                if (!string.IsNullOrEmpty(targetDocumentItemPath) && resource.DocumentItemMap.TryGetValue(targetDocumentItemPath, out targetDTO)) { }
+            }
+            #endregion
+
+            #region 执行构建
+            if (targetDTO is not null)
+            {
+                #region 构建外层容器并使定义节点归位
+                MetaTypeEditorFieldDTO customDefinitionDTO = new()
                 {
-                    targetDocumentItemPath = usePathList.FirstOrDefault(item=>item.EndsWith(fieldName));
-                    if (!string.IsNullOrEmpty(targetDocumentItemPath) && resource.DocumentItemMap.TryGetValue(targetDocumentItemPath, out targetDTO)) { }
-                }
+                    ID = Guid.NewGuid().ToString(),
+                    TypeKind = MetaTypeKind.Struct,
+                    FieldName = definitionDTO.Value.ToString(),
+                    Children = []
+                };
+                definitionDTO.Value = "";
+                definitionParent.Children.Add(customDefinitionDTO);
                 #endregion
 
-                #region 执行构建
-                if (targetDTO is not null)
+                #region 使用注册器执行构建
+                var registry = DocumentDTOBuildStrategyRegistry.Create(resource, this);
+                var childBuilder = registry.Get(targetDTO.TypeKind);
+                var instance = InstantiateDTO(targetDTO, version);
+                childBuilder.Build(instance, targetDTO, version, new(targetDocumentItemPath), anchorMap, instance.TypeKind is MetaTypeKind.Struct && instance.IsRequired);
+                #endregion
+
+                #region 添加并剥壳
+                for (int i = 0; i < instance.Children.Count; i++)
                 {
-                    #region 构建外层容器并使定义节点归位
-                    MetaTypeEditorFieldDTO customDefinitionDTO = new()
-                    {
-                        ID = Guid.NewGuid().ToString(),
-                        TypeKind = MetaTypeKind.Struct,
-                        FieldName = definitionDTO.Value.ToString(),
-                        Children = []
-                    };
-                    definitionDTO.Value = "";
-                    definitionParent.Children.Add(customDefinitionDTO);
-                    #endregion
-
-                    #region 使用注册器执行构建
-                    var registry = DocumentDTOBuildStrategyRegistry.Create(resource, this);
-                    var childBuilder = registry.Get(targetDTO.TypeKind);
-                    var instance = InstantiateDTO(targetDTO, version);
-                    childBuilder.Build(instance, targetDTO, version, new(targetDocumentItemPath), anchorMap);
-                    #endregion
-
-                    #region 添加并剥壳
-                    customDefinitionDTO.Children.Add(instance);
-                    HierarchicallyUpdateTreeStructuredData(customDefinitionDTO, version); 
-                    #endregion
+                    instance.Children[i].Path = new(targetDocumentItemPath);
+                    instance.Children[i].Parent = customDefinitionDTO;
                 }
+                customDefinitionDTO.Children.AddRange(instance.Children);
+                instance.Children.Clear();
+                HierarchicallyUpdateTreeStructuredData(customDefinitionDTO, version);
                 #endregion
             }
+            #endregion
         }
 
-        private void ExecuteAddItem(MetaTypeEditorFieldDTO currentDTO,string version)
+        private void ExecuteAddItem(MetaTypeEditorFieldDTO currentDTO, string version)
         {
-            bool isCompositeItem = currentDTO.TypeKind is MetaTypeKind.Composite && currentDTO.Items?.Count > 1 && currentDTO.Items.FirstOrDefault(item=>item.TypeKind is MetaTypeKind.Union or MetaTypeKind.Enum)?.SelectedUnionTypeName?.Name == "List";
+            var unionOREnumItemDTO = currentDTO.Items?.FirstOrDefault(item => item.TypeKind is MetaTypeKind.Union or MetaTypeKind.Enum);
+            bool isCompositeItem = currentDTO.TypeKind is MetaTypeKind.Composite && currentDTO.Items?.Count > 1 && unionOREnumItemDTO?.SelectedUnionTypeName?.Name == "List";
             bool isListItem = currentDTO.TypeKind is MetaTypeKind.List;
             if (isCompositeItem || isListItem)
             {
-                if (currentDTO?.TemplateReference is null || currentDTO?.TemplateReference.ElementType is null)
+                if (currentDTO.ElementType is null)
                 {
                     return;
                 }
-                var newItem = InstantiateDTO(currentDTO.TemplateReference.ElementType, version, currentDTO);
-                newItem.FieldName = "Entry";
+                var entryItem = InstantiateDTO(currentDTO.ElementType, version, currentDTO);
 
-                if (IsIndirectType(newItem.TypeKind))
+                if (IsIndirectType(entryItem.TypeKind))
                 {
-                    Validator.Verify(([newItem], []), [currentDTO.TemplateReference.ElementType], version,currentDTO.DocumentItemPath ?? currentDTO.Parent?.DocumentItemPath);
-                    // 对当前节点执行展平/提升，去除内部可能残留的 Literal、Generic 或单子 Union
-                    HierarchicallyUpdateTreeStructuredData(newItem, version);
-                    if (newItem.TypeKind is not MetaTypeKind.Composite)
+                    entryItem.SetRequired(true);
+                    currentDTO.ElementType.SetRequired(true);
+                    DTOInstanceContext context = new([entryItem], []);
+                    Validator.Verify(context, [currentDTO.ElementType], version, unionOREnumItemDTO?.Path ?? currentDTO.Path);
+                    // 对当前节点执行展平/提升
+                    entryItem = context.dtoInstanceList[0];
+                    HierarchicallyUpdateTreeStructuredData(entryItem, version);
+                    if (entryItem.TypeKind is not MetaTypeKind.Composite)
                     {
-                        newItem.TypeKind = MetaTypeKind.Entry;
+                        entryItem.TypeKind = MetaTypeKind.Entry;
                     }
+                    entryItem.FieldName = "Entry";
+                    entryItem.IsVisible = true;
                 }
 
                 if (isCompositeItem)
                 {
                     currentDTO.SelectedUnionChildren ??= [];
-                    currentDTO.SelectedUnionChildren.Add(newItem);
+                    currentDTO.SelectedUnionChildren.Add(entryItem);
                 }
-                else if(currentDTO.Parent?.TypeKind is MetaTypeKind.Composite)
+                else if (currentDTO.Parent?.TypeKind is MetaTypeKind.Composite)
                 {
                     currentDTO.Parent.SelectedUnionChildren ??= [];
-                    currentDTO.Parent.SelectedUnionChildren.Add(newItem);
-                    newItem.RemoveItemCommand = CreateRemoveItemCommand(currentDTO.Parent);
+                    currentDTO.Parent.SelectedUnionChildren.Add(entryItem);
+                    entryItem.Parent = currentDTO.Parent;
+                    entryItem.RemoveItemCommand = CreateRemoveItemCommand(entryItem.Parent, entryItem);
                 }
                 else
                 {
                     currentDTO.Items ??= [];
-                    currentDTO.Items.Add(newItem);
-                    newItem.RemoveItemCommand = CreateRemoveItemCommand(currentDTO);
+                    currentDTO.Items.Add(entryItem);
+                    entryItem.Parent = currentDTO;
+                    entryItem.RemoveItemCommand = CreateRemoveItemCommand(currentDTO);
                 }
             }
             else
             {
                 GetDispatchResource(currentDTO, version);
             }
-
-            if (currentDTO.GetCommandParameter is not null)
-            {
-                object commandParameter = currentDTO.GetCommandParameter.Invoke();
-                if (commandParameter is VectorTreeViewItem vectorTreeViewItem)
-                {
-                    vectorTreeViewItem.IsExpanded = true;
-                }
-            }
         }
 
-        private static void ExecuteRemoveItem(MetaTypeEditorFieldDTO currentDTO)
+        private static void ExecuteRemoveItem(MetaTypeEditorFieldDTO currentDTO, MetaTypeEditorFieldDTO item = null)
         {
             if (currentDTO.TypeKind is MetaTypeKind.List)
             {
                 currentDTO?.Items?.Clear();
             }
-            else if(currentDTO.TypeKind is MetaTypeKind.Remove)
+            else if (currentDTO.TypeKind is MetaTypeKind.Composite)
             {
-                currentDTO.Parent?.Parent.Children.Remove(currentDTO.Parent);
-            }
-            object commandParameter = currentDTO.GetCommandParameter?.Invoke();
-            if (commandParameter is VectorTreeViewItem vectorTreeViewItem)
-            {
-                vectorTreeViewItem.IsExpanded = vectorTreeViewItem.HasItems;
+                currentDTO.SelectedUnionChildren?.Remove(item);
             }
         }
 
@@ -280,7 +462,7 @@ namespace CBHK.Utility.Data
         /// </summary>
         /// <param name="template">模板</param>
         /// <param name="parent">父级</param>
-        /// <param name="visited">访问标记</param>
+        /// <param name="visited">祖先链追踪（仅在当前递归路径上检测循环引用）</param>
         /// <returns></returns>
         public MetaTypeEditorFieldDTO InstantiateDTO(
             MetaTypeEditorFieldDTO template,
@@ -288,22 +470,25 @@ namespace CBHK.Utility.Data
             MetaTypeEditorFieldDTO parent = null,
             HashSet<MetaTypeEditorFieldDTO> visited = null)
         {
-            ArgumentNullException.ThrowIfNull(template);
+            if (template is null)
+            {
+                return null;
+            }
 
             //初始化当前DTO实例的ID
             string id = Guid.NewGuid().ToString();
 
-            // 初始化 visited 集合（仅在顶层调用时创建）
+            //初始化祖先链集合（仅在顶层调用时创建）
             visited ??= [];
 
-            // 如果模板对象已经处理过，直接返回一个浅拷贝（避免无限递归）
+            #region 循环引用检测：模板已出现在当前递归路径中 → 返回桩节点打断环
             if (!visited.Add(template))
             {
-                // 已访问过，返回一个不会引发递归的“叶子”节点（或你定义的特殊标记）
+                //已出现在祖先链中（循环引用），返回桩节点打断环。
                 MetaTypeEditorFieldDTO result = new()
                 {
                     ID = id,
-                    DocumentItemPath = template.DocumentItemPath,
+                    Path = template.Path,
                     TemplateReference = template,
                     Parent = parent,
                     FieldName = template.FieldName,
@@ -312,34 +497,26 @@ namespace CBHK.Utility.Data
                     OriginKind = template.OriginKind,
                     TypeName = template.TypeName,
                     TypeParameterNameList = template.TypeParameterNameList,
-                    IsRequired = template.IsRequired,
                     Watermark = template.Watermark,
-                    Value = GetDefaultValue(template),
+                    Value = template.GetDefaultValue(),
                     FeatureMap = new(template.FeatureMap)
                 };
-                if(template.Children is not null)
-                {
-                    result.Children = new(template.Children.Select(item => InstantiateDTO(item, version, result, visited)));
-                }
-                if(template.EnumOptionList is not null)
+                result.SetRequired(template.IsRequired);
+                //循环引用：不展开子级，由TemplateReference懒加载
+                if (template.EnumOptionList is not null)
                 {
                     result.EnumOptionList = [.. template.EnumOptionList];
                 }
-                //版本属性不泄露到子节点
-                //if (template.TypeKind is not (MetaTypeKind.Struct or MetaTypeKind.Enum
-                //    or MetaTypeKind.Dispatch or MetaTypeKind.Union))
-                //{
-                //    result.FeatureMap.Remove("since");
-                //    result.FeatureMap.Remove("until");
-                //}
                 return result;
             }
+            #endregion
 
-            object defaultValue = GetDefaultValue(template);
+            #region 实例化并设置默认值
+            object defaultValue = template.GetDefaultValue();
             var dto = new MetaTypeEditorFieldDTO
             {
                 ID = id,
-                DocumentItemPath = template.DocumentItemPath,
+                Path = template.Path,
                 Parent = parent,
                 TemplateReference = template,
                 FeatureMap = new(template.FeatureMap),
@@ -349,26 +526,19 @@ namespace CBHK.Utility.Data
                 FieldName = template.FieldName,
                 TypeKind = template.TypeKind,
                 OriginKind = template.OriginKind,
-                IsRequired = template.IsRequired,
                 Watermark = template.Watermark,
                 Value = defaultValue,
                 Min = template.Min,
                 Max = template.Max,
             };
-            if(template.EnumOptionList is not null)
+            dto.SetRequired(template.IsRequired);
+            if (template.EnumOptionList is not null)
             {
                 dto.EnumOptionList = [.. template.EnumOptionList];
             }
+            #endregion
 
-            //版本属性只属于定义它们的顶层结构，不应泄露到子节点
-            //if (template.TypeKind is not (MetaTypeKind.Struct or MetaTypeKind.Enum
-            //    or MetaTypeKind.Dispatch or MetaTypeKind.Union))
-            //{
-            //    dto.FeatureMap.Remove("since");
-            //    dto.FeatureMap.Remove("until");
-            //}
-
-            // 处理容器子节点
+            #region 处理容器子节点
             switch (template.TypeKind)
             {
                 case MetaTypeKind.Struct:
@@ -376,33 +546,40 @@ namespace CBHK.Utility.Data
                     {
                         if (template.Children is not null)
                         {
-                            dto.Children = new ObservableCollection<MetaTypeEditorFieldDTO>(template.Children.Select(item => InstantiateDTO(item, version, dto, visited)));
+                            dto.Children = new(template.Children.Select(child => InstantiateDTO(child, version, dto, visited)));
                         }
                         // 如果调度器的目标类型是联合体，需要把联合体的选项信息也带过来
-                        if (template.UnionTypeNameList is not null)
+                        if (template.UnionTypeNameList?.Count > 0)
                         {
                             dto.UnionTypeNameList = [.. template.UnionTypeNameList];
                             dto.SelectedUnionTypeName = dto.UnionTypeNameList[0];
                             if (dto.Children?.Count > 0)
                             {
-                                dto.SelectedUnionChildren = [..dto.Children[0].Children];
+                                if (dto.Children[0].Children is not null)
+                                {
+                                    dto.SelectedUnionChildren = [.. dto.Children[0].Children];
+                                }
+                                else
+                                {
+                                    dto.SelectedUnionChildren = [dto.Children[0]];
+                                }
                             }
                             else
                             {
                                 dto.SelectedUnionChildren = [.. dto.Children];
                             }
                         }
-                        if(template.EnumOptionList is not null)
+                        if (template.EnumOptionList?.Count > 0)
                         {
                             dto.EnumOptionList = template.EnumOptionList;
                             dto.SelectedEnumOption = dto.EnumOptionList[0];
                         }
-                        if(template.ElementType is not null)
+                        if (template.ElementType is not null)
                         {
                             dto.ElementType = template.ElementType;
                         }
 
-                        if(template.TypeKind is MetaTypeKind.Dispatch && template.UnionTypeNameList is not null)
+                        if (template.TypeKind is MetaTypeKind.Dispatch && template.UnionTypeNameList?.Count > 0)
                         {
                             dto.TypeKind = MetaTypeKind.Union;
                             dto.OriginKind = MetaTypeKind.Dispatch;
@@ -412,20 +589,24 @@ namespace CBHK.Utility.Data
 
                 case MetaTypeKind.Union:
                     {
-                        if (template.UnionTypeNameList is not null)
+                        dto.SelectedUnionChildren ??= [];
+                        if (template.UnionTypeNameList?.Count > 0)
                         {
                             dto.UnionTypeNameList = [.. template.UnionTypeNameList];
                         }
                         if (template.Children is not null)
                         {
-                            dto.Children = new ObservableCollection<MetaTypeEditorFieldDTO>(template.Children.Select(item => InstantiateDTO(item, version, dto, visited)));
-                            if (dto.Children[0].Children?.Count > 0)
+                            dto.Children = dto.Children = new(template.Children.Select(child => InstantiateDTO(child, version, dto, visited)));
+                            if (dto.Children?.Count > 0)
                             {
-                                dto.SelectedUnionChildren = [.. dto.Children[0].Children];
-                            }
-                            else
-                            {
-                                dto.SelectedUnionChildren = [.. dto.Children];
+                                if (dto.Children[0].Children is not null)
+                                {
+                                    dto.SelectedUnionChildren = [.. dto.Children[0].Children];
+                                }
+                                else
+                                {
+                                    dto.SelectedUnionChildren = [dto.Children[0]];
+                                }
                             }
                         }
                         break;
@@ -438,12 +619,12 @@ namespace CBHK.Utility.Data
                     {
                         //数组元素的实际模板由 ElementType 控制，ElementType模板在每个列表节点实例的模板节点引用中
                         dto.Items = [];
-                        if(template.TypeKind is MetaTypeKind.List)
+                        if (template.TypeKind is MetaTypeKind.List)
                         {
-                            dto.AddItemCommand = new RelayCommand(() => ExecuteAddItem(dto, version));
-                            dto.RemoveItemCommand = new RelayCommand(() => ExecuteRemoveItem(dto));
-                            dto.ReFreshCommand = new RelayCommand(() => ExecuteReFreshItem(dto, version));
-                            if(template.ElementType is not null)
+                            dto.AddItemCommand = CreateAddItemCommand(dto, version);
+                            dto.RemoveItemCommand = CreateRemoveItemCommand(dto);
+                            dto.ReFreshCommand = CreateReFreshCommand(dto, version);
+                            if (template.ElementType is not null)
                             {
                                 MetaTypeEditorFieldDTO elementType = InstantiateDTO(template.ElementType, version, template, visited);
                                 dto.ElementType = elementType;
@@ -452,7 +633,9 @@ namespace CBHK.Utility.Data
                         break;
                     }
             }
+            #endregion
 
+            visited.Remove(template);
             return dto;
         }
 
@@ -463,13 +646,17 @@ namespace CBHK.Utility.Data
         /// <param name="currentIndex"></param>
         /// <param name="resource"></param>
         /// <returns></returns>
-        private static MetaTypeEditorFieldDTO EvaluateKeyExpression(MetaTypeEditorFieldDTO currentDTO, MetaValue currentIndex,Resource resource)
+        private static MetaTypeEditorFieldDTO EvaluateKeyExpression(MetaTypeEditorFieldDTO currentDTO, string currentResourceLocation, MetaValue currentIndex, Resource resource)
         {
             #region Field
             MetaTypeEditorFieldDTO result = null;
-            string documentItemPath = currentDTO.DocumentItemPath.ToString();
+            string documentItemPath = currentDTO.Path.TargetPath.ToString();
             string indexString = currentIndex.Kind is MetaValueKind.Literal ? currentIndex.LiteralValue.ToString().TrimStart('[').TrimEnd(']') : "";
             string indexValue = "";
+            if (currentIndex.Kind is MetaValueKind.List && currentIndex.Items is not null)
+            {
+                indexString = currentIndex.Items[0].LiteralValue?.ToString() ?? "";
+            }
             #endregion
 
             #region 抓取层级
@@ -482,10 +669,6 @@ namespace CBHK.Utility.Data
                 {
                     switch (indexStringArray[i])
                     {
-                        default:
-                            {
-                                break;
-                            }
                         case "%parent":
                             {
                                 if (iterationDTO.Parent is not null)
@@ -496,6 +679,31 @@ namespace CBHK.Utility.Data
                             }
                         case "%key":
                             {
+                                object defaultValue = iterationDTO.GetDefaultValue();
+                                if (defaultValue is not null)
+                                {
+                                    indexValue = defaultValue.ToString();
+                                }
+                                break;
+                            }
+                        default:
+                            {
+                                //搜索每一层的字段名称
+                                if (iterationDTO.Parent?.Children is not null)
+                                {
+                                    for (int j = 0; j < iterationDTO.Parent.Children.Count; j++)
+                                    {
+                                        if (iterationDTO.Parent.Children[j].FieldName == indexStringArray[i])
+                                        {
+                                            object defaultValue = iterationDTO.Parent.Children[j].GetDefaultValue();
+                                            if (defaultValue is not null)
+                                            {
+                                                indexValue = defaultValue.ToString();
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
                                 break;
                             }
                     }
@@ -532,26 +740,29 @@ namespace CBHK.Utility.Data
                                 {
                                     if (currentDTO.Parent.Children[i].FieldName == indexString)
                                     {
-                                        indexValue = GetDefaultValue(currentDTO.Parent.Children[i])?.ToString() ?? "";
+                                        indexValue = currentDTO.Parent.Children[i].GetDefaultValue()?.ToString() ?? "";
                                         break;
                                     }
                                 }
                             }
                             break;
                         }
-
-                    //目标有值但找不到对应的调度器
-                    case "%unknown":
-                        {
-                            break;
-                        }
-
-                    //目标没有值，调度器索引为空
-                    case "%none":
-                        {
-                            break;
-                        }
                 }
+            }
+
+            switch (indexString)
+            {
+                //目标有值但找不到对应的调度器
+                case "%unknown":
+                    {
+                        break;
+                    }
+
+                //目标没有值，调度器索引为空
+                case "%none":
+                    {
+                        break;
+                    }
             }
             #endregion
 
@@ -559,10 +770,15 @@ namespace CBHK.Utility.Data
             //搜素调度器
             var dispatchPairList = resource.DocumentItemMap.Where(item => item.Value?.TypeKind is MetaTypeKind.Dispatch || item.Value?.OriginKind is MetaTypeKind.Dispatch);
             //搜索资源键
-            List<KeyValuePair<string, MetaTypeEditorFieldDTO>> targetResourcePairList = [.. dispatchPairList.Where(item => item.Value.FeatureMap?["Resource"]?.LiteralValue?.ToString() == indexValue)];
+            List<KeyValuePair<string, MetaTypeEditorFieldDTO>> targetResourcePairList = [.. dispatchPairList.Where(item => item.Value.FeatureMap?["Resource"]?.LiteralValue?.ToString() == currentResourceLocation)];
+
             for (int i = 0; i < targetResourcePairList.Count; i++)
             {
-                if(targetResourcePairList[i].Value.FeatureMap["Index"]?.Items?.Count > 0 && targetResourcePairList[i].Value.FeatureMap["Index"].Items[0].LiteralValue is not null && targetResourcePairList[i].Value.FeatureMap["Index"].Items[0].LiteralValue.ToString() == indexValue)
+                if (targetResourcePairList[i].Value.FeatureMap.TryGetValue("Index", out MetaValue currentIndexValue) && currentIndexValue is not null && currentIndexValue.LiteralValue is not null && currentIndexValue.LiteralValue.ToString().Trim() == indexValue)
+                {
+                    result = targetResourcePairList[i].Value;
+                }
+                else if (targetResourcePairList[i].Value.FeatureMap["Index"]?.Items?.Count > 0 && targetResourcePairList[i].Value.FeatureMap["Index"].Items[0].LiteralValue is not null && targetResourcePairList[i].Value.FeatureMap["Index"].Items[0].LiteralValue.ToString() == indexValue)
                 {
                     List<MetaValue> indexList = targetResourcePairList[i].Value.FeatureMap["Index"].Items;
                     //搜索索引值
@@ -574,116 +790,166 @@ namespace CBHK.Utility.Data
                     }
                 }
             }
-            //目标有值但找不到对应的调度器
-            if (result is null)
-            {
 
+            if (result.Children?.Count > 0)
+            {
+                for (int i = 0; i < result.Children.Count; i++)
+                {
+
+                }
             }
+
             #endregion
 
             return result;
         }
 
+        /// <summary>
+        /// 获取调度器并解释相关资源
+        /// </summary>
+        /// <param name="targetDTO"></param>
+        /// <param name="version"></param>
         public void GetDispatchResource(MetaTypeEditorFieldDTO targetDTO, string version)
         {
-            if (targetDTO.FeatureMap.TryGetValue("Resource", out MetaValue resource) && resource is not null && targetDTO.FeatureMap.TryGetValue("Index", out MetaValue index) && index is not null)
+            //处理有具体资源引用的调度器
+            _ = targetDTO.FeatureMap.TryGetValue("Resource", out MetaValue resource);
+            _ = targetDTO.FeatureMap.TryGetValue("Index", out MetaValue index);
+            if (resource is null || index is null)
             {
-                string resourceString = resource.Kind is MetaValueKind.Literal ? resource.LiteralValue.ToString() : "";
-                if(targetDTO.Parent is null)
-                {
-                    return;
-                }
-                targetDTO.Parent.Children ??= [];
-
-                if (index.Kind is MetaValueKind.Literal)
-                {
-                    var targetInstanceDTO = InvokeAndInterpretDispatchResource([], targetDTO, index, resourceString, version);
-                    if (targetInstanceDTO is not null)
-                    {
-                        MetaTypeEditorFieldDTO removeDTO = new()
-                        {
-                            ID = "placeHolder",
-                            TypeKind = MetaTypeKind.Remove
-                        };
-                        MetaTypeEditorFieldDTO compositeDTO = new()
-                        {
-                            ID = "placeHolder",
-                            TypeKind = MetaTypeKind.Composite,
-                            Items = [removeDTO, targetInstanceDTO]
-                        };
-                        removeDTO.Parent = compositeDTO;
-                        removeDTO.RemoveItemCommand = CreateRemoveItemCommand(removeDTO);
-                        targetInstanceDTO.Parent = compositeDTO;
-                        //处理结构体/数组/联合体
-                        if (targetInstanceDTO.Children?.Count > 1)
-                        {
-                            //bool haveValueNode = targetInstanceDTO.Children.Any(item => item.TypeKind is MetaTypeKind.List or MetaTypeKind.ByteArray or MetaTypeKind.IntArray or MetaTypeKind.LongArray);
-                            //if (haveValueNode)
-                            //{
-                            //    targetInstanceDTO.SelectedUnionItemUpdated = () => SelectedUnionItemUpdated(targetInstanceDTO, version);
-                            //    targetInstanceDTO.SelectedUnionTypeName = targetInstanceDTO.UnionTypeNameList[0];
-                            //}
-                            targetInstanceDTO.TypeKind = MetaTypeKind.Union;
-                            compositeDTO.SelectedUnionChildren = targetInstanceDTO.SelectedUnionChildren;
-                        }
-
-                        //添加给当前复合节点的父级
-                        if (targetDTO.TypeKind is MetaTypeKind.Composite)
-                        {
-                            targetDTO.Parent.Children.Add(compositeDTO);
-                            compositeDTO.Parent = targetDTO.Parent;
-                        }
-                        else
-                        {
-                            targetDTO.Children.Add(targetInstanceDTO);
-                        }
-                    }
-                }
-                else if (index.Kind is MetaValueKind.Array)
-                {
-                    for (int j = 0; j < index.Items.Count; j++)
-                    {
-                        var resultDTO = InvokeAndInterpretDispatchResource([], targetDTO, index.Items[j], resourceString, version);
-                        if (resultDTO is not null)
-                        {
-                            targetDTO.Parent.Children.Add(resultDTO);
-                        }
-                    }
-                }
+                return;
             }
-            else
+            //if (resource is not null && index is not null)
+            //{
+            string resourceString = resource.Kind is MetaValueKind.Literal ? resource.LiteralValue.ToString() : "";
+            if (targetDTO.Parent is null)
             {
-                var enumDTO = targetDTO.Items.FirstOrDefault(item => item.TypeKind is MetaTypeKind.Enum);
-                if(enumDTO is not null)
+                return;
+            }
+            targetDTO.Parent.Children ??= [];
+
+            if (index.Kind is MetaValueKind.Literal)//处理单索引的调度器
+            {
+                var targetInstanceDTO = InvokeAndInterpretDispatchResource([], targetDTO, index, resourceString, version);
+                if (targetInstanceDTO is not null)
                 {
+                    #region 控制第一层子节点的路径
+                    if (targetInstanceDTO.Children?.Count > 0)
+                    {
+                        for (int i = 0; i < targetInstanceDTO.Children.Count; i++)
+                        {
+                            targetInstanceDTO.Children[i].Path ??= new(targetInstanceDTO.Path.TargetPath);
+                        }
+                        for (int i = 0; i < targetInstanceDTO.SelectedUnionChildren.Count; i++)
+                        {
+                            targetInstanceDTO.SelectedUnionChildren[i].Path = new(targetInstanceDTO.Path.TargetPath);
+                        }
+                    }
+                    #endregion
+
+                    #region 封装新节点、刷新视图
+                    MetaTypeEditorFieldDTO removeDTO = new()
+                    {
+                        ID = "placeHolder",
+                        TypeKind = MetaTypeKind.Remove
+                    };
                     MetaTypeEditorFieldDTO compositeDTO = new()
                     {
                         ID = "placeHolder",
                         TypeKind = MetaTypeKind.Composite,
-                        Parent = targetDTO.Parent
+                        Items = [removeDTO],
+                        Parent = targetDTO.Parent,
+                        Path = new(targetInstanceDTO.Path.TargetPath)
                     };
-                    MetaTypeEditorFieldDTO removeDTO = new()
+                    removeDTO.Parent = compositeDTO;
+
+                    //处理结构体
+                    if (targetInstanceDTO.Children?.Count > 0)
                     {
-                        ID = "placeHolder",
-                        TypeKind = MetaTypeKind.Remove,
-                        Parent = compositeDTO
-                    };
-                    removeDTO.RemoveItemCommand = CreateRemoveItemCommand(removeDTO);
-                    compositeDTO.Items =
-                    [
-                        removeDTO,
-                        new()
-                        {
-                            ID = Guid.NewGuid().ToString(),
-                            TypeKind = MetaTypeKind.Struct,
-                            FieldName = !string.IsNullOrEmpty(enumDTO.SelectedEnumOption.Name) ? enumDTO.SelectedEnumOption.Name : "",
-                            Parent = compositeDTO
-                        }
-                    ];
-                    compositeDTO.Parent = targetDTO.Parent;
-                    targetDTO.Parent.Children.Add(compositeDTO);
+                        compositeDTO.Items.Add(targetInstanceDTO);
+                        targetInstanceDTO.Children = targetInstanceDTO.Children;
+                    }//处理列表
+                    else if (targetInstanceDTO.TypeKind is MetaTypeKind.List)
+                    {
+                        targetInstanceDTO.Parent = compositeDTO;
+                        targetInstanceDTO.AddItemCommand = CreateAddItemCommand(targetInstanceDTO, version);
+                        targetInstanceDTO.RemoveItemCommand = CreateRemoveItemCommand(targetInstanceDTO);
+                        compositeDTO.Items.Add(targetInstanceDTO);
+                        compositeDTO.ElementType = targetInstanceDTO.ElementType;
+                    }
+                    else//处理值类型
+                    {
+                        compositeDTO.Items.Add(targetInstanceDTO);
+                    }
+
+                    removeDTO.Parent = compositeDTO;
+                    removeDTO.RemoveItemCommand = CreateRemoveItemCommand(targetDTO, compositeDTO);
+                    targetInstanceDTO.Parent = compositeDTO;
+                    //处理联合体
+                    if (targetInstanceDTO.Children?.Count > 1 && targetInstanceDTO.UnionTypeNameList?.Count > 0)
+                    {
+                        targetInstanceDTO.OriginKind = targetInstanceDTO.TypeKind;
+                        targetInstanceDTO.TypeKind = MetaTypeKind.Union;
+                        compositeDTO.SelectedUnionChildren = targetInstanceDTO.SelectedUnionChildren;
+                    }
+
+                    //添加给当前复合节点的父级
+                    if (targetDTO.TypeKind is MetaTypeKind.Composite)
+                    {
+                        targetDTO.Parent.Children.Add(compositeDTO);
+                        compositeDTO.Parent = targetDTO.Parent;
+                    }
+                    else
+                    {
+                        targetDTO.Children.Add(targetInstanceDTO);
+                    }
+                    #endregion
                 }
             }
+            //else if (index.Kind is MetaValueKind.List)//处理多索引的调度器
+            //{
+            //    for (int j = 0; j < index.Items.Count; j++)
+            //    {
+            //        var resultDTO = InvokeAndInterpretDispatchResource([], targetDTO, index.Items[j], resourceString, version);
+            //        if (resultDTO is not null)
+            //        {
+            //            targetDTO.Parent.Children.Add(resultDTO);
+            //        }
+            //    }
+            //}
+            //}
+            //else
+            //{
+            //    var enumDTO = targetDTO.Items.FirstOrDefault(item => item.TypeKind is MetaTypeKind.Enum);
+            //    if(enumDTO is not null)
+            //    {
+            //        MetaTypeEditorFieldDTO compositeDTO = new()
+            //        {
+            //            ID = "placeHolder",
+            //            TypeKind = MetaTypeKind.Composite,
+            //            Parent = targetDTO.Parent
+            //        };
+            //        MetaTypeEditorFieldDTO removeDTO = new()
+            //        {
+            //            ID = "placeHolder",
+            //            TypeKind = MetaTypeKind.Remove,
+            //            Parent = compositeDTO
+            //        };
+            //        removeDTO.RemoveItemCommand = CreateRemoveItemCommand(targetDTO, compositeDTO);
+            //        compositeDTO.Items =
+            //        [
+            //            removeDTO,
+            //            new()
+            //            {
+            //                ID = Guid.NewGuid().ToString(),
+            //                TypeKind = MetaTypeKind.Struct,
+            //                FieldName = !string.IsNullOrEmpty(enumDTO.SelectedEnumOption.Name) ? enumDTO.SelectedEnumOption.Name : "",
+            //                Parent = compositeDTO
+            //            }
+            //        ];
+            //        compositeDTO.Parent = targetDTO.Parent;
+            //        targetDTO.Parent.Children.Add(compositeDTO);
+            //    }
+            //}
         }
 
         /// <summary>
@@ -695,70 +961,84 @@ namespace CBHK.Utility.Data
         /// <param name="version">目标版本</param>
         /// <param name="index">调度器索引</param>
         /// <returns>返回解析出来的DTO实例列表</returns>
-        public MetaTypeEditorFieldDTO InvokeAndInterpretDispatchResource(Dictionary<string, KeyValueAnchors> anchorMap,MetaTypeEditorFieldDTO currentDTO, MetaValue index, string resourceString, string version)
+        public MetaTypeEditorFieldDTO InvokeAndInterpretDispatchResource(Dictionary<string, KeyValueAnchors> anchorMap, MetaTypeEditorFieldDTO currentDTO, MetaValue index, string resourceString, string version)
         {
-            //计算Key表达式的值
-            MetaTypeEditorFieldDTO targetDispatchDTO = EvaluateKeyExpression(currentDTO, index, resource);
-
-            #region 实例化目标调度器结构、执行验证，最后添加到调用节点的子级中
-            if (targetDispatchDTO is not null)
+            #region 计算Key表达式的值
+            MetaTypeEditorFieldDTO targetDispatchDTO = EvaluateKeyExpression(currentDTO, resourceString, index, resource);
+            MetaTypeEditorFieldDTO targetDispatchInstance = null;
+            if (targetDispatchDTO is null)
             {
-                List<MetaTypeEditorFieldDTO> instanceList = [];
-                List<MetaTypeEditorFieldDTO> targetDispatchChildren = [];
-                if (targetDispatchDTO.Children is not null)
+                return null;
+            }
+            #endregion
+
+            #region 解释可能为泛引用节点的子级
+            targetDispatchInstance = InstantiateDTO(targetDispatchDTO, version);
+            //设定字段名
+            if (targetDispatchInstance.FeatureMap.TryGetValue("Index", out MetaValue indexValue) && indexValue is not null && indexValue.Kind is MetaValueKind.Literal)
+            {
+                targetDispatchInstance.FieldName = "minecraft:" + indexValue.LiteralValue?.ToString() ?? targetDispatchDTO.FieldName;
+            }
+            //处理结构体
+            if (targetDispatchInstance.Children is not null)
+            {
+                for (int i = 0; i < targetDispatchInstance.Children.Count; i++)
                 {
-                    targetDispatchChildren = [.. targetDispatchDTO.Children];
-                    for (int i = 0; i < targetDispatchDTO.Children.Count; i++)
+                    if (targetDispatchInstance.Children[i].Value is not null && targetDispatchInstance.Children[i].TypeKind is MetaTypeKind.Literal)
                     {
-                        var instance = InstantiateDTO(targetDispatchDTO.Children[i], version);
-                        instanceList.Add(instance);
+                        (string realUsePath, MetaTypeEditorFieldDTO realDTO) = UsePathParser.Parse(resource, targetDispatchInstance.Path, targetDispatchInstance.Children[i].Value.ToString());
+                        if (realDTO is not null)
+                        {
+                            var instanceRealDTO = InstantiateDTO(realDTO, version);
+                            targetDispatchInstance.Children[i] = instanceRealDTO;
+                        }
                     }
+                }
+            }//处理列表
+            else if (targetDispatchInstance.OriginKind is not (MetaTypeKind.None or MetaTypeKind.Dispatch))
+            {
+                targetDispatchInstance.TypeKind = targetDispatchInstance.OriginKind;
+                targetDispatchInstance.FeatureMap.Remove("Resource");
+                targetDispatchInstance.FeatureMap.Remove("Index");
+            }
+            #endregion
+
+            #region 执行验证、执行部分浅表复制、返回
+            if (targetDispatchInstance.Children?.Count > 0)
+            {
+                Validator.Verify(new([.. targetDispatchInstance.Children], anchorMap), [.. targetDispatchInstance.Children], version, targetDispatchInstance.Path);
+                for (int i = 0; i < targetDispatchInstance.Children.Count; i++)
+                {
+                    targetDispatchInstance.Children[i].Parent = targetDispatchInstance;
+                    targetDispatchInstance.Children[i].Path ??= targetDispatchInstance.Path;
+                }
+            }
+
+            if (targetDispatchInstance.Children?.Count == 1)
+            {
+                targetDispatchInstance = targetDispatchInstance.Children[0];
+                targetDispatchInstance.Parent = currentDTO;
+            }
+            else if (targetDispatchInstance.Children?.Count > 0)
+            {
+                targetDispatchInstance.UnionTypeNameList = targetDispatchDTO.UnionTypeNameList;
+                targetDispatchInstance.SelectedUnionTypeName = targetDispatchDTO.UnionTypeNameList[0];
+                targetDispatchInstance.SelectedUnionItemUpdated = () => SelectedUnionItemUpdated(targetDispatchInstance, version);
+                if (targetDispatchInstance.Children[0].TypeKind is MetaTypeKind.Struct && targetDispatchInstance.Children[0].Children is not null)
+                {
+                    targetDispatchInstance.SelectedUnionChildren = [.. targetDispatchInstance.Children[0].Children];
+                    targetDispatchInstance.SetRequired(true);
                 }
                 else
                 {
-                    targetDispatchChildren = [targetDispatchDTO];
-                    var instance = InstantiateDTO(targetDispatchDTO, version);
-                    instanceList = [instance];
-                    instance.TypeKind = instance.OriginKind;
-                    instance.FeatureMap.Remove("Resource");
-                    instance.FeatureMap.Remove("Index");
+                    targetDispatchInstance.SelectedUnionChildren = [targetDispatchInstance.Children[0]];
                 }
-
-                //递归逐层解释目标Dispatch实例数据
-                Validator.Verify((instanceList, anchorMap), targetDispatchChildren, version, targetDispatchDTO.DocumentItemPath);
-                targetDispatchDTO.Children = new(instanceList);
-                for (int i = 0; i < instanceList.Count; i++)
-                {
-                    instanceList[i].Parent = targetDispatchDTO;
-                    instanceList[i].DocumentItemPath = targetDispatchDTO.DocumentItemPath;
-                }
-
-                if (instanceList?.Count == 1)
-                {
-                    targetDispatchDTO = instanceList[0];
-                    instanceList[0].Parent = currentDTO;
-                }
-                else if (instanceList?.Count > 0)
-                {
-                    targetDispatchDTO.UnionTypeNameList = [.. targetDispatchDTO.UnionTypeNameList];
-                    targetDispatchDTO.SelectedUnionTypeName = targetDispatchDTO.UnionTypeNameList[0];
-                    targetDispatchDTO.SelectedUnionItemUpdated = () => SelectedUnionItemUpdated(targetDispatchDTO, version);
-                    if (targetDispatchDTO.Children[0].TypeKind is MetaTypeKind.Struct && targetDispatchDTO.Children[0].Children is not null)
-                    {
-                        targetDispatchDTO.SelectedUnionChildren = [.. targetDispatchDTO.Children[0].Children];
-                    }
-                    else
-                    {
-                        targetDispatchDTO.SelectedUnionChildren = [targetDispatchDTO.Children[0]];
-                    }
-                }
-
-                targetDispatchDTO.DocumentItemPath = targetDispatchDTO.DocumentItemPath;
-                targetDispatchDTO.TemplateReference = targetDispatchDTO;
-                targetDispatchDTO.FieldName = targetDispatchDTO.FieldName;
             }
 
-            return targetDispatchDTO;
+            targetDispatchInstance.Path = targetDispatchDTO.Path;
+            targetDispatchInstance.TemplateReference = targetDispatchDTO;
+
+            return targetDispatchInstance;
             #endregion
         }
 
@@ -766,20 +1046,20 @@ namespace CBHK.Utility.Data
         /// 使用栈迭代处理树形结构，展平规范节点或联合体/泛型节点，并在必要时提升节点类型。
         /// </summary>
         /// <returns>返回应当作为父节点子节点的 MetaTypeEditorFieldDTO 列表。</returns>
-        public static List<MetaTypeEditorFieldDTO> HierarchicallyUpdateTreeStructuredData(
+        public List<MetaTypeEditorFieldDTO> HierarchicallyUpdateTreeStructuredData(
             MetaTypeEditorFieldDTO root, string version)
         {
-            Stack<(MetaTypeEditorFieldDTO node, int stage)> stack = new();
+            Stack<(MetaTypeEditorFieldDTO node, bool stage)> stack = new();
             Dictionary<MetaTypeEditorFieldDTO, List<MetaTypeEditorFieldDTO>> resultCache = [];
 
-            stack.Push((root, 0));
+            stack.Push((root, false));
             while (stack.Count > 0)
             {
                 var (node, stage) = stack.Pop();
                 //进入容器分拣
-                if (stage == 0)
+                if (!stage)
                 {
-                    stack.Push((node, 1));
+                    stack.Push((node, true));
                     if (node.Children is not null)
                     {
                         VerifyVersion([.. node.Children], version);
@@ -788,7 +1068,16 @@ namespace CBHK.Utility.Data
                             var child = node.Children[i];
                             if (child.IsVisible || (child.Children?.Count > 0 && (IsContainerType(child.TypeKind) || IsIndirectType(child.TypeKind)) && string.IsNullOrEmpty(child.FieldName)))
                             {
-                                stack.Push((child, 0));
+                                stack.Push((child, false));
+                            }
+                            if (string.IsNullOrEmpty(child.FieldName) && child.TypeKind is MetaTypeKind.Dispatch)
+                            {
+                                child.IsVisible = false;
+                            }
+                            //只剔除挂载在子级的引用类节点
+                            if (!child.IsVisible && string.IsNullOrEmpty(child.FieldName) && child.TypeKind is not MetaTypeKind.Dispatch && child.Value is not null)
+                            {
+                                node.Children.RemoveAt(i);
                             }
                         }
                     }
@@ -799,18 +1088,67 @@ namespace CBHK.Utility.Data
                     List<MetaTypeEditorFieldDTO> allFlattenedChildren = [];
                     if (node.Children is not null)
                     {
+                        VerifyVersion([.. node.Children], version);
+                        for (int i = 0; i < node.Children.Count; i++)
+                        {
+                            if (!node.Children[i].IsVisible && node.Children[i].TypeKind is not MetaTypeKind.Dispatch)
+                            {
+                                node.Children.RemoveAt(i);
+                                i--;
+                            }
+                        }
+                        if (node.Children?.Count == 1)
+                        {
+                            node.OriginKind = node.TypeKind;
+                            node.TypeKind = MetaTypeKind.Struct;
+                            node.UnionTypeNameList = null;
+                        }
+
+                        #region 检测是否需要重置联合体名称列表，是则执行重置
+                        if (node.Children?.Count > 1)
+                        {
+                            bool isNeedRefreshUnionNameList = false;
+                            for (int i = 0; i < node.Children.Count; i++)
+                            {
+                                isNeedRefreshUnionNameList = node.Children[i].OriginKind != node.Children[i].TypeKind;
+                                if (isNeedRefreshUnionNameList)
+                                {
+                                    break;
+                                }
+                            }
+                            //需要重置联合体名称列表
+                            if (isNeedRefreshUnionNameList && (node.TypeKind is MetaTypeKind.Union || (node.TypeKind is MetaTypeKind.Composite && node.Items?.Count > 0 && node.Items[0].TypeKind is MetaTypeKind.Union)) && node.Children?.Count > 1)
+                            {
+                                node.UnionTypeNameList ??= [];
+                                node.UnionTypeNameList.Clear();
+                                List<string> unionNameList = UnionTypeNameParser.Parse([.. node.Children]);
+                                node.UnionTypeNameList.AddRange(unionNameList.Select(item => new EnumMember() { Name = item, Value = new MetaValue() { Kind = MetaValueKind.Literal, LiteralValue = item } }));
+                                if (!node.IsRequired)
+                                {
+                                    node.UnionTypeNameList.Insert(0, new EnumMember() { Name = "- unset -", Value = new MetaValue() { Kind = MetaValueKind.Literal, LiteralValue = "unset" } });
+                                }
+                            }
+                        }
+                        #endregion
+
                         foreach (var child in node.Children)
                         {
                             if (!child.IsVisible)
                             {
-                                // 空 FieldName 的容器是展开残余，提取其子级提升到当前层
+                                //Dispatch无子级：保留空节点以存放 FeatureMap，不参与剥壳
+                                if (child.TypeKind is MetaTypeKind.Dispatch && string.IsNullOrEmpty(child.FieldName) && (child.Children is null || child.Children.Count == 0))
+                                {
+                                    allFlattenedChildren.Add(child);
+                                    continue;
+                                }
+                                //空FieldName的容器是展开残余，提取其子级提升到当前层
                                 if ((IsContainerType(child.TypeKind) || IsIndirectType(child.TypeKind)) && string.IsNullOrEmpty(child.FieldName))
                                 {
                                     if (resultCache.TryGetValue(child, out var promoted) && promoted.Count > 0)
                                     {
                                         allFlattenedChildren.AddRange(promoted);
                                     }
-                                    else if(child.Children is not null)
+                                    else if (child.Children is not null)
                                     {
                                         allFlattenedChildren.AddRange(child.Children);
                                     }
@@ -819,7 +1157,17 @@ namespace CBHK.Utility.Data
                             }
                             if (resultCache.TryGetValue(child, out var childResult))
                             {
-                                allFlattenedChildren.AddRange(childResult);
+                                // 子节点缓存的展平结果可能为空（它曾在自身 S1 被"无可见子节点→隐藏"，
+                                // 但随后父级的 VerifyVersion 又把它 IsVisible 重置回 true）。
+                                // 此时应保留子节点本身，而不是 AddRange 一个空列表导致节点静默丢失。
+                                if (childResult.Count > 0)
+                                {
+                                    allFlattenedChildren.AddRange(childResult);
+                                }
+                                else
+                                {
+                                    allFlattenedChildren.Add(child);
+                                }
                             }
                             else
                             {
@@ -856,7 +1204,7 @@ namespace CBHK.Utility.Data
                     else
                     {
                         // 展平：要么消除节点，要么提升为唯一子节点
-                        if (allFlattenedChildren.Count == 0 && node.TypeKind is not MetaTypeKind.Composite)
+                        if (allFlattenedChildren.Count == 0 && node.TypeKind is not (MetaTypeKind.Composite or MetaTypeKind.Literal))
                         {
                             // 无可见子节点 -> 隐藏当前节点
                             node.IsVisible = false;
@@ -866,42 +1214,69 @@ namespace CBHK.Utility.Data
                         {
                             var only = allFlattenedChildren[0];
                             bool isDefinitionItem = IsDefinitionItem(only.FeatureMap);
-                            if(isDefinitionItem)
+                            if (isDefinitionItem)
                             {
+                                // 定义类节点是用户手写的 Key，必须保留原样，不能展平
+                                resultCache[node] = [node];
                                 continue;
                             }
 
-                            if (!IsContainerType(only.TypeKind) && only.ID != "placeHolder")
+                            if (!IsContainerType(only.TypeKind) && only.ID != "placeHolder" && !string.IsNullOrEmpty(node.FieldName))
                             {
                                 // 唯一子节点是基本类型 -> 将当前节点提升为该基本类型
-                                if (node.Children?.Count == 1 || node.Children is null)
+                                //if (node.Children?.Count == 1 || node.Children is null)
+                                //{
+                                //    node.Children.Clear();
+                                //    node.Value = only.Value;
+                                //}
+                                if (!IsIndirectType(only.TypeKind) && string.IsNullOrEmpty(only.FieldName))
                                 {
                                     node.TypeKind = only.TypeKind;
-                                    node.Children = null;
                                 }
-                                node.Value = only.Value;
-                                node.EnumOptionList = only.EnumOptionList;
+
+                                if (only.EnumOptionList?.Count > 0 && string.IsNullOrEmpty(only.FieldName))
+                                {
+                                    node.EnumOptionList = [.. only.EnumOptionList];
+                                    node.SelectedEnumItemUpdated = () => SelectedEnumItemUpdated(node, version);
+                                }
+                                if (only.UnionTypeNameList?.Count > 0)
+                                {
+                                    node.UnionTypeNameList = [.. only.UnionTypeNameList];
+                                    node.SelectedUnionItemUpdated = () => SelectedUnionItemUpdated(node, version);
+                                }
                                 node.IsFalse = only.IsFalse;
                                 node.IsTrue = only.IsTrue;
                                 // 保留所有上下文属性（FieldName, IsRequired, FeatureMap 等）
                                 resultCache[node] = [node];
                             }
-                            else if(only.ID != "placeHolder")
+                            else if (only.ID != "placeHolder")
                             {
                                 // 唯一子节点是容器类型 -> 将当前节点替换为那个容器，接管其子树
                                 if (node.Children?.Count == 1 || node.Children is null)
                                 {
-                                    node.TypeKind = only.TypeKind;
-                                    node.Children = only.Children;
+                                    bool isRequired = node.IsRequired;
+                                    // 必须就地复制，不能用 node = new(only)：
+                                    // 父级 Children 集合与 resultCache 的键仍持有 node 的原引用，
+                                    // 重新赋值局部变量不会更新它们，会导致"提升"静默失效。
+                                    node.CopyFrom(only);
+                                    if (!IsContainerType(node.TypeKind))
+                                    {
+                                        node.Children = null;
+                                    }
+                                    node.SetRequired(isRequired);
                                 }
-                                node.Value = only.Value;
-                                node.EnumOptionList = only.EnumOptionList;
                                 // 保留所有上下文属性（FieldName, IsRequired, FeatureMap 等）
+                                resultCache[node] = [node];
+                            }
+                            else
+                            {
+                                // 唯一子节点是占位符（可选结构体/懒加载桩）：保留当前节点原样，
+                                // 否则该节点不会登记进 resultCache，父级可能把它当成不可见节点丢弃。
                                 resultCache[node] = [node];
                             }
                         }
                         // allFlattenedChildren.Count > 1
-                        else if(node.TypeKind is not MetaTypeKind.Composite)
+                        else if (node.TypeKind is not (MetaTypeKind.Composite or MetaTypeKind.Literal))
                         {
                             // 只有canonical节点才会进入此分支（Union/Generic 多子时 shouldFlatten 为 false）
                             // 完全消除别名节点，将其子节点列表直接交给父级
@@ -909,40 +1284,85 @@ namespace CBHK.Utility.Data
                             node.Children = new(allFlattenedChildren); // 更新 Children 供外部调用取用
                             resultCache[node] = allFlattenedChildren;
                         }
+                        else
+                        {
+                            // Composite / Literal 且无子节点或多子节点：保留原样
+                            node.Children = new(allFlattenedChildren);
+                            resultCache[node] = [node];
+                        }
                     }
                 }
             }
 
+            //return RefreshSubtreeLayerByLayer(root, resultCache);
             return resultCache.GetValueOrDefault(root, []);
         }
 
         /// <summary>
-        /// 判断是否为容器类型
+        /// 判断是否为容器类型（已移至 MetaTypeKindPredicates）
         /// </summary>
-        /// <param name="kind"></param>
-        /// <returns></returns>
         public static bool IsContainerType(MetaTypeKind kind)
-        {
-            return kind is MetaTypeKind.Struct
-                or MetaTypeKind.List
-                or MetaTypeKind.Dispatch
-                or MetaTypeKind.ByteArray
-                or MetaTypeKind.IntArray
-                or MetaTypeKind.LongArray
-                or MetaTypeKind.Composite;
-        }
+            => MetaTypeKindPredicates.IsContainerType(kind);
 
         /// <summary>
-        /// 判断是否为间接类型
+        /// 判断是否为泛引用类型（已移至 MetaTypeKindPredicates）
         /// </summary>
-        /// <param name="kind"></param>
-        /// <returns></returns>
         public static bool IsIndirectType(MetaTypeKind kind)
+            => MetaTypeKindPredicates.IsIndirectType(kind);
+
+        /// <summary>
+        /// 将调度器结构填入目标泛型
+        /// </summary>
+        /// <param name="targetDispatchDTOInstance"></param>
+        /// <returns></returns>
+        private List<MetaTypeEditorFieldDTO> SubstituteGenericIterative(MetaTypeEditorFieldDTO targetDispatchDTOInstance, string version)
         {
-            return kind is MetaTypeKind.Union
-                or MetaTypeKind.Generic
-                or MetaTypeKind.Reference
-                or MetaTypeKind.Literal;
+            if (targetDispatchDTOInstance.Path is null || string.IsNullOrEmpty(targetDispatchDTOInstance.TypeName))
+            {
+                return [];
+            }
+            List<MetaTypeEditorFieldDTO> result = [];
+            string targetTypeName = targetDispatchDTOInstance.TypeName;
+            string documentItemPathString = targetDispatchDTOInstance.Path.TargetPath.ToString();
+            int lastDoubleColonIndex = documentItemPathString.LastIndexOf("::");
+            string baseUsePath = "";
+            if (lastDoubleColonIndex > -1)
+            {
+                baseUsePath = documentItemPathString[..lastDoubleColonIndex];
+            }
+            string targetGenericStructUsePath = baseUsePath + "::" + targetTypeName;
+            var targetGenericDTO = resource.DocumentItemMap[targetGenericStructUsePath];
+            if (targetGenericDTO is null)
+            {
+                List<string> currentUseList = resource.DocumentPathItemMap[baseUsePath];
+                targetGenericStructUsePath = currentUseList.FirstOrDefault(item => item.EndsWith(targetTypeName));
+                targetGenericDTO = resource.DocumentItemMap[targetGenericStructUsePath];
+            }
+            if (targetGenericDTO is not null && targetGenericDTO.Children?.Count > 0)
+            {
+                MetaValue formalParameter = targetGenericDTO.TypeParameterNameList.FirstOrDefault().Item2;
+                var registry = DocumentDTOBuildStrategyRegistry.Create(resource, this);
+                for (int i = 0; i < targetGenericDTO.Children.Count; i++)
+                {
+                    var childInstance = InstantiateDTO(targetGenericDTO.Children[i], version);
+                    //找到使用了目标泛型的字段
+                    if (childInstance.Value?.ToString() == formalParameter.LiteralValue?.ToString())
+                    {
+                        childInstance.Children ??= [];
+                        for (int j = 0; j < targetDispatchDTOInstance.Children.Count; j++)
+                        {
+                            childInstance.Children.Add(targetDispatchDTOInstance.Children[j]);
+                            targetDispatchDTOInstance.Children[j].Path = targetDispatchDTOInstance.Path;
+                            childInstance.Path = targetDispatchDTOInstance.Path;
+                        }
+                        childInstance.TypeKind = MetaTypeKind.Struct;
+                        childInstance.Value = null;
+                    }
+                    result.Add(childInstance);
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -954,14 +1374,15 @@ namespace CBHK.Utility.Data
         /// <returns></returns>
         public List<MetaTypeEditorFieldDTO> SubstituteGenericIterative(
             MetaTypeEditorFieldDTO targetTemplate,
-            List<string> formalParams,
-            List<string> actualArgs,
+            List<Tuple<string,MetaValue>> formalParams,
+            List<Tuple<string, MetaValue>> actualArgs,
             string version)
         {
-            var paramMap = new Dictionary<string, string>();
+            var paramMap = new Dictionary<string, MetaValue>();
+            //组合形参和实参映射表
             for (int i = 0; i < formalParams.Count && i < actualArgs.Count; i++)
             {
-                paramMap[formalParams[i]] = actualArgs[i];
+                paramMap[formalParams[i].Item1] = actualArgs[i].Item2;
             }
 
             //统一的泛型列表，收集本层展开后的所有单层节点
@@ -992,12 +1413,12 @@ namespace CBHK.Utility.Data
                 if (!string.IsNullOrEmpty(typeResourcefString) && paramMap.TryGetValue(typeResourcefString, out var actualName))
                 {
                     KeyValuePair<string, MetaTypeEditorFieldDTO> pair = resource.DocumentItemMap.FirstOrDefault(p => p.Key.EndsWith("::" + actualName));
-
+                    //处理泛引用类型的实参
                     if (pair.Value is MetaTypeEditorFieldDTO actualStruct)
                     {
                         var replacedChild = InstantiateDTO(actualStruct, version);
                         replacedChild.FieldName = child.FieldName;
-                        replacedChild.IsRequired = child.IsRequired;
+                        replacedChild.SetRequired(child.IsRequired);
                         replacedChild.Watermark = child.Watermark;
 
                         // 1. 判断该结构是容器还是基础值
@@ -1025,7 +1446,7 @@ namespace CBHK.Utility.Data
                             //基础值模式,更改节点类型并赋初值
                             replacedChild.TypeKind = actualStruct.TypeKind;
                             replacedChild.Children = null;
-                            replacedChild.Value = child.Value ?? GetPrimitiveDefaultValue(actualStruct.TypeKind);
+                            replacedChild.Value = child.Value ?? actualStruct.GetDefaultValue();
                         }
 
                         child = replacedChild;
@@ -1033,15 +1454,17 @@ namespace CBHK.Utility.Data
                         //无论容器还是值，统统阻断迭代器的后续下钻
                         skipDrillDown = true;
                     }
-                    else
+                    else//处理基础类型的实参
                     {
-                        child.TypeName = actualName;
-                        if (Enum.TryParse<MetaTypeKind>(actualName, true, out var parsedKind))
+                        child.TypeName = actualName.LiteralValue?.ToString() ?? "";
+                        //根据实参字符串自动转换为对应的枚举类型
+                        if (Enum.TryParse<MetaTypeKind>(child.TypeName, true, out var parsedKind))
                         {
                             child.TypeKind = parsedKind;
-                            child.Value = GetPrimitiveDefaultValue(parsedKind);
+                            var actualDTO = new MetaTypeEditorFieldDTO() { ID = "", TypeKind = parsedKind };
+                            child.Value = actualDTO.GetDefaultValue();
                         }
-                        else
+                        else//若实参不是基础类型，则将其视为字符串类型
                         {
                             child.TypeKind = MetaTypeKind.String;
                             child.Value = "";
@@ -1097,173 +1520,17 @@ namespace CBHK.Utility.Data
         }
 
         /// <summary>
-        /// 为基础类型赋初值，防止 UI 绑定报错
+        /// 判定是否为需要用户手写的定义类节点（已移至 MetaTypeFeatureHelper）
         /// </summary>
-        /// <param name="kind"></param>
-        /// <returns></returns>
-        private static object GetPrimitiveDefaultValue(MetaTypeKind kind) => kind switch
-        {
-            MetaTypeKind.Boolean => false,
-            MetaTypeKind.Byte or MetaTypeKind.Short or MetaTypeKind.Int => 0,
-            MetaTypeKind.Long => 0L,
-            MetaTypeKind.Float => 0.0f,
-            MetaTypeKind.Double => 0.0,
-            _ => ""
-        };
-
         public static bool IsDefinitionItem(Dictionary<string, MetaValue> featureMap)
-        {
-            bool result = false;
-            if (featureMap is not null && featureMap.Count > 0)
-            {
-                var targetTuplePairList = featureMap.Where(item => item.Value.Kind is MetaValueKind.Tuple);
-                List<List<MetaNamedValue>> targetMemberList = [.. targetTuplePairList.Select(item => item.Value.Members)];
-                for (int i = 0; i < targetMemberList.Count; i++)
-                {
-                    //有definition的同时不能有registry，那么就是需要用户手写的定义类节点
-                    result = !targetMemberList[i].Any(item => item.Name == "registry" && item.Value?.TypeValue?.LiteralValue is not null) && targetMemberList[i].Any(item => item.Name == "definition" && item.Value?.TypeValue?.LiteralValue is not null && item.Value.TypeValue.LiteralValue.ToString() == "True");
-                    if(result)
-                    {
-                        break;
-                    }
-                }
-            }
-            return result;
-        }
+            => MetaTypeFeatureHelper.IsDefinitionItem(featureMap);
 
         /// <summary>
-        /// 校验版本：根据 since/until 约束和用户目标版本决定节点是否可见。
-        /// since 为包含下限（≥），until 为排除上限（&lt;）。
-        /// 用户版本可以是单版本 "1.20.5" 或范围 "1.20-1.21"。
+        /// 校验版本：根据 since/until 约束和用户目标版本决定节点是否可见（已移至 VersionFilter）。
         /// </summary>
         public static void VerifyVersion(List<MetaTypeEditorFieldDTO> targetDTOList, string version)
-        {
-            for (int i = 0; i < targetDTOList.Count; i++)
-            {
-                MetaTypeEditorFieldDTO dto = targetDTOList[i];
-                dto.IsVisible = false;
+            => VersionFilter.VerifyVersion(targetDTOList, version);
 
-                //从FeatureMap提取since/until版本约束
-                Version sinceVersion = TryParseFeatureVersion(dto.FeatureMap, "since");
-                Version untilVersion = TryParseFeatureVersion(dto.FeatureMap, "until");
-
-                //无任何版本约束则始终可见
-                if (sinceVersion is null && untilVersion is null)
-                {
-                    dto.IsVisible = true;
-                    continue;
-                }
-
-                //用户版本是范围（如"1.20-1.21"）：区间重叠即视为可见
-                if (version.Contains('-'))
-                {
-                    string[] parts = version.Split('-');
-                    if (parts.Length == 2
-                        && Version.TryParse(parts[0], out Version rangeLeft)
-                        && Version.TryParse(parts[1], out Version rangeRight))
-                    {
-                        dto.IsVisible = IsVersionRangeOverlapping(rangeLeft, rangeRight, sinceVersion, untilVersion);
-                    }
-                }
-                else if (Version.TryParse(version, out Version fullVersion))
-                {
-                    dto.IsVisible = IsVersionInRange(fullVersion, sinceVersion, untilVersion);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 从FeatureMap提取"since"或"until"版本值
-        /// </summary>
-        private static Version TryParseFeatureVersion(Dictionary<string, MetaValue> featureMap, string key)
-        {
-            if (featureMap is not null
-                && featureMap.TryGetValue(key, out MetaValue metaValue)
-                && metaValue?.TypeValue?.LiteralValue is not null
-                && Version.TryParse(metaValue.TypeValue.LiteralValue.ToString(), out Version parsed))
-            {
-                return parsed;
-            }
-            return null;
-        }
-
-        /// <summary>
-        ///判断单版本是否落在[since, until)区间内。
-        ///since为包含（≥），until为排除（&lt;）。
-        /// </summary>
-        private static bool IsVersionInRange(Version target, Version since, Version until)
-        {
-            if (since is { } sinceVer && CompareVersions(target, sinceVer) < 0)
-                return false;
-
-            if (until is { } untilVer && CompareVersions(target, untilVer) >= 0)
-                return false;
-
-            return true;
-        }
-
-        /// <summary>
-        ///判断用户版本范围[rangeLeft,rangeRight]是否与字段约束[since,until)有交集。
-        /// </summary>
-        private static bool IsVersionRangeOverlapping(Version rangeLeft, Version rangeRight, Version since, Version until)
-        {
-            // 用户区间完全在 until 之后则无交集
-            if (until is { } untilVer && CompareVersions(rangeLeft, untilVer) >= 0)
-                return false;
-
-            // 用户区间完全在 since 之前则无交集
-            if (since is { } sinceVer && CompareVersions(rangeRight, sinceVer) < 0)
-                return false;
-
-            return true;
-        }
-
-        /// <summary>
-        /// 逐段比较两个Version，BuildResource/Revision=-1视为"未指定"（等同0参与比较）。
-        /// </summary>
-        private static int CompareVersions(Version a, Version b)
-        {
-            int cmp = a.Major.CompareTo(b.Major);
-            if (cmp != 0) return cmp;
-
-            cmp = a.Minor.CompareTo(b.Minor);
-            if (cmp != 0) return cmp;
-
-            int aBuild = a.Build == -1 ? 0 : a.Build;
-            int bBuild = b.Build == -1 ? 0 : b.Build;
-            cmp = aBuild.CompareTo(bBuild);
-            if (cmp != 0) return cmp;
-
-            int aRev = a.Revision == -1 ? 0 : a.Revision;
-            int bRev = b.Revision == -1 ? 0 : b.Revision;
-            return aRev.CompareTo(bRev);
-        }
-
-        /// <summary>
-        /// 辅助：根据类型返回默认值
-        /// </summary>
-        /// <param name="dto"></param>
-        /// <returns></returns>
-        private static object GetDefaultValue(MetaTypeEditorFieldDTO dto) => dto.TypeKind switch
-        {
-            MetaTypeKind.Boolean => false,
-            MetaTypeKind.Byte => (byte)0,
-            MetaTypeKind.Short => (short)0,
-            MetaTypeKind.Int => 0,
-            MetaTypeKind.Long => 0L,
-            MetaTypeKind.Float => 0.0f,
-            MetaTypeKind.Double => 0.0,
-            MetaTypeKind.String => string.Empty,
-            MetaTypeKind.Enum => dto.SelectedEnumOption?.Value?.TypeValue.LiteralValue?.ToString(),
-            MetaTypeKind.Union => dto.SelectedUnionTypeName.Value?.TypeValue?.LiteralValue?.ToString(),      // Union 值不在 Value 字段体现
-            MetaTypeKind.Struct => null,
-            MetaTypeKind.Dispatch => null,
-            MetaTypeKind.Reference => dto.Value?.ToString() ?? "",
-            MetaTypeKind.IntArray or MetaTypeKind.ByteArray or MetaTypeKind.LongArray => null,
-            MetaTypeKind.List => null,
-            MetaTypeKind.Literal => dto.Value?.ToString(),
-            _ => string.Empty
-        };
         #endregion
     }
 }

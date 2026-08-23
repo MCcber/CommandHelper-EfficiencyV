@@ -9,18 +9,18 @@ namespace CBHK.Domain.DataContext
     {
         #region Method
 
-        public static async Task<MCDocumentFile?> AnalysisMCDocumentFileOrContent(string filePathOrContent)
+        public static async Task<MCDocumentFile?> AnalysisMCDocumentFileOrContent(string filePathOrContent,string baseDocumentPath)
         {
             NamedPipeClientStream mcdocumentPiperClientStream = new(".", "MCDocumentLanguageServerPipe", PipeDirection.InOut);
             await mcdocumentPiperClientStream.ConnectAsync();
 
-            byte[] pathBytes = Encoding.UTF8.GetBytes(filePathOrContent);
-            byte[] lengthBytes = BitConverter.GetBytes(pathBytes.Length);
+            byte[] contentBytes = Encoding.UTF8.GetBytes(baseDocumentPath + '+' + filePathOrContent);
+            byte[] lengthBytes = BitConverter.GetBytes(contentBytes.Length);
 
             // 先发长度
             await mcdocumentPiperClientStream.WriteAsync(lengthBytes);
             // 再发数据
-            await mcdocumentPiperClientStream.WriteAsync(pathBytes);
+            await mcdocumentPiperClientStream.WriteAsync(contentBytes);
 
             // 读取长度前缀
             byte[] lenBuf = new byte[4];

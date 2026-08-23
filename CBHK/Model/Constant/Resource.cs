@@ -1,10 +1,12 @@
 ﻿using CBHK.Domain.DataContext;
 using MinecraftLanguageModelLibrary.Data;
+using MinecraftLanguageModelLibrary.Utility;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -17,12 +19,17 @@ namespace CBHK.Model.Constant
         #endregion
 
         #region Property
+        public RegexService RegexService { get; set; } = new();
         public Dictionary<string, string> GenertorConfiguration { get; private set; }
         public JObject RunningDataObject { get;private set; } = [];
         public string ImageSetDirectoryPath { get; set; } = @"ImageSet";
         public string MCDocumentLeadingPath { get; set; } = "Resource" + Path.DirectorySeparatorChar + "vanilla-mcdoc" + Path.DirectorySeparatorChar + "java";
         public string MCDocumentBasePath { get; set; } = @"::java";
         public string MCDocumentEditorKey { get; set; } = Path.DirectorySeparatorChar + "data";
+        /// <summary>
+        /// 文档别名映射表
+        /// </summary>
+        public ConcurrentDictionary<string, MetaTypeEditorFieldDTO> DocumentAliaItemMap { get; set; } = [];
         /// <summary>
         /// 记录所有文档的路径与对应的DTO对象的映射关系
         /// </summary>
@@ -63,6 +70,7 @@ namespace CBHK.Model.Constant
                     string fullDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + MCDocumentLeadingPath;
                     string[] fileEntryArray = Directory.GetFileSystemEntries(fullDirectoryPath, "*.mcdoc", SearchOption.AllDirectories);
                     string directorySeparatorString = Path.DirectorySeparatorChar.ToString();
+
                     await Parallel.ForEachAsync(fileEntryArray, async (fileEntry, cancellationToken) =>
                     {
                         if (File.Exists(fileEntry))
@@ -71,21 +79,24 @@ namespace CBHK.Model.Constant
                             string fileName = "::" + Path.GetFileNameWithoutExtension(fileEntry);
                             string mcdocFilePath = fullDirectoryName.Replace(fullDirectoryPath, "");
                             string mcdocFileReferencePath = mcdocFilePath.Replace(directorySeparatorString, "::");
-                            if(fileName == "::mod")
+                            string documentFilePath = MCDocumentBasePath + mcdocFileReferencePath;
+                            if (fileName == "::mod")
                             {
                                 fileName = "";
                             }
-                            MCDocumentFile file = await MinecraftLanguageCommunicater.AnalysisMCDocumentFileOrContent(fileEntry);
-                            if (file.RootList is not null)
+                            MCDocumentFile file = await MinecraftLanguageCommunicater.AnalysisMCDocumentFileOrContent(fileEntry, documentFilePath + fileName);
+                            if (file is not null && file.RootList is not null)
                             {
-                                string documentFilePath = MCDocumentBasePath + mcdocFileReferencePath;
+                                //添加文件引用路径
                                 DocumentPathItemMap.TryAdd(documentFilePath + fileName, file.UsePathList);
 
-                                for (int i = 0; i < file.RootList.Count; i++)
+                                for (int j = 0; j < file.RootList.Count; j++)
                                 {
-                                    string documentItemPath = documentFilePath + fileName + "::" + file.RootList[i].FieldName;
-                                    file.RootList[i].DocumentItemPath = new(documentItemPath);
-                                    DocumentItemMap.TryAdd(documentItemPath, file.RootList[i]);
+                                    //添加DTO模板
+                                    string documentItemPath = documentFilePath + fileName + "::" + file.RootList[j].FieldName;
+                                    documentFilePath = documentFilePath.TrimEnd(':');
+                                    file.RootList[j].Path = new(documentItemPath);
+                                    DocumentItemMap.TryAdd(documentItemPath, file.RootList[j]);
                                 }
                             }
                         }

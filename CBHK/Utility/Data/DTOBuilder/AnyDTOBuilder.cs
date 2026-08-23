@@ -15,9 +15,20 @@ namespace CBHK.Utility.Data.DTOBuilder
         private readonly DocumentDTOBuildStrategyRegistry registry = registry;
         #endregion
 
-        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, StringBuilder docPath, Dictionary<string, KeyValueAnchors> anchorMap)
+        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
         {
-            
+            #region 为可选枚举补齐未设置成员
+            if (target.TypeKind is MetaTypeKind.Enum)
+            {
+                target.SelectedEnumItemUpdated = () => helper.SelectedEnumItemUpdated(target, version);
+                if (!target.IsRequired && target.EnumOptionList?.Count > 0 && target.EnumOptionList[0].Name != "- unset -")
+                {
+                    target.EnumOptionList.Insert(0, new EnumMember() { Name = "- unset -", Value = new MetaValue() { Kind = MetaValueKind.Literal, LiteralValue = "unset" } });
+                    target.SelectedEnumOption = target.EnumOptionList[0];
+                    target.SelectedEnumItemIndex = 0;
+                }
+            }
+            #endregion
         }
 
         public bool CanHandle(MetaTypeKind kind)

@@ -3,7 +3,6 @@ using MinecraftLanguageModelLibrary.Data;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace CBHK.Utility.Data.DTOBuilder
 {
@@ -15,10 +14,10 @@ namespace CBHK.Utility.Data.DTOBuilder
         /// <param name="target"></param>
         /// <param name="template"></param>
         /// <param name="version"></param>
-        /// <param name="documentItemPath"></param>
+        /// <param name="documentPath"></param>
         /// <param name="resource"></param>
         /// <param name="helper"></param>
-        public static void BuildResource(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, StringBuilder documentItemPath, Resource resource, MCDocumentMetaTypeDTOHelper helper)
+        public static void BuildResource(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Resource resource, MCDocumentMetaTypeDTOHelper helper)
         {
             #region 处理资源
             if (target.FeatureMap is not null && target.FeatureMap.Count > 0)
@@ -30,11 +29,11 @@ namespace CBHK.Utility.Data.DTOBuilder
                 {
                     MetaTypeEditorFieldDTO enumDTO = new()
                     {
-                        FieldName = "",
+                        FieldName = target.FieldName,
                         TypeKind = MetaTypeKind.Enum,
                         ID = "placeHolder",
                         Parent = target.Parent,
-                        DocumentItemPath = documentItemPath ?? target.DocumentItemPath,
+                        Path = documentPath ?? target.Path,
                         EnumOptionList = []
                     };
                     if (target.TypeKind is MetaTypeKind.Dispatch or MetaTypeKind.Struct)
@@ -47,7 +46,7 @@ namespace CBHK.Utility.Data.DTOBuilder
                             {
                                 FieldName = "",
                                 TypeKind = MetaTypeKind.Add,
-                                DocumentItemPath = documentItemPath ?? target.DocumentItemPath,
+                                Path = documentPath ?? target.Path,
                                 AddItemCommand = helper.CreateAddItemCommand(target,version),
                                 ID = "placeHolder",
                                 Parent = target.Parent
@@ -68,7 +67,6 @@ namespace CBHK.Utility.Data.DTOBuilder
                     //提取简单数据
                     if (idObject.TypeValue?.LiteralValue is not null && resource.RunningDataObject[version][idObject.TypeValue.LiteralValue.ToString().Trim('"')] is JArray literalResourceArray)
                     {
-                        //target.IsTransformFromDispatch = true;
                         EnumOptionList.AddRange(literalResourceArray.Values<string>());
                     }
                     //提取复合数据
@@ -162,7 +160,11 @@ namespace CBHK.Utility.Data.DTOBuilder
                             enumDTO.EnumOptionList.Add(new EnumMember { Name = EnumOptionList[j], Value = new MetaValue { LiteralValue = EnumOptionList[j] } });
                         }
                     }
-                    enumDTO.SelectedEnumItemUpdated = () => MCDocumentMetaTypeDTOHelper.SelectedEnumItemUpdated(enumDTO);
+                    if(!enumDTO.IsRequired && enumDTO.SelectedEnumOption is null)
+                    {
+                        enumDTO.SelectedEnumOption = enumDTO.EnumOptionList[0];
+                    }
+                    enumDTO.SelectedEnumItemUpdated = () => helper.SelectedEnumItemUpdated(enumDTO, version);
                     #endregion
                 }
                 #endregion
@@ -218,6 +220,18 @@ namespace CBHK.Utility.Data.DTOBuilder
                 }
                 #endregion
             }
+            #endregion
+
+            #region 处理Dispatch
+            if (target.FeatureMap.ContainsKey("Resource") && target.FeatureMap.ContainsKey("Index") && !target.FeatureMap.ContainsKey("id"))
+            {
+                if (string.IsNullOrEmpty(target.FieldName))
+                {
+                    target.IsVisible = false;
+                    return;
+                }
+                helper.GetDispatchResource(target, version);
+            } 
             #endregion
 
             #region 对于没有 FeatureMap 的普通枚举节点，也需要设置默认选中项

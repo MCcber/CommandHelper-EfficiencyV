@@ -14,6 +14,13 @@
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="IsExpanded" Value="False" />
         <Setter Property="Padding" Value="1,0,0,0" />
+        <!--
+            让每个层级（含 Composite 子级）的 TreeViewItem 都用 MCDocumentTreeViewTemplateSelector 挑选子节点模板。
+            必须写在这里（TreeViewItem 是 DependencyObject，允许 DynamicResource；而
+            HierarchicalDataTemplate 不是 DependencyObject，不能在它的 ItemTemplateSelector 上挂 DynamicResource）。
+            选择器定义在父级 Container.xaml，StaticResource 解析期不可见，故用 DynamicResource。
+        -->
+        <!--<Setter Property="ItemTemplateSelector" Value="{DynamicResource MCDocumentTreeViewTemplateSelector}" />-->
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Container:VectorTreeViewItem}">

@@ -50,7 +50,6 @@
                 VerticalAlignment="Center"
                 ArrowMargin="0 0 10 0"
                 Foreground="White"
-                SelectedIndex="0"
                 SelectedItem="{Binding SelectedFontFamilyItem}"
                 Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
