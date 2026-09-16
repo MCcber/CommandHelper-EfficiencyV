@@ -34,14 +34,13 @@ namespace CBHK.Utility.Data
             {
                 return dto.TypeKind switch
                 {
-                    MetaTypeKind.Entry => EntryTemplate,
                     MetaTypeKind.Definition => DefinitionTemplate,
                     MetaTypeKind.Add => AddButtonTemlate,
                     MetaTypeKind.Remove => RemoveTemplate,
                     MetaTypeKind.CompositeRGB or MetaTypeKind.CompositeARGB => ColorTemplate,
                     MetaTypeKind.HexRGB or MetaTypeKind.HexARGB => ColorTemplate,
-                    MetaTypeKind.List => ListTemplate,
                     MetaTypeKind.DecRGB or MetaTypeKind.DecRGBA => ColorTemplate,
+                    MetaTypeKind.List => ListTemplate,
                     MetaTypeKind.UUIDArray => UUIDTemplate,
                     MetaTypeKind.Composite => CompositeTemplate,
                     MetaTypeKind.Struct => StructTemplate,

@@ -8,6 +8,16 @@ namespace CBHK.Utility.Data.DTOBuilder
 {
     public static class MCDocumentResourceBuilder
     {
+        private static Dictionary<string, MetaTypeKind> colorDictionary = new() { 
+            { "named",MetaTypeKind.NamedColor } ,
+            { "hex_rgb",MetaTypeKind.NamedColor },
+            { "hex_rgba",MetaTypeKind.NamedColor },
+            { "dec_rgb",MetaTypeKind.NamedColor },
+            { "dec_rgba",MetaTypeKind.NamedColor },
+            { "composite_rgb",MetaTypeKind.NamedColor },
+            { "composite_rgba",MetaTypeKind.NamedColor }
+        };
+
         /// <summary>
         /// 构建资源数据
         /// </summary>
@@ -39,19 +49,18 @@ namespace CBHK.Utility.Data.DTOBuilder
                     if (target.TypeKind is MetaTypeKind.Dispatch or MetaTypeKind.Struct)
                     {
                         target.TypeKind = MetaTypeKind.Composite;
-                        target.Items =
-                        [
-                            enumDTO,
-                            new MetaTypeEditorFieldDTO()
-                            {
-                                FieldName = "",
-                                TypeKind = MetaTypeKind.Add,
-                                Path = documentPath ?? target.Path,
-                                AddItemCommand = helper.CreateAddItemCommand(target,version),
-                                ID = "placeHolder",
-                                Parent = target.Parent
-                            }
-                        ];
+                        target.Items = [enumDTO];
+                        MetaTypeEditorFieldDTO addDTO = new()
+                        {
+                            FieldName = "",
+                            TypeKind = MetaTypeKind.Add,
+                            Path = documentPath ?? target.Path,
+                            AddItemCommand = helper.CreateAddCompositeOrCompoundItemCommand(target, version),
+                            ID = "placeHolder",
+                            Parent = target.Parent
+                        };
+                        addDTO.RemoveItemCommand = helper.CreateRemoveCompositeOrCompoundItemCommand(target, addDTO);
+                        target.Items.Add(addDTO);
                         target.EnumOptionList = null;
                         target.FieldName = "";
                     }
@@ -181,42 +190,10 @@ namespace CBHK.Utility.Data.DTOBuilder
                 #endregion
 
                 #region 识别颜色资源
-                if (target.FeatureMap.TryGetValue("color", out MetaValue colorObject) && colorObject is not null && colorObject.Kind is MetaValueKind.Literal)
+                if (target.FeatureMap.TryGetValue("color", out MetaValue colorObject) && colorObject is not null && colorObject.Kind is MetaValueKind.Type)
                 {
-                    string colorType = colorObject.LiteralValue.ToString();
-                    switch (colorType)
-                    {
-                        case "hex_rgb":
-                            {
-                                target.TypeKind = MetaTypeKind.HexRGB;
-                                break;
-                            }
-                        case "hex_rgba":
-                            {
-                                target.TypeKind = MetaTypeKind.HexARGB;
-                                break;
-                            }
-                        case "dec_rgb":
-                            {
-                                target.TypeKind = MetaTypeKind.DecRGB;
-                                break;
-                            }
-                        case "dec_rgba":
-                            {
-                                target.TypeKind = MetaTypeKind.DecRGBA;
-                                break;
-                            }
-                        case "composite_rgb":
-                            {
-                                target.TypeKind = MetaTypeKind.CompositeRGB;
-                                break;
-                            }
-                        case "composite_rgba":
-                            {
-                                target.TypeKind = MetaTypeKind.CompositeARGB;
-                                break;
-                            }
-                    }
+                    string colorType = colorObject.TypeValue.LiteralValue.ToString();
+                    target.TypeKind = colorDictionary[colorType];
                 }
                 #endregion
             }
@@ -230,7 +207,24 @@ namespace CBHK.Utility.Data.DTOBuilder
                     target.IsVisible = false;
                     return;
                 }
-                helper.GetDispatchResource(target, version);
+                var dispatchResultDTO = helper.GetDispatchResource(target, version);
+                //处理调度器内出现泛型参数的情况
+                if (target.TypeParameterNameList?.Count > 0)
+                {
+
+                }
+                if (dispatchResultDTO is not null)
+                {
+                    if (target.TypeKind is MetaTypeKind.Composite)
+                    {
+                        target.SelectedUnionChildren ??= [];
+                        target.SelectedUnionChildren.Add(dispatchResultDTO);
+                    }
+                    else
+                    {
+                        target.Children.Add(dispatchResultDTO);
+                    }
+                }
             } 
             #endregion
 

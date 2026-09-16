@@ -107,7 +107,7 @@
                     Style="{DynamicResource VectorFlatIconButtonStyle}" />
                 <VectorButton:VectorFlatIconButton
                     Grid.Column="2"
-                    Command="{Binding ClearItemCommand}"
+                    Command="{Binding RemoveItemCommand}"
                     CommandParameter="{Binding}"
                     Icon="{DynamicResource TreeNodeMinusGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
@@ -119,7 +119,7 @@
         </Border>
     </HierarchicalDataTemplate>
 
-    <HierarchicalDataTemplate x:Key="TreeViewEntryItem" ItemsSource="{Binding Children}">
+    <!--<HierarchicalDataTemplate x:Key="TreeViewEntryItem" ItemsSource="{Binding Children}">
         <Grid Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -143,9 +143,13 @@
                 Background="Transparent"
                 FontSize="15"
                 Foreground="{DynamicResource CommonForeground}"
-                Text="{Binding FieldName}" />
+                Text="Entry" />
+            <Container:BindableStackPanel
+                ItemTemplateSelector="{DynamicResource MCDocumentTreeViewTemplateSelector}"
+                ItemsSource="{Binding Items}"
+                Orientation="Horizontal" />
         </Grid>
-    </HierarchicalDataTemplate>
+    </HierarchicalDataTemplate>-->
 
     <DataTemplate x:Key="TreeViewDefinitionItem">
         <Input:VectorTextBox
@@ -344,7 +348,7 @@
         </Grid>
     </HierarchicalDataTemplate>
 
-    <HierarchicalDataTemplate x:Key="TreeViewColorItem">
+    <DataTemplate x:Key="TreeViewColorItem">
         <Grid VerticalAlignment="Center" Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -364,7 +368,7 @@
                 SelectedColor="{Binding Value}"
                 Style="{DynamicResource VectorColorPickerStyle}" />
         </Grid>
-    </HierarchicalDataTemplate>
+    </DataTemplate>
 
     <HierarchicalDataTemplate x:Key="TreeViewEnumItem">
         <Grid Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">

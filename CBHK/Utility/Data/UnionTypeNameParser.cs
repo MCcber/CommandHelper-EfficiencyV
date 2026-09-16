@@ -26,6 +26,12 @@ namespace CBHK.Utility.Data
                             result.Add(targetList[i].TypeKind.ToString());
                             break;
                         }
+                    case MetaTypeKind.Enum:
+                    case MetaTypeKind.NamedColor:
+                        {
+                            result.Add("Enum");
+                            break;
+                        }
                     case MetaTypeKind.CompositeRGB:
                     case MetaTypeKind.CompositeARGB:
                     case MetaTypeKind.DecRGB:
@@ -34,7 +40,6 @@ namespace CBHK.Utility.Data
                     case MetaTypeKind.HexARGB:
                     case MetaTypeKind.Identifier:
                     case MetaTypeKind.Literal:
-                    case MetaTypeKind.Enum:
                         {
                             result.Add("String");
                             break;

@@ -6,7 +6,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -29,7 +28,7 @@ namespace CBHK.Model.Constant
         /// <summary>
         /// 文档别名映射表
         /// </summary>
-        public ConcurrentDictionary<string, MetaTypeEditorFieldDTO> DocumentAliaItemMap { get; set; } = [];
+        //public ConcurrentDictionary<string, MetaTypeEditorFieldDTO> DocumentAliaItemMap { get; set; } = [];
         /// <summary>
         /// 记录所有文档的路径与对应的DTO对象的映射关系
         /// </summary>

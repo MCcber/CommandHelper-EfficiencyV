@@ -2,9 +2,7 @@
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
 using MinecraftLanguageModelLibrary.Data;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace CBHK.Utility.Data.DTOBuilder
 {
@@ -19,8 +17,8 @@ namespace CBHK.Utility.Data.DTOBuilder
         public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
         {
             target.Path = new(documentPath.TargetPath);
-            target.AddItemCommand = helper.CreateAddItemCommand(target, version);
-            target.RemoveItemCommand = helper.CreateRemoveItemCommand(target);
+            target.AddItemCommand = helper.CreateAddListItemCommand(target, version);
+            target.RemoveItemCommand = helper.CreateClearListItemCommand(target);
             target.Items ??= [];
         }
 

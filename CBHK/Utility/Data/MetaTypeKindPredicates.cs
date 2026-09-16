@@ -18,8 +18,7 @@ namespace CBHK.Utility.Data
                 or MetaTypeKind.ByteArray
                 or MetaTypeKind.IntArray
                 or MetaTypeKind.LongArray
-                or MetaTypeKind.Composite
-                or MetaTypeKind.Entry;
+                or MetaTypeKind.Composite;
         }
 
         /// <summary>
@@ -31,6 +30,29 @@ namespace CBHK.Utility.Data
                 or MetaTypeKind.Generic
                 or MetaTypeKind.Reference
                 or MetaTypeKind.Literal;
+        }
+
+        public static bool IsListOrArrayOrValueType(MetaTypeKind kind)
+        {
+            return kind is MetaTypeKind.List
+                or MetaTypeKind.UUIDArray
+                or MetaTypeKind.LongArray
+                or MetaTypeKind.IntArray
+                or MetaTypeKind.ByteArray
+                or MetaTypeKind.CompositeARGB
+                or MetaTypeKind.CompositeRGB
+                or MetaTypeKind.DecRGB
+                or MetaTypeKind.DecRGBA
+                or MetaTypeKind.HexARGB
+                or MetaTypeKind.HexRGB
+                or MetaTypeKind.Byte
+                or MetaTypeKind.Int
+                or MetaTypeKind.Boolean
+                or MetaTypeKind.Short
+                or MetaTypeKind.Float
+                or MetaTypeKind.Double
+                or MetaTypeKind.Long
+                or MetaTypeKind.String;
         }
     }
 }

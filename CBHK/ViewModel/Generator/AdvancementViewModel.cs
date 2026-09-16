@@ -96,38 +96,38 @@ namespace CBHK.ViewModel.Generator
                 var pair = resource.DocumentItemMap.FirstOrDefault(pair => pair.Value.TypeKind is MetaTypeKind.Dispatch && pair.Key == targetDispatchPath);
                 MetaTypeEditorFieldDTO targetDispatchTemplate = pair.Value;
 
-                if (targetDispatchTemplate is not null)
-                {
-                    validator.Verify(context, [.. targetDispatchTemplate.Children], CurrentVersion.Text, new("::java::data::advancement::Advancement"), true);
-                    // 对当前节点执行展平/提升，去除内部可能残留的 Literal、Generic 或单子 Union
-                    for (int i = 0; i < context.dtoInstanceList.Count; i++)
-                    {
-                        dtoHelper.HierarchicallyUpdateTreeStructuredData(context.dtoInstanceList[i], CurrentVersion.Text);
-                    }
-                }
-                MetaTypeDTOTreeViewItemList = new(context.dtoInstanceList);
-                #endregion
-
-                //if (resource.DocumentItemMap.TryGetValue("::java::util::text::Text", out MetaTypeEditorFieldDTO javaTemplate))
+                //if (targetDispatchTemplate is not null)
                 //{
-                //    var instanceDTO = dtoHelper.InstantiateDTO(javaTemplate, CurrentVersion.Text);
-                //    validator.Verify(context, [javaTemplate], CurrentVersion.Text, new("::java::util::text::Text"));
-                //    MetaTypeDTOTreeViewItemList = new([instanceDTO]);
+                //    validator.Verify(context, [.. targetDispatchTemplate.Children], CurrentVersion.Text, new("::java::data::advancement::Advancement"), true);
+                //    // 对当前节点执行展平/提升，去除内部可能残留的 Literal、Generic 或单子 Union
+                //    for (int i = 0; i < context.dtoInstanceList.Count; i++)
+                //    {
+                //        dtoHelper.HierarchicallyUpdateTreeStructuredData(context.dtoInstanceList[i], CurrentVersion.Text);
+                //    }
                 //}
+                //MetaTypeDTOTreeViewItemList = new(context.dtoInstanceList);
+
+                if (resource.DocumentItemMap.TryGetValue("::java::data::worldgen::attribute::GlobalEnvironmentAttributeMap", out MetaTypeEditorFieldDTO javaTemplate))
+                {
+                    var instanceDTO = dtoHelper.InstantiateDTO(javaTemplate, CurrentVersion.Text);
+                    validator.Verify(context, [javaTemplate], CurrentVersion.Text, new("::java::util::text::Text"));
+                    MetaTypeDTOTreeViewItemList = new([instanceDTO]);
+                }
+                #endregion
             });
             #endregion
 
+            #region 载入主结构树，然后处理依赖树
             Task.Run(async () =>
             {
-                #region 载入主结构树，然后处理依赖树
                 if (File.Exists(baseFolderPath + templateFilePath))
                 {
                     string data = await File.ReadAllTextAsync(templateFilePath);
                     //把初始的Json文本和DTO树结果通过调度器传回主线程，更新UI
                     initReporter.Report(data);
                 }
-                #endregion
             });
+            #endregion
         }
 
         ///<summary>
@@ -194,7 +194,7 @@ namespace CBHK.ViewModel.Generator
                         MetaTypeEditorFieldDTO instancedDTO = dtoHelper.InstantiateDTO(targetDTO, CurrentVersion.Text);
                         context = new([.. instancedDTO.Children], []);
                         validator.Verify(context, [.. targetDTO.Children], CurrentVersion.Text, new(targetPair.Key), false);
-                        resultDTOList = context.dtoInstanceList;
+                        resultDTOList = [.. context.dtoInstanceList];
                     }
                 }
                 #endregion
@@ -229,6 +229,10 @@ namespace CBHK.ViewModel.Generator
                     currentDTO.Children.Add(resultDTOList[i]);
                     resultDTOList[i].Path = currentDTO.Path;
                     resultDTOList[i].Parent = currentDTO;
+                    for (int j = 0; j < resultDTOList[i].Items?.Count; j++)
+                    {
+                        resultDTOList[i].Items[j].Parent = resultDTOList[i];
+                    }
                 }
                 //对必选的枚举类节点执行SelectedEnumItemUpdated操作，确保其子节点被正确实例化
                 for (int i = 0; i < resultDTOList.Count; i++)
@@ -241,7 +245,7 @@ namespace CBHK.ViewModel.Generator
                 }
             }
             //没有则添加报错节点
-            else if (currentDTO.Value is not null && !string.IsNullOrEmpty(currentDTO.Value.ToString()))
+            else if ((currentDTO.Children is null || currentDTO.Children[0].ID == "placeHolder") && currentDTO.Value is not null && !string.IsNullOrEmpty(currentDTO.Value.ToString()))
             {
                 currentDTO.Children.Clear();
                 currentDTO.Children.AddRange([new() { ID = "", Path = null, TypeKind = MetaTypeKind.Any, FieldName = "Can't find target structure" }]);

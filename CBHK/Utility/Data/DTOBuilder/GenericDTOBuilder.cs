@@ -63,11 +63,11 @@ namespace CBHK.Utility.Data.DTOBuilder
                     target.TypeKind = targetTypeDTO.TypeKind;
                     if (targetTypeDTO.UnionTypeNameList is not null)
                     {
-                        target.UnionTypeNameList = targetTypeDTO.UnionTypeNameList;
+                        target.UnionTypeNameList = [.. targetTypeDTO.UnionTypeNameList];
                     }
                     if (targetTypeDTO.FeatureMap is not null)
                     {
-                        target.FeatureMap = targetTypeDTO.FeatureMap;
+                        target.FeatureMap = new(targetTypeDTO.FeatureMap);
                     }
                     if (targetTypeDTO.Value is not null)
                     {

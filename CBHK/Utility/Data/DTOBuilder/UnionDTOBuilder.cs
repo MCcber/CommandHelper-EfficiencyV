@@ -21,9 +21,10 @@ namespace CBHK.Utility.Data.DTOBuilder
         {
             #region Field
             int index = 0;
-            bool isHaveArrayOrList = false, isContainerOrReference = true, isUnion = false;
+            bool isListOrArrayOrValueType = false, isContainerOrReference = true, isUnion = false;
             ResolvedTypeReference realData = new("", default);
             string targetUsePath = string.Empty;
+            MetaTypeEditorFieldDTO targetTemplateDTO = null;
             MetaTypeEditorFieldDTO targetDTO = null;
             if (template.Children is null || template.Children?.Count == 0)
             {
@@ -59,7 +60,8 @@ namespace CBHK.Utility.Data.DTOBuilder
                 {
                     realData = UsePathParser.Parse(resource, target.Children[index].Path ?? documentPath, target.Children[index].Value.ToString());
                     targetUsePath = realData.Path;
-                    targetDTO = realData.DTO;
+                    targetTemplateDTO = realData.DTO;
+                    targetDTO = helper.InstantiateDTO(targetTemplateDTO, version);
                 }
 
                 //若已提前替换则直接赋值
@@ -71,16 +73,12 @@ namespace CBHK.Utility.Data.DTOBuilder
 
                 if (targetDTO is not null)
                 {
-                    if (!isHaveArrayOrList && targetDTO.TypeKind is (MetaTypeKind.List or MetaTypeKind.ByteArray or MetaTypeKind.IntArray or MetaTypeKind.LongArray))
+                    if (!isListOrArrayOrValueType && MCDocumentMetaTypeDTOHelper.IsListOrArrayOrValueType(targetDTO.TypeKind))
                     {
-                        isHaveArrayOrList = true;
+                        isListOrArrayOrValueType = true;
                     }
 
                     var childRegistry = registry.Get(targetDTO.TypeKind);
-                    if (targetDTO.TemplateReference is null)
-                    {
-                        targetDTO = helper.InstantiateDTO(targetDTO, version);
-                    }
 
                     MCDocumentResourceBuilder.BaseDataHandler(targetDTO);
                     MCDocumentResourceBuilder.BuildResource(targetDTO, targetDTO, version, targetDTO.Path, resource, helper);
@@ -120,9 +118,9 @@ namespace CBHK.Utility.Data.DTOBuilder
                 //执行资源解释
                 else
                 {
-                    if (!isHaveArrayOrList && target.Children[index].TypeKind is (MetaTypeKind.List or MetaTypeKind.ByteArray or MetaTypeKind.IntArray or MetaTypeKind.LongArray))
+                    if (!isListOrArrayOrValueType && MCDocumentMetaTypeDTOHelper.IsListOrArrayOrValueType(target.Children[index].TypeKind))
                     {
-                        isHaveArrayOrList = true;
+                        isListOrArrayOrValueType = true;
                     }
                     MCDocumentResourceBuilder.BaseDataHandler(target.Children[index]);
                     MCDocumentResourceBuilder.BuildResource(target.Children[index], target.Children[index], version, target.Children[index].Path, resource, helper);
@@ -152,13 +150,13 @@ namespace CBHK.Utility.Data.DTOBuilder
                 target.UnionTypeNameList.AddRange([.. unionNameTypeList.Select(item => new EnumMember() { Name = item, Value = new MetaValue() { Kind = MetaValueKind.Literal, LiteralValue = item } })]);
             }
             //确保联合体节点有默认选中项
-            if (!isHaveArrayOrList || !isContainerOrReference)
+            if (!isListOrArrayOrValueType || !isContainerOrReference)
             {
                 target.SelectedUnionTypeName = target.UnionTypeNameList[0];
                 target.SelectedUnionItemUpdated = () => helper.SelectedUnionItemUpdated(target, version);
             }
             //拥有多个子级且至少有一个子级不是容器类型，则将当前节点提升为复合类型，并将第一个子级作为联合体的默认选中项
-            else if (isHaveArrayOrList)
+            else if (isListOrArrayOrValueType)
             {
                 target.TypeKind = MetaTypeKind.Composite;
 
@@ -183,21 +181,24 @@ namespace CBHK.Utility.Data.DTOBuilder
                 target.SelectedUnionTypeName = null;
             }
 
+            //处理必选节点
             if (target.IsRequired)
             {
                 if (MCDocumentMetaTypeDTOHelper.IsContainerType(target.Children[0].TypeKind))
                 {
-                    target.SelectedUnionChildren = target.Children[0].Children;
+                    target.SelectedUnionChildren = target.Children[0].Children is null ? new ObservableCollection<MetaTypeEditorFieldDTO>() : new ObservableCollection<MetaTypeEditorFieldDTO>(target.Children[0].Children);
                 }
                 else if (target.Items is not null)
                 {
-                    target.Items.Add(target.Children[0]);
+                    var firstSubDTO = helper.InstantiateDTO(target.Children[0], version);
+                    target.Items.Add(firstSubDTO);
                 }
                 else
                 {
                     target.SelectedUnionChildren = new([target.Children[0]]);
                 }
             }
+
             #endregion
         }
 
