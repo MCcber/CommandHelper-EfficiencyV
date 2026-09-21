@@ -4,6 +4,7 @@ using CBHK.Model.Data;
 using CommunityToolkit.Mvvm.Input;
 using DryIoc.ImTools;
 using MinecraftLanguageModelLibrary.Data;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -603,7 +604,7 @@ namespace CBHK.Utility.Data
                 {
                     currentDTO.Children.Add(resultDTO);
                 }
-            } 
+            }
             #endregion
 
             #region 处理空调度器结果
@@ -747,7 +748,7 @@ namespace CBHK.Utility.Data
                     TemplateReference = template,
                     Parent = parent,
                     FieldName = template.FieldName,
-                    EnumOptionList = template.EnumOptionList ?? null,
+                    EnumOptionList = template.EnumOptionList,
                     TypeKind = template.TypeKind,
                     OriginKind = template.OriginKind,
                     TypeName = template.TypeName,
@@ -776,7 +777,7 @@ namespace CBHK.Utility.Data
                 TemplateReference = template,
                 FeatureMap = new(template.FeatureMap),
                 TypeName = template.TypeName,
-                EnumOptionList = template.EnumOptionList ?? null,
+                EnumOptionList = template.EnumOptionList,
                 TypeParameterNameList = template.TypeParameterNameList,
                 FieldName = template.FieldName,
                 TypeKind = template.TypeKind,
@@ -1159,53 +1160,101 @@ namespace CBHK.Utility.Data
                     #endregion
                 }
             }
-            #region 处理多索引的调度器，暂时用不到
-            //else if (index.Kind is MetaValueKind.List)//
-            //{
-            //    for (int j = 0; j < index.Items.Count; j++)
-            //    {
-            //        var resultDTO = InvokeAndInterpretDispatchResource([], targetDTO, index.Items[j], resourceString, version);
-            //        if (resultDTO is not null)
-            //        {
-            //            targetDTO.Parent.Children.Add(resultDTO);
-            //        }
-            //    }
-            //}
-            //}
-            //else
-            //{
-            //    var enumDTO = targetDTO.Items.FirstOrDefault(item => item.TypeKind is MetaTypeKind.Enum);
-            //    if(enumDTO is not null)
-            //    {
-            //        MetaTypeEditorFieldDTO compositeDTO = new()
-            //        {
-            //            ID = "placeHolder",
-            //            TypeKind = MetaTypeKind.Composite,
-            //            Parent = targetDTO.Parent
-            //        };
-            //        MetaTypeEditorFieldDTO removeDTO = new()
-            //        {
-            //            ID = "placeHolder",
-            //            TypeKind = MetaTypeKind.Remove,
-            //            Parent = compositeDTO
-            //        };
-            //        removeDTO.RemoveItemCommand = CreateRemoveListItemCommand(targetDTO, compositeDTO);
-            //        compositeDTO.Items =
-            //        [
-            //            removeDTO,
-            //            new()
-            //            {
-            //                ID = Guid.NewGuid().ToString(),
-            //                TypeKind = MetaTypeKind.Struct,
-            //                FieldName = !string.IsNullOrEmpty(enumDTO.SelectedEnumOption.Name) ? enumDTO.SelectedEnumOption.Name : "",
-            //                Parent = compositeDTO
-            //            }
-            //        ];
-            //        compositeDTO.Parent = targetDTO.Parent;
-            //        targetDTO.Parent.Children.Add(compositeDTO);
-            //    }
-            //} 
+
+            #region 处理多索引的调度器
+            else if (index.Kind is MetaValueKind.List)
+            {
+                for (int j = 0; j < index.Items.Count; j++)
+                {
+                    var resultDTO = InvokeAndInterpretDispatchResource([], targetDTO, index.Items[j], resourceString, version);
+                    if (resultDTO is not null)
+                    {
+                        targetDTO.Parent.Children.Add(resultDTO);
+                    }
+                }
+            }
+            else
+            {
+                var enumDTO = targetDTO.Items.FirstOrDefault(item => item.TypeKind is MetaTypeKind.Enum);
+                if (enumDTO is not null)
+                {
+                    MetaTypeEditorFieldDTO compositeDTO = new()
+                    {
+                        ID = "placeHolder",
+                        TypeKind = MetaTypeKind.Composite,
+                        Parent = targetDTO.Parent
+                    };
+                    MetaTypeEditorFieldDTO removeDTO = new()
+                    {
+                        ID = "placeHolder",
+                        TypeKind = MetaTypeKind.Remove,
+                        Parent = compositeDTO
+                    };
+                    removeDTO.RemoveItemCommand = CreateRemoveListItemCommand(targetDTO, compositeDTO);
+                    compositeDTO.Items =
+                    [
+                        removeDTO,
+                        new ()
+                        {
+                            ID = Guid.NewGuid().ToString(),
+                            TypeKind = MetaTypeKind.Struct,
+                            FieldName = !string.IsNullOrEmpty(enumDTO.SelectedEnumOption.Name) ? enumDTO.SelectedEnumOption.Name : "",
+                            Parent = compositeDTO
+                        }
+                    ];
+                    compositeDTO.Parent = targetDTO.Parent;
+                    targetDTO.Parent.Children.Add(compositeDTO);
+                }
+            }
             #endregion
+
+            return null;
+        }
+
+        /// <summary>
+        /// <summary>
+        /// 根据 Resource 与具体索引值查找调度器模板。
+        /// 用于动态 Map 展开后，索引已经从 %key 变成具体字符串的场景。
+        /// </summary>
+        private MetaTypeEditorFieldDTO FindDispatchTemplate(string resourceString, string indexValue)
+        {
+            var dispatchPairList = resource.DocumentItemMap.Where(item =>
+                item.Value?.TypeKind is MetaTypeKind.Dispatch
+                || item.Value?.OriginKind is MetaTypeKind.Dispatch);
+
+            foreach (var item in dispatchPairList)
+            {
+                MetaTypeEditorFieldDTO dispatchDTO = item.Value;
+                if (dispatchDTO?.FeatureMap is null)
+                {
+                    continue;
+                }
+
+                if (!dispatchDTO.FeatureMap.TryGetValue("Resource", out MetaValue resourceValue)
+                    || resourceValue?.LiteralValue?.ToString() != resourceString)
+                {
+                    continue;
+                }
+
+                if (!dispatchDTO.FeatureMap.TryGetValue("Index", out MetaValue indexValueMeta)
+                    || indexValueMeta is null)
+                {
+                    continue;
+                }
+
+                if (indexValueMeta.Kind is MetaValueKind.Literal
+                    && indexValueMeta.LiteralValue?.ToString() == indexValue)
+                {
+                    return dispatchDTO;
+                }
+
+                if (indexValueMeta.Kind is MetaValueKind.List
+                    && indexValueMeta.Items is not null
+                    && indexValueMeta.Items.Any(item => item.LiteralValue?.ToString() == indexValue))
+                {
+                    return dispatchDTO;
+                }
+            }
 
             return null;
         }
@@ -1222,7 +1271,18 @@ namespace CBHK.Utility.Data
         public MetaTypeEditorFieldDTO InvokeAndInterpretDispatchResource(Dictionary<string, KeyValueAnchors> anchorMap, MetaTypeEditorFieldDTO currentDTO, MetaValue index, string resourceString, string version)
         {
             #region 计算Key表达式的值
-            MetaTypeEditorFieldDTO targetDispatchDTO = EvaluateKeyExpression(currentDTO, resourceString, index, resource);
+            MetaTypeEditorFieldDTO targetDispatchDTO = null;
+
+            // 动态 Map 展开后，索引已经被替换成具体 key（例如 visual/moon_phase）。
+            // 此时直接按 Resource + Index 查找 dispatch 模板，不再走 %key 表达式求值。
+            if (index.Kind is MetaValueKind.Literal
+                && index.LiteralValue is not null
+                && !index.LiteralValue.ToString().StartsWith('%'))
+            {
+                targetDispatchDTO = FindDispatchTemplate(resourceString, index.LiteralValue.ToString());
+            }
+
+            targetDispatchDTO ??= EvaluateKeyExpression(currentDTO, resourceString, index, resource);
             MetaTypeEditorFieldDTO targetDispatchInstance = null;
             if (targetDispatchDTO is null)
             {
@@ -1272,6 +1332,32 @@ namespace CBHK.Utility.Data
                 }
             }
 
+            if (currentDTO.FeatureMap.TryGetValue("Accessor", out MetaValue accessorValue)
+                && accessorValue is not null
+                && targetDispatchInstance.Children?.Count > 0)
+            {
+                IEnumerable<string> accessorNameEnumerable = accessorValue.Kind is MetaValueKind.List && accessorValue.Items is not null
+                    ? accessorValue.Items.Select(item => item.LiteralValue?.ToString())
+                    : [accessorValue.LiteralValue?.ToString()];
+
+                foreach (string accessorName in accessorNameEnumerable)
+                {
+                    if (string.IsNullOrEmpty(accessorName))
+                    {
+                        continue;
+                    }
+
+                    MetaTypeEditorFieldDTO accessorChild = targetDispatchInstance.Children
+                        .FirstOrDefault(child => child.FieldName == accessorName);
+
+                    if (accessorChild is not null)
+                    {
+                        targetDispatchInstance = accessorChild;
+                        break;
+                    }
+                }
+            }
+
             if (targetDispatchInstance.Children?.Count == 1)
             {
                 targetDispatchInstance = targetDispatchInstance.Children[0];
@@ -1279,8 +1365,8 @@ namespace CBHK.Utility.Data
             }
             else if (targetDispatchInstance.Children?.Count > 0)
             {
-                targetDispatchInstance.UnionTypeNameList = [.. targetDispatchDTO.UnionTypeNameList];
-                targetDispatchInstance.SelectedUnionTypeName = targetDispatchDTO.UnionTypeNameList[0];
+                if (targetDispatchDTO.UnionTypeNameList is not null) { targetDispatchInstance.UnionTypeNameList = [.. targetDispatchDTO.UnionTypeNameList]; }
+                targetDispatchInstance.SelectedUnionTypeName = targetDispatchDTO.UnionTypeNameList?.FirstOrDefault();
                 targetDispatchInstance.SelectedUnionItemUpdated = () => SelectedUnionItemUpdated(targetDispatchInstance, version);
                 if (targetDispatchInstance.Children[0].TypeKind is MetaTypeKind.Struct && targetDispatchInstance.Children[0].Children is not null)
                 {
@@ -1802,18 +1888,51 @@ namespace CBHK.Utility.Data
                         //无论容器还是值，统统阻断迭代器的后续下钻
                         skipDrillDown = true;
                     }
-                    //处理基础类型的实参
                     else
                     {
-                        child.TypeName = actualMetaValue.LiteralValue?.ToString() ?? "";
+                        string resourceName = "minecraft:";
+                        if (actualMetaValue.LiteralValue is not null)
+                        {
+                            resourceName += actualMetaValue.LiteralValue.ToString();
+                        }
+                        else if (actualMetaValue.TypeValue?.LiteralValue is not null)
+                        {
+                            resourceName += actualMetaValue.TypeValue?.LiteralValue.ToString();
+                        }
+                        //child.TypeName = resourceName;
                         //根据实参字符串自动转换为对应的枚举类型
-                        if (Enum.TryParse<MetaTypeKind>(child.TypeName, true, out var parsedKind))
+                        if (Enum.TryParse<MetaTypeKind>(resourceName, true, out var parsedKind))
                         {
                             child.TypeKind = parsedKind;
                             var actualDTO = new MetaTypeEditorFieldDTO() { ID = "", TypeKind = parsedKind };
                             child.Value = actualDTO.GetDefaultValue();
                         }
-                        else//若实参不是基础类型，则将其视为字符串类型
+                        //检查符号表中是否存在对应数据
+                        else if (resource.RunningDataObject[version][resourceName] is JArray jArray)
+                        {
+                            child.TypeKind = MetaTypeKind.Enum;
+                            child.EnumOptionList ??= [];
+                            child.EnumOptionList.AddRange(jArray.Values<string>().Select(item => new EnumMember() { Name = item, Value = new MetaValue() { Kind = MetaValueKind.Literal, LiteralValue = item } }));
+                        }
+                        //符号表没数据就试试搜索调度器
+                        else
+                        {
+                            //应该创建一个只承载FeatureMap的DTO实例丢给资源构造器
+                            var dispatchDTOList = resource.DocumentItemMap.Where(item => item.Value.TypeKind is MetaTypeKind.Dispatch);
+
+                            List<KeyValuePair<string,MetaTypeEditorFieldDTO>> targetResourceDispatchDTOPair = [..dispatchDTOList.Where(item=>item.Value.FeatureMap.TryGetValue("Resource",out MetaValue resourceValue) && resourceValue.LiteralValue?.ToString() == resourceName)];
+
+                            for (int i = 0; i < targetResourceDispatchDTOPair.Count; i++)
+                            {
+                                if (targetResourceDispatchDTOPair[i].Value.FeatureMap.TryGetValue("Index", out MetaValue metaValue) && metaValue.Items?.Count > 0)
+                                {
+                                    child.TypeKind = MetaTypeKind.Enum;
+                                    child.EnumOptionList ??= [];
+                                    child.EnumOptionList.AddRange(metaValue.Items.Select(item => new EnumMember() { Name = item.LiteralValue.ToString(), Value = new MetaValue() { Kind = MetaValueKind.Literal, LiteralValue = item } }));
+                                }
+                            }
+                        }
+                        //最后是基础类型，则将其视为字符串类型
                         {
                             child.TypeKind = MetaTypeKind.String;
                             child.Value = "";

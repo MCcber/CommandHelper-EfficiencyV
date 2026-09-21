@@ -222,6 +222,7 @@ namespace CBHK.Utility.Data.DTOBuilder
                     }
                     else
                     {
+                        target.Children ??= [];
                         target.Children.Add(dispatchResultDTO);
                     }
                 }
@@ -249,3 +250,4 @@ namespace CBHK.Utility.Data.DTOBuilder
         }
     }
 }
+

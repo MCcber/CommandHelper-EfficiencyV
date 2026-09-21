@@ -33,8 +33,8 @@ namespace CBHK.ViewModel.Generator
         private ValueTuple<string, int, List<KeyValueAnchors>> jsonParseResultMap = new();
         private IProgress<string> initReporter = null;
         private const string targetDispatchName = "Advancement";
-        private const string targetDispatchPath = "::java::data::advancement::Advancement";
-        //private const string targetDispatchPath = "::java::data::advancement::predicate::EntityPredicate";
+        //private const string targetDispatchPath = "::java::data::advancement::Advancement";
+        private const string targetDispatchPath = "::java::data::worldgen::attribute::GlobalEnvironmentAttributeMap";
         #endregion
 
         #region Property
@@ -107,10 +107,10 @@ namespace CBHK.ViewModel.Generator
                 //}
                 //MetaTypeDTOTreeViewItemList = new(context.dtoInstanceList);
 
-                if (resource.DocumentItemMap.TryGetValue("::java::data::worldgen::attribute::GlobalEnvironmentAttributeMap", out MetaTypeEditorFieldDTO javaTemplate))
+                if (resource.DocumentItemMap.TryGetValue(targetDispatchPath, out MetaTypeEditorFieldDTO javaTemplate))
                 {
                     var instanceDTO = dtoHelper.InstantiateDTO(javaTemplate, CurrentVersion.Text);
-                    validator.Verify(context, [javaTemplate], CurrentVersion.Text, new("::java::util::text::Text"));
+                    validator.Verify(context, [javaTemplate], CurrentVersion.Text, new(targetDispatchPath),true);
                     MetaTypeDTOTreeViewItemList = new([instanceDTO]);
                 }
                 #endregion
