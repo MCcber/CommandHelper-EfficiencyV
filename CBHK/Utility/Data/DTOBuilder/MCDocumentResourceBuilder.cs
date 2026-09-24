@@ -1,4 +1,4 @@
-﻿using CBHK.Model.Constant;
+using CBHK.Model.Constant;
 using MinecraftLanguageModelLibrary.Data;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
@@ -50,15 +50,10 @@ namespace CBHK.Utility.Data.DTOBuilder
                     {
                         target.TypeKind = MetaTypeKind.Composite;
                         target.Items = [enumDTO];
-                        MetaTypeEditorFieldDTO addDTO = new()
-                        {
-                            FieldName = "",
-                            TypeKind = MetaTypeKind.Add,
-                            Path = documentPath ?? target.Path,
-                            AddItemCommand = helper.CreateAddCompositeOrCompoundItemCommand(target, version),
-                            ID = "placeHolder",
-                            Parent = target.Parent
-                        };
+                        MetaTypeEditorFieldDTO addDTO = MCDocumentMetaTypeDTOHelper.BuildAddButton(target.Parent, documentPath ?? target.Path);
+
+                        addDTO.AddItemCommand = helper.CreateAddCompositeOrCompoundItemCommand(target, version);
+
                         addDTO.RemoveItemCommand = helper.CreateRemoveCompositeOrCompoundItemCommand(target, addDTO);
                         target.Items.Add(addDTO);
                         target.EnumOptionList = null;
@@ -74,7 +69,7 @@ namespace CBHK.Utility.Data.DTOBuilder
                     EnumOptionList.Insert(0, "- unset -");
 
                     //提取简单数据
-                    if (idObject.TypeValue?.LiteralValue is not null && resource.RunningDataObject[version][idObject.TypeValue.LiteralValue.ToString().Trim('"')] is JArray literalResourceArray)
+                    if (idObject.TypeValue?.LiteralValue is not null && resource.RunningDataObject.TryGetValue(version, out JToken versionToken) && versionToken.SelectToken(idObject.TypeValue.LiteralValue.ToString().Trim('"')) is JArray literalResourceArray)
                     {
                         EnumOptionList.AddRange(literalResourceArray.Values<string>());
                     }
@@ -121,7 +116,7 @@ namespace CBHK.Utility.Data.DTOBuilder
                         #endregion
 
                         #region 添加目标资源数组、处理添加与删除列表
-                        if (!string.IsNullOrEmpty(registryValueString) && resource.RunningDataObject[version][registryValueString] is JArray targetRegistryArray)
+                        if (!string.IsNullOrEmpty(registryValueString) && resource.RunningDataObject.TryGetValue(version, out versionToken) && versionToken.SelectToken(registryValueString) is JArray targetRegistryArray)
                         {
                             //路径过滤
                             HashSet<string> pathedEnumValueSet = [.. targetRegistryArray.Values<string>()];
@@ -222,6 +217,7 @@ namespace CBHK.Utility.Data.DTOBuilder
                     }
                     else
                     {
+                        // Dispatch 目标是值类型/单个字段时，父节点可能还没有 Children 集合。
                         target.Children ??= [];
                         target.Children.Add(dispatchResultDTO);
                     }

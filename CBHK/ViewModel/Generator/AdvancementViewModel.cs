@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -34,7 +35,7 @@ namespace CBHK.ViewModel.Generator
         private IProgress<string> initReporter = null;
         private const string targetDispatchName = "Advancement";
         //private const string targetDispatchPath = "::java::data::advancement::Advancement";
-        private const string targetDispatchPath = "::java::data::worldgen::attribute::GlobalEnvironmentAttributeMap";
+        private const string targetDispatchPath = "dimension_type";
         #endregion
 
         #region Property
@@ -46,7 +47,7 @@ namespace CBHK.ViewModel.Generator
         [
             new VectorTextComboBoxItem()
             {
-                Text = "1.20.5-1.20.6"
+                Text = "26.1"
             }
         ];
 
@@ -93,26 +94,26 @@ namespace CBHK.ViewModel.Generator
                 var context = MetaTypeTreeViewDTOBuilder.BuildDTOTree(jsonParseResultMap.Item3);
                 context = new([..context.dtoInstanceList[0].Children], context.anchorMap);
 
-                var pair = resource.DocumentItemMap.FirstOrDefault(pair => pair.Value.TypeKind is MetaTypeKind.Dispatch && pair.Key == targetDispatchPath);
-                MetaTypeEditorFieldDTO targetDispatchTemplate = pair.Value;
+                var dispatchDTOList = resource.DocumentItemMap.Where(item=>item.Value.TypeKind is MetaTypeKind.Dispatch);
+                var entranceDispatchDTOList = dispatchDTOList.Where(item=>item.Value.FeatureMap.TryGetValue("Resource",out MetaValue resourceValue) && resourceValue.LiteralValue?.ToString() == "minecraft:resource");
+                var result = entranceDispatchDTOList.FirstOrDefault(item => item.Value.FeatureMap.TryGetValue("Index",out MetaValue indexValue) && indexValue.LiteralValue?.ToString() == targetDispatchPath);
+                MetaTypeEditorFieldDTO targetDispatchTemplate = result.Value;
 
-                //if (targetDispatchTemplate is not null)
-                //{
-                //    validator.Verify(context, [.. targetDispatchTemplate.Children], CurrentVersion.Text, new("::java::data::advancement::Advancement"), true);
-                //    // 对当前节点执行展平/提升，去除内部可能残留的 Literal、Generic 或单子 Union
-                //    for (int i = 0; i < context.dtoInstanceList.Count; i++)
-                //    {
-                //        dtoHelper.HierarchicallyUpdateTreeStructuredData(context.dtoInstanceList[i], CurrentVersion.Text);
-                //    }
-                //}
-                //MetaTypeDTOTreeViewItemList = new(context.dtoInstanceList);
-
-                if (resource.DocumentItemMap.TryGetValue(targetDispatchPath, out MetaTypeEditorFieldDTO javaTemplate))
+                if (targetDispatchTemplate is not null)
                 {
-                    var instanceDTO = dtoHelper.InstantiateDTO(javaTemplate, CurrentVersion.Text);
-                    validator.Verify(context, [javaTemplate], CurrentVersion.Text, new(targetDispatchPath),true);
-                    MetaTypeDTOTreeViewItemList = new([instanceDTO]);
+                    string maxVersion = CurrentVersion.Text;
+                    if(maxVersion.Contains('-'))
+                    {
+                        maxVersion = maxVersion.Split('-')[1];
+                    }
+                    validator.Verify(context, [.. targetDispatchTemplate.Children], maxVersion, new(result.Key), true);
+                    // 对当前节点执行展平/提升，去除内部可能残留的 Literal、Generic 或单子 Union
+                    for (int i = 0; i < context.dtoInstanceList.Count; i++)
+                    {
+                        dtoHelper.HierarchicallyUpdateTreeStructuredData(context.dtoInstanceList[i], CurrentVersion.Text);
+                    }
                 }
+                MetaTypeDTOTreeViewItemList = new(context.dtoInstanceList);
                 #endregion
             });
             #endregion

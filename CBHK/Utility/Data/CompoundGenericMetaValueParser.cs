@@ -1,4 +1,4 @@
-﻿using CBHK.Model.Constant;
+using CBHK.Model.Constant;
 using MinecraftLanguageModelLibrary.Data;
 using Newtonsoft.Json.Linq;
 using System;
@@ -31,7 +31,7 @@ namespace CBHK.Utility.Data
             {
                 string currentResourceLocation = idValue.TypeValue.LiteralValue.ToString();
                 //优先搜索版本资源
-                if (resource.RunningDataObject[version][currentResourceLocation] is JArray targetDataArray)
+                if (resource.RunningDataObject.TryGetValue(version,out JToken versionToken) && versionToken.SelectToken(currentResourceLocation) is JArray targetDataArray)
                 {
                     result = new()
                     {
@@ -58,13 +58,18 @@ namespace CBHK.Utility.Data
                         if (targetResourceDispatchList[i].FeatureMap.TryGetValue("Index", out MetaValue indexValue))
                         {
                             //单值类型
-                            if(indexValue.Kind is MetaValueKind.Literal && indexValue.LiteralValue is not null)
+                            if (indexValue.Kind is MetaValueKind.Literal && indexValue.LiteralValue is not null
+                                && !indexValue.LiteralValue.ToString().StartsWith("%"))
                             {
                                 result.EnumOptionList.Add(new EnumMember() { Name = indexValue.LiteralValue.ToString(), Value = new() { Kind = MetaValueKind.Literal, LiteralValue = indexValue.LiteralValue.ToString() } });
-                            }//列表类型
-                            else if (indexValue.Kind is MetaValueKind.List && indexValue.Members?.Count > 0)
+                            }
+                            // 列表类型：mcdoc 解析出的 Index 列表存放在 Items，
+                            // 这里直接展开为 key Enum，供动态 Map / registry 缺省回退使用。
+                            else if (indexValue.Kind is MetaValueKind.List && indexValue.Items?.Count > 0)
                             {
-                                result.EnumOptionList.AddRange(indexValue.Members.Select(item => new EnumMember() { Name = item.Name, Value = item.Value }));
+                                result.EnumOptionList.AddRange(indexValue.Items
+                                    .Where(item => item.LiteralValue is not null && !item.LiteralValue.ToString().StartsWith("%"))
+                                    .Select(item => new EnumMember() { Name = item.LiteralValue!.ToString(), Value = item }));
                             }
                         }
                     }

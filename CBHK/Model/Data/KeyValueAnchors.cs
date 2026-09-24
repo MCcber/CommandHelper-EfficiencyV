@@ -1,4 +1,4 @@
-﻿using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Document;
 
 namespace CBHK.Model.Data
 {
@@ -11,5 +11,6 @@ namespace CBHK.Model.Data
         public ITextAnchor KeyEnd;      // 键的结束锚点（键字符串结束，不含冒号前的空格）
         public ITextAnchor ValueStart;  // 值的起始锚点
         public ITextAnchor ValueEnd;    // 值的结束锚点（指向值最后一个字符之后）
+        public TextDocument Source;     // 锚点所属的文本
     }
 }

@@ -2,5 +2,5 @@
 
 namespace CBHK.Utility.Data
 {
-    public sealed record ResolvedTypeReference(string Path, MetaTypeEditorFieldDTO DTO);
+    public sealed record ResolvedTypeReference(string Path, MetaTypeEditorFieldDTO Item);
 }

@@ -1,4 +1,4 @@
-﻿using CBHK.Interface.Data;
+using CBHK.Interface.Data;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
 using MinecraftLanguageModelLibrary.Data;
@@ -16,7 +16,7 @@ namespace CBHK.Utility.Data.DTOBuilder
         private readonly DocumentDTOBuildStrategyRegistry registry = registry;
         #endregion
 
-        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
+        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, RenderDepth depth, string typeName = "")
         {
             //必选数组仅占位，由后续懒加载处理
             if (target.IsRequired)
@@ -45,7 +45,7 @@ namespace CBHK.Utility.Data.DTOBuilder
             var elementTypeCopy = helper.InstantiateDTO(target.ElementType, version);
 
             var elementRegistry = registry.Get(elementTypeCopy.TypeKind);
-            elementRegistry.Build(elementTypeCopy, target.ElementType, version, documentPath, anchorMap, justSetView);
+            elementRegistry.Build(elementTypeCopy, target.ElementType, version, documentPath, anchorMap, depth);
             if ((target.Items.Count > 0 && target.Items[0].ID != "placeHolder") || target.Items.Count == 0)
             {
                 target.Items = [elementTypeCopy];

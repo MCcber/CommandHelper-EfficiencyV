@@ -1,4 +1,4 @@
-﻿using CBHK.Interface.Data;
+using CBHK.Interface.Data;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
 using MinecraftLanguageModelLibrary.Data;
@@ -15,7 +15,7 @@ namespace CBHK.Utility.Data.DTOBuilder
         private readonly DocumentDTOBuildStrategyRegistry registry = registry;
         #endregion
 
-        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
+        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, RenderDepth depth, string typeName = "")
         {
             #region 为可选枚举补齐未设置成员
             if (target.TypeKind is MetaTypeKind.Enum)

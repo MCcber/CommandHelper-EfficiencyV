@@ -1,4 +1,4 @@
-﻿using CBHK.Interface.Data;
+using CBHK.Interface.Data;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
 using MinecraftLanguageModelLibrary.Data;
@@ -15,7 +15,7 @@ namespace CBHK.Utility.Data.DTOBuilder
         #endregion
 
         #region Method
-        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
+        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, RenderDepth depth, string typeName = "")
         {
             if (template.Children is null || template.Children.Count == 0)
             {
@@ -62,7 +62,10 @@ namespace CBHK.Utility.Data.DTOBuilder
                     //    instance.TemplateReference = instanceRealData.Item2;
                     //}
 
-                    var realInstance = helper.InstantiateDTO(instanceRealData.DTO, version);
+                    //解析不到真实文档项时按模板自身处理
+                    var realInstance = instanceRealData?.Item is not null
+                        ? helper.InstantiateDTO(instanceRealData.Item, version)
+                        : null;
                     if(realInstance is not null)
                     {
                         string fieldName = instance.FieldName;
@@ -77,9 +80,9 @@ namespace CBHK.Utility.Data.DTOBuilder
 
                     #region 处理泛引用类子级
                     bool isReferenceType = childTemplate.TypeKind is MetaTypeKind.Literal && string.IsNullOrEmpty(childTemplate.FieldName);
-                    if (instanceRealData.DTO is not null)
+                    if (instanceRealData.Item is not null)
                     {
-                        childTemplate = instanceRealData.DTO;
+                        childTemplate = instanceRealData.Item;
                     }
                     if (isReferenceType)
                     {
@@ -101,7 +104,7 @@ namespace CBHK.Utility.Data.DTOBuilder
                     #endregion
 
                     #region 处理已经被转换为结构体并有子级且可选的节点
-                    else if (!instance.IsRequired && instance.TypeKind is MetaTypeKind.Struct && instance.Children?.Count > 0/* && !justSetView*/)
+                    else if (depth is RenderDepth.Shallow && !instance.IsRequired && instance.TypeKind is MetaTypeKind.Struct && instance.Children?.Count > 0)
                     {
                         instance.Path ??= new(documentPath.TargetPath);
                         if (instance.Path.TargetPath.Length > 0)
@@ -132,30 +135,26 @@ namespace CBHK.Utility.Data.DTOBuilder
                 {
                     instance.Path ??= new(target.Path.TargetPath);
                 }
-                if (isContainerOrIndirectType && !justSetView)
+                if (isContainerOrIndirectType && depth is RenderDepth.Deep)
                 {
                     var childStrategy = registry.Get(instance.TypeKind);
-                    childStrategy.Build(instance, childTemplate, version, instance.Path ?? documentPath, anchorMap, !instance.IsRequired, typeName);
+                    childStrategy.Build(instance, childTemplate, version, instance.Path ?? documentPath, anchorMap, depth, typeName);
+                }
+                else if (instance.TypeKind is MetaTypeKind.Literal && instanceRealData.Item is null)
+                {
+                    //找不到引用类型则说明是常量
+                    var subLiteralNode = registry.Get(MetaTypeKind.Literal);
+                    subLiteralNode.Build(instance, childTemplate, version, instance.Path ?? childTemplate.Path ?? documentPath, anchorMap, depth, typeName);
+                }
 
-                    //Literal展开后提升子节点，不保留外壳
-                    if (instance.TypeKind is MetaTypeKind.Literal && instance.Children?.Count > 0)
-                    {
-                        built.AddRange(instance.Children);
-                        instance.Children.Clear();
-                    }
-                    else
-                    {
-                        built.Add(instance);
-                    }
+                //Literal不保留外壳，展开后提升子节点
+                if (instance.TypeKind is MetaTypeKind.Literal && instance.Children?.Count > 0)
+                {
+                    built.AddRange(instance.Children);
+                    instance.Children.Clear();
                 }
                 else
                 {
-                    //找不到引用类型则说明是常量
-                    if (instance.TypeKind is MetaTypeKind.Literal && instanceRealData.DTO is null)
-                    {
-                        var subLiteralNode = registry.Get(MetaTypeKind.Literal);
-                        subLiteralNode.Build(instance, childTemplate, version, instance.Path ?? childTemplate.Path ?? documentPath, anchorMap, justSetView, typeName);
-                    }
                     built.Add(instance);
                 }
                 if(instance.TypeKind is MetaTypeKind.Composite && instance.Items?.Count > 0)

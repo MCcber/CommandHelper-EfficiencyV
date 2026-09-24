@@ -696,7 +696,7 @@ namespace CBHK.ViewModel.Generator
             Task.Run(async () =>
             {
                 ParallelOptions parallelOptions = new();
-                if (resource.RunningDataObject["1.20.5"]["item"] is JArray itemArray)
+                if (resource.RunningDataObject.TryGetValue("1.20.5", out JToken versionToken) && versionToken.SelectToken("item") is JArray itemArray)
                 {
                     await Parallel.ForAsync(0, itemArray.Count, parallelOptions, (i, cancellationToken) =>
                     {

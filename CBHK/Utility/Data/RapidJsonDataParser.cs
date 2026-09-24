@@ -1,4 +1,4 @@
-﻿using CBHK.Model.Data;
+using CBHK.Model.Data;
 using ICSharpCode.AvalonEdit.Document;
 using System.Collections.Generic;
 using System.Text;
@@ -121,6 +121,7 @@ namespace CBHK.Utility.Data
                 KeyStart = keyStart,
                 KeyEnd = keyEnd,
                 ValueStart = valStart,
+                Source = Document,
                 ValueEnd = valEnd
             });
         }
@@ -169,6 +170,7 @@ namespace CBHK.Utility.Data
                 KeyStart = keyStart,
                 KeyEnd = keyEnd,
                 ValueStart = valStart,
+                Source = Document,
                 ValueEnd = valEnd          // 临时
             };
 

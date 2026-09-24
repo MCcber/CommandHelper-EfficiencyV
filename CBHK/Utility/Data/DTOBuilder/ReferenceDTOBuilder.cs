@@ -1,4 +1,4 @@
-﻿using CBHK.Interface.Data;
+using CBHK.Interface.Data;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
 using MinecraftLanguageModelLibrary.Data;
@@ -14,7 +14,7 @@ namespace CBHK.Utility.Data.DTOBuilder
         private readonly DocumentDTOBuildStrategyRegistry registry = registry;
         #endregion
 
-        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
+        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, RenderDepth depth, string typeName = "")
         {
             if (target.Value is not null)
             {
@@ -32,7 +32,7 @@ namespace CBHK.Utility.Data.DTOBuilder
                             MCDocumentResourceBuilder.BaseDataHandler(instanceDTO);
                             MCDocumentResourceBuilder.BuildResource(instanceDTO, referencedDTO, version, documentPath, resource, helper);
                             var instanceRegistry = registry.Get(referencedDTO.TypeKind);
-                            instanceRegistry.Build(instanceDTO, referencedDTO, version, documentPath, anchorMap, justSetView);
+                            instanceRegistry.Build(instanceDTO, referencedDTO, version, documentPath, anchorMap, depth);
                             target.Children ??= [];
                             target.Children.Add(instanceDTO);
                         }

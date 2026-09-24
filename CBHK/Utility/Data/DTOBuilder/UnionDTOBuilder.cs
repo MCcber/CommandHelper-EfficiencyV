@@ -1,4 +1,4 @@
-﻿using CBHK.Interface.Data;
+using CBHK.Interface.Data;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
 using MinecraftLanguageModelLibrary.Data;
@@ -17,7 +17,7 @@ namespace CBHK.Utility.Data.DTOBuilder
         private readonly DocumentDTOBuildStrategyRegistry registry = registry;
         #endregion
 
-        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, bool justSetView = false, string typeName = "")
+        public void Build(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Dictionary<string, KeyValueAnchors> anchorMap, RenderDepth depth, string typeName = "")
         {
             #region Field
             int index = 0;
@@ -59,9 +59,17 @@ namespace CBHK.Utility.Data.DTOBuilder
                 if (!string.IsNullOrEmpty(target.Children[index].Value?.ToString()))
                 {
                     realData = UsePathParser.Parse(resource, target.Children[index].Path ?? documentPath, target.Children[index].Value.ToString());
-                    targetUsePath = realData.Path;
-                    targetTemplateDTO = realData.DTO;
-                    targetDTO = helper.InstantiateDTO(targetTemplateDTO, version);
+                    //解析不到真实文档项时按成员自身处理
+                    if (realData?.Item is not null)
+                    {
+                        targetUsePath = realData.Path;
+                        targetTemplateDTO = realData.Item;
+                        targetDTO = helper.InstantiateDTO(targetTemplateDTO, version);
+                        //新建实例继承上下文：父级、动态 Map 的键载荷、绑定作用域
+                        targetDTO.Parent ??= target;
+                        targetDTO.Items ??= target.Children[index].Items;
+                        targetDTO.BindingScope ??= target.BindingScope;
+                    }
                 }
 
                 //若已提前替换则直接赋值
@@ -82,7 +90,7 @@ namespace CBHK.Utility.Data.DTOBuilder
 
                     MCDocumentResourceBuilder.BaseDataHandler(targetDTO);
                     MCDocumentResourceBuilder.BuildResource(targetDTO, targetDTO, version, targetDTO.Path, resource, helper);
-                    childRegistry.Build(targetDTO, targetDTO, version, targetDTO.Path ?? documentPath, anchorMap, true, typeName);
+                    childRegistry.Build(targetDTO, targetDTO, version, targetDTO.Path ?? documentPath, anchorMap, depth, typeName);
 
                     if (MCDocumentMetaTypeDTOHelper.IsContainerType(targetDTO.TypeKind))
                     {
@@ -152,7 +160,12 @@ namespace CBHK.Utility.Data.DTOBuilder
             //确保联合体节点有默认选中项
             if (!isListOrArrayOrValueType || !isContainerOrReference)
             {
-                target.SelectedUnionTypeName = target.UnionTypeNameList[0];
+                // 防御：某些动态分支可能被版本过滤或 accessor 裁剪后暂时没有 union 名称，
+                // 此时不能直接访问 [0]，否则会抛 ArgumentOutOfRangeException。
+                if (target.UnionTypeNameList?.Count > 0)
+                {
+                    target.SelectedUnionTypeName = target.UnionTypeNameList[0];
+                }
                 target.SelectedUnionItemUpdated = () => helper.SelectedUnionItemUpdated(target, version);
             }
             //拥有多个子级且至少有一个子级不是容器类型，则将当前节点提升为复合类型，并将第一个子级作为联合体的默认选中项
