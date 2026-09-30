@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
@@ -173,8 +173,8 @@ namespace CBHK.ViewModel.Generator
             }
             DTOInstanceContext context = null;
             List<MetaTypeEditorFieldDTO> resultDTOList = [];
-            //确认展开的节点是否为DTO实例
-            if (currentDTO.Children is not null && currentDTO.Children.Count > 0 && currentDTO.Children[0].ID == "placeHolder")
+            //确认展开的节点是否为DTO实例（桩的 ID 在实例化后可能被重发成 GUID，按语义判断）
+            if (currentDTO.Children is not null && currentDTO.Children.Count > 0 && MCDocumentMetaTypeDTOHelper.IsPlaceHolderNode(currentDTO.Children[0]))
             {
                 #region 验证调度器或可选的结构体
                 //处理调度器解释后的可选数据
@@ -184,7 +184,14 @@ namespace CBHK.ViewModel.Generator
                     validator.Verify(context, context.dtoInstanceList, CurrentVersion.Text, currentDTO.Path);
                     resultDTOList = [.. context.dtoInstanceList];
                 }
-                //使用Value的值来查找当前上下文是否有目标资源
+                //懒加载桩展开时优先用替换后缓存的模板（Path 指向的是定义本体，未必是替换结果）
+                else if (currentDTO.TemplateReference?.Children is not null)
+                {
+                    List<MetaTypeEditorFieldDTO> stubTemplates = [.. currentDTO.TemplateReference.Children];
+                    context = new([.. stubTemplates.Select(item => dtoHelper.InstantiateDTO(item, CurrentVersion.Text))], []);
+                    validator.Verify(context, stubTemplates, CurrentVersion.Text, currentDTO.TemplateReference.Path ?? currentDTO.Path, false);
+                    resultDTOList = [.. context.dtoInstanceList];
+                }
                 else if (currentDTO.Value is not null && !string.IsNullOrEmpty(currentDTO.Value.ToString()))
                 {
                     string currentDocumentItemPath = currentDTO.Path.TargetPath.ToString();
@@ -246,7 +253,7 @@ namespace CBHK.ViewModel.Generator
                 }
             }
             //没有则添加报错节点
-            else if ((currentDTO.Children is null || currentDTO.Children[0].ID == "placeHolder") && currentDTO.Value is not null && !string.IsNullOrEmpty(currentDTO.Value.ToString()))
+            else if ((currentDTO.Children is null || MCDocumentMetaTypeDTOHelper.IsPlaceHolderNode(currentDTO.Children[0])) && currentDTO.Value is not null && !string.IsNullOrEmpty(currentDTO.Value.ToString()))
             {
                 currentDTO.Children.Clear();
                 currentDTO.Children.AddRange([new() { ID = "", Path = null, TypeKind = MetaTypeKind.Any, FieldName = "Can't find target structure" }]);

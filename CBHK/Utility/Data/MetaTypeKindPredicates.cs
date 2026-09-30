@@ -29,6 +29,7 @@ namespace CBHK.Utility.Data
             return kind is MetaTypeKind.Union
                 or MetaTypeKind.Generic
                 or MetaTypeKind.Reference
+                or MetaTypeKind.Tuple
                 or MetaTypeKind.Literal;
         }
 

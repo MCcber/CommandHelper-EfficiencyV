@@ -1,4 +1,4 @@
-﻿using MinecraftLanguageModelLibrary.Data;
+using MinecraftLanguageModelLibrary.Data;
 using System.Collections.Generic;
 
 namespace CBHK.Utility.Data
@@ -10,6 +10,20 @@ namespace CBHK.Utility.Data
             List<string> result = [];
             for (int i = 0; i < targetList.Count; i++)
             {
+                //访问器名优先作为分支名，例如 [value] / [modifier]
+                string accessorName = "";
+                if (targetList[i].FeatureMap.TryGetValue("Accessor", out MetaValue accessor) && accessor is not null)
+                {
+                    accessorName = accessor.Kind is MetaValueKind.List && accessor.Items?.Count > 0
+                        ? accessor.Items[0].LiteralValue?.ToString()
+                        : accessor.LiteralValue?.ToString();
+                }
+                if (!string.IsNullOrEmpty(accessorName))
+                {
+                    result.Add(accessorName);
+                    continue;
+                }
+
                 switch (targetList[i].TypeKind)
                 {
                     case MetaTypeKind.Byte:
@@ -59,6 +73,19 @@ namespace CBHK.Utility.Data
                             {
                                 result.Add("Object");
                             }
+                            break;
+                        }
+                    case MetaTypeKind.Dispatch:
+                    case MetaTypeKind.Indexed:
+                        {
+                            result.Add("Object");
+                            break;
+                        }
+                    case MetaTypeKind.Generic:
+                    case MetaTypeKind.Reference:
+                    case MetaTypeKind.Tuple:
+                        {
+                            result.Add("Object");
                             break;
                         }
                     case MetaTypeKind.ByteArray:

@@ -1,6 +1,7 @@
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
+using CBHK.Utility.Data.DTOBuilder;
 using CommunityToolkit.Mvvm.Input;
 using DryIoc.ImTools;
 using MinecraftLanguageModelLibrary.Data;
@@ -42,16 +43,35 @@ namespace CBHK.Utility.Data
             => new RelayCommand(() => ExecuteReFreshItem(dto, version));
         #endregion
 
+        #region Field
+        /// <summary>
+        /// 正在构建的结构路径集合：同一份结构在构建过程中再次进入时不再展开，
+        /// 用于打断 dispatch → generic → struct 这类间接递归（替代旧管线的 justSetView）。
+        /// </summary>
+        public HashSet<string> BuildingStructures { get; } = [];
+
+        /// <summary>
+        /// 正在补解析索引调度器的节点集合：构建期重入同一节点时直接跳过，避免递归。
+        /// </summary>
+        public HashSet<MetaTypeEditorFieldDTO> ResolvingIndexDispatchers { get; } = [];
+        #endregion
+
         #region Method
         /// <summary>
         /// 根据形参列表与实参列表创建逐层泛型绑定作用域。
         /// </summary>
         public static TypeBindingScope CreateBindingScope(
             IList<Tuple<string, MetaValue>>? formalParams,
-            IList<Tuple<string, MetaValue>>? actualArgs,
-            TypeBindingScope? parent = null)
+            IList<MetaValue>? actualArgs,
+            TypeBindingScope? parent = null,
+            string? documentPath = null)
         {
-            TypeBindingScope scope = new() { Parent = parent };
+            TypeBindingScope scope = new()
+            {
+                Parent = parent,
+                //未显式给出文档时沿用外层作用域，保证嵌套替换也能解析相对类型名
+                DocumentPath = string.IsNullOrEmpty(documentPath) ? parent?.ResolveDocumentPath() : documentPath
+            };
             if (formalParams is null || actualArgs is null)
             {
                 return scope;
@@ -63,11 +83,32 @@ namespace CBHK.Utility.Data
                 string formalName = formalParams[i].Item1;
                 if (!string.IsNullOrEmpty(formalName))
                 {
-                    scope.Bindings[formalName] = actualArgs[i].Item2;
+                    scope.Bindings[formalName] = ResolveArgument(actualArgs[i], parent);
                 }
             }
 
             return scope;
+        }
+
+        /// <summary>
+        /// 实参本身是外层形参占位符时，从绑定作用域取出外层注入的实参。
+        /// </summary>
+        private static MetaValue ResolveArgument(MetaValue argument, TypeBindingScope? scope)
+        {
+            if (scope is not null
+                && argument.Kind is MetaValueKind.Type
+                && argument.TypeValue?.Kind is MetaTypeKind.Literal)
+            {
+                string placeholderName = argument.TypeValue.LiteralValue?.ToString() ?? "";
+                if (!string.IsNullOrEmpty(placeholderName)
+                    && scope.TryResolve(placeholderName, out MetaValue boundArgument)
+                    && boundArgument is not null)
+                {
+                    return boundArgument;
+                }
+            }
+
+            return argument;
         }
         /// <summary>
         /// 生成 Composite 容器里的添加按钮。
@@ -133,25 +174,43 @@ namespace CBHK.Utility.Data
         /// <summary>
         /// 联合体成员更新事件
         /// </summary>
+        /// <summary>
+        /// 正在执行切换的联合体集合，防止切换过程中重入自身导致递归。
+        /// </summary>
+        private static readonly HashSet<MetaTypeEditorFieldDTO> updatingUnions = [];
+
         public void SelectedUnionItemUpdated(MetaTypeEditorFieldDTO unionDTO, string version)
         {
+            if (!updatingUnions.Add(unionDTO))
+            {
+                return;
+            }
+
+            try
+            {
+                SelectedUnionItemUpdatedCore(unionDTO, version);
+            }
+            finally
+            {
+                updatingUnions.Remove(unionDTO);
+            }
+        }
+
+        private void SelectedUnionItemUpdatedCore(MetaTypeEditorFieldDTO unionDTO, string version)
+        {
             #region Field
-            MetaTypeEditorFieldDTO targetDTO;
-            if (unionDTO.Parent.Children?.Count > 0)
-            {
-                targetDTO = unionDTO.Parent;
-            }
-            else
-            {
-                targetDTO = unionDTO;
-            }
+            //分支列表取联合体自身的子级；内容落到行内区持有它的宿主容器上（没有宿主时落回自身）
+            MetaTypeEditorFieldDTO branchDTO = unionDTO;
+            MetaTypeEditorFieldDTO targetDTO = unionDTO.Parent is not null && unionDTO.Parent.Items?.Contains(unionDTO) == true
+                ? unionDTO.Parent
+                : unionDTO;
             #endregion
 
             if (unionDTO.Children is not null && unionDTO.SelectedUnionItemIndex > -1 && unionDTO.SelectedUnionItemIndex <= unionDTO.Children.Count)
             {
                 #region 提取目标分支、发送给验证器、执行剥壳
                 int index = unionDTO.SelectedUnionItemIndex;
-                if (!targetDTO.IsRequired)
+                if (!branchDTO.IsRequired)
                 {
                     index--;
                 }
@@ -159,14 +218,14 @@ namespace CBHK.Utility.Data
                 {
                     index = 0;
                 }
-                if(index < 0 || index >= targetDTO.Children.Count)
+                if(index < 0 || index >= branchDTO.Children.Count)
                 {
                     return;
                 }
-                MetaTypeEditorFieldDTO targetChildTemplate = targetDTO.Children[index];
+                MetaTypeEditorFieldDTO targetChildTemplate = branchDTO.Children[index];
                 MetaTypeEditorFieldDTO targetChildInstance = InstantiateDTO(targetChildTemplate, version);
                 DTOInstanceContext context = new([targetChildInstance], []);
-                Validator.Verify(context, [targetChildTemplate], version, targetChildInstance.Path ?? targetDTO.Path, false);
+                Validator.Verify(context, [targetChildTemplate], version, targetChildInstance.Path ?? branchDTO.Path, false);
                 // 对当前节点执行展平/提升，去除内部可能残留的 Literal、Generic 或单子 Union
                 HierarchicallyUpdateTreeStructuredData(context.dtoInstanceList[0], version);
                 var resultDTO = context.dtoInstanceList[0];
@@ -176,17 +235,53 @@ namespace CBHK.Utility.Data
                 if ((IsContainerType(resultDTO.TypeKind) || IsIndirectType(resultDTO.TypeKind)) && resultDTO.Children is not null)
                 {
                     #region 更换分支
-                    targetDTO.SelectedUnionChildren.Clear();
-                    for (int i = 0; i < targetDTO.Items.Count; i++)
+                    if (targetDTO.Items is not null)
                     {
-                        if(!IsContainerType(targetDTO.Items[i].TypeKind) && targetDTO.Items[i].TypeKind is not MetaTypeKind.Union)
+                        //只清掉行内区的值编辑器，保留键选择器与添加/删除按钮
+                        for (int i = 0; i < targetDTO.Items.Count; i++)
                         {
-                            targetDTO.Items.RemoveAt(i);
-                            i--;
+                            MetaTypeEditorFieldDTO item = targetDTO.Items[i];
+                            bool isValueEditor = !IsContainerType(item.TypeKind)
+                                && !IsIndirectType(item.TypeKind)
+                                && item.TypeKind is not (MetaTypeKind.Enum or MetaTypeKind.Add or MetaTypeKind.Remove);
+                            if (isValueEditor)
+                            {
+                                targetDTO.Items.RemoveAt(i);
+                                i--;
+                            }
                         }
                     }
 
-                    targetDTO.SelectedUnionChildren.AddRange([.. resultDTO.Children]);
+                    //内容落进已有的入口结构节点（由添加按钮建立），没有入口时直接挂内容
+                    MetaTypeEditorFieldDTO entry = null;
+                    if (targetDTO.SelectedUnionChildren is not null)
+                    {
+                        foreach (MetaTypeEditorFieldDTO child in targetDTO.SelectedUnionChildren)
+                        {
+                            if (child.IsInterpretFromDispatch)
+                            {
+                                entry = child;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (entry is not null)
+                    {
+                        entry.Children ??= [];
+                        entry.Children.Clear();
+                        foreach (MetaTypeEditorFieldDTO child in resultDTO.Children)
+                        {
+                            child.Parent = entry;
+                            entry.Children.Add(child);
+                        }
+                    }
+                    else
+                    {
+                        targetDTO.SelectedUnionChildren ??= [];
+                        targetDTO.SelectedUnionChildren.Clear();
+                        targetDTO.SelectedUnionChildren.AddRange([.. resultDTO.Children]);
+                    }
                     #endregion
                 }
                 //处理值类枚举
@@ -250,6 +345,8 @@ namespace CBHK.Utility.Data
                     }
                     else
                     {
+                        //值编辑器不需要自己的字段名
+                        targetChildInstance.FieldName = "";
                         compositeDTO.Items.Add(targetChildInstance);
                     }
                     unionDTO.SelectedUnionChildren?.Clear();
@@ -780,6 +877,20 @@ namespace CBHK.Utility.Data
             //初始化祖先链集合（仅在顶层调用时创建）
             visited ??= [];
 
+            if (visited.Count > 400)
+            {
+                //过深时按懒加载桩返回，静默打断间接递归
+                return new MetaTypeEditorFieldDTO
+                {
+                    ID = "placeHolder",
+                    Path = template.Path,
+                    TemplateReference = template,
+                    Parent = parent,
+                    FieldName = template.FieldName,
+                    TypeKind = MetaTypeKind.Any
+                };
+            }
+
             #region 循环引用检测：模板已出现在当前递归路径中 → 返回桩节点打断环
             if (!visited.Add(template))
             {
@@ -796,6 +907,9 @@ namespace CBHK.Utility.Data
                     OriginKind = template.OriginKind,
                     TypeName = template.TypeName,
                     TypeParameterNameList = template.TypeParameterNameList,
+                    //实参列表按实例复制，替换时的写回不能污染模板
+                    ActualTypeArguments = template.ActualTypeArguments is null ? null : [.. template.ActualTypeArguments],
+                    BindingScope = template.BindingScope,
                     Watermark = template.Watermark,
                     Value = template.GetDefaultValue(),
                     FeatureMap = new(template.FeatureMap)
@@ -817,11 +931,17 @@ namespace CBHK.Utility.Data
                 ID = id,
                 Path = template.Path,
                 Parent = parent,
-                TemplateReference = template,
+                //模板本身还是懒加载桩时，穿透到真正带子级的一层
+                TemplateReference = template.Children is not null && template.Children.Count == 1 && IsPlaceHolderNode(template.Children[0]) && template.TemplateReference is not null
+                    ? template.TemplateReference
+                    : template,
                 FeatureMap = new(template.FeatureMap),
                 TypeName = template.TypeName,
                 EnumOptionList = template.EnumOptionList,
                 TypeParameterNameList = template.TypeParameterNameList,
+                //实参列表按实例复制，替换时的写回不能污染模板
+                ActualTypeArguments = template.ActualTypeArguments is null ? null : [.. template.ActualTypeArguments],
+                BindingScope = template.BindingScope,
                 FieldName = template.FieldName,
                 TypeKind = template.TypeKind,
                 OriginKind = template.OriginKind,
@@ -842,6 +962,7 @@ namespace CBHK.Utility.Data
             {
                 case MetaTypeKind.Struct:
                 case MetaTypeKind.Dispatch:
+                case MetaTypeKind.Tuple:
                     {
                         if (template.Children is not null)
                         {
@@ -959,7 +1080,7 @@ namespace CBHK.Utility.Data
             }
             #endregion
 
-            // 业务过程：%unknown / %none 是 mcdoc 调度器里的特殊索引，
+            // %unknown / %none 是 mcdoc 调度器里的特殊索引，
             // 它们本身也对应 DocumentItemMap 中真实的 dispatch 模板，命中后会正常实例化其目标类型。
             // 它们不是动态表达式，直接按 Resource + Index 精确匹配 dispatch 模板。
             if (indexString is "%unknown" or "%none")
@@ -1026,14 +1147,12 @@ namespace CBHK.Utility.Data
                         {
                             if (currentDTO.Items is not null && currentDTO.Items.Count > 0)
                             {
-                                var targetEnumDTO = currentDTO.Items.FirstOrDefault(item => item.TypeKind is MetaTypeKind.Enum);
-                                if (targetEnumDTO.SelectedEnumOption is EnumMember enumMember && enumMember.Value?.LiteralValue is not null)
+                                MetaTypeEditorFieldDTO enumDTO = currentDTO.Items.FirstOrDefault(item => item.TypeKind is MetaTypeKind.Enum);
+                                if (enumDTO?.SelectedEnumOption is EnumMember enumMember && enumMember.Value?.LiteralValue is not null)
                                 {
-                                    indexValue = enumMember.Value.LiteralValue.ToString();
-                                }
-                                else
-                                {
-                                    indexValue = "Error! No Dispatch structure corresponds to the key.";
+                                    //选中空成员时按 %none 处理，其余按选中值精确匹配
+                                    string selectedValue = enumMember.Value.LiteralValue.ToString();
+                                    indexValue = selectedValue == "unset" ? "%none" : selectedValue;
                                 }
                             }
                             break;
@@ -1128,20 +1247,20 @@ namespace CBHK.Utility.Data
                 return null;
             }
 
-            // 业务过程：%none 表示没有调度器 Index，此时也要走 fallback 模板。
+            // %none 表示没有调度器 Index，此时也要走 fallback 模板。
             if (index is null)
             {
                 index = new MetaValue { Kind = MetaValueKind.Literal, LiteralValue = "%none" };
             }
 
             string resourceString = resource.Kind is MetaValueKind.Literal ? resource.LiteralValue.ToString() : "";
-            if (targetDTO.Parent is null)
+            //父级只用于承载结果；索引允许字面量与列表（访问器索引 [[field]] 以列表承载），其余形态仍拒绝
+            if (targetDTO.Parent is not null)
             {
-                return null;
+                targetDTO.Parent.Children ??= [];
             }
-            targetDTO.Parent.Children ??= [];
 
-            if (index.Kind is not MetaValueKind.Literal)
+            if (index.Kind is not (MetaValueKind.Literal or MetaValueKind.List))
             {
                 return null;
             }
@@ -1152,15 +1271,18 @@ namespace CBHK.Utility.Data
                 if (targetInstanceDTO is not null)
                 {
                     #region 控制第一层子节点的路径
-                    if (targetInstanceDTO.Children?.Count > 0)
+                    if (targetInstanceDTO.Children?.Count > 0 && targetInstanceDTO.Path is not null)
                     {
                         for (int i = 0; i < targetInstanceDTO.Children.Count; i++)
                         {
                             targetInstanceDTO.Children[i].Path ??= new(targetInstanceDTO.Path.TargetPath);
                         }
-                        for (int i = 0; i < targetInstanceDTO.SelectedUnionChildren.Count; i++)
+                        if (targetInstanceDTO.SelectedUnionChildren is not null)
                         {
-                            targetInstanceDTO.SelectedUnionChildren[i].Path = new(targetInstanceDTO.Path.TargetPath);
+                            for (int i = 0; i < targetInstanceDTO.SelectedUnionChildren.Count; i++)
+                            {
+                                targetInstanceDTO.SelectedUnionChildren[i].Path = new(targetInstanceDTO.Path.TargetPath);
+                            }
                         }
                     }
                     #endregion
@@ -1223,7 +1345,8 @@ namespace CBHK.Utility.Data
                         }
                     ];
                     compositeDTO.Parent = targetDTO.Parent;
-                    targetDTO.Parent.Children.Add(compositeDTO);
+                    //父级可能尚未挂载，此时挂到自身子级
+                    (targetDTO.Parent?.Children ?? (targetDTO.Children ??= [])).Add(compositeDTO);
                 }
             }
             #endregion
@@ -1231,7 +1354,7 @@ namespace CBHK.Utility.Data
             return null;
         }
         /// <summary>
-        /// 业务过程：动态 Map 展开后，索引已变成具体 key（例如 visual/moon_phase），
+        /// 动态 Map 展开后，索引已变成具体 key（例如 visual/moon_phase），
         /// 返回值是 DocumentItemMap 里的 dispatch 模板 Item，调用方会继续实例化它的真实调度目标。
         /// 此时按 Resource + Index 直接命中 dispatch 模板，而不是再走 %key 表达式。
         /// 根据 Resource 与具体索引值查找调度器模板。
@@ -1281,6 +1404,56 @@ namespace CBHK.Utility.Data
         }
 
         /// <summary>
+        /// 判断是否为懒加载占位桩：ID 标记为 placeHolder，或实例化后 ID 被替换成 GUID 的空 Any 桩。
+        /// </summary>
+        public static bool IsPlaceHolderNode(MetaTypeEditorFieldDTO node)
+        {
+            return node is not null
+                && (node.ID == "placeHolder"
+                || (node.TypeKind is MetaTypeKind.Any && node.Children is null && string.IsNullOrEmpty(node.FieldName)));
+        }
+
+        /// <summary>
+        /// 取出调度索引里的访问器路径文本，兼容字面量、字面量列表与嵌套列表（[[field]] 形式）。
+        /// </summary>
+        public static string ExtractAccessorPath(MetaValue index)
+        {
+            if (index is null)
+            {
+                return "";
+            }
+
+            if (index.Kind is MetaValueKind.Literal)
+            {
+                return index.LiteralValue?.ToString() ?? "";
+            }
+
+            if (index.Kind is MetaValueKind.List && index.Items is not null)
+            {
+                return string.Join(".", index.Items.Select(ExtractAccessorPath).Where(item => !string.IsNullOrEmpty(item)));
+            }
+
+            return index.TypeValue?.LiteralValue?.ToString() ?? "";
+        }
+
+        /// <summary>
+        /// 按访问器路径定位字段节点，支持 %parent 逐级上溯（[[modifier]] / [[%parent.%parent.modifier]]）。
+        /// </summary>
+        private static MetaTypeEditorFieldDTO ResolveAccessorTarget(MetaTypeEditorFieldDTO currentDTO, string accessorPath)
+        {
+            MetaTypeEditorFieldDTO scope = currentDTO;
+            string fieldPath = accessorPath;
+            while (fieldPath.StartsWith("%parent.", StringComparison.Ordinal))
+            {
+                scope = scope?.Parent;
+                fieldPath = fieldPath["%parent.".Length..];
+            }
+
+            return scope?.Parent?.Children?.FirstOrDefault(child => child.FieldName == fieldPath)
+                ?? scope?.Children?.FirstOrDefault(child => child.FieldName == fieldPath);
+        }
+
+        /// <summary>
         /// 调用并解释Dispatch资源
         /// </summary>
         /// <param name="anchorMap">上下文文本锚点映射表</param>
@@ -1295,12 +1468,48 @@ namespace CBHK.Utility.Data
             MetaTypeEditorFieldDTO targetDispatchDTO = null;
 
             // 动态 Map 展开后，索引已经被替换成具体 key（例如 visual/moon_phase）。
+            // 索引可能写成访问器（资源对象的字段），先取出字段名/路径文本
+            string accessorPath = ExtractAccessorPath(index);
+
             // 此时直接按 Resource + Index 查找 dispatch 模板，不再走 %key 表达式求值。
-            if (index.Kind is MetaValueKind.Literal
-                && index.LiteralValue is not null
-                && !index.LiteralValue.ToString().StartsWith('%'))
+            if (!string.IsNullOrEmpty(accessorPath) && !accessorPath.StartsWith('%'))
             {
-                targetDispatchDTO = FindDispatchTemplate(resource, resourceString, index.LiteralValue.ToString());
+                targetDispatchDTO = FindDispatchTemplate(resource, resourceString, accessorPath);
+            }
+
+            //索引写成字段访问器（dispatch resource[[field]] / [[%parent.%parent.field]]）时，取该字段当前选中值再查表
+            if (targetDispatchDTO is null && !string.IsNullOrEmpty(accessorPath) && !accessorPath.StartsWith('%'))
+            {
+                MetaTypeEditorFieldDTO indexField = ResolveAccessorTarget(currentDTO, accessorPath);
+                string indexFieldValue = indexField?.SelectedEnumOption?.Value?.LiteralValue?.ToString()
+                    ?? indexField?.SelectedEnumOption?.Name
+                    ?? indexField?.Value?.ToString();
+
+                //同级实例尚未构建时，用该字段所在定义的默认成员作索引
+                if (string.IsNullOrEmpty(indexFieldValue))
+                {
+                    MetaTypeEditorFieldDTO indexFieldTemplate = currentDTO?.Parent?.TemplateReference?.Children?.FirstOrDefault(child => child.FieldName == accessorPath);
+                    if (indexFieldTemplate is null
+                        && currentDTO?.Path?.TargetPath is string definitionPath
+                        && resource.DocumentItemMap.TryGetValue(definitionPath, out MetaTypeEditorFieldDTO definitionItem))
+                    {
+                        indexFieldTemplate = definitionItem.Children?.FirstOrDefault(child => child.FieldName == accessorPath);
+                    }
+                    if (indexFieldTemplate is not null)
+                    {
+                        string indexTypeName = indexFieldTemplate.Value?.ToString() ?? indexFieldTemplate.TypeName ?? "";
+                        ResolvedTypeReference indexTypeReference = UsePathParser.Parse(resource, indexFieldTemplate.Path ?? currentDTO.Path, indexTypeName);
+                        indexFieldValue = indexTypeReference?.Item?.EnumOptionList?.FirstOrDefault()?.Value?.LiteralValue?.ToString()
+                            ?? indexTypeReference?.Item?.EnumOptionList?.FirstOrDefault()?.Name
+                            //字段本身是常量（如 modifier: "override"）时直接用它作索引
+                            ?? (indexFieldTemplate.TypeKind is MetaTypeKind.Literal ? indexTypeName : null);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(indexFieldValue))
+                {
+                    targetDispatchDTO = FindDispatchTemplate(resource, resourceString, indexFieldValue);
+                }
             }
 
             targetDispatchDTO ??= EvaluateKeyExpression(currentDTO, resourceString, index, resource);
@@ -1310,10 +1519,9 @@ namespace CBHK.Utility.Data
             // 而不是简单构造一个空 Item。
             if (targetDispatchDTO is null)
             {
-                string fallbackIndex = index.Kind is MetaValueKind.Literal
-                    && index.LiteralValue?.ToString() == "%none"
-                        ? "%none"
-                        : "%unknown";
+                //选中空成员时用 %none 调度器，索引不存在时用 %unknown 调度器
+                string indexText = index.Kind is MetaValueKind.Literal ? index.LiteralValue?.ToString() : null;
+                string fallbackIndex = indexText is "%none" or "unset" ? "%none" : "%unknown";
 
                 targetDispatchDTO = FindDispatchTemplate(resource, resourceString, fallbackIndex);
             }
@@ -1322,40 +1530,31 @@ namespace CBHK.Utility.Data
             {
                 return null;
             }
+
+            //目标就是当前节点自身的模板（自引用调度）时直接跳过，避免解析链递归
+            if (ReferenceEquals(targetDispatchDTO, currentDTO?.TemplateReference))
+            {
+                return null;
+            }
             #endregion
 
             #region 解释可能为泛引用节点的子级
             targetDispatchInstance = InstantiateDTO(targetDispatchDTO, version);
 
-            // 业务过程：处理 dispatch 目标自身的泛型实参。
-            // 例如 dispatch ... to Holder<struct Inner>，上层 Builder 只会留下
-            // GenericBase=Holder 与实参列表，这里再解析 Holder 的形参并完成替换。
-            if (!string.IsNullOrEmpty(targetDispatchInstance.TypeName)
-                && targetDispatchInstance.TypeParameterNameList?.Count > 0)
+            // 目标是具名定义时（dispatch ... to SomeStruct / Holder<struct Inner>），
+            // 把定义结构物化进调度实例：解析定义、按位置绑定形参并替换，访问器与后续校验都基于它。
+            if ((targetDispatchInstance.Children is null || targetDispatchInstance.Children.Count == 0)
+                && !string.IsNullOrEmpty(targetDispatchInstance.TypeName))
             {
-                ResolvedTypeReference genericReference = UsePathParser.Parse(
-                    resource,
+                MCDocumentResourceBuilder.BuildResource(
+                    targetDispatchInstance,
+                    targetDispatchInstance,
+                    version,
                     targetDispatchInstance.Path ?? targetDispatchDTO.Path,
-                    targetDispatchInstance.TypeName);
-
-                if (genericReference?.Item is MetaTypeEditorFieldDTO genericTemplate
-                    && genericTemplate.TypeParameterNameList?.Count > 0)
-                {
-                    genericTemplate.Path ??= targetDispatchInstance.Path ?? targetDispatchDTO.Path;
-                    List<MetaTypeEditorFieldDTO> substitutedChildren = SubstituteGenericIterative(
-                        genericTemplate,
-                        genericTemplate.TypeParameterNameList,
-                        targetDispatchInstance.TypeParameterNameList,
-                        version);
-
-                    targetDispatchInstance.TypeKind = genericTemplate.TypeKind;
-                    targetDispatchInstance.Children = new ObservableCollection<MetaTypeEditorFieldDTO>(substitutedChildren);
-                    targetDispatchInstance.BindingScope = CreateBindingScope(
-                        genericTemplate.TypeParameterNameList,
-                        targetDispatchInstance.TypeParameterNameList,
-                        targetDispatchInstance.BindingScope);
-                }
+                    resource,
+                    this);
             }
+
             //设定字段名
             if (targetDispatchInstance.FeatureMap.TryGetValue("Index", out MetaValue indexValue) && indexValue is not null && indexValue.Kind is MetaValueKind.Literal)
             {
@@ -1397,7 +1596,8 @@ namespace CBHK.Utility.Data
             }
 
             //实例 <- 模板的回填要先做，Accessor 之后 targetDispatchInstance 已经换人
-            targetDispatchInstance.Path = targetDispatchDTO.Path;
+            //模板自身没有路径时沿用调度节点的路径（调度语句所在文档），供目标内部的类型名解析
+            targetDispatchInstance.Path = targetDispatchDTO.Path ?? currentDTO?.Path;
             targetDispatchInstance.TemplateReference = targetDispatchDTO;
 
             //处理 [value] / [modifier] 这类字段访问器。
@@ -1428,7 +1628,8 @@ namespace CBHK.Utility.Data
                 }
             }
 
-            if (targetDispatchInstance.Children?.Count == 1)
+            //懒加载桩不能提升，否则会连同外壳与模板引用一起丢掉
+            if (targetDispatchInstance.Children?.Count == 1 && !IsPlaceHolderNode(targetDispatchInstance.Children[0]))
             {
                 targetDispatchInstance = targetDispatchInstance.Children[0];
                 targetDispatchInstance.Parent = currentDTO;
@@ -1449,6 +1650,17 @@ namespace CBHK.Utility.Data
                 }
             }
 
+
+            //访问器取出的字段若是懒加载桩，就地物化，让属性结构直接可见
+            if (targetDispatchInstance.Children?.Count == 1
+                && IsPlaceHolderNode(targetDispatchInstance.Children[0])
+                && targetDispatchInstance.TemplateReference?.Children is not null)
+            {
+                MetaTypeEditorFieldDTO stubTemplate = targetDispatchInstance.TemplateReference;
+                List<MetaTypeEditorFieldDTO> instanceList = [.. stubTemplate.Children.Select(item => InstantiateDTO(item, version))];
+                Validator.Verify(new(instanceList, []), [.. stubTemplate.Children], version, targetDispatchInstance.Path, true);
+                targetDispatchInstance.Children = new(instanceList);
+            }
 
             return targetDispatchInstance;
             #endregion
@@ -1566,7 +1778,7 @@ namespace CBHK.Utility.Data
                     // 判断是否应当展平
                     bool isCompoundItem = (IsContainerType(node.TypeKind) || IsIndirectType(node.TypeKind)) && node.TypeKind is not (MetaTypeKind.ByteArray or MetaTypeKind.IntArray or MetaTypeKind.LongArray or MetaTypeKind.List or MetaTypeKind.Composite);
 
-                    if (!isCompoundItem || node.ID == "placeHolder")
+                    if (!isCompoundItem || IsPlaceHolderNode(node))
                     {
                         resultCache[node] = [node];
                         continue;
@@ -1608,7 +1820,7 @@ namespace CBHK.Utility.Data
                                 continue;
                             }
 
-                            if (!IsContainerType(only.TypeKind) && only.ID != "placeHolder" && !string.IsNullOrEmpty(node.FieldName))
+                            if (!IsContainerType(only.TypeKind) && !IsPlaceHolderNode(only) && !string.IsNullOrEmpty(node.FieldName))
                             {
                                 if (!IsIndirectType(only.TypeKind) && string.IsNullOrEmpty(only.FieldName))
                                 {
@@ -1631,7 +1843,7 @@ namespace CBHK.Utility.Data
                                 resultCache[node] = [node];
                             }
                             //带 Items 的 Composite 是展示容器，不当空壳提升掉
-                            else if (only.ID != "placeHolder"
+                            else if (!IsPlaceHolderNode(only)
                                 && !(only.TypeKind is MetaTypeKind.Composite && only.Items?.Count > 0))
                             {
                                 // 唯一子节点是容器类型 -> 将当前节点替换为那个容器，接管其子树
@@ -1780,7 +1992,7 @@ namespace CBHK.Utility.Data
             return result;
         }
         /// <summary>
-        /// 业务过程：把匿名/内联 MetaType 实参递归转换为 Item 模板。
+        /// 把匿名/内联 MetaType 实参递归转换为 Item 模板。
         /// 主要用于 dispatch + generic 组合时，结构体/枚举实参没有命名路径可解析的场景。
         /// </summary>
         private MetaTypeEditorFieldDTO BuildDtoFromMetaType(MetaType type, string fieldName, string version)
@@ -1843,6 +2055,10 @@ namespace CBHK.Utility.Data
                     }
                     break;
 
+                case MetaTypeKind.Literal:
+                    dto.Value = type.LiteralValue?.ToString() ?? "";
+                    break;
+
                 default:
                     dto.Value = dto.GetDefaultValue();
                     break;
@@ -1860,14 +2076,15 @@ namespace CBHK.Utility.Data
         public List<MetaTypeEditorFieldDTO> SubstituteGenericIterative(
             MetaTypeEditorFieldDTO targetTemplate,
             List<Tuple<string,MetaValue>> formalParams,
-            List<Tuple<string, MetaValue>> actualArgs,
-            string version)
+            List<MetaValue> actualArgs,
+            string version,
+            TypeBindingScope? scope = null)
         {
             var paramMap = new Dictionary<string, MetaValue>();
-            //组合形参和实参映射表
+            //按位置组合形参和实参映射表，实参是占位符时经作用域取外层实参
             for (int i = 0; i < formalParams.Count && i < actualArgs.Count; i++)
             {
-                paramMap[formalParams[i].Item1] = actualArgs[i].Item2;
+                paramMap[formalParams[i].Item1] = ResolveArgument(actualArgs[i], scope ?? targetTemplate.BindingScope);
             }
 
             //统一的泛型列表，收集本层展开后的所有单层节点
@@ -1892,17 +2109,34 @@ namespace CBHK.Utility.Data
                 //阻止下钻
                 bool skipDrillDown = false;
 
-                //参数替换逻辑
-                string typeResourceString = child.TypeName ?? child.Value?.ToString() ?? "";
+                //参数替换逻辑：形参占位符可能以 TypeName 或 Value 承载名称，空串也要回落到 Value
+                string typeResourceString = !string.IsNullOrEmpty(child.TypeName) ? child.TypeName : child.Value?.ToString() ?? "";
                 MetaValue? actualMetaValue = null;
                 _ = paramMap.TryGetValue(typeResourceString, out actualMetaValue);
 
-                // 业务过程：当前层没有命中形参时，沿 TypeBindingScope 向上查找，
+                // 当前层没有命中形参时，沿 TypeBindingScope 向上查找，
                 // 让嵌套泛型/别名节点也能消费外层泛型绑定。
                 if (actualMetaValue is null && child.BindingScope is not null)
                 {
                     _ = child.BindingScope.TryResolve(typeResourceString, out actualMetaValue);
                 }
+
+                //嵌套泛型应用的实参也经当前绑定解析，避免外层实参在下一层丢失
+                if (child.ActualTypeArguments is not null)
+                {
+                    for (int i = 0; i < child.ActualTypeArguments.Count; i++)
+                    {
+                        MetaValue argument = child.ActualTypeArguments[i];
+                        string placeholderName = argument.Kind is MetaValueKind.Type && argument.TypeValue?.Kind is MetaTypeKind.Literal
+                            ? argument.TypeValue.LiteralValue?.ToString()
+                            : null;
+                        if (!string.IsNullOrEmpty(placeholderName) && paramMap.TryGetValue(placeholderName, out MetaValue boundArgument))
+                        {
+                            child.ActualTypeArguments[i] = boundArgument;
+                        }
+                    }
+                }
+
                 ResolvedTypeReference typeReference = null;
 
                 // 普通非 Generic 节点如果命中了形参名，说明它是“泛型参数占位符”，
@@ -1960,9 +2194,11 @@ namespace CBHK.Utility.Data
                                 }
                             }
                         }
-                        else if (actualType.AttributeList is not null)
+                        else if (actualType.AttributeList?.Count > 0)
                         {
                             actualStruct = CompoundGenericMetaValueParser.Parse(resource, version, actualType.AttributeList);
+                            //带属性但没有可查资源的实参（如 int @ 0..15）按类型本体构建
+                            actualStruct ??= BuildDtoFromMetaType(actualType, child.FieldName ?? "", version);
                             if (actualStruct is not null && actualStruct.TypeKind is MetaTypeKind.Enum)
                             {
                                 actualStruct.SelectedEnumItemUpdated += () => SelectedEnumItemUpdated(actualStruct, version);
@@ -1997,6 +2233,7 @@ namespace CBHK.Utility.Data
                         }
                     }
 
+
                     //处理泛引用类型的实参
                     if (actualStruct is not null)
                     {
@@ -2005,6 +2242,12 @@ namespace CBHK.Utility.Data
                         replacedChild.FieldName = child.FieldName;
                         replacedChild.SetRequired(child.IsRequired);
                         replacedChild.Watermark = child.Watermark;
+                        //继承替换链所在文档的路径，供替换结果内部的类型名解析
+                        string? scopeDocumentPath = (scope ?? targetTemplate.BindingScope)?.ResolveDocumentPath();
+                        if (replacedChild.Path is null && !string.IsNullOrEmpty(scopeDocumentPath))
+                        {
+                            replacedChild.Path = new DocumentPath(scopeDocumentPath);
+                        }
 
                         //判断该结构是容器还是基础值
                         bool isContainer = actualStruct.TypeKind is MetaTypeKind.Struct
@@ -2023,15 +2266,25 @@ namespace CBHK.Utility.Data
                             replacedChild.Children = [new MetaTypeEditorFieldDTO() { ID = "placeHolder", TypeKind = MetaTypeKind.Any }];
 
                             //将完整的结构体模板缓存在TemplateReference中，供UI点击展开时读取和解析
-                            replacedChild.TemplateReference = actualStruct;
+                            //实参本身可能还是桩，穿透到真正带子级的那一层
+                            MetaTypeEditorFieldDTO templateSource = actualStruct;
+                            while (templateSource.TemplateReference is not null
+                                && !ReferenceEquals(templateSource.TemplateReference, templateSource)
+                                && (templateSource.Children is null
+                                    || templateSource.Children.Count == 0
+                                    || IsPlaceHolderNode(templateSource.Children[0])))
+                            {
+                                templateSource = templateSource.TemplateReference;
+                            }
+                            replacedChild.TemplateReference = templateSource;
                             replacedChild.Value = actualMetaValue;
                         }
                         else
                         {
-                            //基础值模式,更改节点类型并赋初值
+                            //基础值模式：占位符自身的值就是形参名，必须丢弃并改用实参的默认值
                             replacedChild.TypeKind = actualStruct.TypeKind;
                             replacedChild.Children = null;
-                            replacedChild.Value = child.Value ?? actualStruct.GetDefaultValue();
+                            replacedChild.Value = actualStruct.GetDefaultValue();
                         }
 
                         child = replacedChild;

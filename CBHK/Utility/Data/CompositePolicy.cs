@@ -24,7 +24,7 @@ namespace CBHK.Utility.Data
 
             List<MetaTypeEditorFieldDTO> meaningfulItems = [.. items.Where(item =>
                 item is not null
-                && item.ID != "placeHolder"
+                && !MCDocumentMetaTypeDTOHelper.IsPlaceHolderNode(item)
                 && item.TypeKind is not (MetaTypeKind.Add or MetaTypeKind.Remove))];
 
             if (meaningfulItems.Count < 2)

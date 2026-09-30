@@ -46,7 +46,7 @@ namespace CBHK.Utility.Data.DTOBuilder
 
             var elementRegistry = registry.Get(elementTypeCopy.TypeKind);
             elementRegistry.Build(elementTypeCopy, target.ElementType, version, documentPath, anchorMap, depth);
-            if ((target.Items.Count > 0 && target.Items[0].ID != "placeHolder") || target.Items.Count == 0)
+            if ((target.Items.Count > 0 && !MCDocumentMetaTypeDTOHelper.IsPlaceHolderNode(target.Items[0])) || target.Items.Count == 0)
             {
                 target.Items = [elementTypeCopy];
             }

@@ -1,4 +1,4 @@
-﻿using CBHK.Interface.Data;
+using CBHK.Interface.Data;
 using CBHK.Model.Constant;
 using CBHK.Utility.Data.DTOBuilder;
 using MinecraftLanguageModelLibrary.Data;
@@ -33,11 +33,10 @@ namespace CBHK.Utility.Data
             registry.Register(MetaTypeKind.LongArray, new ArrayDTOBuilder(resource, helper, registry));
             registry.Register(MetaTypeKind.UUIDArray, new ArrayDTOBuilder(resource, helper, registry));
             registry.Register(MetaTypeKind.List, new ListDTOBuilder(resource, helper, registry));
+            registry.Register(MetaTypeKind.Tuple, new TupleDTOBuilder(resource, helper, registry));
             registry.Register(MetaTypeKind.Generic, new GenericDTOBuilder(resource, helper, registry));
             registry.Register(MetaTypeKind.Reference, new ReferenceDTOBuilder(resource, helper, registry));
-            // 注意：Dispatch 不注册策略。调度器在树中作为驻留锚点，
-            // 子树由 Helper 的 GetDispatchResource / SelectedEnumItemUpdated 根据上下文动态生成。
-            // 因此 registry.Get(Dispatch) 会走 Any 兜底（无操作），与原空壳 DispatchDTOBuilder 行为一致。
+            registry.Register(MetaTypeKind.Dispatch, new DispatchDTOBuilder(resource, helper, registry));
             registry.Register(MetaTypeKind.Any, new AnyDTOBuilder(resource, helper, registry));
 
             return registry;

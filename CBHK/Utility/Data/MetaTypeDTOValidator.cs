@@ -3,6 +3,7 @@ using CBHK.Utility.Data.DTOBuilder;
 using CBHK.Interface.Data;
 using CBHK.Model.Data;
 using MinecraftLanguageModelLibrary.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -66,6 +67,10 @@ namespace CBHK.Utility.Data
                 #endregion
 
                 #region 分流：带类型引用的节点先解析文档类型
+                List<MetaValue> actualTypeArguments = template.ActualTypeArguments;
+                TypeBindingScope bindingScope = template.BindingScope;
+                //字段自身的注解（如 #[color=...]）不能被解析出来的定义覆盖，必须在替换前留一份
+                Dictionary<string, MetaValue> originalFeatures = template.FeatureMap is null ? [] : new(template.FeatureMap);
                 if (HasTypeReference(template))
                 {
                     //先解析真实文档类型
@@ -74,7 +79,7 @@ namespace CBHK.Utility.Data
                         ResolvedTypeReference resolved = UsePathParser.Parse(resource, itemPath, template.Value.ToString());
                         if (resolved?.Item is not null)
                         {
-                            //保留模板的必选性
+                            //保留模板的必选性与泛型实参
                             bool isRequired = template.IsRequired;
                             template = templates[i] = resolved.Item;
                             template.SetRequired(isRequired);
@@ -99,6 +104,14 @@ namespace CBHK.Utility.Data
                 else
                 {
                     instance = DTOHelper.InstantiateDTO(template, version);
+                    //定义替换会丢掉实参，这里带回来供后续替换使用
+                    instance.ActualTypeArguments ??= actualTypeArguments;
+                    instance.BindingScope ??= bindingScope;
+                }
+                instance.FeatureMap ??= [];
+                foreach (KeyValuePair<string, MetaValue> pair in originalFeatures)
+                {
+                    instance.FeatureMap[pair.Key] = pair.Value;
                 }
                 #endregion
 

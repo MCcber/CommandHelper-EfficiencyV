@@ -1,6 +1,7 @@
 using CBHK.Model.Constant;
 using MinecraftLanguageModelLibrary.Data;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,10 +13,12 @@ namespace CBHK.Utility.Data.DTOBuilder
             { "named",MetaTypeKind.NamedColor } ,
             { "hex_rgb",MetaTypeKind.NamedColor },
             { "hex_rgba",MetaTypeKind.NamedColor },
+            { "hex_argb",MetaTypeKind.NamedColor },
             { "dec_rgb",MetaTypeKind.NamedColor },
             { "dec_rgba",MetaTypeKind.NamedColor },
             { "composite_rgb",MetaTypeKind.NamedColor },
-            { "composite_rgba",MetaTypeKind.NamedColor }
+            { "composite_rgba",MetaTypeKind.NamedColor },
+            { "composite_argb",MetaTypeKind.NamedColor }
         };
 
         /// <summary>
@@ -29,6 +32,46 @@ namespace CBHK.Utility.Data.DTOBuilder
         /// <param name="helper"></param>
         public static void BuildResource(MetaTypeEditorFieldDTO target, MetaTypeEditorFieldDTO template, string version, DocumentPath documentPath, Resource resource, MCDocumentMetaTypeDTOHelper helper)
         {
+            #region 解析定义引用（别名与泛型应用）
+            //名字载体（字面量/引用）用 Value 承载名字，其余类型用 TypeName 承载定义名
+            string definitionName = target.TypeKind is MetaTypeKind.Literal or MetaTypeKind.Reference
+                ? target.Value?.ToString() ?? ""
+                : target.TypeName ?? "";
+            if (!string.IsNullOrEmpty(definitionName) && !ReferenceEquals(target.TemplateReference, target))
+            {
+                ResolvedTypeReference reference = UsePathParser.Parse(resource, documentPath ?? target.Path, definitionName);
+                if (reference?.Item is MetaTypeEditorFieldDTO definition && !ReferenceEquals(definition, target))
+                {
+                    MetaTypeEditorFieldDTO definitionInstance = helper.InstantiateDTO(definition, version);
+                    List<Tuple<string, MetaValue>> formalParameters = definition.TypeParameterNameList ?? [];
+                    List<MetaValue> actualArguments = target.ActualTypeArguments ?? [];
+                    if (formalParameters.Count > 0 && actualArguments.Count > 0)
+                    {
+                        //按位置绑定形参后替换，结果落在定义实例上，不修改文档模板本身
+                        target.BindingScope = MCDocumentMetaTypeDTOHelper.CreateBindingScope(formalParameters, actualArguments, target.BindingScope, target.Path?.TargetPath ?? documentPath?.TargetPath);
+                        definitionInstance.Children = new(helper.SubstituteGenericIterative(definition, formalParameters, actualArguments, version, target.BindingScope));
+                        definitionInstance.TypeKind = definition.TypeKind;
+                    }
+
+                    bool isRequired = target.IsRequired;
+                    //字段自身的注解（如 #[color=...]）不能被定义实例的属性覆盖，先留一份
+                    Dictionary<string, MetaValue> ownFeatures = target.FeatureMap is null ? [] : new(target.FeatureMap);
+                    target.CopyFrom(definitionInstance);
+                    target.SetRequired(isRequired);
+                    target.FeatureMap ??= [];
+                    foreach (KeyValuePair<string, MetaValue> pair in ownFeatures)
+                    {
+                        target.FeatureMap[pair.Key] = pair.Value;
+                    }
+                    if (definitionInstance.Path?.TargetPath.Length > 0)
+                    {
+                        //定义体内部的名字要在定义所在的文档命名空间里解析
+                        target.Path = new(definitionInstance.Path.TargetPath);
+                    }
+                }
+            }
+            #endregion
+
             #region 处理资源
             if (target.FeatureMap is not null && target.FeatureMap.Count > 0)
             {
@@ -185,29 +228,33 @@ namespace CBHK.Utility.Data.DTOBuilder
                 #endregion
 
                 #region 识别颜色资源
-                if (target.FeatureMap.TryGetValue("color", out MetaValue colorObject) && colorObject is not null && colorObject.Kind is MetaValueKind.Type)
+                if (target.FeatureMap.TryGetValue("color", out MetaValue colorObject) && colorObject is not null)
                 {
-                    string colorType = colorObject.TypeValue.LiteralValue.ToString();
-                    target.TypeKind = colorDictionary[colorType];
+                    //属性的值可能是类型、字面量或列表，统一取出颜色种类名（hex_rgb、named 等）
+                    string colorType = colorObject.Kind switch
+                    {
+                        MetaValueKind.Type => colorObject.TypeValue?.LiteralValue?.ToString(),
+                        MetaValueKind.Literal => colorObject.LiteralValue?.ToString(),
+                        MetaValueKind.List => colorObject.Items?.FirstOrDefault()?.LiteralValue?.ToString(),
+                        _ => null
+                    } ?? "";
+                    if (colorDictionary.TryGetValue(colorType, out MetaTypeKind colorKind))
+                    {
+                        target.TypeKind = colorKind;
+                    }
                 }
                 #endregion
             }
             #endregion
 
             #region 处理Dispatch
-            if (target.FeatureMap.ContainsKey("Resource") && target.FeatureMap.ContainsKey("Index") && !target.FeatureMap.ContainsKey("id"))
+            //只有调度器节点（或曾由调度器解释的节点）才执行调度，避免物化后的结果再次触发调度
+            bool isDispatcher = target.TypeKind is MetaTypeKind.Dispatch || target.OriginKind is MetaTypeKind.Dispatch;
+            if (isDispatcher && target.FeatureMap.ContainsKey("Resource") && target.FeatureMap.ContainsKey("Index") && !target.FeatureMap.ContainsKey("id"))
             {
-                if (string.IsNullOrEmpty(target.FieldName))
-                {
-                    target.IsVisible = false;
-                    return;
-                }
+                //调度节点常无路径，继承当前构建文档，供目标内部的类型名解析使用
+                target.Path ??= documentPath;
                 var dispatchResultDTO = helper.GetDispatchResource(target, version);
-                //处理调度器内出现泛型参数的情况
-                if (target.TypeParameterNameList?.Count > 0)
-                {
-
-                }
                 if (dispatchResultDTO is not null)
                 {
                     if (target.TypeKind is MetaTypeKind.Composite)
@@ -217,10 +264,24 @@ namespace CBHK.Utility.Data.DTOBuilder
                     }
                     else
                     {
-                        // Dispatch 目标是值类型/单个字段时，父节点可能还没有 Children 集合。
-                        target.Children ??= [];
-                        target.Children.Add(dispatchResultDTO);
+                        //调度结果物化进本节点，避免多一层调度器外壳
+                        string fieldName = target.FieldName;
+                        bool isRequired = target.IsRequired;
+                        DocumentPath path = target.Path;
+                        Dictionary<string, MetaValue> featureMap = target.FeatureMap;
+                        target.CopyFrom(dispatchResultDTO);
+                        target.FieldName = fieldName;
+                        target.SetRequired(isRequired);
+                        target.Path ??= path;
+                        target.FeatureMap = featureMap;
+                        target.OriginKind = MetaTypeKind.Dispatch;
                     }
+                }
+                else if (!string.IsNullOrEmpty(target.FieldName))
+                {
+                    //调度目标解析失败时按 Any 走完管线，调度器特征保留以便后续重新解释
+                    target.OriginKind = MetaTypeKind.Dispatch;
+                    target.TypeKind = MetaTypeKind.Any;
                 }
             } 
             #endregion

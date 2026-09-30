@@ -1,4 +1,4 @@
-﻿using CBHK.Model.Constant;
+using CBHK.Model.Constant;
 using MinecraftLanguageModelLibrary.Data;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,6 +37,17 @@ namespace CBHK.Utility.Data
                 {
                     _ = resource.DocumentItemMap.TryGetValue(targetUsePath, out resultDTO);
                     resultPath = targetUsePath;
+                    //相对引用（不带 :: 前缀）要拼上当前文件的命名空间
+                    if (resultDTO is null && !targetUsePath.StartsWith("::") && !targetUsePath.StartsWith("super"))
+                    {
+                        string relativeUsePath = parentPathString + "::" + targetUsePath;
+                        if (resource.DocumentItemMap.TryGetValue(relativeUsePath, out MetaTypeEditorFieldDTO relativeDTO) && relativeDTO is not null)
+                        {
+                            targetUsePath = relativeUsePath;
+                            resultDTO = relativeDTO;
+                            resultPath = relativeUsePath;
+                        }
+                    }
                     //检测引用语句的继承用例
                     if(targetUsePath.StartsWith("super"))
                     {
