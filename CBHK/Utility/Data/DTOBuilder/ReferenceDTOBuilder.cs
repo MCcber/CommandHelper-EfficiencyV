@@ -35,6 +35,9 @@ namespace CBHK.Utility.Data.DTOBuilder
                             instanceRegistry.Build(instanceDTO, referencedDTO, version, documentPath, anchorMap, depth);
                             target.Children ??= [];
                             target.Children.Add(instanceDTO);
+                            //引用实例要挂上父子链：同级字段驱动的调度器重解析（SelectedEnumItemUpdated）依赖 Parent
+                            instanceDTO.Parent = target;
+                            MCDocumentMetaTypeDTOHelper.AttachParentLinks(instanceDTO);
                         }
                     }
                 }

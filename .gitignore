@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# 本地验证用的构建副本（输出已重定向到 _mcdoc-verify/_build）
+CBHK/cbhk.verify.csproj

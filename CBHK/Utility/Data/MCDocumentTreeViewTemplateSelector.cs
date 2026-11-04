@@ -1,4 +1,4 @@
-﻿using MinecraftLanguageModelLibrary.Data;
+using MinecraftLanguageModelLibrary.Data;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -21,7 +21,6 @@ namespace CBHK.Utility.Data
         public DataTemplate AddButtonTemlate { get; set; }
         public DataTemplate RemoveTemplate { get; set; }
         public DataTemplate EntryTemplate { get; set; }
-        public DataTemplate DefinitionTemplate { get; set; }
         #endregion
 
         #region Method
@@ -34,7 +33,6 @@ namespace CBHK.Utility.Data
             {
                 return dto.TypeKind switch
                 {
-                    MetaTypeKind.Definition => DefinitionTemplate,
                     MetaTypeKind.Add => AddButtonTemlate,
                     MetaTypeKind.Remove => RemoveTemplate,
                     MetaTypeKind.CompositeRGB or MetaTypeKind.CompositeARGB => ColorTemplate,

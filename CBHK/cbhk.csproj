@@ -1,7 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
     <OutputType>WinExe</OutputType>
+    <!--
+      XAML 里用的是绝对 pack URI（/CBHK;component/...），解析目标就是"名为 CBHK 的程序集"。
+      不写这一行时程序集名按工程文件名推断为 cbhk（小写），在 Windows 上靠大小写不敏感侥幸成立；
+      显式声明后与验证副本 cbhk.verify.csproj 完全一致，避免换平台/换构建工具时资源解析失败。
+    -->
+    <AssemblyName>CBHK</AssemblyName>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>

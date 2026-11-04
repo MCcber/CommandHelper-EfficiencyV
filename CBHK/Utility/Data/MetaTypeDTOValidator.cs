@@ -40,6 +40,10 @@ namespace CBHK.Utility.Data
                 return;
             }
 
+            //构建收尾的具名键补解析：DocumentItemMap 边建边填，跨文件枚举引用在构建期可能还没注册，
+            //整批文档建完后在这里补一次（每版本一次），动态 map 的键选择器才拿得到枚举选项
+            DTOHelper?.ResolveDeferredNamedKeys(version);
+
             List<MetaTypeEditorFieldDTO> templates = [.. templateList];
             if (templates.Count == 0)
             {

@@ -19,6 +19,7 @@ namespace CBHK.Utility.Data.DTOBuilder
         {
             string currentValueString = target.Value?.ToString() ?? "";
 
+
             if (!string.IsNullOrEmpty(currentValueString))
             {
                 target.TypeKind = MetaTypeKind.Enum;

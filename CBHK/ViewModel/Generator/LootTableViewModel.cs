@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CBHK.Model.Constant;
 
 namespace CBHK.ViewModel.Generator
 {
-    internal class LootTableViewModel
+    /// <summary>入口：loot_table（其余逻辑全在 McdocGeneratorViewModelBase）。</summary>
+    public sealed partial class LootTableViewModel : McdocGeneratorViewModelBase
     {
+        public LootTableViewModel(Resource resource) : base(resource, "loot_table")
+        {
+        }
     }
 }

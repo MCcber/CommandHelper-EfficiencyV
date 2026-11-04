@@ -26,6 +26,18 @@ namespace CBHK.Utility.Data
                 parentPathString = documentItemPathString[..(dispatchFeatureMatch.Index - 2)];
             }
 
+            //匿名定义（如调度器内联结构体）的路径会多出层级，回溯到最近的文档路径，才能取到该文件自己的引用列表
+            string filePathString = parentPathString;
+            while (filePathString.Length > 0 && !resource.DocumentPathItemMap.ContainsKey(filePathString))
+            {
+                int lastColonIndex = filePathString.LastIndexOf("::");
+                filePathString = lastColonIndex > 0 ? filePathString[..lastColonIndex] : "";
+            }
+            if (filePathString.Length > 0)
+            {
+                parentPathString = filePathString;
+            }
+
             //精准匹配目标结构
             if (!string.IsNullOrEmpty(parentPathString) && resource.DocumentPathItemMap.TryGetValue(parentPathString, out List<string> targetFileUseList) &&
                targetFileUseList is not null)

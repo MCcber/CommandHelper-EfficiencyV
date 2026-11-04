@@ -1,0 +1,52 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
+    xmlns:data="clr-namespace:CBHK.Utility.Data">
+
+    <!--
+        生成器页面的通用 chrome（misode 的顶栏：版本选择 + 复制/下载）。
+        控件一律用仓内既有 Vector 控件，不追 misode 的外观。
+        与行的下拉同一个转换器：EnumMember → VectorTextComboBoxItem 的稳定实例，
+        否则 SelectedItem 不在 ItemsSource 里，选中态会被立刻清空。
+    -->
+    <data:EnumMemberToTextComboBoxItemConverter x:Key="McdocChromeComboConverter" />
+
+    <DataTemplate x:Key="McdocGeneratorChrome">
+        <StackPanel
+            Margin="2,2,2,0"
+            VerticalAlignment="Center"
+            Orientation="Horizontal">
+            <VectorComboBox:VectorTextComboBox
+                Width="150"
+                Height="26"
+                VerticalAlignment="Center"
+                Title="版本"
+                ItemsSource="{Binding GameVersionOptions, Converter={StaticResource McdocChromeComboConverter}}"
+                SelectedItem="{Binding SelectedGameVersionOption, Converter={StaticResource McdocChromeComboConverter}}"
+                Style="{DynamicResource VectorTextComboBoxStyle}"
+                ToolTip="切换游戏版本：按新版本的 #[since]/#[until] 重新求值，文档内容保留" />
+            <VectorButton:VectorTextButton
+                Height="26"
+                Margin="8,0,0,0"
+                Padding="10,0"
+                VerticalAlignment="Center"
+                Command="{Binding CopyJsonCommand}"
+                OriginBottomHeight="2"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="复制"
+                ToolTip="复制当前 JSON（Ctrl+Shift+C）" />
+            <VectorButton:VectorTextButton
+                Height="26"
+                Margin="6,0,0,0"
+                Padding="10,0"
+                VerticalAlignment="Center"
+                Command="{Binding SaveJsonCommand}"
+                OriginBottomHeight="2"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="保存"
+                ToolTip="另存 JSON（Ctrl+S）" />
+        </StackPanel>
+    </DataTemplate>
+</ResourceDictionary>

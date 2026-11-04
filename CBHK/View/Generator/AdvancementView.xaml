@@ -1,13 +1,13 @@
-﻿<Container:VectorWindow
+<Container:VectorWindow
     x:Class="CBHK.View.Generator.AdvancementView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
-    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
-    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:jsonText="clr-namespace:CBHK.Utility.Data.JsonText"
     xmlns:local="clr-namespace:CBHK.View.Generator"
+    xmlns:mcdoc="clr-namespace:CBHK.Utility.Data.Mcdoc"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="{Binding ViewName}"
@@ -19,12 +19,6 @@
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
-    <behaviors:Interaction.Triggers>
-        <behaviors:EventTrigger EventName="Loaded">
-            <behaviors:CallMethodAction MethodName="Advancement_Loaded" TargetObject="{Binding}" />
-        </behaviors:EventTrigger>
-    </behaviors:Interaction.Triggers>
-
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1.5*" />
@@ -35,40 +29,46 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <VectorComboBox:VectorTextComboBox
-            Title="版本"
+        <ContentControl
             Grid.Row="0"
-            Height="30"
-            ArrowMargin="0 0 5 0"
-            ItemsSource="{Binding VersionList}"
-            SelectedIndex="0"
-            SelectedItem="{Binding CurrentVersion}"
-            Style="{StaticResource VectorTextComboBoxStyle}" />
-        <Container:VectorTreeView
+            Grid.Column="0"
+            Content="{Binding}"
+            ContentTemplate="{StaticResource McdocGeneratorChrome}" />
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="2"
+            Margin="5,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            FontSize="13"
+            Foreground="{DynamicResource CommonForeground}"
+            Opacity="0.6"
+            Text="{Binding MdocStatus}"
+            TextTrimming="CharacterEllipsis"
+            ToolTip="{Binding MdocStatus}" />
+        <mcdoc:McdocTreeRowView
             Grid.Row="1"
             Grid.Column="0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             Background="Transparent"
-            BorderThickness="0"
-            ItemTemplateSelector="{StaticResource MCDocumentTreeViewTemplateSelector}"
-            ItemsSource="{Binding MetaTypeDTOTreeViewItemList}"
-            Style="{DynamicResource VectorTreeViewStyle}">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:CallMethodAction MethodName="VectorTreeView_Loaded" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
-        </Container:VectorTreeView>
+            ItemContainerStyle="{StaticResource McdocRowItemContainerStyle}"
+            ItemTemplateSelector="{StaticResource McdocRowTemplateSelector}"
+            ItemsSource="{Binding Rows}" />
         <GridSplitter
             Grid.Row="1"
             Grid.Column="1"
             VerticalAlignment="Stretch"
             Background="Transparent"
-            BorderBrush="Gray"
+            BorderBrush="{DynamicResource CommonForeground}"
             BorderThickness="1,0,1,0"
             ResizeBehavior="PreviousAndNext" />
-        <avalonedit:TextEditor
+        <!--
+            右侧 JSON 编辑器：JsonTextEditor 派生自 AvalonEdit 的 TextEditor，
+            自带 JSON 解析 + 锚点表，树上的编辑会手术式回写到这里（只改那一段）。
+        -->
+        <jsonText:JsonTextEditor
+            mcdoc:McdocJsonEditorHost.IsEnabled="True"
             Grid.Row="1"
             Grid.Column="2"
             Margin="5"
@@ -76,18 +76,12 @@
             VerticalAlignment="Stretch"
             Background="Transparent"
             FontFamily="JetBrains Mono"
-            Foreground="White"
+            Foreground="{DynamicResource CommonForeground}"
             HorizontalScrollBarVisibility="Auto"
             IsReadOnly="False"
-            LineNumbersForeground="White"
+            LineNumbersForeground="{DynamicResource CommonForeground}"
             ShowLineNumbers="True"
             VerticalScrollBarVisibility="Auto"
-            WordWrap="True">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:CallMethodAction MethodName="TextEditor_Loaded" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
-        </avalonedit:TextEditor>
+            WordWrap="True" />
     </Grid>
 </Container:VectorWindow>

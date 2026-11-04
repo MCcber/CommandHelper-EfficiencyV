@@ -50,7 +50,7 @@
 
     <Style
         x:Key="VectorIconTextComboBoxStyle"
-        BasedOn="{DynamicResource VectorTextComboBoxStyle}"
+        BasedOn="{StaticResource VectorTextComboBoxStyle}"
         TargetType="{x:Type VectorComboBox:VectorIconTextComboBox}">
         <Setter Property="ItemTemplate" Value="{DynamicResource VectorIconTextComboBoxItemTemplate}" />
     </Style>

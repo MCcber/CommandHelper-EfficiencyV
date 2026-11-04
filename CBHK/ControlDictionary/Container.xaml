@@ -1,6 +1,10 @@
-﻿<ResourceDictionary
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:data="clr-namespace:CBHK.Utility.Data"
     xmlns:treeviewVisualUtility="clr-namespace:CBHK.Utility.Visual.TreeView">
     <ResourceDictionary.MergedDictionaries>
@@ -26,6 +30,8 @@
         <ResourceDictionary Source="/ControlDictionary/Container/TransactionItem.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorTreeView.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/TreeViewCommon.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/McdocRows.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/Container/McdocGeneratorChrome.xaml" />
         <ResourceDictionary>
             <data:MCDocumentTreeViewTemplateSelector
                 x:Key="MCDocumentTreeViewTemplateSelector"
@@ -34,7 +40,6 @@
                 BoolTemplate="{StaticResource TreeViewBoolItem}"
                 ColorTemplate="{StaticResource TreeViewColorItem}"
                 CompositeTemplate="{StaticResource TreeViewCompositeItem}"
-                DefinitionTemplate="{StaticResource TreeViewDefinitionItem}"
                 EnumTemplate="{StaticResource TreeViewEnumItem}"
                 ListTemplate="{StaticResource TreeViewListItem}"
                 NumberTemplate="{StaticResource TreeViewNumberTemplate}"
@@ -43,6 +48,76 @@
                 StructTemplate="{StaticResource TreeViewStructItem}"
                 UUIDTemplate="{StaticResource TreeViewUUIDItem}"
                 UnionTemplate="{StaticResource TreeViewUnionItem}" />
+
+            <!--
+                新 mcdoc 求值管线（McdocTreeNode）。与上面旧选择器完全同一模式：
+                直接内联在这里，才能 StaticResource 到 TreeViewCommon.xaml / VectorTreeViewItem.xaml 里的资源
+                （跨字典 StaticResource 在本项目里不可靠，见 TreeViewCommon.xaml 末尾的注释）。
+            -->
+
+            <!--  新管线的 union 行：标签 + 分支下拉 + 当前分支的（标量）编辑器  -->
+            <HierarchicalDataTemplate x:Key="MdocTreeUnionItem" ItemsSource="{Binding SelectedUnionChildren}">
+                <Border
+                    Margin="0,2"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource CommonBackground}"
+                    CornerRadius="5"
+                    Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock
+                            Margin="5,0"
+                            VerticalAlignment="Center"
+                            FontSize="15"
+                            Foreground="{DynamicResource CommonForeground}"
+                            Text="{Binding FieldName}" />
+                        <VectorComboBox:VectorTextComboBox
+                            Title="{Binding FieldName}"
+                            VerticalAlignment="Center"
+                            ArrowMargin="0 0 8 0"
+                            ItemsSource="{Binding UnionTypeNameList, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                            SelectedItem="{Binding SelectedUnionTypeName, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                            Style="{DynamicResource VectorTextComboBoxStyle}" />
+                        <ContentControl
+                            VerticalAlignment="Center"
+                            Content="{Binding}"
+                            ContentTemplateSelector="{StaticResource McdocValueEditorTemplateSelector}" />
+                    </StackPanel>
+                </Border>
+            </HierarchicalDataTemplate>
+
+            <data:McdocTreeViewTemplateSelector
+                x:Key="McdocTreeViewTemplateSelector"
+                ArrayTemplate="{StaticResource TreeViewArrayItem}"
+                BoolTemplate="{StaticResource TreeViewBoolItem}"
+                DynamicKeyTemplate="{StaticResource TreeViewDynamicKeyItem}"
+                EnumTemplate="{StaticResource TreeViewEnumItem}"
+                ListTemplate="{StaticResource TreeViewListItem}"
+                NumberTemplate="{StaticResource TreeViewNumberTemplate}"
+                StringTemplate="{StaticResource TreeViewStringItem}"
+                StructTemplate="{StaticResource TreeViewStructItem}"
+                UnionTemplate="{StaticResource MdocTreeUnionItem}" />
+
+            <!--  折叠/选中状态走 WPF 惯用法：容器样式双向绑定到数据项  -->
+            <Style
+                x:Key="McdocTreeViewItemContainerStyle"
+                BasedOn="{StaticResource VectorTreeViewItemContainerStyle}"
+                TargetType="{x:Type Container:VectorTreeViewItem}">
+                <!--
+                    IsExpanded 不在这里绑定：用户点击写的是"本地值"，会盖掉样式 Setter 的绑定，
+                    源节点收不到更新，容器一回收就回落成 False（表现：展开后立刻被收回）。
+                    改由 VectorTreeViewItem 在 Loaded / Expanded / Collapsed 里双向同步。
+                -->
+                <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                <!--  右键菜单：复制（misode 的 duplicate：内存里深拷贝一份插到同层）  -->
+                <Setter Property="ContextMenu">
+                    <Setter.Value>
+                        <ContextMenu>
+                            <MenuItem Command="{Binding DuplicateCommand}" Header="复制" />
+                            <MenuItem Command="{Binding RemoveEntryCommand}" Header="删除该条目" />
+                        </ContextMenu>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

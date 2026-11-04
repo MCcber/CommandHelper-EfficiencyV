@@ -1,4 +1,4 @@
-﻿using CBHK.Model.Constant;
+using CBHK.Model.Constant;
 using CBHK.Utility.Visual;
 using System.Windows;
 using System.Windows.Controls;
@@ -64,12 +64,14 @@ namespace CBHK.CustomControl.Input
         #region Method
         public VectorTextBox()
         {
-            SetResourceReference(ThemeBackgroundProperty, Theme.CommonBackground);
+            // 主题底色由 VectorTextBoxStyle 提供：构造函数里设的是本地值，会压过样式，行内就改不成透明
             Loaded += VectorTextBox_Loaded;
         }
 
         public void UpdateBorderColorByBackgroundColor()
         {
+            // 透明主题（行内"不带底色"的用法）：配色交给 XAML，别再刷掉 Background/BorderBrush
+            if (ThemeBackground is SolidColorBrush { Color.A: 0 }) return;
             if (ThemeBackground is SolidColorBrush themeBrush)
             {
                 Background = new SolidColorBrush(themeBrush.Color);

@@ -3,6 +3,7 @@ using MinecraftLanguageModelLibrary.Data;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace CBHK.Utility.Data.DTOBuilder
@@ -58,16 +59,19 @@ namespace CBHK.Utility.Data.DTOBuilder
                     Dictionary<string, MetaValue> ownFeatures = target.FeatureMap is null ? [] : new(target.FeatureMap);
                     target.CopyFrom(definitionInstance);
                     target.SetRequired(isRequired);
-                    target.FeatureMap ??= [];
-                    foreach (KeyValuePair<string, MetaValue> pair in ownFeatures)
-                    {
-                        target.FeatureMap[pair.Key] = pair.Value;
-                    }
+                    //版本门控逐节点独立：定义体的 since/until 不搬到使用点上
+                    MCDocumentMetaTypeDTOHelper.ApplyOwnFeatures(target, ownFeatures);
+                    //CopyFrom 只拷集合引用，子级仍指着定义实例：不补父链的话，
+                    //同级字段驱动的调度器重解析会去定义实例上找宿主，切换静默失效
+                    MCDocumentMetaTypeDTOHelper.AttachParentLinks(target);
                     if (definitionInstance.Path?.TargetPath.Length > 0)
                     {
                         //定义体内部的名字要在定义所在的文档命名空间里解析
                         target.Path = new(definitionInstance.Path.TargetPath);
                     }
+                    //替换出来的子树要带上刚建的绑定作用域：否则内部 `to T` 这类泛型目标拿不到实参，
+                    //调度解析失败后静默退化成 Any（表现为一行没有编辑器的空节点）
+                    GenericDTOBuilder.AttachBindingScopeRecursively(target, target.BindingScope);
                 }
             }
             #endregion
@@ -78,7 +82,9 @@ namespace CBHK.Utility.Data.DTOBuilder
                 #region 处理ID
                 List<string> EnumOptionList = [];
                 //解析id键对应的文档资源
-                if (target.FeatureMap.TryGetValue("id", out MetaValue idObject))
+                //动态 map（[K]: V）的 id 属于它的键：这里把整个 map 改成枚举会吃掉 map 结构，
+                //交给 Tuple 构建器去建键选择器（键自己的 id 由它解析）
+                if (target.FeatureMap.TryGetValue("id", out MetaValue idObject) && target.TypeKind is not MetaTypeKind.Tuple)
                 {
                     MetaTypeEditorFieldDTO enumDTO = new()
                     {
@@ -111,87 +117,13 @@ namespace CBHK.Utility.Data.DTOBuilder
 
                     EnumOptionList.Insert(0, "- unset -");
 
-                    //提取简单数据
-                    if (idObject.TypeValue?.LiteralValue is not null && resource.RunningDataObject.TryGetValue(version, out JToken versionToken) && versionToken.SelectToken(idObject.TypeValue.LiteralValue.ToString().Trim('"')) is JArray literalResourceArray)
-                    {
-                        EnumOptionList.AddRange(literalResourceArray.Values<string>());
-                    }
-                    //提取复合数据
-                    else if (idObject.Kind is MetaValueKind.Tuple && idObject.Members is not null)
-                    {
-                        #region 收集数据模型
-                        MetaNamedValue registryValue = idObject.Members.FirstOrDefault(item => item.Name == "registry");
-                        MetaNamedValue pathValue = idObject.Members.FirstOrDefault(item => item.Name == "path");
-                        MetaNamedValue excludeValue = idObject.Members.FirstOrDefault(item => item.Name == "exclude");
-                        MetaNamedValue includeValue = idObject.Members.FirstOrDefault(item => item.Name == "include");
-                        MetaNamedValue prefixValue = idObject.Members.FirstOrDefault(item => item.Name == "prefix");
-                        MetaNamedValue suffixValue = idObject.Members.FirstOrDefault(item => item.Name == "suffix");
-                        string registryValueString = registryValue?.Value?.TypeValue?.LiteralValue is not null ? registryValue.Value.TypeValue.LiteralValue.ToString() : "";
-                        #endregion
-
-                        #region 提取包含列表与排除列表
-                        HashSet<string> excludeValueStringList = [];
-                        HashSet<string> includeValueStringList = [];
-
-                        if (excludeValue?.Value?.Items is not null)
-                        {
-                            string text = "";
-                            for (int j = 0; j < excludeValue.Value.Items.Count; j++)
-                            {
-                                text = excludeValue.Value.Items[j].TypeValue.LiteralValue.ToString();
-                                excludeValueStringList.Add(text);
-                            }
-                        }
-                        if (includeValue?.Value?.Items is not null)
-                        {
-                            string text = "";
-                            for (int j = 0; j < includeValue.Value.Items.Count; j++)
-                            {
-                                text = includeValue.Value.Items[j].TypeValue.LiteralValue.ToString();
-                                includeValueStringList.Add(text);
-                            }
-                        }
-                        #endregion
-
-                        #region 提取前后缀
-                        string prefixValueString = prefixValue?.Value?.TypeValue?.LiteralValue is not null ? prefixValue.Value.TypeValue.LiteralValue.ToString() : "";
-                        string suffixValueString = suffixValue?.Value?.TypeValue?.LiteralValue is not null ? suffixValue.Value.TypeValue.LiteralValue.ToString() : "";
-                        #endregion
-
-                        #region 添加目标资源数组、处理添加与删除列表
-                        if (!string.IsNullOrEmpty(registryValueString) && resource.RunningDataObject.TryGetValue(version, out versionToken) && versionToken.SelectToken(registryValueString) is JArray targetRegistryArray)
-                        {
-                            //路径过滤
-                            HashSet<string> pathedEnumValueSet = [.. targetRegistryArray.Values<string>()];
-                            if (pathValue is not null && pathValue.Value?.TypeValue?.LiteralValue is not null)
-                            {
-                                string targetPathString = pathValue.Value.TypeValue.LiteralValue.ToString();
-                                EnumOptionList.AddRange(pathedEnumValueSet.Where(item => item.StartsWith(targetPathString)));
-                            }
-                            else
-                            {
-                                EnumOptionList.AddRange(targetRegistryArray.Values<string>());
-                            }
-                        }
-
-                        //删除排除列表的所有成员
-                        EnumOptionList.RemoveAll(excludeValueStringList.Contains);
-                        //添加包含列表的所有成员
-                        EnumOptionList.AddRange(includeValueStringList);
-                        #endregion
-
-                        #region 添加前缀与后缀
-                        if (!string.IsNullOrEmpty(prefixValueString) || !string.IsNullOrEmpty(suffixValueString))
-                        {
-                            for (int j = 1; j < EnumOptionList.Count; j++)
-                            {
-                                EnumOptionList[j] = prefixValueString + EnumOptionList[j] + suffixValueString;
-                            }
-                        }
-                        #endregion
-                    }
+                    //提取注册表数据：简单 id 与复合 id（registry/path/include/exclude/prefix/suffix）共用同一份收集逻辑
+                    EnumOptionList.AddRange(CompoundGenericMetaValueParser.ParseIdOptionNames(resource, version, idObject));
 
                     #region 添加处理完毕的枚举列表
+                    //同一节点可能被反复解释（切换分支时复用），每次重建而不是追加，否则选项会不断累积
+                    enumDTO.EnumOptionList ??= [];
+                    enumDTO.EnumOptionList.Clear();
                     if (EnumOptionList[0].Contains('='))
                     {
                         for (int j = 0; j < EnumOptionList.Count; j++)
@@ -228,7 +160,8 @@ namespace CBHK.Utility.Data.DTOBuilder
                 #endregion
 
                 #region 识别颜色资源
-                if (target.FeatureMap.TryGetValue("color", out MetaValue colorObject) && colorObject is not null)
+                //列表形态的颜色（如 [float] @ 4）保留列表编辑器，不压成单值颜色，否则元素会丢
+                if (target.ElementType is null && target.FeatureMap.TryGetValue("color", out MetaValue colorObject) && colorObject is not null)
                 {
                     //属性的值可能是类型、字面量或列表，统一取出颜色种类名（hex_rgb、named 等）
                     string colorType = colorObject.Kind switch
@@ -261,27 +194,43 @@ namespace CBHK.Utility.Data.DTOBuilder
                     {
                         target.SelectedUnionChildren ??= [];
                         target.SelectedUnionChildren.Add(dispatchResultDTO);
+                            dispatchResultDTO.Parent = target;
                     }
                     else
                     {
                         //调度结果物化进本节点，避免多一层调度器外壳
+                        target.IsVisible = true;
                         string fieldName = target.FieldName;
+                        string typeName = target.TypeName;
                         bool isRequired = target.IsRequired;
                         DocumentPath path = target.Path;
                         Dictionary<string, MetaValue> featureMap = target.FeatureMap;
                         target.CopyFrom(dispatchResultDTO);
-                        target.FieldName = fieldName;
+                        //本节点无名时沿用调度结果自带的字段名：那正是目标定义里的外层字段
+                        //（Conditions<C> 的 conditions），强行写回空名会把它变成一行无名节点
+                        target.FieldName = string.IsNullOrEmpty(fieldName) ? target.FieldName : fieldName;
+                        //调度结果自带的目标类型名不能被继承，否则本节点会被当成别名再次展开，调度器身份丢失
+                        target.TypeName = typeName;
                         target.SetRequired(isRequired);
                         target.Path ??= path;
                         target.FeatureMap = featureMap;
                         target.OriginKind = MetaTypeKind.Dispatch;
+                        //同上：调度结果物化进本节点后，子级的父链要指向本节点而不是调度结果实例
+                        MCDocumentMetaTypeDTOHelper.AttachParentLinks(target);
                     }
                 }
-                else if (!string.IsNullOrEmpty(target.FieldName))
+                else if (!string.IsNullOrEmpty(target.FieldName) && target.TypeKind is MetaTypeKind.Dispatch)
                 {
                     //调度目标解析失败时按 Any 走完管线，调度器特征保留以便后续重新解释
+                    //（已经物化出结构的节点不回退成 Any：重新解释失败不该丢掉上一次的解释结果）
                     target.OriginKind = MetaTypeKind.Dispatch;
                     target.TypeKind = MetaTypeKind.Any;
+                }
+                else
+                {
+                    //无名调度器（...resource[[field]] 展开）没解析出目标时没有任何可编辑内容，
+                    //留着就是一行空壳；隐藏掉，等同级枚举定值后重解析成功再显示出来
+                    target.IsVisible = false;
                 }
             } 
             #endregion
@@ -290,6 +239,22 @@ namespace CBHK.Utility.Data.DTOBuilder
             if (target.EnumOptionList?.Count > 0 && target.SelectedEnumOption is null)
             {
                 target.SelectedEnumOption = target.EnumOptionList[0];
+            }
+            #endregion
+
+            #region 按当前成员重建联合名称列表
+            //成员（尤其跨层合并来的）可能在构建过程中才定型，名称列表要跟着最终成员走
+            MCDocumentMetaTypeDTOHelper.RefreshUnionNameLists(target);
+            #endregion
+
+            #region 联合节点要能响应成员切换：补上初始选中项与切换事件
+            if (target.TypeKind is MetaTypeKind.Union && target.SelectedUnionItemUpdated is null)
+            {
+                if (target.SelectedUnionTypeName is null && target.UnionTypeNameList?.Count > 0)
+                {
+                    target.SelectedUnionTypeName = target.UnionTypeNameList[0];
+                }
+                target.SelectedUnionItemUpdated = () => helper.SelectedUnionItemUpdated(target, version);
             }
             #endregion
         }

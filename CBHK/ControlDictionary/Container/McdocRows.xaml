@@ -1,0 +1,1031 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
+    xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
+    xmlns:cbhkData="clr-namespace:CBHK.Utility.Data"
+    xmlns:data="clr-namespace:CBHK.Utility.Data.Mcdoc"
+    xmlns:visualUtility="clr-namespace:CBHK.Utility.Visual.TreeView">
+
+    <!--
+        外观走项目控件库（Vector 控件 + CommonForeground/CommonBackground），
+        不照搬 misode 的配色；功能（编辑器种类 / 按钮语义 / 层级）与之对齐。
+    -->
+
+    <!--  行容器：去掉系统蓝框，选中/悬停用主题底色  -->
+    <Style x:Key="McdocRowItemContainerStyle" TargetType="ListBoxItem">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border
+                        x:Name="root"
+                        Background="{TemplateBinding Background}"
+                        BorderThickness="0"
+                        CornerRadius="5">
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="root" Property="Background" Value="{DynamicResource CommonBackground}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="root" Property="Background" Value="{DynamicResource CommonBackground}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        行内控件统一"透明背景"：主题底色只留在文字/描边上，不再给每一格铺一块白底或橙底。
+        VectorTextBox 的底色由 ThemeBackground 在 Loaded/鼠标离开时覆写，所以 Background 与
+        ThemeBackground 两个都要设，缺一个就会被控件自己刷回去。
+    -->
+    <Style x:Key="MdocBareButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <ContentPresenter />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style
+        x:Key="MdocTransparentTextBoxStyle"
+        BasedOn="{StaticResource VectorTextBoxStyle}"
+        TargetType="{x:Type Input:VectorTextBox}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="ThemeBackground" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CommonForeground}" />
+    </Style>
+
+    <Style
+        x:Key="MdocTransparentComboBoxStyle"
+        BasedOn="{StaticResource VectorTextComboBoxStyle}"
+        TargetType="{x:Type VectorComboBox:VectorTextComboBox}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CommonForeground}" />
+    </Style>
+
+    <Style
+        x:Key="MdocTransparentNumberStyle"
+        BasedOn="{StaticResource VectorNumbericUpDownStyle}"
+        TargetType="{x:Type Input:VectorNumbericUpDown}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CommonForeground}" />
+    </Style>
+
+    <!--  展开按钮：矢量箭头（复用 RightArrow 几何；DrawingImage 不能给 Path.Data）  -->
+    <Style x:Key="McdocRowExpanderStyle" TargetType="ToggleButton">
+        <Setter Property="Width" Value="16" />
+        <Setter Property="Height" Value="16" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="Transparent">
+                        <Path
+                            x:Name="chevron"
+                            Width="5"
+                            Height="9"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Data="{DynamicResource RightArrow}"
+                            Fill="{DynamicResource CommonForeground}"
+                            Opacity="0.75"
+                            RenderTransformOrigin="0.5,0.5"
+                            Stretch="Uniform">
+                            <Path.RenderTransform>
+                                <RotateTransform Angle="0" />
+                            </Path.RenderTransform>
+                        </Path>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="chevron" Property="RenderTransform">
+                                <Setter.Value>
+                                    <RotateTransform Angle="90" />
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="McdocRowLabelStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource CommonForeground}" />
+        <Setter Property="Margin" Value="6,0" />
+        <Setter Property="Opacity" Value="0.78" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!--  动作按钮：平时隐藏，悬停该行才显现；Visibility 仍由业务决定，这里只动 Opacity 以免布局跳动  -->
+    <Style x:Key="McdocActionGroupStyle" TargetType="StackPanel">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="Margin" Value="4,0,0,0" />
+    </Style>
+
+    <!--  图标的公共定值：项目控件库的 Icon 只吃 Geometry  -->
+    <Style x:Key="McdocRowIconStyle" TargetType="Path">
+        <Setter Property="Width" Value="14" />
+        <Setter Property="Height" Value="14" />
+        <Setter Property="Fill" Value="{DynamicResource CommonForeground}" />
+        <Setter Property="Stretch" Value="Uniform" />
+    </Style>
+
+    <!--  行内小图标：一律内联 Vector path（Icon.xaml 多为 DrawingImage/png，不能给 Path.Data）  -->
+    <Geometry x:Key="MdocSyncGeometry">F1 M 11,2 A 9,9 0 1 0 20,11 L 17,11 A 6,6 0 1 1 11,5 L 11,8 L 16,4 L 11,0 Z</Geometry>
+    <Geometry x:Key="MdocArrowUpGeometry">M 0,10 L 6,0 L 12,10 Z</Geometry>
+    <Geometry x:Key="MdocArrowDownGeometry">M 0,0 L 6,10 L 12,0 Z</Geometry>
+    <Geometry x:Key="MdocDuplicateGeometry">F1 M 0,0 L 8,0 L 8,8 L 0,8 Z M 4,4 L 12,4 L 12,12 L 4,12 Z</Geometry>
+    <Geometry x:Key="MdocClearGeometry">F1 M 0,3 L 12,3 L 12,12 L 0,12 Z M 2,5 L 10,5 L 10,10 L 2,10 Z</Geometry>
+    <Geometry x:Key="MdocRenameGeometry">M 1,11 L 1,13 L 3,13 L 12,4 L 10,2 Z M 11,1 L 13,3 L 12,4 L 10,2 Z</Geometry>
+    <Geometry x:Key="MdocTrashGeometry">F1 M 2,2 L 12,2 L 12,4 L 2,4 Z M 3,5 L 11,5 L 10,13 L 4,13 Z</Geometry>
+
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <cbhkData:HexToBrushConverter x:Key="HexToBrushConverter" />
+    <cbhkData:HexStringToColorConverter x:Key="HexStringToColorConverter" />
+    <cbhkData:CategoryToBrushConverter x:Key="CategoryToBrushConverter" />
+
+    <!--  ===== 值编辑器（DataContext = McdocTreeNode）=====  -->
+    <DataTemplate x:Key="McdocEmptyEditor">
+        <Border Width="0" Height="0" />
+    </DataTemplate>
+
+    <!--
+        misode 的 <input list=datalist>：白名单外 #[id] 既能手输任意 id，也能从候选里选。
+        控件库里 VectorTextComboBox 的模板没有 PART_EditableTextBox（IsEditable 的触发器被注释掉了），
+        所以这里用「文本框 + 窄候选下拉」的组合，不擅自改控件字典。
+    -->
+    <DataTemplate x:Key="McdocTextEditor">
+        <Grid Width="236" Height="34">
+            <Input:VectorTextBox
+                x:Name="plainEditor"
+                Height="34"
+                VerticalAlignment="Center"
+                FontSize="16"
+                Style="{StaticResource MdocTransparentTextBoxStyle}"
+                Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
+            <!--  有候选就只给一件控件：再加一个文本框是多余的（需要手输就改右侧 JSON）  -->
+            <Grid x:Name="customSelectEditor" Visibility="Collapsed">
+                <VectorComboBox:VectorTextComboBox
+                    Width="236"
+                    Height="34"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    DisplayMemberPath="Text"
+                    Foreground="{DynamicResource CommonForeground}"
+                    ItemsSource="{Binding EnumOptionList, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                    SelectedItem="{Binding SelectedEnumOption, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                    Style="{StaticResource MdocTransparentComboBoxStyle}"
+                    ToolTip="从候选里选一个" />
+            </Grid>
+        </Grid>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding AllowCustomValue}" Value="True">
+                <Setter TargetName="plainEditor" Property="Visibility" Value="Collapsed" />
+                <Setter TargetName="customSelectEditor" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <!--  misode NumericHead：数字输入 + （#[random] 时）重掷按钮  -->
+    <DataTemplate x:Key="McdocNumberEditor">
+        <StackPanel Orientation="Horizontal">
+            <!--  减 / 加：直接走命令写回文档（控件自带的步进不会触发 ValueChanged，JSON 永远不更新）  -->
+            <VectorButton:VectorFlatIconButton
+                Command="{Binding DecreaseCommand}"
+                Icon="{DynamicResource MdocArrowDownGeometry}"
+                IconBrush="{DynamicResource CommonForeground}"
+                IconHeight="14"
+                IconMargin="5"
+                IconWidth="14"
+                Style="{DynamicResource VectorFlatIconButtonStyle}"
+                ToolTip="减一（写回文档）" />
+            <!--  自绘文本输入：清空即删键；行内不再出现"控件自带的左右箭头"（它们不通知绑定）  -->
+            <TextBox
+                Width="140"
+                Height="34"
+                Padding="6,0"
+                VerticalContentAlignment="Center"
+                Background="Transparent"
+                BorderBrush="{DynamicResource CommonForeground}"
+                BorderThickness="1"
+                Foreground="{DynamicResource CommonForeground}"
+                Text="{Binding NumberText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <VectorButton:VectorFlatIconButton
+                Command="{Binding IncreaseCommand}"
+                Icon="{DynamicResource MdocArrowUpGeometry}"
+                IconBrush="{DynamicResource CommonForeground}"
+                IconHeight="14"
+                IconMargin="5"
+                IconWidth="14"
+                Style="{DynamicResource VectorFlatIconButtonStyle}"
+                ToolTip="加一（写回文档）" />
+            <VectorButton:VectorFlatIconButton
+                Command="{Binding RegenerateSeedCommand}"
+                Icon="{DynamicResource MdocSyncGeometry}"
+                IconBrush="{DynamicResource CommonForeground}"
+                IconHeight="15"
+                IconMargin="5"
+                IconWidth="15"
+                Style="{DynamicResource VectorFlatIconButtonStyle}"
+                ToolTip="重新生成随机值"
+                Visibility="{Binding RandomButtonVisibility}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <!--  misode BooleanHead：False / True 两个按钮，选中态高亮  -->
+    <DataTemplate x:Key="McdocBoolEditor">
+        <StackPanel Orientation="Horizontal">
+            <VectorButton:VectorToggleTextButton
+                Height="34"
+                FontSize="14"
+                IsChecked="{Binding IsFalse, Mode=TwoWay}"
+                OriginBottomHeight="4"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="False" />
+            <VectorButton:VectorToggleTextButton
+                Height="34"
+                FontSize="14"
+                IsChecked="{Binding IsTrue, Mode=TwoWay}"
+                OriginBottomHeight="4"
+                Style="{DynamicResource VectorToggleTextButtonStyle}"
+                Text="True" />
+        </StackPanel>
+    </DataTemplate>
+
+    <!--  枚举 / #[id] 注册表引用：项目库下拉  -->
+    <DataTemplate x:Key="McdocEnumEditor">
+        <VectorComboBox:VectorTextComboBox
+            Width="236"
+            Height="34"
+            VerticalAlignment="Center"
+            Background="Transparent"
+            DisplayMemberPath="Text"
+            Foreground="{DynamicResource CommonForeground}"
+            ItemsSource="{Binding EnumOptionList, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+            SelectedItem="{Binding SelectedEnumOption, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+            Style="{StaticResource MdocTransparentComboBoxStyle}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocInlineTupleEditor">
+        <ItemsControl ItemsSource="{Binding Items}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Input:VectorNumbericUpDown
+                        Width="90"
+                        Height="34"
+                        Margin="2,0"
+                        Style="{StaticResource MdocTransparentNumberStyle}"
+                        Text="{Binding Value}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DataTemplate>
+
+    <!--  misode AnyHead：先选 JSON 类型，再给该类型的编辑器  -->
+    <DataTemplate x:Key="McdocRawEditor">
+        <StackPanel Orientation="Horizontal">
+            <VectorComboBox:VectorTextComboBox
+                Width="130"
+                Height="34"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                DisplayMemberPath="Text"
+                Foreground="{DynamicResource CommonForeground}"
+                ItemsSource="{Binding AnyTypeOptions, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                SelectedItem="{Binding SelectedAnyType, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                Style="{StaticResource MdocTransparentComboBoxStyle}" />
+            <Input:VectorTextBox
+                Width="236"
+                Height="34"
+                VerticalAlignment="Center"
+                Style="{StaticResource MdocTransparentTextBoxStyle}"
+                Text="{Binding RawJson, UpdateSourceTrigger=LostFocus}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocColorEditor">
+        <StackPanel Orientation="Horizontal">
+            <Border
+                Width="24"
+                Height="24"
+                Margin="2,0,4,0"
+                VerticalAlignment="Center"
+                Background="{Binding Value, Converter={StaticResource HexToBrushConverter}}"
+                BorderBrush="{DynamicResource CommonForeground}"
+                BorderThickness="1"
+                CornerRadius="3" />
+            <Input:VectorTextBox
+                Width="160"
+                Height="34"
+                Style="{StaticResource MdocTransparentTextBoxStyle}"
+                Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocEditorPreview">
+        <TextBlock
+            Margin="5,0"
+            VerticalAlignment="Center"
+            FontSize="13"
+            Foreground="{DynamicResource CommonForeground}"
+            Text="{Binding PreviewText}"
+            TextTrimming="CharacterEllipsis" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocColorPickerEditor">
+        <Input:VectorColorPicker
+            Width="220"
+            Height="34"
+            VerticalAlignment="Center"
+            SelectedColor="{Binding Value, Mode=TwoWay, Converter={StaticResource HexStringToColorConverter}}"
+            Style="{DynamicResource VectorColorPickerStyle}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocIconSelectEditor">
+        <StackPanel Orientation="Horizontal">
+            <!--
+                ItemIdPreview：有真实纹理就画图，没有就用确定性瓷砖（id 的 hash → 色相 + 首字母）。
+                这一格的 DataContext 是节点，预览相关的属性在行上，所以走 RelativeSource 取行的。
+            -->
+            <Grid
+                Width="26"
+                Height="26"
+                Margin="2,0,4,0"
+                VerticalAlignment="Center"
+                ToolTip="{Binding DataContext.Node.Value, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                Visibility="{Binding DataContext.ShowItemPreview, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource BoolToVisibility}}">
+                <Image
+                    RenderOptions.BitmapScalingMode="HighQuality"
+                    Source="{Binding DataContext.ItemTexture, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                    Stretch="Uniform"
+                    Visibility="{Binding DataContext.ItemImageVisibility, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                <Border
+                    Background="{Binding DataContext.ItemTileBrush, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                    BorderBrush="{DynamicResource CommonForeground}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Visibility="{Binding DataContext.ItemTileVisibility, RelativeSource={RelativeSource AncestorType=ListBoxItem}}">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource CommonForeground}"
+                        Text="{Binding DataContext.ItemPreviewText, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                </Border>
+            </Grid>
+            <VectorComboBox:VectorIconTextComboBox
+                Width="260"
+                Height="34"
+                VerticalAlignment="Center"
+                DisplayMemberPath="Name"
+                Foreground="{DynamicResource CommonForeground}"
+                ItemsSource="{Binding EnumOptionList}"
+                SelectedItem="{Binding SelectedEnumOption, Mode=TwoWay}"
+                Style="{DynamicResource VectorIconTextComboBoxStyle}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <data:McdocValueEditorTemplateSelector
+        x:Key="McdocValueEditorTemplateSelector"
+        BoolEditor="{StaticResource McdocBoolEditor}"
+        ColorEditor="{StaticResource McdocColorEditor}"
+        ColorPickerEditor="{StaticResource McdocColorPickerEditor}"
+        EmptyEditor="{StaticResource McdocEmptyEditor}"
+        EnumEditor="{StaticResource McdocEnumEditor}"
+        IconSelectEditor="{StaticResource McdocIconSelectEditor}"
+        InlineTupleEditor="{StaticResource McdocInlineTupleEditor}"
+        NumberEditor="{StaticResource McdocNumberEditor}"
+        Preview="{StaticResource McdocEditorPreview}"
+        RawEditor="{StaticResource McdocRawEditor}"
+        TextEditor="{StaticResource McdocTextEditor}" />
+
+    <!--  行首标记：诊断 / 未知字段 / 颜色（misode 的 Errors + 色块；一格竖排，行高 30 够放两个）  -->
+    <DataTemplate x:Key="MdocRowMarkerTemplate">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock
+                FontSize="12"
+                FontWeight="Bold"
+                Foreground="#F0AD4E"
+                Text="?"
+                ToolTip="未在 schema 中声明"
+                Visibility="{Binding UnknownBadgeVisibility}" />
+            <Border
+                Width="10"
+                Height="10"
+                Margin="0,1"
+                Background="{Binding ColorSwatchBrush}"
+                BorderBrush="{DynamicResource CommonForeground}"
+                BorderThickness="1"
+                CornerRadius="2"
+                ToolTip="{Binding Node.Value}"
+                Visibility="{Binding ColorBadgeVisibility}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <!--  misode Key：标签可点开 doc 面板；有文档时带下划线  -->
+    <DataTemplate x:Key="MdocKeyTemplate">
+        <Grid>
+            <!--  只有真的有文档时才是"可点的标签"：没有文档不给手型、不弹空面板  -->
+            <Button
+                Command="{Binding ToggleDocCommand}"
+                Focusable="False"
+                IsHitTestVisible="{Binding HasDocumentation}">
+                <Button.Style>
+                    <Style BasedOn="{StaticResource MdocBareButtonStyle}" TargetType="Button">
+                        <Setter Property="Cursor" Value="Arrow" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasDocumentation}" Value="True">
+                                <Setter Property="Cursor" Value="Hand" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <TextBlock Text="{Binding DisplayLabel}">
+                    <TextBlock.Style>
+                        <Style BasedOn="{StaticResource McdocRowLabelStyle}" TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasDocumentation}" Value="True">
+                                    <Setter Property="TextDecorations" Value="Underline" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Button>
+            <Popup
+                AllowsTransparency="True"
+                IsOpen="{Binding IsDocOpen, Mode=TwoWay}"
+                Placement="Bottom"
+                StaysOpen="False">
+                <Border
+                    MaxWidth="420"
+                    Padding="8,6"
+                    Background="{DynamicResource CommonBackground}"
+                    BorderBrush="{DynamicResource CommonForeground}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                    <TextBlock
+                        data:McdocMarkdown.Source="{Binding Documentation}"
+                        FontSize="12"
+                        Foreground="{DynamicResource CommonForeground}"
+                        TextWrapping="Wrap" />
+                </Border>
+            </Popup>
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocAddTailRow">
+        <Grid
+            MinHeight="30"
+            Margin="{Binding Indent}"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <VectorButton:VectorFlatIconButton
+                Grid.Column="2"
+                Command="{Binding AddTailCommand}"
+                Icon="{DynamicResource TreeNodePlusGeometry}"
+                IconBrush="{DynamicResource CommonForeground}"
+                IconHeight="15"
+                IconMargin="5"
+                IconWidth="15"
+                Style="{DynamicResource VectorFlatIconButtonStyle}"
+                ToolTip="追加一条"
+                Visibility="{Binding AddTailVisibility}" />
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocPlainRow">
+        <Grid
+            MinHeight="30"
+            Margin="{Binding Indent}"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="Auto" MinWidth="72" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ContentControl
+                Grid.Column="0"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocRowMarkerTemplate}" />
+            <ToggleButton
+                Grid.Column="1"
+                IsChecked="{Binding IsExpanded, Mode=TwoWay}"
+                Style="{StaticResource McdocRowExpanderStyle}"
+                Visibility="{Binding ExpanderVisibility}" />
+            <ContentControl
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocKeyTemplate}" />
+            <Border
+                Grid.Column="3"
+                VerticalAlignment="Center"
+                BorderBrush="{Binding ErrorBorderBrush}"
+                BorderThickness="1">
+                <StackPanel Orientation="Horizontal">
+                    <ContentControl
+                        VerticalAlignment="Center"
+                        Content="{Binding EditorContent}"
+                        ContentTemplateSelector="{StaticResource McdocValueEditorTemplateSelector}" />
+                    <Grid Visibility="{Binding DiagnosticBadgeVisibility}">
+                        <Button
+                            Command="{Binding ToggleDiagnosticsCommand}"
+                            Cursor="Hand"
+                            Focusable="False"
+                            Style="{StaticResource MdocBareButtonStyle}">
+                            <TextBlock
+                                Margin="4,0"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                FontWeight="Bold"
+                                Foreground="{Binding ErrorBrush}"
+                                Text="!"
+                                ToolTip="{Binding DiagnosticSummary}" />
+                        </Button>
+                        <Popup
+                            AllowsTransparency="True"
+                            IsOpen="{Binding IsDiagnosticsOpen, Mode=TwoWay}"
+                            Placement="Bottom"
+                            StaysOpen="False">
+                            <Border
+                                MaxWidth="420"
+                                Padding="8,6"
+                                Background="{DynamicResource CommonBackground}"
+                                BorderBrush="{Binding ErrorBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                                <ItemsControl ItemsSource="{Binding Diagnostics}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource CommonForeground}"
+                                                Text="{Binding}"
+                                                TextWrapping="Wrap" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <StackPanel Grid.Column="4" Style="{StaticResource McdocActionGroupStyle}">
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding AddTopCommand}"
+                    Icon="{DynamicResource TreeNodePlusGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="在顶部新增"
+                    Visibility="{Binding ListAddTopVisibility}" />
+                <!--  misode 的列表行只有一个 add（add_top）；追加到尾部走 AddBottomCommand，不占行的按钮位  -->
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding SetDefaultCommand}"
+                    Icon="{DynamicResource TreeNodePlusGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="设默认值"
+                    Visibility="{Binding SetDefaultVisibility}" />
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding MoveUpCommand}"
+                    Icon="{DynamicResource MdocArrowUpGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="上移"
+                    Visibility="{Binding ItemActionsVisibility}" />
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding MoveDownCommand}"
+                    Icon="{DynamicResource MdocArrowDownGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="下移"
+                    Visibility="{Binding ItemActionsVisibility}" />
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding DuplicateCommand}"
+                    Icon="{DynamicResource MdocDuplicateGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="复制这一项"
+                    Visibility="{Binding DuplicateVisibility}" />
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding RemoveSelfCommand}"
+                    Icon="{DynamicResource TreeNodeMinusGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="删除这一项"
+                    Visibility="{Binding RemoveSelfVisibility}" />
+                <!--  可选且有子级：⊕ 让位给「清空」，同一行不再出现第二个删除入口  -->
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding ClearCommand}"
+                    Icon="{DynamicResource MdocClearGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="14"
+                    IconMargin="5"
+                    IconWidth="14"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="清空（把该键从文档里去掉）"
+                    Visibility="{Binding ClearVisibility}" />
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding RemoveFieldCommand}"
+                    Icon="{DynamicResource MdocTrashGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="删除字段"
+                    Visibility="{Binding RemoveFieldVisibility}" />
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocUnionRow">
+        <Grid
+            MinHeight="30"
+            Margin="{Binding Indent}"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="Auto" MinWidth="72" />
+                <ColumnDefinition
+                    Width="Auto"
+                    MinWidth="120"
+                    MaxWidth="220" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ContentControl
+                Grid.Column="0"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocRowMarkerTemplate}" />
+            <ToggleButton
+                Grid.Column="1"
+                IsChecked="{Binding IsExpanded, Mode=TwoWay}"
+                Style="{StaticResource McdocRowExpanderStyle}"
+                Visibility="{Binding ExpanderVisibility}" />
+            <ContentControl
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocKeyTemplate}" />
+            <VectorComboBox:VectorTextComboBox
+                Grid.Column="3"
+                Height="34"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                DisplayMemberPath="Text"
+                Foreground="{DynamicResource CommonForeground}"
+                ItemsSource="{Binding UnionOptions, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                SelectedItem="{Binding SelectedUnionOption, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                Style="{StaticResource MdocTransparentComboBoxStyle}" />
+            <ContentControl
+                Grid.Column="4"
+                VerticalAlignment="Center"
+                Content="{Binding EditorContent}"
+                ContentTemplateSelector="{StaticResource McdocValueEditorTemplateSelector}" />
+            <StackPanel Grid.Column="5" Style="{StaticResource McdocActionGroupStyle}">
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding Node.AddItemCommand}"
+                    Icon="{DynamicResource TreeNodePlusGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="新增"
+                    Visibility="{Binding ListButtonsVisibility}" />
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding RemoveFieldCommand}"
+                    Icon="{DynamicResource MdocTrashGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="删除"
+                    Visibility="{Binding RemoveFieldVisibility}" />
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocKeyedRow">
+        <Grid
+            MinHeight="30"
+            Margin="{Binding Indent}"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="Auto" MinWidth="72" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ContentControl
+                Grid.Column="0"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocRowMarkerTemplate}" />
+            <ToggleButton
+                Grid.Column="1"
+                IsChecked="{Binding IsExpanded, Mode=TwoWay}"
+                Style="{StaticResource McdocRowExpanderStyle}"
+                Visibility="{Binding ExpanderVisibility}" />
+            <Grid Grid.Column="2">
+                <!--  条目行的键以标签显示（键编辑框收起时必须有人顶上去）  -->
+                <ContentControl
+                    Content="{Binding}"
+                    ContentTemplate="{StaticResource MdocKeyTemplate}"
+                    Visibility="{Binding KeyLabelVisibility}" />
+                <data:McdocKeyBox
+                    Height="34"
+                    HorizontalAlignment="Stretch"
+                    Style="{StaticResource MdocTransparentTextBoxStyle}"
+                    Text="{Binding Node.EditingKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Visibility="{Binding KeyTextVisibility}" />
+                <VectorComboBox:VectorTextComboBox
+                    Height="34"
+                    HorizontalAlignment="Stretch"
+                    Background="Transparent"
+                    DisplayMemberPath="Text"
+                    Foreground="{DynamicResource CommonForeground}"
+                    ItemsSource="{Binding KeyOptions, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                    SelectedItem="{Binding SelectedKey, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                    Style="{StaticResource MdocTransparentComboBoxStyle}"
+                    Visibility="{Binding KeyComboVisibility}" />
+            </Grid>
+            <Border
+                Grid.Column="3"
+                VerticalAlignment="Center"
+                BorderBrush="{Binding ErrorBorderBrush}"
+                BorderThickness="1">
+                <StackPanel Orientation="Horizontal">
+                    <ContentControl
+                        VerticalAlignment="Center"
+                        Content="{Binding EditorContent}"
+                        ContentTemplateSelector="{StaticResource McdocValueEditorTemplateSelector}" />
+                    <Grid Visibility="{Binding DiagnosticBadgeVisibility}">
+                        <Button
+                            Command="{Binding ToggleDiagnosticsCommand}"
+                            Cursor="Hand"
+                            Focusable="False"
+                            Style="{StaticResource MdocBareButtonStyle}">
+                            <TextBlock
+                                Margin="4,0"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                FontWeight="Bold"
+                                Foreground="{Binding ErrorBrush}"
+                                Text="!"
+                                ToolTip="{Binding DiagnosticSummary}" />
+                        </Button>
+                        <Popup
+                            AllowsTransparency="True"
+                            IsOpen="{Binding IsDiagnosticsOpen, Mode=TwoWay}"
+                            Placement="Bottom"
+                            StaysOpen="False">
+                            <Border
+                                MaxWidth="420"
+                                Padding="8,6"
+                                Background="{DynamicResource CommonBackground}"
+                                BorderBrush="{Binding ErrorBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                                <ItemsControl ItemsSource="{Binding Diagnostics}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource CommonForeground}"
+                                                Text="{Binding}"
+                                                TextWrapping="Wrap" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <StackPanel Grid.Column="4" Style="{StaticResource McdocActionGroupStyle}">
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding Node.AddEntryCommand}"
+                    CommandParameter="{Binding}"
+                    Icon="{DynamicResource TreeNodePlusGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="加入"
+                    Visibility="{Binding AddEntryVisibility}" />
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding RenameKeyCommand}"
+                    Icon="{DynamicResource MdocRenameGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="14"
+                    IconMargin="5"
+                    IconWidth="14"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="重命名这个键"
+                    Visibility="{Binding RenameVisibility}" />
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding RemoveEntryCommand}"
+                    Icon="{DynamicResource TreeNodeMinusGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="移除条目"
+                    Visibility="{Binding RemoveEntryVisibility}" />
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocPlaceholderRow">
+        <Grid
+            MinHeight="30"
+            Margin="{Binding Indent}"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="Auto" MinWidth="72" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ContentControl
+                Grid.Column="0"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocRowMarkerTemplate}" />
+            <Grid Grid.Column="2">
+                <data:McdocKeyBox
+                    Height="34"
+                    HorizontalAlignment="Stretch"
+                    Style="{StaticResource MdocTransparentTextBoxStyle}"
+                    Text="{Binding Node.EditingKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Visibility="{Binding KeyTextVisibility}" />
+                <!--  VectorTextBox 的 WaterMarkerText 在行内看不见（被内容宿主盖住），空键时自己叠一层提示  -->
+                <TextBlock
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    Foreground="{DynamicResource CommonForeground}"
+                    IsHitTestVisible="False"
+                    Opacity="0.55"
+                    Text="新键：先起个名字，再点右侧 +">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Node.EditingKey}" Value="">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <VectorComboBox:VectorTextComboBox
+                    Height="34"
+                    HorizontalAlignment="Stretch"
+                    Background="Transparent"
+                    DisplayMemberPath="Text"
+                    Foreground="{DynamicResource CommonForeground}"
+                    ItemsSource="{Binding KeyOptions, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                    SelectedItem="{Binding SelectedKey, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                    Style="{StaticResource MdocTransparentComboBoxStyle}"
+                    Visibility="{Binding KeyComboVisibility}" />
+            </Grid>
+            <VectorButton:VectorFlatIconButton
+                Grid.Column="3"
+                Command="{Binding Node.AddEntryCommand}"
+                CommandParameter="{Binding}"
+                Icon="{DynamicResource TreeNodePlusGeometry}"
+                IconBrush="{DynamicResource CommonForeground}"
+                IconHeight="15"
+                IconMargin="5"
+                IconWidth="15"
+                Style="{DynamicResource VectorFlatIconButtonStyle}"
+                ToolTip="新增键" />
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="McdocMoreRow">
+        <Grid
+            MinHeight="30"
+            Margin="{Binding Indent}"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ContentControl
+                Grid.Column="0"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocRowMarkerTemplate}" />
+            <TextBlock
+                Grid.Column="2"
+                Margin="6,0"
+                VerticalAlignment="Center"
+                FontSize="13"
+                Foreground="{DynamicResource CommonForeground}"
+                Opacity="0.78"
+                Text="{Binding MoreLabel}" />
+            <StackPanel Grid.Column="3" Style="{StaticResource McdocActionGroupStyle}">
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding ShowMoreCommand}"
+                    Icon="{DynamicResource TreeNodePlusGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="再多显示 50 条" />
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding ShowAllCommandRow}"
+                    Icon="{DynamicResource Checkmark}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="全部显示" />
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
+    <data:McdocRowTemplateSelector
+        x:Key="McdocRowTemplateSelector"
+        AddTailRow="{StaticResource McdocAddTailRow}"
+        KeyedRow="{StaticResource McdocKeyedRow}"
+        MoreRow="{StaticResource McdocMoreRow}"
+        PlaceholderRow="{StaticResource McdocPlaceholderRow}"
+        PlainRow="{StaticResource McdocPlainRow}"
+        UnionRow="{StaticResource McdocUnionRow}" />
+</ResourceDictionary>
+

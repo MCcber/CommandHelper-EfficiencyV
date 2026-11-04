@@ -42,6 +42,7 @@ namespace CBHK.Utility.Data
                 or MetaTypeKind.ByteArray
                 or MetaTypeKind.CompositeARGB
                 or MetaTypeKind.CompositeRGB
+                or MetaTypeKind.NamedColor
                 or MetaTypeKind.DecRGB
                 or MetaTypeKind.DecRGBA
                 or MetaTypeKind.HexARGB

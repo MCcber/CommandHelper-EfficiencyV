@@ -1,4 +1,4 @@
-﻿using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Rendering;
 using System;
 using System.Windows;
@@ -25,6 +25,8 @@ namespace CBHK.Utility.Visual
         #region Method
         public void Draw(TextView textView, DrawingContext drawingContext)
         {
+            // 整篇替换文本（Reload / Reformat）会把锚点变成"已删除"，读 Offset 会抛 InvalidOperationException
+            if (startAnchor is null || endAnchor is null || startAnchor.IsDeleted || endAnchor.IsDeleted) return;
             if (startAnchor.Offset >= endAnchor.Offset) return;
             textView.EnsureVisualLines();
             var document = textView.Document;

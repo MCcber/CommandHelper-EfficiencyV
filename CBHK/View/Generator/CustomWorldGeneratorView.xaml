@@ -1,4 +1,4 @@
-﻿<Container:VectorWindow
+<Container:VectorWindow
     x:Class="CBHK.View.Generator.CustomWorldGeneratorView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,6 +8,8 @@
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CBHK.View.Generator"
+    xmlns:json="clr-namespace:CBHK.Utility.Data.JsonText"
+    xmlns:mcdoc="clr-namespace:CBHK.Utility.Data.Mcdoc"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="自定义世界编辑器"
@@ -40,11 +42,6 @@
                 SelectedIndex="0"
                 SelectedItem="{Binding CurrentVersion}"
                 Style="{StaticResource VectorTextComboBoxStyle}">
-                <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="SelectionChanged">
-                        <behaviors:CallMethodAction MethodName="Version_SelectionChanged" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
-                </behaviors:Interaction.Triggers>
             </VectorComboBox:VectorTextComboBox>
             <VectorComboBox:VectorTextComboBox
                 Grid.Column="1"
@@ -53,32 +50,37 @@
                 SelectedIndex="0"
                 SelectedItem="{Binding CurrentGenerator}"
                 Style="{StaticResource VectorTextComboBoxStyle}">
-                <behaviors:Interaction.Triggers>
-                    <behaviors:EventTrigger EventName="SelectionChanged">
-                        <behaviors:CallMethodAction MethodName="Generator_SelectionChanged" TargetObject="{Binding}" />
-                    </behaviors:EventTrigger>
-                </behaviors:Interaction.Triggers>
             </VectorComboBox:VectorTextComboBox>
         </Grid>
-        <Container:VectorTreeView
-            Grid.Row="1"
-            Grid.Column="0"
+        <DockPanel Grid.Row="1" Grid.Column="0">
+            <ContentControl
+                DockPanel.Dock="Top"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource McdocGeneratorChrome}" />
+            <TextBlock
+                DockPanel.Dock="Bottom"
+                Margin="6,2"
+                FontSize="12"
+                Foreground="{DynamicResource CommonForeground}"
+                Text="{Binding MdocStatus}"
+                TextTrimming="CharacterEllipsis" />
+            <mcdoc:McdocTreeRowView
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             Background="Transparent"
-            BorderThickness="0"
-            ItemTemplateSelector="{StaticResource MCDocumentTreeViewTemplateSelector}"
-            ItemsSource="{Binding TreeViewItemList}"
-            Style="{DynamicResource VectorTreeViewStyle}" />
+            ItemContainerStyle="{StaticResource McdocRowItemContainerStyle}"
+            ItemTemplateSelector="{StaticResource McdocRowTemplateSelector}"
+            ItemsSource="{Binding Rows}"  />
+        </DockPanel>
         <GridSplitter
             Grid.Row="1"
             Grid.Column="1"
             VerticalAlignment="Stretch"
             Background="Transparent"
-            BorderBrush="Gray"
+            BorderBrush="{DynamicResource CommonForeground}"
             BorderThickness="1,0,1,0"
             ResizeBehavior="PreviousAndNext" />
-        <avalonedit:TextEditor
+        <json:JsonTextEditor mcdoc:McdocJsonEditorHost.IsEnabled="True"
             Grid.Row="1"
             Grid.Column="2"
             Margin="5"
@@ -86,21 +88,13 @@
             VerticalAlignment="Stretch"
             Background="Transparent"
             FontFamily="JetBrains Mono"
-            Foreground="White"
+            Foreground="{DynamicResource CommonForeground}"
             HorizontalScrollBarVisibility="Auto"
             IsReadOnly="False"
-            LineNumbersForeground="White"
+            LineNumbersForeground="{DynamicResource CommonForeground}"
             ShowLineNumbers="True"
             VerticalScrollBarVisibility="Auto"
             WordWrap="True">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger EventName="Loaded">
-                    <behaviors:CallMethodAction MethodName="TextEditor_Loaded" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger EventName="LostFocus">
-                    <behaviors:CallMethodAction MethodName="TextEditor_LostFocus" TargetObject="{Binding}" />
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
-        </avalonedit:TextEditor>
+        </json:JsonTextEditor>
     </Grid>
 </Container:VectorWindow>

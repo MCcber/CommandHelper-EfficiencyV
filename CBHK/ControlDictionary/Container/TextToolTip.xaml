@@ -1,8 +1,9 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Style TargetType="ToolTip">
-        <Setter Property="Background" Value="#484848" />
-        <Setter Property="Foreground" Value="White" />
+        <!--  跟主题走：写死深灰+白字会在一片主题色里显出一块异色面板  -->
+        <Setter Property="Background" Value="{DynamicResource CommonBackground}" />
+        <Setter Property="Foreground" Value="{DynamicResource CommonForeground}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="MaxWidth" Value="500" />
         <Setter Property="Template">

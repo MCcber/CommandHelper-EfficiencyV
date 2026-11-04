@@ -151,18 +151,59 @@
         </Grid>
     </HierarchicalDataTemplate>-->
 
-    <DataTemplate x:Key="TreeViewDefinitionItem">
-        <Input:VectorTextBox
-            Height="40"
+
+    <!--  动态键行（map 的 [k]: V）：键可编辑，"+" 新增/改名，"−" 删除该键  -->
+    <HierarchicalDataTemplate x:Key="TreeViewDynamicKeyItem" ItemsSource="{Binding Children}">
+        <Border
             VerticalAlignment="Center"
-            visualUtility:TextSizeHelper.AutoFontSize="True"
-            Foreground="{DynamicResource CommonForeground}"
-            Style="{DynamicResource VectorTextBoxStyle}"
-            Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
-            WaterMarkerBrush="{DynamicResource CommonForeground}"
-            WaterMarkerMargin="2 0 0 0"
-            WaterMarkerText="Please Input Key" />
-    </DataTemplate>
+            Background="{DynamicResource CommonBackground}"
+            CornerRadius="5"
+            Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid HorizontalAlignment="Left">
+                <Grid.ColumnDefinitions>
+                    <!--  键编辑器给固定宽度：用 * 会被父级撑满，把 ⊕ 挤到列外裁掉（点不到）  -->
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <!--  键：注册表能取到候选值时用下拉，否则退回文本框（两者按 UseKeySelect 切换显隐）  -->
+                <Input:VectorTextBox
+                    Grid.Column="0"
+                    Width="320"
+                    Height="40"
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    Style="{DynamicResource VectorTextBoxStyle}"
+                    Text="{Binding EditingKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    ToolTip="{Binding Desc}"
+                    Visibility="{Binding UseKeyText, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <VectorComboBox:VectorTextComboBox
+                    Grid.Column="0"
+                    Width="320"
+                    Height="40"
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    DisplayMemberPath="Text"
+                    Foreground="{DynamicResource CommonForeground}"
+                    ItemsSource="{Binding KeyOptionList, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                    SelectedItem="{Binding SelectedKey, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                    Style="{DynamicResource VectorTextComboBoxStyle}"
+                    ToolTip="{Binding Desc}"
+                    Visibility="{Binding UseKeySelect, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <VectorButton:VectorFlatIconButton
+                    Grid.Column="1"
+                    Command="{Binding AddEntryCommand}"
+                    CommandParameter="{Binding}"
+                    Icon="{DynamicResource TreeNodePlusGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}" />
+                <!--  占位行只提供"新增"；删除在条目行的右键菜单里  -->
+            </Grid>
+        </Border>
+    </HierarchicalDataTemplate>
 
     <HierarchicalDataTemplate x:Key="TreeViewBoolItem">
         <Grid VerticalAlignment="Center" Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">

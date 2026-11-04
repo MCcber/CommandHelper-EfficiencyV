@@ -1,5 +1,6 @@
-﻿using CBHK.Domain;
+using CBHK.Domain;
 using CBHK.Model.Constant;
+using CBHK.ViewModel.Generator;
 using CBHK.Utility.Common;
 using CBHK.Utility.Data;
 using CBHK.View;
@@ -87,6 +88,17 @@ namespace CBHK
             containerRegistry.RegisterSingleton<RegexService>();
             containerRegistry.Register<MCDocumentMetaTypeDTOHelper>();
             containerRegistry.Register<MetaTypeDTOValidator>();
+
+        // mcdoc 生成器页面：入口不同、引擎同一套（骨架阶段先注册为瞬时）
+        containerRegistry.Register<AdvancementViewModel>();
+        containerRegistry.Register<DimensionTypeViewModel>();
+        containerRegistry.Register<DimensionViewModel>();
+        containerRegistry.Register<PredicateViewModel>();
+        containerRegistry.Register<LootTableViewModel>();
+        containerRegistry.Register<ItemModifierViewModel>();
+        containerRegistry.Register<DamageTypeViewModel>();
+        containerRegistry.Register<ChatTypeViewModel>();
+        containerRegistry.Register<CustomWorldGeneratorViewModel>();
 
         }
 

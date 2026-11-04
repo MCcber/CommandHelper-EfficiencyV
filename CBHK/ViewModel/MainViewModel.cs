@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorButton;
 using CBHK.Domain;
 using CBHK.Domain.Model.Database;
@@ -120,7 +120,19 @@ namespace CBHK.ViewModel
 
             InitUIDataProgress = new Progress<byte>(async (number) =>
             {
-                await resource.Init();
+                try
+                {
+                    // Init 内部自带语言服务器拉起、单文档记账与总预算；这里只保证启动流程一定往下走
+                    await resource.Init();
+                }
+                catch (Exception error)
+                {
+                    System.Diagnostics.Debug.WriteLine("mcdoc 索引失败：" + error);
+                }
+                finally
+                {
+                    StopSkeletonScreen();
+                }
 
                 #region 加载用户数据
                 //if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png"))
@@ -141,8 +153,6 @@ namespace CBHK.ViewModel
                     SetGeneratorButtonProgress.Report(0);
                 }
                 #endregion
-
-                StopSkeletonScreen();
             });
 
             ReadDataSource();
@@ -197,12 +207,14 @@ namespace CBHK.ViewModel
             {
                 GeneratorTable.Children.Add(InnerGeneratorTable);
             }
+            TryFinishSkeleton();
         }
 
         [RelayCommand]
         private void SkeletonGridLoaded(object sender)
         {
             SkeletonGrid = sender as Grid;
+            TryFinishSkeleton();
             if (Application.Current.Resources[Theme.CommonBackground] is SolidColorBrush commonBackgroundBrush)
             {
                 Color darken = ColorTool.Darken(commonBackgroundBrush.Color, 0.4f);
@@ -228,24 +240,48 @@ namespace CBHK.ViewModel
 
         #region Method
 
+        private bool startupFinished;
+        private bool startupNoticeShown;
+
         /// <summary>
-        /// 骨架屏持续时间
+        /// 收起骨架屏。索引可能极快结束（语言服务器不可用时 40ms 就返回），
+        /// 那时视图的 Loaded 还没跑，SkeletonGrid/GeneratorTable 还是 null —— 直接解引用会在 async void 回调里
+        /// 抛未处理异常把应用打死。所以这里只记状态，真正收起由两个 Loaded 回调补。
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void StopSkeletonScreen()
         {
+            startupFinished = true;
+            TryFinishSkeleton();
+        }
+
+        private void TryFinishSkeleton()
+        {
+            if (!startupFinished || SkeletonGrid is null || GeneratorTable is null)
+            {
+                return;
+            }
             SkeletonGrid.Visibility = Visibility.Collapsed;
             GeneratorTable.Visibility = Visibility.Visible;
-            if (bool.TryParse(config.ShowNotice, out bool showNotice) && showNotice)
+            ShowStartupNotice();
+        }
+
+        private void ShowStartupNotice()
+        {
+            if (startupNoticeShown || config is null)
             {
-                NoticeToUsersView noticeToUsers = container.Resolve<NoticeToUsersView>();
-                noticeToUsers.Topmost = true;
-                NoticeToUsersViewModel notichViewModel = noticeToUsers.DataContext as NoticeToUsersViewModel;
-                if (noticeToUsers.ShowDialog().Value)
-                {
-                    config.ShowNotice = (!notichViewModel.DonotShowNextTime).ToString();
-                }
+                return;
+            }
+            startupNoticeShown = true;
+            if (!bool.TryParse(config.ShowNotice, out bool showNotice) || !showNotice)
+            {
+                return;
+            }
+            NoticeToUsersView noticeToUsers = container.Resolve<NoticeToUsersView>();
+            noticeToUsers.Topmost = true;
+            NoticeToUsersViewModel notichViewModel = noticeToUsers.DataContext as NoticeToUsersViewModel;
+            if (noticeToUsers.ShowDialog().Value)
+            {
+                config.ShowNotice = (!notichViewModel.DonotShowNextTime).ToString();
             }
         }
 

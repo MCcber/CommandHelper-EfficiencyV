@@ -5,6 +5,7 @@
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input">
 
     <Style x:Key="VectorTextBoxStyle" TargetType="{x:Type Input:VectorTextBox}">
+        <Setter Property="ThemeBackground" Value="{DynamicResource CommonBackground}" />
         <Setter Property="AllowDrop" Value="true" />
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />

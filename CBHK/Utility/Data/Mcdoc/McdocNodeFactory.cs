@@ -1,0 +1,360 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using MinecraftLanguageModelLibrary.Data;
+
+namespace CBHK.Utility.Data.Mcdoc
+{
+    /// <summary>一次构建共享的节点预算（跨子树累计，不是按路径深度）。</summary>
+    internal sealed class McdocNodeBudget
+    {
+        private int remaining;
+        public McdocNodeBudget(int limit) => remaining = limit;
+        public bool TryConsume() => remaining-- > 0;
+    }
+
+    /// <summary>
+    /// 节点工厂：只管"求值 + 构建策略（深度 / 预算 / 环）+ 交给表现器生成子级"。
+    /// 原来 BuildChildren 的五个 switch 分支已移入表现器族（McdocPresenters.cs）。
+    /// </summary>
+    public sealed class McdocNodeFactory
+    {
+        /// <summary>递归上限：mcdoc 允许自引用结构，视图侧必须设硬上限。</summary>
+        public const int MaxDepth = 32;
+
+        /// <summary>缺省结构是"一个字段带出整棵子树"的指数展开，必须有总闸。</summary>
+        public const int MaxNodes = 3000;
+
+        /// <summary>懒建子级：默认展开深度以内的节点仍然急切构建，深处的节点等展开再建。</summary>
+        public static bool LazyChildren { get; set; } = true;
+
+        /// <summary>默认展开深度（misode 是全展开；这里是性能取向的 WPF 偏差，文档里记录）。</summary>
+        public static int DefaultExpandDepth { get; set; } = 3;
+
+        private readonly McdocPresenterRegistry registry;
+
+        public McdocNodeFactory(McdocPresenterRegistry registry = null)
+            => this.registry = registry ?? McdocPresenterRegistry.Default;
+
+        public McdocPresenterRegistry Registry => registry;
+
+        /// <summary>最近一次 Build 造出的合成根节点：摊平后它不进 Nodes，但仍是顶层节点的父容器。</summary>
+        public McdocTreeNode RootNode { get; private set; }
+
+        /// <summary>只构建根节点（不摊平）。narrow=false 供"纯 simplify"对拍使用。</summary>
+        public McdocTreeNode BuildRoot(McdocType rootType, McdocJsonValue json, McdocRuntime runtime,
+            bool narrow = true, Action<McdocTreeNode> onValueChanged = null, Action<McdocTreeNode> onStructureChanged = null)
+            => CreateNode("root", rootType, json, runtime, null, null, 0, narrow, onValueChanged, "$", null, onStructureChanged);
+
+        public ObservableCollection<McdocTreeNode> Build(McdocType rootType, string jsonText, McdocRuntime runtime,
+            Action<McdocTreeNode> onValueChanged = null, Action<McdocTreeNode> onStructureChanged = null)
+            => Build(rootType, McdocJsonParser.Parse(jsonText), runtime, onValueChanged, onStructureChanged);
+
+        public ObservableCollection<McdocTreeNode> Build(McdocType rootType, McdocJsonValue json, McdocRuntime runtime,
+            Action<McdocTreeNode> onValueChanged = null, Action<McdocTreeNode> onStructureChanged = null)
+        {
+            var result = new ObservableCollection<McdocTreeNode>();
+            var rootNode = CreateNode("root", rootType, json, runtime, null, null, 0, true, onValueChanged, "$", null, onStructureChanged);
+            RootNode = rootNode;
+
+            // 与 misode 的 McdocRoot 一致：根是 struct 且节点是 object 时，直接取子级，不再多包一层
+            if (registry.For(rootNode.Type).FlattensRoot && rootNode.Children.Count > 0)
+            {
+                foreach (var child in rootNode.Children) result.Add(child);
+                return result;
+            }
+            result.Add(rootNode);
+            return result;
+        }
+
+        /// <summary>
+        /// 求值前把"必填 + 有闭合候选 + 文档里没值"的字段写进 JSON（misode 的必填默认值语义）。
+        /// 候选走 IdMembers 那条出口（IdSpec → IdSpaces）：用演示节点问 presenter 的方法在 union 标量支上
+        /// 拿不到 IdMembers，会静默什么都不写（type_specific 展开后没有 variant 就是这么留下的）。
+        /// </summary>
+        private static int MaterializeDiscriminators(McdocType structType, McdocJsonValue json, McdocRuntime runtime)
+        {
+            var fields = structType?.Fields;
+            if (fields is null || fields.Count == 0) return 0;
+            var written = 0;
+            foreach (var field in fields)
+            {
+                if (field is null || field.Optional || field.IsSpread) continue;
+                var name = field.Name;
+                if (string.IsNullOrEmpty(name) || json.Get(name) is not null) continue;
+                var literal = FirstCandidateLiteral(field.Type, runtime);
+                if (string.IsNullOrEmpty(literal)) continue;
+                json.Add(name, McdocJsonValue.String(literal));
+                written++;
+            }
+            return written;
+        }
+
+        /// <summary>按 #[id] 的注册表候选取首项（自身 + union 标量支都试）。</summary>
+        private static string FirstCandidateLiteral(McdocType type, McdocRuntime runtime)
+        {
+            if (type is null || runtime?.IdSpaces is null) return null;
+            foreach (var candidate in WithUnionMembers(type))
+            {
+                var spec = McdocIdSpec.FromAttributes(candidate.Attributes);
+                if (spec is null || string.IsNullOrEmpty(spec.Registry)) continue;
+                if (!McdocSelectRegistries.IsSelect(spec.Registry, runtime.GameVersion ?? "1.21")) continue;
+                var resolved = runtime.IdSpaces.Resolve(spec, runtime);
+                if (resolved?.Members is { Count: > 0 }) return resolved.Members[0];
+            }
+            return null;
+
+            static IEnumerable<McdocType> WithUnionMembers(McdocType type)
+            {
+                yield return type;
+                if (type.Kind != McdocTypeKind.Union) yield break;
+                foreach (var member in type.Members ?? [])
+                {
+                    if (member is not null) yield return member;
+                }
+            }
+        }
+
+
+        internal McdocTreeNode CreateNode(string name, McdocType declaredType, McdocJsonValue json,
+            McdocRuntime runtime, McdocValueNode parent, McdocRuntimeNode keyNode, int depth,
+            bool narrow = true, Action<McdocTreeNode> onValueChanged = null, string jsonPath = "$",
+            List<McdocType> visiting = null, Action<McdocTreeNode> onStructureChanged = null,
+            McdocNodeBudget budget = null, bool deferChildren = false)
+        {
+            var runtimeNode = new McdocRuntimeNode(json, json?.InferType() ?? McdocType.Any());
+            var self = McdocValueNode.Of(runtimeNode, parent, keyNode);
+
+            var simplifyContext = new McdocSimplifyContext
+            {
+                Runtime = runtime,
+                Node = self,
+                Tag = (McdocSimplifier.IndexTrace is null ? null : name + "@" + jsonPath),
+            };
+            McdocType type;
+            var dependsOnRuntimeData = false;
+            string evaluationError = null;
+            try
+            {
+                var simplified = McdocSimplifier.Simplify(declaredType, simplifyContext);
+                type = simplified.TypeDef;
+                dependsOnRuntimeData = simplified.DynamicData;
+                if (simplifyContext.Diagnostics.Count > 0)
+                {
+                    // 一条链上可能连挂十几条：行上只留前 5 条，剩下的给个计数（ToolTip 撑爆比丢信息更糟）
+                    var distinctDiagnostics = simplifyContext.Diagnostics.Distinct().ToList();
+                    evaluationError = string.Join("；", distinctDiagnostics.Take(5))
+                        + (distinctDiagnostics.Count > 5 ? "；…等 " + distinctDiagnostics.Count + " 条" : "");
+                }
+                // union 保留（UI 上要能切换分支），默认分支由 UnionNodePresenter 挑
+            }
+            catch (Exception error)
+            {
+                // 单个字段求值失败不应拖垮整棵树，但要在行上露出来（misode 的 ErrorIndicator）
+                type = McdocType.Any();
+                evaluationError = error.Message;
+            }
+            // 派发器/动态索引是在**求值期**读同层取值的：判别键（必填 + 闭合候选）必须在求值前就在 JSON 里，
+            // 否则 spread 解析成 %none，父结构"看着渲染完了、其实成员一个都没解出来"（type_specific 没有 variant）。
+            if (json is { Kind: McdocJsonKind.Object } objectJson
+                && type?.Kind == McdocTypeKind.Struct
+                && MaterializeDiscriminators(type, objectJson, runtime) > 0)
+            {
+                try
+                {
+                    var again = new McdocSimplifyContext { Runtime = runtime, Node = self };
+                    type = McdocSimplifier.Simplify(declaredType, again).TypeDef;
+                }
+                catch (Exception)
+                {
+                    // 重求值失败就保留第一轮结果：宁可行上挂诊断，不静默把树改坏
+                }
+            }
+
+            if (type?.IsDirective == true)
+            {
+                // NF 强制：求值后不允许指令逃到节点上（渲染层只认归一形态）。
+                // 换成 any 并保留诊断——行会变成"原始 JSON 编辑 + 错误徽标"，而不是把 Reference/Template 当标量文本框。
+                evaluationError ??= "未解开的类型包装：" + type.Kind;
+                type = McdocType.Any();
+            }
+            if (evaluationError is null && type?.Kind == McdocTypeKind.Union && (type.Members?.Count ?? 0) == 0)
+            {
+                evaluationError = "文档里该字段声明为 ()：没有结构（存在性谓词）";
+            }
+            // 声明/求值是容器、文档里却是标量（或反过来）：这是**非法文档**，树上必须给"诚实的形状" ——
+            // 一行原始 JSON + 错误诊断，绝不按声明类型摊开子级（否则会长出"父是字符串、子却在展开"的幽灵行）。
+            if (json is not null && type is not null && IsContainerKind(type.Kind) && IsScalarJson(json.Kind))
+            {
+                evaluationError ??= "值与类型不符：期望 " + type.Kind + "，实际 " + json.Kind + "（在右侧 JSON 修正）";
+                type = McdocType.Any();
+            }
+            else if (json is not null && type is not null && IsScalarKind(type.Kind)
+                && json.Kind is McdocJsonKind.Object or McdocJsonKind.Array)
+            {
+                evaluationError ??= "值与类型不符：期望 " + type.Kind + "，实际 " + json.Kind + "（在右侧 JSON 修正）";
+                type = McdocType.Any();
+            }
+
+            // misode：定长 list 当 tuple 处理（每个下标独立成节点）
+            if (McdocHelpers.IsFixedList(type) && McdocHelpers.AsFixedTuple(type) is { } fixedTuple)
+            {
+                type = fixedTuple;
+            }
+
+            var node = new McdocTreeNode
+            {
+                FieldName = name,
+                DeclaredType = declaredType,
+                Type = type,
+                ValueNode = self,
+                Depth = depth,
+                Json = json,
+                ValueChanged = onValueChanged,
+                JsonPath = jsonPath,
+                DependsOnRuntimeData = dependsOnRuntimeData,
+                Key = name ?? "",
+                StructureChanged = onStructureChanged,
+                Error = evaluationError,
+            };
+            var editor = McdocCollectionEditor.Default;
+            // 只有"列表语义"的节点才有列表追加：map/struct 的 ⊕ 必须走"起键"（CommitEntry），
+            // 否则按下一个永远 CanExecute=true 的按钮，什么都写不出来（表现是"按了没反应/结果不对"）
+            bool CanAppendItems() => node.Type?.IsListLike == true
+                || (node.UnionListLike && node.SelectedUnionMember?.IsListLike == true);
+            node.AddItemCommand = new McdocCommand(() => editor.AppendItem(node, runtime), CanAppendItems);
+            node.AddItemTopCommand = new McdocCommand(() => editor.AddItem(node, runtime, atTop: true), CanAppendItems);
+            node.SetDefaultCommand = new McdocCommand(() => editor.SetDefault(node, runtime),
+                () => node.Json is null && node.Parent is not null && !node.IsRequired);
+            node.ShowMoreCommand = new McdocCommand(() => node.ItemsShown += Math.Max(1, McdocRowProjector.PageSize));
+            node.ShowAllCommand = new McdocCommand(() => node.ItemsShown = int.MaxValue);
+            node.RemoveItemCommand = new McdocCommand(() => editor.RemoveLastItem(node),
+                () => node.Json is { Kind: McdocJsonKind.Array } list && list.Items is { Count: > 0 });
+            node.DuplicateCommand = new McdocCommand(() => editor.DuplicateItem(node),
+                () => node.Json is not null && node.Parent?.Json is { Kind: McdocJsonKind.Array });
+            node.RemoveFieldCommand = new McdocCommand(() => editor.RemoveField(node),
+                () => node.Parent?.Json is { Kind: McdocJsonKind.Object } parent
+                    && parent.Properties is not null
+                    && parent.Properties.Any(pair => pair.Key == node.FieldName));
+
+            budget ??= new McdocNodeBudget(MaxNodes);
+            visiting ??= [];
+            var context = new McdocBuildContext
+            {
+                Runtime = runtime,
+                Factory = this,
+                Registry = registry,
+                Self = self,
+                KeyNode = keyNode,
+                Depth = depth,
+                Narrow = narrow,
+                JsonPath = jsonPath,
+                Visiting = visiting,
+                Budget = budget,
+                SimplifyContext = simplifyContext,
+                OnValueChanged = onValueChanged,
+                OnStructureChanged = onStructureChanged,
+            };
+            // 行自身状态必须在任何早退之前备好：深度/预算/环只省"子级"，不能省"这行用什么控件/显示什么值"
+            registry.For(type).Prepare(node, type, json, context);
+
+            if (depth >= MaxDepth) return node;
+            // 预算只约束"缺省展开"（json == null）：真实 JSON 节点不吃预算，
+            // 否则导入大文件会变成"文件里有、树里没有"的静默丢数据
+            if (json is null && !budget.TryConsume()) return node;
+
+            // 类型级环检测：按**声明类型**判环（simplify 每次都造新对象，按求值后类型判必然失效）
+            if (declaredType is not null && visiting.Any(item => ReferenceEquals(item, declaredType))) return node;
+            if (declaredType is not null) visiting.Add(declaredType);
+            try
+            {
+
+                // 局部队列重建：结构变更只重建这一层子树（避免整树 Load）
+                node.RefreshChildren = () =>
+                {
+                    node.Children.Clear();
+                    node.Items.Clear();
+                    node.SelectedUnionChildren.Clear();
+                    registry.For(type).PopulateChildren(node, type, node.Json, context);
+                    foreach (var child in node.Children) child.Parent = node;
+                    foreach (var item in node.Items) item.Parent = node;
+                    foreach (var item in node.SelectedUnionChildren) item.Parent = node;
+                    node.ChildrenBuilt = true;
+                };
+
+                // 懒建：越深的子树越晚构建；union 例外（分支名在 Head 里要用）。
+                // deferChildren：父级已经知道"这是缺省成员"（文档里没有这个键）——
+                // 投影对这类节点一列子行都不画（缺省字段只留一行 ⊕），此时建出来的子级全是"看不见的节点"。
+                // 但 union 不能 defer：分支候选是行的状态（下拉要能切支），不是"值的子级"。
+                var eager = (!deferChildren || type.Kind == McdocTypeKind.Union)
+                    && (!LazyChildren || depth < DefaultExpandDepth || type.Kind == McdocTypeKind.Union);
+                if (eager)
+                {
+                    node.RefreshChildren();
+                }
+                else
+                {
+                    node.ChildrenBuilt = false;
+                }
+
+                // misode：默认展开（只有 IsDefaultCollapsedType 例外）+ 深度上限（WPF 性能偏差）
+                var hasChildren = eager
+                    ? node.Children.Count + node.Items.Count + node.SelectedUnionChildren.Count > 0
+                    : registry.For(type).CanHaveChildren(node);
+                // 先看页面级折叠记忆（misode useToggles），没有记录才走"默认展开深度"
+                var remembered = McdocExpandState.Lookup(jsonPath);
+                if (remembered.HasValue)
+                {
+                    // 缺省字段只留一行 ⊕（与 misode 一致）：json 为 null 时"记住的展开态"不许把子级撑开，
+                    // 否则关窗体重开后会看到"树上凭空多出子行、父行还是个 ⊕"。
+                    node.IsExpanded = remembered.Value && hasChildren && json is not null;
+                }
+                else if (json is not null && hasChildren && depth < DefaultExpandDepth
+                    && !McdocHelpers.IsDefaultCollapsedType(declaredType ?? type))
+                {
+                    node.IsExpanded = true;
+                }
+            }
+            finally
+            {
+                if (declaredType is not null) visiting.RemoveAt(visiting.Count - 1);
+            }
+
+            return node;
+        }
+
+        /// <summary>能装子级的类型（声明成这些却拿到标量 = 非法文档）。</summary>
+        private static bool IsContainerKind(McdocTypeKind kind)
+            => kind is McdocTypeKind.Struct or McdocTypeKind.List or McdocTypeKind.Tuple
+                or McdocTypeKind.ByteArray or McdocTypeKind.IntArray or McdocTypeKind.LongArray;
+
+        /// <summary>叶子类型（声明成这些却拿到对象/数组 = 非法文档）。</summary>
+        private static bool IsScalarKind(McdocTypeKind kind)
+            => kind is McdocTypeKind.Boolean or McdocTypeKind.String or McdocTypeKind.Literal or McdocTypeKind.Enum
+                or McdocTypeKind.Byte or McdocTypeKind.Short or McdocTypeKind.Int or McdocTypeKind.Long
+                or McdocTypeKind.Float or McdocTypeKind.Double;
+
+        private static bool IsScalarJson(McdocJsonKind kind)
+            => kind is McdocJsonKind.String or McdocJsonKind.Number or McdocJsonKind.Boolean or McdocJsonKind.Null;
+    }
+
+    /// <summary>老入口的过渡壳：对拍工具（e2e）与探针无需改动即可继续使用。</summary>
+    public static class McdocTreeBuilder
+    {
+        public const int MaxDepth = McdocNodeFactory.MaxDepth;
+        public const int MaxNodes = McdocNodeFactory.MaxNodes;
+
+        public static McdocTreeNode BuildRoot(McdocType rootType, McdocJsonValue json, McdocRuntime runtime,
+            bool narrow = true, Action<McdocTreeNode> onValueChanged = null, Action<McdocTreeNode> onStructureChanged = null)
+            => new McdocNodeFactory().BuildRoot(rootType, json, runtime, narrow, onValueChanged, onStructureChanged);
+
+        public static ObservableCollection<McdocTreeNode> Build(McdocType rootType, string jsonText, McdocRuntime runtime,
+            Action<McdocTreeNode> onValueChanged = null)
+            => new McdocNodeFactory().Build(rootType, jsonText, runtime, onValueChanged);
+
+        public static ObservableCollection<McdocTreeNode> Build(McdocType rootType, McdocJsonValue json, McdocRuntime runtime,
+            Action<McdocTreeNode> onValueChanged = null, Action<McdocTreeNode> onStructureChanged = null)
+            => new McdocNodeFactory().Build(rootType, json, runtime, onValueChanged, onStructureChanged);
+    }
+}

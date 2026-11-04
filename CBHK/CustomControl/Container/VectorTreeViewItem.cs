@@ -1,4 +1,5 @@
-﻿using MinecraftLanguageModelLibrary.Data;
+using CBHK.Utility.Data.Mcdoc;
+using MinecraftLanguageModelLibrary.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -42,6 +43,17 @@ namespace CBHK.CustomControl.Container
         public VectorTreeViewItem()
         {
             Loaded += VectorTreeViewItem_Loaded;
+            // 展开/折叠写回数据项，容器回收后也能恢复
+            Expanded += (_, _) => SyncExpansion(true);
+            Collapsed += (_, _) => SyncExpansion(false);
+        }
+
+        private void SyncExpansion(bool expanded)
+        {
+            if (Header is McdocTreeNode node)
+            {
+                node.IsExpanded = expanded;
+            }
         }
 
         #endregion
@@ -68,17 +80,19 @@ namespace CBHK.CustomControl.Container
                 {
                     vectorTreeViewItem.Visibility = Visibility.Collapsed;
                 }
-                //自定义节点按下回车事件
-                if(headerDTO.TypeKind is MetaTypeKind.Definition)
-                {
-                    vectorTreeViewItem.PreviewKeyDown += (s, e) =>
-                    {
-                        if(e.Key is System.Windows.Input.Key.Enter && vectorTreeViewItem.Header is MetaTypeEditorFieldDTO dto)
-                        {
-                            dto.DefinitionEnterKeyDown?.Invoke();
-                        }
-                    };
-                }
+                //定义键已并入 Tuple 管线：动态 map 的键由"输入框 + 加号"负责，加号里直接解析值类型，
+                //不再产出 Definition 节点，所以这里原先绑定的回车提交事件一并去掉
+            }
+            //新求值管线的视图节点：只保留"必选有子级则自动展开"这一条 UX 规则。
+            //旧分支里的 IsVisible 判断不需要复刻 —— 新管线在求值期就把 #[since]/#[until] 与不可见调度器过滤掉了
+            else if (sender is VectorTreeViewItem item && item.Header is McdocTreeNode mdNode)
+            {
+                // 还原用户上次的展开状态；没有状态时按旧管线规则"必选且有子级就展开"。
+                // 不能只靠样式 Setter 里的 IsExpanded 绑定：用户点击写的是本地值，会盖掉那条绑定，
+                // 源节点永远收不到更新 —— 容器一旦回收就回落成 False（表现就是"展开后立刻被收回"）。
+                var hasChildren = mdNode.Children?.Count > 0 || mdNode.SelectedUnionChildren?.Count > 0;
+                IsExpanded = hasChildren && (mdNode.IsExpanded || mdNode.IsRequired);
+                mdNode.IsExpanded = IsExpanded;
             }
         }
 

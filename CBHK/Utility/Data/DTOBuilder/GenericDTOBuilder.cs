@@ -75,6 +75,8 @@ namespace CBHK.Utility.Data.DTOBuilder
             target.IsTrue = targetTypeDTO.IsTrue;
             target.IsFalse = targetTypeDTO.IsFalse;
             target.Children = new ObservableCollection<MetaTypeEditorFieldDTO>(expandedChildrenList);
+            //替换出来的子树要带回父子链（含直接子节点自身）：同级字段驱动的调度器重解析依赖 Parent
+            MCDocumentMetaTypeDTOHelper.AttachParentLinks(target);
             #endregion
 
             #region 交回注册表继续
@@ -99,8 +101,10 @@ namespace CBHK.Utility.Data.DTOBuilder
 
         /// <summary>
         /// 把当前泛型作用域递归挂到整棵子树上，供嵌套泛型与别名继续消费外层实参。
+        /// 定义引用展开（MCDocumentResourceBuilder）同样要用它：那条路建了作用域却没往下传，
+        /// 子树里的 `to T` 因为拿不到实参而解析失败，会静默退化成 Any。
         /// </summary>
-        private static void AttachBindingScopeRecursively(MetaTypeEditorFieldDTO node, TypeBindingScope scope)
+        public static void AttachBindingScopeRecursively(MetaTypeEditorFieldDTO node, TypeBindingScope scope)
         {
             node.BindingScope ??= scope;
 
@@ -123,6 +127,18 @@ namespace CBHK.Utility.Data.DTOBuilder
             if (node.Items is not null)
             {
                 foreach (MetaTypeEditorFieldDTO child in node.Items)
+                {
+                    AttachBindingScopeRecursively(child, scope);
+                }
+            }
+
+            //懒加载桩的缓存集合（Value）里挂着尚未展开的子树，同样要拿到作用域：
+            //动态 map 的值结构、联合的分支表都会先挪进这里，漏掉它们的话，
+            //桩在展开时那些节点没有绑定作用域，`to T` 这类泛型目标就替换不出实参，
+            //调度会静默退化成 Any（表现为一行没有编辑器的空节点）
+            if (node.Value is ObservableCollection<MetaTypeEditorFieldDTO> stashedChildren)
+            {
+                foreach (MetaTypeEditorFieldDTO child in stashedChildren)
                 {
                     AttachBindingScopeRecursively(child, scope);
                 }

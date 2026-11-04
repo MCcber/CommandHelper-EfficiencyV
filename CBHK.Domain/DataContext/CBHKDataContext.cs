@@ -1,4 +1,4 @@
-﻿using CBHK.Domain.Model.Database;
+using CBHK.Domain.Model.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace CBHK.Domain
@@ -43,7 +43,10 @@ namespace CBHK.Domain
         #region Event
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            string path = $"Data Source=Minecraft.db";
+            // 必须用绝对路径：相对路径跟着"当前工作目录"走。快捷方式改了起始位置、Start-Process 不传
+            // -WorkingDirectory、或者调试配置的 working directory 不对时，EF 会在那个目录新建一个空库，
+            // 表现为启动即 "no such table: EnvironmentConfigSet"、主窗口根本建不出来。
+            string path = $"Data Source={System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Minecraft.db")}";
             optionsBuilder.UseSqlite(path);
         }
 
