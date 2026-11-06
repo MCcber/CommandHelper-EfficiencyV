@@ -47,10 +47,12 @@ namespace CBHK.Utility.Data
                 + string.Join(",", spec.Include ?? []) + "|" + (spec.Tags ?? "") + "|" + string.Join(",", spec.Exclude ?? []);
             if (!sets.TryGetValue(key, out var set))
             {
-                set = new HashSet<string>(options, StringComparer.Ordinal);
+                // 注册表里存的是裸 id（acacia_button），界面里的值带命名空间（minecraft:acacia_button）：
+                // 两边都按 #[id] 的 lengthen 语义归一，否则合法值会被判成"不在注册表内"
+                set = new HashSet<string>(options.Select(McdocIdSpec.Lengthen), StringComparer.Ordinal);
                 sets[key] = set;
             }
-            return set.Contains(value);
+            return set.Contains(McdocIdSpec.Lengthen(value));
         }
 
         private readonly Dictionary<string, HashSet<string>> sets = [];

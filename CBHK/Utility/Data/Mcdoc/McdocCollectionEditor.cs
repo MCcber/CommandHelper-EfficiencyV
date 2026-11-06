@@ -39,9 +39,31 @@ namespace CBHK.Utility.Data.Mcdoc
                 // 只看 UseSelect 会让必选枚举（frame=Task 这类）永远进不了文档。
                 // **静默写入**：不走 ApplyValue（它抬 ValueChanged/StructureChanged），否则重建会把
                 // 用户正在操作的行换成脱挂节点（S12 的候选选择写不进 JSON 就是这么坏的）。
-                var hasOptions = node.EnumOptionList is { Count: > 0 };
-                if (node.IsRequired && emptyText && (node.UseSelect || hasOptions)
-                    && node.SelectedEnumOption?.Value?.LiteralValue is not null)
+                // 必填容器没有任何值：先把它本身建出来（空对象 / 空数组）。
+            // 不建这一层，里面的必填字段（必选枚举就是典型）连节点都没有，物化永远轮不到它，
+            // 校验就一直报「缺少必填键」——行上那颗感叹号也是这么来的。
+            if (node.IsRequired && node.Json is null && node.DeclaredType is { } containerType
+                && containerType.Kind is McdocTypeKind.Struct or McdocTypeKind.List or McdocTypeKind.Tuple)
+            {
+                WriteDisplayed(node, containerType.Kind == McdocTypeKind.Struct
+                    ? McdocJsonValue.Object()
+                    : McdocJsonValue.Array());
+            }
+            // union 行：行上显示着某个成员，文档里却没有它的值 —— 按"所见即所得"把成员默认结构落盘。
+            // 不落盘的话，行上选着 block_state_property、文档里没有 condition，同层就没有 Block/Properties
+            // （调度器也因为没有可索引的键而解不出成员）。落盘后本轮 Load 会把它连同必填键一起解出来。
+            if (node.Type?.Kind == McdocTypeKind.Union && node.Json is null
+                && node.SelectedUnionMember is { } displayedMember && !McdocUnionSwitch.IsUnsetOption(node.SelectedUnionTypeName))
+            {
+                var unionDefault = McdocHelpers.GetChange(displayedMember, node.Type, null);
+                if (unionDefault is not null) WriteDisplayed(node, unionDefault);
+            }
+            var hasOptions = node.EnumOptionList is { Count: > 0 };
+            // 键已经在文档里、值却是空串（block: ""）：那是"有键没值"，必须按显示中的候选补上。
+            // 可选字段只在"键已存在"时补，绝不因为"行上显示了默认值"就凭空插键。
+            var presentButEmpty = node.Json is not null && emptyText;
+            if ((node.IsRequired || presentButEmpty) && emptyText && (node.UseSelect || hasOptions)
+                && node.SelectedEnumOption?.Value?.LiteralValue is not null)
                 {
                     var text = Convert.ToString(node.SelectedEnumOption.Value.LiteralValue);
                     if (!string.IsNullOrEmpty(text))
@@ -192,6 +214,26 @@ namespace CBHK.Utility.Data.Mcdoc
             var value = ReadEditedValue(node);
             if (value is null)
             {
+                // 候选下拉行（#[id] / 枚举的文本变体）：编辑器里显示的是候选，空文本不等于"用户要写空串"。
+                // 写 "" 会让这个键带着一个非法值留在文档里 —— 依赖它的 dispatcher 索引
+                // （properties: mcdoc:block_states[[block]]）整片解不出来，行上还会挂"值不在候选内"。
+                // 只要行上有非哨兵的选中项，落盘的就是它（所见即所得）；真 unset 走下面的哨兵分支。
+                if (node.EnumOptionList is { Count: > 0 } && node.SelectedEnumOption is { } shown
+                    && !McdocUnionSwitch.IsUnsetOption(shown) && EnumValue(shown) is { } candidate)
+                {
+                    ApplyValue(node, candidate);
+                    return true;
+                }
+                // union 行镜像着的标量分支：空编辑器 = "这一支的默认标量"（与切分支同一个出口），不是"删键"。
+                // 删键会把**分支身份**一起删掉：文档里没有这个键 → 下一次重建 union 只能回到未设置，
+                // 用户看到的就是"选了 String 分支立刻弹回（未设置）"（chat_type 的 color 正是这一条）。
+                // unset 在下拉里是显式的一项（未设置哨兵），不走"清空编辑器"这条路。
+                var branchValue = ScalarBranchValue(node);
+                if (branchValue is not null)
+                {
+                    ApplyValue(node, branchValue);
+                    return true;
+                }
                 // 编辑器的"空状态"（文本框清空 / bool 两个都取消选中）语义 == unset：
                 // 可选字段直接把键从文档里删掉；必填写空要有可见诊断，不许静默不动。
                 ApplyEmptyValue(node);
@@ -199,6 +241,17 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             ApplyValue(node, value);
             return true;
+        }
+
+        /// <summary>
+        /// union 行上镜像着的标量分支的默认值（与切分支同一个口径 <see cref="McdocHelpers.GetChange"/>）；
+        /// 不是"union + 标量镜像"时返回 null，交回既有的 unset 语义。
+        /// </summary>
+        private static McdocJsonValue ScalarBranchValue(McdocTreeNode node)
+        {
+            if (node?.Type?.Kind != McdocTypeKind.Union || node.ScalarEditorKind is null) return null;
+            var member = node.SelectedUnionMember;
+            return member is null ? null : McdocHelpers.GetChange(member, node.Type, node.Json);
         }
 
         /// <summary>编辑器被清空：可选字段删键（misode 的 unset），必填字段挂诊断。</summary>
@@ -216,6 +269,15 @@ namespace CBHK.Utility.Data.Mcdoc
         private static McdocJsonValue ReadEditedValue(McdocTreeNode node)
         {
             if (node?.Head is not { } head) return null;
+            // 下拉里选中（未设置）= unset（走 ApplyEmptyValue 删键），与这一行用的是 Enum 还是
+            // "#[id] 只有下拉"的 Text 变体无关。union 行不算：它的（未设置）在分支下拉里。
+            if (node.Type?.Kind != McdocTypeKind.Union
+                && node.EnumOptionList is { Count: > 0 } options
+                && McdocUnionSwitch.IsUnsetOption(options[0])
+                && McdocUnionSwitch.IsUnsetOption(node.SelectedEnumOption))
+            {
+                return null;
+            }
             return head.EditorKind switch
             {
                 // 枚举写回的是**字面量值**（Block = "block"），不是标识符（Block）；
@@ -225,9 +287,10 @@ namespace CBHK.Utility.Data.Mcdoc
                 McdocEditorKind.Bool => !node.IsRequired && !node.IsTrue && !node.IsFalse
                     ? null : McdocJsonValue.Boolean(node.IsTrue),
                 McdocEditorKind.Number => ToNumber(node.Value),
-                // 必填字符串的空串是合法值（写 ""）；可选空串才算 unset
+                // 必填字符串的空串只在"没有候选"时才算合法值（写 ""）；候选下拉行的空文本不是写空串 ——
+                // 行上选着候选就意味着用户看到的值是那个候选，交给 ApplyNodeValue 的候选物化 / unset 语义。
                 McdocEditorKind.Text => string.IsNullOrEmpty(Convert.ToString(node.Value))
-                    ? (node.IsRequired ? McdocJsonValue.String("") : null)
+                    ? (node.EnumOptionList is { Count: > 0 } ? null : (node.IsRequired ? McdocJsonValue.String("") : null))
                     : McdocJsonValue.String(Convert.ToString(node.Value)),
                 // Raw 编辑器自己解析成 Json 了；None / InlineTuple 没有行内值（子项各走各的行）
                 _ => null,
@@ -237,6 +300,7 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>EnumMember.Value 的字面量 → JSON 值（字符串/布尔/数值三种枚举底层）。</summary>
         private static McdocJsonValue EnumValue(EnumMember option)
         {
+            if (McdocUnionSwitch.IsUnsetOption(option)) return null;   // 哨兵永不落盘
             var literal = option?.Value?.LiteralValue;
             return literal switch
             {
@@ -338,8 +402,10 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
                 else
                 {
+                    // 重建期间旧节点被换掉是**预期**：这类跳过不许变成行上的感叹号
+                    // （现场日志里 41 条"写回已跳过"把黄标永久钉在 block/condition 上）。只留 trace，
+                    // 行上的诊断只许来自"当前状态"的校验。
                     McdocWriteTrace.Log("ReplaceRoot 跳过（脱挂节点）", node, "<无父级>");
-                    node.Error = "写回已跳过：节点已脱挂（不是文档根）";
                 }
                 return;
             }
@@ -469,6 +535,28 @@ namespace CBHK.Utility.Data.Mcdoc
             node.StructureChanged?.Invoke(node);
         }
 
+        /// <summary>
+        /// 结构变更的通知目标：union 的列表分支是**临时节点**（不挂在树上，条目直接挂 union 的
+        /// SelectedUnionChildren），在它身上抬 StructureChanged 等于重建一个脱挂的壳 ——
+        /// 宿主那边 RefreshAround 找不到父行、Reset 出来的还是旧树，表现就是"删了条目，右侧 JSON 少了、左侧树一动不动"。
+        /// 一律向上找到最近的"挂在树上"的祖先再通知（找不到就退回自己）。
+        /// </summary>
+        private static void NotifyStructure(McdocTreeNode node)
+        {
+            if (node is null) return;
+            // 判据用"父级的三个子级集合里有没有它"：union 的列表/结构分支本身不会被 Add 进父级
+            // （子级被上提了），只有后者能代表"能重建的那一层"
+            var target = node;
+            while (target.Parent is { } parent && !Contains(parent, target))
+            {
+                target = parent;
+            }
+            (target.StructureChanged ?? node.StructureChanged)?.Invoke(target);
+        }
+
+        private static bool Contains(McdocTreeNode parent, McdocTreeNode child)
+            => parent.Children.Contains(child) || parent.Items.Contains(child) || parent.SelectedUnionChildren.Contains(child);
+
         /// <summary>列表 ⊕（misode ListHead/ListBody 的 add_top / add_bottom）。</summary>
         public void AddItem(McdocTreeNode node, McdocRuntime runtime, bool atTop = false)
         {
@@ -480,7 +568,7 @@ namespace CBHK.Utility.Data.Mcdoc
             array.Items ??= [];
             if (atTop) array.Items.Insert(0, value); else array.Items.Add(value);
             KeepListBranchExpanded(node);
-            node.StructureChanged?.Invoke(node);
+            NotifyStructure(node);
         }
 
         /// <summary>删除指定下标的列表项；删空且不允许为空的可选列表时，整个字段一起移除。</summary>
@@ -497,7 +585,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 RemoveField(node);
                 return;
             }
-            node.StructureChanged?.Invoke(node);
+            NotifyStructure(node);
         }
 
         /// <summary>列表项上移 / 下移。</summary>
@@ -508,7 +596,7 @@ namespace CBHK.Utility.Data.Mcdoc
             var value = array.Items[from];
             array.Items.RemoveAt(from);
             array.Items.Insert(to, value);
-            node.StructureChanged?.Invoke(node);
+            NotifyStructure(node);
         }
 
         /// <summary>
@@ -565,7 +653,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 return;
             }
             array.Items.RemoveAt(array.Items.Count - 1);
-            node.StructureChanged?.Invoke(node);
+            NotifyStructure(node);
         }
 
         /// <summary>右键"复制"：深拷贝本节点的 JSON 值并插到同层（仅列表项；对象属性复制会产生重复键）。</summary>
@@ -582,7 +670,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 return;
             }
             array.Items.Insert(index + 1, node.Json.Clone());
-            node.StructureChanged?.Invoke(node);
+            NotifyStructure(node);
         }
 
         /// <summary>节点还没有 JSON 时（如可选字段缺省），先在父对象里把容器建出来。</summary>

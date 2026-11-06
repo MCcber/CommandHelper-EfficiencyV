@@ -3,6 +3,7 @@
 // 其余位置由 TextDocument 的 TextAnchor 自动平移。
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CBHK.Utility.Data.Mcdoc;
 using ICSharpCode.AvalonEdit.Document;
 
@@ -90,6 +91,262 @@ namespace CBHK.Utility.Data.JsonText
             }
         }
 
+        /// <summary>
+        /// 增量重解析：只重解析"改动落在其中"的顶层成员，其余成员的 AST 对象原样复用（身份不变）。
+        /// 返回 false = 这次改动不归增量管（跨成员 / 触及顶层分隔符 / 根换了形状），调用方必须走 <see cref="Reparse"/>。
+        /// 与 <see cref="Reparse"/> 同一条同代契约：唯一输入是 <see cref="Document"/> 的当前文本。
+        /// </summary>
+        public bool TryIncrementalReparse(string text)
+        {
+            if (text is null) return false;
+            // 同代契约：只认 Document 的当前文本；外部旧快照会让 AST 退代
+            if (!string.Equals(text, document.Text, StringComparison.Ordinal)) return false;
+            var oldText = RootText ?? "";
+            if (string.Equals(text, oldText, StringComparison.Ordinal)) return true;
+
+            var root = Root;
+            var isObject = root is not null && root.Kind == McdocJsonKind.Object;
+            var isArray = root is not null && root.Kind == McdocJsonKind.Array;
+            if (!isObject && !isArray) return false;
+
+            var members = new List<McdocJsonValue>(isObject ? root.Properties?.Count ?? 0 : root.Items?.Count ?? 0);
+            if (isObject)
+            {
+                foreach (var pair in root.Properties ?? []) members.Add(pair.Value);
+            }
+            else
+            {
+                foreach (var item in root.Items ?? []) members.Add(item);
+            }
+            if (members.Count == 0) return false;
+            if (!spans.TryGetValue(root, out var rootSpan)) return false;
+            foreach (var member in members)
+            {
+                // 没有区间就拼不出新根：宁可回落整篇
+                if (member is null || !spans.ContainsKey(member)) return false;
+            }
+
+            // 公共前后缀 → 旧脏区间 [prefix, oldDirtyEnd)；改动落在单个成员内部才有增量可言
+            var oldLength = oldText.Length;
+            var newLength = text.Length;
+            var shared = Math.Min(oldLength, newLength);
+            var prefix = 0;
+            while (prefix < shared && oldText[prefix] == text[prefix]) prefix++;
+            var suffix = 0;
+            while (suffix < shared - prefix && oldText[oldLength - 1 - suffix] == text[newLength - 1 - suffix]) suffix++;
+            var oldDirtyEnd = oldLength - suffix;
+            var delta = newLength - oldLength;
+
+            var first = -1;
+            var last = -1;
+            for (var index = 0; index < members.Count; index++)
+            {
+                var span = spans[members[index]];
+                // 空脏区间（纯插入）没有宽度可交，只能看插入点是否落在成员内部
+                var hit = prefix < oldDirtyEnd
+                    ? span.PairStart < oldDirtyEnd && prefix < span.PairEnd
+                    : span.PairStart < prefix && prefix < span.PairEnd;
+                if (!hit) continue;
+                if (first < 0) first = index;
+                last = index;
+            }
+            if (first < 0) return false;
+
+            var runStart = spans[members[first]].PairStart;
+            var runEnd = spans[members[last]].PairEnd;
+            // 脏区间出了成员段（或段本身自相矛盾）→ 边界要重算，增量拼接必然错位
+            if (prefix < runStart || oldDirtyEnd > runEnd || runEnd > oldLength) return false;
+            if (TouchesTopLevelSeparator(oldText, runStart, prefix, oldDirtyEnd)) return false;
+
+            var newRunEnd = runEnd + delta;
+            if (newRunEnd < runStart || newRunEnd > newLength) return false;
+            var runLength = last - first + 1;
+            // 复用既有解析器：片段补上容器外壳就能整段解析，多出的一个字符由 pairStart-1 抵消
+            var wrapped = (isObject ? "{" : "[") + text.Substring(runStart, newRunEnd - runStart) + (isObject ? "}" : "]");
+            var fragment = McdocJsonTextParser.Parse(wrapped);
+            var fragmentRoot = fragment.Root;
+            if (fragmentRoot is null || fragmentRoot.Kind != (isObject ? McdocJsonKind.Object : McdocJsonKind.Array)) return false;
+            // 解析器很宽容（非法内容也能吐出一个值）；只有吃掉整段外壳才算语法成立
+            if (!fragment.Spans.TryGetValue(fragmentRoot, out var fragmentSpan)
+                || fragmentSpan.ValueStart != 0 || fragmentSpan.ValueEnd != wrapped.Length) return false;
+            var parsedCount = isObject ? fragmentRoot.Properties?.Count ?? 0 : fragmentRoot.Items?.Count ?? 0;
+            // 成员数会变（增删成员）就不是"改一个值"，回落整篇
+            if (parsedCount != runLength) return false;
+
+            var newRoot = isObject ? McdocJsonValue.Object() : McdocJsonValue.Array();
+            var expectedKeys = new List<string>(members.Count);
+            for (var index = 0; index < first; index++) AppendMember(newRoot, isObject, root, index, members[index], expectedKeys);
+            for (var offset = 0; offset < parsedCount; offset++)
+            {
+                if (isObject)
+                {
+                    var pair = fragmentRoot.Properties[offset];
+                    newRoot.Properties.Add(new KeyValuePair<string, McdocJsonValue>(pair.Key, pair.Value));
+                    expectedKeys.Add(pair.Key);
+                }
+                else
+                {
+                    newRoot.Items.Add(fragmentRoot.Items[offset]);
+                }
+            }
+            for (var index = last + 1; index < members.Count; index++) AppendMember(newRoot, isObject, root, index, members[index], expectedKeys);
+
+            // 质量守卫：拼出来的键序列必须与"旧键 + 受影响成员解析结果"逐一相等（拼错一位就会在树里显形）
+            if (isObject)
+            {
+                if (newRoot.Properties.Count != expectedKeys.Count) return false;
+                for (var index = 0; index < expectedKeys.Count; index++)
+                {
+                    if (!string.Equals(newRoot.Properties[index].Key, expectedKeys[index], StringComparison.Ordinal)) return false;
+                }
+            }
+            else if (newRoot.Items.Count != members.Count)
+            {
+                return false;
+            }
+
+            // 以下开始改状态：上面的判据全部成立才允许落地
+            for (var index = first; index <= last; index++) DropSubtree(members[index]);
+            if (delta != 0)
+            {
+                for (var index = last + 1; index < members.Count; index++) ShiftSubtree(members[index], delta, spans);
+            }
+            var shift = runStart - 1;
+            if (shift != 0)
+            {
+                if (isObject)
+                {
+                    foreach (var pair in fragmentRoot.Properties ?? []) ShiftSubtree(pair.Value, shift, fragment.Spans);
+                }
+                else
+                {
+                    foreach (var item in fragmentRoot.Items ?? []) ShiftSubtree(item, shift, fragment.Spans);
+                }
+            }
+            foreach (var pair in fragment.Spans)
+            {
+                if (ReferenceEquals(pair.Key, fragmentRoot)) continue;
+                spans[pair.Key] = pair.Value;
+                anchors[pair.Key] = CreateNodeAnchors(pair.Value);
+            }
+
+            spans.Remove(root);
+            anchors.Remove(root);
+            var newRootSpan = new McdocJsonSpan(rootSpan.ValueStart, rootSpan.ValueEnd + delta, rootSpan.PairStart, rootSpan.PairEnd + delta);
+            spans[newRoot] = newRootSpan;
+            newRoot.Start = newRootSpan.ValueStart;
+            newRoot.End = newRootSpan.ValueEnd;
+            anchors[newRoot] = CreateNodeAnchors(newRootSpan);
+
+            RootText = text;
+            Generation++;
+            Root = newRoot;
+            return true;
+        }
+
+        private static void AppendMember(McdocJsonValue target, bool isObject, McdocJsonValue oldRoot, int index,
+            McdocJsonValue value, List<string> keys)
+        {
+            if (!isObject)
+            {
+                target.Items.Add(value);
+                return;
+            }
+            var key = oldRoot.Properties[index].Key;
+            target.Properties.Add(new KeyValuePair<string, McdocJsonValue>(key, value));
+            keys.Add(key);
+        }
+
+        /// <summary>顶层逗号/括号被碰过就必须重算成员边界；这里只在脏区间上判，避免整篇走查。</summary>
+        private static bool TouchesTopLevelSeparator(string text, int runStart, int from, int to)
+        {
+            var depth = 0;
+            var inString = false;
+            for (var index = runStart; index < to && index < text.Length; index++)
+            {
+                var current = text[index];
+                if (inString)
+                {
+                    if (current == '\\') { index++; continue; }
+                    if (current == '"') inString = false;
+                    continue;
+                }
+                if (current == '"') { inString = true; continue; }
+                if (current == '{' || current == '[') { depth++; continue; }
+                if (current == '}' || current == ']')
+                {
+                    depth--;
+                    if (depth < 0) return true;
+                    continue;
+                }
+                if (current == ',' && depth <= 0 && index >= from) return true;
+            }
+            return false;
+        }
+
+        /// <summary>被重解析的旧成员整棵子树要从登记表里摘掉，否则旧对象会把区间表越撑越大。</summary>
+        private void DropSubtree(McdocJsonValue node)
+        {
+            if (node is null) return;
+            spans.Remove(node);
+            anchors.Remove(node);
+            if (node.Kind == McdocJsonKind.Object)
+            {
+                foreach (var pair in node.Properties ?? []) DropSubtree(pair.Value);
+            }
+            else if (node.Kind == McdocJsonKind.Array)
+            {
+                foreach (var item in node.Items ?? []) DropSubtree(item);
+            }
+        }
+
+        /// <summary>复用的子树随文本平移：节点自身的 Start/End 与各层区间必须一起挪，否则锚点与树对不上。</summary>
+        private static void ShiftSubtree(McdocJsonValue node, int delta, Dictionary<McdocJsonValue, McdocJsonSpan> source)
+        {
+            if (node is null) return;
+            if (node.Start >= 0) node.Start += delta;
+            if (node.End >= 0) node.End += delta;
+            if (source.TryGetValue(node, out var span))
+            {
+                source[node] = new McdocJsonSpan(span.ValueStart + delta, span.ValueEnd + delta,
+                    span.PairStart + delta, span.PairEnd + delta);
+            }
+            if (node.Kind == McdocJsonKind.Object)
+            {
+                foreach (var pair in node.Properties ?? []) ShiftSubtree(pair.Value, delta, source);
+            }
+            else if (node.Kind == McdocJsonKind.Array)
+            {
+                foreach (var item in node.Items ?? []) ShiftSubtree(item, delta, source);
+            }
+        }
+
+        /// <summary>
+        /// 锚点只是区间表的缓存：文本被整篇替换后旧 TextAnchor 会被打散，所以读的时候按 spans 校验一次，
+        /// 不在了就现建——增量提交因此不必替整棵树重建锚点（那是这条路径上唯一的 O(节点) 硬开销）。
+        /// </summary>
+        private bool TryUseAnchors(McdocJsonValue node, out JsonNodeAnchors anchor)
+        {
+            anchor = null;
+            if (node is null || !spans.TryGetValue(node, out var span)) return false;
+            if (anchors.TryGetValue(node, out anchor) && IsAligned(anchor, span)) return true;
+            anchor = CreateNodeAnchors(span);
+            anchors[node] = anchor;
+            return true;
+        }
+
+        /// <summary>旧锚点（整篇替换后多半已被打散）正好落在目标区间上才算可复用，否则读到的偏移是假的。</summary>
+        private static bool IsAligned(JsonNodeAnchors anchor, McdocJsonSpan span)
+            => anchor is not null
+               && anchor.ValueStart is { IsDeleted: false }
+               && anchor.ValueEnd is { IsDeleted: false }
+               && anchor.PairStart is { IsDeleted: false }
+               && anchor.PairEnd is { IsDeleted: false }
+               && anchor.ValueStart.Offset == span.ValueStart
+               && anchor.ValueEnd.Offset == span.ValueEnd
+               && anchor.PairStart.Offset == span.PairStart
+               && anchor.PairEnd.Offset == span.PairEnd;
+
         /// <summary>在指定偏移建一个光标锚点。带 SurviveDeletion：被删除时只看 IsDeleted，不抛异常。</summary>
         public TextAnchor CreateCaretAnchor(int offset)
         {
@@ -136,10 +393,28 @@ namespace CBHK.Utility.Data.JsonText
         {
             start = 0;
             length = 0;
-            if (node is null || !anchors.TryGetValue(node, out var anchor) || !anchor.IsValid) return false;
+            if (!TryUseAnchors(node, out var anchor)) return false;
             start = anchor.ValueStart.Offset;
             length = Math.Max(0, anchor.ValueEnd.Offset - anchor.ValueStart.Offset);
             return true;
+        }
+
+        /// <summary>
+        /// 就地改文本之后，把区间表整体挪一下。区间表是锚点的"真相"（<see cref="TryUseAnchors"/> 拿它对账）：
+        /// 只改文本不改它，下一次读锚点就会按**旧位置**现建，编辑选区整体偏 delta 位 ——
+        /// 表现是"上一处改完，下一处改的时候啃掉/残留一个字符"（ffalse / falsee）。
+        /// </summary>
+        private void ShiftSpans(int replacedStart, int replacedEnd, int delta)
+        {
+            if (delta == 0) return;
+            foreach (var key in spans.Keys.ToList())
+            {
+                var span = spans[key];
+                spans[key] = new McdocJsonSpan(
+                    Shift(span.ValueStart), Shift(span.ValueEnd), Shift(span.PairStart), Shift(span.PairEnd));
+            }
+            return;
+            int Shift(int offset) => offset >= replacedEnd ? offset + delta : offset;
         }
 
         /// <summary>取得某个节点当前的文本（读自锚点）。</summary>
@@ -174,7 +449,9 @@ namespace CBHK.Utility.Data.JsonText
             }
 
             document.Replace(start, length, text);
-            // 只给"被替换的节点"重建锚点（TextAnchor.Offset 只读）；其它锚点由 AvalonEdit 自动平移
+            // 只给"被替换的节点"重建锚点（TextAnchor.Offset 只读）；其它锚点由 AvalonEdit 自动平移，
+            // 但**区间表不会自己挪**，必须跟着走，否则下一次读锚点会按旧位置现建
+            ShiftSpans(start, start + length, text.Length - length);
             spans[newValue] = new McdocJsonSpan(start, start + text.Length, start, start + text.Length);
             anchors[newValue] = CreateNodeAnchors(spans[newValue]);
         }
@@ -184,7 +461,7 @@ namespace CBHK.Utility.Data.JsonText
         {
             if (node is null || writing) return;
             var parent = FindParent(Root, node);
-            if (parent is null || parent.Kind != McdocJsonKind.Object || !anchors.TryGetValue(node, out var anchor)) return;
+            if (parent is null || parent.Kind != McdocJsonKind.Object || !TryUseAnchors(node, out var anchor)) return;
 
             var start = anchor.PairStart.Offset;
             var end = anchor.PairEnd.Offset;
@@ -311,16 +588,14 @@ namespace CBHK.Utility.Data.JsonText
             host = null;
             delta = 0;
             var bestStart = int.MinValue;
-            foreach (var pair in anchors)
+            // 走区间表而不是锚点表：锚点可能被整篇替换打散，区间表永远反映当前文本
+            foreach (var pair in spans)
             {
-                var anchor = pair.Value;
-                if (anchor is null || !anchor.IsValid) continue;
-                var start = anchor.ValueStart.Offset;
-                var end = anchor.ValueEnd.Offset;
-                if (offset < start || offset > end || start < bestStart) continue;
-                bestStart = start;
+                var span = pair.Value;
+                if (offset < span.ValueStart || offset > span.ValueEnd || span.ValueStart < bestStart) continue;
+                bestStart = span.ValueStart;
                 host = pair.Key;
-                delta = offset - start;
+                delta = offset - span.ValueStart;
             }
         }
 
@@ -328,7 +603,7 @@ namespace CBHK.Utility.Data.JsonText
         private int MapCaretOffset(McdocJsonValue host, int delta, int fallback)
         {
             var length = document.TextLength;
-            if (host is null || !anchors.TryGetValue(host, out var anchor) || anchor is null || !anchor.IsValid)
+            if (host is null || !TryUseAnchors(host, out var anchor) || anchor is null)
             {
                 var clamped = Math.Max(0, Math.Min(fallback, length));
                 McdocWriteTrace.Log("光标映射（退化夹紧）", null, "caret=" + fallback + " host=" + (host?.Kind.ToString() ?? "<无>")
@@ -435,10 +710,14 @@ namespace CBHK.Utility.Data.JsonText
             var text = McdocJsonFormatter.Format(newValue);
             if (text is null || text.Contains('\n')) return false;
 
+            // 换下来的旧节点必须一起从登记表里摘掉：两张表的键是强引用，
+            // 留在里面的旧 AST 会被一直吊着 —— 每改一次值就多一项（实测连改 200 次 +200 项）
+            McdocJsonValue previous = null;
             if (slot.Parent.Kind == McdocJsonKind.Object && slot.Parent.Properties is not null
                 && slot.Index < slot.Parent.Properties.Count)
             {
                 var pair = slot.Parent.Properties[slot.Index];
+                previous = pair.Value;
                 if (!ReferenceEquals(pair.Value, newValue))
                 {
                     slot.Parent.Properties[slot.Index] = new KeyValuePair<string, McdocJsonValue>(pair.Key, newValue);
@@ -447,16 +726,23 @@ namespace CBHK.Utility.Data.JsonText
             else if (slot.Parent.Kind == McdocJsonKind.Array && slot.Parent.Items is not null
                 && slot.Index < slot.Parent.Items.Count)
             {
+                previous = slot.Parent.Items[slot.Index];
                 slot.Parent.Items[slot.Index] = newValue;
             }
             else
             {
                 return false;
             }
+            if (previous is not null && !ReferenceEquals(previous, newValue))
+            {
+                spans.Remove(previous);
+                anchors.Remove(previous);
+            }
 
             var start = Math.Max(0, Math.Min(slot.Start, document.TextLength));
             var length = Math.Max(0, Math.Min(slot.Length, document.TextLength - start));
             document.Replace(start, length, text);
+            ShiftSpans(start, start + length, text.Length - length);
             spans[newValue] = new McdocJsonSpan(start, start + text.Length, start, start + text.Length);
             anchors[newValue] = CreateNodeAnchors(spans[newValue]);
             // 文本与 AST 仍一一对应：同代断言要跟着更新（不重解析，Root 不变）

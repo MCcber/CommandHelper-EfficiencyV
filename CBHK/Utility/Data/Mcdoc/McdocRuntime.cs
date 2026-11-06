@@ -56,6 +56,14 @@ namespace CBHK.Utility.Data.Mcdoc
         public McdocAttributeRegistry Attributes = new();
         public bool AllowMissingKeys;
         public bool RequireCanonical;
+
+        /// <summary>
+        /// 本次构建要沿用的"用户显式选过的 union 分支"（JsonPath → 成员下标）。
+        /// 局部重建是"按声明类型重跑一遍"，不带这个提示就只能按 JSON 值猜；并列时猜会退回首个成员，
+        /// 表现是切完分支一重建就自己弹回去。由 <see cref="McdocTreeDocument.RebuildNode"/> 填入，
+        /// Runtime 一次构建一个，不会跨会话串味。
+        /// </summary>
+        public IReadOnlyDictionary<string, int> UnionSelectionHints;
         public Action<string> Warn;
         /// <summary>#[id] 候选空间解析器（注册表 / 调度器索引成员），缓存随 runtime 生命周期。</summary>
         public McdocIdSpaceService IdSpaces = new();

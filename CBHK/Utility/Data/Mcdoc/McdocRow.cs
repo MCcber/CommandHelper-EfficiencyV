@@ -215,9 +215,47 @@ namespace CBHK.Utility.Data.Mcdoc
 
         public string Category => Head.Category;
 
-        /// <summary>行尾角标：诊断 / 未知字段 / 颜色（error 压制 warning 之后还有内容才显示）。</summary>
-        public Visibility DiagnosticBadgeVisibility => Diagnostics.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        public Visibility UnknownBadgeVisibility => Node.IsUnknownField ? Visibility.Visible : Visibility.Collapsed;
+        /// <summary>
+        /// 行尾角标：诊断 / 颜色（error 压制 warning 之后还有内容才显示）。
+        /// 版本更迭后遗留的键不在这里挂第二颗"!"：它行首已经有专门的黄色感叹号。
+        /// </summary>
+        public Visibility DiagnosticBadgeVisibility
+            => !Node.IsUnknownField && Diagnostics.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        /// <summary>
+        /// 版本更迭后遗留的键（schema 里没有这个键）：行首永远给删除入口 ——
+        /// 键还在文档里就删键；换版本时已经被清掉了，就删这一行（幽灵行不该点不掉）。
+        /// </summary>
+        public Visibility UnknownDeleteVisibility
+            => Node.IsUnknownField && Node.Parent is not null ? Visibility.Visible : Visibility.Collapsed;
+
+        /// <summary>
+        /// 遗留键的删除入口。两种现场分开走：键还在 → 走节点级删除（父级重建，行随之消失）；
+        /// 键已被换版本清掉 → 只把这一行从树上摘掉再重拼父行。**不能**走父级重建：
+        /// 那种重建是"按 JSON 重亲子级"，同一父级下其它幽灵行会一起被清走。
+        /// </summary>
+        public System.Windows.Input.ICommand UnknownDeleteCommand => new McdocCommand(() =>
+        {
+            McdocWriteTrace.Trace("unknown-delete", "path=" + (Node.JsonPath ?? "?")
+                + " removeField=" + (Node.RemoveFieldCommand?.CanExecute(null) == true)
+                + " field=" + (Node.FieldName ?? "<空>"));
+            if (Node.RemoveFieldCommand?.CanExecute(null) == true)
+            {
+                Node.RemoveFieldCommand.Execute(null);
+                return;
+            }
+            var parent = Node.Parent;
+            if (parent is null) return;
+            parent.Children.Remove(Node);
+            parent.Items.Remove(Node);
+            parent.SelectedUnionChildren.Remove(Node);
+            // 只重拼"父行自己的子树"（RefreshAround 会去刷父行的父级，这里刷不到）
+            if (projector?.Find(parent) is { } parentRow) projector.SpliceSubtree(parentRow);
+        });
+
+        /// <summary>行尾的黄色感叹号：当前版本不存在该节点（管线不解析、不渲染它的子级）</summary>
+        public Visibility UnknownBadgeVisibility
+            => Node.IsUnknownField ? Visibility.Visible : Visibility.Collapsed;
         public Visibility ColorBadgeVisibility => Head.IsColorPicker || Head.IsColorEnum ? Visibility.Visible : Visibility.Collapsed;
 
         /// <summary>ToolTip 摘要：不截断（弹层里也要看全部）。</summary>
@@ -352,34 +390,25 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>可选且文档里还没有这个键：只给一个 ⊕（添加）。</summary>
         public Visibility SetDefaultVisibility => Head.CanSetDefault ? Visibility.Visible : Visibility.Collapsed;
 
-        /// <summary>可选且已经有值、并且带子级：⊕ 让位给「清空」（把值从文档里去掉）。</summary>
+        /// <summary>
+        /// 可选且已经有值、且编辑器**自己清不空**（容器 / 颜色选择器 / Raw）：给「清空」把键从文档里去掉。
+        /// 能靠编辑器清空的（文本框 / 数字 / 布尔 / 枚举下拉的（未设置）/ union 分支下拉）不再出行尾按钮 ——
+        /// 可选字段的 unset 只有一条出口，行上不留第二个删除入口。
+        /// </summary>
         public Visibility ClearVisibility
-            => !Node.IsRequired && Node.Json is not null && HasChildren && Node.RemoveFieldCommand is not null
+            => !Node.IsRequired && !Node.IsUnknownField && Node.Json is not null
+               && !McdocNodePresenter.HasSelfClearGesture(Node)
                 ? Visibility.Visible
                 : Visibility.Collapsed;
 
         public System.Windows.Input.ICommand ClearCommand => Node.RemoveFieldCommand;
         public Visibility ItemActionsVisibility => IsListChild ? Visibility.Visible : Visibility.Collapsed;
 
-        public System.Windows.Input.ICommand RemoveCommand => Node.RemoveEntryCommand ?? Node.RemoveFieldCommand;
-        public System.Windows.Input.ICommand RemoveFieldCommand => Node.RemoveFieldCommand;
         public System.Windows.Input.ICommand RemoveEntryCommand => Node.RemoveEntryCommand;
-
-        /// <summary>misode：只有可选字段/列表项才给删除按钮（必选字段删了就是非法文档，不提供入口）。</summary>
-        /// <summary>misode StructHead：可选且已存在 → 红垃圾桶（删字段）。</summary>
-        /// <summary>垃圾桶只处理"没有子级"的可选字段；带子级的走「清空」，避免同一行两个删除入口。</summary>
-        public Visibility RemoveFieldVisibility
-            => Head.CanRemove && !HasChildren ? Visibility.Visible : Visibility.Collapsed;
 
         /// <summary>动态键条目（map 里的已有键）删除。</summary>
         public Visibility RemoveEntryVisibility
             => Node.RemoveEntryCommand?.CanExecute(null) == true ? Visibility.Visible : Visibility.Collapsed;
-
-        /// <summary>兼容聚合：任一"删除"入口可用即视为可见。</summary>
-        public Visibility RemoveVisibility
-            => RemoveFieldVisibility == Visibility.Visible || RemoveEntryVisibility == Visibility.Visible
-                ? Visibility.Visible
-                : Visibility.Collapsed;
 
         /// <summary>misode ListBody 尾部的 add_bottom：一条"追加"行。</summary>
         public System.Windows.Input.ICommand AddTailCommand => Node.AddItemCommand;
@@ -533,9 +562,21 @@ namespace CBHK.Utility.Data.Mcdoc
 
         /// <summary>列表/tuple 子行的"删掉这一项"（Node.RemoveSelfCommand → RemoveItemAt）。</summary>
         public Visibility RemoveSelfVisibility
-            => ItemActionsVisibility == Visibility.Visible && Node.RemoveSelfCommand?.CanExecute(null) == true
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+        {
+            get
+            {
+                if (ItemActionsVisibility != Visibility.Visible) return Visibility.Collapsed;
+                if (Node.RemoveSelfCommand?.CanExecute(null) == true) return Visibility.Visible;
+                // 是列表子行、文档里也有值，却拿不到删除命令：这排按钮上一轮就是这么永久塌掉的。
+                // 让它自己进日志（只在 trace 打开时写），用户点一次即可由 --check-trace 判定。
+                if (Node.Json is not null)
+                {
+                    McdocWriteTrace.Trace("self-delete-hidden", "path=" + (Node.JsonPath ?? "?")
+                        + " isListChild=" + IsListChild + " command=" + (Node.RemoveSelfCommand is null ? "<null>" : "cannot"));
+                }
+                return Visibility.Collapsed;
+            }
+        }
 
         public Visibility DiagnosticsVisibility => DiagnosticBadgeVisibility;
 
@@ -543,7 +584,18 @@ namespace CBHK.Utility.Data.Mcdoc
 
         public EnumMember SelectedUnionOption
         {
-            get => Node.SelectedUnionTypeName;
+            get
+            {
+                // 必须回「候选列表里的那一个实例」：ItemsSource 是 Head.BranchOptions，
+                // 每次投影都是新对象，直接返回节点上那个旧实例会让下拉找不到选中项，
+                // 于是把自己的值再推回 setter（同一支、不同对象）→ 又切一次分支 → JSON 抖动。
+                var current = Node.SelectedUnionTypeName;
+                foreach (var option in UnionOptions)
+                {
+                    if (McdocUnionSwitch.IsSameOption(option, current)) return option;
+                }
+                return current;
+            }
             set
             {
                 // 分支切换的节点级语义收在 McdocUnionSwitch（unset / 同支 / 展开 / getChange 改写文档）

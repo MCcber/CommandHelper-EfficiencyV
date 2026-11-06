@@ -1,3 +1,5 @@
+using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -97,18 +99,60 @@ namespace CBHK.Utility.Data.Mcdoc
             => node is not null && node.Json is null && node.Parent is not null && !node.IsRequired
                && !node.IsDynamicKey && !node.IsMapEntry;
 
-        /// <summary>可选字段的删除入口：有值、且文档里确实有这个键（删得掉才给按钮）。</summary>
-        protected static bool CanRemoveField(McdocTreeNode node)
-            => node is not null && node.Json is not null && !node.IsRequired
-               && !node.IsDynamicKey && !node.IsMapEntry
-               && node.RemoveFieldCommand?.CanExecute(null) == true;
+        /// <summary>
+        /// 行上的编辑器自己能不能把值弄空（= 可选字段的 unset 手势）。只回答"控件允许不允许清空"，
+        /// 不回答"该不该允许删"——必选/动态键这些语义由调用方守。返回 false 的行由行尾「清空」兜底
+        /// （容器 / 取色器 / Raw）；能自己清空的行不再给第二个删除入口。
+        /// </summary>
+        public static bool HasSelfClearGesture(McdocTreeNode node)
+        {
+            if (node is null) return false;
+            // union：unset 在分支下拉里（（未设置）哨兵），与标量镜像无关
+            if (node.Type?.Kind == McdocTypeKind.Union) return true;
+            // hex 颜色走取色器：没有"清空"这个手势
+            if (ColorKindFor(node) == "hex_rgb") return false;
+            // 图标位 + 候选下拉（item/block 的 #[id]）：只能选候选，清空要靠（未设置）
+            if (IsIconSelectFor(node)) return HasUnsetOption(node);
+            var editor = MirroredEditorKind(node);
+            if (editor == McdocEditorKind.None) editor = EditorKindFor(node.Type, node.UseSelect);
+            return editor switch
+            {
+                // 文本框变体清空即删键；但 UseSelect / AllowCustomValue 走的是"只有下拉"，得靠（未设置）反选
+                McdocEditorKind.Text => !(node.UseSelect || node.AllowCustomValue) || HasUnsetOption(node),
+                McdocEditorKind.Number or McdocEditorKind.Bool => true,
+                // 枚举/候选下拉：只有"第 0 项是（未设置）"时才能反选（可选字段由父级插哨兵）
+                McdocEditorKind.Enum => HasUnsetOption(node),
+                _ => false,
+            };
+        }
+
+        private static bool HasUnsetOption(McdocTreeNode node)
+            => node.EnumOptionList is { Count: > 0 } options && McdocUnionSwitch.IsUnsetOption(options[0]);
 
         protected static IReadOnlyList<string> DiagnosticsFor(McdocTreeNode node)
         {
             var list = new List<string>();
             if (!string.IsNullOrEmpty(node.Error)) list.Add(node.Error);
             if (node.Diagnostics is { Count: > 0 }) list.AddRange(node.Diagnostics);
+            if (list.Count == 0) return null;
+            // 构建期挂上的「缺少必填键：x」是**当时的**判定：键后来补上了，它就该自己消失。
+            // 按现在的文档重新判定一次（不是按消息特判业务，而是同一条规则的重算即覆盖）。
+            list.RemoveAll(text => IsStaleMissingKeyMessage(node, text));
             return list.Count == 0 ? null : list;
+        }
+
+        private const string MissingKeyPrefix = "缺少必填键";
+
+        private static bool IsStaleMissingKeyMessage(McdocTreeNode node, string text)
+        {
+            if (string.IsNullOrEmpty(text) || !text.StartsWith(MissingKeyPrefix, StringComparison.Ordinal)) return false;
+            var separator = text.IndexOf('：');
+            if (separator < 0 || separator + 1 >= text.Length) return false;
+            var field = text.Substring(separator + 1).Trim();
+            var json = node?.Json;
+            if (json is null) return false;                       // 还是空壳：提醒有效
+            if (json.Kind != McdocJsonKind.Object) return true;   // 已经不是对象了，这条提醒不再成立
+            return (json.Properties ?? []).Any(item => string.Equals(item.Key, field, StringComparison.Ordinal));
         }
 
         /// <summary>空值占位（旧管线拿字段名当水印，这里给类型提示，对应 misode 的 placeholder）。</summary>

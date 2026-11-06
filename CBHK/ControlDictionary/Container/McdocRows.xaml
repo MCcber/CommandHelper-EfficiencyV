@@ -61,14 +61,16 @@
         </Setter>
     </Style>
 
+    <!--
+        行内文本框直接用项目皮肤（VectorTextBoxStyle）：ThemeBackground=CommonBackground、
+        Foreground/CaretBrush=CommonForeground、模板里的上边线 + 水印全部生效。
+        以前这里把底色/描边压成 Transparent/CommonForeground，而 VectorTextBox 遇到透明主题会跳过
+        UpdateBorderColorByBackgroundColor，于是永远停在"白底 + 深色 1px 边"的扁平样子。
+    -->
     <Style
         x:Key="MdocTransparentTextBoxStyle"
         BasedOn="{StaticResource VectorTextBoxStyle}"
-        TargetType="{x:Type Input:VectorTextBox}">
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="ThemeBackground" Value="Transparent" />
-        <Setter Property="BorderBrush" Value="{DynamicResource CommonForeground}" />
-    </Style>
+        TargetType="{x:Type Input:VectorTextBox}" />
 
     <Style
         x:Key="MdocTransparentComboBoxStyle"
@@ -156,7 +158,6 @@
     <Geometry x:Key="MdocArrowUpGeometry">M 0,10 L 6,0 L 12,10 Z</Geometry>
     <Geometry x:Key="MdocArrowDownGeometry">M 0,0 L 6,10 L 12,0 Z</Geometry>
     <Geometry x:Key="MdocDuplicateGeometry">F1 M 0,0 L 8,0 L 8,8 L 0,8 Z M 4,4 L 12,4 L 12,12 L 4,12 Z</Geometry>
-    <Geometry x:Key="MdocClearGeometry">F1 M 0,3 L 12,3 L 12,12 L 0,12 Z M 2,5 L 10,5 L 10,10 L 2,10 Z</Geometry>
     <Geometry x:Key="MdocRenameGeometry">M 1,11 L 1,13 L 3,13 L 12,4 L 10,2 Z M 11,1 L 13,3 L 12,4 L 10,2 Z</Geometry>
     <Geometry x:Key="MdocTrashGeometry">F1 M 2,2 L 12,2 L 12,4 L 2,4 Z M 3,5 L 11,5 L 10,13 L 4,13 Z</Geometry>
 
@@ -400,14 +401,18 @@
                         Text="{Binding DataContext.ItemPreviewText, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
                 </Border>
             </Grid>
+            <!--
+                候选项必须过转换器：VectorIconTextComboBoxItemTemplate 绑的是 item.Text（还有 item.Image），
+                直接喂 EnumMember 时每一行都是空的（"物品枚举节点里成员看不见文本"）。
+                DisplayMemberPath 也没用 —— 样式里的 ItemTemplate 会压掉它。
+            -->
             <VectorComboBox:VectorIconTextComboBox
                 Width="260"
                 Height="34"
                 VerticalAlignment="Center"
-                DisplayMemberPath="Name"
                 Foreground="{DynamicResource CommonForeground}"
-                ItemsSource="{Binding EnumOptionList}"
-                SelectedItem="{Binding SelectedEnumOption, Mode=TwoWay}"
+                ItemsSource="{Binding EnumOptionList, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+                SelectedItem="{Binding SelectedEnumOption, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
                 Style="{DynamicResource VectorIconTextComboBoxStyle}" />
         </StackPanel>
     </DataTemplate>
@@ -426,16 +431,26 @@
         RawEditor="{StaticResource McdocRawEditor}"
         TextEditor="{StaticResource McdocTextEditor}" />
 
-    <!--  行首标记：诊断 / 未知字段 / 颜色（misode 的 Errors + 色块；一格竖排，行高 30 够放两个）  -->
+    <!--  行首标记：删除入口 / 颜色（misode 的 Errors + 色块）。感叹号不在这里，它在行尾（模板最右）  -->
     <DataTemplate x:Key="MdocRowMarkerTemplate">
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-            <TextBlock
-                FontSize="12"
-                FontWeight="Bold"
-                Foreground="#F0AD4E"
-                Text="?"
-                ToolTip="未在 schema 中声明"
-                Visibility="{Binding UnknownBadgeVisibility}" />
+        <StackPanel
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Orientation="Horizontal">
+            <!--
+                版本更迭后遗留的键（schema 里没有这个键）：行首这颗与行尾「删除这个键」**完全同款**（Icon 15 + IconMargin 5）。
+                按钮本体 = 边框 1+1 + 描边列 3+3 + (15+5+5) = 33，所以行首列宽必须 ≥33（这里给 34），列窄了就会左右被裁。
+            -->
+            <VectorButton:VectorFlatIconButton
+                Command="{Binding UnknownDeleteCommand}"
+                Icon="{DynamicResource MdocTrashGeometry}"
+                IconBrush="{DynamicResource CommonForeground}"
+                IconHeight="15"
+                IconMargin="5"
+                IconWidth="15"
+                Style="{DynamicResource VectorFlatIconButtonStyle}"
+                ToolTip="当前版本不存在该节点（版本更迭后遗留的键），点击删除"
+                Visibility="{Binding UnknownDeleteVisibility}" />
             <Border
                 Width="10"
                 Height="10"
@@ -503,13 +518,13 @@
 
     <DataTemplate x:Key="McdocAddTailRow">
         <Grid
-            MinHeight="30"
+            MinHeight="38"
             Margin="{Binding Indent}"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
             Background="Transparent">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="16" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
@@ -529,13 +544,13 @@
 
     <DataTemplate x:Key="McdocPlainRow">
         <Grid
-            MinHeight="30"
+            MinHeight="38"
             Margin="{Binding Indent}"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
             Background="Transparent">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="16" />
                 <ColumnDefinition Width="Auto" MinWidth="72" />
                 <ColumnDefinition Width="Auto" />
@@ -670,40 +685,40 @@
                     Style="{DynamicResource VectorFlatIconButtonStyle}"
                     ToolTip="删除这一项"
                     Visibility="{Binding RemoveSelfVisibility}" />
-                <!--  可选且有子级：⊕ 让位给「清空」，同一行不再出现第二个删除入口  -->
+                <!--  可选且编辑器自己清不空（容器 / 取色器 / Raw）：行尾只留这一个删除入口  -->
                 <VectorButton:VectorFlatIconButton
                     Command="{Binding ClearCommand}"
-                    Icon="{DynamicResource MdocClearGeometry}"
-                    IconBrush="{DynamicResource CommonForeground}"
-                    IconHeight="14"
-                    IconMargin="5"
-                    IconWidth="14"
-                    Style="{DynamicResource VectorFlatIconButtonStyle}"
-                    ToolTip="清空（把该键从文档里去掉）"
-                    Visibility="{Binding ClearVisibility}" />
-                <VectorButton:VectorFlatIconButton
-                    Command="{Binding RemoveFieldCommand}"
                     Icon="{DynamicResource MdocTrashGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
                     IconHeight="15"
                     IconMargin="5"
                     IconWidth="15"
                     Style="{DynamicResource VectorFlatIconButtonStyle}"
-                    ToolTip="删除字段"
-                    Visibility="{Binding RemoveFieldVisibility}" />
+                    ToolTip="删除这个键（从文档里去掉）"
+                    Visibility="{Binding ClearVisibility}" />
+                <!--  当前版本不存在该节点：感叹号放在行尾（模板最右侧），行首只留删除入口  -->
+                <TextBlock
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="13"
+                    FontWeight="Bold"
+                    Foreground="#FFC107"
+                    Text="!"
+                    ToolTip="当前版本不存在该节点（版本更迭后遗留的键）：内容不解析、不渲染，可点行首按钮删除"
+                    Visibility="{Binding UnknownBadgeVisibility}" />
             </StackPanel>
         </Grid>
     </DataTemplate>
 
     <DataTemplate x:Key="McdocUnionRow">
         <Grid
-            MinHeight="30"
+            MinHeight="38"
             Margin="{Binding Indent}"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
             Background="Transparent">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="16" />
                 <ColumnDefinition Width="Auto" MinWidth="72" />
                 <ColumnDefinition
@@ -753,29 +768,19 @@
                     Style="{DynamicResource VectorFlatIconButtonStyle}"
                     ToolTip="新增"
                     Visibility="{Binding ListButtonsVisibility}" />
-                <VectorButton:VectorFlatIconButton
-                    Command="{Binding RemoveFieldCommand}"
-                    Icon="{DynamicResource MdocTrashGeometry}"
-                    IconBrush="{DynamicResource CommonForeground}"
-                    IconHeight="15"
-                    IconMargin="5"
-                    IconWidth="15"
-                    Style="{DynamicResource VectorFlatIconButtonStyle}"
-                    ToolTip="删除"
-                    Visibility="{Binding RemoveFieldVisibility}" />
             </StackPanel>
         </Grid>
     </DataTemplate>
 
     <DataTemplate x:Key="McdocKeyedRow">
         <Grid
-            MinHeight="30"
+            MinHeight="38"
             Margin="{Binding Indent}"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
             Background="Transparent">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="16" />
                 <ColumnDefinition Width="Auto" MinWidth="72" />
                 <ColumnDefinition Width="Auto" />
@@ -904,13 +909,13 @@
 
     <DataTemplate x:Key="McdocPlaceholderRow">
         <Grid
-            MinHeight="30"
+            MinHeight="38"
             Margin="{Binding Indent}"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
             Background="Transparent">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="16" />
                 <ColumnDefinition Width="Auto" MinWidth="72" />
                 <ColumnDefinition Width="Auto" />
@@ -973,13 +978,13 @@
 
     <DataTemplate x:Key="McdocMoreRow">
         <Grid
-            MinHeight="30"
+            MinHeight="38"
             Margin="{Binding Indent}"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
             Background="Transparent">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="16" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />

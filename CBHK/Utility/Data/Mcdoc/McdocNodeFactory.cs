@@ -121,7 +121,7 @@ namespace CBHK.Utility.Data.Mcdoc
             McdocRuntime runtime, McdocValueNode parent, McdocRuntimeNode keyNode, int depth,
             bool narrow = true, Action<McdocTreeNode> onValueChanged = null, string jsonPath = "$",
             List<McdocType> visiting = null, Action<McdocTreeNode> onStructureChanged = null,
-            McdocNodeBudget budget = null, bool deferChildren = false)
+            McdocNodeBudget budget = null, bool deferChildren = false, bool unknownField = false)
         {
             var runtimeNode = new McdocRuntimeNode(json, json?.InferType() ?? McdocType.Any());
             var self = McdocValueNode.Of(runtimeNode, parent, keyNode);
@@ -206,6 +206,8 @@ namespace CBHK.Utility.Data.Mcdoc
             var node = new McdocTreeNode
             {
                 FieldName = name,
+                // 未声明键要在 Prepare / 建子级之前就打上标记：表现器与工厂都按它改道
+                IsUnknownField = unknownField,
                 DeclaredType = declaredType,
                 Type = type,
                 ValueNode = self,
@@ -218,7 +220,15 @@ namespace CBHK.Utility.Data.Mcdoc
                 StructureChanged = onStructureChanged,
                 Error = evaluationError,
             };
-            var editor = McdocCollectionEditor.Default;
+            if (declaredType?.Kind is McdocTypeKind.Dispatcher or McdocTypeKind.Indexed)
+        {
+            // 靠兄弟键/调度器解出来的类型：解不出来时求值退成 any —— 行上就是空下拉或动态键占位
+            McdocWriteTrace.Trace("index-resolve", "path=" + (jsonPath ?? "?")
+                + " registry=" + (declaredType.Registry ?? "-")
+                + " resolved=" + (type?.Kind is not (McdocTypeKind.Any or McdocTypeKind.Unsafe))
+                + " kind=" + (type?.Kind.ToString() ?? "null"));
+        }
+        var editor = McdocCollectionEditor.Default;
             // 只有"列表语义"的节点才有列表追加：map/struct 的 ⊕ 必须走"起键"（CommitEntry），
             // 否则按下一个永远 CanExecute=true 的按钮，什么都写不出来（表现是"按了没反应/结果不对"）
             bool CanAppendItems() => node.Type?.IsListLike == true
@@ -234,7 +244,9 @@ namespace CBHK.Utility.Data.Mcdoc
             node.DuplicateCommand = new McdocCommand(() => editor.DuplicateItem(node),
                 () => node.Json is not null && node.Parent?.Json is { Kind: McdocJsonKind.Array });
             node.RemoveFieldCommand = new McdocCommand(() => editor.RemoveField(node),
-                () => node.Parent?.Json is { Kind: McdocJsonKind.Object } parent
+                // 必选字段删了就是非法文档：删除原语自己就得拒绝（行上的按钮与 union 的 unset 都已按可选性收口）
+                () => !node.IsRequired
+                    && node.Parent?.Json is { Kind: McdocJsonKind.Object } parent
                     && parent.Properties is not null
                     && parent.Properties.Any(pair => pair.Key == node.FieldName));
 
@@ -257,7 +269,21 @@ namespace CBHK.Utility.Data.Mcdoc
                 OnStructureChanged = onStructureChanged,
             };
             // 行自身状态必须在任何早退之前备好：深度/预算/环只省"子级"，不能省"这行用什么控件/显示什么值"
-            registry.For(type).Prepare(node, type, json, context);
+            registry.For(node).Prepare(node, type, json, context);
+            // 取证：声明是枚举/带候选，却一个候选都没建出来 —— 首次建树"哑下拉"的现场特征
+            if (node.DeclaredType?.Kind == McdocTypeKind.Enum
+                && (node.EnumOptionList is null || node.EnumOptionList.Count == 0))
+            {
+                McdocWriteTrace.Trace("enum-empty", "path=" + (node.JsonPath ?? "?")
+                    + " declared=" + node.DeclaredType.Kind + " values=" + (node.DeclaredType.EnumValues?.Count ?? 0));
+            }
+            // 取证：把行上现存的提醒原文记下来（哪条消息让感叹号下不去）
+            if (!string.IsNullOrEmpty(node.Error) || node.Diagnostics is { Count: > 0 })
+            {
+                McdocWriteTrace.Trace("diag", "path=" + (node.JsonPath ?? "?")
+                    + " err=" + (node.Error ?? "")
+                    + " msgs=" + (node.Diagnostics is { Count: > 0 } list ? string.Join(" | ", list) : ""));
+            }
 
             if (depth >= MaxDepth) return node;
             // 预算只约束"缺省展开"（json == null）：真实 JSON 节点不吃预算，
@@ -276,7 +302,7 @@ namespace CBHK.Utility.Data.Mcdoc
                     node.Children.Clear();
                     node.Items.Clear();
                     node.SelectedUnionChildren.Clear();
-                    registry.For(type).PopulateChildren(node, type, node.Json, context);
+                    registry.For(node).PopulateChildren(node, type, node.Json, context);
                     foreach (var child in node.Children) child.Parent = node;
                     foreach (var item in node.Items) item.Parent = node;
                     foreach (var item in node.SelectedUnionChildren) item.Parent = node;
@@ -301,7 +327,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 // misode：默认展开（只有 IsDefaultCollapsedType 例外）+ 深度上限（WPF 性能偏差）
                 var hasChildren = eager
                     ? node.Children.Count + node.Items.Count + node.SelectedUnionChildren.Count > 0
-                    : registry.For(type).CanHaveChildren(node);
+                    : registry.For(node).CanHaveChildren(node);
                 // 先看页面级折叠记忆（misode useToggles），没有记录才走"默认展开深度"
                 var remembered = McdocExpandState.Lookup(jsonPath);
                 if (remembered.HasValue)

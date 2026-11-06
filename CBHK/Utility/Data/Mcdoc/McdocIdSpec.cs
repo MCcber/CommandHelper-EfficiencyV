@@ -238,6 +238,13 @@ namespace CBHK.Utility.Data.Mcdoc
         }
     }
 
+    /// <summary>哑下拉自报：只在 trace 打开时写，供 --check-trace 判定。</summary>
+    internal static class McdocOptionTrace
+    {
+        public static void Report(McdocTreeNode node, string reason)
+            => McdocWriteTrace.Trace("enum-empty", "path=" + (node?.JsonPath ?? "?") + " reason=" + reason);
+    }
+
     /// <summary>#[id] 规格解析与候选值填充（misode 的 getValues / isSelectRegistry 分支）。</summary>
     internal static class McdocSelectOptions
     {
@@ -261,11 +268,20 @@ namespace CBHK.Utility.Data.Mcdoc
                 ApplyBareId(node, type);
                 return;
             }
-            if (string.IsNullOrEmpty(spec?.Registry) || runtime is null) return;
+            if (string.IsNullOrEmpty(spec?.Registry) || runtime is null)
+            {
+                if (type.Kind == McdocTypeKind.Enum) McdocOptionTrace.Report(node, "enum-without-registry");
+                return;
+            }
 
             // 候选在求值期就解析好了（McdocSimplifier.ResolveIdMembers）：presenter 不再回查数据源
             var options = type.IdMembers;
-            if (options is not { Count: > 0 }) return;
+            if (options is not { Count: > 0 })
+            {
+                // 声明有注册表/是枚举，求值却给不出候选：行上就是一个"哑下拉"（点了没反应）
+                McdocOptionTrace.Report(node, "no-members registry=" + spec.Registry);
+                return;
+            }
 
             // misode McdocRenderer.tsx:163：isSelect = idRegistry && isSelectRegistry(idRegistry, version)。
             // 白名单内 → 闭合下拉（<select>，只能选候选）；白名单外 → 可编辑下拉（<input list=datalist>，
@@ -368,6 +384,33 @@ namespace CBHK.Utility.Data.Mcdoc
             node.SelectedEnumOption = normalized is null
                 ? node.EnumOptionList.FirstOrDefault()
                 : node.EnumOptionList.FirstOrDefault(item => item.Name == normalized) ?? node.EnumOptionList.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// 可选字段的下拉第 0 项补「（未设置）」：选中即删键（与 union 分支下拉同一语义）。
+        /// **必须在父级写完 <see cref="McdocTreeNode.IsRequired"/> 之后调用** —— 建子级期那个值还是默认 true，
+        /// 那时判"是否可选"会恒真（同一个坑见 bool 默认值）。幂等：重复调用只留一个哨兵。
+        /// </summary>
+        internal static void EnsureUnsetOption(McdocTreeNode node) => EnsureUnsetOption(node, node is not null && !node.IsRequired);
+
+        /// <summary>同上；<paramref name="optional"/> 由调用方显式给（union 分支节点的 IsRequired 没有"可选"含义）。</summary>
+        internal static void EnsureUnsetOption(McdocTreeNode node, bool optional)
+        {
+            if (node?.EnumOptionList is not { Count: > 0 } options) return;
+            if (!optional) return;
+            if (!McdocUnionSwitch.IsUnsetOption(options[0]))
+            {
+                options.Insert(0, new EnumMember
+                {
+                    Name = McdocNodePresenter.UnsetLabel,
+                    Value = new MetaValue { LiteralValue = -1 },
+                });
+            }
+            // 文档里没有这个键 → 显示（未设置）；有值就不动选中项（候选外的值不伪造选中）
+            if (node.Json is null)
+            {
+                node.SetEnumOptionSilently(options[0]);
+            }
         }
 
         /// <summary>动态键行的键候选：键类型带 #[id] 且注册表取得到值时，把键变成下拉。</summary>

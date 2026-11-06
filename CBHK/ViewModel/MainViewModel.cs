@@ -90,10 +90,11 @@ namespace CBHK.ViewModel
                     string currentName = data.ZH;
                     string imagePath = baseImagePath + currentId + ".png";
                     Uri uri = new(imagePath, UriKind.Absolute);
-                    if (Application.GetResourceStream(uri) is not null)
+                    try
                     {
                         button.Icon = new BitmapImage(uri);
                     }
+                    catch {}
                     if (currentId is not null)
                     {
                         button.Title = currentName;

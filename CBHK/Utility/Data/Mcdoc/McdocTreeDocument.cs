@@ -88,11 +88,46 @@ namespace CBHK.Utility.Data.Mcdoc
             return Diagnostics;
         }
 
-        /// <summary>只重建该节点的直接子级（结构变更的快路径，避免整树重新求值）。</summary>
-        public void RefreshNode(McdocTreeNode node)
+        /// <summary>
+        /// 把"当前版本不存在"的键从文档里摘掉（换版本后调用）：左侧行**留着**（黄色感叹号），
+        /// 右侧 JSON 里这个键不再存在。所以这里必须**静默**改模型 —— 走 RemoveField 会抬 StructureChanged，
+        /// 父级一重建，JSON 里没有的键就不会再出"未声明键"行，那行当场消失。
+        /// </summary>
+        public int CountUnknownFields()
         {
-            node?.RefreshChildren?.Invoke();
+            var count = 0;
+            void Walk(McdocTreeNode node)
+            {
+                if (node is null) return;
+                if (node.IsUnknownField && node.Json is not null)
+                {
+                    // 遗留键不建子级，它的子树里不会再冒出别的键
+                    count++;
+                    return;
+                }
+                foreach (var child in node.Children) Walk(child);
+                foreach (var child in node.Items) Walk(child);
+                foreach (var child in node.SelectedUnionChildren) Walk(child);
+            }
+            foreach (var root in Nodes) Walk(root);
+            return count;
+        }
+
+        /// <summary>
+        /// 只重建该节点的直接子级（结构变更的快路径）。
+        /// 返回 true 表示节点**被换掉了**（声明按兄弟键求值，只能重新求值），调用方要按新节点重拼投影。
+        /// </summary>
+        public bool RefreshNode(McdocTreeNode node)
+        {
+            // 子级被重建了：路径索引必须失效，否则 FindNode 会把刚被删掉/换掉的旧节点捞回来
+            // （表现是"JSON 里键没了、树侧那一行却还在"，因为按路径重建又把它装回去了）
+            nodeIndex = null;
+            if (node is null) return false;
+            // RefreshChildren 捕获的是建节点那一刻的 type：dispatcher/indexed 的形状由**兄弟键**决定，
+            // 复用它等于永远按旧值重建子级（切方块后旧属性行不走、按钮身份也不对）。这类节点只能重新求值。
+            node.RefreshChildren?.Invoke();
             Validate();
+            return false;
         }
 
         /// <summary>
@@ -103,9 +138,23 @@ namespace CBHK.Utility.Data.Mcdoc
         public void ValidateNode(McdocTreeNode node)
         {
             if (node is null) return;
-            var fresh = McdocValidator.ValidateNode(node, MissedReferences, RegistryOptions, GameVersion);
+            // 子树一起算：切分支后子节点（block / properties）的旧诊断必须被换掉，否则行上的感叹号下不去
+            var fresh = McdocValidator.ValidateSubtree(node, MissedReferences, RegistryOptions, GameVersion);
             var path = node.JsonPath ?? "$";
-            Diagnostics = (Diagnostics ?? []).Where(item => item.Path != path).Concat(fresh).ToList();
+            Diagnostics = (Diagnostics ?? [])
+                .Where(item => !SameOrBelow(item.Path, path))
+                .Concat(fresh)
+                .ToList();
+        }
+
+        /// <summary>诊断路径是否落在该子树里（"$.a" 与其 "a[0]" / "a.b" 都算）。</summary>
+        private static bool SameOrBelow(string itemPath, string rootPath)
+        {
+            if (string.IsNullOrEmpty(itemPath) || string.IsNullOrEmpty(rootPath)) return false;
+            if (string.Equals(itemPath, rootPath, StringComparison.Ordinal)) return true;
+            if (!itemPath.StartsWith(rootPath, StringComparison.Ordinal)) return false;
+            var next = itemPath[rootPath.Length];
+            return next is '.' or '[';
         }
 
         public McdocRuntime CreateRuntime() => new()
@@ -209,15 +258,31 @@ namespace CBHK.Utility.Data.Mcdoc
             // 让调用方回退整树重建，而不是把匿名空壳摆成条目行。
             if (node.ValueNode is null) return null;
             var factory = new McdocNodeFactory();
-            var rebuilt = factory.CreateNode(node.FieldName, node.DeclaredType, node.Json, CreateRuntime(),
+            var rebuildRuntime = CreateRuntime();
+            if (node.UnionSelectionExplicit && node.Type?.Members is { } unionMembers && node.SelectedUnionMember is not null)
+            {
+                var index = unionMembers.IndexOf(node.SelectedUnionMember);
+                if (index >= 0)
+                {
+                    rebuildRuntime.UnionSelectionHints = new Dictionary<string, int>(StringComparer.Ordinal)
+                    {
+                        [node.JsonPath ?? ""] = index
+                    };
+                }
+            }
+            var rebuilt = factory.CreateNode(node.FieldName, node.DeclaredType, node.Json, rebuildRuntime,
                 node.ValueNode?.Parent, node.ValueNode?.RuntimeKey, node.Depth, true,
                 NodeValueChanged, node.JsonPath, null, NodeStructureChanged, null);
             if (rebuilt is null) return null;
             // 父级表现器是**建完子节点之后**才写字段语义的（必选性 / 文档注释 / 键提示），重建不会带回来：
             // 丢了就是"可选字段突然变成必填"（行上的「清空」让位给 ⊕，ui-gate S20-4 直接红）
             rebuilt.IsRequired = node.IsRequired;
+            // 重建出来的是新节点：可选字段下拉的（未设置）哨兵与"缺键就显示未设置"的预选要补回来
+            McdocSelectOptions.EnsureUnsetOption(rebuilt);
             rebuilt.Desc = node.Desc;
             rebuilt.Key = node.Key;
+            // 用户显式选过的 union 分支：重建后必须还是那一支，否则一改别的字段就自己弹回去
+            rebuilt.UnionSelectionExplicit = node.UnionSelectionExplicit;
             // 缺省字段（⊕ 行）长出了值：展开态要用新节点算出来的默认值（depth < DefaultExpandDepth + 有 JSON），
             // 否则「新加进来的 display 是折叠的」，而整树重建出来却是展开的 —— 两个视图观感不同代
             if (node.Json is not null) rebuilt.IsExpanded = node.IsExpanded;
@@ -227,7 +292,41 @@ namespace CBHK.Utility.Data.Mcdoc
             if (node.Parent is { } parent)
             {
                 rebuilt.Parent = parent;
+                // map 条目的"行身份"同样是父级建完子节点之后才写的（是不是条目 / 键名 / 动态字段下标 / 键候选），
+                // 重建只按声明类型重跑一遍会把这些全部丢掉 —— 表现是行上的「重命名」与条目删除按钮当场消失。
+                // 命令必须按**新节点**重挂：旧闭包捕获的是已经被换掉的旧节点。
+                // 父级类型把这个键声明成**静态字段**时，它就不是 map 条目：这时把旧节点的条目身份搬回来
+                // 会让行上同时出现"添加"和"删除条目"（AddEntryVisibility = !IsMapEntry）—— 身份必须按新形态判。
+                var declaredByParent = parent.Type?.Fields?.Any(field => field is not null
+                    && string.Equals(field.Name, node.FieldName, StringComparison.Ordinal)) == true;
+                if (node.IsMapEntry && !declaredByParent)
+                {
+                    var editor = McdocCollectionEditor.Default;
+                    var runtime = CreateRuntime();
+                    rebuilt.IsMapEntry = true;
+                    rebuilt.DynamicFieldIndex = node.DynamicFieldIndex;
+                    rebuilt.UseKeySelect = node.UseKeySelect;
+                    rebuilt.KeyOptionList ??= node.KeyOptionList;
+                    rebuilt.AddEntryCommand = new McdocCommand(
+                        () => editor.CommitEntry(parent, rebuilt, runtime),
+                        () => editor.CanCommitEntry(parent, rebuilt));
+                    rebuilt.RemoveEntryCommand = new McdocCommand(
+                        () => editor.RemoveEntry(parent, rebuilt),
+                        () => rebuilt.Json is not null);
+                    rebuilt.EditingKey = node.EditingKey;
+                }
+                // 列表/元组子行的「删掉这一项」也是父级（列表表现器）建完子节点之后才挂的：
+                // 重建按声明类型重跑一遍就没有这条命令 → 行上那个删除按钮永久塌掉
+                // （现场：Entry 里把子 condition 换一支之后，Entry 自己的删除按钮消失）。
+                var listIndex = node.RemoveSelfCommand is null || parent.Items is null
+                    ? -1
+                    : parent.Items.IndexOf(node);
                 replaced = ReplaceIn(parent.Children) || ReplaceIn(parent.Items) || ReplaceIn(parent.SelectedUnionChildren);
+                if (replaced && listIndex >= 0 && rebuilt.RemoveSelfCommand is null)
+                {
+                    rebuilt.RemoveSelfCommand = new McdocCommand(
+                        () => McdocCollectionEditor.Default.RemoveItemAt(parent, listIndex));
+                }
                 // 摊平根的顶层成员：Nodes 是投影与一致性守卫的来源，只换 rootNode.Children 的话
                 // 视图还指着旧实例（子行永远不更新），而 RefreshAround 又因为父行是合成根而返回 false
                 if (replaced && ReferenceEquals(parent, rootNode))
@@ -397,7 +496,13 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             RootJson = root;
             // 摊平后合成根不在 Nodes 里，重指（RelinkToRoot）走不到它；不同步就会把顶层增删写进上一份 JSON
-            if (rootNode is not null) rootNode.Json = root;
+            if (rootNode is not null)
+            {
+                rootNode.Json = root;
+                // 求值现场也得跟到这一代：顶层字段按"同层兄弟键"求值（dispatcher 的动态索引）读的就是它，
+                // 合成根漏了就会按上一代 AST 取键 —— 右侧把 block 改空、左侧 properties 照样解成旧方块
+                if (rootNode.ValueNode?.Node is not null) rootNode.ValueNode.Node.OriginalNode = root;
+            }
             nodeIndex = null;
             Generation++;
         }

@@ -89,17 +89,16 @@ namespace CBHK
             containerRegistry.Register<MCDocumentMetaTypeDTOHelper>();
             containerRegistry.Register<MetaTypeDTOValidator>();
 
-        // mcdoc 生成器页面：入口不同、引擎同一套（骨架阶段先注册为瞬时）
-        containerRegistry.Register<AdvancementViewModel>();
-        containerRegistry.Register<DimensionTypeViewModel>();
-        containerRegistry.Register<DimensionViewModel>();
-        containerRegistry.Register<PredicateViewModel>();
-        containerRegistry.Register<LootTableViewModel>();
-        containerRegistry.Register<ItemModifierViewModel>();
-        containerRegistry.Register<DamageTypeViewModel>();
-        containerRegistry.Register<ChatTypeViewModel>();
-        containerRegistry.Register<CustomWorldGeneratorViewModel>();
-
+            // mcdoc 生成器页面：入口不同、引擎同一套（骨架阶段先注册为瞬时）
+            containerRegistry.Register<AdvancementViewModel>();
+            containerRegistry.Register<DimensionTypeViewModel>();
+            containerRegistry.Register<DimensionViewModel>();
+            containerRegistry.Register<PredicateViewModel>();
+            containerRegistry.Register<LootTableViewModel>();
+            containerRegistry.Register<ItemModifierViewModel>();
+            containerRegistry.Register<DamageTypeViewModel>();
+            containerRegistry.Register<ChatTypeViewModel>();
+            containerRegistry.Register<CustomWorldGeneratorViewModel>();
         }
 
         protected override void ConfigureViewModelLocator()

@@ -18,6 +18,8 @@ namespace CBHK.Model.Constant
     {
         #region Field
         private string configurationPath = AppDomain.CurrentDomain.BaseDirectory + @"Configuration.json";
+        /// <summary>Configuration.json 缺失时用的注册表目录（仓里 Resource 下就带这一份）。</summary>
+        private static readonly string DefaultRegistriesDirectoryPath = "Resource" + Path.DirectorySeparatorChar + "Registries";
         #endregion
 
         #region Property
@@ -107,131 +109,150 @@ namespace CBHK.Model.Constant
 
         public async Task Init(IProgress<(int Done, int Total)> progress = null)
         {
+            // Configuration.json 是可选的（仓里没有这一份）：以前 File.Exists 为假会让整条 Init 静默跳过 ——
+            // 注册表与符号表双双为空，生成器页面的默认文档只能是 null，而状态栏一条提示都没有。
+            JObject configuration = null;
+            string configurationNote = null;
             if (File.Exists(configurationPath))
             {
                 try
                 {
-                    JObject dataObject = JObject.Parse(File.ReadAllText(configurationPath));
-                    string registriesDirectoryPath = dataObject["Registries"].Value<string>();
-                    GenertorConfiguration = dataObject["Generator"].ToObject<Dictionary<string, string>>();
+                    configuration = JObject.Parse(File.ReadAllText(configurationPath));
+                }
+                catch (Exception error)
+                {
+                    configurationNote = "Configuration.json 读取失败，已按默认路径继续：" + error.Message;
+                }
+            }
 
-                    #region 收集注册表数据
-                    if (!string.IsNullOrEmpty(registriesDirectoryPath))
-                    {
-                        LoadRegistries(AppDomain.CurrentDomain.BaseDirectory + registriesDirectoryPath);
-                    }
-                    #endregion
+            try
+            {
+                #region 收集注册表数据
+                // 配置只负责"改路径"：缺文件不改变这条管线本身（注册表/符号表都还在仓里 Resource 下）
+                string registriesDirectoryPath = configuration?["Registries"]?.Value<string>();
+                if (string.IsNullOrEmpty(registriesDirectoryPath))
+                {
+                    registriesDirectoryPath = DefaultRegistriesDirectoryPath;
+                }
+                GenertorConfiguration = configuration?["Generator"]?.ToObject<Dictionary<string, string>>() ?? [];
+                LoadRegistries(AppDomain.CurrentDomain.BaseDirectory + registriesDirectoryPath);
+                #endregion
 
-                    #region 语言服务器就位：应用自己拉起，失败不挂起
-                    // 起进程 + 等就绪都是阻塞的（最长 15s），放后台线程：冷启动不能把 UI 冻住
-                    McdocLanguageServerStatus serverStatus = await Task.Run(() => McdocLanguageServerHost.Shared.EnsureRunning(
-                        AppDomain.CurrentDomain.BaseDirectory, TimeSpan.FromSeconds(15)));
-                    if (!serverStatus.IsRunning)
-                    {
-                        // 不抛不退出：页面照常打开，#[id] 退化但带诊断，状态栏能看到原因
-                        McdocIndexFailures = ["语言服务器不可用：" + serverStatus.Reason];
-                        return;
-                    }
-                    #endregion
+                #region 语言服务器就位：应用自己拉起，失败不挂起
+                // 起进程 + 等就绪都是阻塞的（最长 15s），放后台线程：冷启动不能把 UI 冻住
+                McdocLanguageServerStatus serverStatus = await Task.Run(() => McdocLanguageServerHost.Shared.EnsureRunning(
+                    AppDomain.CurrentDomain.BaseDirectory, TimeSpan.FromSeconds(15)));
+                if (!serverStatus.IsRunning)
+                {
+                    // 不抛不退出：页面照常打开，#[id] 退化但带诊断，状态栏能看到原因
+                    McdocIndexFailures = configurationNote is null
+                        ? new[] { "语言服务器不可用：" + serverStatus.Reason }
+                        : new[] { configurationNote, "语言服务器不可用：" + serverStatus.Reason };
+                    return;
+                }
+                #endregion
 
-                    #region 全量解析mcdoc目录下所有文档
-                    string fullDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + MCDocumentLeadingPath;
-                    string[] fileEntryArray = Directory.GetFileSystemEntries(fullDirectoryPath, "*.mcdoc", SearchOption.AllDirectories);
-                    string directorySeparatorString = Path.DirectorySeparatorChar.ToString();
+                #region 全量解析mcdoc目录下所有文档
+                string fullDirectoryPath = AppDomain.CurrentDomain.BaseDirectory + MCDocumentLeadingPath;
+                string[] fileEntryArray = Directory.GetFileSystemEntries(fullDirectoryPath, "*.mcdoc", SearchOption.AllDirectories);
+                string directorySeparatorString = Path.DirectorySeparatorChar.ToString();
 
-                    var indexFailures = new ConcurrentBag<string>();
-                    int documentTotal = fileEntryArray.Length;
-                    int documentDone = 0;
-                    progress?.Report((0, documentTotal));
-                    // 整批给一个总预算：服务器半死不活时宁可残缺也要把流程放出去（骨架屏必须能收起）
-                    using CancellationTokenSource budget = new(TimeSpan.FromSeconds(90));
-                    // 并发别开太大：每个文档要开一条命名管道，几百条同时压过去容易把服务器压崩，
-                    // 一崩就是"某些类型查不到"的静默残缺。
-                    try
-                    {
-                        await Parallel.ForEachAsync(fileEntryArray,
-                            new ParallelOptions { MaxDegreeOfParallelism = 8, CancellationToken = budget.Token },
-                            async (fileEntry, cancellationToken) =>
+                var indexFailures = new ConcurrentBag<string>();
+                int documentTotal = fileEntryArray.Length;
+                int documentDone = 0;
+                progress?.Report((0, documentTotal));
+                // 整批给一个总预算：服务器半死不活时宁可残缺也要把流程放出去（骨架屏必须能收起）
+                using CancellationTokenSource budget = new(TimeSpan.FromSeconds(90));
+                // 并发别开太大：每个文档要开一条命名管道，几百条同时压过去容易把服务器压崩，
+                // 一崩就是"某些类型查不到"的静默残缺。
+                try
+                {
+                    await Parallel.ForEachAsync(fileEntryArray,
+                        new ParallelOptions { MaxDegreeOfParallelism = 8, CancellationToken = budget.Token },
+                        async (fileEntry, cancellationToken) =>
+                        {
+                            try
                             {
+                                if (!File.Exists(fileEntry))
+                                {
+                                    return;
+                                }
+
+                                string fullDirectoryName = Path.GetDirectoryName(fileEntry);
+                                string fileName = "::" + Path.GetFileNameWithoutExtension(fileEntry);
+                                string mcdocFilePath = fullDirectoryName.Replace(fullDirectoryPath, "");
+                                string mcdocFileReferencePath = mcdocFilePath.Replace(directorySeparatorString, "::");
+                                string documentFilePath = MCDocumentBasePath + mcdocFileReferencePath;
+                                if (fileName == "::mod")
+                                {
+                                    fileName = "";
+                                }
+                                MCDocumentFile file;
                                 try
                                 {
-                                    if (!File.Exists(fileEntry))
-                                    {
-                                        return;
-                                    }
-
-                                    string fullDirectoryName = Path.GetDirectoryName(fileEntry);
-                                    string fileName = "::" + Path.GetFileNameWithoutExtension(fileEntry);
-                                    string mcdocFilePath = fullDirectoryName.Replace(fullDirectoryPath, "");
-                                    string mcdocFileReferencePath = mcdocFilePath.Replace(directorySeparatorString, "::");
-                                    string documentFilePath = MCDocumentBasePath + mcdocFileReferencePath;
-                                    if (fileName == "::mod")
-                                    {
-                                        fileName = "";
-                                    }
-                                    MCDocumentFile file;
-                                    try
-                                    {
-                                        file = await MinecraftLanguageCommunicater.AnalysisMCDocumentFileOrContent(fileEntry, documentFilePath + fileName, cancellationToken);
-                                    }
-                                    catch (Exception error)
-                                    {
-                                        // 单个文档失败只记账，不拖垮整张符号表
-                                        indexFailures.Add(documentFilePath + fileName + "：" + error.Message);
-                                        return;
-                                    }
-                                    if (file is null)
-                                    {
-                                        indexFailures.Add(documentFilePath + fileName + "：语言服务器没有返回内容");
-                                        return;
-                                    }
-                                    // 新求值管线的类型索引；mod.mcdoc 的文件名是空串，这里与旧路径算法保持一致
-                                    string typeDefBasePath = documentFilePath.TrimEnd(':') + fileName;
-                                    // 模块 → use 列表：引用解析的第二优先级（绝对路径 → 当前模块 → use 别名 → …）
-                                    if (file.UsePathList is { Count: > 0 })
-                                    {
-                                        McdocTypes.RegisterUsePaths(typeDefBasePath, file.UsePathList);
-                                    }
-                                    if (file.TypeDefList is { Count: > 0 })
-                                    {
-                                        McdocTypes.RegisterAll(file.TypeDefList
-                                            .Where(typeDef => typeDef is not null)
-                                            .Select(typeDef => (typeDefBasePath + "::" + (typeDef.Name ?? typeDef.MetaTypeName ?? ""), typeDef)));
-                                    }
-                                    if (file.RootList is not null)
-                                    {
-                                        //添加文件引用路径
-                                        DocumentPathItemMap.TryAdd(documentFilePath + fileName, file.UsePathList);
-
-                                        for (int j = 0; j < file.RootList.Count; j++)
-                                        {
-                                            //添加DTO模板
-                                            string documentItemPath = documentFilePath + fileName + "::" + file.RootList[j].FieldName;
-                                            documentFilePath = documentFilePath.TrimEnd(':');
-                                            file.RootList[j].Path = new(documentItemPath);
-                                            DocumentItemMap.TryAdd(documentItemPath, file.RootList[j]);
-                                        }
-                                    }
+                                    file = await MinecraftLanguageCommunicater.AnalysisMCDocumentFileOrContent(fileEntry, documentFilePath + fileName, cancellationToken);
                                 }
-                                finally
+                                catch (Exception error)
                                 {
-                                    progress?.Report((Interlocked.Increment(ref documentDone), documentTotal));
+                                    // 单个文档失败只记账，不拖垮整张符号表
+                                    indexFailures.Add(documentFilePath + fileName + "：" + error.Message);
+                                    return;
                                 }
-                            });
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        indexFailures.Add("索引超过 90 秒预算，已停止；剩余文档未载入");
-                    }
-                    McdocIndexFailures = indexFailures.ToArray();
-                    #endregion
+                                if (file is null)
+                                {
+                                    indexFailures.Add(documentFilePath + fileName + "：语言服务器没有返回内容");
+                                    return;
+                                }
+                                // 新求值管线的类型索引；mod.mcdoc 的文件名是空串，这里与旧路径算法保持一致
+                                string typeDefBasePath = documentFilePath.TrimEnd(':') + fileName;
+                                // 模块 → use 列表：引用解析的第二优先级（绝对路径 → 当前模块 → use 别名 → …）
+                                if (file.UsePathList is { Count: > 0 })
+                                {
+                                    McdocTypes.RegisterUsePaths(typeDefBasePath, file.UsePathList);
+                                }
+                                if (file.TypeDefList is { Count: > 0 })
+                                {
+                                    McdocTypes.RegisterAll(file.TypeDefList
+                                        .Where(typeDef => typeDef is not null)
+                                        .Select(typeDef => (typeDefBasePath + "::" + (typeDef.Name ?? typeDef.MetaTypeName ?? ""), typeDef)));
+                                }
+                                if (file.RootList is not null)
+                                {
+                                    //添加文件引用路径
+                                    DocumentPathItemMap.TryAdd(documentFilePath + fileName, file.UsePathList);
+
+                                    for (int j = 0; j < file.RootList.Count; j++)
+                                    {
+                                        //添加DTO模板
+                                        string documentItemPath = documentFilePath + fileName + "::" + file.RootList[j].FieldName;
+                                        documentFilePath = documentFilePath.TrimEnd(':');
+                                        file.RootList[j].Path = new(documentItemPath);
+                                        DocumentItemMap.TryAdd(documentItemPath, file.RootList[j]);
+                                    }
+                                }
+                            }
+                            finally
+                            {
+                                progress?.Report((Interlocked.Increment(ref documentDone), documentTotal));
+                            }
+                        });
                 }
-                catch (Exception e)
+                catch (OperationCanceledException)
                 {
-                    // 配置坏了也不能退出应用：把原因摆到状态栏，页面照常打开
-                    McdocIndexFailures = ["mcdoc 索引构建失败：" + e.Message];
-                    MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    indexFailures.Add("索引超过 90 秒预算，已停止；剩余文档未载入");
                 }
+                if (configurationNote is not null)
+                {
+                    indexFailures.Add(configurationNote);
+                }
+                McdocIndexFailures = indexFailures.ToArray();
+                #endregion
+            }
+            catch (Exception e)
+            {
+                // 配置坏了也不能退出应用：把原因摆到状态栏，页面照常打开
+                McdocIndexFailures = ["mcdoc 索引构建失败：" + e.Message];
+                MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         #endregion

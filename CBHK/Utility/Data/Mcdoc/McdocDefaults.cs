@@ -27,11 +27,14 @@ namespace CBHK.Utility.Data.Mcdoc
 
             try
             {
-                return McdocSimplifier.Simplify(declared, new McdocSimplifyContext
+                var resolved = McdocSimplifier.Simplify(declared, new McdocSimplifyContext
                 {
                     Runtime = runtime,
                     Node = node ?? DefaultNode(),
                 }).TypeDef;
+                // 求值后仍是指令（引用没解掉 / 调度器未知）就不是归一形态：按 any 处理。
+                // 放它过去会让 GetDefault 掉进 default 分支造出 JsonValue.Null（整份默认文档变成 null）。
+                return resolved is null || resolved.IsDirective ? McdocType.Any() : resolved;
             }
             catch (Exception)
             {
@@ -47,8 +50,16 @@ namespace CBHK.Utility.Data.Mcdoc
         public static McdocJsonValue Resolve(McdocType declared, McdocRuntime runtime, McdocValueNode node = null)
         {
             var options = Options(runtime);
-            return McdocHelpers.GetDefault(ResolveType(declared, runtime, node), options)
-                ?? McdocHelpers.GetDefault(McdocType.Any(), options);
+            var resolved = McdocHelpers.GetDefault(ResolveType(declared, runtime, node), options);
+            // GetDefault 对"空联合 / 空枚举 / 没解出的指令"回的是 JsonValue.Null（不是 C# null，所以 ?? 拦不住）：
+            // 那东西不是文档值，写进页面就是整份文档变成 null（"载入后没有内容"），
+            // 写进列表就是一个 null 条目。必须按契约退成 any 的默认值，并把"解不出来"说出去。
+            if (CanMaterialize(resolved))
+            {
+                return resolved;
+            }
+            runtime?.Report("默认值解不出可物化的文档（" + (resolved?.Kind.ToString() ?? "null") + "），已退 any");
+            return McdocHelpers.GetDefault(McdocType.Any(), options);
         }
 
         /// <summary>默认上下文：没有具体键、没有父级约束。</summary>

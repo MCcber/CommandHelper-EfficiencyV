@@ -40,6 +40,10 @@ namespace CBHK.Utility.Data.Mcdoc
             stats = new McdocSyncStats();
             if (document is null || newRoot is null) return false;
 
+            // 顶层行没有可挂的父行（摊平后合成根不在 Rows 里）：任何一次同步都要记下"上一代顶层列表"，
+            // 否则顶层字段被重建时 RefreshAround 必然失败 → 整表重投影（判据：结构变化也要 0 次）
+            stats.PreviousTopLevel = document.Nodes.ToList();
+
             var started = Stopwatch.GetTimestamp();
             var valuePatches = new List<(string Path, McdocJsonValue Value)>();
             var anchors = new List<string>();
@@ -253,8 +257,6 @@ namespace CBHK.Utility.Data.Mcdoc
 
             var members = document.TopLevelMembers();
             var keyOrder = (newRoot.Properties ?? []).Select(pair => pair.Key).ToList();
-            // 投影要按"上一代顶层列表"分段重拼（根没有行可挂，只能按顶层序号定位）
-            stats.PreviousTopLevel = document.Nodes.ToList();
 
             foreach (var key in removed)
             {
@@ -323,6 +325,10 @@ namespace CBHK.Utility.Data.Mcdoc
                         }
                     }
                     node.Json = value;
+                    // 求值现场（ValueNode）也要指到这一代 AST：只改 node.Json 的话，之后按**同层兄弟键**
+                    // 求值时读到的还是旧对象（README §2.7「AST 同源」）。ValueNode 的父子是同一批实例，
+                    // 逐个就地改 OriginalNode，整条链就一起跟过来了（RuntimeKey 是键节点，值不变不动它）。
+                    if (node.ValueNode?.Node is not null) node.ValueNode.Node.OriginalNode = value;
                 }
                 foreach (var child in node.Children) Walk(child);
                 foreach (var child in node.Items) Walk(child);

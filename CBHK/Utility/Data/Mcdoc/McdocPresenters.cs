@@ -37,6 +37,37 @@ namespace CBHK.Utility.Data.Mcdoc
         }
     }
 
+    /// <summary>
+    /// 版本更迭后遗留的键（schema 里没有这个键）：只说明"这一行存在" —— 标签 + 黄色感叹号。
+    /// 不建子级、不给编辑器、不给任何按钮；文档里那份值原样保留（删不删由行首的删除入口决定）。
+    /// 只按**节点**分派（<see cref="McdocTreeNode.IsUnknownField"/>），不参与类型竞争。
+    /// </summary>
+    public sealed class UnknownFieldPresenter : McdocNodePresenter
+    {
+        public override bool CanPresent(McdocType type) => false;
+
+        public override bool CanHaveChildren(McdocTreeNode node) => false;
+
+        public override IReadOnlyList<McdocTreeNode> Children(McdocTreeNode node) => [];
+
+        public override bool IsListLike => false;
+
+        /// <summary>子结构一律不建：遗留键的整棵子树在树上就是一格（值还在文档里，没被删）</summary>
+        public override void PopulateChildren(McdocTreeNode node, McdocType type, McdocJsonValue json, McdocBuildContext context)
+        {
+        }
+
+        public override McdocNodeHead Describe(McdocTreeNode node) => new()
+        {
+            Label = node?.FieldName ?? "",
+            RowKind = McdocRowKind.Plain,
+            EditorKind = McdocEditorKind.None,
+            CanAddTop = false,
+            CanAddBottom = false,
+            CanSetDefault = false,
+        };
+    }
+
     /// <summary>标量行：string / enum / 数值 / bool / literal。map 条目与新增占位行也落在这里（行形状由标志决定）。</summary>
     public class ScalarNodePresenter : McdocNodePresenter
     {
@@ -97,7 +128,6 @@ namespace CBHK.Utility.Data.Mcdoc
                 IsIconSelect = IsIconSelectFor(node),
                 Category = McdocHelpers.GetCategory(node.Type),
                 Diagnostics = DiagnosticsFor(node),
-                CanRemove = CanRemoveField(node),
             };
         }
 
@@ -194,7 +224,6 @@ namespace CBHK.Utility.Data.Mcdoc
             Diagnostics = DiagnosticsFor(node),
             IsRawKey = IsRawKeyNode(node),
             CanSetDefault = CanSetDefaultField(node),
-            CanRemove = CanRemoveField(node),
         };
 
         public override bool FlattensRoot => true;
@@ -302,6 +331,8 @@ namespace CBHK.Utility.Data.Mcdoc
             var child = context.Child(name, field.Type, fieldJson, keyNode, context.Depth + 1, context.JsonPath + "." + name,
                 deferChildren: fieldJson is null && field.Optional);
             child.IsRequired = !field.Optional;
+            // 可选字段的下拉第 0 项要有（未设置）：选中即删键。顺序是硬约束（IsRequired 落定之后）
+            McdocSelectOptions.EnsureUnsetOption(child);
             child.Desc = field.Desc ?? "";
             if (!string.IsNullOrEmpty(child.Desc)) child.Key = child.Desc;
             // misode：必填字段缺键 → missing key 错误指示
@@ -375,14 +406,20 @@ namespace CBHK.Utility.Data.Mcdoc
             return child;
         }
 
-        /// <summary>声明里没有的键（misode 的 UnknownField）：任意 JSON + 「未在 schema 中声明」。</summary>
+        /// <summary>
+        /// 当前版本不存在的键（misode 的 UnknownField，版本更迭后遗留的那种）：管线对它只保留"这一行"，
+        /// 不解析、不建子级、不给编辑器（见 <see cref="UnknownFieldPresenter"/>），文档里那份值原样不动。
+        /// </summary>
         private static McdocTreeNode BuildUnknownField(string key, McdocJsonValue value, McdocBuildContext context)
         {
             var itemKeyNode = new McdocRuntimeNode(key, McdocType.LiteralString(key));
+            // unknownField 必须在建节点时给：表现器/工厂都按它改道，事后再打标记已经晚了
             var unknown = context.Child(key, McdocType.Any(), value, itemKeyNode,
-                context.Depth + 1, context.JsonPath + "." + key, deferChildren: value is null);
-            unknown.IsUnknownField = true;
-            unknown.Desc = "未在 schema 中声明";
+                context.Depth + 1, context.JsonPath + "." + key, deferChildren: true, unknownField: true);
+            // 没有哪份 schema 声明过这个键，"必选"对它是无意义的：不置 false 就永远删不掉
+            // （删除原语自己守着 !IsRequired，见 McdocNodeFactory.RemoveFieldCommand）
+            unknown.IsRequired = false;
+            unknown.Desc = "当前版本不存在该节点（版本更迭后遗留的键）";
             return unknown;
         }
 
@@ -473,7 +510,6 @@ namespace CBHK.Utility.Data.Mcdoc
                 IsRawKey = IsRawKeyNode(node),
                 CanUnset = canUnset,
                 Diagnostics = DiagnosticsFor(node),
-                CanRemove = CanRemoveField(node),
             };
         }
 
@@ -492,9 +528,23 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             // JSON 里没有这个键（新建条目/缺省）→ 不自动挑分支，落到 unset（misode 的 selectUnionMember 返回 -1）
             // JSON 里已经有值 → 按值匹配；匹配不上时退回首个成员（保持既有文档的渲染稳定）
-            var selected = json is null
-                ? null
-                : McdocTypeMatcher.SelectMember(type, json, context.SimplifyContext) ?? members[0];
+            // 用户显式切过的分支优先：只要它对当前值仍然成立就别顶掉。
+            // 否则并列（两个成员都能吃这个值）时"按值猜"会退回首个成员，表现是切完一重建就弹回去。
+            var explicitMember = node.UnionSelectionExplicit ? node.SelectedUnionMember : null;
+            if (explicitMember is null
+                && context.Runtime?.UnionSelectionHints is { } hints
+                && hints.TryGetValue(context.JsonPath ?? "", out var hinted)
+                && hinted >= 0 && hinted < members.Count)
+            {
+                // 局部重建：节点是新建的，标志还在老节点上；提示由文档随本次构建传进来
+                explicitMember = members[hinted];
+            }
+            var selected = explicitMember is not null
+                && (json is null || McdocTypeMatcher.Matches(explicitMember, json, context.SimplifyContext))
+                ? explicitMember
+                : json is null
+                    ? null
+                    : McdocTypeMatcher.SelectMember(type, json, context.SimplifyContext) ?? members[0];
             // 解不出来的成员（声明不是 any、求值却是 any）不当默认分支：
             // 否则文档里一个它解不了的值会把整行钉死在一个"看着能编辑、其实写不出合法值"的分支上。
             if (selected is not null && McdocUnionSwitch.IsUnresolvedMember(node, selected))
@@ -503,12 +553,14 @@ namespace CBHK.Utility.Data.Mcdoc
                 selected = null;
             }
             node.SelectedUnionMember = selected;
-            // 必选却没选定分支：给诊断提示（不阻止用户选 unset，misode 同款）
-            if (selected is null && node.IsRequired)
-            {
-                node.Error = "必选字段：当前未选定分支（unset）";
-            }
+            // 这里**不许**按 IsRequired 挂"必选却未选分支"：建子级时子节点的必选性还没被父级写进来
+            // （默认 true），可选字段（chat_type 的 color）会被扣一顶假诊断且永远清不掉。
+            // 真正缺必填键由 McdocValidator 报（"缺少必填键"），它在全树建完之后才跑。
             // misode formatUnionMember：名字只取决于"自身 + 是否存在同类成员"
+            // 重建从零开始：分支节点与上提的字段行都属于"当前选中的成员"，
+            // 不先清掉就会在旧状态上叠加（现场：切到 block_state_property 后 terms 与 block 同时存在）。
+            node.Children.Clear();
+            node.SelectedUnionChildren.Clear();
             var memberNames = members
                 .Select((member, index) => FormatUnionMember(member, members.Where((_, other) => other != index).ToList()))
                 .ToList();
@@ -530,7 +582,11 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     value = McdocHelpers.GetChange(member, node.DeclaredType ?? type, value);
                 }
-                return context.Child(node.FieldName, member, value, context.KeyNode, context.Depth + 1, context.JsonPath);
+                var branch = context.Child(node.FieldName, member, value, context.KeyNode, context.Depth + 1, context.JsonPath);
+                // 分支是枚举/候选下拉时，第 0 项也要有（未设置）：否则镜像到 union 行上的下拉
+                // 只能显示"第一个有意义的成员"，用户没法把它退回去
+                McdocSelectOptions.EnsureUnsetOption(branch, true);
+                return branch;
             };
             var selectedIndex = members.IndexOf(selected);
             // 没匹配到就落到 unset 哨兵（不是 members[0]）：新建的 criterion.trigger 应该显示"（未设置）"
@@ -566,7 +622,14 @@ namespace CBHK.Utility.Data.Mcdoc
         public override void ApplyBranch(McdocTreeNode node, McdocTreeNode branchNode)
         {
             if (branchNode is null) return;
+            // 分支节点自己也要挂到 union 上：列表/结构分支的子级会上提到 union（子级 Parent=node），
+            // 但分支节点本体没被 Add，Parent 一直是 null —— 条目按钮上的"删这一项"捕获的是分支节点，
+            // 它抬 StructureChanged 时宿主顺着 Parent 找不到能重建的祖先，于是"右侧 JSON 少了、左侧树不动"。
+            branchNode.Parent = node;
             node.SelectedUnionChildren.Clear();
+            // 结构/列表分支的字段行是**上提到 union 节点**上的：不清掉的话，切支后新旧两支的字段会合并
+            // （现场：condition 从 any_of 切到 block_state_property 后，$..u 下面同时留着 terms 和 block）
+            node.Children.Clear();
 
             // 标量分支：把编辑状态镜像到 union 行上，UI 上就是"标签 + 分支下拉 + 编辑器"一行
             var scalarKind = branchNode.Type?.Kind switch
@@ -733,7 +796,6 @@ namespace CBHK.Utility.Data.Mcdoc
                 IsRawKey = IsRawKeyNode(node),
                 CanAddTop = count < max,
                 CanAddBottom = count < max,
-                CanRemove = CanRemoveField(node),
             };
         }
 
@@ -787,7 +849,6 @@ namespace CBHK.Utility.Data.Mcdoc
             // 定长结构：不提供增删/默认值（显式置 false，别依赖 init 默认值——曾经把 tuple 当列表给了 ⊕）
             CanAddTop = false,
             CanAddBottom = false,
-            CanRemove = false,
             CanSetDefault = false,
         };
 

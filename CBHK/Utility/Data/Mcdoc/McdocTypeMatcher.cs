@@ -26,17 +26,46 @@ namespace CBHK.Utility.Data.Mcdoc
             if (type is null || type.Kind != McdocTypeKind.Union || json is null) return null;
             var members = type.Members;
             if (members is null || members.Count <= 1) return null;
-            McdocType single = null;
-            var matchCount = 0;
+            // 同一个值常常能匹配多个成员（"black" 既是 string 也落在 TextColor 里）：按"具体程度"取最高的那个。
+            // 只看"命中了几个"会在这种联合上放弃选择，渲染层只能退回声明序第一支 —— 表现是
+            // "选了 Enum 支，任何一次重建后又回到 String 支"。
+            McdocType best = null;
+            var bestSpecificity = int.MinValue;
+            var bestCount = 0;
             foreach (var member in members)
             {
                 if (!Matches(member, json, context)) continue;
-                matchCount++;
-                single = member;
-                if (matchCount > 1) return null;
+                var specificity = Specificity(member);
+                if (specificity > bestSpecificity)
+                {
+                    bestSpecificity = specificity;
+                    best = member;
+                    bestCount = 1;
+                }
+                else if (specificity == bestSpecificity)
+                {
+                    bestCount++;
+                }
             }
-            return matchCount == 1 ? single : null;
+            // 唯一命中，或者"更具体的那个"是唯一最高分 → 选它；并列最高仍然不猜
+            return best is not null && bestCount == 1 ? best : null;
         }
+
+        /// <summary>
+        /// 成员的具体程度（值越被限定越高）。用于"同一个值匹配多个成员"时挑默认分支：
+        /// literal &gt; enum &gt; 普通同型 &gt; 其它 &gt; any/unsafe。
+        /// </summary>
+        private static int Specificity(McdocType type) => type?.Kind switch
+        {
+            McdocTypeKind.Literal => 4,
+            McdocTypeKind.Enum => 3,
+            McdocTypeKind.Boolean or McdocTypeKind.Byte or McdocTypeKind.Short or McdocTypeKind.Int
+                or McdocTypeKind.Long or McdocTypeKind.Float or McdocTypeKind.Double
+                or McdocTypeKind.String or McdocTypeKind.List or McdocTypeKind.Tuple
+                or McdocTypeKind.Struct => 2,
+            McdocTypeKind.Any or McdocTypeKind.Unsafe => 0,
+            _ => 1,
+        };
 
         /// <summary>结构上是否可能匹配。无法判定时返回 true（保守保留，宁可让用户选分支）。</summary>
         public static bool Matches(McdocType type, McdocJsonValue json, McdocSimplifyContext context, int depth = 0)

@@ -79,28 +79,28 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="cb.ico" />
-    <Resource Include="Resource\CBHK\Image\Generator\advancement.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\armorstand.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\datapack.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\dimension.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\entity.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\firework.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\item.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\loottable.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\ooc.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\recipe.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\spawner.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\tag.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\villager.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\writtenbook.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\customWorld.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\damageType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Advancement.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Armorstand.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Datapack.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Dimension.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Entity.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Firework.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Item.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Loottable.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Ooc.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Recipe.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Spawner.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Tag.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Villager.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Writtenbook.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\CustomWorld.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\DamageType.png" />
     <Resource Include="Resource\CBHK\Image\Generator\分类.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\sign.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\itemModifier.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\dimensionType.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\chatType.png" />
-    <Resource Include="Resource\CBHK\Image\Generator\predicate.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Sign.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\ItemModifier.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\DimensionType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\ChatType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Predicate.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command1.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command2.png" />
     <Resource Include="Resource\Common\Image\Datapack\Command3.png" />
@@ -447,12 +447,11 @@
     <None Remove="Resource\CBHK\Image\Generator\advancement.png" />
     <None Remove="Resource\CBHK\Image\Generator\armorstand.png" />
     <None Remove="Resource\CBHK\Image\Generator\datapack.png" />
-    <None Remove="Resource\CBHK\Image\Generator\dimension.png" />
-    <None Remove="Resource\CBHK\Image\Generator\entity.png" />
+    <None Remove="Resource\CBHK\Image\Generator\Entities.png" />
+    <None Remove="Resource\CBHK\Image\Generator\Entity.png" />
     <None Remove="Resource\CBHK\Image\Generator\firework.png" />
     <None Remove="Resource\CBHK\Image\Generator\item.png" />
     <None Remove="Resource\CBHK\Image\Generator\loottable.png" />
-    <None Remove="Resource\CBHK\Image\Generator\ooc.png" />
     <None Remove="Resource\CBHK\Image\Generator\recipe.png" />
     <None Remove="Resource\CBHK\Image\Generator\spawner.png" />
     <None Remove="Resource\CBHK\Image\Generator\tag.png" />
@@ -541,6 +540,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
+    <!-- 运行期配置（Resource.Init 读 Registries/Generator，McdocItemTextures 读 ItemTextures）：
+         必须躺在 exe 旁边，缺了会走代码里的默认值 -->
+    <None Update="Configuration.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\MinecraftLanguageModelLibrary\MinecraftLanguageModelLibrary.csproj" />

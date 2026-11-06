@@ -27,6 +27,7 @@ namespace CBHK.Utility.Data.Mcdoc
 
         public void Reset(IEnumerable<McdocTreeNode> roots)
         {
+            McdocWriteTrace.Trace("proj-reset", "rows=" + Rows.Count + " reset=" + ResetCount + " splice=" + SpliceCount);
             ResetCount++;
             McdocWriteTrace.LogText("整表重投影", "reset#" + ResetCount, withCaller: true);
             byNode.Clear();
@@ -69,8 +70,12 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             // 展开走的是"只拼这一行子树"的捷径（AppendChildren → 这里），不经过 Collect 的 EnsureChildren；
             // 懒建节点（深度 >= DefaultExpandDepth）不先建子级的话，点箭头只会得到 0 行 —— 看起来就是"展开没反应"。
+            // 只在这一拍真的把子级建出来时才通知：每次投影都无条件喊一遍的话，
+            // 宿主那边"补物化 + 排重建"就会跟着每一轮 Reset 重新触发 —— 现场就是
+            // proj-splice / proj-reset 各 100 次、structure 只有 3 次的自我驱动循环。
+            var justBuilt = !node.ChildrenBuilt;
             node.EnsureChildren();
-            AfterChildrenBuilt?.Invoke(node);
+            if (justBuilt) AfterChildrenBuilt?.Invoke(node);
             var children = McdocPresenterRegistry.Default.Children(node);
             var childIsList = IsListLike(node);
             // ItemsShown 是"这一行显示多少条"的用户意图（点"再显示"会 +PageSize，点"全部"设 MaxValue）；
@@ -117,6 +122,8 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         public void ReplaceRow(McdocRow row)
         {
+            McdocWriteTrace.Trace("proj-replace", "path=" + (row.Node?.JsonPath ?? "?")
+                + " kind=" + row.Kind + " rows=" + Rows.Count + " splice=" + SpliceCount);
             var index = Rows.IndexOf(row);
             if (index < 0)
             {
@@ -173,6 +180,8 @@ namespace CBHK.Utility.Data.Mcdoc
         public void SpliceSubtree(McdocRow row, bool ensureExpanded = false)
         {
             if (row is null) return;
+            McdocWriteTrace.Trace("proj-splice", "path=" + (row.Node?.JsonPath ?? "?")
+                + " kind=" + row.Kind + " rows=" + Rows.Count + " splice=" + SpliceCount);
             var index = Rows.IndexOf(row);
             if (index < 0) return;
             var started = Environment.TickCount64;

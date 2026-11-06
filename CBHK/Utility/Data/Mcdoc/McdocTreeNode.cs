@@ -279,14 +279,22 @@ namespace CBHK.Utility.Data.Mcdoc
             };
             isTrue = json?.Kind == McdocJsonKind.Boolean && json.BooleanValue;
             isFalse = json?.Kind == McdocJsonKind.Boolean && !json.BooleanValue;
-            if (EnumOptionList is { Count: > 0 } options && json is { Kind: McdocJsonKind.String } text)
+            if (EnumOptionList is { Count: > 0 } options)
             {
-                // 只跟"候选里真有这个值"的情况；候选外的值不猜、不补候选，由校验器挂警告
-                var match = options.FirstOrDefault(option =>
-                    Convert.ToString(option.Value?.LiteralValue) == text.StringValue);
-                if (match is not null)
+                if (json is { Kind: McdocJsonKind.String } text)
                 {
-                    selectedEnumOption = match;
+                    // 只跟"候选里真有这个值"的情况；候选外的值不猜、不补候选，由校验器挂警告
+                    var match = options.FirstOrDefault(option =>
+                        Convert.ToString(option.Value?.LiteralValue) == text.StringValue);
+                    if (match is not null)
+                    {
+                        selectedEnumOption = match;
+                    }
+                }
+                else if (json is null && !IsRequired && McdocUnionSwitch.IsUnsetOption(options[0]))
+                {
+                    // 键被删掉了：行上回到（未设置），不许留着上一份选中
+                    selectedEnumOption = options[0];
                 }
             }
             OnPropertyChanged(null);
@@ -522,6 +530,14 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (Equals(selectedEnumOption, value)) return;
                 selectedEnumOption = value;
                 OnPropertyChanged();
+                // union 行上镜像的枚举分支选「（未设置）」= 这个键整个不存在：走 union 的 unset 出口
+                // （删键 + 清分支镜像 + 回未设置），否则这个选项点了没反应、行上却显示（未设置）
+                if (Type?.Kind == McdocTypeKind.Union && !SuppressValueNotifications
+                    && McdocUnionSwitch.IsUnsetOption(value)
+                    && McdocUnionSwitch.SwitchTo(this, value))
+                {
+                    return;
+                }
                 ValueChanged?.Invoke(this);
             }
         }
@@ -570,6 +586,12 @@ namespace CBHK.Utility.Data.Mcdoc
             OnPropertyChanged(nameof(SelectedUnionTypeName));
         }
 
+        /// <summary>
+        /// 这次分支选中是**用户在行上选的**（而不是按 JSON 值猜出来的默认支）。
+        /// 重建时"按值猜"会在并列时退回第一个成员，把用户的选择顶掉 —— 有了这个标志，显式选择优先。
+        /// </summary>
+        public bool UnionSelectionExplicit { get; set; }
+
         private EnumMember selectedUnionTypeName;
         public EnumMember SelectedUnionTypeName
         {
@@ -577,7 +599,11 @@ namespace CBHK.Utility.Data.Mcdoc
             set
             {
                 if (Equals(selectedUnionTypeName, value)) return;
+                var previous = selectedUnionTypeName;
                 selectedUnionTypeName = value;
+                // 切成员只有一条规则：旧成员声明、新成员不声明的键要剪掉。
+                // 以前只有 SwitchTo 里做，走下拉/重建这条 setter 路径时旧键会留在文档里（现场：terms 残影）。
+                McdocUnionSwitch.DropAbandonedKeys(this, previous, value);
                 // 先重建再通知：行上的 Head 是按当前分支算的，通知里重算时必须已经能看到新分支
                 if (!suppressUnionRebuild) RebuildUnionBranch();
                 OnPropertyChanged();
@@ -617,6 +643,41 @@ namespace CBHK.Utility.Data.Mcdoc
             // 与 misode 一致：onSelect 里就是 makeEdit(getChange(newBranch, oldBranch, node))——
             // 切分支当场把文档整成新分支的形状。文本同步由宿主做（不再触发重建）。
             if (!SuppressValueNotifications) ValueChanged?.Invoke(this);
+        }
+
+        /// <summary>
+        /// 切支把值写进文档之后，重新派生分支节点与行上的镜像。
+        /// 建支那一刻文档里还没有值（分支是用 null JSON 建的），镜像会停在（未设置）；值一落盘必须跟着刷新，
+        /// 否则"选了 Enum 支、行上的枚举下拉却显示（未设置）"。
+        /// </summary>
+        internal void RefreshUnionBranchMirror()
+        {
+            if (Type?.Kind != McdocTypeKind.Union) return;
+            var wasSuppressed = SuppressValueNotifications;
+            SuppressValueNotifications = true;   // 这不是用户编辑
+            try
+            {
+                // 结构分支：分支节点有自己的 JSON，派生完再镜像过来
+                if (SelectedUnionChildren.FirstOrDefault() is { } branch)
+                {
+                    if (branch.Json is null && Json is not null) branch.Json = Json;
+                    branch.SyncScalarFromJson();
+                    SelectedEnumOption = branch.SelectedEnumOption;
+                    return;
+                }
+                // 标量分支是镜像到本行的（没有分支子级）：直接按本行的值挑选中项，缺值就回（未设置）
+                if (EnumOptionList is not { Count: > 0 } options) return;
+                var text = Json is { Kind: McdocJsonKind.String } value ? value.StringValue : null;
+                var match = text is null
+                    ? null
+                    : options.FirstOrDefault(option => Convert.ToString(option.Value?.LiteralValue) == text);
+                if (match is not null) SelectedEnumOption = match;
+                else if (Json is null) SelectedEnumOption = options[0];
+            }
+            finally
+            {
+                SuppressValueNotifications = wasSuppressed;
+            }
         }
 
         /// <summary>按当前选中的成员名重建分支子树；值不兼容时用 GetChange 尽量保留旧值。</summary>

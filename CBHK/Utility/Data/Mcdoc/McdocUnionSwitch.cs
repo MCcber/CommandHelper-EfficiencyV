@@ -1,5 +1,7 @@
 // union 切分支的唯一业务入口：行、探针、命令都走这里，避免"每个调用点各拼一遍流程"。
 // 语义与 misode 的 UnionHead.onSelect 一致：切到哪一支 → 按该支 getChange 改写文档 → 分支子树重建。
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using MinecraftLanguageModelLibrary.Data;
 
@@ -44,6 +46,21 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 切到指定分支。返回是否真的发生了变化（unset/同分支都算没变化）。
         /// 只做节点级动作（选支、必要时展开、按 getChange 改文档形状），行级通知由调用方负责。
         /// </summary>
+        /// <summary>
+        /// 分支身份按「名字 + 下标」比，**不按 EnumMember 实例引用**：每次建支都会新建一批 EnumMember，
+        /// 绑定的 SelectedItem 与节点上那个必然不是同一个对象。按引用比 → 每次绑定都判成"换了一支" →
+        /// SwitchTo 又走一遍 getChange（改写文档）并 ReplaceRow → 新 Head、新 BranchOptions → 再触发绑定：
+        /// 表现就是「选中项高频跳、JSON 跟着抖」。
+        /// </summary>
+        public static bool IsSameOption(EnumMember left, EnumMember right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+            if (!string.Equals(left.Name, right.Name, StringComparison.Ordinal)) return false;
+            return string.Equals(Convert.ToString(left.Value?.LiteralValue),
+                Convert.ToString(right.Value?.LiteralValue), StringComparison.Ordinal);
+        }
+
         public static bool SwitchTo(McdocTreeNode node, EnumMember option)
         {
             if (node is null) return false;
@@ -64,13 +81,26 @@ namespace CBHK.Utility.Data.Mcdoc
                     Value = new MetaValue { LiteralValue = -1 },
                 });
                 node.ClearUnionBranch();
+                node.UnionSelectionExplicit = false;
                 node.IsExpanded = false;
                 // 真的变了：行要重投影（RefreshHead + ReplaceRow），不然界面上还是上一支的编辑器
                 return true;
             }
-            if (Equals(node.SelectedUnionTypeName, option)) return false;
+            McdocWriteTrace.Trace("union-switch", "path=" + (node.JsonPath ?? "?")
+                + " from=" + (node.SelectedUnionTypeName?.Name ?? "<null>")
+                + " to=" + (option?.Name ?? "<null>")
+                + " same=" + IsSameOption(node.SelectedUnionTypeName, option)
+                + " explicit=" + node.UnionSelectionExplicit);
+            if (IsSameOption(node.SelectedUnionTypeName, option)) return false;
+            var previousOption = node.SelectedUnionTypeName;
 
             node.SelectedUnionTypeName = option;
+            // 旧成员声明过、新成员不声明的键不再属于这个分支：留着就会在行上长出"上一支的字段"
+            // （现场：any_of 切到 block_state_property 后 terms 还留在列表里）。这两个成员都必须是结构 ——
+            // any/标量分支本来就什么都能吃，剪了反而是丢数据。
+            DropAbandonedKeys(node, previousOption, option);
+            // 这是用户选的：此后重建不许用"按值猜"把它顶回去（并列时按值猜会退回首个成员）
+            node.UnionSelectionExplicit = true;
             // 成员解不出来（声明不是 any，求值却退成 any）→ 不保留这次选择：与 misode 一致跳回 unset，
             // 并挂可见诊断。否则行上会留下一个"看着有编辑器、其实写不出合法值"的死分支。
             if (IsUnresolvedMember(node, node.SelectedUnionMember) || IsUnresolvedBranch(node))
@@ -94,8 +124,13 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             // misode 的 UnionHead.onSelect：切分支当场按新分支改写文档（getChange）
             node.ConvertJsonToSelectedBranch();
-            // 切到列表分支：值必须是数组，否则列表动作没有落点（标量就地包成一条，不丢用户的值）
-            if (node.UnionListLike && node.Json is not { Kind: McdocJsonKind.Array })
+            // 值刚落盘：分支节点与行上镜像按新值重新派生（否则镜像停在建支那一刻的（未设置））
+            node.RefreshUnionBranchMirror();
+            // 切到列表分支：值必须是数组，否则列表动作没有落点（标量就地包成一条，不丢用户的值）。
+            // 判据用**声明**（SelectedUnionMember.IsListLike），不许用行上的 UnionListLike 镜像：
+            // 那是上一支的状态，从列表支切到标量支时它还留着，会把刚落盘的 "" 又包成 ["c"]。
+            var listBranch = node.SelectedUnionMember is { } selectedMember ? selectedMember.IsListLike : node.UnionListLike;
+            if (listBranch && node.Json is not { Kind: McdocJsonKind.Array })
             {
                 var array = McdocJsonValue.Array();
                 array.Items ??= [];
@@ -156,6 +191,55 @@ namespace CBHK.Utility.Data.Mcdoc
             if (index < 0 || declared is null || index >= declared.Count) return false;
             if (IsScalarBranch(declared[index])) return false;
             return declared[index].Kind is not (McdocTypeKind.Any or McdocTypeKind.Unsafe);
+        }
+
+        /// <summary>
+        /// 切支：把"旧成员声明、新成员不声明"的键从文档里去掉。
+        /// 只处理「旧新都是结构」这一对：结构有确定的字段集合，能判定哪些键属于被放弃的那一支；
+        /// 标量/列表/any 分支不做（它们本来就不限定键集）。
+        /// </summary>
+        public static void DropAbandonedKeys(McdocTreeNode node, EnumMember previous, EnumMember current)
+        {
+            if (node?.Json is not { Kind: McdocJsonKind.Object } json) return;
+            var members = node.Type?.Members;
+            if (members is null || json.Properties is null) return;
+            var newMember = MemberAt(node, current);
+            var oldMember = MemberAt(node, previous);
+            if (newMember?.Kind != McdocTypeKind.Struct || oldMember?.Kind != McdocTypeKind.Struct) return;
+            var keep = FieldNames(newMember);
+            var drop = FieldNames(oldMember).Where(name => !keep.Contains(name)).ToList();
+            if (drop.Count == 0) return;
+            var kept = json.Properties.Where(pair => !drop.Contains(pair.Key)).ToList();
+            if (kept.Count == json.Properties.Count) return;
+            var pruned = McdocJsonValue.Object();
+            pruned.Properties = kept;
+            node.Json = pruned;
+            McdocCollectionEditor.Default.WriteIntoParent(node, pruned);
+        }
+
+        /// <summary>选项下标 → 求值后的成员（下标存在 EnumMember.Value 里）。</summary>
+        private static McdocType MemberAt(McdocTreeNode node, EnumMember option)
+        {
+            var index = option?.Value?.LiteralValue switch
+            {
+                int value => value,
+                decimal number => (int)number,
+                string text when int.TryParse(text, out var parsed) => parsed,
+                _ => -1,
+            };
+            var members = node?.Type?.Members;
+            return members is not null && index >= 0 && index < members.Count ? members[index] : null;
+        }
+
+        private static HashSet<string> FieldNames(McdocType type)
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            if (type?.Fields is null) return names;
+            foreach (var field in type.Fields)
+            {
+                if (!string.IsNullOrEmpty(field.Name)) names.Add(field.Name);
+            }
+            return names;
         }
 
         /// <summary>声明成标量的成员：写出来就是合法标量，不参与"解不出来就回退"的判定。</summary>

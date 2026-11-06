@@ -34,7 +34,6 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>列表头/尾的 ⊕ 是否可用（受 LengthRange.Max 约束）。</summary>
         public bool CanAddTop { get; init; }
         public bool CanAddBottom { get; init; }
-        public bool CanRemove { get; init; }
         public bool CanSetDefault { get; init; }
         public bool IsInlineTuple { get; init; }
         public bool IsRawKey { get; init; }

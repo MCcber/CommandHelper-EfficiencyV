@@ -64,6 +64,29 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 只重算**一个节点**的诊断。文本→树的值补丁不走重建，节点诊断会停在上一次校验的结果上
         /// （表现：JSON 里改成合法值，感叹号去不掉）；值只可能影响它自己，所以按节点重算就够。
         /// </summary>
+        /// <summary>
+        /// 只重算一棵子树（切分支 / 值补丁之后用）。文档级的 <see cref="Validate"/> 每次全量走一遍太贵，
+        /// 但**子树**必须一起走：只算根节点的话，子节点还挂着上一支形状下的旧诊断，
+        /// 行上的黄色感叹号就再也下不去。
+        /// </summary>
+        public static IReadOnlyList<McdocDiagnostic> ValidateSubtree(McdocTreeNode root, IReadOnlyCollection<string> missed,
+            IMcdocRegistryOptions registryOptions = null, string version = null)
+        {
+            var result = new List<McdocDiagnostic>();
+            if (root is null) return result;
+            var missedSet = missed as HashSet<string> ?? new HashSet<string>(missed ?? []);
+            var stack = new Stack<McdocTreeNode>();
+            stack.Push(root);
+            var guard = 0;
+            while (stack.Count > 0 && guard++ < 20000)
+            {
+                var node = stack.Pop();
+                ValidateNodeCore(node, missedSet, result, registryOptions, version);
+                foreach (var child in McdocPresenterRegistry.Default.Children(node)) stack.Push(child);
+            }
+            return result;
+        }
+
         public static IReadOnlyList<McdocDiagnostic> ValidateNode(McdocTreeNode node,
             IReadOnlyCollection<string> missedReferences = null,
             IMcdocRegistryOptions registryOptions = null, string version = null)

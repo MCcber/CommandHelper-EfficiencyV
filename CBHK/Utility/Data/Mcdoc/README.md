@@ -86,7 +86,7 @@
 | 无孤儿行 | 每一行都能挂到一个存在的父行上 |
 | 缩进契约 | 子行必须比父行深（缺省/压缩层可以跳，但绝不许同层） |
 | 缺省字段不摊开 | 文档里没有的可选字段只有一行 ⊕，不许挂子级 |
-| 键 ↔ 行双射 | 文档里每个键都有对应行，且只有一行（不许"文件里有、树里没有"或残骸行） |
+| 键 ↔ 行双射 | 文档里每个键都有对应行，且只有一行（不许"文件里有、树里没有"或残骸行）。**例外**：当前版本不存在的键（`IsUnknownField`）只出**一行**，它里面的子键不出行——那棵子树已经被管线忽略（见 §三） |
 | 无重复键 | 同一个对象里不许出现两个同名键（物化/追加最容易造出来） |
 | 导出 = 屏幕 | 复制/保存出来的就是屏幕上那份文本 |
 | 换版本不改文档 | 切游戏版本只换 schema 求值口径，不许动用户已经写的键值 |
@@ -108,6 +108,7 @@
 - **`StaticResource` 找不到就抛，`DynamicResource` 静默降级**：跨词典引用统一 Dynamic。
 - **`Style.BasedOn` / `TargetType` 不能用 `DynamicResource`**：它们是 CLR 属性，写成 DynamicResource 的 Style 一实例化就抛 `XamlParseException`（图标下拉就这么坏过）。
 - **`VectorTextBox` 自带的 `WaterMarkerText` 在行内看不见**：内容宿主的不透明底盖住水印；行内空值占位要自己叠一层 `TextBlock`。
+- **行内文本框要沿用项目皮肤**：`MdocTransparentTextBoxStyle` 曾经把 `Background`/`ThemeBackground` 压成 `Transparent`，而 `VectorTextBox.UpdateBorderColorByBackgroundColor` 遇到透明主题直接 return → 永远停在"白底 + 深色 1px 边"，与下拉框的皮肤不是一套。现在它只 `BasedOn=VectorTextBoxStyle`，不再覆盖底色/描边。
 - **附加属性做不了事件触发器**：挂行为用附加属性 + `Loaded` 回调；`CallMethodAction` 指向不存在的方法只静默报绑定错。
 - **`TextBlock.Text` 与 `Inlines` 不能同时设**：doc 面板要富文本就得删 `Text`、代码赋 `Inlines`；`FlowDocument` 被复用容器抢挂会抛异常。
 - **`Documentation` 带 `///` 前缀、多行还是逗号拼的**：渲染前必须逐行剥 `///`/`//!` 与行首逗号。
@@ -125,7 +126,12 @@
 - **"键被删掉"必须折叠，投影侧也要兜底**：可选字段的 `Json` 变成 null（右侧把整段结构删了）时，节点若还留着 `IsExpanded = true`，投影就会把**早就建好的子级**重新摊到行下面 —— 现象是"右侧删了整段 `display`，左侧 `display` 的子级还在"。两处都要守：`McdocTreeNode.Json` 变 null 且非必选时立刻折叠；`McdocRowProjector.Collect` 对"可选 + 没有 JSON"的节点直接不拼子级（折叠状态脏了也不会漏）。判据见 ui-gate `S42`。
 - **折叠态是静态表，必须按"页面实例"分会话**：只按 EntryId 分会话时，关窗体再开（新 VM、新编辑器）会把上一个窗口的展开态带进来 —— 于是"文档里根本没有的字段"被撑开、子行凭空出现，父行还是个 ⊕，看着像"子结构摊到了同层"。会话键 = (EntryId, 页面实例)；同时 `json == null` 的字段一律只留一行 ⊕（记住的展开态不许撑开它）。判据见 ui-gate `S41`。
 - **整篇写回必须保住光标**：整篇替换（Reformat / Reload）会把光标夹到文末，用户**逐字符**继续敲的字就落到根外面，报 `Expected depth to be zero at the end of the JSON payload`（行号正是根结束那行）——看起来像"写了 `criteria.test` 但左侧模板崩了"，其实左侧渲染的是上一代树（文本非法期间树按设计不动）。修法：写回前把光标定位到"所在的最内层 JSON 节点 + 相对偏移"，写回后按同一节点（保身份的 Reformat）的新区间落点；换 AST 的 Reload 才退化成夹紧。判据见 ui-gate `S38`。
+- **区间表是锚点的"真相"，就地改文本必须同步挪它**：`TryUseAnchors` 拿 `spans` 对账，而 `document.Replace` 只会让 AvalonEdit 的 `TextAnchor` 自动平移、**不会**改区间表。两处手术式写入口（`ReplaceValue` / `TryRewriteMember`）若只更新被替换的那个节点，下一次读锚点就按旧位置现建 → 选区整体偏 delta 位，表现是「上一处改完，下一处改的时候残留/啃掉一个字符」（`ffalse`、`falsee`）。两处都要 `ShiftSpans(start, start+len, delta)`；判据 `CBHK.Probe --case sequential-edit`（含变长与变短两个方向）。
+- **登记表的键是强引用：换了节点就必须搬登记**：`spans`/`anchors` 以 `McdocJsonValue` 为键，手术式改值把父级的那个值换成新对象后，旧对象若还留在表里，就被字典一直吊着不放（旧 AST 一起泄漏）。实测连改 200 次：条目数 508 → 708（每次 +1）。`ReplaceValue` 走 `MigrateRegistration` 没这问题，`TryRewriteMember` 直接赋值漏了 —— 换下来的旧值必须 `spans.Remove`/`anchors.Remove`。判据 `CBHK.Probe --case memory`（连改 200 次条目数不许涨）。
 - **文本→树的差量同步必须先 Relink 再重建锚点**：`McdocSyncEngine` 若先 `RebuildNode(锚点)` 再 `RelinkToRoot`，重建用的是**旧** `node.Json` —— 重建出来的子树里没有新键（现象：JSON 里多了 `criteria.test`，树上只有"新键"占位行，条目行不存在）。顺序固定为"值补丁 → Relink/AdoptRoot → 重建锚点子树"。判据见 ui-gate `S37`。
+- **只重指 `node.Json` 不够：求值现场（`ValueNode`）也要跟着换 AST**：换根之后节点上的 `ValueNode` 还指着旧对象，按**同层兄弟键**求值（dispatcher 的动态索引）读到的就是上一代的值 —— 现象是"右侧把 `block` 改空、左侧 `properties` 照样解成旧方块"。两处都要重指：每个节点（`RelinkToRoot`）+ 摊平后的合成根（`AdoptRoot`；它不在 `Nodes` 里，`RelinkToRoot` 走不到它）。判据 `CBHK.Probe --case text-edit-reevaluates-dependents`。
+- **文本→树的值补丁必须重新求值"靠这个键解出来的兄弟"**：`McdocSyncEngine` 只打值补丁，`dispatcher/indexed` 的子树不会自己重算。出口只有一个 `McdocPipeline.RebuildDependents`，VM 在 `ApplyTextToTree` 里、**投影之前**调用；重建数 > 0 时走 `SyncJsonText()`（重建会物化判别键，只 `PushJsonText` 会让两侧不同代）。
+- **"列表分支必须落数组"要按声明判，不许用行内镜像**：`node.UnionListLike` 是上一支留下的镜像，从列表支切到标量支时它还在，会把刚落盘的 `""` 又包成 `["c"]`（`condition` 变空串的现场）。
 - **消化完文本后 `JsonText` 要取编辑器当前文本**：消化过程中树侧可能已经整篇回写（物化必填键 / 重建后重排），拿进来时的快照回写会让 `JsonText` 与屏幕上的 JSON 不同代 —— 复制/保存导出的就是上一份。
 - **整篇替换文本会杀掉 `ITextAnchor`**：`JsonTextEditor.Reload` / `JsonTextState.Reformat` 都是 `Document.Replace(0, len, text)`，语法波浪线的锚点随即失效，下一次绘制在 `WaveUnderlineBackgroundRenderer.Draw` 里抛 `InvalidOperationException`（删节点必崩就是这么来的）。整篇写之前先 `overlay.Clear()`，renderer 自己也要判 `IsDeleted`。
 - **右侧语法错误 ≠ 永远不许动文本**：今天分成两档 —— 用户在**右侧打字**时，树侧一个字符都不许改（等他自己修括号）；用户一旦操作**左侧树**，就要把脏区域对齐成合法文本，否则"我点了树却什么都没发生"比改错更糟。对齐只做**容器级替换**（找包住脏区域的最小完整结构，用模型里同一份整段换掉），绝不猜字符；局部拼接的前提是"脏容器之外词法完整"（祖先也没闭合就只能整篇以模型为准）。判据见 ui-gate `S43 文本非法时树侧改值 / 脏容器被完整容器包住 / 定位不到可替换结构`。
@@ -135,6 +141,22 @@
 - **缺省成员不许在"饿建期"把子结构建出来**：`LazyChildren = false`（sweep / pipe 为了"行数==节点数"都关掉懒建）时，presenter 里 `node.Parent is not null && json is null` 这类守卫**恒为 false** —— `Parent` 只在本节点的 `RefreshChildren` 返回之后才由父级赋值。于是缺省的可选成员照样把整棵子树建出来，而投影对这类节点一列子行都不画（只留一行 ⊕）→ "节点建出来却不可见"，`行数 == 节点数` 从 1151 掉到 850。修法：由**父级**在 `context.Child(..., deferChildren: ...)` 上说清"这是缺省成员"，工厂据此跳过饿建（必填成员不 defer：非法文档仍要摊开子行 + 挂诊断）。
 - **判据要按形态**：union 切到**列表/元组**支时"0 子级"不是空壳（列表没值就没有项，入口是 add）；空壳指的是结构支里的同名行 / 空 `Any` 行。R5 早写过同一政策（结构体是 ⊕、列表是 add、联合是 unset），U2 现在照同一口径判。
 - **根层的"新增成员"不许再进差分锚点**：`Diff` 对"旧值不存在"的键会加锚点，锚点循环随即把它重建一遍 —— 而重建只有声明类型，拿不会建树期的语义（`IsUnknownField`、动态键身份、`IsRequired`、"缺少必填键"诊断）。现象是"未声明键的行退化成 Plain 行，占位子行却还在"。根层成员由 `CreateRootMember` 建好后就跳过递归差分，锚点只留给"确实换了形状的老节点"。
+- **mcdoc:block_states 的成员来自 BlockState 资产，不是 schema**：block_state.mcdoc 只声明 dispatcher 空间 + 「dispatch … to struct {}」兜底，成员表得由宿主喂。McdocBlockStates.Load(版本, 目录) 读 Resource/Registries/BlockState/<版本>.json（元素[0] = 属性名→候选值数组，元素[1] 默认状态弃用），每个方块产出一个「属性名 → 字符串枚举」的 Struct（字段全部 Optional），再由 Register 走 McdocTypeIndex.RegisterDispatch(mcdoc:block_states, 方块 id 去掉 minecraft: 前缀, 类型)。版本键不存在时按「精确 → 不高于当前版本的最近一份 → 最高可用」回退（与 GetRegistriesData 同口径）。VM 在 CreateDocument() 里注册一次，换版本重走 CreateDocument 自然刷新。**端到端未验**：properties 节点要真的显示属性成员，还需要 LSP 把 mcdoc:block_states[[block]] 索引解析到这些成员；判据 --case blockstate-properties 只到「成员表按版本正确生成并注册」这一层（并逐字段比对真资产文件）。
+- **必填容器没建出来，里面的必填字段永远物化不到**：物化只走「已经建出来的子节点」，而 `StructPresenter.PopulateChildren` 在 `json == null` 时直接返回 —— 于是「必填结构 → 必选枚举」这种两层的必填链，里层连节点都没有，校验就一直报「缺少必填键」（行上那颗感叹号）。修法：物化的第一步先把**必填容器的空壳**补上（空对象 / 空数组），再靠既有的不动点循环（每轮写完重建一次）把下一层带出来。判据 `CBHK.Probe --case required-enum`。
+- **用户显式选过的 union 分支不许被「按值猜」顶掉**：`UnionNodePresenter.PopulateChildren` 每次建支都按 JSON 重新猜，并列（两个成员都能吃这个值）时退回 `members[0]` —— 表现是「切到某个成员，一重建就自己弹回去」，然后每次重建都再弹一次。局部重建尤其致命：节点是新建的，标志留在了老节点上。修法：`SwitchTo` 打 `UnionSelectionExplicit`；`RebuildNode` 按 `JsonPath` 把成员下标放进 `McdocRuntime.UnionSelectionHints` 交给这一次构建；建支时**显式优先，但仍要求它对当前值成立**（值变了就照旧回到按值猜）。判据 `CBHK.Probe --case union-stable`。
+- **条目身份只在"新形态仍然成立"时回填**：`RebuildNode` 无条件把旧节点的 `IsMapEntry / RemoveEntryCommand` 搬回来，父级却已把这个键声明成静态字段时，行上就会**同时**出现"添加"与"删除条目"（`AddEntryVisibility = !IsMapEntry`）。判据 `CBHK.Probe --case rebuild-entry-identity`。
+- **切 union 成员的剪键只有一条规则，但有两个入口**：`SwitchTo` 里有 `DropAbandonedKeys`，而"下拉改选中 / 重建"走的是 `SelectedUnionTypeName` setter —— 那条路以前不剪，于是旧成员的键留在文档里（现场：切到 `block_state_property` 后 `terms` 残影，用户只能手动删）。现在剪键收口在 setter（`SwitchTo` 仍然走同一条规则）。
+- **依赖键换了要剪掉"旧声明过、新不声明"的键**：切方块后 `properties` 里上一块方块的属性留着只会变成未声明键（用户看到的是"旧属性还挂着"）。与切 union 分支的 `DropAbandonedKeys` 同一条规则，只剪这一种键，别处手写内容一律不动。判据 `--case structure-change-reevaluates`。
+- **`RefreshNode` 复用建节点时捕获的类型闭包 —— 但别往它里面加"重新求值"分支**：运行期依赖的节点在 `OnStructureChanged` 里就被 `IsRuntimeDependent` 早早转给"延后一拍重建"（`ScheduleRebuild → RebuildTargetedOrFallback`），`RefreshNode` 根本走不到。探针必须把 `ScheduleRebuild` 接上（否则那条早退在探针里等于"什么都没发生也算绿"），判据见 `--case structure-change-reevaluates` 的隔离夹具。
+- **`RebuildNode` 还要带回「父级写过的条目身份」**：`IsMapEntry / EditingKey / DynamicFieldIndex / KeyOptionList / RemoveEntryCommand` 也是**父级建完子节点之后**才写的（与必选性同源）。重建只按声明类型重跑一遍，这些全丢 —— 表现是行上的「重命名」与条目删除按钮**当场消失**，而切 union 成员、展开子级、改名提交之后都会走重建，所以三条不同的「按钮不见了」是同一个根因。两条硬约束：① 命令必须按**新节点**重挂，旧闭包捕获的是已经被换掉的旧节点；② 判据要连行级派生量一起断言（`RenameVisibility / RemoveEntryVisibility / ItemActionsVisibility`），只看节点字段会漏。判据 `CBHK.Probe --case rebuild-semantics`。
+- **切 union 分支要丢掉「旧成员声明、新成员不声明」的键**：结构分支的字段行是上提到 union 节点上的，而那些键留在文档里 → 切完 `terms` 还和 `block` 并排出现在行上（现场 `block,terms,keep`）。`McdocUnionSwitch.SwitchTo` 在 `ConvertJsonToSelectedBranch` 之前按「求值成员的字段集合」做差集剪枝（只对「旧新都是结构」生效，any/标量分支不剪）；判据 `--case union-branch-stale`。
+- **靠兄弟键求值的子树必须「重新求值」而不是「刷新」**：`dispatcher`/`indexed` 类型（`mcdoc:block_states[[block]]`）在兄弟键还没有值的时候只能解成兜底 `any`，`RefreshNode` 只是重跑表现器、用的还是建节点那一刻算出来的兜底类型，所以「第一次是哑的、折叠再展开才好」。正解：值变更后按**声明**找出用这个键做动态索引的兄弟节点，走 `RebuildNode` 重新求值（判据 `--case blockstate-enum-after-value`：前=空 → 后=`face,facing,powered`，候选含「（未设置）」）。
+- **`enum-empty` / `index-resolve` 自报**：声明是枚举或带注册表却拿不到候选时写 `enum-empty path=… reason=…`；`dispatcher`/`indexed` 求值退成 `any` 时写 `index-resolve … resolved=False`。`--check-trace` 把 `enum-empty=0` 作为硬断言（空下拉在界面上就是「点了没反应」）。
+- **重建闸门必须覆盖整段，不是中间那一次调用**：`McdocPipeline` 的 `Rebuilding` 若只包住 `RefreshNode`/`RebuildNode`，复位之后才跑的 `MaterializeUntilStable` 与 `Projector.Reset` 会 `EnsureChildren` → 触发「刚建出子级」钩子 → 再排一次重建，形成自我驱动循环（现场真机日志：`proj-splice`/`proj-reset` 各 130+ 次、`structure` 只有 2 次、周期约 100ms，UI 线程被占死表现为「点击失灵 + 选中态一直闪」）。闸门要包住【刷新/重建 → 物化到不动点 → 投影 → 回写】整段；判据 `--case no-selfstart` 从两侧钉住：闸门内钩子 `Δ=0`（不自我启动）、闸门外 `Δ=1`（用户展开仍然工作），**不是**把机制一刀切掉。
+- **「刚建出子级」回调只许在真的建出来那一拍触发**：`McdocRowProjector.CollectChildren` 原来每次都无条件 `AfterChildrenBuilt?.Invoke(node)`，于是**每一轮整表重投影都会再喊一遍** → 宿主补物化 → 排重建 → 再 Reset → …（真机日志签名：`proj-splice`/`proj-reset` 各 100 次、`structure` 只有 3 次、周期 7ms，UI 线程被占死）。正解是 `var justBuilt = !node.ChildrenBuilt; node.EnsureChildren(); if (justBuilt) …`（判据 `--case no-selfstart` 的「重复投影不再触发补建回调」）。
+- **重建期间收到的结构变更通知是自己造的**：`PopulateChildren` / `ApplyBranch` / 物化都会在重建过程中抬 `StructureChanged`，那时再排一次重建就是自我驱动。`McdocPipeline.OnStructureChanged` 入口对 `Rebuilding` 一律早退（与节点类型无关）；VM 的「运行期依赖 → 延后一拍重建」也已收进管线，不再有第二条绕过闸门的路。判据 `--case no-selfstart` 的「重建期间的再入通知不刷新投影 / 不排重建」两条钉住它。
+- **切到解不出来的 union 成员要先回 unset 再谈切回**：`SwitchTo` 里 `IsUnresolvedMember`/`IsUnresolvedBranch` 命中就回 unset + 挂诊断（否则行上留一个写不出合法值的死分支）；判据 `--case union-unresolved` 额外钉住「切回可解的支后重建不弹回」。
+- **`RefreshNode` 必须让路径索引失效**：子级被重建后 `nodeIndex` 还指着旧节点，`FindNode` 就会把刚被删掉的节点捞回来 —— 随后「按路径重建」又把它装回树上，表现是「JSON 里键没了、左侧那一行却还在」。判据 `CBHK.Probe --case legacy-delete`。
 - **`RebuildNode` 必须把父级写的字段语义带回来**：必选性 / 文档注释 / 键提示是**父级表现器建完子节点之后**才写的，重建只按声明类型重跑一遍，`IsRequired` 就会退回默认的 `true` —— 现象是"可选字段突然变必填，行上的「清空」让位给 ⊕"（ui-gate `S20-4`）。以前没露出来是因为重建结果被投影丢掉了（见下一条），接上之后当场显形。
 - **摊平根的顶层节点重建必须同时换 `Nodes` 里的那一项**：`Nodes` 是投影与一致性守卫的来源，只换 `rootNode.Children` 的话视图还指着旧实例（子行永不更新），而 `RefreshAround` 又因为父行是合成根而返回 false → 整表重投影。判据是 ui-gate `S43 根层` 的"整表重投影 = 0"。
 - **顶层区的行重拼只能按"第几个 `Depth == 0` 行"定位**：重建过的顶层行实例已经换掉了，按行对象/节点查索引会落空；按路径找又会命中同路径的占位行（D1 同款）。`McdocRowProjector.SpliceTopLevels` 拿"上一代/这一代顶层列表"求公共前后缀，再按序号算行区间。
@@ -149,6 +171,8 @@
 - **`VectorColorPicker.HexCode` 是私有 setter**：只能绑 `SelectedColor`，字符串字段配双向转换器。
 - **"行上显示了默认值"不等于"JSON 里有这个值"**：必填 + 白名单闭合下拉会自动选中第一个候选但建树期不落盘；依赖它的动态 spread 会解析成 `%none`（`advancement.criteria.<name>.trigger` 的子级整片空）。修法：只对**必填**字段在载入/结构变更后物化默认选中值再重建。
 - **物化写成员不能用纯追加**：父对象里常有同名的空值（`trigger: ""`），追加后成 `{"trigger":"","trigger":"minecraft:…"}`，dispatcher 读第一个 → spread 依旧空，行上却"已选中候选"。
+- **良性跳过绝不许写成行徽标**：`WriteIntoParent` 遇到"节点没有父级且不是文档根"时是一句 `McdocWriteTrace.Log` 就够的**预期**情形（重建换了节点、编辑器还握着旧实例），把它写成 `node.Error` 就会变成永远消不掉的黄色感叹号（现场 trace 里 41 条全是这一句，压在 `block` / `condition` 上）。判据 `CBHK.Probe --case benign-skip-no-badge`；行徽标只许来自"当前状态"的校验。
+- **候选下拉行的空文本绝不许落成 `""`**：`ReadEditedValue` 原先给"必填 + 空文本"一律 `String("")`，于是 `block: ""` 进了文档 —— `#[id]` 行立刻挂"值不在候选内"黄标，靠它做动态索引的 `properties` 整片解不出来（退成动态键占位）。两条一起守：① `ReadEditedValue` 的 Text 支只在**没有候选**时才允许空串；② `ApplyNodeValue` 在空值时优先落"行上显示的候选"（真 unset 走哨兵分支，不靠清空编辑器）；③ 物化把"键在、值是空串"也算没有值（可选字段只在键已存在时补，绝不凭空插键）。判据 `CBHK.Probe --case required-candidate-not-blank`。
 - **物化的容器不许"往上找最近有 JSON 的祖先"**：那是把子键提到根上的唯一通道（删 `display` 却出现 `{ "title": "x" }`）。只有 union 摊平出来的分支层可以借容器。
 - **删字段要连 JSON 一起断**：只清子级不清 `node.Json` 时，残留值会被后续物化/回写当成"还在文档里"。
 - **值从"没有"变"有"之后必须放开子级**：删字段会把 `ChildrenBuilt` 冻结，再 ⊕ 时 `{}` 回来了但子行回不来（"结构有了、行没回来"）。
@@ -157,6 +181,15 @@
 - **动态键在 MetaType 侧是"字段类型 = `Tuple[键类型, 值类型]`"**：泛型形参落在键上时 `field.Key` 为空，模板替换必须先拆这个 Tuple 分别求值，否则键退化成 `Any`、候选与泛型替换一起丢。
 - **动态键的 key 类型常常是 `type` 别名**：属性挂在别名目标上，解析必须按符号表穿透 `Reference` 再取属性。
 - **union 选「未设置」不等于只删键**：删键之外还得清**分支镜像**（`ScalarEditorKind` / `EnumOptionList` / `SelectedEnumOption` / `UnionListLike` / `UseSelect`）、清 `SelectedUnionChildren`、折叠，并且**返回"真的变了"**让行重投影（`RefreshHead` + `ReplaceRow`）。少任何一步，行上就留一个写着旧值、点不动的死编辑器（"选了未设置，行里还有 `minecraft:allay`，右边 JSON 里却已经没有这个键"）。判据见 ui-gate `S43 树上把 union 切回未设置`。
+- **union 标量支的“空值”不是 unset**：切到 `string` 支时 `getChange` 写出来的是 `""`，回写出口若按“可选字符串清空 = 删键”处理，就把**分支身份**一起删了 —— 文档里没有这个键，下一次重建 `PopulateChildren` 只能回到未设置，用户看到的是“选了 String 分支立刻弹回（未设置）”（`chat_type` 的 `color` 就是这条：`string | TextColor`）。判据：切分支后 `getChange` 的值必须落盘（`color: ""`）、**整树重建后 `SelectedUnionTypeName` 不变**；unset 只走下拉里的（未设置），绝不靠“清空编辑器”。出口：`McdocCollectionEditor.ScalarBranchValue`。
+- **同值能匹配多个 union 成员时，按"具体程度"选支，不是"命中一个才选"**：`color?: #[color="hex_rgb"] string | #[color="named"] TextColor` 里 `"black"` 同时命中两支，旧规则（多命中就放弃 → 渲染层退回声明序第一支）会让**每次重建都把 Enum 支打回 String**（`McdocTypeMatcher.SelectMember` 现在是 literal > enum > 普通同型 > any，并列最高仍不猜）。判据：`"black"` → Enum、`"#FF00FF"`/候选外 → String，且整树重建两次后仍是 Enum。
+- **程序写的文本不算用户输入**：`TryRewriteMember` 落盘那一段之后，编辑器会抬 TextChanged；不压住回写通道（`suppressReload`）就会被当成用户输入 → 防抖 → 文本→树同步 → 锚点重建 → 承载光标的行被换掉，用户"每敲一个字符就丢焦点"。同时 `SyncTextToTree` 在 `IsTextEditorFocused()` 时只验证语法、不落地（`syncDeferred` + `FlushDeferredRebuild` 补跑）。顺手钉死：`IsTextEditorFocused` 里 `Keyboard.FocusedElement` 在非 STA 线程（探针/门禁后台线程）会抛"调用线程必须为 STA"，必须 try/catch 成 false，否则一调 `SyncTextToTree` 就崩。
+- **列表条目的增删要通知"能重建的那一层"**：union 的列表/结构分支本身不会被 Add 进父级（子级被上提），在它身上抬 `StructureChanged` 等于重建一个临时壳 —— 宿主那边 `RefreshAround` 找不到父行、`Reset` 出来的还是旧树，表现就是"右侧 JSON 少了、左侧树一动不动"。两条一起守：① `ApplyBranch` 里 `branchNode.Parent = node`（分支节点也要挂到 union 上，否则连向上找的路都没有）；② `McdocCollectionEditor.NotifyStructure` 用"父级的 Children/Items/SelectedUnionChildren 里有没有它"逐级上溯，通知到真正挂在树上的那一层。
+- **候选下拉的 ItemsSource 一律过 `EnumMemberToTextComboBoxItemConverter`**：`VectorIconTextComboBoxItemTemplate` 绑的是 `item.Text`/`item.Image`，直接喂 `EnumMember` 时每一行都是空的（"物品枚举节点里成员看不见文本"就是这么来的）。顺带钉死：样式里设了 `ItemTemplate`，`DisplayMemberPath` 会被它压掉，写了也没用。
+- **union 分支的枚举下拉也要有（未设置）**：`UnionBranchBuilder` 建支时文档里往往还没有值（分支用 null JSON 建），分支节点若只有枚举候选，镜像到 union 行上的下拉就只能显示"第一个有意义的成员"、点了也退不回去。三处一起守：① 分支节点建好后调 `EnsureUnsetOption(branch, optional: true)` 插哨兵（分支节点的 `IsRequired` 没有"可选"含义，所以用显式重载）；② `SwitchTo` 里 `ConvertJsonToSelectedBranch()` 写完值要 `RefreshUnionBranchMirror()` —— 标量分支没有子级，必须按本行的值重新派生选中项，否则镜像停在建支那一刻的（未设置）；③ union 行上选哨兵 = 这个键整个不存在，`SelectedEnumOption` setter 直接转 `McdocUnionSwitch.SwitchTo(this, 哨兵)`，不许"行上显示（未设置）、文档里还留着旧值"。
+- **“必选却未选定分支”不许在建子级时挂**：那一刻子节点的 `IsRequired` 还是默认 `true`（父级建完子节点之后才写），可选字段（`color`）会被扣一顶假诊断而且永远清不掉（状态栏凭空多一条“⚠ 1 条诊断”）。缺必填键由 `McdocValidator` 在全树建完之后报。
+- **下拉的（未设置）哨兵必须由父级在 `IsRequired` 落定之后插**：建子级期 `child.IsRequired` 还是默认 `true`，`Prepare` / `McdocSelectOptions.Apply` 里判"是否可选"恒为真 —— 必选字段会莫名其妙多出一个能删键的项（与 bool 默认值那个坑同源）。收口点只有 `McdocPresenters.BuildStaticField` 与 `McdocTreeDocument.RebuildNode` 两处，且必须幂等。
+- **当前版本不存在的键只出一行、不解析子树**：`IsUnknownField` 的节点走 `UnknownFieldPresenter`（不建子级、不给编辑器、不给任何按钮），行首那一格只放**标准图标按钮**（`VectorFlatIconButton` + `MdocTrashGeometry`，`UnknownDeleteVisibility` / `UnknownDeleteCommand`；列宽 26 是算出来的：模板自带 3+3 描边列 + 15 图标 + 左右 IconMargin，给 5 就会超宽被裁，所以这里左右只给 1），黄色 `!`（`UnknownBadgeVisibility`）在**行尾**（模板最右），文档里那份值**原样留在文档里**（`McdocTreeDocument.CountUnknownFields` 只数不删；换版本照 §2.7「换版本不改文档」执行）。切到声明这个键的版本时，同一份 JSON 整树重建就把子树就地建出来 —— 数据从没丢过，也就没有"快照仓"这回事。三条硬约束：① 删除原语自己守 `!IsRequired`（`McdocNodeFactory.RemoveFieldCommand`），所以未声明键必须在建节点时就 `unknownField: true` 且 `IsRequired = false`，否则一个都删不掉；② 标记必须在 `CreateNode` **之前/当下**打上（`McdocBuildContext.Child(..., unknownField: true)`），表现器的选择与 `Prepare` 都按它改道，事后再打标记已经晚了；③ 行尾不再挂诊断徽标与删除按钮，否则行首那颗 `!` 会和它重复。 行首删除入口分两条路：键还在文档里 → 删键（父级重建，行随之消失）；键已经不在了（右侧把整行删掉之后的残影行）→ 只把这一行摘掉再 `SpliceSubtree` 父行，**不能**走父级重建 —— 那条路按 JSON 重亲子级，同一父级下其它幽灵行会被一起清走。
 - **`McdocRow.Head` 是"构造时求值 + 缓存"**：union 行必须不缓存（切分支会改编辑器/分支候选），否则"切分支后编辑器不回来"。
 - **`indexed` 不许清 `TypeArgs`**：`Concrete{Item=Indexed(Dispatcher), Items=[…]}` 是"泛型 dispatcher"的唯一写法，清掉实参目标模板就拿不到。
 - **模板形参引用要按最后一段名匹配**：`Mapped` 里的 `Reference` 可能带模块前缀（`::mod::T`）。
@@ -194,6 +227,7 @@
 - **无超时的 `ConnectAsync()` 比崩溃更糟**：服务器没起时 `Init()` 永远不返回 → 骨架屏不消失、符号表为空、所有 `#[id]` 变文本框，而且一条日志都没有。
 - **生成器页面只声明 EntryId**：所有入口页统一继承基类，页面里不许自带引擎逻辑（同步/默认值/防抖重建只有一份）。
 - **`Resource` 是 Prism 单例**，VM 走构造注入；`Init()` 没跑过，任何页面都建不出树。
+- **`Configuration.json` 缺了不许让整条 `Init()` 静默跳过**：这个文件不在仓里（安装包才带），旧代码第一句就是 `if (File.Exists(configurationPath))` —— 缺文件时注册表与符号表双双为空，生成器页面的默认文档变成 `null`（右侧 “1: null”、左侧 1 行、“字段 1 个顶层”，状态栏一条提示都没有，看起来像“页面载入后没有内容”）。两条一起守：① 入口不许因为“可选配置文件不存在”整段跳过（缺文件按 `Resource\Registries` 的默认路径继续，读坏了记一条 note 一样继续）；② 默认文档出口的契约是“绝不返回 null”，但 `GetDefault` 对空联合 / 没解出的指令回的是 `JsonValue.Null`（**不是 C# null，`??` 拦不住**），必须过 `CanMaterialize` 再退 `{}`。判据：符号表为空时页面文本是 `{}`、状态栏说得出“符号表为空”，数据到位后自动重生成一次（用户已经改过内容就只换 schema、不动键值）。③ 这个文件只承载三把旋钮，且源码在 `CBHK\Configuration.json`、随构建拷到 exe 旁：`Registries`（注册表目录，缺省 `Resource\Registries`）、`ItemTextures`（物品贴图根目录，缺省 `Resource\Textures\item`；仓里没有贴图，缺省就是“画确定性瓷砖”）、`Generator`（**入口文件**：键 = `EntryId`、大小写不敏感，值 = 相对 BaseDirectory 的文件，或“里面取 `empty.json`”的目录——旧管线就是“目录 + empty.json”；每次建默认文档都重新读配置，所以改完配置重开窗口即生效，读不到才退回代数默认值，用的哪一份写在状态栏）。
 - **AvalonEdit 必须用 `JsonTextEditor`**：只有它持有 `JsonTextState`，树与文本才能共用同一批 `JsonValue`。
 - **编辑器 `Text` 不是依赖属性**：禁止在 XAML 里绑 `Text`（真机 `XamlParseException`）。
 - **visitor 是"new + 逐属性拷"**：新增的属性载体**必须加进拷贝清单**，否则只活到中间对象上（裸 `#[id]` 就这样丢过一轮）。
@@ -225,6 +259,9 @@
 - **断言不许可空过**：`if (row is not null) Gate.Check(...)` 这种写法在行消失时整条断言蒸发（`S16-2b` 就这么空过过一轮），必须有"找不到行 = 红"。
 - **现象要能复现成"一份内联文档"**：`--entity-predicate` 这类模式用**内联常量**把用户现场（`criteria.<名>.conditions.player`）钉进门禁，比截图/口述可靠；配套的索引 trace（`McdocSimplifier.IndexTrace`，默认关）能把"同一层级该取哪份 JSON"直接打出来。
 - **性能预算要按"修好之后真正干的活"标定**：`S10 结构补丁 ≤50ms` 原本标在"锚点命中占位行、只重建 1 个节点"的错误行为上；修好锚点后同一条补丁变成重建整片容器（3.5k 节点的文档 67ms），旧阈值就成了"用 bug 的速度给新代码设限"。预算只拦量级退化，**结构正确性另配断言**（不许 fallback / 不牵动无关节点）。
+- **顶层字段被重建时没有父行可挂**：摊平后合成根不在 `Rows` 里，`RefreshAround` 必返回 false → 整表重投影（判据 `--gate sync` 的四条结构变化当场全红）。修法是任何一次同步都先记下"上一代顶层列表"，投影侧按 `SpliceTopLevels` 分段重拼（`McdocSyncEngine.TryApply` 开头 + `McdocProjectionSync.Apply`）。
+- **"一有作废就整篇回退"在文本侧同步里没有可达路径**：8 类操作（值变化 / 嵌套增删键 / 根层增删键 / 列表增删项 / 无变化）实测一次都没触发 `uncovered > 0` —— 形状变化的节点总被锚点覆盖。留着当安全网可以，但别再把它写成"下一步"。
+- **判据落点**：`CBHK.Probe`（`--gate sync` / `--gate parse` / `--case criterion-empty`）。它与 VM 共用 `McdocProjectionSync.Apply`，量的就是界面上跑的那段；退出码 0/1/2 = 绿/红/环境不足，**没有 SKIP**。
 
 ## 四、一次真实缺陷的完整证据链
 
@@ -255,10 +292,12 @@
 | 无 checker 级 Errors | C# 侧没有 spyglass checker，用结构 + 取值域校验替代；跨资源/tag 存在性不做 |
 | 物品图标退化成确定性瓷砖 | 仓内 png 全是 UI 图、没有 item/block 贴图（misode 拉远端）；宁可画瓷砖也不静默空白 |
 | `DeferEditors` 默认关 | 摘要行更矮 → 视口物化更多容器，首屏更慢 |
+| **union 行"显示即落盘"**：行上显示着某个成员、文档里却没有它的值 → 物化期按成员默认结构写进文档（用户明确要求"所见即所得，同层调度器也要跟着解"） | 不落盘就会出现"下拉选着 `block_state_property`、同层没有 Block/Properties，切一次成员才出现"；代价是替用户写键，所以只在**显示的是具体成员**（不是未设置）时做 |
 | 角标用文本字形 | `Icon.xaml` 图标依赖 png 资源 |
 | 候选外的值：不伪造候选、不显示成选中项，只挂 warn 诊断「值不在候选内：X」，JSON 与选中项都保持不动 | 判断只看"该位置有没有值"；伪造候选会把用户选择弹回去（换 trigger 后 spread 不跟就是这么踩的） |
 | 白名单外 `#[id]` 也只给一件控件（单个下拉），手输自定义值走右侧 JSON 面板 | 用户明确要求"有下拉就别再放文本框"；可编辑下拉在这个控件里没有 |
-| 渲染完毕后把行上显示的默认值（数字 / bool / union 标量支）落盘；编辑器清空即删键 | 用户明确要求"所见即所得"：右侧 JSON 必须和左侧树一致；代价是打开页面后文档会带上这些默认键 |
+| 渲染完毕后把行上显示的默认值（数字 / bool / union 标量支）落盘；**可选字段的 unset 只有编辑器一条出口，行上不再有删除按钮** | 用户明确要求"所见即所得"：右侧 JSON 必须和左侧树一致；可选字段的清空手势见下条 |
+| 可选字段的清空手势：文本框清空 / 数字清空 / 布尔两个都取消 / 枚举与 `#[id]` 下拉的**第 0 项「（未设置）」** / union 分支下拉的（未设置）→ **都真的把该键从文档里删掉**；可选容器与取色器没有清空手势，保留行尾的删除按钮（垃圾桶图标）；**当前版本不存在的键**（`IsUnknownField`）整棵子树只出一行、不解析不给编辑器，行首是黄色 `!` + 删除按钮，行尾不再重复给 | 删键必须只有一条出口（`McdocCollectionEditor.ApplyEmptyValue`）；哨兵绝不许把 `-1` 物化进文档。**例外**：union 标量镜像行的空值 = 该支的默认标量（删键会连分支身份一起删，切支立刻弹回未设置） |
 | map 条目行的键以只读标签显示，改名走「重命名」入口 | 键名是用户自己起的，不该在条目行上再出现候选下拉；下拉只属于"新键"占位行 |
 | 解不出来的 union 成员切过去会**回 unset**（附诊断） | 与 misode 一致：渲染不了的分支不该被"选中"，否则行上会留一个写不出合法值的编辑器 |
 | i18n 中文硬编码 | CBHK 只面向中文用户 |
@@ -274,24 +313,78 @@
 
 ## 七、未收口的坑（下一轮从这里接）
 
-- **只写 definition、不写 trigger 的文档本身是合法的**：`{"criteria":{"test":{}}}` 载入后 `criteria` 是 Struct、条目类型是 criterion 结构（不是 `Any`）。所以再看到"空壳条目"，先怀疑文本被污染（上一条），不要再往求值层找。
-- **动态键行的添加入口只有一条**：数据结构（map/struct）的 ⊕ 只能是「起键 → 用该键作 `%key` 求值」（`CommitEntry`）；列表语义的追加（`AddItem/AppendItem`）只对 `List` / union 的列表分支成立。给所有节点无差别挂 `AddItemCommand`（没有 `CanExecute` 守卫）会让 map 行出现一个永远可点、点了什么也写不出来的按钮。
-- **"新键"占位行不该有值编辑器**：它只负责起键（键输入 + 候选下拉 + ⊕）。一旦它渲染出值编辑器，用户看到的就是"键框旁边蹲着一段裸 JSON"，看起来像模板崩坏。
+- **criterion 空对象条目只做了机制验证，真 schema 未验**：`{"criteria":{"test":{}}}` 在"只由 struct 组成的联合"上实测不退化成 `any`（判据 `CBHK.Probe --case criterion-empty`：`$.criteria` 是结构、条目是"成员全为结构"的联合、无空壳诊断、能摊出子行）。合成 schema 复现的是机制；真 `advancement` 联合还要过一次 `Resource.Init` 的符号表才算验过——那需要 `MinecraftLanguageServer` 在跑，当前环境没跑，所以记"未跑"，不记"验过"。
 
-## 八、下一步要做的事：文本 → 树的最小范围同步
+## 八、下一步要做的事
 
-**目标**：右侧改一处，左侧只重建那一处；不论文档多大，**更新代价只跟"改动范围"有关，与文档规模无关**。判据三条（缺一不可）：① 文本仍是单个根；② 整表重投影 = 0 次；③ 600 行文档里"局部结构变化"≤ 150ms、"值变化"≤ 20ms。
+**（空）** —— 原来那两步已经做完：① 顶层字段被重建时不再整表重投影（判据 `--gate sync`，8 类操作 × 8 条判据，整表重投影 = 0、结构变化 1–3ms）；② 文本 → 树的解析走增量（判据 `--gate parse`，未受影响成员 AST 原样复用 3/3、增量 0.043ms vs 整篇 0.773ms，并含"增删顶层成员必须回落整篇"的反向用例）。剩下的待办只有 §七 那条"真 schema 未验"。判据落点见「验证」节。
+## 九、当前待办（2026-06 现场回归，按优先级）
 
-**现状**：
+来源：用户真机三张截图（同一主题/视口，`mcdoc | advancement`，版本 1.20.5）。下面每条都写清「现象 → 已掌握的机制/证据 → 怎么修 → 拿什么判绿」。
+**状态口径**：已修 = 判据先红后绿且全量门禁绿；待办 = 还没有判据或还没通过。
 
-- 差分器能定位到**最深的变化容器**并只重建那一个子树，投影也只重拼那几行。
-- **变化落在根对象**（加键 / 删键 / 删掉一层包装）也已经是局部同步：按"根的直接子键"逐个差分，顶层行按"第几个顶层行"分段重拼，不走整树重建。判据是 ui-gate `S43 根层` 五步（整表重投影 = 0、单次结构变化 ≤ 150ms）。
-- 解析仍是整篇递归下降：没有"只重解析改动区间"的能力，所以做不到"识别最小合法结构的起止位置"。
-- 为了不留下残骸行，现在对"未被锚点覆盖的作废子树"一律整篇回退 —— 这是安全优先，但也把能局部的情形一起牺牲了。
+| # | 现象（截图） | 状态 |
+|---|---|---|
+| T1 | `Properties` 展开后**子级为空**（只剩一行 ⊕），JSON 里是 `"properties": {}` | 已修（本地夹具；真 schema 未验）——根因是文本→树的值补丁不重新求值依赖 + 求值现场停在上一代 AST |
+| T2 | `block` 被写成 `""`，`Properties` 退回**动态键占位**（`新建: 先起个名字…`），已加的 `face` 行还在 | 部分：闸门覆盖范围与"退化后行跟文档键走"已钉住（`--case value-gate-scope`）；`""` 的具体写入点仍需真机 trace 定罪 |
+| T3 | union 切到 `minecraft:allay_of` 后 `condition` 变成 `""`（对象被写成空串） | 已修（形状矩阵 `--case union-switch-shape` 抓到的真缺陷是"列表支→标量支被包成数组"；object→struct 不是缺陷，见下） |
+| T4 | `Condition` / `Block` 行黄标一直在（原文未定案） | 已修：原文是 `写回已跳过：节点已脱挂（不是文档根）`（真机 trace 41 条），良性跳过不再写 `node.Error`（`--case benign-skip-no-badge`） |
+| T6 | union 行显示着成员、同层却没有字段（切一次成员才出现）；换成员后旧键残留 | 已修：显示即落盘（`--case union-display-materializes`）+ 剪键收口到 setter 路径 |
+| T5 | `Properties` 字段第一次建出来是"哑"的，折叠再展开才正常 | 已修（判据扩到声明形状矩阵 `--case dependents-declaration-shape`） |
 
-**还剩两步，风险递增**：
+### T1　展开 `Properties` 却没有子级
 
-1. **拆掉"一有作废就整篇回退"**：改成"覆盖不到的子树各自重建"，并按契约清单（§2.7）重新守一遍残骸行与双射。风险在"行 ↔ 文档"的对应关系，必须有对应操作盯着。
-2. **增量解析**：保留上次解析的区间表，用编辑偏移定位受影响的顶层成员，只重解析那段文本、其余 AST 复用。这才是字面意义上的"最小合法结构区间"；贴一大段只改一处也能接近常数，但需要解析器支持片段解析 + 偏移修正。
+- **机制**：`properties` 的类型是 `mcdoc:block_states[[block]]`（`vanilla-mcdoc/java/data/loot/condition.mcdoc:33`）。它靠兄弟键 `block` 动态索引；`block` 没值时解成 `%unknown` 兜底（`java/util/block_state.mcdoc:6` → `struct { [string]: string }`），此时行是**动态键**形态，展开只会得到"新建键"占位。
+- **待证**：图 1 里 `block` 有值（`minecraft:acacia_button`）但 `properties` 仍为空 —— 需要确认重建后有没有人对它 `EnsureChildren`/重投影，还是解析已经正确、只是投影没跟上。
+- **怎么修**：先加判据 `--case properties-children-after-rebuild`：`block` 有值 → 重建 `properties` → 断言它的字段行（`face/facing/powered`）**在 `Projector.Rows` 里**且 `EnumOptionList` 非空。红了再决定是补 `EnsureChildren`，还是补"重建后按新类型重投影该行子树"。
 
-**每步都必须先补一条会红的判据**（加在"操作 × 契约"的矩阵里，而不是新开一次性用例）：覆盖不到的子树局部重建时，行数/双射/无残骸行三条同时成立；增量解析那步再加"文本与 AST 同代"。
+### T2　`block` 被写空 → `properties` 退化成动态键
+
+- **机制**：`block: ""` 让 `[[block]]` 解析失败 → `%unknown` → 动态键占位（与 T1 同源，只是这里的触发者是"值被写空"）。
+- **头号嫌疑**：重建/切支期间的**赋值通知被当成用户编辑写回**（`NodeValueChanged` 只由 `loading` 闸门拦，`McdocPipeline.OnValueChanged` 原先没进闸门）。已把 `OnValueChanged` 整段包进 `Rebuilding + loading`（`McdocPipeline.cs:201-217`，`OnValueChangedCore` 为实体），**尚未提交判据、也未经真机确认**。
+- **怎么修**：① 上面的闸门先落地；② 判据 `--case value-survives-sibling-rebuild`：给 `block` 落值 → `pipeline.OnValueChanged(block)` → 断言 `$.block` 仍是 `minecraft:acacia_button`、`$.properties` 仍是对象（不是 `""`、不是 `null`）；③ 若仍被写空，继续查 `McdocCollectionEditor.ApplyNodeValue`：**空 `Value` 不等于"删键"**，可选字段空串该保留还是删键要有明确规则（不许按路径特判）。
+
+### T3　union 切支把对象写成 `""`
+
+- **机制**：切支走 `McdocUnionSwitch.SwitchTo` → `ConvertJsonToSelectedBranch` → `McdocHelpers.GetChange(member, Type, Json)`。上一轮已修「`GetChange` 保留旧分支键」导致的幽灵字段（`DropAbandonedKeys`，判据 `--case union-branch-stale`）。**保留旧键之外**还有一条：当值不是对象时 `GetChange` 会给出标量，空串写进文档就变成 `"condition": ""`。
+- **怎么修**：判据 `--case union-switch-keeps-object`：union 当前是对象 → 切到另一个结构成员 → 断言 `$.condition` 仍是对象（键可为空），绝不是字符串；再断言切回来值不丢。红了在 `SwitchTo` 里补"结构分支必须落对象"的通用规则（`UnionListLike` 已有同款先例：标量就地包成数组，`McdocUnionSwitch.cs:129-140`）。
+
+### T4　黄标原文未定案
+
+- **已修**：① 注册表 id 命名空间不一致（注册表存 `acacia_button`、文档里是 `minecraft:acacia_button`，`Contains` 序数比较把合法值判成"不在注册表内"）→ 两侧按 `McdocIdSpec.Lengthen` 归一（判据 `--case registry-id-namespace`）；② 构建期挂的 `缺少必填键：x` 是**当时的**判定，键补上后不消失 → `DiagnosticsFor` 读取时按当前文档重算（"重算即覆盖"）；③ `ValidateNode` 只重算单个节点 → 换成 `ValidateSubtree`（子树一起算），行头连子树一起刷。
+- **怎么取证**：跑一次真机操作后执行 `CBHK.Probe.exe --check-trace "%TEMP%\mcdoc-trace.log"`，它会打印 `diag path=… err=… msgs=…` 的前 3 条原文、`enum-empty` 计数、`index-resolve resolved=False` 次数。拿到原文再决定是不是**合法提醒**（若是，是否要放宽校验属于产品决策，不自己改）。
+
+### T5　第一次建出来是哑的（已修，机制层）
+
+- 根因：`properties` 先建（此时 `block` 无值）→ 解成兜底 `any`；`block` 落值只刷自己那一行，`properties` 不重新求值。
+- 修法：`McdocPipeline.OnValueChanged` 按**声明类型**找"动态索引访问器正是这个键"的兄弟，`Document.RebuildNode` 重新求值（`RefreshNode` 不行：它只重跑表现器，用的还是兜底类型）。判据 `--case blockstate-enum-after-value` 红→绿；`--case blockstate-enum-first-build` 钉住"首次建树候选就齐全"。
+- **未验**：真 schema（LSP 符号表）路径下的 `mcdoc:block_states[[block]]`；探针用等价声明模拟。
+
+### 通用纪律（这几条是上面几条的前提，别绕过）
+
+1. **重建期间的赋值通知一律不许写回**：`Rebuilding`/`loading` 闸门要覆盖【刷新 → 物化 → 投影 → 写回】整段（见 §三 的真机日志签名：`proj-splice`/`proj-reset` 各上百次、`structure` 只有 3 次）。
+2. **重建必须重新求值，不是重跑表现器**：`RebuildNode` vs `RefreshNode` 的区别决定"靠兄弟键解析"的类型能不能刷回来。
+3. **诊断是当前状态的函数**：任何 `node.Error`/`node.Diagnostics` 在重算后要能被覆盖（含清空），不许"设上就再也不清"。
+4. **判据必须驱动 `McdocPipeline`**，`document.NodeStructureChanged` 在 `Load` **之前**挂好，并断言界面真正持有的行实例；探针自己手抄时序 = 绿灯也不算数。
+5. **构建用 VS Insiders MSBuild**（`dotnet build` 因 COM 引用 MSB4803 失败）；增量构建偶尔不重编，新增 `--case` 跑出 usage 时先全量重建再判断。
+
+### 2026-11 修复记录：判据落点与"被证据推翻的假设"
+
+四条新判据（都先红后绿）：`--case dependents-declaration-shape`、`--case text-edit-reevaluates-dependents`、`--case value-gate-scope`、`--case union-switch-shape`。
+
+- **T1 的真根因不是"投影没跟上"，是求值现场停在上一代 AST**：`McdocSyncEngine` 的值补丁把新 AST 换进来（`AdoptRoot`），但只重指了 `node.Json`；`ValueNode`（求值现场）还指着旧对象，于是重建 `properties` 时按同层兄弟键读到**旧的** `block`。两处收口：`RelinkToRoot` 逐个重指节点的 `ValueNode.Node.OriginalNode`；`AdoptRoot` 额外重指**摊平后的合成根**（它不在 `Nodes` 里，`RelinkToRoot` 走不到）。
+- **文本→树通道缺"重新求值依赖"这一步**：值补丁只改 `node.Json`，谁声明"用这个键做动态索引"就必须重建（`McdocPipeline.RebuildDependents`）。VM 在 `ApplyTextToTree` 里、**投影之前**调用；重建数 > 0 时走 `SyncJsonText()` 整篇对齐（重建会物化判别键，只 `PushJsonText` 会让两侧不同代）。
+- **声明常被指令包着**：`Mapped{copy}` / `Concrete` / `Indexed` 空壳都只换上下文、索引挂在里层 `Dispatcher` 上；`IndexesByKey` 只判顶层 `Kind` 会整条漏掉。现在沿 `Item` 链下钻，但**遇到自带动态索引的那一层就停**（否则会把"另一层索引"混算成命中）。实测：这三种外壳都可求值，裸 `Dispatcher{无索引}` 解成联合（不是空壳）。
+- **切 union 分支时"列表必须落数组"要用声明判**：`node.UnionListLike` 是上一支的行内镜像，从列表支切到标量支时它还留着，会把刚落盘的 `""` 又包成 `["c"]`——`condition` 变空串就是这么来的。判据改用 `SelectedUnionMember.IsListLike`。object→struct 方向经矩阵确认**不是**缺陷（`ConvertJsonToSelectedBranch` 在 `Kind` 相同时早退），所以"结构分支必须落对象"这条形状补丁不落地。
+- **"类型退化会留残骸行"被推翻**：`properties` 退化成 `Any` 后，文档里还在的键**照样要有行**（键↔行双射），残骸行指的是"节点已不存在而行还在"。所以不加"非容器就不画子级"的守卫，改成判据"子行数 ≤ 文档键数 + 1（新键占位）"。
+- **探针必须接 `document.NodeValueChanged`**：全仓原先只有 VM 接了这一个回调，探针只接 `NodeStructureChanged`，于是"重建期间的赋值回弹"这类缺陷在探针里根本不存在，判据恒绿。`Gates.Harness` 现在两个都接，并且 `GetLoading/SetLoading` 走真正的 `loading` 变量。
+
+### 2026-11 第二轮（现场 5 条零碎毛病）
+
+三条新判据：`--case benign-skip-no-badge`、`--case structure-change-reevaluates`、`--case rebuild-entry-identity`（29 条 `--case` + 3 条 `--gate` 全绿）。
+
+- **黄标**：不是校验问题，是"良性跳过被写成 `node.Error`"。已修（红 → 绿：`err=` 由那句原文变成空）。
+- **添加与删除按钮同时出现**：`RebuildNode` 无条件回填条目身份。已修（红 → 绿：`IsMapEntry=True → False`）。
+- **切方块后旧属性不消失 / 结构变更后子级还是旧形状**：前者是"没剪旧成员键"，已修（红 → 绿：`properties=有键 → 只剩新成员`）；后者经实验确认**走的是延后一拍重建**（`IsRuntimeDependent` 早退），不在 `RefreshNode` 上——所以没有往 `RefreshNode` 里加分支（加了也走不到，已回退），改为把 `ScheduleRebuild` 接进探针、按真实路径断言。
+- **载入时 properties 没解出子结构**：代码路径本来就是"物化到不动点（含行上默认值）→ 首次投影"（`McdocGeneratorViewModelBase.cs:1443`），且 `block` 必填候选会被物化；本轮把它的两个前提（良性疾病、旧成员剪枝）修掉后需真机复跑确认，不另立机制。
+

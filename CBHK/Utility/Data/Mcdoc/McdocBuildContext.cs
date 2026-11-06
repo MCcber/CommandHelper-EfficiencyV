@@ -28,9 +28,9 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 表现器的"缺省字段不摊开"守卫在这条路上恒为 false（见 README 的踩坑清单）。
         /// </summary>
         public McdocTreeNode Child(string name, McdocType declaredType, McdocJsonValue json,
-            McdocRuntimeNode keyNode, int depth, string jsonPath, bool deferChildren = false)
+            McdocRuntimeNode keyNode, int depth, string jsonPath, bool deferChildren = false, bool unknownField = false)
             => Factory.CreateNode(name, declaredType, json, Runtime, Self, keyNode, depth, Narrow,
-                OnValueChanged, jsonPath, Visiting, OnStructureChanged, Budget, deferChildren);
+                OnValueChanged, jsonPath, Visiting, OnStructureChanged, Budget, deferChildren, unknownField);
 
         public Action<McdocTreeNode> OnValueChanged;
         public Action<McdocTreeNode> OnStructureChanged;
