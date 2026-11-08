@@ -529,12 +529,17 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 validMembers = validMembers.Where(m => HasAttribute(m, "canonical")).ToList();
             }
-            if (validMembers.Count == 1) return Simplify(validMembers[0], context);
+            // 成员按"自己是 self"求值：成员里的 ...dispatch[[key]] 必须读**同一个对象**的兄弟键
+            // （ResolveIndices: IsMember ? Node : Node.Parent）。spread 自己会置 IsMember=true，
+            // 但成员被 Mapped/Concrete 包一层就丢了 —— 现场是 data.type 已落盘、同层 spread 仍解成 %none。
+            var memberContext = context.Clone();
+            memberContext.IsMember = true;
+            if (validMembers.Count == 1) return Simplify(validMembers[0], memberContext);
 
             var members = new List<McdocType>();
             foreach (var member in validMembers)
             {
-                var simplified = Simplify(member, context);
+                var simplified = Simplify(member, memberContext);
                 if (simplified.DynamicData) dynamicData = true;
                 var simplifiedType = simplified.TypeDef;
                 if (simplifiedType.Kind != McdocTypeKind.Union)
@@ -773,6 +778,14 @@ namespace CBHK.Utility.Data.Mcdoc
             var simplifiedArgs = new List<McdocType>();
             foreach (var argument in typeDef.Items ?? [])
             {
+                // 实参里带动态索引：这里**连试求值都不做**。试求值会按当前节点（多半是列表容器/父结构）
+                // 去解 [[key]]，读成 %none 之后不仅结果没用，还会把整条链烤成 any（现场：data 整支解不出来）。
+                if (ContainsDynamicIndex(argument, context.Runtime))
+                {
+                    simplifiedArgs.Add(argument);
+                    dynamicData = true;
+                    continue;
+                }
                 var result = Simplify(argument, context);
                 if (result.DynamicData) dynamicData = true;
                 simplifiedArgs.Add(result.TypeDef);
@@ -783,6 +796,78 @@ namespace CBHK.Utility.Data.Mcdoc
             return new McdocSimplifyResult(
                 KeepDeclaredOnFailure(childResult.TypeDef, typeDef, context, "concrete"),
                 dynamicData || childResult.DynamicData);
+        }
+
+        /// <summary>
+        /// 声明里有没有"靠运行期值才能解的动态索引"（Dispatcher / Indexed 带 Dynamic accessor）。
+        /// 有的话这个类型只能在**持有那份 JSON 的节点**上求值：在父层（列表容器/外层结构）先求值，
+        /// 索引会被读成 %none、整支烤成 any，之后再怎么补都回不来。
+        /// </summary>
+        private static bool ContainsDynamicIndex(McdocType type, McdocRuntime runtime, int depth = 0)
+        {
+            // 这只是"要不要延后求值"的启发式：任何异常都按"没有动态索引"处理，
+            // 绝不许因为查个符号表把编辑链路搞崩（真机上这条路径会碰上懒加载/相对名）。
+            try
+            {
+                return ContainsDynamicIndexCore(type, runtime, depth);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private static bool ContainsDynamicIndexCore(McdocType type, McdocRuntime runtime, int depth)
+        {
+            if (type is null || depth > 8) return false;
+            foreach (var index in type.Indices ?? [])
+            {
+                if (index?.Kind == McdocIndexKind.Dynamic && index.Accessor is { Count: > 0 }) return true;
+            }
+            if (type.Kind == McdocTypeKind.Indexed) return true;
+            if (ContainsDynamicIndex(type.Item, runtime, depth + 1)) return true;
+            foreach (var item in type.Items ?? [])
+            {
+                if (ContainsDynamicIndex(item, runtime, depth + 1)) return true;
+            }
+            foreach (var member in type.Members ?? [])
+            {
+                if (ContainsDynamicIndex(member, runtime, depth + 1)) return true;
+            }
+            foreach (var pair in type.Mapping ?? [])
+            {
+                if (ContainsDynamicIndex(pair.Value, runtime, depth + 1)) return true;
+            }
+            // spread 字段的索引挂在**字段类型**上（...dispatch[[key]]），字段本身必须一起走
+            foreach (var field in type.Fields ?? [])
+            {
+                if (ContainsDynamicIndex(field?.Type, runtime, depth + 1)) return true;
+            }
+            // 关键：动态索引常常写在**被引用的类型定义里**（IntProvider<T> 的成员结构 spread 上），
+            // 只看声明本身会漏 —— 于是实参在容器上就被求值，整支烤成 any。
+            // 已知代价：在热路径里查符号表会改变"哪些行还是 union"（S43 里 player 变成 player.player 空壳），
+            // 所以暂不做 Reference 解析；带动态索引的实参如果藏在被引用类型体里，仍会在父层求值。
+            // 只在最外层（实参/映射值本身）看引用：往下逐层查符号表会让"可选 union"退化成单支，
+            // 真机上表现为 S43「切回未设置」找不到可选 union 行（player → player.player 空壳）。
+            if (depth <= 1 && type.Kind == McdocTypeKind.Reference && type.Path is { Length: > 0 })
+            {
+                // 只查全限定名：相对名要带模块上下文，符号表侧对它们的处理不一定成立（抛过 ArgumentNullException）。
+                // 这里只是"要不要延后求值"的启发式，查不到就当没有，绝不能把编辑链路搞崩。
+                McdocType target = null;
+                try
+                {
+                    // 三参重载：模块必填——真索引里全限定名也要参考模块才能命中（两参在真 schema 上返回 null，
+                    // 于是"带动态索引"判不出来，实参又被打回容器层求值）。
+                    target = runtime?.Symbols?.GetTypeDef(type.Path, runtime.DocumentUri ?? "",
+                        string.IsNullOrEmpty(type.Module) ? runtime.ModulePath : type.Module);
+                }
+                catch (Exception)
+                {
+                    target = null;
+                }
+                if (target is not null && ContainsDynamicIndex(target, runtime, depth + 1)) return true;
+            }
+            return false;
         }
 
         private static McdocSimplifyResult SimplifyTemplate(McdocType typeDef, McdocSimplifyContext context)
@@ -842,6 +927,13 @@ namespace CBHK.Utility.Data.Mcdoc
                 : new Dictionary<string, McdocType>(context.TypeMapping, StringComparer.Ordinal);
             foreach (var pair in typeDef.Mapping ?? [])
             {
+                // 与 Concrete 同一条规则：带动态索引的映射值保留声明，且**不在这里试求值**。
+                if (ContainsDynamicIndex(pair.Value, context.Runtime))
+                {
+                    mapping[pair.Key] = pair.Value;
+                    dynamicData = true;
+                    continue;
+                }
                 var result = Simplify(pair.Value, context);
                 if (result.DynamicData) dynamicData = true;
                 mapping[pair.Key] = result.TypeDef;

@@ -82,16 +82,123 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 if (field is null || field.Optional || field.IsSpread) continue;
                 var name = field.Name;
-                if (string.IsNullOrEmpty(name) || json.Get(name) is not null) continue;
+                if (string.IsNullOrEmpty(name)) continue;
+                // JSON 里写的是 null 也算"没有值"：不补的话同层 spread 拿到 %none，
+                // 整支只出 type 一行（现场：weighted_list 条目里 data.type = null）。
+                var existing = json.Get(name);
+                if (existing is { Kind: not McdocJsonKind.Null }) continue;
                 var literal = FirstCandidateLiteral(field.Type, runtime);
                 if (string.IsNullOrEmpty(literal)) continue;
-                json.Add(name, McdocJsonValue.String(literal));
+                if (existing is null)
+                {
+                    json.Add(name, McdocJsonValue.String(literal));
+                }
+                else
+                {
+                    for (var i = 0; i < json.Properties.Count; i++)
+                    {
+                        if (json.Properties[i].Key != name) continue;
+                        json.Properties[i] = new KeyValuePair<string, McdocJsonValue>(name, McdocJsonValue.String(literal));
+                        break;
+                    }
+                }
                 written++;
             }
             return written;
         }
 
         /// <summary>按 #[id] 的注册表候选取首项（自身 + union 标量支都试）。</summary>
+        /// <summary>
+        /// 沿**声明**找"判别键挂哪个结构"，全程不求值：Mapped 按 mapping 换形参、Concrete/Template 拆壳、
+        /// Reference 查符号表、Union 按 JSON 形状取结构成员。
+        /// 不能先求值再找：泛型实参里带 [[type]] 时，求值会先把它读成 %none，整支烤成 any，
+        /// 那时连"哪个字段是判别键"都看不到了（现场：data.type = null）。
+        /// </summary>
+        private static McdocType DeclaredDiscriminatorHost(McdocType declaredType, McdocJsonValue json, McdocRuntime runtime)
+            => WalkDeclaredHost(declaredType, json, runtime, null, null, 0);
+
+        private static Dictionary<string, McdocType> MergeBindings(Dictionary<string, McdocType> bindings)
+            => bindings is null
+                ? new Dictionary<string, McdocType>(StringComparer.Ordinal)
+                : new Dictionary<string, McdocType>(bindings, StringComparer.Ordinal);
+
+        private static McdocType WalkDeclaredHost(McdocType declaredType, McdocJsonValue json, McdocRuntime runtime,
+            Dictionary<string, McdocType> bindings, List<McdocType> pendingArgs, int depth)
+        {
+            if (declaredType is null || depth > 12) return null;
+            switch (declaredType.Kind)
+            {
+                case McdocTypeKind.Struct:
+                    return declaredType;
+                case McdocTypeKind.Mapped:
+                {
+                    var merged = MergeBindings(bindings);
+                    foreach (var pair in declaredType.Mapping ?? []) merged[pair.Key] = pair.Value;
+                    return WalkDeclaredHost(declaredType.Item, json, runtime, merged, null, depth + 1);
+                }
+                case McdocTypeKind.Concrete:
+                    // 实参登记一次，交给紧接着的 Template 绑形参（与求值期的 TypeArgs 同一条规则）
+                    return WalkDeclaredHost(declaredType.Item, json, runtime, bindings, declaredType.Items, depth + 1);
+                case McdocTypeKind.Indexed:
+                    // Indexed 不清实参（README §2.3：Concrete{Item=Indexed(Dispatcher)} 靠它传参）
+                    return WalkDeclaredHost(declaredType.Item, json, runtime, bindings, pendingArgs, depth + 1);
+                case McdocTypeKind.Template:
+                {
+                    var merged = MergeBindings(bindings);
+                    var parameters = declaredType.TypeParams ?? [];
+                    for (var i = 0; i < parameters.Count && i < (pendingArgs?.Count ?? 0); i++)
+                    {
+                        merged[parameters[i]] = pendingArgs[i];
+                    }
+                    return WalkDeclaredHost(declaredType.Item, json, runtime, merged, null, depth + 1);
+                }
+                case McdocTypeKind.Reference:
+                {
+                    if (bindings is not null && declaredType.Path is { Length: > 0 } name
+                        && bindings.TryGetValue(name, out var bound))
+                    {
+                        return WalkDeclaredHost(bound, json, runtime, bindings, pendingArgs, depth + 1);
+                    }
+                    McdocType target = null;
+                    try
+                    {
+                        target = string.IsNullOrEmpty(declaredType.Path)
+                            ? null
+                            : runtime?.Symbols?.GetTypeDef(declaredType.Path, runtime.DocumentUri ?? "",
+                                string.IsNullOrEmpty(declaredType.Module) ? runtime.ModulePath : declaredType.Module);
+                    }
+                    catch (Exception)
+                    {
+                        // 符号表对相对名/未绑定形参不保证返回 null，可能直接抛：预写只是启发式，查不到就算了
+                        target = null;
+                    }
+                    return target is null
+                        ? null
+                        : WalkDeclaredHost(target, json, runtime, bindings, pendingArgs, depth + 1);
+                }
+                case McdocTypeKind.Union:
+                {
+                    if (json is not { Kind: McdocJsonKind.Object }) return null;
+                    foreach (var member in declaredType.Members ?? [])
+                    {
+                        var host = WalkDeclaredHost(member, json, runtime, bindings, pendingArgs, depth + 1);
+                        if (host is { Kind: McdocTypeKind.Struct }) return host;
+                    }
+                    return null;
+                }
+                default:
+                    return null;
+            }
+        }
+        /// <summary>按**声明**把"必填 + 有闭合候选"的判别键先写进 JSON。</summary>
+        private static int WriteDeclarationDiscriminators(McdocType declaredType, McdocJsonValue json, McdocRuntime runtime)
+        {
+            if (declaredType is null || json is null) return 0;
+            var host = DeclaredDiscriminatorHost(declaredType, json, runtime);
+            if (host?.Kind != McdocTypeKind.Struct) return 0;
+            return MaterializeDiscriminators(host, json, runtime);
+        }
+
         private static string FirstCandidateLiteral(McdocType type, McdocRuntime runtime)
         {
             if (type is null || runtime?.IdSpaces is null) return null;
@@ -99,7 +206,9 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 var spec = McdocIdSpec.FromAttributes(candidate.Attributes);
                 if (spec is null || string.IsNullOrEmpty(spec.Registry)) continue;
-                if (!McdocSelectRegistries.IsSelect(spec.Registry, runtime.GameVersion ?? "1.21")) continue;
+                // 不看 IsSelect：那只是"闭合下拉 vs 可输入"的分派，决定的是编辑器形态，
+                // 不是"有没有候选"。调度器空间（int_provider_type 这类）永远不在闭合白名单里，
+                // 但它的候选正是判别键要用的那个（物化阶段用的是同一条 IdSpaces 出口）。
                 var resolved = runtime.IdSpaces.Resolve(spec, runtime);
                 if (resolved?.Members is { Count: > 0 }) return resolved.Members[0];
             }
@@ -107,7 +216,15 @@ namespace CBHK.Utility.Data.Mcdoc
 
             static IEnumerable<McdocType> WithUnionMembers(McdocType type)
             {
-                yield return type;
+                // 模板字段替换后 #[id] 常常被 Mapped/Concrete/Indexed/Template 包着：
+                // 只看顶层 Attributes 会整条漏掉（候选取不到，判别键就不写）。
+                var current = type;
+                for (var depth = 0; current is not null && depth < 8; depth++)
+                {
+                    yield return current;
+                    if (!current.IsDirective) break;
+                    current = current.Item;
+                }
                 if (type.Kind != McdocTypeKind.Union) yield break;
                 foreach (var member in type.Members ?? [])
                 {
@@ -126,6 +243,14 @@ namespace CBHK.Utility.Data.Mcdoc
             var runtimeNode = new McdocRuntimeNode(json, json?.InferType() ?? McdocType.Any());
             var self = McdocValueNode.Of(runtimeNode, parent, keyNode);
 
+            // 判别键必须在**第一次求值之前**落盘：结构常被 Concrete/Reference/Template/Union 包着，
+            // 等求值完再写就晚了 —— 求值期 [[type]] 已经读成 %none，字段的闭合候选一起丢了
+            // （现场：distribution[0].data = { "type": null } 时同层 spread 永远不出现）。
+            if (json is { Kind: McdocJsonKind.Object } earlyJson)
+            {
+                // 判别键必须在这份 JSON 上、且赶在第一次求值前写进去
+                WriteDeclarationDiscriminators(declaredType, earlyJson, runtime);
+            }
             var simplifyContext = new McdocSimplifyContext
             {
                 Runtime = runtime,
@@ -157,6 +282,9 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             // 派发器/动态索引是在**求值期**读同层取值的：判别键（必填 + 闭合候选）必须在求值前就在 JSON 里，
             // 否则 spread 解析成 %none，父结构"看着渲染完了、其实成员一个都没解出来"（type_specific 没有 variant）。
+            // union 也要预写：data 这种"必选 type + 同层 spread"的节点，求值结果是 union，
+            // 判别键没值（缺失或 null）时 spread 直接解成 %none，而那时已经无法再靠物化补（没有候选）。
+            // 取**按形状选中的结构成员**来预写，写完用同一份 JSON 重求值一次。
             if (json is { Kind: McdocJsonKind.Object } objectJson
                 && type?.Kind == McdocTypeKind.Struct
                 && MaterializeDiscriminators(type, objectJson, runtime) > 0)
@@ -172,6 +300,19 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
             }
 
+            if (type?.IsDirective == true)
+            {
+                // 映射替换可能把"待求值的声明"原样交回来（刻意保留的泛型实参）：在**本节点**再求值一次，
+                // 而不是在替换点提前求值（那会打乱泛型实参的作用域）。
+                try
+                {
+                    type = McdocSimplifier.Simplify(type, simplifyContext).TypeDef;
+                }
+                catch (Exception)
+                {
+                    // 保持原样，下面按指令降级处理
+                }
+            }
             if (type?.IsDirective == true)
             {
                 // NF 强制：求值后不允许指令逃到节点上（渲染层只认归一形态）。

@@ -21,7 +21,8 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 选出"当前 JSON 节点唯一匹配的联合成员"，不唯一或无法判定时返回 null。
         /// 用途是给渲染层挑**默认分支**——联合本身要保留（UI 上还要能切成别的分支）。
         /// </summary>
-        public static McdocType SelectMember(McdocType type, McdocJsonValue json, McdocSimplifyContext context)
+        public static McdocType SelectMember(McdocType type, McdocJsonValue json, McdocSimplifyContext context,
+            bool preferShapeOverAny = false)
         {
             if (type is null || type.Kind != McdocTypeKind.Union || json is null) return null;
             var members = type.Members;
@@ -45,6 +46,37 @@ namespace CBHK.Utility.Data.Mcdoc
                 else if (specificity == bestSpecificity)
                 {
                     bestCount++;
+                }
+            }
+            // Any 成员"匹配一切"但最不具体：它挤压掉真正对得上的结构支时，显示层也要走形状兜底。
+            // 只对"挑默认分支"（渲染）生效；Narrow（求值收窄）保持原语义，否则 union 会被塌成单支、行再也切不了。
+            if (best is null
+                || (preferShapeOverAny && best.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe))
+            {
+                best = null;
+                bestSpecificity = int.MinValue;
+                bestCount = 0;
+                // 精确匹配一个都没有：退到"只看 JSON 形状"这一层。
+                // 典型现场 dimension_type.monster_spawn_light_level = (int | struct{ type, ...spread })：
+                // 文档写成 { "type": "minecraft:clamped" }，结构支的必填键（min/max）还没填，
+                // MatchesStruct 判它不匹配 → 整个联合没有候选 → 渲染层退回声明序第一支 Int，
+                // 于是"对象被当成 int 渲染"（原始 JSON）并且每次重建都弹回 Int。
+                // 这里只放宽"选哪一支显示"，取值的合法性仍由校验器按缺必填键报。
+                foreach (var member in members)
+                {
+                    if (!MatchesKind(member, json)) continue;
+                    var specificity = Specificity(member);
+                    if (specificity <= 0) continue;   // Any/Unsafe 不参与形状兜底
+                    if (specificity > bestSpecificity)
+                    {
+                        bestSpecificity = specificity;
+                        best = member;
+                        bestCount = 1;
+                    }
+                    else if (specificity == bestSpecificity)
+                    {
+                        bestCount++;
+                    }
                 }
             }
             // 唯一命中，或者"更具体的那个"是唯一最高分 → 选它；并列最高仍然不猜
@@ -216,6 +248,48 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (value != null && McdocHelpers.ToDecimal(value.Value) == json.NumberValue) return true;
             }
             return false;
+        }
+
+        /// <summary>只看 JSON 形状对不对得上声明（不看必填键齐不齐），用于"精确匹配一个都没有"时的兜底选支。</summary>
+        private static bool MatchesKind(McdocType type, McdocJsonValue json)
+        {
+            if (type is null || json is null) return false;
+            switch (type.Kind)
+            {
+                case McdocTypeKind.Any:
+                case McdocTypeKind.Unsafe:
+                    return true;
+                case McdocTypeKind.Struct:
+                case McdocTypeKind.Mapped:
+                    return json.Kind == McdocJsonKind.Object;
+                case McdocTypeKind.List:
+                case McdocTypeKind.Tuple:
+                case McdocTypeKind.ByteArray:
+                case McdocTypeKind.IntArray:
+                case McdocTypeKind.LongArray:
+                    return json.Kind == McdocJsonKind.Array;
+                case McdocTypeKind.String:
+                case McdocTypeKind.Enum:
+                case McdocTypeKind.Literal:
+                    return json.Kind == McdocJsonKind.String;
+                case McdocTypeKind.Byte:
+                case McdocTypeKind.Short:
+                case McdocTypeKind.Int:
+                case McdocTypeKind.Long:
+                case McdocTypeKind.Float:
+                case McdocTypeKind.Double:
+                    return json.Kind == McdocJsonKind.Number;
+                case McdocTypeKind.Boolean:
+                    return json.Kind == McdocJsonKind.Boolean;
+                case McdocTypeKind.Union:
+                    foreach (var member in type.Members ?? [])
+                    {
+                        if (MatchesKind(member, json)) return true;
+                    }
+                    return false;
+                default:
+                    return false;
+            }
         }
 
         private static bool MatchesStruct(McdocType type, McdocJsonValue json, McdocSimplifyContext context, int depth)

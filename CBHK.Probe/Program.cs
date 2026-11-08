@@ -58,6 +58,13 @@ namespace CBHK.Probe
                     "--case union-identity" => Gates.UnionIdentity(),
                     "--case required-enum" => Gates.RequiredEnum(),
                     "--case memory" => Gates.Memory(),
+                    "--case condition-dispatch-load" => Gates.ConditionDispatchOnLoad(),
+                    "--case condition-switch-keeps-value" => Gates.ConditionSwitchKeepsValue(),
+                    "--case generic-dispatcher-spread" => Gates.GenericDispatcherSpread(),
+                    "--case real-dimension-light-level" => Gates.RealDimensionLightLevel(),
+                    "--case real-dimension-default" => Gates.RealDimensionDefault(),
+                    "--case vm-union-switch" => Gates.VmUnionSwitch(),
+                    "--case generic-arg-dynamic-index" => Gates.GenericArgDynamicIndex(),
                     _ => Usage()
                 };
             }

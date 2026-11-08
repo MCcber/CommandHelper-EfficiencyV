@@ -88,6 +88,17 @@ namespace CBHK.Utility.Data.Mcdoc
             }
         }
 
+        /// <summary>
+        /// 切 union 结构分支之后的唯一收尾：<c>SwitchTo</c> 只按 <c>getChange</c> 重建分支子树并写 JSON，
+        /// 必选判别键还没有值、同层 spread 也还没重新求值 —— 只同步文本会停在「Type 有显示、文档里是 null、
+        /// min/max 不出现」（截图现场）。延后一拍重建这一支：重建会按声明重写判别键，再把物化跑到不动点。
+        /// </summary>
+        public void OnUnionBranchSwitched(McdocTreeNode node)
+        {
+            if (node?.Json is null || node.SelectedUnionMember is null) return;
+            ScheduleRebuild?.Invoke(node.RebuildAnchor);
+        }
+
         public int MaterializeUntilStable(bool includeDisplayedDefaults = false, int maxPasses = 3)
         {
             var total = 0;
@@ -223,6 +234,10 @@ namespace CBHK.Utility.Data.Mcdoc
             var rebuilt = RebuildDependents([node]);
             foreach (var dependent in rebuilt)
             {
+                // 重建出来的新成员在懒建下是"只有壳"的：不先把子级建出来，投影画不出行、
+                // 物化也遍历不到 —— 现场就是"切成员后 block 有行没值、properties 没有方块上下文"。
+                // 这里已经在 Rebuilding 闸门里，补建抬起的钩子不会再排第二次重建（不自我驱动）。
+                dependent.EnsureChildren();
                 if (!Projector.RefreshAround(dependent)) Projector.Reset(Document.Nodes.ToList());
                 RefreshDiagnostics(dependent);
             }
@@ -249,9 +264,23 @@ namespace CBHK.Utility.Data.Mcdoc
             var rebuilt = new List<McdocTreeNode>();
             if (changed is null || Document is null) return rebuilt;
             var seen = new HashSet<McdocTreeNode>();
+            // 判别键的**父级**也是依赖方：...dispatch[[key]] 的 spread 挂在父结构上（父级自己的 Indices 是空的），
+            // 只扫兄弟会整条漏掉 —— 现场是"切 condition 成员后 block 没出现、旧成员的 terms 还挂着、
+            // properties 没有方块上下文"。父级重建放到第二段做：它会把 changed 里的节点一起换掉。
+            var parents = new List<McdocTreeNode>();
             foreach (var node in changed)
             {
                 if (node?.Parent is null || string.IsNullOrEmpty(node.Key)) continue;
+                var parent = node.Parent;
+                // 判据两条：声明里明确有"按这个键索引的 spread"；或父级求值时读过运行期数据
+                // （真 schema 的 spread 常被 Reference/Mapped/Concrete 包着，声明上摸不到 Fields）。
+                if (parent.Parent is not null && parent.Json is { Kind: McdocJsonKind.Object }
+                    && seen.Add(parent)
+                    && (parent.DependsOnRuntimeData || HasSpreadIndex(parent.DeclaredType, node.Key)))
+                {
+                    McdocWriteTrace.Trace("dependents-parent", "path=" + (parent.JsonPath ?? "?") + " key=" + node.Key);
+                    parents.Add(parent);
+                }
                 foreach (var sibling in McdocPresenterRegistry.Default.Children(node.Parent).ToList())
                 {
                     if (ReferenceEquals(sibling, node) || !seen.Add(sibling)) continue;
@@ -270,6 +299,21 @@ namespace CBHK.Utility.Data.Mcdoc
                         rebuilt.Add(fresh);
                     }
                 }
+            }
+            foreach (var parent in parents)
+            {
+                if (rebuilt.Count >= MaxDependents)
+                {
+                    McdocWriteTrace.Trace("dependents-limit", "cap=" + MaxDependents);
+                    break;
+                }
+                if (Document.RebuildNode(parent) is not { } freshParent)
+                {
+                    McdocWriteTrace.Trace("dependents-parent-skip", "path=" + (parent.JsonPath ?? "?"));
+                    continue;
+                }
+                PruneAbandonedMembers(parent, freshParent);
+                rebuilt.Add(freshParent);
             }
             if (rebuilt.Count > 0)
             {
@@ -341,6 +385,18 @@ namespace CBHK.Utility.Data.Mcdoc
             rebuilt.ChildrenBuilt = false;
             rebuilt.Children.Clear();
             return abandoned.Count;
+        }
+
+        /// <summary>声明里有 spread 字段，且那个 spread 的类型按这个键做动态索引（父级结构自己的 Indices 是空的）。</summary>
+        public static bool HasSpreadIndex(McdocType type, string key)
+        {
+            if (type is null || string.IsNullOrEmpty(key)) return false;
+            foreach (var field in type.Fields ?? [])
+            {
+                if (field is not { IsSpread: true }) continue;
+                if (IndexesByKey(field.Type, key)) return true;
+            }
+            return false;
         }
 
         private static bool HasDynamicAccessor(McdocType type, string key)

@@ -947,6 +947,14 @@ namespace CBHK.ViewModel.Generator
                 // 这个值参与过动态索引（例如 advancement 的 trigger 决定 ...minecraft:trigger[[trigger]] 展开什么）：
                 // 只重排文本会让 spread 停在旧分支，必须按新 JSON 重建
                 SyncJsonText();
+                // 切 union 结构分支：分支子树是按 getChange 的默认形状建的，必选判别键还没落盘、
+                // 同层 spread 也还没重新求值 —— 只同步文本会让行停在「只有 type 一行」（截图现场）。
+                // 延后一拍重建这一支：重建会重写判别键并补物化到不动点。
+                if (unionStructuralBranch)
+                {
+                    pipeline.OnUnionBranchSwitched(node);
+                    return;
+                }
                 // 这个值参与过动态索引（例如 advancement 的 trigger 决定 ...minecraft:trigger[[trigger]] 展开什么）：
                 // 文本已经同步，重建延后一拍再做 —— 同步重建会打断进行中的编辑（动态键正在输入时节点会被换掉，
                 // 表现就是"加了键但 JSON 里没有"）。

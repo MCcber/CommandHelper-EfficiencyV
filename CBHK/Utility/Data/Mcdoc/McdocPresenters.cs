@@ -482,7 +482,8 @@ namespace CBHK.Utility.Data.Mcdoc
             // misode UnionHead：{(!selectedType || optional) && <option value=SPECIAL_UNSET>}
             // 已经匹配到成员的可选/必选都不给 unset；必选但没匹配到时要给（并且默认就落在它上面）
             var canUnset = node.Parent is not null && (!node.IsRequired || node.SelectedUnionMember is null);
-            var branches = node.UnionTypeNameList;
+            // 空联合（文档里真的声明成 ()）也是合法形态：分支列表可能还没建出来，这里一律给非 null 集合
+            var branches = node.UnionTypeNameList ?? new System.Collections.ObjectModel.ObservableCollection<EnumMember>();
             if (canUnset)
             {
                 branches = new System.Collections.ObjectModel.ObservableCollection<EnumMember>
@@ -544,7 +545,9 @@ namespace CBHK.Utility.Data.Mcdoc
                 ? explicitMember
                 : json is null
                     ? null
-                    : McdocTypeMatcher.SelectMember(type, json, context.SimplifyContext) ?? members[0];
+                    // 显示层挑默认分支：Any 成员不许压掉真正对得上的结构支（见 SelectMember 的 preferShapeOverAny）
+                    : McdocTypeMatcher.SelectMember(type, json, context.SimplifyContext, preferShapeOverAny: true)
+                        ?? members[0];
             // 解不出来的成员（声明不是 any、求值却是 any）不当默认分支：
             // 否则文档里一个它解不了的值会把整行钉死在一个"看着能编辑、其实写不出合法值"的分支上。
             if (selected is not null && McdocUnionSwitch.IsUnresolvedMember(node, selected))

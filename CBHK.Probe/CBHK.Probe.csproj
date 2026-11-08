@@ -12,5 +12,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CBHK\cbhk.csproj" />
+    <!-- 真 schema 用例要用 mcdoc 解析器（与 ui-gate 同一条路），合成夹具之外再有一条"真数据"判据 -->
+    <ProjectReference Include="..\..\MinecraftLanguageServer\MinecraftLanguageServer.csproj" />
   </ItemGroup>
 </Project>

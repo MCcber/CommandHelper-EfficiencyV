@@ -281,5 +281,271 @@ namespace CBHK.Probe
             union.Members = members;
             return union;
         }
+
+        // ── 现场形状（截图 1/2）：condition 判别键 + 同层 spread 调度器 + block 的动态索引兄弟 ──────
+
+        /// <summary>condition 调度器空间名：与真 schema 的 minecraft:loot_condition 同形（成员键不带前缀）。</summary>
+        public const string ConditionRegistry = "mcdoc:probe_condition";
+
+        /// <summary>
+        /// criteria(map) → tset → conditions → location(列表) → 条目 → condition(必选枚举 + ...调度器[[condition]])。
+        /// 与既有夹具的差别只有一处，但就是现场那一处：分支字段靠**同层兄弟键**做动态索引。
+        /// </summary>
+        public static McdocType ConditionRootType()
+        {
+            var location = McdocType.Create(McdocTypeKind.List);
+            location.Item = ConditionEntryType();
+            var conditions = McdocType.Create(McdocTypeKind.Struct);
+            conditions.Fields = [ Static("location", location, optional: true) ];
+            var criterion = McdocType.Create(McdocTypeKind.Struct);
+            criterion.Fields = [ Static("conditions", conditions, optional: true) ];
+            var criteria = McdocType.Create(McdocTypeKind.Struct);
+            criteria.Fields = [ Map(criterion) ];
+            var root = McdocType.Create(McdocTypeKind.Struct);
+            root.Fields = [ Static("criteria", criteria) ];
+            return root;
+        }
+
+        private static McdocType ConditionEntryType()
+        {
+            var entry = McdocType.Create(McdocTypeKind.Struct);
+            var spread = McdocType.Create(McdocTypeKind.Dispatcher);
+            spread.Registry = ConditionRegistry;
+            spread.Indices = [ McdocIndex.Dynamic(new List<string> { "condition" }) ];
+            entry.Fields =
+            [
+                new McdocStructField
+                {
+                    Name = "condition", Key = McdocType.LiteralString("condition"),
+                    Type = IdString(ConditionRegistry)
+                },
+                new McdocStructField { IsSpread = true, Type = spread }
+            ];
+            return entry;
+        }
+
+        /// <summary>把 condition 两个成员与 block_states 真资产喂进索引；返回注册条数（0 = 资产缺失）。</summary>
+        public static int RegisterConditionDispatchers(McdocTypeIndex index, string blockStateDir)
+        {
+            var terms = McdocType.Create(McdocTypeKind.List);
+            terms.Item = ConditionEntryType();
+            var allOf = McdocType.Create(McdocTypeKind.Struct);
+            allOf.Fields = [ new McdocStructField { Name = "terms", Key = McdocType.LiteralString("terms"), Type = terms } ];
+
+            var properties = McdocType.Create(McdocTypeKind.Dispatcher);
+            properties.Registry = McdocBlockStates.Registry;
+            properties.Indices = [ McdocIndex.Dynamic(new List<string> { "block" }) ];
+            var blockStateProperty = McdocType.Create(McdocTypeKind.Struct);
+            blockStateProperty.Fields =
+            [
+                new McdocStructField { Name = "block", Key = McdocType.LiteralString("block"), Type = IdString("block") },
+                new McdocStructField { Name = "properties", Key = McdocType.LiteralString("properties"), Type = properties, Optional = true }
+            ];
+
+            var registered = McdocBlockStates.Register(index, "1.20.5", blockStateDir) + 2;
+            index.RegisterDispatch(ConditionRegistry, "all_of", allOf);
+            index.RegisterDispatch(ConditionRegistry, "block_state_property", blockStateProperty);
+            return registered;
+        }
+
+        /// <summary>#[id=registry] 的 string：候选走 IdSpec → IdSpaces（调度器成员或注册表），不是写死的枚举。</summary>
+        private static McdocType IdString(string registry)
+        {
+            var type = McdocType.Create(McdocTypeKind.String);
+            type.Attributes = [ new McdocAttribute { Name = "id", Value = McdocAttrValue.Of(registry) } ];
+            return type;
+        }
+        // ── 真形状：IntProvider<T> = (T | struct { type: #[id]; ...int_provider[[type]]<T> }) ──────
+        // dimension_type.monster_spawn_light_level 就是这一句（泛型 dispatcher 的 spread 落在 union 的一支里）。
+
+        public const string IntProviderRegistry = "mcdoc:probe_int_provider";
+
+        public static McdocType DimensionLikeRootType()
+        {
+            var value = McdocType.Create(McdocTypeKind.Int);
+            value.Range = new McdocRange { Min = 0, Max = 15 };
+
+            var dispatcher = McdocType.Create(McdocTypeKind.Dispatcher);
+            dispatcher.Registry = IntProviderRegistry;
+            dispatcher.Indices = [ McdocIndex.Dynamic(new List<string> { "type" }) ];
+            var indexed = McdocType.Create(McdocTypeKind.Indexed);
+            indexed.Item = dispatcher;
+            var concrete = McdocType.Create(McdocTypeKind.Concrete);
+            concrete.Items = [ value ];
+            concrete.Item = indexed;
+
+            var provider = McdocType.Create(McdocTypeKind.Struct);
+            provider.Fields =
+            [
+                new McdocStructField { Name = "type", Key = McdocType.LiteralString("type"), Type = IdString(IntProviderRegistry) },
+                new McdocStructField { IsSpread = true, Type = concrete }
+            ];
+            var union = McdocType.Create(McdocTypeKind.Union);
+            union.Members = [ value, provider ];
+
+            var root = McdocType.Create(McdocTypeKind.Struct);
+            root.Fields = [ Static("monster_spawn_light_level", union) ];
+            return root;
+        }
+
+        /// <summary>dispatch minecraft:int_provider[uniform]&lt;T&gt; to struct { min_inclusive: T, max_inclusive: T }。</summary>
+        public static int RegisterIntProviderDispatchers(McdocTypeIndex index)
+        {
+            var typeArg = new McdocType { Kind = McdocTypeKind.Reference, Path = "T" };
+            var uniform = McdocType.Create(McdocTypeKind.Struct);
+            uniform.Fields = [ Static("min_inclusive", typeArg), Static("max_inclusive", typeArg) ];
+            var template = McdocType.Create(McdocTypeKind.Template);
+            template.TypeParams = new List<string> { "T" };
+            template.Item = uniform;
+
+            var constant = McdocType.Create(McdocTypeKind.Struct);
+            constant.Fields = [ Static("value", typeArg) ];
+            var constantTemplate = McdocType.Create(McdocTypeKind.Template);
+            constantTemplate.TypeParams = new List<string> { "T" };
+            constantTemplate.Item = constant;
+
+            index.RegisterDispatch(IntProviderRegistry, "uniform", template);
+            index.RegisterDispatch(IntProviderRegistry, "constant", constantTemplate);
+            return 2;
+        }
+
+        // ── 泛型实参自带动态索引：NonEmptyWeightedList<T> / WeightedEntry<T> 的真形状 ──────────
+        // 现场：distribution: NonEmptyWeightedList<IntProvider<T>>，实参 IntProvider 自己带 [[type]]。
+
+        public const string WeightedEntryPath = "::probe::WeightedEntry";
+        public const string WeightedListPath = "::probe::NonEmptyWeightedList";
+        public const string IntProviderPath = "::probe::IntProvider";
+        public const string UniformProviderPath = "::probe::UniformIntProvider";
+
+        /// <summary>type UniformIntProvider&lt;T&gt; = struct { min_inclusive: T, max_inclusive: T }。</summary>
+        private static McdocType UniformProviderTemplate()
+        {
+            var typeArg = new McdocType { Kind = McdocTypeKind.Reference, Path = "T" };
+            var shape = McdocType.Create(McdocTypeKind.Struct);
+            shape.Fields = [ Static("min_inclusive", typeArg), Static("max_inclusive", typeArg) ];
+            var template = McdocType.Create(McdocTypeKind.Template);
+            template.TypeParams = new List<string> { "T" };
+            template.Item = shape;
+            return template;
+        }
+
+        /// <summary>dispatch ...[uniform]&lt;T&gt; to ( #[until="1.20.5"] struct{value: Alias&lt;T&gt;} | #[since="1.20.5"] Alias&lt;T&gt; )。</summary>
+        private static McdocType UniformAliasMember()
+        {
+            var typeArg = new McdocType { Kind = McdocTypeKind.Reference, Path = "T" };
+            var legacyInner = McdocType.Create(McdocTypeKind.Concrete);
+            legacyInner.Items = [ new McdocType { Kind = McdocTypeKind.Reference, Path = "T" } ];
+            legacyInner.Item = new McdocType { Kind = McdocTypeKind.Reference, Path = UniformProviderPath };
+            var legacy = McdocType.Create(McdocTypeKind.Struct);
+            legacy.Fields = [ Static("value", legacyInner) ];
+
+            var alias = McdocType.Create(McdocTypeKind.Concrete);
+            alias.Items = [ new McdocType { Kind = McdocTypeKind.Reference, Path = "T" } ];
+            alias.Item = new McdocType { Kind = McdocTypeKind.Reference, Path = UniformProviderPath };
+
+            var union = McdocType.Create(McdocTypeKind.Union);
+            union.Members = [ legacy, alias ];
+            var template0 = McdocType.Create(McdocTypeKind.Template);
+            template0.TypeParams = new List<string> { "T" };
+            template0.Item = union;
+            return template0;
+
+            // 先只复现"目标是泛型别名"这一跳（版本过滤那层单独再说，避免一次改两个变量）
+            var template = McdocType.Create(McdocTypeKind.Template);
+            template.TypeParams = new List<string> { "T" };
+            template.Item = alias;
+            return template;
+        }
+
+        /// <summary>value: IntProvider&lt;int @ 0..15&gt; —— 其中 weighted 支带 distribution: NonEmptyWeightedList&lt;IntProvider&lt;…&gt;&gt;。</summary>
+        public static McdocType GenericArgRootType()
+        {
+            var root = McdocType.Create(McdocTypeKind.Struct);
+            root.Fields = [ Static("value", IntProviderUsage()) ];
+            return root;
+        }
+
+        /// <summary>带泛型列表字段的成员（weighted_list 的形状）。</summary>
+        public static McdocType GenericArgDistributionType()
+        {
+            var distribution = McdocType.Create(McdocTypeKind.Concrete);
+            distribution.Items = [ IntProviderUsage() ];
+            distribution.Item = new McdocType { Kind = McdocTypeKind.Reference, Path = WeightedListPath };
+            var member = McdocType.Create(McdocTypeKind.Struct);
+            member.Fields = [ Static("distribution", distribution) ];
+            return member;
+        }
+
+        /// <summary>IntProvider&lt;int @ 0..15&gt; 的用法：Concrete{ Items=[…], Item=Reference }。</summary>
+        private static McdocType IntProviderUsage()
+        {
+            var value = McdocType.Create(McdocTypeKind.Int);
+            value.Range = new McdocRange { Min = 0, Max = 15 };
+            var usage = McdocType.Create(McdocTypeKind.Concrete);
+            usage.Items = [ value ];
+            usage.Item = new McdocType { Kind = McdocTypeKind.Reference, Path = IntProviderPath };
+            return usage;
+        }
+
+        /// <summary>type IntProvider&lt;T&gt; = ( T | struct { type: #[id]; ...dispatcher[[type]]&lt;T&gt; } )。</summary>
+        private static McdocType IntProviderTemplate()
+        {
+            var typeArg = new McdocType { Kind = McdocTypeKind.Reference, Path = "T" };
+            var dispatcher = McdocType.Create(McdocTypeKind.Dispatcher);
+            dispatcher.Registry = IntProviderRegistry;
+            dispatcher.Indices = [ McdocIndex.Dynamic(new List<string> { "type" }) ];
+            var indexed = McdocType.Create(McdocTypeKind.Indexed);
+            indexed.Item = dispatcher;
+            var spread = McdocType.Create(McdocTypeKind.Concrete);
+            spread.Items = [ typeArg ];
+            spread.Item = indexed;
+
+            var provider = McdocType.Create(McdocTypeKind.Struct);
+            provider.Fields =
+            [
+                new McdocStructField { Name = "type", Key = McdocType.LiteralString("type"), Type = IdString(IntProviderRegistry) },
+                new McdocStructField { IsSpread = true, Type = spread }
+            ];
+            var union = McdocType.Create(McdocTypeKind.Union);
+            union.Members = [ typeArg, provider ];
+            var template = McdocType.Create(McdocTypeKind.Template);
+            template.TypeParams = new List<string> { "T" };
+            template.Item = union;
+            return template;
+        }
+
+        /// <summary>登记 WeightedEntry&lt;T&gt; = struct { weight: int, data: T } 与 NonEmptyWeightedList&lt;T&gt; = [WeightedEntry&lt;T&gt;]。</summary>
+        public static void RegisterGenericArgTypeDefs(McdocTypeIndex index)
+        {
+            var typeArg = new McdocType { Kind = McdocTypeKind.Reference, Path = "T" };
+
+            var entry = McdocType.Create(McdocTypeKind.Struct);
+            entry.Fields = [ Static("weight", McdocType.Create(McdocTypeKind.Int)), Static("data", typeArg) ];
+            var entryTemplate = McdocType.Create(McdocTypeKind.Template);
+            entryTemplate.TypeParams = new List<string> { "T" };
+            entryTemplate.Item = entry;
+            index.RegisterTypeDef(WeightedEntryPath, entryTemplate);
+
+            var entryConcrete = McdocType.Create(McdocTypeKind.Concrete);
+            entryConcrete.Items = [ new McdocType { Kind = McdocTypeKind.Reference, Path = "T" } ];
+            entryConcrete.Item = new McdocType { Kind = McdocTypeKind.Reference, Path = WeightedEntryPath };
+            var list = McdocType.Create(McdocTypeKind.List);
+            list.Item = entryConcrete;
+            var listTemplate = McdocType.Create(McdocTypeKind.Template);
+            listTemplate.TypeParams = new List<string> { "T" };
+            listTemplate.Item = list;
+            index.RegisterTypeDef(WeightedListPath, listTemplate);
+
+            index.RegisterTypeDef(IntProviderPath, IntProviderTemplate());
+            RegisterIntProviderDispatchers(index);
+            // 真 schema 里 uniform/biased_to_bottom 的目标是**泛型别名**：
+            //   type UniformIntProvider<T> = struct { min_inclusive: T, max_inclusive: T }
+            //   dispatch ...[uniform]<T> to ( #[until] struct{value: Alias<T>} | #[since] Alias<T> )
+            // 这里照抄这个"别名 + 版本过滤后的 union"形状，用来复现真 schema 里那一层。
+            index.RegisterTypeDef(UniformProviderPath, UniformProviderTemplate());
+            index.RegisterDispatch(IntProviderRegistry, "weighted", GenericArgDistributionType());
+            index.RegisterDispatch(IntProviderRegistry, "uniform_alias", UniformAliasMember());
+        }
+
     }
 }

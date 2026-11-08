@@ -34,6 +34,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
                 // 空串同样算"没有值"：默认值把必填枚举物化成 "" 时，依赖它的调度器 spread 会解析成 %none
                 var emptyText = node.Json is null
+                    || node.Json.Kind == McdocJsonKind.Null
                     || (node.Json.Kind == McdocJsonKind.String && string.IsNullOrWhiteSpace(node.Json.StringValue));
                 // 有候选且有选中项就物化：普通 enum / literal 的 UseSelect 是 false，
                 // 只看 UseSelect 会让必选枚举（frame=Task 这类）永远进不了文档。
@@ -62,10 +63,15 @@ namespace CBHK.Utility.Data.Mcdoc
             // 键已经在文档里、值却是空串（block: ""）：那是"有键没值"，必须按显示中的候选补上。
             // 可选字段只在"键已存在"时补，绝不因为"行上显示了默认值"就凭空插键。
             var presentButEmpty = node.Json is not null && emptyText;
+            // "显示中的那个候选"：行的 Head 是构造时求值的，新长出来的子树（切成员/重建）还没有行，
+            // SelectedEnumOption 就还是 null —— 这时按候选表首项落盘（行上下拉显示的正是它）。
+            // 只对必填字段生效；哨兵永远不落盘。
+            var shown = node.SelectedEnumOption
+                ?? (hasOptions && !McdocUnionSwitch.IsUnsetOption(node.EnumOptionList[0]) ? node.EnumOptionList[0] : null);
             if ((node.IsRequired || presentButEmpty) && emptyText && (node.UseSelect || hasOptions)
-                && node.SelectedEnumOption?.Value?.LiteralValue is not null)
+                && shown?.Value?.LiteralValue is not null)
                 {
-                    var text = Convert.ToString(node.SelectedEnumOption.Value.LiteralValue);
+                    var text = Convert.ToString(shown.Value.LiteralValue);
                     if (!string.IsNullOrEmpty(text))
                     {
                         WriteDisplayed(node, McdocJsonValue.String(text));
