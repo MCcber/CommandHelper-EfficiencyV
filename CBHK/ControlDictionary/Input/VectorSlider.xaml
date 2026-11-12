@@ -9,11 +9,11 @@
             BorderBrush="Black"
             BorderThickness="2"
             SnapsToDevicePixels="True"
-            UseLayoutRounding="True">
+            UseLayoutRounding="False">
             <Grid
                 ClipToBounds="False"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
+                UseLayoutRounding="False">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="2.5" />
                     <RowDefinition Height="*" />

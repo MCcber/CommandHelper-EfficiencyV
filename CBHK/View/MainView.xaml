@@ -787,8 +787,8 @@
                 <Common:SettingsView />
             </Container:VectorIconTextTabItem>
             <Container:VectorIconTextTabItem HeaderText="测试" Style="{StaticResource VectorIconTextTabItemStyle}">
-                <!--<Container:TimelineToolContainer Style="{DynamicResource TimelineToolContainerStyle}" />-->
-                <Grid>
+                <Container:TimelineToolContainer Style="{DynamicResource TimelineToolContainerStyle}" />
+                <!--<Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="35" />
                         <RowDefinition Height="*" />
@@ -799,8 +799,8 @@
                         OriginBottomHeight="4"
                         Style="{DynamicResource VectorTextButtonStyle}"
                         Text="点击导入文档数据" />
-                    <!--<ItemsControl ItemTemplateSelector="{DynamicResource MetaTypeTemplateSelector}" ItemsSource="{Binding MetaTypeList}" />-->
-                </Grid>
+                    <ItemsControl ItemTemplateSelector="{DynamicResource MetaTypeTemplateSelector}" ItemsSource="{Binding MetaTypeList}" />
+                </Grid>-->
             </Container:VectorIconTextTabItem>
         </Container:VectorTabControl>
     </Grid>

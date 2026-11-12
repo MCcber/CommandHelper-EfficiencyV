@@ -27,7 +27,6 @@
         <ResourceDictionary Source="/ControlDictionary/Container/VectorTreeViewItem.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorListViewItemContainer.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorListView.xaml" />
-        <ResourceDictionary Source="/ControlDictionary/Container/TransactionItem.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/VectorTreeView.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/TreeViewCommon.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/McdocRows.xaml" />

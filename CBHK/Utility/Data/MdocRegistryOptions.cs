@@ -28,7 +28,7 @@ namespace CBHK.Utility.Data
             }
 
             var rawOptions = ReadArray(spec.Registry, version);
-            var tagOptions = spec.Tags is "allowed" or "implicit" || spec.Prefix is "!"
+            var tagOptions = spec.Tags is "required" or "allowed" or "implicit" || spec.Prefix is "!"
                 ? ReadArray("tag/" + spec.Registry, version)
                 : null;
             return spec.Apply(rawOptions, tagOptions);

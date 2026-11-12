@@ -9,13 +9,18 @@ namespace CBHK.CustomControl.VectorButton
     public class VectorToggleIconTextButton : BaseVectorToggleButton
     {
         #region Field
-        private int OriginBottomHeight;
+        private const int DefaultBottomHeight = 4;
         private Thickness OriginThumbMargin;
         private Brush OriginLeftTopBorderBrush;
         private Brush OriginRightBottomBorderBrush;
         #endregion
 
         #region Property
+
+        /// <summary>
+        /// Thumb 底边附加线的高度，0 表示使用默认值
+        /// </summary>
+        public int OriginBottomHeight { get; set; }
 
         public string Text
         {
@@ -238,11 +243,6 @@ namespace CBHK.CustomControl.VectorButton
         {
             Text ??= "";
 
-            if (OriginBottomHeight == 0)
-            {
-                OriginBottomHeight = 4;
-            }
-
             if(BackgroundWidth == 0)
             {
                 BackgroundWidth = 70;
@@ -264,11 +264,6 @@ namespace CBHK.CustomControl.VectorButton
             }
 
             OriginThumbMargin = ThumbMargin = new(2, -5, 0, 0);
-
-            if (GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
-            {
-                rowDefinition.Height = new GridLength(OriginBottomHeight);
-            }
 
             UpdateBorderColorByBackgroundColor();
         }
@@ -307,6 +302,18 @@ namespace CBHK.CustomControl.VectorButton
             {
                 RightBottomBorderBrush = new SolidColorBrush(ColorTool.Lighten(rightBottomBorderBrush.Color, 0.4f));
             }
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            ApplyBottomHeight();
+        }
+
+        private void ApplyBottomHeight()
+        {
+            if (GetTemplateChild("extraBottomLine") is RowDefinition rowDefinition)
+                rowDefinition.Height = new GridLength(OriginBottomHeight == 0 ? DefaultBottomHeight : OriginBottomHeight);
         }
 
         protected override void OnChecked(RoutedEventArgs e)

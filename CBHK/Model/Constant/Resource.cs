@@ -26,7 +26,7 @@ namespace CBHK.Model.Constant
         public RegexService RegexService { get; set; } = new();
         public Dictionary<string, string> GenertorConfiguration { get; private set; }
         public JObject RunningDataObject { get;private set; } = [];
-        public string ImageSetDirectoryPath { get; set; } = @"ImageSet";
+        public string ImageSetDirectoryPath { get; set; } = @"ImageSet\";
         public string MCDocumentLeadingPath { get; set; } = "Resource" + Path.DirectorySeparatorChar + "vanilla-mcdoc" + Path.DirectorySeparatorChar + "java";
         public string MCDocumentBasePath { get; set; } = @"::java";
         public string MCDocumentEditorKey { get; set; } = Path.DirectorySeparatorChar + "data";

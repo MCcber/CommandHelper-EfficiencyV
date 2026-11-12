@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
@@ -22,8 +22,10 @@ using CBHK.Utility.Visual.MessageTip;
 using CBHK.Utility.Common;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Constant;
-using CBHK.CustomControl.Container;
-using CBHK.CustomControl.Input;
+using Prism.Events;
+using CBHK.ViewModel.Component.Villager.Event;
+using CBHK.ViewModel.Component.Villager.Control;
+using CBHK.Utility.Data;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -33,19 +35,22 @@ namespace CBHK.ViewModel.Generator
         private Resource resource;
         private MessagePopup messagePopup = new();
         private CBHKDataContext context = null;
-        int CurrentMinVersion = 0;
+        private IEventAggregator eventAggregator = null;
+
         /// <summary>
         /// 存储生成结果
         /// </summary>
         public string Result;
+        
         /// <summary>
         /// 主页引用
         /// </summary>
         private Window home = null;
+
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconVillagers.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconVillager.png";
         string VillagerTypeSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\VillagerTypes.ini";
         string VillagerProfessionsSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\VillagerProfessionTypes.ini";
         string VillagerLevelSourceFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\VillagerLevels.ini";
@@ -53,18 +58,10 @@ namespace CBHK.ViewModel.Generator
         public Dictionary<string, string> VillagerTypeDataBase = [];
         public Dictionary<string, string> VillagerProfessionTypeDataBase = [];
         string emptyIcon = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/empty.png";
-        string GossipTypesFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\GossipTypeList.ini";
+        string gossipTypesFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\GossipTypeList.ini";
         private readonly SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
         private readonly SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private readonly SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
-
-        //private Dictionary<string, string> ItemIDAndNameMap = [];
-        //private List<string> ItemKeyList = [];
-
-        private IProgress<ItemStructure> AddOriginalItemProgress = null;
-        private IProgress<(int, string, string, string)> SetOriginalItemProgress = null;
-        private IProgress<ItemStructure> AddCustomItemProgress = null;
-        private IProgress<(int, string, string, string, string)> SetCustomItemProgress = null;
 
         private DataService dataService = null;
         private IContainerProvider container;
@@ -73,10 +70,7 @@ namespace CBHK.ViewModel.Generator
         /// 加载物品集合
         /// </summary>
         private string ItemSaveFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Item";
-        /// <summary>
-        /// 言论搜索目标引用
-        /// </summary>
-        TextBox GossipSearchTarget = null;
+
         /// <summary>
         /// 言论搜索类型引用
         /// </summary>
@@ -117,13 +111,28 @@ namespace CBHK.ViewModel.Generator
 
         #region Property
         [ObservableProperty]
+        private Visibility leastPlayerUUIDVisibility = Visibility.Collapsed;
+        [ObservableProperty]
+        private Visibility mostPlayerUUIDVisibility = Visibility.Collapsed;
+        [ObservableProperty]
+        private Visibility playerUUIDVisibility = Visibility.Collapsed;
+
+        [ObservableProperty]
+        private string leastPlayerUUID = "";
+        [ObservableProperty]
+        private string mostPlayerUUID = "";
+
+        [ObservableProperty]
+        private string playerUUID = "";
+        [ObservableProperty]
         private VectorTextComboBoxItem _selectedVersion;
         /// <summary>
         /// 版本源
         /// </summary>
         [ObservableProperty]
         public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
-            new VectorTextComboBoxItem() { Text = "1.20.2" },
+            new VectorTextComboBoxItem() { Text = "1.20.2+" },
+            new VectorTextComboBoxItem() { Text = "1.16" },
             new VectorTextComboBoxItem() { Text = "1.13.0" }
             ];
         /// <summary>
@@ -133,21 +142,25 @@ namespace CBHK.ViewModel.Generator
         public bool _showResult;
         [ObservableProperty]
         public ObservableCollection<VectorTextComboBoxItem> _gossipTypeList = [];
+
+        [ObservableProperty]
+        private string searchGossipText = "";
+
         /// <summary>
         /// 左侧交易项数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TransactionItem> _transactionItemList = [];
+        public ObservableCollection<TransactionItemViewModel> _transactionItemList = [];
         /// <summary>
         /// 言论数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<GossipsItem> _gossipItemList = [];
+        public ObservableCollection<GossipsItemViewModel> _gossipItemList = [];
         /// <summary>
         /// 当前选中的交易项
         /// </summary>
         [ObservableProperty]
-        private TransactionItem _currentItem = null;
+        private TransactionItemViewModel currentTransactionItem = null;
         /// <summary>
         /// 主项数量
         /// </summary>
@@ -183,9 +196,8 @@ namespace CBHK.ViewModel.Generator
         public ObservableCollection<string> _bagItemToolTips = [];
         //言论搜索类型数据源
         [ObservableProperty]
-        ObservableCollection<VectorTextComboBoxItem> _gossipSearchType = [];
-        //言论搜索类型配置文件路径
-        string gossipSearchTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Villager\Data\GossipSearchTypes.ini";
+        ObservableCollection<VectorTextComboBoxItem> _gossipSearchTypeList = [];
+
         /// <summary>
         /// 维度数据源
         /// </summary>
@@ -242,10 +254,17 @@ namespace CBHK.ViewModel.Generator
         [ObservableProperty]
         private int _selectedItemListIndex;
         /// <summary>
-        /// 搜索内容
+        /// 搜索原版物品
         /// </summary>
         [ObservableProperty]
-        private string _searchText = "";
+        private string searchOriginItemText = "";
+
+        /// <summary>
+        /// 搜索自定义物品
+        /// </summary>
+        [ObservableProperty]
+        private string searchCustomItemText = "";
+
         /// <summary>
         /// 村民类型数据源
         /// </summary>
@@ -333,7 +352,7 @@ namespace CBHK.ViewModel.Generator
             {
                 if (TransactionItemList.Count == 0) return "";
                 string result = "Offers:{Recipes:[";
-                string transactionItemData = string.Join("", TransactionItemList.Select(item => (item.DataContext as TransactionItem).TransactionItemData + ","));
+                string transactionItemData = string.Join("", TransactionItemList.Select(item => item.GetTransactionItemData() + ","));
                 result += transactionItemData.TrimEnd(',') + "]},";
                 return result;
             }
@@ -350,7 +369,7 @@ namespace CBHK.ViewModel.Generator
                     return "";
                 }
                 string result = "Gossips:[";
-                result += string.Join(",", GossipItemList.Select(item => (item.DataContext as GossipsItem).GossipData));
+                result += string.Join(",", GossipItemList.Select(item => item.GetGossipData()));
                 result = result.TrimEnd(',') + "],";
                 return result;
             }
@@ -556,26 +575,29 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public VillagerViewModel(IContainerProvider Container,MainView mainView,CBHKDataContext Context,DataService DataService,Resource resource)
+        public VillagerViewModel(IContainerProvider Container,IEventAggregator EventAggregator,MainView mainView,CBHKDataContext Context,DataService DataService,Resource resource)
         {
             #region Inject
             this.resource = resource;
             dataService = DataService;
             context = Context;
             container = Container;
-            home = mainView; 
+            home = mainView;
+            eventAggregator = EventAggregator;
             #endregion
 
             #region 初始化主、副、结果空图像
             BuyItemIcon = BuyBItemIcon = SellItemIcon = new BitmapImage(new Uri(emptyIcon));
             #endregion
 
-            #region 读取言论类型
-            if (File.Exists(GossipTypesFilePath))
+            #region 读取言论类型与搜索言论类型
+            if (File.Exists(gossipTypesFilePath))
             {
-                string[] types = File.ReadAllLines(GossipTypesFilePath);
+                string[] types = File.ReadAllLines(gossipTypesFilePath);
                 for (int i = 0; i < types.Length; i++)
+                {
                     GossipTypeList.Add(new() { Text = types[i] });
+                }
             }
             #endregion
 
@@ -639,51 +661,12 @@ namespace CBHK.ViewModel.Generator
             MeetingPointDimension = HomeDimension = JobSiteDimension = DimensionTypeSource[0];
             #endregion
 
-            AddOriginalItemProgress = new Progress<ItemStructure>(OriginalItemList.Add);
-            SetOriginalItemProgress = new Progress<(int, string, string, string)>(item =>
-            {
-                if (File.Exists(item.Item4))
-                {
-                    OriginalItemList[item.Item1].IDAndName = item.Item2 /*+ ':' + item.Item3*/;
-                    OriginalItemList[item.Item1].ImagePath = new BitmapImage(new Uri(item.Item4, UriKind.Absolute));
-                }
-            });
-
-            AddCustomItemProgress = new Progress<ItemStructure>(CustomItemList.Add);
-            SetCustomItemProgress = new Progress<(int, string, string, string, string)>(item =>
-            {
-                if (File.Exists(item.Item4))
-                {
-                    CustomItemList[item.Item1].IDAndName = item.Item2/* + ':' + item.Item3*/;
-                    CustomItemList[item.Item1].NBT = item.Item5;
-                    CustomItemList[item.Item1].ImagePath = new BitmapImage(new Uri(item.Item4, UriKind.Absolute));
-                }
-            });
-
-            //ItemIDAndNameMap = dataService.GetItemIDAndNameGroupByVersionMap()
-            //.Where(pair => pair.Key <= CurrentMinVersion)
-            //.SelectMany(pair => pair.Value)
-            //.ToDictionary(
-            //    pair => pair.Key,
-            //    pair => pair.Value
-            //);
-
-            //List<string> HaveNoIImageList = [];
-            //foreach (var item in ItemIDAndNameMap)
-            //{
-            //    if (!File.Exists(resource.ImageSetDirectoryPath + item.Key + ".png") && !File.Exists(resource.ImageSetDirectoryPath + item.Key + "_spawn_egg.png"))
-            //    {
-            //        HaveNoIImageList.Add(item.Key);
-            //    }
-            //}
-
-            //foreach (var item in HaveNoIImageList)
-            //{
-            //    ItemIDAndNameMap.Remove(item);
-            //}
-
-            //ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
-            //ItemKeyList.Sort();
+            #region 订阅事件
+            eventAggregator.GetEvent<RemoveTransactionItemEvent>().Subscribe(RemoveTransactionItem);
+            eventAggregator.GetEvent<OpenTransactionEditPanelEvent>().Subscribe(OpenTransactionEditPanel);
+            eventAggregator.GetEvent<RemoveGossipItemEvent>().Subscribe(RemoveGossipItem);
+            eventAggregator.GetEvent<UpdateGossipEffectEvent>().Subscribe(UpdateGossipEffect);
+            #endregion
         }
 
         /// <summary>
@@ -691,37 +674,71 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void InitOriginItemList()
         {
-            OriginalItemList.Clear();
-
-            Task.Run(async () =>
+            _ = Task.Run(() =>
             {
-                ParallelOptions parallelOptions = new();
-                if (resource.RunningDataObject.TryGetValue("1.20.5", out JToken versionToken) && versionToken.SelectToken("item") is JArray itemArray)
-                {
-                    await Parallel.ForAsync(0, itemArray.Count, parallelOptions, (i, cancellationToken) =>
-                    {
-                        AddOriginalItemProgress.Report(new());
-                        return new ValueTask();
-                    });
+                var imageDir = AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath;
 
-                    string imagePath = "";
-                    string basePath = AppDomain.CurrentDomain.BaseDirectory;
-                    Parallel.For(0, itemArray.Count, (i) =>
+                if (!resource.RunningDataObject.TryGetValue("1.20.5", out var token)
+                    || token.SelectToken("item") is not JArray itemArray)
+                    return;
+
+                //目录只扫一次，别在循环里 File.Exists
+                var fileSet = new HashSet<string>(
+                    Directory.EnumerateFiles(imageDir, "*.png")
+                             .Select(Path.GetFileNameWithoutExtension),
+                    StringComparer.OrdinalIgnoreCase);
+
+                //先做"匹配 + 排序"的计划表（纯字符串操作，很快）
+                var plans = itemArray
+                    .Select(t => t.Value<string>())
+                    .Select(key =>
                     {
-                        string currentKey = itemArray[i].Value<string>();
-                        if (File.Exists(resource.ImageSetDirectoryPath + currentKey + ".png"))
+                        string file =
+                            fileSet.Contains(key) ? key + ".png"
+                          : fileSet.Contains(key + "_spawn_egg") ? key + "_spawn_egg.png"
+                          : null;
+                        return (key, file);
+                    })
+                    .Where(p => p.file is not null)
+                    // 按文件名 a–z；这里用 OrdinalIgnoreCase，稳定且与区域设置无关
+                    .OrderBy(p => p.file, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                //预分配数组：索引即最终顺序，与并行完成顺序无关
+                var result = new ItemStructure[plans.Length];
+
+                Parallel.For(0, plans.Length, i =>
+                {
+                    var (key, file) = plans[i];
+                    try
+                    {
+                        var bmp = new BitmapImage();
+                        bmp.BeginInit();
+                        bmp.CacheOption = BitmapCacheOption.OnLoad;   // 立即解码，不留文件锁
+                        bmp.UriSource = new Uri(Path.Combine(imageDir, file), UriKind.Absolute);
+                        bmp.EndInit();
+                        bmp.Freeze();                                  // 冻结 → 可跨线程，UI 零解码
+
+                        result[i] = new ItemStructure { IDAndName = key, ImagePath = bmp };
+                    }
+                    catch
+                    {
+                        // 单张坏图丢掉即可，不要影响整体
+                    }
+                });
+
+                //一次性按序推回 UI
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    OriginalItemList.Clear();
+                    foreach (var it in result)
+                    {
+                        if (it is not null)
                         {
-                            imagePath = basePath + resource.ImageSetDirectoryPath + currentKey + ".png";
+                            OriginalItemList.Add(it);
                         }
-                        else
-                        if (File.Exists(resource.ImageSetDirectoryPath + currentKey + "_spawn_egg.png"))
-                        {
-                            imagePath = basePath + resource.ImageSetDirectoryPath + currentKey + ".png";
-                            imagePath = basePath + resource.ImageSetDirectoryPath + currentKey + "_spawn_egg.png";
-                        }
-                        SetOriginalItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, "", imagePath));
-                    });
-                }
+                    }
+                });
             });
         }
 
@@ -730,57 +747,195 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void InitCustomItemList()
         {
-            CustomItemList.Clear();
-
-            Task.Run(async () =>
+            _ = Task.Run(() =>
             {
-                string[] itemFileList = Directory.GetFiles(ItemSaveFolderPath);
-                ParallelOptions parallelOptions = new();
-                await Parallel.ForAsync(0, itemFileList.Length, parallelOptions, (i, cancellationToken) =>
-                {
-                    if (File.Exists(itemFileList[i]))
+                if (!Directory.Exists(ItemSaveFolderPath))
+                    return;
+
+                var imageDir = AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath;
+
+                // 1) 图像目录只扫一次，之后 O(1) 查询，替代多次 File.Exists
+                var imageFileSet = new HashSet<string>(
+                    Directory.EnumerateFiles(imageDir, "*.png")
+                             .Select(Path.GetFileNameWithoutExtension),
+                    StringComparer.OrdinalIgnoreCase);
+
+                // 2) 每个存档文件只读一次，构建 (保存名, nbt, key, 图像文件) 计划表
+                var plans = Directory.EnumerateFiles(ItemSaveFolderPath)
+                    .Select(path =>
                     {
-                        string nbt = ExternalDataImportManager.GetItemDataHandler(itemFileList[i], true);
-                        string currentKey = "";
-                        if (JObject.Parse(nbt)["oldID"] is JToken IDToken)
+                        string saveName = Path.GetFileNameWithoutExtension(path);
+
+                        string nbt;
+                        try
                         {
-                            currentKey = IDToken.Value<string>().Replace("minecraft:", "");
-                            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + ".png") || File.Exists(AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + "_spawn_egg.png"))
-                            {
-                                AddCustomItemProgress.Report(new ItemStructure());
-                            }
+                            nbt = ExternalDataImportManager.GetItemDataHandler(path, true);
                         }
+                        catch
+                        {
+                            return (saveName, nbt: (string)null, key: (string)null, file: (string)null);
+                        }
+
+                        string key = null;
+                        try
+                        {
+                            if (JObject.Parse(nbt)["oldID"] is JToken idToken)
+                                key = idToken.Value<string>()?.Replace("minecraft:", "");
+                        }
+                        catch
+                        {
+                            return (saveName, nbt, key: (string)null, file: (string)null);
+                        }
+
+                        string file = null;
+                        if (key is not null)
+                        {
+                            if (imageFileSet.Contains(key))
+                                file = key + ".png";
+                            else if (imageFileSet.Contains(key + "_spawn_egg"))
+                                file = key + "_spawn_egg.png";
+                        }
+
+                        return (saveName, nbt, key, file);
+                    })
+                    .Where(p => p.nbt is not null && p.key is not null && p.file is not null)
+                    // 按保存的文件名 a–z 排序（与 UI 上看到的"文件名"一致）
+                    .OrderBy(p => p.saveName, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                // 3) 预分配数组，索引即最终顺序，与并行完成顺序无关
+                var result = new ItemStructure[plans.Length];
+
+                Parallel.For(0, plans.Length, i =>
+                {
+                    var (saveName, nbt, key, file) = plans[i];
+                    try
+                    {
+                        var bmp = new BitmapImage();
+                        bmp.BeginInit();
+                        bmp.CacheOption = BitmapCacheOption.OnLoad;  // 立即解码，不留文件锁
+                        bmp.DecodePixelWidth = 64;                        // 按实际显示尺寸解码
+                        bmp.UriSource = new Uri(Path.Combine(imageDir, file), UriKind.Absolute);
+                        bmp.EndInit();
+                        bmp.Freeze();                                     // 冻结 → 跨线程安全、UI 零解码
+
+                        result[i] = new ItemStructure
+                        {
+                            IDAndName = key,
+                            NBT = nbt,
+                            ImagePath = bmp,
+                        };
                     }
-                    return new ValueTask();
+                    catch
+                    {
+                        // 单张坏图丢弃，不影响整体
+                    }
                 });
 
-                Parallel.For(0, itemFileList.Length, (i) =>
+                // 4) 一次性替换集合，只触发 1 次 PropertyChanged
+                var items = result.Where(x => x is not null).ToList();
+
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    if (File.Exists(itemFileList[i]))
-                    {
-                        string nbt = ExternalDataImportManager.GetItemDataHandler(itemFileList[i], true);
-                        string currentKey = "";
-                        if (JObject.Parse(nbt)["oldID"] is JToken IDToken)
-                        {
-                            currentKey = IDToken.Value<string>().Replace("minecraft:", "");
-                        }
-                        string imagePath = "";
-                        if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + ".png"))
-                        {
-                            imagePath = AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + ".png";
-                        }
-                        else
-                        if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + "_spawn_egg.png"))
-                        {
-                            imagePath = AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath + currentKey + "_spawn_egg.png";
-                        }
-                        if (imagePath.Length > 0)
-                        {
-                            SetCustomItemProgress.Report(new ValueTuple<int, string, string, string, string>(i, currentKey, "", imagePath, nbt));
-                        }
-                    }
+                    CustomItemList = new ObservableCollection<ItemStructure>(items);
                 });
             });
+        }
+
+        /// <summary>
+        /// 删除指定交易项
+        /// </summary>
+        /// <param name="transactionItem"></param>
+        private void RemoveTransactionItem(TransactionItemViewModel transactionItem) => TransactionItemList.Remove(transactionItem);
+
+        /// <summary>
+        /// 删除指定言论项
+        /// </summary>
+        /// <param name="gossipsItem"></param>
+        private void RemoveGossipItem(GossipsItemViewModel gossipsItem) => GossipItemList.Remove(gossipsItem);
+
+        private void UpdateGossipEffect(GossipsItemViewModel gossipsItem)
+        {
+            //创建字典，让字典的键来自动匹配对应的值，自动执行搜索和带入公式两个行为
+            Dictionary<string, int> currentGossipTypes = [];
+            //已处理的标记
+            Dictionary<string, bool> handedMarkers = [];
+            foreach (var item in GossipTypeList)
+            {
+                currentGossipTypes.Add(item.Text, 0);
+                handedMarkers.Add(item.Text, false);
+            }
+            string currentType = gossipsItem.SelectedTypeItem.Text;
+            string currentUID = gossipsItem.TargetText;
+            currentGossipTypes[currentType] = int.Parse(gossipsItem.GossipValue.ToString());
+            handedMarkers[currentType] = true;
+
+            _ = GossipItemList.Where(gossipsItem =>
+            {
+                string currentGossipType = gossipsItem.SelectedTypeItem.Text;
+                if (currentGossipTypes.ContainsKey(currentGossipType) && gossipsItem.TargetText == currentUID && !handedMarkers[currentGossipType])
+                {
+                    currentGossipTypes[currentGossipType] = int.Parse(gossipsItem.GossipValue.ToString());
+                    handedMarkers[currentGossipType] = true;
+                }
+                return true;
+            });
+
+            if (currentGossipTypes.Count == 5)
+                _ = TransactionItemList.All(item => { item.UpdateDiscountData(currentGossipTypes["minor_negative"], currentGossipTypes["minor_positive"], currentGossipTypes["major_negative"], currentGossipTypes["major_positive"], currentGossipTypes["trading"]); return true; });
+        }
+
+        /// <summary>
+        /// 打开交易项编辑面板
+        /// </summary>
+        /// <param name="targetItem"></param>
+        private void OpenTransactionEditPanel(TransactionItemViewModel targetItem)
+        {
+            TransactionDataGridVisibility = Visibility.Visible;
+            RewardExp = targetItem.RewardExp;
+            VillagerGetXp = targetItem.Xp;
+
+            BuyItemIcon = targetItem.BuyImageSource.Clone();
+
+            BuyBItemIcon = targetItem.BuyBImageSource.Clone();
+            SellItemIcon = targetItem.SellImageSource.Clone();
+
+            BuyItemData = targetItem.BuyTag;
+            BuyBItemData = targetItem.BuyBTag;
+            SellItemData = targetItem.SellTag;
+
+            BuyCount = int.Parse(targetItem.BuyCountDisplayText.Replace("x", ""));
+            BuyBCount = int.Parse(targetItem.BuyBCountDisplayText.Replace("x", ""));
+            SellCount = int.Parse(targetItem.SellCountDisplayText.Replace("x", ""));
+
+            MaxUses = targetItem.MaxUses;
+            Uses = targetItem.Uses;
+            Demand = targetItem.Demand;
+            SpecialPrice = targetItem.SpecialPrice;
+            PriceMultiplier = targetItem.PriceMultiplier;
+            CurrentTransactionItem = targetItem;
+        }
+
+        /// <summary>
+        /// 根据版本更新不同UUID文本框的可见性
+        /// </summary>
+        private void UpdateUUIDVisibility()
+        {
+            string selectedVersion = SelectedVersion.Text;
+            LeastPlayerUUIDVisibility = MostPlayerUUIDVisibility = PlayerUUIDVisibility = Visibility.Collapsed;
+            if (VersionRangeChecker.IsLessThan(selectedVersion, "1.16") && IsEditGossips is Visibility.Visible)
+            {
+                LeastPlayerUUIDVisibility = MostPlayerUUIDVisibility = Visibility.Visible;
+            }
+            else
+            {
+                LeastPlayerUUIDVisibility = MostPlayerUUIDVisibility = Visibility.Collapsed;
+            }
+
+            if (VersionRangeChecker.IsGreaterThan(selectedVersion, "1.16") || selectedVersion == "1.16" && IsEditGossips is Visibility.Visible)
+            {
+                PlayerUUIDVisibility = Visibility.Visible;
+            }
         }
 
         /// <summary>
@@ -812,7 +967,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OriginalItemListView_Loaded(object sender,RoutedEventArgs e)
+        public async void OriginalItemListView_Loaded(object sender,RoutedEventArgs e)
         {
             Bag = sender as ListView;
             Bag.DataContext = this;
@@ -849,9 +1004,14 @@ namespace CBHK.ViewModel.Generator
             }
         }
 
-        public void VersionBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        /// <summary>
+        /// 版本更新事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void VersionBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            UpdateUUIDVisibility();
         }
 
         /// <summary>
@@ -859,19 +1019,25 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void GossipEditButton_Click(object sender,RoutedEventArgs e)
+        [RelayCommand]
+        public void ClickGossipEditButton()
         {
             IsEditGossips = CanEditGossip ? Visibility.Visible : Visibility.Collapsed;
             //恢复所有交易项的价格
             if (!CanEditGossip)
             {
-                TransactionItemList.All(item => { (item.DataContext as TransactionItem).HideDiscountData(); return true; });
+                _ = TransactionItemList.All(item => { item.HideDiscountData(); return true; });
             }
             else
             {
-                TransactionItemList.All(item => { (item.DataContext as TransactionItem).HideDiscountData(false); return true; });
+                _ = TransactionItemList.All(item => { item.HideDiscountData(false); return true; });
             }
             OnlyEditItem = !CanEditBrain && !CanEditGossip ? Visibility.Collapsed : Visibility.Visible;
+            if (IsEditGossips is Visibility.Collapsed)
+            {
+                SelectedItemListIndex = 2;
+            }
+            UpdateUUIDVisibility();
         }
 
         /// <summary>
@@ -879,48 +1045,75 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void BrainEditButton_Click(object sender, RoutedEventArgs e)
+        [RelayCommand]
+        public void ClickBrainEditButton()
         {
             IsEditBrain = CanEditBrain ? Visibility.Visible : Visibility.Collapsed;
             OnlyEditItem = !CanEditBrain && !CanEditGossip ? Visibility.Collapsed : Visibility.Visible;
+            if (IsEditBrain is Visibility.Collapsed && IsEditGossips is Visibility.Collapsed)
+            {
+                SelectedItemListIndex = 2;
+            }
+            else if (IsEditBrain is Visibility.Collapsed && IsEditGossips is Visibility.Visible)
+            {
+                SelectedItemListIndex = 3;
+            }
+        }
+
+        [RelayCommand]
+        private void RespawnPlayerUUID()
+        {
+            if (LeastPlayerUUIDVisibility is Visibility.Visible || MostPlayerUUIDVisibility is Visibility.Visible)
+            {
+                var (Most, Least) = UUIDHelper.SplitGuid(Guid.NewGuid());
+                LeastPlayerUUID = Least;
+                MostPlayerUUID = Most;
+            }
+            else if (PlayerUUIDVisibility is Visibility.Visible)
+            {
+                int[] UUIDIntArray = UUIDHelper.GuidToMinecraftIntArray(Guid.NewGuid());
+                PlayerUUID = string.Join(',', UUIDIntArray);
+            }
         }
 
         /// <summary>
-        /// 搜索文本更新
+        /// 搜索原版物品
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void SearchTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        public void SearchOriginItemTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (SelectedItemListIndex == 0)
-            {
-                OriginalViewSource.View?.Refresh();
-            }
-            else
-            {
-                CustomViewSource.View?.Refresh();
-            }
+            OriginalViewSource.View?.Refresh();
+        }
+
+        /// <summary>
+        /// 搜索自定义物品
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SearchCustomItemTextBox_TextChanged(object sender,TextChangedEventArgs e)
+        {
+            CustomViewSource.View?.Refresh();
         }
 
         [RelayCommand]
         /// <summary>
         /// 关闭交易数据设置面板
         /// </summary>
-        public void CloseTransactionDataGrid()
+        public void CloseTransactionPanel()
         {
             TransactionDataGridVisibility = Visibility.Collapsed;
-            TransactionItem transactionItemsView = CurrentItem.DataContext as TransactionItem;
             //更新当前交易项的数量显示
-            transactionItemsView.RewardExp = RewardExp is not null ? RewardExp.Value : false;
-            transactionItemsView.BuyCountDisplayText = "x" + BuyCount.ToString();
-            transactionItemsView.BuyBCountDisplayText = "x" + BuyBCount.ToString();
-            transactionItemsView.SellCountDisplayText = "x" + SellCount.ToString();
-            transactionItemsView.MaxUses = MaxUses;
-            transactionItemsView.Uses = Uses;
-            transactionItemsView.Xp = VillagerGetXp;
-            transactionItemsView.Demand = Demand;
-            transactionItemsView.SpecialPrice = SpecialPrice;
-            transactionItemsView.PriceMultiplier = PriceMultiplier;
+            CurrentTransactionItem.RewardExp = RewardExp is not null && RewardExp.Value;
+            CurrentTransactionItem.BuyCountDisplayText = "x" + BuyCount.ToString();
+            CurrentTransactionItem.BuyBCountDisplayText = "x" + BuyBCount.ToString();
+            CurrentTransactionItem.SellCountDisplayText = "x" + SellCount.ToString();
+            CurrentTransactionItem.MaxUses = MaxUses;
+            CurrentTransactionItem.Uses = Uses;
+            CurrentTransactionItem.Xp = VillagerGetXp;
+            CurrentTransactionItem.Demand = Demand;
+            CurrentTransactionItem.SpecialPrice = SpecialPrice;
+            CurrentTransactionItem.PriceMultiplier = PriceMultiplier;
         }
 
         [RelayCommand]
@@ -984,7 +1177,7 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         private void CollectionViewSource_Filter(object sender, FilterEventArgs e)
         {
-            if (SearchText.Trim().Length > 0)
+            if (SearchOriginItemText.Trim().Length > 0)
             {
                 e.Accepted = false;
                 ItemStructure itemStructure = e.Item as ItemStructure;
@@ -997,7 +1190,7 @@ namespace CBHK.ViewModel.Generator
                         currentItemName = itemStructure.IDAndName.Split(':')[1];
                     }
 
-                    if (currentItemID.StartsWith(SearchText) || currentItemName.StartsWith(SearchText))
+                    if (currentItemID.StartsWith(SearchOriginItemText) || currentItemName.StartsWith(SearchOriginItemText))
                     {
                         e.Accepted = true;
                     }
@@ -1039,8 +1232,21 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void Run()
         {
+            #region UUID
+            string UUIDString = "";
+            string selectedVersion = SelectedVersion.Text;
+            if (VersionRangeChecker.IsLessThan(selectedVersion, "1.16"))
+            {
+                UUIDString = "UUIDLeast:" + LeastPlayerUUID + ",UUIDMost:" + MostPlayerUUID;
+            }
+            else if (VersionRangeChecker.IsGreaterThan(selectedVersion, "1.16") || selectedVersion == "1.16")
+            {
+                UUIDString = "UUID:[I;" + PlayerUUID + ']';
+            } 
+            #endregion
+
             Result = "";
-            Result += WillingString + VillagerData + Offers + Gossips + Brain + LastRestockString + XpString;
+            Result += WillingString + VillagerData + Offers + Gossips + Brain + LastRestockString + XpString + UUIDString;
             Result = "/summon villager ~ ~1 ~ {" + Result.TrimEnd(',') + "}";
 
             if (ShowResult)
@@ -1072,8 +1278,8 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void AddTransactionItem()
         {
-            TransactionItem transaction = new(context, dataService);
-            TransactionItemList.Add(transaction);
+            TransactionItemViewModel transactionItem = container.Resolve<TransactionItemViewModel>();
+            TransactionItemList.Add(transactionItem);
         }
 
         [RelayCommand]
@@ -1082,6 +1288,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ClearTransactionItem()
         {
+            TransactionDataGridVisibility = Visibility.Collapsed;
             TransactionItemList.Clear();
         }
 
@@ -1093,14 +1300,9 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void AddGossipItem()
         {
-            GossipsItem gossipsItem = new()
-            {
-                Margin = new Thickness(12, 0, 0, 5),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch,
-                Style = Application.Current.Resources["GossipsItemStyle"] as Style
-            };
+            GossipsItemViewModel gossipsItem = container.Resolve<GossipsItemViewModel>();
             GossipItemList.Add(gossipsItem);
+            gossipsItem.GossipTypeList = GossipTypeList;
         }
 
         [RelayCommand]
@@ -1113,36 +1315,6 @@ namespace CBHK.ViewModel.Generator
         }
 
         /// <summary>
-        /// 获取言论搜索目标的引用
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void GossipSearchTargetLoaded(object sender, RoutedEventArgs e)
-        {
-            GossipSearchTarget = sender as TextBox;
-        }
-
-        /// <summary>
-        /// 获取言论搜索类型的引用
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void GossipSearchTypeLoaded(object sender, RoutedEventArgs e)
-        {
-            GossipSearchTypeBox = sender as ComboBox;
-            if(File.Exists(gossipSearchTypeFilePath))
-            {
-                string[] types = File.ReadAllLines(gossipSearchTypeFilePath);
-                for (int i = 0; i < types.Length; i++)
-                {
-                    GossipSearchType.Add(new VectorTextComboBoxItem() { Text = types[i] });
-                }
-            }
-            GossipSearchTypeBox.ItemsSource = GossipSearchType;
-            GossipSearchTypeBox.SelectedIndex = 0;
-        }
-
-        /// <summary>
         /// 查找目标言论并更新价格数据
         /// </summary>
         /// <param name="sender"></param>
@@ -1151,20 +1323,38 @@ namespace CBHK.ViewModel.Generator
         {
             if(CanEditGossip)
             {
-                string current_type = SelectedSearchGossipItem.Text;
-                List<GossipsItem> target_gossip = GossipItemList.Where(gossip =>
+                string currentType = SelectedSearchGossipItem.Text;
+                if (!string.IsNullOrEmpty(SearchGossipText.Trim()))
                 {
-                    GossipsItem gossipsItemsViewModel = gossip.DataContext as GossipsItem;
-                    string type = gossipsItemsViewModel.SelectedTypeItem.Text;
-                    if (gossipsItemsViewModel.TargetText == GossipSearchTarget.Text.Trim() && type == current_type)
-                        return true;
-                    else
-                        return false;
-                }).ToList();
-
-                if (target_gossip.Count > 0)
-                    ScrollToSomeWhere.Scroll(target_gossip[0], GossipViewer);
+                    SearchGossipText = SearchGossipText.Trim();
+                    for (int i = 0; i < GossipItemList.Count; i++)
+                    {
+                        string type = GossipItemList[i].SelectedTypeItem.Text;
+                        GossipItemList[i].Visibility = Visibility.Collapsed;
+                        if (GossipItemList[i].TargetText == SearchGossipText && type == currentType)
+                        {
+                            GossipItemList[i].Visibility = Visibility.Visible;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < GossipItemList.Count; i++)
+                    {
+                        GossipItemList[i].Visibility = Visibility.Visible;
+                    }
+                }
             }
+        }
+
+        /// <summary>
+        /// 搜索言论类型变更事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SearchType_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            SearchGossipsTextChanged(null, null);
         }
 
         /// <summary>

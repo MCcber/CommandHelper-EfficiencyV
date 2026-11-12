@@ -21,7 +21,7 @@
     MinHeight="550"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
-    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconRecipes.png"
+    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconRecipe.png"
     IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
@@ -328,12 +328,14 @@
                 Background="#EFF2F1"
                 Command="{Binding ImportFromClipboardCommand}"
                 Foreground="Black"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从剪切板导入" />
             <VectorButton:VectorTextButton
                 Background="#EFF2F1"
                 Command="{Binding ImportFromFileCommand}"
                 Foreground="Black"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
             <VectorComboBox:VectorTextComboBox
@@ -425,7 +427,7 @@
                                             Source="{Binding Path=ImagePath, IsAsync=True}"
                                             ToolTipService.BetweenShowDelay="0"
                                             ToolTipService.InitialShowDelay="0"
-                                            UseLayoutRounding="True">
+                                            UseLayoutRounding="False">
                                             <Image.ToolTip>
                                                 <ToolTip
                                                     Background="#484848"
@@ -502,7 +504,7 @@
                                             Source="{Binding Path=ImagePath, IsAsync=True, Mode=OneWay}"
                                             ToolTipService.BetweenShowDelay="0"
                                             ToolTipService.InitialShowDelay="0"
-                                            UseLayoutRounding="True">
+                                            UseLayoutRounding="False">
                                             <Image.ToolTip>
                                                 <ToolTip
                                                     Background="#484848"

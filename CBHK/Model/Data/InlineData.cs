@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Linq;
+using System.Windows;
 using System.Windows.Media;
 
 namespace CBHK.Model.Data
@@ -11,45 +12,15 @@ namespace CBHK.Model.Data
         public FontWeight FontWeight { get; set; }
         public TextDecorationCollection TextDecorationCollection { get; set; }
 
-        private bool isBold = false;
-        public bool IsBold 
-        {
-            get => isBold;
-            set
-            {
-                isBold = FontWeight == FontWeights.Bold;
-            }
-        }
+        public bool IsBold => FontWeight == FontWeights.Bold;
+        public bool IsItalic => FontStyle == FontStyles.Italic;
+        public bool IsUnderline => TextDecorationCollection?.Any(decoration => decoration.Location == TextDecorationLocation.Underline) ?? false;
+        public bool IsStrikeThrough => TextDecorationCollection?.Any(decoration => decoration.Location == TextDecorationLocation.Strikethrough) ?? false;
 
-        private bool isItalic = false;
-        public bool IsItalic
-        {
-            get => isItalic;
-            set
-            {
-                isItalic = FontStyle == FontStyles.Italic;
-            }
-        }
-
-        private bool isUnderline = false;
-        public bool IsUnderline
-        {
-            get => isUnderline;
-            set
-            {
-                isUnderline = TextDecorationCollection == TextDecorations.Underline;
-            }
-        }
-
-        private bool isStrikeThrough = false;
-        public bool IsStrikeThrough
-        {
-            get => isStrikeThrough;
-            set
-            {
-                isStrikeThrough = TextDecorationCollection == TextDecorations.Strikethrough;
-            }
-        }
+        /// <summary>
+        /// 混淆标记只能从附加属性读出：ObfuscatedAdorner 每帧都在改写 Run.Foreground，无法由颜色或字体反推
+        /// </summary>
+        public bool IsObfuscated { get; set; }
 
         public Brush Foreground { get; set; }
 

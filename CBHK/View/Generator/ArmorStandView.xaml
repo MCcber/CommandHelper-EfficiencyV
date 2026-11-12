@@ -40,6 +40,13 @@
         <BitmapImage x:Key="TrimMaterial" UriSource="/CBHK;component/Resource/Common/Image/TrimMaterial.png" />
         <UtilityCommon:PositionConverter x:Key="PositionConverter" />
     </Window.Resources>
+
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="Loaded">
+            <behaviors:CallMethodAction MethodName="ArmorStandView_Loaded" TargetObject="{Binding}" />
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -113,7 +120,13 @@
                 ItemSelectedMarkerBrush="White"
                 OriginBottomHeight="4"
                 SelectedIndex="0"
-                Style="{DynamicResource TextStyleEditorStyle}" />
+                Style="{DynamicResource TextStyleEditorStyle}">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger EventName="Loaded">
+                        <behaviors:CallMethodAction MethodName="CustomNameBox_Loaded" TargetObject="{Binding}" />
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </Input:TextStyleEditor>
             <VectorButton:VectorToggleIconTextButton
                 Margin="5,0,0,0"
                 HorizontalAlignment="Left"
@@ -297,6 +310,7 @@
                                         Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=HeadX, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
+                                        Margin="0,2"
                                         HorizontalAlignment="Left"
                                         Foreground="White"
                                         IsChecked="{Binding CannotPlaceOrReplaceHead, Mode=TwoWay}"
@@ -332,7 +346,7 @@
                                         Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=HeadY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
-                                        HorizontalAlignment="Left"
+                                        Margin="0,2"
                                         Foreground="White"
                                         IsChecked="{Binding CannotTakeOrReplaceHead, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -367,7 +381,7 @@
                                         Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=HeadZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
-                                        HorizontalAlignment="Left"
+                                        Margin="0,2"
                                         Foreground="White"
                                         IsChecked="{Binding CannotPlaceHead, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -389,24 +403,23 @@
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <DockPanel Grid.Row="0" Margin="25,0,0,5">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="White"
-                                        Text="三轴合一"
-                                        TextAlignment="Center" />
-                                    <VectorButton:VectorTextButton
-                                        Width="50"
-                                        Height="30"
-                                        Margin="35,0,0,0"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        BorderBrush="Black"
-                                        ClickMode="Press"
+                                <DockPanel
+                                    Grid.Row="0"
+                                    Margin="10,2,0,-5"
+                                    VerticalAlignment="Top">
+                                    <VectorButton:VectorFlatIconTextButton
+                                        Padding="5,0"
+                                        BorderThickness="1"
                                         Command="{Binding BodyThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        Style="{DynamicResource VectorTextButtonStyle}">
+                                        Foreground="White"
+                                        Icon="M972.8 844.8l-138.24-204.8c-5.12-10.24-20.48-10.24-25.6 0l-40.96 81.92-220.16-102.4V373.76h92.16c10.24 0 20.48-10.24 10.24-20.48l-128-215.04c-5.12-10.24-20.48-10.24-25.6 0L373.76 353.28c-5.12 10.24 0 20.48 10.24 20.48h92.16V614.4L256 716.8l-35.84-81.92c-5.12-10.24-20.48-10.24-25.6 0l-138.24 204.8c-5.12 10.24 0 20.48 10.24 20.48l240.64 30.72c10.24 0 20.48-10.24 15.36-20.48l-35.84-81.92 225.28-107.52 225.28 107.52-35.84 81.92c-5.12 10.24 5.12 20.48 15.36 20.48l245.76-25.6c10.24 0 15.36-15.36 10.24-20.48z"
+                                        IconFillBrush="White"
+                                        IconHeight="20"
+                                        IconMargin="2"
+                                        IconWidth="20"
+                                        Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                        Text="三轴合一">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -418,24 +431,25 @@
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseWheel" TargetObject="{Binding}" />
                                             </behaviors:EventTrigger>
                                         </behaviors:Interaction.Triggers>
-                                    </VectorButton:VectorTextButton>
-                                    <DockPanel Margin="0,0,5,0" HorizontalAlignment="Right">
+                                    </VectorButton:VectorFlatIconTextButton>
+                                    <DockPanel Margin="0,0,5,-5" HorizontalAlignment="Right">
                                         <VectorButton:VectorToggleIconTextButton
-                                            Margin="5,5,0,0"
                                             HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            IsChecked="{Binding Path=CanResetBodyPose, Mode=TwoWay}"
-                                            Style="{StaticResource VectorToggleIconTextButtonStyle}" />
+                                            BackgroundHeight="30"
+                                            IsChecked="{Binding CanResetBodyPose, Mode=TwoWay}"
+                                            Style="{DynamicResource VectorToggleIconTextButtonStyle}" />
                                         <VectorButton:VectorFlatIconTextButton
-                                            Width="60"
-                                            Height="30"
-                                            Margin="0,2,0,0"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            BorderThickness="0"
-                                            ClickMode="Press"
+                                            Width="80"
+                                            Background="#C6C6C6"
+                                            BorderBrush="Black"
+                                            BorderThickness="1"
                                             Command="{Binding ResetBodyPoseCommand}"
-                                            Foreground="{Binding Path=ResetBodyPoseButtonForeground, Mode=OneWay}"
+                                            Foreground="{Binding ResetBodyPoseButtonForeground}"
+                                            Icon="M111.104 584.704c8.704-8.704 12.8-19.456 12.8-29.696V277.504c0-12.8 8.704-21.504 21.504-21.504H819.2l-76.8 76.8c-16.896 16.896-16.896 42.496 0 59.904 8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8l140.8-142.848c16.896-16.896 16.896-42.496 0-59.904L802.304 47.104c-16.896-16.896-42.496-16.896-59.904 0-16.896 16.896-16.896 42.496 0 59.904l61.952 64H78.848c-23.552 0-42.496 19.456-42.496 42.496v341.504c0 25.6 21.504 42.496 42.496 42.496 12.8 0 23.552-4.608 32.256-12.8z m823.296-155.648c-10.752 0-21.504 4.096-29.696 12.8-8.704 8.704-12.8 19.456-12.8 29.696v275.456c0 12.8-8.704 21.504-21.504 21.504H198.656L271.36 695.808c16.896-16.896 16.896-42.496 0-59.904-16.896-16.896-42.496-16.896-59.904 0l-140.8 142.848c-16.896 16.896-16.896 42.496 0 59.904l140.8 142.848c8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8 16.896-16.896 16.896-42.496 0-59.904l-64-66.048h729.6c23.552 0 42.496-19.456 42.496-42.496V471.552c-2.048-25.6-20.992-42.496-44.544-42.496z"
+                                            IconFillBrush="{Binding ResetBodyPoseButtonForeground}"
+                                            IconHeight="15"
+                                            IconMargin="10 0 0 0"
+                                            IconWidth="15"
                                             Style="{DynamicResource VectorFlatIconTextButtonStyle}"
                                             Text="重置" />
                                     </DockPanel>
@@ -501,7 +515,6 @@
                                         Style="{DynamicResource VectorNumbericUpDownStyle}"
                                         Text="{Binding Path=BodyY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
-                                        Background="#FF191919"
                                         Foreground="White"
                                         IsChecked="{Binding CannotTakeOrReplaceBody, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -534,7 +547,6 @@
                                         Text="{Binding Path=BodyZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
-                                        Background="#FF191919"
                                         Foreground="White"
                                         IsChecked="{Binding CannotPlaceBody, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -556,24 +568,24 @@
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <DockPanel Grid.Row="0" Margin="25,0,0,5">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="White"
-                                        Text="三轴合一"
-                                        TextAlignment="Center" />
-                                    <VectorButton:VectorTextButton
-                                        Width="50"
-                                        Height="30"
-                                        Margin="35,0,0,0"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        BorderBrush="Black"
-                                        ClickMode="Press"
+                                <DockPanel
+                                    Grid.Row="0"
+                                    Height="30"
+                                    Margin="10,2,0,-5"
+                                    VerticalAlignment="Top">
+                                    <VectorButton:VectorFlatIconTextButton
+                                        Padding="5,0"
+                                        BorderThickness="1"
                                         Command="{Binding LeftArmThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        Style="{DynamicResource VectorTextButtonStyle}">
+                                        Foreground="White"
+                                        Icon="M972.8 844.8l-138.24-204.8c-5.12-10.24-20.48-10.24-25.6 0l-40.96 81.92-220.16-102.4V373.76h92.16c10.24 0 20.48-10.24 10.24-20.48l-128-215.04c-5.12-10.24-20.48-10.24-25.6 0L373.76 353.28c-5.12 10.24 0 20.48 10.24 20.48h92.16V614.4L256 716.8l-35.84-81.92c-5.12-10.24-20.48-10.24-25.6 0l-138.24 204.8c-5.12 10.24 0 20.48 10.24 20.48l240.64 30.72c10.24 0 20.48-10.24 15.36-20.48l-35.84-81.92 225.28-107.52 225.28 107.52-35.84 81.92c-5.12 10.24 5.12 20.48 15.36 20.48l245.76-25.6c10.24 0 15.36-15.36 10.24-20.48z"
+                                        IconFillBrush="White"
+                                        IconHeight="20"
+                                        IconMargin="2"
+                                        IconWidth="20"
+                                        Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                        Text="三轴合一">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -585,40 +597,27 @@
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseWheel" TargetObject="{Binding}" />
                                             </behaviors:EventTrigger>
                                         </behaviors:Interaction.Triggers>
-                                        <Button.Content>
-                                            <Viewbox
-                                                Width="15"
-                                                Height="15"
-                                                Margin="0,0,0,2">
-                                                <Path Fill="Black">
-                                                    <Path.Data>
-                                                        M980.949333 861.525333c0-0.256 0.042667-0.469333 0-0.682667l-49.834667-177.152c-2.304-8.661333-7.936-15.616-15.146667-19.797333-7.168-4.224-13.098667-10.581333-21.717333-8.277333-17.408 4.693333-27.733333 22.442667-23.04 39.978667l26.496 106.282667-356.053333-205.568L541.653333 185.941333l78.848 76.16c12.757333 12.757333 33.28 12.757333 46.037333 0 6.314667-6.314667 3.754667-14.592 3.754667-22.997333 0-8.362667-3.242667-16.64-9.557333-22.954667l-128.64-131.797333c-0.085333-0.128-0.256-0.170667-0.512-0.298667-2.816-2.858667-9.514667-5.162667-13.226667-6.741333-3.413333-1.365333-0.597333-1.877333-4.096-2.133333-0.725333 0-1.365333-0.341333-2.048-0.341333-0.512 0-0.853333 0.256-1.322667 0.256-3.797333 0.170667-5.674667 0.853333-9.344 2.218667-3.2 1.365333-5.930667 3.456-8.490667 5.674667-0.682667 0.512-1.450667 0.768-2.048 1.365333L359.381333 216.192c-12.8 12.672-6.912 33.322667 5.802667 45.952 12.714667 12.757333 33.322667 12.757333 45.994667 0l70.357333-76.16 0.042667 414.336-355.370667 205.141333 26.581333-106.325333c4.693333-17.450667-5.632-35.2-23.04-39.936-8.661333-2.304-14.506667 4.053333-21.76 8.234667-7.210667 4.181333-12.842667 11.136-15.146667 19.797333l-49.792 177.237333c-0.085333 0.170667 0 0.341333 0 0.597333-1.024 3.968 0.256 10.794667 0.725333 14.848 0.512 3.626667-1.322667 1.493333 0.256 4.522667 0.341333 0.725333 0.341333 1.408 0.682667 2.005333 0.256 0.469333 0.682667 0.682667 0.896 1.024 2.048 3.157333 3.626667 4.437333 6.528 6.954667 2.773333 2.090667 6.016 3.370667 9.258667 4.522667 0.725333 0.298667 1.408 0.896 2.218667 1.066667l179.968 48.213333c17.365333 4.693333 32.298667-10.666667 36.821333-28.074667 4.693333-17.322667-5.589333-35.242667-22.954667-39.808l-101.248-22.869333 358.784-207.146667 352.682667 203.605333-101.205333 22.869333c-17.322667 4.565333-27.605333 22.442667-22.954667 39.808 4.522667 17.408 19.498667 32.810667 36.821333 28.074667l180.010667-48.213333c0.853333-0.213333 1.493333-0.768 2.261333-1.066667 3.2-1.109333 6.4-2.432 9.216-4.522667 2.944-2.517333 4.48-3.797333 6.528-6.954667 0.256-0.426667 0.682667-0.597333 0.896-1.024 0.341333-0.597333 0.341333-1.237333 0.725333-1.962667 1.493333-3.072-0.298667-0.938667 0.213333-4.565333C980.693333 872.277333 981.973333 865.408 980.949333 861.525333z
-                                                    </Path.Data>
-                                                </Path>
-                                            </Viewbox>
-                                        </Button.Content>
-                                    </VectorButton:VectorTextButton>
-                                    <DockPanel Margin="0,0,5,0" HorizontalAlignment="Right">
+                                    </VectorButton:VectorFlatIconTextButton>
+                                    <DockPanel Margin="0,0,5,-5" HorizontalAlignment="Right">
                                         <VectorButton:VectorToggleIconTextButton
-                                            Width="46"
-                                            Height="26"
-                                            Margin="5,5,0,0"
                                             HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            IsChecked="{Binding Path=CanResetLArmPose, Mode=TwoWay}"
-                                            Style="{StaticResource VectorToggleIconTextButtonStyle}" />
-                                        <VectorButton:VectorTextButton
-                                            Width="60"
-                                            Height="30"
-                                            Margin="0,2,0,0"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            BorderThickness="0"
-                                            ClickMode="Press"
+                                            BackgroundHeight="30"
+                                            IsChecked="{Binding CanResetLeftArmPose, Mode=TwoWay}"
+                                            Style="{DynamicResource VectorToggleIconTextButtonStyle}" />
+                                        <VectorButton:VectorFlatIconTextButton
+                                            Width="80"
+                                            Background="#C6C6C6"
+                                            BorderBrush="Black"
+                                            BorderThickness="1"
                                             Command="{Binding ResetLeftArmPoseCommand}"
-                                            Content="重置"
-                                            Foreground="{Binding Path=ResetLArmPoseButtonForeground, Mode=OneWay}"
-                                            Style="{DynamicResource VectorTextButtonStyle}" />
+                                            Foreground="{Binding ResetLeftArmPoseButtonForeground}"
+                                            Icon="M111.104 584.704c8.704-8.704 12.8-19.456 12.8-29.696V277.504c0-12.8 8.704-21.504 21.504-21.504H819.2l-76.8 76.8c-16.896 16.896-16.896 42.496 0 59.904 8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8l140.8-142.848c16.896-16.896 16.896-42.496 0-59.904L802.304 47.104c-16.896-16.896-42.496-16.896-59.904 0-16.896 16.896-16.896 42.496 0 59.904l61.952 64H78.848c-23.552 0-42.496 19.456-42.496 42.496v341.504c0 25.6 21.504 42.496 42.496 42.496 12.8 0 23.552-4.608 32.256-12.8z m823.296-155.648c-10.752 0-21.504 4.096-29.696 12.8-8.704 8.704-12.8 19.456-12.8 29.696v275.456c0 12.8-8.704 21.504-21.504 21.504H198.656L271.36 695.808c16.896-16.896 16.896-42.496 0-59.904-16.896-16.896-42.496-16.896-59.904 0l-140.8 142.848c-16.896 16.896-16.896 42.496 0 59.904l140.8 142.848c8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8 16.896-16.896 16.896-42.496 0-59.904l-64-66.048h729.6c23.552 0 42.496-19.456 42.496-42.496V471.552c-2.048-25.6-20.992-42.496-44.544-42.496z"
+                                            IconFillBrush="{Binding ResetLeftArmPoseButtonForeground}"
+                                            IconHeight="15"
+                                            IconMargin="10 0 0 0"
+                                            IconWidth="15"
+                                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                            Text="重置" />
                                     </DockPanel>
                                 </DockPanel>
                                 <DockPanel Grid.Row="1" Margin="10,0,0,0">
@@ -683,7 +682,6 @@
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
                                         HorizontalAlignment="Left"
-                                        Background="#FF191919"
                                         Foreground="White"
                                         IsChecked="{Binding CannotTakeOrReplaceOffHand, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -716,7 +714,6 @@
                                         Text="{Binding Path=LArmZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
-                                        Background="#FF191919"
                                         Foreground="White"
                                         IsChecked="{Binding CannotPlaceOffHand, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -739,24 +736,24 @@
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <DockPanel Grid.Row="0" Margin="25,0,0,5">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="White"
-                                        Text="三轴合一"
-                                        TextAlignment="Center" />
-                                    <VectorButton:VectorTextButton
-                                        Width="50"
-                                        Height="30"
-                                        Margin="35,0,0,0"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        BorderBrush="Black"
-                                        ClickMode="Press"
+                                <DockPanel
+                                    Grid.Row="0"
+                                    Height="30"
+                                    Margin="10,2,0,-5"
+                                    VerticalAlignment="Top">
+                                    <VectorButton:VectorFlatIconTextButton
+                                        Padding="5,0"
+                                        BorderThickness="1"
                                         Command="{Binding RightArmThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        Style="{DynamicResource VectorTextButtonStyle}">
+                                        Foreground="White"
+                                        Icon="M972.8 844.8l-138.24-204.8c-5.12-10.24-20.48-10.24-25.6 0l-40.96 81.92-220.16-102.4V373.76h92.16c10.24 0 20.48-10.24 10.24-20.48l-128-215.04c-5.12-10.24-20.48-10.24-25.6 0L373.76 353.28c-5.12 10.24 0 20.48 10.24 20.48h92.16V614.4L256 716.8l-35.84-81.92c-5.12-10.24-20.48-10.24-25.6 0l-138.24 204.8c-5.12 10.24 0 20.48 10.24 20.48l240.64 30.72c10.24 0 20.48-10.24 15.36-20.48l-35.84-81.92 225.28-107.52 225.28 107.52-35.84 81.92c-5.12 10.24 5.12 20.48 15.36 20.48l245.76-25.6c10.24 0 15.36-15.36 10.24-20.48z"
+                                        IconFillBrush="White"
+                                        IconHeight="20"
+                                        IconMargin="2"
+                                        IconWidth="20"
+                                        Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                        Text="三轴合一">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -768,40 +765,27 @@
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseWheel" TargetObject="{Binding}" />
                                             </behaviors:EventTrigger>
                                         </behaviors:Interaction.Triggers>
-                                        <Button.Content>
-                                            <Viewbox
-                                                Width="15"
-                                                Height="15"
-                                                Margin="0,0,0,2">
-                                                <Path Fill="Black">
-                                                    <Path.Data>
-                                                        M980.949333 861.525333c0-0.256 0.042667-0.469333 0-0.682667l-49.834667-177.152c-2.304-8.661333-7.936-15.616-15.146667-19.797333-7.168-4.224-13.098667-10.581333-21.717333-8.277333-17.408 4.693333-27.733333 22.442667-23.04 39.978667l26.496 106.282667-356.053333-205.568L541.653333 185.941333l78.848 76.16c12.757333 12.757333 33.28 12.757333 46.037333 0 6.314667-6.314667 3.754667-14.592 3.754667-22.997333 0-8.362667-3.242667-16.64-9.557333-22.954667l-128.64-131.797333c-0.085333-0.128-0.256-0.170667-0.512-0.298667-2.816-2.858667-9.514667-5.162667-13.226667-6.741333-3.413333-1.365333-0.597333-1.877333-4.096-2.133333-0.725333 0-1.365333-0.341333-2.048-0.341333-0.512 0-0.853333 0.256-1.322667 0.256-3.797333 0.170667-5.674667 0.853333-9.344 2.218667-3.2 1.365333-5.930667 3.456-8.490667 5.674667-0.682667 0.512-1.450667 0.768-2.048 1.365333L359.381333 216.192c-12.8 12.672-6.912 33.322667 5.802667 45.952 12.714667 12.757333 33.322667 12.757333 45.994667 0l70.357333-76.16 0.042667 414.336-355.370667 205.141333 26.581333-106.325333c4.693333-17.450667-5.632-35.2-23.04-39.936-8.661333-2.304-14.506667 4.053333-21.76 8.234667-7.210667 4.181333-12.842667 11.136-15.146667 19.797333l-49.792 177.237333c-0.085333 0.170667 0 0.341333 0 0.597333-1.024 3.968 0.256 10.794667 0.725333 14.848 0.512 3.626667-1.322667 1.493333 0.256 4.522667 0.341333 0.725333 0.341333 1.408 0.682667 2.005333 0.256 0.469333 0.682667 0.682667 0.896 1.024 2.048 3.157333 3.626667 4.437333 6.528 6.954667 2.773333 2.090667 6.016 3.370667 9.258667 4.522667 0.725333 0.298667 1.408 0.896 2.218667 1.066667l179.968 48.213333c17.365333 4.693333 32.298667-10.666667 36.821333-28.074667 4.693333-17.322667-5.589333-35.242667-22.954667-39.808l-101.248-22.869333 358.784-207.146667 352.682667 203.605333-101.205333 22.869333c-17.322667 4.565333-27.605333 22.442667-22.954667 39.808 4.522667 17.408 19.498667 32.810667 36.821333 28.074667l180.010667-48.213333c0.853333-0.213333 1.493333-0.768 2.261333-1.066667 3.2-1.109333 6.4-2.432 9.216-4.522667 2.944-2.517333 4.48-3.797333 6.528-6.954667 0.256-0.426667 0.682667-0.597333 0.896-1.024 0.341333-0.597333 0.341333-1.237333 0.725333-1.962667 1.493333-3.072-0.298667-0.938667 0.213333-4.565333C980.693333 872.277333 981.973333 865.408 980.949333 861.525333z
-                                                    </Path.Data>
-                                                </Path>
-                                            </Viewbox>
-                                        </Button.Content>
-                                    </VectorButton:VectorTextButton>
-                                    <DockPanel Margin="0,0,5,0" HorizontalAlignment="Right">
+                                    </VectorButton:VectorFlatIconTextButton>
+                                    <DockPanel Margin="0,0,5,-5" HorizontalAlignment="Right">
                                         <VectorButton:VectorToggleIconTextButton
-                                            Width="46"
-                                            Height="26"
-                                            Margin="5,5,0,0"
                                             HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            IsChecked="{Binding Path=CanResetRArmPose, Mode=TwoWay}"
-                                            Style="{StaticResource VectorToggleIconTextButtonStyle}" />
-                                        <VectorButton:VectorTextButton
-                                            Width="60"
-                                            Height="30"
-                                            Margin="0,2,0,0"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            BorderThickness="0"
-                                            ClickMode="Press"
+                                            BackgroundHeight="30"
+                                            IsChecked="{Binding CanResetRightArmPose, Mode=TwoWay}"
+                                            Style="{DynamicResource VectorToggleIconTextButtonStyle}" />
+                                        <VectorButton:VectorFlatIconTextButton
+                                            Width="80"
+                                            Background="#C6C6C6"
+                                            BorderBrush="Black"
+                                            BorderThickness="1"
                                             Command="{Binding ResetRightArmPoseCommand}"
-                                            Content="重置"
-                                            Foreground="{Binding Path=ResetRArmPoseButtonForeground, Mode=OneWay}"
-                                            Style="{DynamicResource VectorTextButtonStyle}" />
+                                            Foreground="{Binding ResetRightArmPoseButtonForeground}"
+                                            Icon="M111.104 584.704c8.704-8.704 12.8-19.456 12.8-29.696V277.504c0-12.8 8.704-21.504 21.504-21.504H819.2l-76.8 76.8c-16.896 16.896-16.896 42.496 0 59.904 8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8l140.8-142.848c16.896-16.896 16.896-42.496 0-59.904L802.304 47.104c-16.896-16.896-42.496-16.896-59.904 0-16.896 16.896-16.896 42.496 0 59.904l61.952 64H78.848c-23.552 0-42.496 19.456-42.496 42.496v341.504c0 25.6 21.504 42.496 42.496 42.496 12.8 0 23.552-4.608 32.256-12.8z m823.296-155.648c-10.752 0-21.504 4.096-29.696 12.8-8.704 8.704-12.8 19.456-12.8 29.696v275.456c0 12.8-8.704 21.504-21.504 21.504H198.656L271.36 695.808c16.896-16.896 16.896-42.496 0-59.904-16.896-16.896-42.496-16.896-59.904 0l-140.8 142.848c-16.896 16.896-16.896 42.496 0 59.904l140.8 142.848c8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8 16.896-16.896 16.896-42.496 0-59.904l-64-66.048h729.6c23.552 0 42.496-19.456 42.496-42.496V471.552c-2.048-25.6-20.992-42.496-44.544-42.496z"
+                                            IconFillBrush="{Binding ResetRightArmPoseButtonForeground}"
+                                            IconHeight="15"
+                                            IconMargin="10 0 0 0"
+                                            IconWidth="15"
+                                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                            Text="重置" />
                                     </DockPanel>
                                 </DockPanel>
                                 <DockPanel Grid.Row="1" Margin="10,0,0,0">
@@ -865,7 +849,6 @@
                                         Text="{Binding Path=RArmY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
-                                        Background="#FF191919"
                                         Foreground="White"
                                         IsChecked="{Binding CannotTakeOrReplaceMainHand, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -898,7 +881,6 @@
                                         Text="{Binding Path=RArmZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
-                                        Background="#FF191919"
                                         Foreground="White"
                                         IsChecked="{Binding CannotPlaceMainHand, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -920,24 +902,24 @@
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <DockPanel Grid.Row="0" Margin="25,0,0,5">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="White"
-                                        Text="三轴合一"
-                                        TextAlignment="Center" />
-                                    <VectorButton:VectorTextButton
-                                        Width="50"
-                                        Height="30"
-                                        Margin="35,0,0,0"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        BorderBrush="Black"
-                                        ClickMode="Press"
+                                <DockPanel
+                                    Grid.Row="0"
+                                    Height="30"
+                                    Margin="10,2,0,-5"
+                                    VerticalAlignment="Top">
+                                    <VectorButton:VectorFlatIconTextButton
+                                        Padding="5,0"
+                                        BorderThickness="1"
                                         Command="{Binding LeftLegThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        Style="{DynamicResource VectorTextButtonStyle}">
+                                        Foreground="White"
+                                        Icon="M972.8 844.8l-138.24-204.8c-5.12-10.24-20.48-10.24-25.6 0l-40.96 81.92-220.16-102.4V373.76h92.16c10.24 0 20.48-10.24 10.24-20.48l-128-215.04c-5.12-10.24-20.48-10.24-25.6 0L373.76 353.28c-5.12 10.24 0 20.48 10.24 20.48h92.16V614.4L256 716.8l-35.84-81.92c-5.12-10.24-20.48-10.24-25.6 0l-138.24 204.8c-5.12 10.24 0 20.48 10.24 20.48l240.64 30.72c10.24 0 20.48-10.24 15.36-20.48l-35.84-81.92 225.28-107.52 225.28 107.52-35.84 81.92c-5.12 10.24 5.12 20.48 15.36 20.48l245.76-25.6c10.24 0 15.36-15.36 10.24-20.48z"
+                                        IconFillBrush="White"
+                                        IconHeight="20"
+                                        IconMargin="2"
+                                        IconWidth="20"
+                                        Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                        Text="三轴合一">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -949,40 +931,27 @@
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseWheel" TargetObject="{Binding}" />
                                             </behaviors:EventTrigger>
                                         </behaviors:Interaction.Triggers>
-                                        <Button.Content>
-                                            <Viewbox
-                                                Width="15"
-                                                Height="15"
-                                                Margin="0,0,0,2">
-                                                <Path Fill="Black">
-                                                    <Path.Data>
-                                                        M980.949333 861.525333c0-0.256 0.042667-0.469333 0-0.682667l-49.834667-177.152c-2.304-8.661333-7.936-15.616-15.146667-19.797333-7.168-4.224-13.098667-10.581333-21.717333-8.277333-17.408 4.693333-27.733333 22.442667-23.04 39.978667l26.496 106.282667-356.053333-205.568L541.653333 185.941333l78.848 76.16c12.757333 12.757333 33.28 12.757333 46.037333 0 6.314667-6.314667 3.754667-14.592 3.754667-22.997333 0-8.362667-3.242667-16.64-9.557333-22.954667l-128.64-131.797333c-0.085333-0.128-0.256-0.170667-0.512-0.298667-2.816-2.858667-9.514667-5.162667-13.226667-6.741333-3.413333-1.365333-0.597333-1.877333-4.096-2.133333-0.725333 0-1.365333-0.341333-2.048-0.341333-0.512 0-0.853333 0.256-1.322667 0.256-3.797333 0.170667-5.674667 0.853333-9.344 2.218667-3.2 1.365333-5.930667 3.456-8.490667 5.674667-0.682667 0.512-1.450667 0.768-2.048 1.365333L359.381333 216.192c-12.8 12.672-6.912 33.322667 5.802667 45.952 12.714667 12.757333 33.322667 12.757333 45.994667 0l70.357333-76.16 0.042667 414.336-355.370667 205.141333 26.581333-106.325333c4.693333-17.450667-5.632-35.2-23.04-39.936-8.661333-2.304-14.506667 4.053333-21.76 8.234667-7.210667 4.181333-12.842667 11.136-15.146667 19.797333l-49.792 177.237333c-0.085333 0.170667 0 0.341333 0 0.597333-1.024 3.968 0.256 10.794667 0.725333 14.848 0.512 3.626667-1.322667 1.493333 0.256 4.522667 0.341333 0.725333 0.341333 1.408 0.682667 2.005333 0.256 0.469333 0.682667 0.682667 0.896 1.024 2.048 3.157333 3.626667 4.437333 6.528 6.954667 2.773333 2.090667 6.016 3.370667 9.258667 4.522667 0.725333 0.298667 1.408 0.896 2.218667 1.066667l179.968 48.213333c17.365333 4.693333 32.298667-10.666667 36.821333-28.074667 4.693333-17.322667-5.589333-35.242667-22.954667-39.808l-101.248-22.869333 358.784-207.146667 352.682667 203.605333-101.205333 22.869333c-17.322667 4.565333-27.605333 22.442667-22.954667 39.808 4.522667 17.408 19.498667 32.810667 36.821333 28.074667l180.010667-48.213333c0.853333-0.213333 1.493333-0.768 2.261333-1.066667 3.2-1.109333 6.4-2.432 9.216-4.522667 2.944-2.517333 4.48-3.797333 6.528-6.954667 0.256-0.426667 0.682667-0.597333 0.896-1.024 0.341333-0.597333 0.341333-1.237333 0.725333-1.962667 1.493333-3.072-0.298667-0.938667 0.213333-4.565333C980.693333 872.277333 981.973333 865.408 980.949333 861.525333z
-                                                    </Path.Data>
-                                                </Path>
-                                            </Viewbox>
-                                        </Button.Content>
-                                    </VectorButton:VectorTextButton>
-                                    <DockPanel Margin="0,0,5,0" HorizontalAlignment="Right">
+                                    </VectorButton:VectorFlatIconTextButton>
+                                    <DockPanel Margin="0,0,5,-5" HorizontalAlignment="Right">
                                         <VectorButton:VectorToggleIconTextButton
-                                            Width="46"
-                                            Height="26"
-                                            Margin="5,5,0,0"
                                             HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            IsChecked="{Binding Path=CanResetLLegPose, Mode=TwoWay}"
-                                            Style="{StaticResource VectorToggleIconTextButtonStyle}" />
-                                        <VectorButton:VectorTextButton
-                                            Width="60"
-                                            Height="30"
-                                            Margin="0,2,0,0"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            BorderThickness="0"
-                                            ClickMode="Press"
+                                            BackgroundHeight="30"
+                                            IsChecked="{Binding CanResetLeftLegPose, Mode=TwoWay}"
+                                            Style="{DynamicResource VectorToggleIconTextButtonStyle}" />
+                                        <VectorButton:VectorFlatIconTextButton
+                                            Width="80"
+                                            Background="#C6C6C6"
+                                            BorderBrush="Black"
+                                            BorderThickness="1"
                                             Command="{Binding ResetLeftLegPoseCommand}"
-                                            Content="重置"
-                                            Foreground="{Binding Path=ResetLLegPoseButtonForeground, Mode=OneWay}"
-                                            Style="{DynamicResource VectorTextButtonStyle}" />
+                                            Foreground="{Binding ResetLeftLegPoseButtonForeground}"
+                                            Icon="M111.104 584.704c8.704-8.704 12.8-19.456 12.8-29.696V277.504c0-12.8 8.704-21.504 21.504-21.504H819.2l-76.8 76.8c-16.896 16.896-16.896 42.496 0 59.904 8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8l140.8-142.848c16.896-16.896 16.896-42.496 0-59.904L802.304 47.104c-16.896-16.896-42.496-16.896-59.904 0-16.896 16.896-16.896 42.496 0 59.904l61.952 64H78.848c-23.552 0-42.496 19.456-42.496 42.496v341.504c0 25.6 21.504 42.496 42.496 42.496 12.8 0 23.552-4.608 32.256-12.8z m823.296-155.648c-10.752 0-21.504 4.096-29.696 12.8-8.704 8.704-12.8 19.456-12.8 29.696v275.456c0 12.8-8.704 21.504-21.504 21.504H198.656L271.36 695.808c16.896-16.896 16.896-42.496 0-59.904-16.896-16.896-42.496-16.896-59.904 0l-140.8 142.848c-16.896 16.896-16.896 42.496 0 59.904l140.8 142.848c8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8 16.896-16.896 16.896-42.496 0-59.904l-64-66.048h729.6c23.552 0 42.496-19.456 42.496-42.496V471.552c-2.048-25.6-20.992-42.496-44.544-42.496z"
+                                            IconFillBrush="{Binding ResetLeftLegPoseButtonForeground}"
+                                            IconHeight="15"
+                                            IconMargin="10 0 0 0"
+                                            IconWidth="15"
+                                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                            Text="重置" />
                                     </DockPanel>
                                 </DockPanel>
                                 <DockPanel Grid.Row="1" Margin="10,0,0,0">
@@ -1046,7 +1015,6 @@
                                         Text="{Binding Path=LLegY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
-                                        Background="#FF191919"
                                         Foreground="White"
                                         IsChecked="{Binding CannotTakeOrReplaceLegs, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -1079,7 +1047,6 @@
                                         Text="{Binding Path=LLegZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
-                                        Background="#FF191919"
                                         Foreground="White"
                                         IsChecked="{Binding CannotPlaceLegs, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -1101,24 +1068,24 @@
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <DockPanel Grid.Row="0" Margin="25,0,0,5">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="White"
-                                        Text="三轴合一"
-                                        TextAlignment="Center" />
-                                    <VectorButton:VectorTextButton
-                                        Width="50"
-                                        Height="30"
-                                        Margin="35,0,0,0"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        BorderBrush="Black"
-                                        ClickMode="Press"
+                                <DockPanel
+                                    Grid.Row="0"
+                                    Height="30"
+                                    Margin="10,2,0,-5"
+                                    VerticalAlignment="Top">
+                                    <VectorButton:VectorFlatIconTextButton
+                                        Padding="5,0"
+                                        BorderThickness="1"
                                         Command="{Binding RightLegThreeAxisCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                        Style="{DynamicResource VectorTextButtonStyle}">
+                                        Foreground="White"
+                                        Icon="M972.8 844.8l-138.24-204.8c-5.12-10.24-20.48-10.24-25.6 0l-40.96 81.92-220.16-102.4V373.76h92.16c10.24 0 20.48-10.24 10.24-20.48l-128-215.04c-5.12-10.24-20.48-10.24-25.6 0L373.76 353.28c-5.12 10.24 0 20.48 10.24 20.48h92.16V614.4L256 716.8l-35.84-81.92c-5.12-10.24-20.48-10.24-25.6 0l-138.24 204.8c-5.12 10.24 0 20.48 10.24 20.48l240.64 30.72c10.24 0 20.48-10.24 15.36-20.48l-35.84-81.92 225.28-107.52 225.28 107.52-35.84 81.92c-5.12 10.24 5.12 20.48 15.36 20.48l245.76-25.6c10.24 0 15.36-15.36 10.24-20.48z"
+                                        IconFillBrush="White"
+                                        IconHeight="20"
+                                        IconMargin="2"
+                                        IconWidth="20"
+                                        Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                        Text="三轴合一">
                                         <behaviors:Interaction.Triggers>
                                             <behaviors:EventTrigger EventName="MouseLeave">
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseLeave" TargetObject="{Binding}" />
@@ -1130,40 +1097,27 @@
                                                 <behaviors:CallMethodAction MethodName="ThreeAxisMouseWheel" TargetObject="{Binding}" />
                                             </behaviors:EventTrigger>
                                         </behaviors:Interaction.Triggers>
-                                        <Button.Content>
-                                            <Viewbox
-                                                Width="15"
-                                                Height="15"
-                                                Margin="0,0,0,2">
-                                                <Path Fill="Black">
-                                                    <Path.Data>
-                                                        M980.949333 861.525333c0-0.256 0.042667-0.469333 0-0.682667l-49.834667-177.152c-2.304-8.661333-7.936-15.616-15.146667-19.797333-7.168-4.224-13.098667-10.581333-21.717333-8.277333-17.408 4.693333-27.733333 22.442667-23.04 39.978667l26.496 106.282667-356.053333-205.568L541.653333 185.941333l78.848 76.16c12.757333 12.757333 33.28 12.757333 46.037333 0 6.314667-6.314667 3.754667-14.592 3.754667-22.997333 0-8.362667-3.242667-16.64-9.557333-22.954667l-128.64-131.797333c-0.085333-0.128-0.256-0.170667-0.512-0.298667-2.816-2.858667-9.514667-5.162667-13.226667-6.741333-3.413333-1.365333-0.597333-1.877333-4.096-2.133333-0.725333 0-1.365333-0.341333-2.048-0.341333-0.512 0-0.853333 0.256-1.322667 0.256-3.797333 0.170667-5.674667 0.853333-9.344 2.218667-3.2 1.365333-5.930667 3.456-8.490667 5.674667-0.682667 0.512-1.450667 0.768-2.048 1.365333L359.381333 216.192c-12.8 12.672-6.912 33.322667 5.802667 45.952 12.714667 12.757333 33.322667 12.757333 45.994667 0l70.357333-76.16 0.042667 414.336-355.370667 205.141333 26.581333-106.325333c4.693333-17.450667-5.632-35.2-23.04-39.936-8.661333-2.304-14.506667 4.053333-21.76 8.234667-7.210667 4.181333-12.842667 11.136-15.146667 19.797333l-49.792 177.237333c-0.085333 0.170667 0 0.341333 0 0.597333-1.024 3.968 0.256 10.794667 0.725333 14.848 0.512 3.626667-1.322667 1.493333 0.256 4.522667 0.341333 0.725333 0.341333 1.408 0.682667 2.005333 0.256 0.469333 0.682667 0.682667 0.896 1.024 2.048 3.157333 3.626667 4.437333 6.528 6.954667 2.773333 2.090667 6.016 3.370667 9.258667 4.522667 0.725333 0.298667 1.408 0.896 2.218667 1.066667l179.968 48.213333c17.365333 4.693333 32.298667-10.666667 36.821333-28.074667 4.693333-17.322667-5.589333-35.242667-22.954667-39.808l-101.248-22.869333 358.784-207.146667 352.682667 203.605333-101.205333 22.869333c-17.322667 4.565333-27.605333 22.442667-22.954667 39.808 4.522667 17.408 19.498667 32.810667 36.821333 28.074667l180.010667-48.213333c0.853333-0.213333 1.493333-0.768 2.261333-1.066667 3.2-1.109333 6.4-2.432 9.216-4.522667 2.944-2.517333 4.48-3.797333 6.528-6.954667 0.256-0.426667 0.682667-0.597333 0.896-1.024 0.341333-0.597333 0.341333-1.237333 0.725333-1.962667 1.493333-3.072-0.298667-0.938667 0.213333-4.565333C980.693333 872.277333 981.973333 865.408 980.949333 861.525333z
-                                                    </Path.Data>
-                                                </Path>
-                                            </Viewbox>
-                                        </Button.Content>
-                                    </VectorButton:VectorTextButton>
-                                    <DockPanel Margin="0,0,5,0" HorizontalAlignment="Right">
+                                    </VectorButton:VectorFlatIconTextButton>
+                                    <DockPanel Margin="0,0,5,-5" HorizontalAlignment="Right">
                                         <VectorButton:VectorToggleIconTextButton
-                                            Width="46"
-                                            Height="26"
-                                            Margin="5,5,0,0"
                                             HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            IsChecked="{Binding Path=CanResetRLegPose, Mode=TwoWay}"
-                                            Style="{StaticResource VectorToggleIconTextButtonStyle}" />
-                                        <VectorButton:VectorTextButton
-                                            Width="60"
-                                            Height="30"
-                                            Margin="0,2,0,0"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            BorderThickness="0"
-                                            ClickMode="Press"
+                                            BackgroundHeight="30"
+                                            IsChecked="{Binding CanResetRightLegPose, Mode=TwoWay}"
+                                            Style="{DynamicResource VectorToggleIconTextButtonStyle}" />
+                                        <VectorButton:VectorFlatIconTextButton
+                                            Width="80"
+                                            Background="#C6C6C6"
+                                            BorderBrush="Black"
+                                            BorderThickness="1"
                                             Command="{Binding ResetRightLegPoseCommand}"
-                                            Content="重置"
-                                            Foreground="{Binding Path=ResetRLegPoseButtonForeground, Mode=OneWay}"
-                                            Style="{DynamicResource VectorTextButtonStyle}" />
+                                            Foreground="{Binding ResetRightLegPoseButtonForeground}"
+                                            Icon="M111.104 584.704c8.704-8.704 12.8-19.456 12.8-29.696V277.504c0-12.8 8.704-21.504 21.504-21.504H819.2l-76.8 76.8c-16.896 16.896-16.896 42.496 0 59.904 8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8l140.8-142.848c16.896-16.896 16.896-42.496 0-59.904L802.304 47.104c-16.896-16.896-42.496-16.896-59.904 0-16.896 16.896-16.896 42.496 0 59.904l61.952 64H78.848c-23.552 0-42.496 19.456-42.496 42.496v341.504c0 25.6 21.504 42.496 42.496 42.496 12.8 0 23.552-4.608 32.256-12.8z m823.296-155.648c-10.752 0-21.504 4.096-29.696 12.8-8.704 8.704-12.8 19.456-12.8 29.696v275.456c0 12.8-8.704 21.504-21.504 21.504H198.656L271.36 695.808c16.896-16.896 16.896-42.496 0-59.904-16.896-16.896-42.496-16.896-59.904 0l-140.8 142.848c-16.896 16.896-16.896 42.496 0 59.904l140.8 142.848c8.704 8.704 19.456 12.8 29.696 12.8 10.752 0 21.504-4.096 29.696-12.8 16.896-16.896 16.896-42.496 0-59.904l-64-66.048h729.6c23.552 0 42.496-19.456 42.496-42.496V471.552c-2.048-25.6-20.992-42.496-44.544-42.496z"
+                                            IconFillBrush="{Binding ResetRightLegPoseButtonForeground}"
+                                            IconHeight="15"
+                                            IconMargin="10 0 0 0"
+                                            IconWidth="15"
+                                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                            Text="重置" />
                                     </DockPanel>
                                 </DockPanel>
                                 <DockPanel Grid.Row="1" Margin="10,0,0,0">
@@ -1227,7 +1181,6 @@
                                         Text="{Binding Path=RLegY, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
-                                        Background="#FF191919"
                                         Foreground="White"
                                         IsChecked="{Binding CannotTakeOrReplaceLegs, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -1260,7 +1213,6 @@
                                         Text="{Binding Path=RLegZ, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <VectorButton:VectorToggleIconTextButton
                                         Margin="0,2"
-                                        Background="#FF191919"
                                         Foreground="White"
                                         IsChecked="{Binding CannotPlaceLegs, Mode=TwoWay}"
                                         Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -1284,7 +1236,6 @@
                                 <VectorButton:VectorToggleIconTextButton
                                     Grid.Row="0"
                                     HorizontalAlignment="Center"
-                                    Background="#FF191919"
                                     Foreground="White"
                                     IsChecked="{Binding CannotPlaceOrReplaceBoots, Mode=TwoWay}"
                                     Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -1292,7 +1243,6 @@
                                 <VectorButton:VectorToggleIconTextButton
                                     Grid.Row="1"
                                     HorizontalAlignment="Center"
-                                    Background="#FF191919"
                                     Foreground="White"
                                     IsChecked="{Binding CannotTakeOrReplaceBoots, Mode=TwoWay}"
                                     Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -1301,7 +1251,6 @@
                                     Grid.Row="2"
                                     Margin="0,0,45,0"
                                     HorizontalAlignment="Center"
-                                    Background="#FF191919"
                                     Foreground="White"
                                     IsChecked="{Binding CannotPlaceBoots, Mode=TwoWay}"
                                     Style="{DynamicResource VectorToggleIconTextButtonStyle}"
@@ -1463,7 +1412,7 @@
                         </Grid>
                         <Container:VectorScrollViewer
                             Grid.Row="1"
-                            Margin="5,0,5,5"
+                            Margin="5,5,5,5"
                             Background="#565A57"
                             HorizontalScrollBarVisibility="Disabled"
                             RenderOptions.BitmapScalingMode="NearestNeighbor"
@@ -1687,7 +1636,7 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
                             Panel.ZIndex="1">
-                            <!--<VectorButton:VectorFlatImageButton
+                            <VectorButton:VectorFlatImageButton
                                 Width="25"
                                 Height="25"
                                 Margin="0,0,0,5"
@@ -1811,7 +1760,7 @@
                                         Content="开启/关闭越肩视角"
                                         Foreground="White" />
                                 </VectorButton:VectorFlatImageButton.ToolTip>
-                            </VectorButton:VectorFlatImageButton>-->
+                            </VectorButton:VectorFlatImageButton>
                         </StackPanel>
                         <DockPanel
                             Margin="0,0,5,0"

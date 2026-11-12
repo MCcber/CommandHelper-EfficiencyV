@@ -22,7 +22,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 
-namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
+namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationView
 {
     public partial class TemplateSelectPageViewModel(CBHKDataContext Context,RegexService RegexService): ObservableObject
     {

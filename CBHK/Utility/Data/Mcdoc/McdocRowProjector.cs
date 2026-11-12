@@ -27,6 +27,7 @@ namespace CBHK.Utility.Data.Mcdoc
 
         public void Reset(IEnumerable<McdocTreeNode> roots)
         {
+            using var stage = McdocWriteTrace.Stage("proj.reset");
             McdocWriteTrace.Trace("proj-reset", "rows=" + Rows.Count + " reset=" + ResetCount + " splice=" + SpliceCount);
             ResetCount++;
             McdocWriteTrace.LogText("整表重投影", "reset#" + ResetCount, withCaller: true);
@@ -153,6 +154,7 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             var index = Rows.IndexOf(row);
             if (index < 0) return;
+            using var stage = McdocWriteTrace.Stage("proj.expand");
             var started = Environment.TickCount64;
             var end = DescendantEnd(index);
             if (end > index + 1) DropRange(index + 1, end - index - 1);
@@ -180,6 +182,7 @@ namespace CBHK.Utility.Data.Mcdoc
         public void SpliceSubtree(McdocRow row, bool ensureExpanded = false)
         {
             if (row is null) return;
+            using var stage = McdocWriteTrace.Stage("proj.splice");
             McdocWriteTrace.Trace("proj-splice", "path=" + (row.Node?.JsonPath ?? "?")
                 + " kind=" + row.Kind + " rows=" + Rows.Count + " splice=" + SpliceCount);
             var index = Rows.IndexOf(row);

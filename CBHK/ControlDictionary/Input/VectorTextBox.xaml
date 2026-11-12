@@ -15,7 +15,7 @@
         <Setter Property="CaretBrush" Value="{DynamicResource CommonForeground}" />
         <Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor" />
         <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
-        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="False" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="ScrollViewer.PanningMode" Value="VerticalFirst" />

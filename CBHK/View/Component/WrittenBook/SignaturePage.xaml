@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="CBHK.View.Compoment.WrittenBook.SignaturePage"
+    x:Class="CBHK.View.Component.WrittenBook.SignaturePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
@@ -22,9 +22,9 @@
                 </behavior:Interaction.Triggers>
             </Image>
             <Input:TextStyleEditor
-                x:Name="title"
-                Grid.Row="0"
-                Margin="45,115,45,0"
+                Title="Title"
+                Height="35"
+                Margin="45,140,45,0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
                 VerticalContentAlignment="Center"
@@ -33,11 +33,18 @@
                 BorderBrush="Black"
                 FontFamily="Minecraft AE Pixel"
                 Foreground="White"
-                Style="{DynamicResource TextStyleEditorStyle}" />
+                OriginBottomHeight="4"
+                Style="{DynamicResource TextStyleEditorStyle}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Loaded">
+                        <behavior:CallMethodAction MethodName="TitleEditor_Loaded" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </Input:TextStyleEditor>
             <Input:TextStyleEditor
-                x:Name="author"
-                Grid.Row="1"
-                Margin="45,165,195,0"
+                Title="Author"
+                Height="35"
+                Margin="45,190,220,0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
                 VerticalContentAlignment="Center"
@@ -46,7 +53,14 @@
                 BorderBrush="Black"
                 FontFamily="Minecraft AE Pixel"
                 Foreground="White"
-                Style="{DynamicResource TextStyleEditorStyle}" />
+                OriginBottomHeight="4"
+                Style="{DynamicResource TextStyleEditorStyle}">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Loaded">
+                        <behavior:CallMethodAction MethodName="AuthorEditor_Loaded" TargetObject="{Binding}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </Input:TextStyleEditor>
         </Grid>
         <VectorButton:VectorTextButton
             Height="28"

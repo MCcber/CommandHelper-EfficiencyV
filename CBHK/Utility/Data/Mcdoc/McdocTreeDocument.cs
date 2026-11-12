@@ -312,21 +312,23 @@ namespace CBHK.Utility.Data.Mcdoc
                         () => editor.CanCommitEntry(parent, rebuilt));
                     rebuilt.RemoveEntryCommand = new McdocCommand(
                         () => editor.RemoveEntry(parent, rebuilt),
-                        () => rebuilt.Json is not null);
+                        () => rebuilt.IsMapEntry);
                     rebuilt.EditingKey = node.EditingKey;
                 }
                 // 列表/元组子行的「删掉这一项」也是父级（列表表现器）建完子节点之后才挂的：
                 // 重建按声明类型重跑一遍就没有这条命令 → 行上那个删除按钮永久塌掉
                 // （现场：Entry 里把子 condition 换一支之后，Entry 自己的删除按钮消失）。
-                var listIndex = node.RemoveSelfCommand is null || parent.Items is null
-                    ? -1
-                    : parent.Items.IndexOf(node);
+                // "这一项是列表条目"不能只查 parent.Items：union 的列表分支把条目上提到
+                // SelectedUnionChildren（parent 是 union 行、Items 是空的）。漏判的后果是
+                // 重建出来的条目没有 RemoveSelfCommand —— 行上的 ⊖ 当场消失（现场：只有 1 个元素时）。
+                // **只认真正的列表条目**：map 条目也在 parent.Children 里，把它算成"列表条目"会给它挂上
+                // ▲▼/⊖ 三颗列表命令（找不到 owner → list-item-owner-miss，行上还多出没法用的按钮）。
+                var wasListItem = parent.Items.Contains(node)
+                    || (parent.UnionListLike && parent.SelectedUnionChildren.Contains(node));
                 replaced = ReplaceIn(parent.Children) || ReplaceIn(parent.Items) || ReplaceIn(parent.SelectedUnionChildren);
-                if (replaced && listIndex >= 0 && rebuilt.RemoveSelfCommand is null)
-                {
-                    rebuilt.RemoveSelfCommand = new McdocCommand(
-                        () => McdocCollectionEditor.Default.RemoveItemAt(parent, listIndex));
-                }
+                // 列表项的三个命令（删/上移/下移）都是父级建完子节点之后才挂的：重建必须整套搬回来，
+                // 而且下标要在**执行时**现问 —— 只搬"删除"会让 ▲▼ 当场消失或挪错项
+                if (replaced && wasListItem) McdocCollectionEditor.Default.AttachListItemCommands(parent, rebuilt);
                 // 摊平根的顶层成员：Nodes 是投影与一致性守卫的来源，只换 rootNode.Children 的话
                 // 视图还指着旧实例（子行永远不更新），而 RefreshAround 又因为父行是合成根而返回 false
                 if (replaced && ReferenceEquals(parent, rootNode))
@@ -351,6 +353,11 @@ namespace CBHK.Utility.Data.Mcdoc
             nodeIndex = null;
             Validate();
             return rebuilt;
+
+            static bool Contains(McdocTreeNode owner, McdocTreeNode child)
+                => owner is not null && child is not null
+                    && (owner.Children.Contains(child) || owner.Items.Contains(child)
+                        || owner.SelectedUnionChildren.Contains(child));
 
             bool ReplaceIn(ObservableCollection<McdocTreeNode> collection)
             {
@@ -515,6 +522,7 @@ namespace CBHK.Utility.Data.Mcdoc
 
         public void Load(McdocType rootType, McdocJsonValue root)
         {
+            using var stageTotal = McdocWriteTrace.Stage("doc.load");
             RootJson = root;
             nodeIndex = null;
             Generation++;
@@ -538,7 +546,11 @@ namespace CBHK.Utility.Data.Mcdoc
                 // 模块没显式给定时用根类型登记的模块：相对名解析不该取决于调用方有没有记得设置
                 ModulePath ??= rootType?.Module;
                 var factory = new McdocNodeFactory();
-                var built = factory.Build(rootType, root, CreateRuntime(), NodeValueChanged, NodeStructureChanged);
+                System.Collections.ObjectModel.ObservableCollection<McdocTreeNode> built;
+                using (McdocWriteTrace.Stage("doc.build"))
+                {
+                    built = factory.Build(rootType, root, CreateRuntime(), NodeValueChanged, NodeStructureChanged);
+                }
                 rootNode = factory.RootNode;
                 Nodes.Clear();
                 foreach (var node in built)
@@ -572,7 +584,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 Log.Add("[McdocTreeDocument] 构建失败: " + error.Message);
                 Nodes.Clear();
             }
-            Validate();
+            using (McdocWriteTrace.Stage("doc.validate")) Validate();
         }
 
         /// <summary>

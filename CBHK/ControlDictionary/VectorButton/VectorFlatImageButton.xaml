@@ -5,7 +5,7 @@
 
     <Style x:Key="VectorFlatImageButtonStyle" TargetType="{x:Type VectorButton:VectorFlatImageButton}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="False" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -20,11 +20,11 @@
                         BorderBrush="Black"
                         BorderThickness="1"
                         SnapsToDevicePixels="true"
-                        UseLayoutRounding="True">
+                        UseLayoutRounding="False">
                         <Grid
                             Background="{TemplateBinding Background}"
                             SnapsToDevicePixels="true"
-                            UseLayoutRounding="True">
+                            UseLayoutRounding="False">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="3.5" />
                                 <ColumnDefinition Width="*" />

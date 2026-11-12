@@ -1,10 +1,11 @@
-﻿using CBHK.CustomControl;
+﻿using CBHK.CustomControl.Container;
 using CBHK.CustomControl.Input;
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Interface.Data;
 using CBHK.Model.Data;
 using CBHK.Utility.Common;
+using CBHK.Utility.Data;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Item;
@@ -38,10 +39,11 @@ namespace CBHK.ViewModel.Generator
     public partial class ArmorStandViewModel : ObservableObject, IGenerator
     {
         #region Field
+        private MessagePopup messagePopup;
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconArmorStand.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconArmorStand.png";
         /// <summary>
         /// 开始三轴合一
         /// </summary>
@@ -60,6 +62,10 @@ namespace CBHK.ViewModel.Generator
         /// 主页引用
         /// </summary>
         private Window home = null;
+        /// <summary>
+        /// 当前绑定的视图
+        /// </summary>
+        private VectorWindow currentWindow = null;
 
         /// <summary>
         /// 当前视图模型
@@ -163,7 +169,6 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Property
-        public MessagePopup MessagePopup { get; set; }
         /// <summary>
         /// 生成器标题
         /// </summary>
@@ -351,6 +356,7 @@ namespace CBHK.ViewModel.Generator
             }
         }
         #endregion
+
         /// <summary>
         /// 重置头部动作的按钮前景
         /// </summary>
@@ -369,82 +375,87 @@ namespace CBHK.ViewModel.Generator
             }
         }
         #endregion
+
         #region 重置身体动作的按钮前景
         [ObservableProperty]
         private Brush _resetBodyPoseButtonForeground;
         #endregion
 
         #region 是否可以重置左臂动作
-        private bool canResetLarmPose;
-        public bool CanResetLArmPose
+        private bool canResetLeftArmPose;
+        public bool CanResetLeftArmPose
         {
-            get => canResetLarmPose;
+            get => canResetLeftArmPose;
             set
             {
-                SetProperty(ref canResetLarmPose, value);
-                ResetLArmPoseButtonForeground = CanResetLArmPose ? Brushes.Black : Brushes.White;
+                SetProperty(ref canResetLeftArmPose, value);
+                ResetLeftArmPoseButtonForeground = CanResetLeftArmPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
+
         /// <summary>
         /// 重置左臂动作的按钮前景
         /// </summary>
         [ObservableProperty]
-        private Brush _resetLArmPoseButtonForeground;
+        private Brush _resetLeftArmPoseButtonForeground;
 
         #region 是否可以重置右臂动作
-        private bool canResetRArmPose;
-        public bool CanResetRArmPose
+        private bool canResetRightArmPose;
+        public bool CanResetRightArmPose
         {
-            get => canResetRArmPose;
+            get => canResetRightArmPose;
             set
             {
-                SetProperty(ref canResetRArmPose, value);
-                ResetRArmPoseButtonForeground = CanResetRArmPose ? Brushes.Black : Brushes.White;
+                SetProperty(ref canResetRightArmPose, value);
+                ResetRightArmPoseButtonForeground = CanResetRightArmPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
+
         /// <summary>
         /// 重置右臂动作的按钮前景
         /// </summary>
         [ObservableProperty]
-        private Brush _resetRArmPoseButtonForeground;
+        private Brush _resetRightArmPoseButtonForeground;
 
         #region 是否可以重置左腿动作
-        private bool canResetLLegPose;
-        public bool CanResetLLegPose
+        private bool canResetLeftLegPose;
+        public bool CanResetLeftLegPose
         {
-            get => canResetLLegPose;
+            get => canResetLeftLegPose;
             set
             {
-                SetProperty(ref canResetLLegPose, value);
-                ResetLLegPoseButtonForeground = CanResetLLegPose ? Brushes.Black : Brushes.White;
+                SetProperty(ref canResetLeftLegPose, value);
+                ResetLeftLegPoseButtonForeground = CanResetLeftLegPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
+
         /// <summary>
         /// 重置左臂动作的按钮前景
         /// </summary>
         [ObservableProperty]
-        private Brush _resetLLegPoseButtonForeground;
+        private Brush _resetLeftLegPoseButtonForeground;
 
         #region 是否可以重置右腿动作
-        private bool canResetRLegPose;
-        public bool CanResetRLegPose
+        private bool canResetRightLegPose;
+        public bool CanResetRightLegPose
         {
-            get => canResetRLegPose;
+            get => canResetRightLegPose;
             set
             {
-                SetProperty(ref canResetRLegPose, value);
-                ResetRLegPoseButtonForeground = CanResetRLegPose ? Brushes.Black : Brushes.White;
+                SetProperty(ref canResetRightLegPose, value);
+                ResetRightLegPoseButtonForeground = CanResetRightLegPose ? Brushes.Black : Brushes.White;
             }
         }
         #endregion
+        
         /// <summary>
         /// 重置右臂动作的按钮前景
         /// </summary>
         [ObservableProperty]
-        private Brush _resetRLegPoseButtonForeground;
+        private Brush _resetRightLegPoseButtonForeground;
         #endregion
 
         #region 头部XYZ
@@ -972,24 +983,9 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region 已选择的版本
+        [ObservableProperty]
         private VectorTextComboBoxItem selectedVersion;
-        public VectorTextComboBoxItem SelectedVersion
-        {
-            get => selectedVersion;
-            set
-            {
-                SetProperty(ref selectedVersion, value);
-                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
-            }
-        }
 
-        private int currentMinVersion = 1202;
-
-        public int CurrentMinVersion
-        {
-            get => currentMinVersion;
-            set => currentMinVersion = value;
-        }
         public IEventAggregator EventAggregator { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public bool ShowResult { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         string IGenerator.SelectedVersion { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -1012,31 +1008,7 @@ namespace CBHK.ViewModel.Generator
             this.container = container;
             home = mainView;
 
-            ResetAllPoseButtonForeground = ResetHeadPoseButtonForeground = ResetLArmPoseButtonForeground = ResetRArmPoseButtonForeground = ResetBodyPoseButtonForeground = ResetLLegPoseButtonForeground = ResetRLegPoseButtonForeground = Brushes.White;
-        }
-
-        private ImageSource CreateColoredImage(BitmapImage originalImage, Color overlayColor)
-        {
-            // 创建一个新的 DrawingVisual
-            DrawingVisual drawingVisual = new DrawingVisual();
-            using (DrawingContext drawingContext = drawingVisual.RenderOpen())
-            {
-                // 绘制原始图像
-                drawingContext.DrawImage(originalImage, new Rect(0, 0, originalImage.PixelWidth, originalImage.PixelHeight));
-
-                // 创建带颜色的填充
-                SolidColorBrush colorBrush = new SolidColorBrush(overlayColor);
-                colorBrush.Opacity = 0.5; // 设定透明度
-
-                // 绘制覆盖颜色
-                drawingContext.DrawRectangle(colorBrush, null, new Rect(0, 0, originalImage.PixelWidth, originalImage.PixelHeight));
-            }
-
-            // 创建一个 RenderTargetBitmap 用于将 DrawingVisual 转换为 BitmapImage
-            RenderTargetBitmap renderBitmap = new RenderTargetBitmap(originalImage.PixelWidth, originalImage.PixelHeight, 96d, 96d, PixelFormats.Pbgra32);
-            renderBitmap.Render(drawingVisual);
-
-            return renderBitmap;
+            ResetAllPoseButtonForeground = ResetHeadPoseButtonForeground = ResetLeftArmPoseButtonForeground = ResetRightArmPoseButtonForeground = ResetBodyPoseButtonForeground = ResetLeftLegPoseButtonForeground = ResetRightLegPoseButtonForeground = Brushes.White;
         }
 
         private DependencyObject GetHitObject(Point mousePosition, Viewport3D visual3D)
@@ -1194,6 +1166,11 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Event
+        public void ArmorStandView_Loaded(object sender,RoutedEventArgs e)
+        {
+            currentWindow = sender as VectorWindow;
+            messagePopup = new(currentWindow);
+        }
 
         /// <summary>
         /// 载入并创建SceneGizmo
@@ -1430,7 +1407,7 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void Version_SelectionChanged(object sender, RoutedEventArgs e)
         {
-
+            textStyleEditor.Version = SelectedVersion.Text;
         }
 
         [RelayCommand]
@@ -1661,18 +1638,14 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private async Task Run()
         {
-            StringBuilder Result = new();
-            CustomName = "";
-            //await textStyleEditor.Upgrade(CurrentMinVersion);
+            StringBuilder Result;
+
             await tagRichTextBox.GetResult();
-            StringBuilder customnameResult = new();
-            //StringBuilder customnameResult = textStyleEditor.Create();
-            //textStyleEditor.CollectionData(customnameResult);
-            //textStyleEditor.BuildResource(customnameResult);
-            string CustomNameValue = customnameResult.ToString();
+            string CustomNameValue = textStyleEditor.GetCurrentItemJson();
+            bool isGreaterThan1_13 = VersionRangeChecker.IsGreaterThan(SelectedVersion.Text, "1.13.0") || SelectedVersion.Text == "1.13.0" || SelectedVersion.Text == "1.13";
             if (CustomNameValue.Trim().Length > 0)
             {
-                CustomName = "CustomName:" + (CurrentMinVersion >= 1130 ? "'[" : @"\\\\\\\""") + CustomNameValue.TrimEnd(',') + (CurrentMinVersion >= 1130 ? "]'" : @"\\\\\\\""") + ",";
+                CustomName = "CustomName:" + (isGreaterThan1_13 ? "'[" : @"\\\\\\\""") + CustomNameValue + (isGreaterThan1_13 ? "]'" : @"\\\\\\\""") + ",";
                 CustomName = CustomName.Replace(@"\\n", "");
             }
 
@@ -1685,7 +1658,7 @@ namespace CBHK.ViewModel.Generator
             #region Result
             string nbt = CustomName + BoolNBTList + EquipmentList + DisabledValue + CustomNameVisibleString + TagList + PoseString;
             nbt = nbt.TrimEnd(',');
-            if (CurrentMinVersion >= 1130)
+            if (isGreaterThan1_13)
                 Result = new("summon armor_stand ~ ~ ~" + (nbt != "" ? " {" + nbt + "}" : ""));
             else
                 Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""summon armor_stand ~ ~ ~ {" + nbt + @"}\\\""}\""}}""}}");
@@ -1706,7 +1679,7 @@ namespace CBHK.ViewModel.Generator
             else
             {
                 Clipboard.SetText(Result.ToString());
-                MessagePopup.PushMessage(new GeneratorMessage()
+                messagePopup.PushMessage(new GeneratorMessage()
                 {
                     Message = "盔甲架生成成功！数据已进入剪切板",
                     SubMessage = "盔甲架生成器",
@@ -1774,10 +1747,10 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ResetLeftArmPose()
         {
-            if (CanResetLArmPose)
+            if (CanResetLeftArmPose)
             {
                 LArmX = LArmY = LArmZ = 0f;
-                CanResetLArmPose = false;
+                CanResetLeftArmPose = false;
             }
         }
 
@@ -1787,10 +1760,10 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ResetRightArmPose()
         {
-            if (CanResetRArmPose)
+            if (CanResetRightArmPose)
             {
                 RArmX = RArmY = RArmZ = 0f;
-                CanResetRArmPose = false;
+                CanResetRightArmPose = false;
             }
         }
 
@@ -1800,10 +1773,10 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ResetLeftLegPose()
         {
-            if (CanResetLLegPose)
+            if (CanResetLeftLegPose)
             {
                 LLegX = LLegY = LLegZ = 0f;
-                CanResetLLegPose = false;
+                CanResetLeftLegPose = false;
             }
         }
 
@@ -1813,10 +1786,10 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ResetRightLegPose()
         {
-            if (CanResetRLegPose)
+            if (CanResetRightLegPose)
             {
                 RLegX = RLegY = RLegZ = 0f;
-                CanResetRLegPose = false;
+                CanResetRightLegPose = false;
             }
         }
 

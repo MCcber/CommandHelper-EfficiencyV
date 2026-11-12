@@ -33,6 +33,12 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>子行用下标做标签（列表 / 元组），投影层不再自己判断类型。</summary>
         public virtual bool IsListLike => false;
 
+        /// <summary>
+        /// 这一行在当前文档形状下是不是"列表行"。默认跟随类型；`any` 行按**文档形状**判 ——
+        /// 它借用了 struct/list 的 Body，子行来源与标签也必须跟着借（否则数组项的 Items 一个都不出行）。
+        /// </summary>
+        public virtual bool IsListLikeFor(McdocTreeNode node) => IsListLike;
+
         /// <summary>根节点是否摊平子级（misode McdocRoot 的 struct 分支）。</summary>
         public virtual bool FlattensRoot => false;
 

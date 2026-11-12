@@ -23,6 +23,13 @@ namespace CBHK.Utility.Data.Mcdoc
                 _ => false,
             };
 
+        public override bool IsListLikeFor(McdocTreeNode node)
+            => node?.Json?.Kind == McdocJsonKind.Array;
+
+        /// <summary>数组形态的 any：子行就是数组项（list Body 把它们挂在 Items 上）。</summary>
+        public override IReadOnlyList<McdocTreeNode> Children(McdocTreeNode node)
+            => node.Items.Count > 0 ? node.Items : node.Children;
+
         public override void PopulateChildren(McdocTreeNode node, McdocType type, McdocJsonValue json, McdocBuildContext context)
         {
             // misode selectAnyType：按 JSON 的类型挑 ANY_TYPES 里的一项，然后走对应 Body
@@ -236,7 +243,10 @@ namespace CBHK.Utility.Data.Mcdoc
             // 字段本身还没进文档（可选字段没填 / 刚被删掉）：不摊开子级。
             // 否则删掉一个结构字段以后，它的子结构还整片挂在树上（"点了删除按钮没反应"就是这么来的）；
             // 用户点行上的 ⊕ 后 JSON 出现，再重建就会长出来。
-            if (node.Parent is not null && json is null)
+            // 可选且文档里没有这个键：只留一行 ⊕（子级不摊开）。
+            // 必选缺值是**非法文档**：照常摊开声明出来的子字段行，每行各自挂"缺少必填键"，
+            // 否则这一行既没有编辑器、也没有 ⊕，展开还建不出子级 —— 用户面前就是一行死节点。
+            if (node.Parent is not null && json is null && !node.IsRequired)
             {
                 return;
             }
@@ -400,9 +410,10 @@ namespace CBHK.Utility.Data.Mcdoc
             child.AddEntryCommand = new McdocCommand(
                 () => context.Editor.CommitEntry(container, child, context.Runtime),
                 () => context.Editor.CanCommitEntry(container, child));
+            // 条目随时可以删：值被（未设置）清掉时键已经不在文档里，删除就退化成"摘掉这一行"
             child.RemoveEntryCommand = new McdocCommand(
                 () => context.Editor.RemoveEntry(container, child),
-                () => child.Json is not null);
+                () => child.IsMapEntry);
             return child;
         }
 
@@ -448,6 +459,24 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (specs[i] is null) return i;
             }
             return 0;
+        }
+
+        /// <summary>
+        /// 这个结构里有没有"能收下这个键"的动态字段（map 成员）。判定必须走 #[id] 的 prefix 规则，
+        /// 不能只看"有没有无名字段"：**spread 字段与派发兜底字段也长成无名字段**，按它们放宽，
+        /// 旧成员的残影键就再也剪不掉了（切成员后 terms 与 block 并排的现场会回来）。
+        /// </summary>
+        internal static bool AcceptsDynamicKey(McdocType structType, string key)
+        {
+            if (structType?.Fields is null || string.IsNullOrEmpty(key)) return false;
+            foreach (var field in structType.Fields)
+            {
+                if (field is null || field.IsSpread || IsDispatchFallback(field)) continue;
+                if (LiteralName(field) is not null) continue;          // 静态字段不归动态键管
+                var spec = McdocSelectOptions.Resolve(UnwrapDynamicFieldKeyType(field));
+                if (spec is null || spec.AcceptsKey(key)) return true; // 没有 #[id] 约束的 map 收任意键
+            }
+            return false;
         }
 
         /// <summary>动态字段的键类型：Tuple〔keyType, valueType〕的第一项，或字段自身的 Key。</summary>
@@ -496,7 +525,13 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 Label = node.FieldName,
                 Documentation = node.Desc,
-                RowKind = node.IsMapEntry || node.IsDynamicKey ? RowKindFor(node) : McdocRowKind.Union,
+                // 新建键占位行是输入框（Keyed）；但**已有条目**的值若是 union，必须给分支下拉 ——
+                // 以前按"行种类"一律走 Keyed 模板，于是 attributes.<键> 只见字段不见选择器（现场）。
+                RowKind = node.IsDynamicKey && !node.IsMapEntry
+                    ? RowKindFor(node)
+                    : node.Type?.Kind == McdocTypeKind.Union
+                        ? McdocRowKind.Union
+                        : RowKindFor(node),
             // 列表分支的子级摊在 union 行下面：⊕ / 尾部追加也由这一行出（原来只有列表 presenter 会给能力位）
             CanAddTop = node.UnionListLike && CanAppendToList(node),
             CanAddBottom = node.UnionListLike && CanAppendToList(node),
@@ -577,13 +612,20 @@ namespace CBHK.Utility.Data.Mcdoc
                     Value = new MetaValue { LiteralValue = i }
                 });
             }
-            node.UnionBranchBuilder = (member, branchJson) =>
+            node.UnionBranchBuilder = (member, branchJson, previousMember) =>
             {
-                // 切换分支时把旧值迁到新成员；但没有 JSON 值时不要凭空造一个
+                // 分支子树一律建在**文档里那份值**上（键 ↔ 行双射）：值能落进新成员就原样用，
+                // 落不进才做一次形状转换。以前无条件走 GetChange，而且没带 runtime：
+                //   · `argument: T` 这类泛型字段在缺省代数里取不到默认值 → 整支只剩 {}；
+                //   · QuickEqualTypes 把两个指令当"同型" → {k:X} 搬运把整个旧值塞进第一个字段。
+                // 现场（1.21.11 dimension_type 的 audio/ambient_sounds 切 Modifier 支）：modifier 行拿到
+                // 整个父对象（"值与类型不符：期望 Literal"），argument 行没有值（"缺少必填键"）。
                 var value = branchJson ?? node.Json;
-                if (value is not null)
+                if (value is not null && !McdocUnionSwitch.ValueFitsMember(member, value, context.SimplifyContext))
                 {
-                    value = McdocHelpers.GetChange(member, node.DeclaredType ?? type, value);
+                    // 旧类型取"切走的那个成员"：拿 union 声明来比，四条搬运规则（X↔[X]、{k:X}↔X）全都不成立
+                    value = McdocHelpers.GetChange(member, previousMember ?? node.DeclaredType ?? type, value,
+                        McdocDefaults.Options(context.Runtime));
                 }
                 var branch = context.Child(node.FieldName, member, value, context.KeyNode, context.Depth + 1, context.JsonPath);
                 // 分支是枚举/候选下拉时，第 0 项也要有（未设置）：否则镜像到 union 行上的下拉
@@ -823,13 +865,10 @@ namespace CBHK.Utility.Data.Mcdoc
                 // 列表项用下标做标签（misode 一样），别再用 "entry" 这种假名字
                 var item = context.Child(i.ToString(), itemType, items[i], itemKeyNode,
                     context.Depth + 1, context.JsonPath + "[" + i + "]");
-                var index = i;
-                item.RemoveSelfCommand = new McdocCommand(() => context.Editor.RemoveItemAt(node, index));
-                item.MoveUpCommand = new McdocCommand(() => context.Editor.MoveItem(node, index, index - 1),
-                    () => index > 0);
-                item.MoveDownCommand = new McdocCommand(() => context.Editor.MoveItem(node, index, index + 1),
-                    () => index < node.Items.Count - 1);
+                item.Parent = node;
                 node.Items.Add(item);
+                // 命令在 Add 之后挂：它的 CanExecute 要问 Items.IndexOf(item)
+                context.Editor.AttachListItemCommands(node, item);
             }
         }
     }

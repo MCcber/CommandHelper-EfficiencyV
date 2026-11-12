@@ -20,7 +20,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
     Foreground="White"
-    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconTags.png"
+    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconTag.png"
     IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"

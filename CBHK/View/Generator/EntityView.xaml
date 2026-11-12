@@ -18,7 +18,7 @@
     MinHeight="635"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
-    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntities.png"
+    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntity.png"
     IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"

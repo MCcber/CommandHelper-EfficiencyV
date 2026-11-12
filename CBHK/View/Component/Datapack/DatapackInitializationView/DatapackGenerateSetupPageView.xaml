@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="CBHK.View.Component.Datapack.DatapackInitializationForms.DatapackGenerateSetupPageView"
+    x:Class="CBHK.View.Component.Datapack.DatapackInitializationView.DatapackGenerateSetupPageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
@@ -7,7 +7,7 @@
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:CBHK.View.Component.Datapack.DatapackInitializationForms"
+    xmlns:local="clr-namespace:CBHK.View.Component.Datapack.DatapackInitializationView"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:utility="clr-namespace:CBHK.Utility.Visual"

@@ -6,7 +6,7 @@ using CBHK.View;
 using CBHK.ViewModel.Component.Datapack.HomePage;
 using CBHK.View.Component.Datapack.EditPage;
 using CBHK.View.Component.Datapack.HomePage;
-using CBHK.View.Component.Datapack.DatapackInitializationForms;
+using CBHK.View.Component.Datapack.DatapackInitializationView;
 using System.IO;
 
 namespace CBHK.ViewModel.Generator

@@ -16,6 +16,8 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
+using CBHK.View.Component.Villager.Control;
+using CBHK.ViewModel.Component.Villager.Control;
 
 namespace CBHK
 {
@@ -25,7 +27,6 @@ namespace CBHK
     public partial class App : PrismApplication
     {
         #region Field
-
         private static string StartUpTimeString = "";
 
 #pragma warning disable IDE0052
@@ -86,8 +87,16 @@ namespace CBHK
             containerRegistry.RegisterSingleton<MainView>();
             containerRegistry.RegisterSingleton<DataService>();
             containerRegistry.RegisterSingleton<RegexService>();
+            containerRegistry.RegisterSingleton<DisplayerView>();
             containerRegistry.Register<MCDocumentMetaTypeDTOHelper>();
             containerRegistry.Register<MetaTypeDTOValidator>();
+
+            #region 注册页面上的组件
+            containerRegistry.Register<TransactionItemView>();
+            containerRegistry.Register<TransactionItemViewModel>();
+            containerRegistry.Register<GossipsItemView>();
+            containerRegistry.Register<GossipsItemViewModel>(); 
+            #endregion
 
             // mcdoc 生成器页面：入口不同、引擎同一套（骨架阶段先注册为瞬时）
             containerRegistry.Register<AdvancementViewModel>();
@@ -101,6 +110,9 @@ namespace CBHK
             containerRegistry.Register<CustomWorldGeneratorViewModel>();
         }
 
+        /// <summary>
+        /// 重写Prism的定位器
+        /// </summary>
         protected override void ConfigureViewModelLocator()
         {
             base.ConfigureViewModelLocator();

@@ -29,7 +29,7 @@ namespace CBHK.ViewModel.Generator
         private Window home = null;
         private ImageSource icon = new BitmapImage();
         private IContainerProvider container;
-        string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\SignView\images\icon.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconSign.png";
         #endregion
 
         #region Property

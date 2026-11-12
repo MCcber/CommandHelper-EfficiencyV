@@ -5,7 +5,7 @@
     <Style x:Key="VectorTextButtonStyle" TargetType="{x:Type VectorButton:VectorTextButton}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
-        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type VectorButton:VectorTextButton}">

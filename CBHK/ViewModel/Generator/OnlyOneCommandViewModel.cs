@@ -37,7 +37,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 本生成器的图标路径
         /// </summary>
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconCommandBlock.png";
+        string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconCommandBlock.png";
         SolidColorBrush tranparentBrush = Brushes.Transparent;
         SolidColorBrush textBrush = Brushes.White;
         SolidColorBrush caretBrush = Brushes.White;

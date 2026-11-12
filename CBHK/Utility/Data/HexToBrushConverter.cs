@@ -11,7 +11,7 @@ namespace CBHK.Utility.Data
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var text = System.Convert.ToString(value)?.Trim();
-            if (string.IsNullOrEmpty(text) || !text.StartsWith("#")) return Brushes.Transparent;
+            if (string.IsNullOrEmpty(text) || !text.StartsWith('#')) return Brushes.Transparent;
             try
             {
                 return new BrushConverter().ConvertFromString(text) as Brush ?? Brushes.Transparent;

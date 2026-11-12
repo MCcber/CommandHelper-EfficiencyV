@@ -18,7 +18,7 @@
     MinHeight="690"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
-    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconFireworks.png"
+    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconFirework.png"
     IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"

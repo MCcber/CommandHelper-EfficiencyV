@@ -36,6 +36,31 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 严格校验并转换：失败时给出 <see cref="SyntaxError"/>（用 System.Text.Json 的异常位置），成功时返回转换后的值。
         /// 留出这个方法是因为"语法错误不能污染树"必须在调用处就能判断，不能像 <see cref="Parse"/> 那样静默返回空对象。
         /// </summary>
+        /// <summary>
+        /// 把"看不见但会让 JSON 解析失败"的空白类字符归一成普通空格（只动空白，不动任何值）：
+        /// BOM、不换行空格、零宽空格/连接符、全角空格、窄空格。粘贴是最常见的来源 ——
+        /// 用户看着是一份合法 JSON，解析器却报 "0xC2 is an invalid start of a property name"，
+        /// 结果就是"粘贴一大段内容，左侧树一动不动"。
+        /// </summary>
+        public static string NormalizeInvisible(string text, out int replaced)
+        {
+            replaced = 0;
+            if (string.IsNullOrEmpty(text)) return text;
+            var builder = new System.Text.StringBuilder(text.Length);
+            foreach (var ch in text)
+            {
+                if (ch is '\uFEFF' or '\u00A0' or '\u200B' or '\u200C' or '\u200D'
+                    or '\u3000' or '\u2007' or '\u202F' or '\u2002' or '\u2003')
+                {
+                    builder.Append(' ');
+                    replaced++;
+                    continue;
+                }
+                builder.Append(ch);
+            }
+            return replaced == 0 ? text : builder.ToString();
+        }
+
         public static bool TryParse(string text, out McdocJsonValue value, out SyntaxError error)
         {
             value = null;

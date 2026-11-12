@@ -23,7 +23,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 
-namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationForms
+namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationView
 {
     /// <summary>
     /// 属性设置窗体逻辑处理

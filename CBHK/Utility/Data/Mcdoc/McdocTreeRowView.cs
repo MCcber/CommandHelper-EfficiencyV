@@ -201,6 +201,8 @@ namespace CBHK.Utility.Data.Mcdoc
             ActivateFrom(e.OriginalSource as DependencyObject);
         }
 
+
+
         protected override void OnLostKeyboardFocus(System.Windows.Input.KeyboardFocusChangedEventArgs e)
         {
             base.OnLostKeyboardFocus(e);
@@ -288,6 +290,13 @@ namespace CBHK.Utility.Data.Mcdoc
             scrollViewer ??= FindScroll(this);
             if (scrollViewer is null || scrollViewer.VerticalOffset <= 0) return;
             anchorOffset = scrollViewer.VerticalOffset;
+            // 先在同帧的 Render 拍恢复（早于绘制，用户看不到中间态），再在 Loaded 补一次
+            // —— 原来只在 Loaded 恢复，那一帧已经画出去了，"点一下按钮列表往上跳一小段"就是这么来的。
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (anchorOffset < 0) return;
+                scrollViewer?.ScrollToVerticalOffset(anchorOffset);
+            }), DispatcherPriority.Render);
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (anchorOffset < 0) return;

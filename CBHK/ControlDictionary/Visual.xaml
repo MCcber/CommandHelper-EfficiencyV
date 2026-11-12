@@ -1,0 +1,12 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <TextDecorationCollection x:Key="BuyDiscountDecoration">
+        <TextDecoration
+            Location="Strikethrough"
+            PenOffset="0"
+            PenOffsetUnit="Pixel">
+            <TextDecoration.Pen>
+                <Pen Brush="{DynamicResource CommonBackground}" Thickness="2" />
+            </TextDecoration.Pen>
+        </TextDecoration>
+    </TextDecorationCollection>
+</ResourceDictionary>

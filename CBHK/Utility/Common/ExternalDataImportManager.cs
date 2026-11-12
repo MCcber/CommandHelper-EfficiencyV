@@ -14,6 +14,7 @@ using CBHK.ViewModel.Component.FireworkRocket;
 using CBHK.ViewModel.Component.Item;
 using CBHK.ViewModel.Component.Recipe;
 using CBHK.ViewModel.Component.Spawner;
+using CBHK.ViewModel.Component.Villager.Control;
 using CBHK.ViewModel.Generator;
 using Newtonsoft.Json.Linq;
 using System;
@@ -486,10 +487,10 @@ namespace CBHK.Utility.Common
                     {
                         ExistItem = true;
                         context.AddTransactionItem();
-                        TransactionItem transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItem;
+                        TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1];
                         string iconPath = rootPath + buyID + ".png";
                         if (File.Exists(iconPath))
-                            transactionItemsViewModel.Buy.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                            transactionItemsViewModel.BuyImageSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
                         if (buyCountObj is not null)
                         {
@@ -502,8 +503,8 @@ namespace CBHK.Utility.Common
                             IDAndName = buyID,
                             NBT = recipe.SelectToken("buy.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
                         };
-                        transactionItemsViewModel.Buy.Source = new BitmapImage(iconUri);
-                        transactionItemsViewModel.Buy.Tag = imageTag;
+                        transactionItemsViewModel.BuyImageSource = new BitmapImage(iconUri);
+                        transactionItemsViewModel.BuyTag = imageTag;
                     }
                     #endregion
                     #region buyB
@@ -514,9 +515,9 @@ namespace CBHK.Utility.Common
                         if (buyBID.Length > 0)
                         {
                             string iconPath = rootPath + buyBID + ".png";
-                            TransactionItem transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItem;
+                            TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1];
                             if (File.Exists(iconPath))
-                                transactionItemsViewModel.BuyB.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                                transactionItemsViewModel.BuyBImageSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
                             if (buyBCountObj is not null)
                             {
@@ -529,8 +530,8 @@ namespace CBHK.Utility.Common
                                 IDAndName = buyBID,
                                 NBT = recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
                             };
-                            transactionItemsViewModel.BuyB.Source = new BitmapImage(iconUri);
-                            transactionItemsViewModel.BuyB.Tag = imageTag;
+                            transactionItemsViewModel.BuyBImageSource = new BitmapImage(iconUri);
+                            transactionItemsViewModel.BuyBTag = imageTag;
                         }
                     }
                     #endregion
@@ -542,9 +543,9 @@ namespace CBHK.Utility.Common
                         if (sellID.Length > 0)
                         {
                             string iconPath = rootPath + sellID + ".png";
-                            TransactionItem transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItem;
+                            TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1];
                             if (File.Exists(iconPath))
-                                transactionItemsViewModel.Sell.Source = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                                transactionItemsViewModel.SellImageSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
 
                             if (sellCountObj is not null)
                             {
@@ -557,15 +558,15 @@ namespace CBHK.Utility.Common
                                 IDAndName = buyBID,
                                 NBT = recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
                             };
-                            transactionItemsViewModel.Sell.Source = new BitmapImage(iconUri);
-                            transactionItemsViewModel.Sell.Tag = imageTag;
+                            transactionItemsViewModel.SellImageSource = new BitmapImage(iconUri);
+                            transactionItemsViewModel.SellTag = imageTag;
                         }
                     }
                     #endregion
                     #region other
                     if (ExistItem)
                     {
-                        TransactionItem transactionItemsViewModel = context.TransactionItemList[^1].DataContext as TransactionItem;
+                        TransactionItemViewModel transactionItemsViewModel = context.TransactionItemList[^1];
                         transactionItemsViewModel.Demand = int.Parse(demand.ToString());
                         transactionItemsViewModel.MaxUses = int.Parse(maxUses.ToString());
                         transactionItemsViewModel.PriceMultiplier = int.Parse(priceMultiplier.ToString());
@@ -587,7 +588,7 @@ namespace CBHK.Utility.Common
                 {
                     context.AddGossipItem();
                     JToken value = gossip.SelectToken("Text");
-                    GossipsItem gossipsItemsViewModel = context.GossipItemList[^1].DataContext as GossipsItem;
+                    GossipsItemViewModel gossipsItemsViewModel = context.GossipItemList[^1];
                     if (gossip.SelectToken("Target") is JArray targetUID)
                         gossipsItemsViewModel.TargetText = targetUID[0].ToString() + "," + targetUID[1].ToString() + "," + targetUID[2].ToString() + "," + targetUID[3].ToString();
                     if (gossip.SelectToken("Type") is JObject type)

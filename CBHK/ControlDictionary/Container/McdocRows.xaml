@@ -88,16 +88,21 @@
         <Setter Property="BorderBrush" Value="{DynamicResource CommonForeground}" />
     </Style>
 
-    <!--  展开按钮：矢量箭头（复用 RightArrow 几何；DrawingImage 不能给 Path.Data）  -->
-    <Style x:Key="McdocRowExpanderStyle" TargetType="ToggleButton">
+    <!--
+        展开/折叠：行内模板按钮（矢量箭头；DrawingImage 不能给 Path.Data）。
+        用 Button + ToggleExpandedCommand，不再靠 ToggleButton 的选中态绑 IsExpanded。
+    -->
+    <Style x:Key="McdocRowExpanderStyle" TargetType="Button">
         <Setter Property="Width" Value="16" />
         <Setter Property="Height" Value="16" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Focusable" Value="False" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="ToolTip" Value="展开 / 折叠" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="ToggleButton">
-                    <Border Background="Transparent">
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="shell" Background="Transparent">
                         <Path
                             x:Name="chevron"
                             Width="5"
@@ -115,12 +120,18 @@
                         </Path>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsChecked" Value="True">
+                        <!--  展开态：箭头转 90°（与 misode 一致：折叠▸ / 展开▾）  -->
+                        <DataTrigger Binding="{Binding IsExpanded}" Value="True">
                             <Setter TargetName="chevron" Property="RenderTransform">
                                 <Setter.Value>
                                     <RotateTransform Angle="90" />
                                 </Setter.Value>
                             </Setter>
+                        </DataTrigger>
+                        <!--  悬停给一点反馈：这一格现在是个真按钮，不再是"点了没反应"的装饰  -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="chevron" Property="Opacity" Value="1" />
+                            <Setter TargetName="shell" Property="Background" Value="{DynamicResource CommonBackground}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -211,36 +222,46 @@
     <!--  misode NumericHead：数字输入 + （#[random] 时）重掷按钮  -->
     <DataTemplate x:Key="McdocNumberEditor">
         <StackPanel Orientation="Horizontal">
-            <!--  减 / 加：直接走命令写回文档（控件自带的步进不会触发 ValueChanged，JSON 永远不更新）  -->
-            <VectorButton:VectorFlatIconButton
-                Command="{Binding DecreaseCommand}"
-                Icon="{DynamicResource MdocArrowDownGeometry}"
-                IconBrush="{DynamicResource CommonForeground}"
-                IconHeight="14"
-                IconMargin="5"
-                IconWidth="14"
-                Style="{DynamicResource VectorFlatIconButtonStyle}"
-                ToolTip="减一（写回文档）" />
-            <!--  自绘文本输入：清空即删键；行内不再出现"控件自带的左右箭头"（它们不通知绑定）  -->
-            <TextBox
+            <!--  数字框沿用本地主题资产：底色/前景/光标色都来自 VectorTextBoxStyle（换主题自动跟随）  -->
+            <Input:VectorTextBox
                 Width="140"
                 Height="34"
-                Padding="6,0"
-                VerticalContentAlignment="Center"
-                Background="Transparent"
-                BorderBrush="{DynamicResource CommonForeground}"
-                BorderThickness="1"
-                Foreground="{DynamicResource CommonForeground}"
+                VerticalAlignment="Center"
+                Style="{DynamicResource VectorTextBoxStyle}"
                 Text="{Binding NumberText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            <VectorButton:VectorFlatIconButton
-                Command="{Binding IncreaseCommand}"
-                Icon="{DynamicResource MdocArrowUpGeometry}"
-                IconBrush="{DynamicResource CommonForeground}"
-                IconHeight="14"
-                IconMargin="5"
-                IconWidth="14"
-                Style="{DynamicResource VectorFlatIconButtonStyle}"
-                ToolTip="加一（写回文档）" />
+            <!--  上 / 下统一放在右侧竖排（点它们不会把列表滚一段：McdocTreeRowView 会吞掉"已可见行"的 bring-into-view）  -->
+            <Grid
+                Width="24"
+                Height="34"
+                Margin="4,0,0,0"
+                VerticalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <VectorButton:VectorFlatIconButton
+                    Grid.Row="0"
+                    Command="{Binding IncreaseCommand}"
+                    Focusable="False"
+                    Icon="{DynamicResource MdocArrowUpGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="10"
+                    IconMargin="2"
+                    IconWidth="10"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="加一（写回文档）" />
+                <VectorButton:VectorFlatIconButton
+                    Grid.Row="1"
+                    Command="{Binding DecreaseCommand}"
+                    Focusable="False"
+                    Icon="{DynamicResource MdocArrowDownGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="10"
+                    IconMargin="2"
+                    IconWidth="10"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="减一（写回文档）" />
+            </Grid>
             <VectorButton:VectorFlatIconButton
                 Command="{Binding RegenerateSeedCommand}"
                 Icon="{DynamicResource MdocSyncGeometry}"
@@ -296,13 +317,49 @@
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
+                <!--  元组里的内联数字与数字行同一套：主题底色输入框 + 右侧竖排 ▲/▼
+                      （原来用 VectorNumbericUpDown，它自带的步进不通知绑定、打字也不落盘）  -->
                 <DataTemplate>
-                    <Input:VectorNumbericUpDown
-                        Width="90"
-                        Height="34"
+                    <StackPanel
                         Margin="2,0"
-                        Style="{StaticResource MdocTransparentNumberStyle}"
-                        Text="{Binding Value}" />
+                        Orientation="Horizontal">
+                        <Input:VectorTextBox
+                            Width="58"
+                            Height="34"
+                            VerticalAlignment="Center"
+                            Style="{DynamicResource VectorTextBoxStyle}"
+                            Text="{Binding NumberText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Grid
+                            Width="18"
+                            Height="34"
+                            Margin="2,0,0,0"
+                            VerticalAlignment="Center">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <VectorButton:VectorFlatIconButton
+                                Grid.Row="0"
+                                Command="{Binding IncreaseCommand}"
+                                Focusable="False"
+                                Icon="{DynamicResource MdocArrowUpGeometry}"
+                                IconBrush="{DynamicResource CommonForeground}"
+                                IconHeight="8"
+                                IconMargin="1"
+                                IconWidth="8"
+                                Style="{DynamicResource VectorFlatIconButtonStyle}" />
+                            <VectorButton:VectorFlatIconButton
+                                Grid.Row="1"
+                                Command="{Binding DecreaseCommand}"
+                                Focusable="False"
+                                Icon="{DynamicResource MdocArrowDownGeometry}"
+                                IconBrush="{DynamicResource CommonForeground}"
+                                IconHeight="8"
+                                IconMargin="1"
+                                IconWidth="8"
+                                Style="{DynamicResource VectorFlatIconButtonStyle}" />
+                        </Grid>
+                    </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
@@ -451,6 +508,20 @@
                 Style="{DynamicResource VectorFlatIconButtonStyle}"
                 ToolTip="当前版本不存在该节点（版本更迭后遗留的键），点击删除"
                 Visibility="{Binding UnknownDeleteVisibility}" />
+            <!--
+                map 条目行的删除入口（行首）：条目就是"这一行"，与可选字段的「清空」不是一回事。
+                值被（未设置）清掉后键已经不在文档里、这一行还在 —— 那时点它就是摘掉这一行。
+            -->
+            <VectorButton:VectorFlatIconButton
+                Command="{Binding RemoveEntryCommand}"
+                Icon="{DynamicResource TreeNodeMinusGeometry}"
+                IconBrush="{DynamicResource CommonForeground}"
+                IconHeight="15"
+                IconMargin="5"
+                IconWidth="15"
+                Style="{DynamicResource VectorFlatIconButtonStyle}"
+                ToolTip="删除这个条目"
+                Visibility="{Binding RemoveEntryVisibility}" />
             <Border
                 Width="10"
                 Height="10"
@@ -462,6 +533,17 @@
                 ToolTip="{Binding Node.Value}"
                 Visibility="{Binding ColorBadgeVisibility}" />
         </StackPanel>
+    </DataTemplate>
+
+    <!--
+        行内展开/折叠按钮：三套行模板共用一份；可见性只有一条判据（真的有子级 / 必选容器）。
+        可选且缺省的字段只有一行 ⊕，不挂这个按钮。
+    -->
+    <DataTemplate x:Key="MdocRowExpander">
+        <Button
+            Command="{Binding ToggleExpandedCommand}"
+            Style="{StaticResource McdocRowExpanderStyle}"
+            Visibility="{Binding ExpanderVisibility}" />
     </DataTemplate>
 
     <!--  misode Key：标签可点开 doc 面板；有文档时带下划线  -->
@@ -560,11 +642,10 @@
                 Grid.Column="0"
                 Content="{Binding}"
                 ContentTemplate="{StaticResource MdocRowMarkerTemplate}" />
-            <ToggleButton
+            <ContentControl
                 Grid.Column="1"
-                IsChecked="{Binding IsExpanded, Mode=TwoWay}"
-                Style="{StaticResource McdocRowExpanderStyle}"
-                Visibility="{Binding ExpanderVisibility}" />
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocRowExpander}" />
             <ContentControl
                 Grid.Column="2"
                 VerticalAlignment="Center"
@@ -732,11 +813,10 @@
                 Grid.Column="0"
                 Content="{Binding}"
                 ContentTemplate="{StaticResource MdocRowMarkerTemplate}" />
-            <ToggleButton
+            <ContentControl
                 Grid.Column="1"
-                IsChecked="{Binding IsExpanded, Mode=TwoWay}"
-                Style="{StaticResource McdocRowExpanderStyle}"
-                Visibility="{Binding ExpanderVisibility}" />
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocRowExpander}" />
             <ContentControl
                 Grid.Column="2"
                 VerticalAlignment="Center"
@@ -790,11 +870,10 @@
                 Grid.Column="0"
                 Content="{Binding}"
                 ContentTemplate="{StaticResource MdocRowMarkerTemplate}" />
-            <ToggleButton
+            <ContentControl
                 Grid.Column="1"
-                IsChecked="{Binding IsExpanded, Mode=TwoWay}"
-                Style="{StaticResource McdocRowExpanderStyle}"
-                Visibility="{Binding ExpanderVisibility}" />
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocRowExpander}" />
             <Grid Grid.Column="2">
                 <!--  条目行的键以标签显示（键编辑框收起时必须有人顶上去）  -->
                 <ContentControl
@@ -893,16 +972,7 @@
                     Style="{DynamicResource VectorFlatIconButtonStyle}"
                     ToolTip="重命名这个键"
                     Visibility="{Binding RenameVisibility}" />
-                <VectorButton:VectorFlatIconButton
-                    Command="{Binding RemoveEntryCommand}"
-                    Icon="{DynamicResource TreeNodeMinusGeometry}"
-                    IconBrush="{DynamicResource CommonForeground}"
-                    IconHeight="15"
-                    IconMargin="5"
-                    IconWidth="15"
-                    Style="{DynamicResource VectorFlatIconButtonStyle}"
-                    ToolTip="移除条目"
-                    Visibility="{Binding RemoveEntryVisibility}" />
+                <!--  条目删除已挪到行首（MdocRowMarkerTemplate）：同一行只留一个删除入口  -->
             </StackPanel>
         </Grid>
     </DataTemplate>

@@ -88,21 +88,25 @@
             <VectorButton:VectorTextButton
                 Padding="5"
                 Command="{Binding AddSpawnerCommand}"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="添加" />
             <VectorButton:VectorTextButton
                 Padding="5"
                 Command="{Binding ClearSpawnerCommand}"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="清除" />
             <VectorButton:VectorTextButton
                 Padding="5"
                 Command="{Binding ImportFromClipboardCommand}"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从剪切板导入" />
             <VectorButton:VectorTextButton
                 Padding="5"
                 Command="{Binding ImportFromFileCommand}"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
             <VectorButton:VectorToggleIconTextButton

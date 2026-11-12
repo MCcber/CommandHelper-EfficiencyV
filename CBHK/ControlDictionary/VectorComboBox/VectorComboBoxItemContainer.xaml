@@ -25,7 +25,7 @@
                                 Margin="0,15,0,0"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                UseLayoutRounding="True"
+                                UseLayoutRounding="False"
                                 Visibility="Hidden">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="1" />

@@ -1,0 +1,7 @@
+<Project>
+  <!-- 仅本地构建用：命令行去掉 ResolveComReference（dotnet 版 MSBuild 不支持该任务），
+       该 COM 类型在源码里零引用。不进版本库。 -->
+  <ItemGroup>
+    <COMReference Remove="IWshRuntimeLibrary" />
+  </ItemGroup>
+</Project>

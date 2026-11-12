@@ -1,6 +1,6 @@
-﻿using CBHK.CustomControl.VectorComboBox;
-using CBHK.Model.Data;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Constant;
+using CBHK.Model.Data;
 using CBHK.Utility.Common;
 using CBHK.Utility.Data;
 using CBHK.Utility.Visual;
@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -27,9 +28,9 @@ namespace CBHK.CustomControl.Input
         private Brush OriginBorderCornerBrush;
         private Brush OriginBottomBrush;
         private Brush OriginRightBottomBorderBrush;
-        private Style textblockStyle = Application.Current.TryFindResource("DefaultTextStyleEditorTextBlockStyle") as Style;
         private VectorRichTextBox editor = null;
         private bool isEnterKeyDown = false;
+        private CollectionViewSource ItemView = null;
         #endregion
 
         #region Property
@@ -41,7 +42,15 @@ namespace CBHK.CustomControl.Input
         public bool IsSelectionObfuscated { get; private set; }
 
         private ObservableCollection<TextStyleEditorItem> DataList { get; set; } = [];
-        private CollectionViewSource ItemView = null;
+
+        public string Version
+        {
+            get { return (string)GetValue(VersionProperty); }
+            set { SetValue(VersionProperty, value); }
+        }
+
+        public static readonly DependencyProperty VersionProperty =
+            DependencyProperty.Register(nameof(Version), typeof(string), typeof(TextStyleEditor), new PropertyMetadata("1.16"));
 
         public string SearchText
         {
@@ -232,6 +241,7 @@ namespace CBHK.CustomControl.Input
                     Foreground = run.Foreground,
                     FontWeight = run.FontWeight,
                     TextDecorationCollection = run.TextDecorations,
+                    IsObfuscated = ObfuscatedProvider.GetIsObfuscated(run)
                 })),
                 IsSelected = isSelected
             });
@@ -261,6 +271,36 @@ namespace CBHK.CustomControl.Input
                 runList.RemoveAll(item => item is null);
                 AddNewItem(runList, true);
             }
+        }
+
+        public string GetCurrentItemJson()
+        {
+            StringBuilder result = new();
+            var currentItem = DataList[SelectedIndex];
+            string[] versionArray = Version.Split('-');
+            for (int i = 0; i < currentItem.InlineList.Count; i++)
+            {
+                string inlineString = $$"""{"text":"{{currentItem.InlineList[i].Text}}"}""";
+                string colorString = "";
+                bool isLessThan1_16 = VersionRangeChecker.IsLessThan(Version,"1.16");
+                SolidColorBrush solidColorBrush = currentItem.InlineList[i].Foreground as SolidColorBrush;
+                if (isLessThan1_16 && solidColorBrush is not null)
+                {
+                    var nearestColor = ColorManagement.GetName(solidColorBrush.Color);
+                    colorString = $",\"color\":\"{nearestColor}\"";
+                }
+                else if(solidColorBrush is not null)
+                {
+                    colorString = $",\"color\":\"{solidColorBrush.Color}\"";
+                }
+                string boldString = currentItem.InlineList[i].IsBold ? ",\"bold\":true" : "";
+                string italicString = currentItem.InlineList[i].IsItalic ? ",\"italic\":true" : "";
+                string underlinedString = currentItem.InlineList[i].IsUnderline ? ",\"underlined\":true" : "";
+                string strikethroughString = currentItem.InlineList[i].IsStrikeThrough ? ",\"strikethrough\":true" : "";
+                string obfuscatedString = currentItem.InlineList[i].IsObfuscated ? ",\"obfuscated\":true" : "";
+                result.Append(inlineString + colorString + boldString + italicString + underlinedString + strikethroughString + obfuscatedString + "},");
+            }
+            return result.ToString().TrimEnd(',');
         }
 
         /// <summary>
@@ -578,6 +618,7 @@ namespace CBHK.CustomControl.Input
         {
             if (ItemsSource is ListCollectionView listCollectionView)
             {
+                //留下默认的提示成员
                 while (listCollectionView.Count > 1)
                 {
                     listCollectionView.RemoveAt(1);

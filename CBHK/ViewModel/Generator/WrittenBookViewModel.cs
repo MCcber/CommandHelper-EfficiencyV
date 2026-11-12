@@ -1,17 +1,20 @@
-﻿using CBHK.CustomControl.TextElement;
+﻿using CBHK.CustomControl.Input;
+using CBHK.CustomControl.TextElement;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Interface.Visual;
 using CBHK.Model.Data;
 using CBHK.Utility.Common;
+using CBHK.Utility.Data;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
-using CBHK.View.Compoment.WrittenBook;
+using CBHK.View.Component.WrittenBook;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -25,7 +28,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using EditPage = CBHK.View.Compoment.WrittenBook.EditPage;
+using EditPage = CBHK.View.Component.WrittenBook.EditPage;
 using Image = System.Windows.Controls.Image;
 
 namespace CBHK.ViewModel.Generator
@@ -36,15 +39,18 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 拾色器
         /// </summary>
-        //ColorPickers colorPicker = null;
+        private VectorColorPicker colorPicker;
         /// <summary>
         /// 成书编辑框引用
         /// </summary>
-        public RichTextBox WrittenBookEditor = null;
+        private RichTextBox WrittenBookEditor = null;
+        private TextStyleEditor titleEditor = null;
+        private TextStyleEditor authorEditor = null;
+        private TextPointer SelectionStart, SelectionEnd;
         /// <summary>
         /// 悬浮菜单
         /// </summary>
-        Popup popup = new()
+        private readonly Popup popup = new()
         {
             IsOpen = false,
             Placement = PlacementMode.AbsolutePoint,
@@ -91,7 +97,8 @@ namespace CBHK.ViewModel.Generator
         int PageMaxLineCount = 7;
 
         //字符数量超出提示
-        TextBlock ExceedsBlock = null;
+        [ObservableProperty]
+        private string exceedsTip = string.Empty;
         /// <summary>
         /// 主页引用
         /// </summary>
@@ -100,14 +107,10 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 事件设置控件
         /// </summary>
-        //TextEvent EventComponent = new();
         //本生成器的图标路径
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png";
 
         private ImageSource defaultSuccessIcon = new BitmapImage(new Uri("pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png", UriKind.RelativeOrAbsolute));
-
-        //当前光标选中的文本对象链表
-        List<RichRun> CurrentSelectedRichRunList = [];
 
         //作为内部工具被调用
         public bool AsInternalTool = false;
@@ -132,67 +135,67 @@ namespace CBHK.ViewModel.Generator
         /// 显示字符超出数量
         /// </summary>
         [ObservableProperty]
-        private Visibility _displayExceedsCount = Visibility.Collapsed;
+        private Visibility exceedsVisibility = Visibility.Collapsed;
         /// <summary>
         /// 总页数
         /// </summary>
         [ObservableProperty]
-        private int _maxPage = 1;
+        private int maxPage = 1;
         /// <summary>
         /// 当前页码下标
         /// </summary>
         [ObservableProperty]
-        int _currentPageIndex = 0;
+        int currentPageIndex = 0;
         /// <summary>
         /// 当前光标所在的文本对象引用
         /// </summary>
         [ObservableProperty]
-        private RichRun _currentRichRun = null;
+        private RichRun currentRichRun = null;
         /// <summary>
         /// 开启点击事件
         /// </summary>
         [ObservableProperty]
-        private bool _enableClickEvent = false;
+        private bool enableClickEvent = false;
         /// <summary>
         /// 开启悬浮事件
         /// </summary>
         [ObservableProperty]
-        private bool _enableHoverEvent = false;
+        private bool enableHoverEvent = false;
         /// <summary>
         /// 开启插入
         /// </summary>
         [ObservableProperty]
-        private bool _enableInsertion = false;
+        private bool enableInsertion = false;
         /// <summary>
         /// 被选择文本的字体颜色
         /// </summary>
         [ObservableProperty]
-        private SolidColorBrush _selectionColor = new(Color.FromRgb(0,0,0));
+        private SolidColorBrush selectionColor = new(Color.FromRgb(0,0,0));
         /// <summary>
         /// 当前页码与总页数数据
         /// </summary>
         [ObservableProperty]
-        private string _pageData = "页面 ：1/1";
+        private string pageData = "页面 ：1/1";
         /// <summary>
         /// 是否显示左箭头
         /// </summary>
         [ObservableProperty]
-        private Visibility _displayLeftArrow = Visibility.Collapsed;
+        private Visibility leftArrowVisibility = Visibility.Collapsed;
         /// <summary>
         /// 是否显示右箭头
         /// </summary>
         [ObservableProperty]
-        private Visibility _displayRightArrow = Visibility.Visible;
+        private Visibility rightArrowVisibility = Visibility.Visible;
         /// <summary>
         /// 显示结果
         /// </summary>
         [ObservableProperty]
-        private bool _showGeneratorResult = false;
+        private bool showGeneratorResult = false;
         /// <summary>
         /// 跳转页面数字
         /// </summary>
         [ObservableProperty]
-        private int _jumpSpecificPageNumber;
+        private int jumpSpecificPageNumber;
 
         #region 版本数据源与已选择版本
         [ObservableProperty]
@@ -200,19 +203,9 @@ namespace CBHK.ViewModel.Generator
             new VectorTextComboBoxItem() { Text = "1.20.5+" },
             new VectorTextComboBoxItem() { Text = "1.12" }
             ];
+
+        [ObservableProperty]
         private VectorTextComboBoxItem selectedVersion;
-
-        public VectorTextComboBoxItem SelectedVersion
-        {
-            get => selectedVersion;
-            set
-            {
-                SetProperty(ref selectedVersion, value);
-                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
-            }
-        }
-
-        private int CurrentMinVersion = 1205;
         #endregion
 
         #endregion
@@ -226,9 +219,13 @@ namespace CBHK.ViewModel.Generator
             MaxPage = WrittenBookPages.Count;
             PageData = "页面 ：" + (CurrentPageIndex + 1).ToString() + "/" + MaxPage.ToString();
             if (CurrentPageIndex > 0)
-                DisplayLeftArrow = Visibility.Visible;
+            {
+                LeftArrowVisibility = Visibility.Visible;
+            }
             else
-                DisplayLeftArrow = Visibility.Collapsed;
+            {
+                RightArrowVisibility = Visibility.Collapsed;
+            }
         }
 
         /// <summary>
@@ -373,13 +370,9 @@ namespace CBHK.ViewModel.Generator
         /// <returns></returns>
         private async Task<string> GetTitle()
         {
-            //StringBuilder Title = signaturePage.title.Create();
-            //signaturePage.title.CollectionData(Title);
-            //signaturePage.title.BuildResource(Title);
-            //string result = Title.ToString();
-            string result = "";
-            string quotation = CurrentMinVersion < 113 ? "\"" : "'";
-            return "title:" + quotation + result.TrimEnd(',') + quotation + ",";
+            string result = titleEditor.GetCurrentItemJson();
+            string quotation = VersionRangeChecker.IsLessThan(SelectedVersion.Text,"1.13") ? "\"" : "'";
+            return "title:" + quotation + result + quotation + ",";
         }
 
         /// <summary>
@@ -388,13 +381,9 @@ namespace CBHK.ViewModel.Generator
         /// <returns></returns>
         private async Task<string> GetAuthor()
         {
-            //StringBuilder Author = signaturePage.author.Create();
-            //signaturePage.author.CollectionData(Author);
-            //signaturePage.author.BuildResource(Author);
-            //string result = Author.ToString();
-            string result = "";
-            string quotation = CurrentMinVersion < 113 ? "\"" : "'";
-            return "author:" + quotation + result.TrimEnd(',') + quotation + ",";
+            string result = authorEditor.GetCurrentItemJson();
+            string quotation = VersionRangeChecker.IsLessThan(SelectedVersion.Text, "1.13") ? "\"" : "'";
+            return "author:" + quotation + result + quotation + ",";
         }
         #endregion
 
@@ -407,12 +396,30 @@ namespace CBHK.ViewModel.Generator
         public void PageFrame_Loaded(object sender, RoutedEventArgs e)
         {
             editPage.DataContext = signaturePage.DataContext = this;
-            RichParagraph richParagraph = editPage.richTextBox.Document.Blocks.FirstBlock as RichParagraph;
-            RichRun richRun = richParagraph.Inlines.FirstInline as RichRun;
-            richRun.Foreground = Brushes.Black;
+
             ContentControl contentControl = sender as ContentControl;
             PageFrame.Content = editPage;
             contentControl.Content = PageFrame;
+        }
+
+        /// <summary>
+        /// 标题编辑器
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void TitleEditor_Loaded(object sender, RoutedEventArgs e)
+        {
+            titleEditor = sender as TextStyleEditor;
+        }
+
+        /// <summary>
+        /// 作者编辑器
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void AuthorEditor_Loaded(object sender, RoutedEventArgs e)
+        {
+            authorEditor = sender as TextStyleEditor;
         }
 
         /// <summary>
@@ -433,6 +440,31 @@ namespace CBHK.ViewModel.Generator
             }
         }
 
+        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if (e.PropertyName == "JumpSpecificPageNumber")
+            {
+                if (JumpSpecificPageNumber > 0 && JumpSpecificPageNumber <= WrittenBookPages.Count)
+                {
+                    WrittenBookEditor.Document = WrittenBookPages[JumpSpecificPageNumber - 1];
+                    CurrentPageIndex = JumpSpecificPageNumber - 1;
+                    UpdatePageViewDisplay();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 编辑页鼠标移出事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ContentEditor_MouseLeave(object sender, MouseEventArgs e)
+        {
+            SelectionStart = WrittenBookEditor.Selection.Start;
+            SelectionEnd = WrittenBookEditor.Selection.End;
+        }
+
         /// <summary>
         /// 版本更换
         /// </summary>
@@ -440,8 +472,8 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //await signaturePage.title.Upgrade(CurrentMinVersion);
-            //await signaturePage.author.Upgrade(CurrentMinVersion);
+            titleEditor.Version = SelectedVersion.Text;
+            authorEditor.Version = SelectedVersion.Text;
         }
 
         [RelayCommand]
@@ -669,6 +701,7 @@ namespace CBHK.ViewModel.Generator
                     }
                     page_string = page_string.TrimEnd(',') + "]',";
                 }
+                bool isLessThan1_13 = VersionRangeChecker.IsLessThan(SelectedVersion.Text,"1.13");
                 pagesString += page_string.TrimEnd(',') + "]";
                 pagesString = pagesString.Trim() == "pages:['[\"\"]']" || pagesString.Trim() == "pages:['[\"\",{\"text\":\"\"}]']" ? "" : pagesString;
                 string NBTData = "";
@@ -676,9 +709,9 @@ namespace CBHK.ViewModel.Generator
                 string AuthorString = await GetAuthor();
                 NBTData += TitleString + AuthorString + pagesString;
                 NBTData = "{" + NBTData.TrimEnd(',') + "}";
-                Result += (CurrentMinVersion < 1130 ? " 1 0 " : "") + NBTData;
+                Result += (isLessThan1_13 ? " 1 0 " : "") + NBTData;
 
-                if(CurrentMinVersion < 1130)
+                if(isLessThan1_13)
                 {
                     Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + Result.Replace(@"""",@"\\\\\\\""") + @"\\\""}\""}}""}}";
                 }
@@ -824,21 +857,25 @@ namespace CBHK.ViewModel.Generator
 
             if (exceedLineCount > 0)
             {
-                ExceedsBlock.ToolTip = "当前超出" + exceedLineCount + "行";
+                ExceedsTip = "当前超出" + exceedLineCount + "行";
             }
-            if (exceedLength > 0)
+            if (exceedLength > 0 && exceedLineCount > 0)
             {
-                ExceedsBlock.ToolTip += "当前超出" + exceedLength + "个字节";
-            }
-            if (exceedLength > 0 || exceedLineCount > 0)
-            {
-                ToolTipService.SetInitialShowDelay(ExceedsBlock, 0);
-                ToolTipService.SetBetweenShowDelay(ExceedsBlock, 0);
-                ExceedsBlock.Text = "查看超出内容";
-                DisplayExceedsCount = Visibility.Visible;
+                ExceedsTip += exceedLength + "个字节";
             }
             else
-                DisplayExceedsCount = Visibility.Collapsed;
+            {
+                ExceedsTip = exceedLength + "个字节";
+            }
+
+            if (exceedLength > 0 || exceedLineCount > 0)
+            {
+                ExceedsVisibility = Visibility.Visible;
+            }
+            else
+            {
+                ExceedsVisibility = Visibility.Collapsed;
+            }
             #endregion
         }
 
@@ -881,11 +918,22 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void SetSelectionColor(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        public void SetSelectionColor()
         {
-            //ColorPickers colorPickers = sender as ColorPickers;
-            //TextRange textRange = new TextRange(WrittenBookEditor.Selection.Start, WrittenBookEditor.Selection.End);
-            //textRange.ApplyPropertyValue(TextBlock.ForegroundProperty, colorPickers.SelectColor);
+            TextPointer currentStart = null,currentEnd = null;
+            if (WrittenBookEditor.Selection.Start == WrittenBookEditor.Selection.End)
+            {
+                currentStart = SelectionStart;
+                currentEnd = SelectionEnd;
+            }
+            else
+            {
+                currentStart = WrittenBookEditor.Selection.Start;
+                currentEnd = WrittenBookEditor.Selection.End;
+            }
+            WrittenBookEditor.Selection.Select(currentStart, currentEnd);
+            TextRange textRange = new(WrittenBookEditor.Selection.Start, WrittenBookEditor.Selection.End);
+            textRange.ApplyPropertyValue(TextBlock.ForegroundProperty, new SolidColorBrush(colorPicker.SelectedColor));
         }
 
         /// <summary>
@@ -910,6 +958,10 @@ namespace CBHK.ViewModel.Generator
             if(WrittenBookPages.Count == 0 || CurrentPageIndex < 0 || CurrentPageIndex > WrittenBookPages.Count)
             {
                 WrittenBookEditor = sender as RichTextBox;
+                RichParagraph richParagraph = WrittenBookEditor.Document.Blocks.FirstBlock as RichParagraph;
+                RichRun richRun = richParagraph.Inlines.FirstInline as RichRun;
+                richRun.Foreground = Brushes.Black;
+
                 //初始化文档链表
                 if (HistroyFlowDocumentList.Count == 0)
                     WrittenBookPages.Add(WrittenBookEditor.Document as EnabledFlowDocument);
@@ -930,23 +982,14 @@ namespace CBHK.ViewModel.Generator
         }
 
         /// <summary>
-        /// 获取超出文本块的引用
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ExceedsTextBlockLoaded(object sender, RoutedEventArgs e)
-        {
-            ExceedsBlock = sender as TextBlock;
-        }
-
-        /// <summary>
         /// 载入拾色器
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         public void ColorPickerLoaded(object sender, RoutedEventArgs e)
         {
-            //colorPicker = sender as ColorPickers;
+            colorPicker = sender as VectorColorPicker;
+            colorPicker.SelectedColorGridMouseLeftButtonUpCallBack = SetSelectionColor;
         }
 
         /// <summary>

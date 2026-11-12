@@ -1,16 +1,17 @@
-using System;
-using System.IO;
-using System.Windows;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using CBHK.Model.Constant;
 using CBHK.Utility.Data;
-using CBHK.Utility.Data.Mcdoc;
 using CBHK.Utility.Data.JsonText;
+using CBHK.Utility.Data.Mcdoc;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MinecraftLanguageModelLibrary.Data;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Windows;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -178,14 +179,17 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void RefreshWithReadyRuntime()
         {
-            if (!defaultDocumentDegraded) return;   // 建树时数据就是齐的：正常路径一次都不用重来
+            if (!needsRuntimeRefresh) return;   // 建树时数据就是齐的：正常路径一次都不用重来
+            needsRuntimeRefresh = false;
             defaultDocumentDegraded = false;
             FillGameVersionOptions();
             var untouched = string.IsNullOrWhiteSpace(JsonText)
                 || (defaultDocumentText is not null && string.Equals(JsonText, defaultDocumentText, StringComparison.Ordinal));
             if (untouched)
             {
-                LoadDefault();
+                // 入口文件就是这份文档：按同一份来源重来（换成 LoadDefault 会把文件内容换成代数默认值）
+                if (defaultDocumentText is not null) LoadMcdocTree(defaultDocumentText);
+                else LoadDefault();
                 return;
             }
             CreateDocument();
@@ -250,6 +254,27 @@ namespace CBHK.ViewModel.Generator
         {
             if (jsonEditor is null || digestingText) return !textParseFailed;
             var text = jsonEditor.Text;
+            // 粘贴常常带进"看不见的空白"（BOM / 不换行空格 / 全角空格）：它们会让严格解析直接判非法，
+            // 现象就是"粘贴了一大段合法 JSON，左侧树一动不动"。这里先归一再解析，并把归一后的文本写回编辑器
+            // （只动空白类字符，不碰任何值，状态栏说明发生了归一化）。
+            var normalized = McdocJsonParser.NormalizeInvisible(text, out var replaced);
+            if (replaced > 0)
+            {
+                McdocWriteTrace.Log("文本含不可见空白字符，按空格归一", null, "replaced=" + replaced);
+                text = normalized;
+                var wasSuppressed = suppressReload;
+                suppressReload = true;
+                try
+                {
+                    PushJsonText(text);
+                    jsonEditor.Reload(text);
+                }
+                finally
+                {
+                    suppressReload = wasSuppressed;
+                }
+                MdocStatus = "已把 " + replaced + " 个不可见字符（BOM / 不换行空格 / 全角空格）按空格处理，树按归一后的文本更新";
+            }
             if (!McdocJsonParser.TryParse(text, out _, out var syntaxError))
             {
                 textParseFailed = true;
@@ -314,7 +339,7 @@ namespace CBHK.ViewModel.Generator
                 var liveText = jsonEditor.Text ?? "";
                 if (!string.Equals(liveText, text, StringComparison.Ordinal))
                 {
-                    CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Log("消化文本快照过期", null,
+                    McdocWriteTrace.Log("消化文本快照过期", null,
                         "快照=" + (text?.Length ?? 0) + " 编辑器=" + liveText.Length + "，以编辑器为准");
                     text = liveText;
                 }
@@ -415,6 +440,32 @@ namespace CBHK.ViewModel.Generator
             // 优先读编辑器当前文本：VM 的 JsonText 副本可能落后（落后就会用旧文本重解析）
             var text = jsonEditor is not null ? jsonEditor.Text : JsonText;
             if (string.IsNullOrWhiteSpace(text)) return false;
+            // 粘贴带进的"看不见的空白"（BOM / 不换行空格 / 全角空格）在这里**必须**先归一：
+            // 防抖 tick 走的就是这个出口（OnJsonEditorTextChanged → ScheduleReload → SyncTextToTree），
+            // 严格解析会直接判非法 → 树按契约冻死 → 用户看到的是"粘贴整篇，左侧一动不动"。
+            // 归一后写回编辑器：否则屏幕留着脏字符、模型是归一文本，下一次比对又判"不同代"。
+            var normalizedText = McdocJsonParser.NormalizeInvisible(text, out var replacedInvisible);
+            if (replacedInvisible > 0)
+            {
+                McdocWriteTrace.Log("文本含不可见空白字符，按空格归一", null,
+                    "replaced=" + replacedInvisible + " 来源=SyncTextToTree");
+                text = normalizedText;
+                if (jsonEditor is not null)
+                {
+                    var wasSuppressed = suppressReload;
+                    suppressReload = true;
+                    try
+                    {
+                        PushJsonText(text);
+                        jsonEditor.Reload(text);
+                    }
+                    finally
+                    {
+                        suppressReload = wasSuppressed;
+                    }
+                }
+                MdocStatus = "已把 " + replacedInvisible + " 个不可见字符（BOM / 不换行空格 / 全角空格）按空格处理，树按归一后的文本更新";
+            }
             // 语法检查用 System.Text.Json（TryParse 里就是它）：错误就只画波浪线 + 状态，树一动不动
             if (!McdocJsonParser.TryParse(text, out var parsedText, out var syntaxError))
             {
@@ -473,7 +524,7 @@ namespace CBHK.ViewModel.Generator
                 }
             }
             // 运行数据可能刚到位：先把降级的默认文档重生成一次（内部已经建过树），别再按旧文本建第二遍
-            if (IsRuntimeReady() && defaultDocumentDegraded)
+            if (IsRuntimeReady() && (needsRuntimeRefresh || defaultDocumentDegraded))
             {
                 RefreshWithReadyRuntime();
             }
@@ -531,23 +582,24 @@ namespace CBHK.ViewModel.Generator
             if (jsonEditor.State.Generation == lastTextGeneration) return;
             lastTextGeneration = jsonEditor.State.Generation;
             if (jsonEditor.State.IsInStepWithDocument) return;
-            CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Log("AST 与文本不同代，按当前文本重解析", null,
+            McdocWriteTrace.Log("AST 与文本不同代，按当前文本重解析", null,
                 "AST文本长=" + (jsonEditor.State.RootText?.Length ?? 0) + " 编辑器=" + (jsonEditor.Text ?? "").Length);
             jsonEditor.State.Reparse();
         }
 
         private void VerifyJsonTextGeneration(string source)
         {
-            if (!CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Enabled) return;   // 诊断：不进生产热路径
+            if (!McdocWriteTrace.Enabled) return;   // 诊断：不进生产热路径
             if (string.IsNullOrWhiteSpace(JsonText)) return;
             if (McdocJsonParser.TryParse(JsonText, out _, out var syntaxError)) return;
             MdocStatus = "文本与树不同代（" + source + "）：" + syntaxError.Message;
-            CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Log(source + " 写回后文本不可解析", null,
+            McdocWriteTrace.Log(source + " 写回后文本不可解析", null,
                 syntaxError.Message + " | 长度=" + JsonText.Length);
         }
 
         private void SyncJsonTextOnce()
         {
+            using var stage = McdocWriteTrace.Stage("text.sync");
             // 树 → 文本：这一刻两边是一致的，记下来（用户输入不会被误判成"已同步"）
             if (jsonEditor is not null)
             {
@@ -567,7 +619,35 @@ namespace CBHK.ViewModel.Generator
                 {
                     // 整篇替换会让语法波浪线的锚点失效（下一次绘制直接抛异常），先摘掉
                     syntaxOverlay?.Clear();
-                    jsonEditor.Reformat();
+                    // 模型根被**整篇替换**过时（根 union 切支 / 根标量编辑走 ReplaceRoot），
+                    // 编辑器里还是上一代 AST —— 直接 Reformat 只会把旧文本重排一遍，右侧就停在旧形状上。
+                    // 这里按"视图同代"先对账：不一致就先把模型这一代灌进编辑器。
+                    string modelText;
+                    using (McdocWriteTrace.Stage("text.format"))
+                    {
+                        modelText = McdocJsonFormatter.Format(document.RootJson);
+                    }
+                    // 模型这一代格式化后与"上次落到屏幕上的那份文本"逐字相同 ⇒ 右侧已经是同代文本，
+                    // 不必再全文 Parse 一遍对账、也不必 Reformat（实测这两步占每次交互 2–7ms）。
+                    if (jsonEditor.State.IsInStepWithDocument
+                        && string.Equals(modelText, lastSyncedText, StringComparison.Ordinal))
+                    {
+                        JsonText = jsonEditor.Text;
+                        EnsureProjectionMatchesDocument();
+                        return;
+                    }
+                    var reconciled = false;
+                    using (McdocWriteTrace.Stage("text.reconcile"))
+                    {
+                        reconciled = !McdocJsonParser.TryParse(jsonEditor.Text ?? "", out var editorRoot, out _)
+                            || !string.Equals(McdocJsonFormatter.Format(editorRoot), modelText, StringComparison.Ordinal);
+                    }
+                    if (reconciled)
+                    {
+                        McdocWriteTrace.Log("编辑器文本落后于模型，按模型重灌", null, "model=" + modelText.Length);
+                        jsonEditor.Reload(modelText);
+                    }
+                    using (McdocWriteTrace.Stage("text.reformat")) jsonEditor.Reformat();
                     JsonText = jsonEditor.Text;
                 }
                 finally
@@ -577,10 +657,10 @@ namespace CBHK.ViewModel.Generator
                 lastSyncedText = JsonText;
                 EnsureProjectionMatchesDocument();
                 VerifyJsonTextGeneration("SyncJsonText");
-                CBHK.Utility.Data.Mcdoc.McdocWriteTrace.LogText("SyncJsonText 编辑器文本",
+                McdocWriteTrace.LogText("SyncJsonText 编辑器文本",
                     JsonText, true);
-                CBHK.Utility.Data.Mcdoc.McdocWriteTrace.LogText("SyncJsonText document.RootJson 键",
-                    CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Keys(document.RootJson));
+                McdocWriteTrace.LogText("SyncJsonText document.RootJson 键",
+                    McdocWriteTrace.Keys(document.RootJson));
                 return;
             }
             PushJsonText(McdocJsonFormatter.Format(document.RootJson));
@@ -644,7 +724,10 @@ namespace CBHK.ViewModel.Generator
                 loading = true;
                 try
                 {
-                    document.Load(McdocHelpers.GetRootType(EntryId), jsonEditor.State.Root);
+                    using (McdocWriteTrace.Stage("vm.dirtyReload"))
+                    {
+                        document.Load(McdocHelpers.GetRootType(EntryId), jsonEditor.State.Root);
+                    }
                 }
                 finally
                 {
@@ -655,7 +738,7 @@ namespace CBHK.ViewModel.Generator
                 SyncJsonText();     // 最后排版：Reformat 一次并记下"已同步的那一代"
                 EnsureProjectionMatchesDocument();
                 MdocStatus = "右侧 JSON 有语法错误，已按左侧对齐脏区域（" + dirty.Path + "）并排版";
-                CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Log("右侧脏区域已对齐", edited,
+                McdocWriteTrace.Log("右侧脏区域已对齐", edited,
                     "容器=" + dirty.Path + " 闭合=" + dirty.Closed + " 原长=" + text.Length + " 新长=" + resolved.Length);
                 return true;
             }
@@ -800,12 +883,38 @@ namespace CBHK.ViewModel.Generator
 
         /// <summary>复制当前 JSON（misode 的 SourcePanel 里"复制"那一档）。</summary>
         [CommunityToolkit.Mvvm.Input.RelayCommand]
-        private void CopyJson()
+        public void CopyJson()
         {
-            if (!string.IsNullOrWhiteSpace(JsonText))
+            if (string.IsNullOrWhiteSpace(JsonText))
             {
-                System.Windows.Clipboard.SetText(JsonText);
-                MdocStatus = "已复制 JSON（" + JsonText.Length + " 字符）";
+                return;
+            }
+
+            const int MaxRetries = 10;
+            const int RetryDelayMs = 50;
+
+            for (int i = 0; i < MaxRetries; i++)
+            {
+                try
+                {
+                    Clipboard.SetText(JsonText);
+                    MdocStatus = "已复制 JSON (长度 " + JsonText.Length + ")";
+                    return; // 成功则直接返回
+                }
+                catch (COMException ex) when (ex.HResult == unchecked((int)0x800401D0))
+                {
+                    // 是剪贴板被占用的异常，则进行重试
+                    if (i == MaxRetries - 1)
+                    {
+                        // 最后一次仍然失败，可选择通知用户或记录日志
+                        MdocStatus = "复制失败：剪贴板被其他程序占用";
+                        // 可选：MessageBox.Show("复制失败，请稍后重试。");
+                    }
+                    else
+                    {
+                        System.Threading.Thread.Sleep(RetryDelayMs);
+                    }
+                }
             }
         }
 
@@ -832,7 +941,7 @@ namespace CBHK.ViewModel.Generator
         public bool WriteJsonFile(string path)
         {
             if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(JsonText)) return false;
-            System.IO.File.WriteAllText(path, JsonText);
+            File.WriteAllText(path, JsonText);
             return true;
         }
 
@@ -860,6 +969,12 @@ namespace CBHK.ViewModel.Generator
             // BlockState 资产 → mcdoc:block_states 调度器成员：schema 自带 [[block]] 索引，这里只提供成员表。
             // 换版本会重新走 CreateDocument，所以注册一次即可按版本刷新。
             McdocBlockStates.Register(resource.McdocTypes, GameVersion);
+            // 数据没就绪就建的文档：必选判别键只能落成空串，等数据到位要按同一份来源重来一次
+            if (!IsRuntimeReady()) needsRuntimeRefresh = true;
+            // 日志第一行就暴露"跑的是哪一版"：VS 调试用的是启动那一刻装进内存的 DLL，重新生成不会换掉它，
+            // 没有这行标记，就分不清"代码没生效"和"跑的是旧进程"。
+            McdocWriteTrace.Trace("mcdoc-build", "marker=" + McdocWriteTrace.BuildMarker
+                + " entry=" + EntryId + " version=" + GameVersion);
             // 同步时序只有一份实现（McdocPipeline），探针跑的也是它：探针自己抄一份的话，绿了也说明不了界面绿
             pipeline = new McdocPipeline
             {
@@ -912,6 +1027,7 @@ namespace CBHK.ViewModel.Generator
                         {
                             JsonText = jsonEditor.Text;
                             lastSyncedText = JsonText;
+
                         }
                     }
                     finally
@@ -924,20 +1040,22 @@ namespace CBHK.ViewModel.Generator
                         // 标量行的 Head 跟值无关，不必整行重读绑定；union 行镜像的编辑器/分支候选会变，要刷。
                         // 统一入口：刷诊断 + 重建"靠这个键解出来"的兄弟子树（dispatcher 索引）
                         pipeline.OnValueChanged(node);
-                        CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Log("值编辑走手术式回写", node,
+                        McdocWriteTrace.Log("值编辑走手术式回写", node,
                             "span=" + slot.Start + "+" + slot.Length);
-                        if (node.IsRuntimeDependent) ScheduleRebuild(node.RebuildAnchor);
+                        // 只有"这个键真的有依赖方"才排重建：否则一次数字/布尔改动会白重建一层（行拼接 → 滚动视图跳）
+                        if (node.IsRuntimeDependent && (pipeline?.ValueDrivesDependents(node) ?? true)) ScheduleRebuild(node.RebuildAnchor);
                         return;
                     }
                     // 手术式落地失败（值变成容器/多行/锚点丢失）：AST 已经写过，走整篇回写即可，不再二次 ApplyNodeValue
-                    CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Log("值编辑退回整篇", node, "路径=" + (node.JsonPath ?? "?"));
+                    McdocWriteTrace.Log("值编辑退回整篇", node, "路径=" + (node.JsonPath ?? "?"));
                     SyncJsonText();
-                    if (node.Type?.Kind != McdocTypeKind.Union && node.IsRuntimeDependent) ScheduleRebuild(node.RebuildAnchor);
+                    if (node.Type?.Kind != McdocTypeKind.Union && node.IsRuntimeDependent
+                        && (pipeline?.ValueDrivesDependents(node) ?? true)) ScheduleRebuild(node.RebuildAnchor);
                     return;
                 }
                 if (!unionStructuralBranch && jsonEditor is not null && node.Json is not null)
                 {
-                    CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Log("值编辑未走快路径", node,
+                    McdocWriteTrace.Log("值编辑未走快路径", node,
                         "捕获定位失败 路径=" + (node.JsonPath ?? "?") + " 值=" + node.Json.Kind);
                 }
                 if (!unionStructuralBranch) McdocCollectionEditor.Default.ApplyNodeValue(node);
@@ -955,15 +1073,10 @@ namespace CBHK.ViewModel.Generator
                     pipeline.OnUnionBranchSwitched(node);
                     return;
                 }
-                // 这个值参与过动态索引（例如 advancement 的 trigger 决定 ...minecraft:trigger[[trigger]] 展开什么）：
-                // 文本已经同步，重建延后一拍再做 —— 同步重建会打断进行中的编辑（动态键正在输入时节点会被换掉，
-                // 表现就是"加了键但 JSON 里没有"）。
-                // union 行自己已经把分支换好了（ConvertJsonToSelectedBranch + 原位重建行），
-                // 再排一次整树重建反而会把行实例整批换掉（滚动/展开/选中全丢）。
-                if (node.Type?.Kind != McdocTypeKind.Union && node.IsRuntimeDependent)
-                {
-                    ScheduleRebuild(node.RebuildAnchor);
-                }
+                // 值变化的**唯一**出口：重算诊断 + 重建"靠这个键解出来的兄弟/父级"（清旧成员、解新成员）。
+                // 以前只有手术式快路径接了 pipeline.OnValueChanged，慢路径（没有编辑器 / 快路径失手）
+                // 只排一个 IsRuntimeDependent 重建 —— 于是"切完 Enum，同层旧成员的键还在、新成员也不解析"。
+                pipeline.OnValueChanged(node);
             };
             document.NodeStructureChanged = node =>
             {
@@ -973,16 +1086,6 @@ namespace CBHK.ViewModel.Generator
                 // 结构变更只有一份实现（McdocPipeline）：运行期依赖 / 再入 / 刷新次序都在里面
                 pipeline.OnStructureChanged(node);
             };
-        }
-
-        /// <summary>
-        /// 把"必填 + 闭合下拉 + 已经替用户选中"的值写进文档，并重建一次让依赖它的 spread 解析到位。
-        /// <paramref name="includeDisplayedDefaults"/> 只在"载入渲染完毕"时开：那一刻行上显示的
-        /// 数字/bool/union 标量默认值要落盘（所见即所得）；结构变更后不补，免得编辑时凭空长出键。
-        /// </summary>
-        private int MaterializeRequiredSelections(bool includeDisplayedDefaults = false)
-        {
-            return pipeline?.MaterializeOnce(includeDisplayedDefaults) ?? 0;
         }
 
         /// <summary>
@@ -1003,26 +1106,9 @@ namespace CBHK.ViewModel.Generator
         private void OnChildrenBuilt(McdocTreeNode node)
         {
             if (loading || node is null) return;
-            // 重建/刷新期间投影自己也会 EnsureChildren：那时"刚建出子级"不是用户展开，
-            // 再排一次重建就会自我驱动（现场 116 次 proj-splice 把 UI 线程占死）
-            if (pipeline?.Rebuilding == true) return;
-            var wasLoading = loading;
-            loading = true;
-            var written = 0;
-            try
-            {
-                written = McdocCollectionEditor.Default.MaterializeRequiredSelections([node]);
-            }
-            catch (Exception)
-            {
-                // 投影期间补物化失败只影响这一拍的树形，绝不能让建树/展开整段崩掉
-                written = 0;
-            }
-            finally
-            {
-                loading = wasLoading;
-            }
-            if (written > 0) ScheduleRebuild(node);
+            // 闸门内不丢弃、只登记：闸门结束后由管线补跑一次（McdocPipeline.DrainPendingChildBuilds）。
+            // 丢弃会让新子树里的必填判别键永远不落盘 —— 表现是"加了元素，同层调度器成员一个都不出现"。
+            pipeline?.NoteChildrenBuilt(node);
         }
 
         private bool rebuildScheduled;
@@ -1137,16 +1223,19 @@ namespace CBHK.ViewModel.Generator
             {
                 dispatcher.BeginInvoke(new Action(() =>
                 {
+                    // 锚点必须由**这次调度**自己带上：只读共享字段的话，别处清掉它之后这里就只剩 null，
+                    // 而 null 的含义是"整篇重载"（实测一次标量编辑因此多花 50ms 全量重解）。
+                    var target = pendingRebuildAnchor ?? anchor;
                     rebuildScheduled = false;
                     // 用户正在行内编辑器里打字：这一刻重建会把承载光标的行换掉（焦点掉到列表上，第二个字符就丢了）。
                     // 记下来，等焦点离开行视图时再补跑。
                     if (IsTextEditorFocused())
                     {
                         rebuildDeferred = true;
+                        pendingRebuildAnchor = target;
                         ArmDeferredFlush();
                         return;
                     }
-                    var target = pendingRebuildAnchor;
                     pendingRebuildAnchor = null;
                     RebuildTargetedOrFallback(target);
                 }), System.Windows.Threading.DispatcherPriority.Background);
@@ -1161,9 +1250,10 @@ namespace CBHK.ViewModel.Generator
         /// <summary>定向重建：只重造 anchor 子树并重拼父行的子行；锚点失效/根级替换时回退整树。</summary>
         private void RebuildTargetedOrFallback(McdocTreeNode anchor)
         {
+            using var stage = McdocWriteTrace.Stage("vm.rebuild");
             if (anchor is null)
             {
-                ReloadKeepingEditor();
+                using (McdocWriteTrace.Stage("vm.rebuildNull")) ReloadKeepingEditor();
                 return;
             }
             // 锚点已被上一次重建换掉时才按路径重找：路径索引里同路径的可能是动态键占位行（无键身份），
@@ -1175,6 +1265,24 @@ namespace CBHK.ViewModel.Generator
             try
             {
                 rebuilt = document.RebuildNode(current);
+                // 锚点这一层换不成（它的父容器已被上一拍的重建换掉：IsAttached 只按父链判，
+                // 旧父链照样通到树根）——先按路径找本代节点，再逐级往上，实在不行才整篇重载。
+                // 少了这段梯子，一次标量编辑会因为"锚点这一层重解不出来"退化成整篇重解（实测 55ms）。
+                if (rebuilt is null && anchor.JsonPath is { Length: > 0 } path)
+                {
+                    var byPath = document.FindNode(path);
+                    if (byPath is not null && !ReferenceEquals(byPath, current))
+                    {
+                        current = byPath;
+                        rebuilt = document.RebuildNode(byPath);
+                    }
+                }
+                for (var hop = 0; rebuilt is null && hop < 2; hop++)
+                {
+                    current = current?.Parent;
+                    if (current is null) break;
+                    rebuilt = document.RebuildNode(current);
+                }
             }
             finally
             {
@@ -1182,7 +1290,10 @@ namespace CBHK.ViewModel.Generator
             }
             if (rebuilt is null)
             {
-                ReloadKeepingEditor();
+                McdocWriteTrace.Log("定向重建失败→整篇重载", current,
+                    "anchor=" + (anchor?.JsonPath ?? "<null>") + " valueNode=" + (current?.ValueNode is not null)
+                    + " parent=" + (current?.Parent?.JsonPath ?? "<null>") + " root=" + document.FlattenedRoot);
+                using (McdocWriteTrace.Stage("vm.rebuildMiss")) ReloadKeepingEditor();
                 return;
             }
             if (!projector.RefreshAround(rebuilt))
@@ -1203,6 +1314,8 @@ namespace CBHK.ViewModel.Generator
         /// <summary>按当前 JSON 重建树，但不重解析编辑器文本（值变化/结构变化的共同出口）。</summary>
         private void ReloadKeepingEditor()
         {
+            using var stage = McdocWriteTrace.Stage("vm.reload");
+            McdocWriteTrace.LogText("整篇重载入口", null, withCaller: true);
             var wasLoading = loading;
             loading = true;
             try
@@ -1250,14 +1363,27 @@ namespace CBHK.ViewModel.Generator
             var sourceNote = "";
             try
             {
+                var entryAccepted = false;
                 if (TryLoadEntryDocument(out var entryText, out var entrySource))
                 {
-                    // 入口文件就是这份文档本身：树/文本/默认值快照都按它来
-                    defaultDocumentText = entryText;
-                    LoadMcdocTree(entryText);
-                    sourceNote = "入口文件：" + entrySource;
+                    // 入口文件的**根形状**必须与声明一致：模板数据坏了（现场：loot_table 的模板是一份
+                    // "函数数组"，而根声明是 struct）时，整页会退化成 any 原始行，看着像"求解/渲染坏了"。
+                    // 这种情形不许拿坏数据建树 —— 退回代数默认值并把原因摆在状态栏。
+                    if (EntryDocumentMatchesRoot(entryText, out var mismatch))
+                    {
+                        // 入口文件就是这份文档本身：树/文本/默认值快照都按它来
+                        defaultDocumentText = entryText;
+                        LoadMcdocTree(entryText);
+                        sourceNote = "入口文件：" + entrySource;
+                        entryAccepted = true;
+                    }
+                    else
+                    {
+                        defaultDocumentDegraded = true;
+                        sourceNote = "入口文件根形状与声明不符（" + mismatch + "，来自 " + entrySource + "），已按代数默认值生成";
+                    }
                 }
-                else
+                if (!entryAccepted)
                 {
                     var root = McdocHelpers.GetRootType(EntryId);
                     // 求值与默认值生成必须共用同一个 runtime：misode 的 getDefault 在 struct 字段 / list 项 /
@@ -1269,7 +1395,7 @@ namespace CBHK.ViewModel.Generator
                     defaultDocumentText = McdocJsonFormatter.Format(
                         McdocDefaults.CanMaterialize(value) ? value : McdocJsonValue.Object());
                     LoadMcdocTree(defaultDocumentText);
-                    sourceNote = entrySource + "，已按代数默认值生成";
+                    if (sourceNote.Length == 0) sourceNote = "已按代数默认值生成";
                 }
             }
             catch (Exception error)
@@ -1282,6 +1408,35 @@ namespace CBHK.ViewModel.Generator
             if (sourceNote.Length > 0)
             {
                 MdocStatus = MdocStatus.Length > 0 ? sourceNote + " | " + MdocStatus : sourceNote;
+            }
+        }
+
+        /// <summary>
+        /// 入口文件的根形状是否与声明一致：结构要对象、列表/元组/原始数组要数组、any/解不开不判。
+        /// 只做形状判（读文档第一层），不看字段 —— 目的是拦住"模板本身就是另一种资源"这类坏数据。
+        /// </summary>
+        private bool EntryDocumentMatchesRoot(string text, out string mismatch)
+        {
+            mismatch = "";
+            var declared = McdocDefaults.ResolveType(McdocHelpers.GetRootType(EntryId),
+                document?.CreateRuntime(), McdocDefaults.DefaultNode());
+            if (declared is null || declared.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe) return true;
+            if (!MdococJsonTryParse(text, out var parsed)) return true;   // 解析不了交给 LoadMcdocTree 去报语法错
+            return McdocHelpers.RootShapeMatches(parsed, declared, out mismatch);
+        }
+
+        private static bool MdococJsonTryParse(string text, out McdocJsonValue value)
+        {
+            value = null;
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            try
+            {
+                value = McdocJsonTextParser.Parse(text).Root;
+                return value is not null;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
 
@@ -1396,6 +1551,13 @@ namespace CBHK.ViewModel.Generator
 
         /// <summary>这份默认文档是在"运行数据没就绪"的情况下求出来的（等数据到了要重生成）。</summary>
         private bool defaultDocumentDegraded;
+        /// <summary>
+        /// 这份文档是在运行数据（注册表/符号表）就绪**之前**建起来的：那时 #[id] 候选为空，
+        /// 必选判别键会被落成空串（现场：loot_table 的 entries[].type = ""，行上却显示着候选）。
+        /// 数据到位后必须按同一份来源重来一次 —— 只认 defaultDocumentDegraded 时，从入口文件载入的
+        /// 那份文档永远不会重来，空串就留在 JSON 里（"有的能落盘有的不行"就是这么来的）。
+        /// </summary>
+        private bool needsRuntimeRefresh;
 
         /// <summary>最近一次生成默认文档的文本：用来判断用户有没有动过内容（动过就不许顶掉）。</summary>
         private string defaultDocumentText;
@@ -1412,9 +1574,18 @@ namespace CBHK.ViewModel.Generator
             }
             // 兜底校验：任何入口（切换版本/载入草稿/防抖重建）都先过 System.Text.Json，
             // 语法错就只画线、不碰树——宽容解析器会返回部分结果，直接建树会把旧内容覆盖掉。
-            CBHK.Utility.Data.Mcdoc.McdocWriteTrace.LogText(
+            McdocWriteTrace.LogText(
                 "LoadMcdocTree由" + (new System.Diagnostics.StackTrace(1, false).GetFrame(0)?.GetMethod()?.Name ?? "?")
                 + "调用 loading=" + loading + " isDocumentRoot=" + (document?.RootJson is not null), text);
+            // 与 DigestEditorText 同一条口径：先归一"看不见的空白"（粘贴来源），再严格解析。
+            var normalizedText = McdocJsonParser.NormalizeInvisible(text, out var replacedInvisible);
+            if (replacedInvisible > 0)
+            {
+                McdocWriteTrace.Log("文本含不可见空白字符，按空格归一", null,
+                    "replaced=" + replacedInvisible + " 来源=LoadMcdocTree");
+                text = normalizedText;
+                MdocStatus = "已把 " + replacedInvisible + " 个不可见字符（BOM / 不换行空格 / 全角空格）按空格处理";
+            }
             if (!McdocJsonParser.TryParse(text, out var parsedText, out var syntaxError))
             {
                 ShowSyntaxError(syntaxError);
@@ -1439,8 +1610,11 @@ namespace CBHK.ViewModel.Generator
             loading = true;
             try
             {
-                document.Load(McdocHelpers.GetRootType(EntryId),
-                    jsonEditor is not null ? jsonEditor.State.Root : parsedText);
+                using (McdocWriteTrace.Stage("vm.loadTree"))
+                {
+                    document.Load(McdocHelpers.GetRootType(EntryId),
+                        jsonEditor is not null ? jsonEditor.State.Root : parsedText);
+                }
             }
             finally
             {

@@ -7,9 +7,9 @@
     xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:json="clr-namespace:CBHK.Utility.Data.JsonText"
     xmlns:local="clr-namespace:CBHK.View.Generator"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:json="clr-namespace:CBHK.Utility.Data.JsonText"
     xmlns:mcdoc="clr-namespace:CBHK.Utility.Data.Mcdoc"
     xmlns:prism="http://prismlibrary.com/"
     Title="维度编辑器"
@@ -39,23 +39,23 @@
             Style="{StaticResource VectorTextComboBoxStyle}" />
         <DockPanel Grid.Row="1" Grid.Column="0">
             <ContentControl
-                DockPanel.Dock="Top"
                 Content="{Binding}"
-                ContentTemplate="{StaticResource McdocGeneratorChrome}" />
+                ContentTemplate="{StaticResource McdocGeneratorChrome}"
+                DockPanel.Dock="Top" />
             <TextBlock
-                DockPanel.Dock="Bottom"
                 Margin="6,2"
+                DockPanel.Dock="Bottom"
                 FontSize="12"
                 Foreground="{DynamicResource CommonForeground}"
                 Text="{Binding MdocStatus}"
                 TextTrimming="CharacterEllipsis" />
             <mcdoc:McdocTreeRowView
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            Background="Transparent"
-            ItemContainerStyle="{StaticResource McdocRowItemContainerStyle}"
-            ItemTemplateSelector="{StaticResource McdocRowTemplateSelector}"
-            ItemsSource="{Binding Rows}"  />
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="Transparent"
+                ItemContainerStyle="{StaticResource McdocRowItemContainerStyle}"
+                ItemTemplateSelector="{StaticResource McdocRowTemplateSelector}"
+                ItemsSource="{Binding Rows}" />
         </DockPanel>
         <GridSplitter
             Grid.Row="1"
@@ -65,12 +65,13 @@
             BorderBrush="{DynamicResource CommonForeground}"
             BorderThickness="1,0,1,0"
             ResizeBehavior="PreviousAndNext" />
-        <json:JsonTextEditor mcdoc:McdocJsonEditorHost.IsEnabled="True"
+        <json:JsonTextEditor
             Grid.Row="1"
             Grid.Column="2"
             Margin="5"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
+            mcdoc:McdocJsonEditorHost.IsEnabled="True"
             Background="Transparent"
             FontFamily="JetBrains Mono"
             Foreground="{DynamicResource CommonForeground}"

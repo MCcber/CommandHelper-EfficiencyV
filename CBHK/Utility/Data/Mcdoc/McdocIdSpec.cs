@@ -219,8 +219,16 @@ namespace CBHK.Utility.Data.Mcdoc
                 result.Add(Prefix is { Length: > 0 } ? Prefix + id : id);
             }
 
-            // tag 形式（allowed / implicit）：'#' 或属性里的 prefix 前缀
-            if (Tags is "allowed" or "implicit")
+            // tags="required"：值**必须**是 tag，注册表成员一个都不合法（1.18.2..26.2 的 infiniburn 就是这条）。
+            // 以前不认 required：候选里全是方块 id，文档里合法写着的 "#minecraft:infiniburn_overworld"
+            // 于是被判成"候选外的值"挂 warn，下拉里还会把方块 id 当选项显示。
+            if (Tags is "required")
+            {
+                result.Clear();
+            }
+
+            // tag 形式（required / allowed / implicit）：'#' 或属性里的 prefix 前缀
+            if (Tags is "required" or "allowed" or "implicit")
             {
                 var tagPrefix = Prefix is { Length: > 0 } ? Prefix : "#";
                 foreach (var raw in tagOptions ?? [])
@@ -270,7 +278,14 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             if (string.IsNullOrEmpty(spec?.Registry) || runtime is null)
             {
-                if (type.Kind == McdocTypeKind.Enum) McdocOptionTrace.Report(node, "enum-without-registry");
+                // 没有 #[id] 注册表：**裸枚举的候选来自 EnumValues**（表现器自己填，下拉是好的），
+                // 在这里报一条就是假阳性 —— 以前每个裸枚举都写，`--check-trace` 的 enum-empty=0
+                // 永远到不了（skybox / cardinal_light 这种场次全都计入）。只有"声明了注册表候选
+                // 却拿不到数据源"才是真正的哑下拉。
+                if (type.Kind == McdocTypeKind.Enum && runtime is null && spec?.Registry is { Length: > 0 })
+                {
+                    McdocOptionTrace.Report(node, "enum-without-registry");
+                }
                 return;
             }
 

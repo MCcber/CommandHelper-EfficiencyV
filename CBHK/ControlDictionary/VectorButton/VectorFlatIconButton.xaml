@@ -21,7 +21,7 @@
                         BorderBrush="Black"
                         BorderThickness="1"
                         SnapsToDevicePixels="true"
-                        UseLayoutRounding="True">
+                        UseLayoutRounding="False">
                         <Grid Background="{TemplateBinding Background}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="3" />

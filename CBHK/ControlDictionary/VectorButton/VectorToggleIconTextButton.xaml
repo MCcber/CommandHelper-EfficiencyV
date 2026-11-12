@@ -8,7 +8,7 @@
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
-        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="False" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="1" />
@@ -20,7 +20,7 @@
                         Background="Transparent"
                         BorderThickness="0"
                         SnapsToDevicePixels="true"
-                        UseLayoutRounding="True">
+                        UseLayoutRounding="False">
                         <Grid ClipToBounds="False">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -189,7 +189,8 @@
                                         <RowDefinition Height="2" />
                                         <RowDefinition Height="*" />
                                         <RowDefinition Height="2" />
-                                        <RowDefinition x:Name="extraBottomLine" />
+                                        <!--  底边附加线：默认 4px，代码在 OnApplyTemplate 中按 OriginBottomHeight 覆盖，避免延迟应用模板时退化成 *  -->
+                                        <RowDefinition x:Name="extraBottomLine" Height="4" />
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="2" />

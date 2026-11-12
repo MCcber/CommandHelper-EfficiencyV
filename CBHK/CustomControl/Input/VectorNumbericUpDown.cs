@@ -9,10 +9,19 @@ namespace CBHK.CustomControl.Input
     public class VectorNumbericUpDown : Control
     {
         #region Field
-        private string originText = "";
+
         #endregion
 
         #region Property
+        public decimal Value
+        {
+            get { return (decimal)GetValue(ValueProperty); }
+            set { SetValue(ValueProperty, value); }
+        }
+
+        public static readonly DependencyProperty ValueProperty =
+            DependencyProperty.Register(nameof(Value), typeof(decimal), typeof(VectorNumbericUpDown), new PropertyMetadata(default(decimal)));
+
         public string Text
         {
             get { return (string)GetValue(TextProperty); }
@@ -89,6 +98,20 @@ namespace CBHK.CustomControl.Input
                 BorderBrush = LocateLineBrush = new SolidColorBrush(ColorTool.Darken(themeBrush.Color, 0.2f));
             }
         }
+
+        private string GetResultNumberText(decimal currentValue)
+        {
+            string result = "";
+            if (!string.IsNullOrWhiteSpace(WaterMarkerText))
+            {
+                result = WaterMarkerText + ':' + currentValue;
+            }
+            else
+            {
+                result = currentValue.ToString();
+            }
+            return result;
+        }
         #endregion
 
         #region Event
@@ -99,10 +122,6 @@ namespace CBHK.CustomControl.Input
 
         public void VectorNumbericUpDownTextBox_Loaded(object sender, RoutedEventArgs e)
         {
-            if (double.TryParse(Text, out double result))
-            {
-                originText = result.ToString();
-            }
             VectorNumbericUpDown_LostFocus(sender, e);
         }
 
@@ -117,44 +136,40 @@ namespace CBHK.CustomControl.Input
 
         public void VectorNumbericUpDown_GotFocus(object sender, RoutedEventArgs e)
         {
-            Text = originText;
+            Text = Value.ToString();
         }
 
         public void VectorNumbericUpDown_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(originText) && !string.IsNullOrEmpty(WaterMarkerText))
+            if (decimal.TryParse(Text, out decimal currentValue))
             {
-                Text = WaterMarkerText + ':' + originText;
+                Text = (!string.IsNullOrEmpty(WaterMarkerText) ? WaterMarkerText + ':' : "") + currentValue;
+            }
+            else
+            {
+                Text = (!string.IsNullOrEmpty(WaterMarkerText) ? WaterMarkerText + ':' : "") + Value;
             }
         }
 
         public void OnTextChanged(object sender, TextChangedEventArgs e)
         {
             SetValue(HasTextPropertyKey, Text is not null && Text.Length > 0);
-            if (sender is TextBox textBox && textBox.IsFocused)
+            if (decimal.TryParse(Text, out decimal result))
             {
-                originText = Text;
+                Value = result;
             }
         }
 
         public void OnIncrease_Click(object sender,RoutedEventArgs e)
         {
-            if (int.TryParse(originText, out int value))
-            {
-                value++;
-                originText = value.ToString();
-                Text = WaterMarkerText + ':' + originText;
-            }
+            Value++;
+            Text = GetResultNumberText(Value);
         }
 
         public void OnDecrease_Click(object sender, RoutedEventArgs e)
         {
-            if (int.TryParse(originText, out int value))
-            {
-                value--;
-                originText = value.ToString();
-                Text = WaterMarkerText + ':' + originText;
-            }
+            Value--;
+            Text = GetResultNumberText(Value);
         }
         #endregion
     }

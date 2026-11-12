@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace CBHK.Utility.Data.Mcdoc
@@ -10,6 +11,9 @@ namespace CBHK.Utility.Data.Mcdoc
     public static class McdocWriteTrace
     {
         /// <summary>开关是否打开（MCDOC_TRACE_WRITE=1）。诊断类解析只在打开时执行，不进生产热路径。</summary>
+        /// <summary>构建标记：改逻辑时更新它，日志第一行就能看出跑的是哪一版（排"旧进程"用）。</summary>
+        public const string BuildMarker = "trace-v20/2026-11-12-perf";
+
         public static bool Enabled { get; } =
             string.Equals(Environment.GetEnvironmentVariable("MCDOC_TRACE_WRITE"), "1", StringComparison.Ordinal)
             // 从 VS 里 F5 启动时没法带环境变量：在 exe 旁边放一个空文件 mcdoc-trace.on 同样能开
@@ -108,6 +112,71 @@ namespace CBHK.Utility.Data.Mcdoc
             if (!Enabled) return;
             Console.WriteLine("[mcdoc-write] " + action + " path=" + (node?.JsonPath ?? "?")
                 + " field=" + (node?.FieldName ?? "?") + " brokenAt=" + brokenAt);
+        }
+
+        // ── 分阶段计时（MCDOC_TRACE_WRITE=1 或 MCDOC_TRACE_STATS=1 才累加）────────
+        // 关着的时候 Stage 返回空 scope，调用点只多一次静态布尔判断（热路径零分配零计时）。
+
+        /// <summary>只累计、不落盘的开关：实测交互耗时时用它，避免 trace 的落盘 I/O 污染数字。</summary>
+        public static bool StatsEnabled { get; set; } = Enabled
+            || string.Equals(Environment.GetEnvironmentVariable("MCDOC_TRACE_STATS"), "1", StringComparison.Ordinal);
+
+        private struct StageAcc
+        {
+            public long Ticks;
+            public int Count;
+        }
+
+        private static readonly Dictionary<string, StageAcc> stageTotals = new(StringComparer.Ordinal);
+
+        public static void ResetStages() => stageTotals.Clear();
+
+        /// <summary>一次计时的作用域：<c>using (McdocWriteTrace.Stage("doc.load")) { ... }</c></summary>
+        public readonly struct StageScope : IDisposable
+        {
+            private readonly string name;
+            private readonly long started;
+
+            internal StageScope(string name, long started)
+            {
+                this.name = name;
+                this.started = started;
+            }
+
+            public void Dispose()
+            {
+                if (name is null) return;
+                var elapsed = Stopwatch.GetTimestamp() - started;
+                if (!stageTotals.TryGetValue(name, out var acc)) acc = default;
+                acc.Ticks += elapsed;
+                acc.Count++;
+                stageTotals[name] = acc;
+            }
+        }
+
+        public static StageScope Stage(string name)
+            => StatsEnabled ? new StageScope(name, Stopwatch.GetTimestamp()) : default;
+
+        public static double StageMs(string name)
+            => stageTotals.TryGetValue(name, out var acc) ? acc.Ticks * 1000.0 / Stopwatch.Frequency : 0;
+
+        public static int StageCount(string name)
+            => stageTotals.TryGetValue(name, out var acc) ? acc.Count : 0;
+
+        /// <summary>按总耗时降序输出一张表：<c>name=总计ms×次数</c>。没开计时就是空串。</summary>
+        public static string StageReport()
+        {
+            if (stageTotals.Count == 0) return "";
+            var ordered = new List<KeyValuePair<string, StageAcc>>(stageTotals);
+            ordered.Sort((left, right) => right.Value.Ticks.CompareTo(left.Value.Ticks));
+            var text = "";
+            foreach (var pair in ordered)
+            {
+                var ms = pair.Value.Ticks * 1000.0 / Stopwatch.Frequency;
+                if (text.Length > 0) text += " ";
+                text += pair.Key + "=" + ms.ToString("0.0") + "ms/" + pair.Value.Count;
+            }
+            return text;
         }
     }
 }

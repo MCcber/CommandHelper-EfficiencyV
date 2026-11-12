@@ -74,7 +74,7 @@
                 AllowDrop="True"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
+                UseLayoutRounding="False">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
@@ -104,7 +104,7 @@
                 AllowDrop="True"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
+                UseLayoutRounding="False">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
@@ -134,7 +134,7 @@
                 AllowDrop="True"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
+                UseLayoutRounding="False">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
@@ -164,7 +164,7 @@
                 AllowDrop="True"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
+                UseLayoutRounding="False">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
@@ -194,7 +194,7 @@
                 AllowDrop="True"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
+                UseLayoutRounding="False">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
@@ -223,7 +223,7 @@
                 AllowDrop="True"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
+                UseLayoutRounding="False">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
@@ -252,7 +252,7 @@
                 AllowDrop="True"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
+                UseLayoutRounding="False">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
@@ -281,7 +281,7 @@
                 AllowDrop="True"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
+                UseLayoutRounding="False">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
@@ -310,7 +310,7 @@
                 AllowDrop="True"
                 RenderOptions.BitmapScalingMode="NearestNeighbor"
                 SnapsToDevicePixels="True"
-                UseLayoutRounding="True">
+                UseLayoutRounding="False">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger EventName="Drop">
                         <behaviors:CallMethodAction MethodName="GetDropData" TargetObject="{Binding}" />
@@ -415,7 +415,7 @@
             RenderOptions.BitmapScalingMode="NearestNeighbor"
             RenderOptions.EdgeMode="Aliased"
             SnapsToDevicePixels="True"
-            UseLayoutRounding="True">
+            UseLayoutRounding="False">
             <behaviors:Interaction.Triggers>
                 <behaviors:EventTrigger EventName="Loaded">
                     <behaviors:CallMethodAction MethodName="ResultItem_Loaded" TargetObject="{Binding}" />
@@ -590,7 +590,7 @@
                                     Source="{StaticResource Slot}"
                                     ToolTipService.BetweenShowDelay="0"
                                     ToolTipService.InitialShowDelay="0"
-                                    UseLayoutRounding="True" />
+                                    UseLayoutRounding="False" />
                                 <Image
                                     Width="50"
                                     Height="50"
@@ -601,7 +601,7 @@
                                     Source="{Binding Path=ImagePath, IsAsync=True, Mode=OneWay}"
                                     ToolTipService.BetweenShowDelay="0"
                                     ToolTipService.InitialShowDelay="0"
-                                    UseLayoutRounding="True">
+                                    UseLayoutRounding="False">
                                     <Image.ToolTip>
                                         <ToolTip
                                             Background="#484848"

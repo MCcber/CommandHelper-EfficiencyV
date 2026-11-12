@@ -137,6 +137,9 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 // 文档里没有这个键、也不是必选：只有一行 ⊕，不许有展开按钮（缺省字段不摊开子级）
                 if (!Node.IsRequired && Node.Json is null) return false;
+                // 必选却还没有值：这一行没有编辑器、也没有 ⊕，展开是它**唯一**的入口 ——
+                // 必须给箭头，点开按声明摊开子字段行（缺值的子行各自挂"缺少必填键"）。
+                if (Node.Json is null) return true;
                 var presenter = McdocPresenterRegistry.Default;
                 if (presenter.Children(Node).Count > 0) return true;
                 // 建过且确实空的节点不再猜"可能能装"，免得留一个点不开的死箭头
@@ -144,6 +147,10 @@ namespace CBHK.Utility.Data.Mcdoc
             }
         }
         public Visibility ExpanderVisibility => HasChildren ? Visibility.Visible : Visibility.Hidden;
+
+        /// <summary>展开/折叠：行内模板按钮绑这个（控件自身不该带选中态逻辑）。</summary>
+        public System.Windows.Input.ICommand ToggleExpandedCommand
+            => new McdocCommand(() => IsExpanded = !IsExpanded);
 
         public bool IsExpanded
         {
@@ -227,7 +234,20 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 键还在文档里就删键；换版本时已经被清掉了，就删这一行（幽灵行不该点不掉）。
         /// </summary>
         public Visibility UnknownDeleteVisibility
-            => Node.IsUnknownField && Node.Parent is not null ? Visibility.Visible : Visibility.Collapsed;
+            => (Node.IsUnknownField || IsGhostRow) && Node.Parent is not null
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
+        /// <summary>
+        /// 幽灵行：行上还挂着值，文档里那个键已经没了（切 union 剪键 / 右侧删键之后投影没跟上）。
+        /// 这类行四个删除出口全都不成立（节点的 Json 还在、键不在文档里），没有这条判据就是
+        /// "文档里没有、行上却点不掉" —— 现场：切分支后残留的那一行怎么都删不掉。
+        /// </summary>
+        public bool IsGhostRow
+            => !Node.IsUnknownField && Node.Json is not null && Node.Parent is not null
+               && !string.IsNullOrEmpty(Node.FieldName)
+               && Node.Parent.Json is { Kind: McdocJsonKind.Object } parent
+               && parent.Get(Node.FieldName) is null;
 
         /// <summary>
         /// 遗留键的删除入口。两种现场分开走：键还在 → 走节点级删除（父级重建，行随之消失）；
@@ -397,18 +417,33 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         public Visibility ClearVisibility
             => !Node.IsRequired && !Node.IsUnknownField && Node.Json is not null
+               // map 条目与列表项各有自己的删除入口（RemoveEntry / ⊖）：行上不许再出现第二个
+               // （README §三：可选字段的 unset 只有一条出口）。现场：加出来的 map 条目同时显示
+               // "删除条目"和"清空"两把垃圾桶。
+               && !Node.IsMapEntry && !IsListChild
                && !McdocNodePresenter.HasSelfClearGesture(Node)
                 ? Visibility.Visible
                 : Visibility.Collapsed;
 
         public System.Windows.Input.ICommand ClearCommand => Node.RemoveFieldCommand;
-        public Visibility ItemActionsVisibility => IsListChild ? Visibility.Visible : Visibility.Collapsed;
+        /// <summary>
+        /// 列表项的 ▲▼⊖ 只在**真正的元素行**上出现：More / AddTail 行也是 listChild，
+        /// 它们的 Command 全挂在列表节点上（null），渲染出来就是"看得见、点了什么都不发生"的四颗空按钮。
+        /// </summary>
+        public Visibility ItemActionsVisibility
+            => IsListChild && Kind is not (McdocRowKind.More or McdocRowKind.AddTail)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
 
         public System.Windows.Input.ICommand RemoveEntryCommand => Node.RemoveEntryCommand;
 
         /// <summary>动态键条目（map 里的已有键）删除。</summary>
+        /// <summary>
+        /// map 条目行的删除入口：与"可选字段清空"不是一回事，放在**行首**（行尾那格留给加入/重命名）。
+        /// 值被（未设置）清掉后键已经不在文档里、这一行还在 —— 那时点它就是摘掉这一行。
+        /// </summary>
         public Visibility RemoveEntryVisibility
-            => Node.RemoveEntryCommand?.CanExecute(null) == true ? Visibility.Visible : Visibility.Collapsed;
+            => Node.IsMapEntry && Node.Parent is not null ? Visibility.Visible : Visibility.Collapsed;
 
         /// <summary>misode ListBody 尾部的 add_bottom：一条"追加"行。</summary>
         public System.Windows.Input.ICommand AddTailCommand => Node.AddItemCommand;

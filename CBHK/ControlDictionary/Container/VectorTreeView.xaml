@@ -34,7 +34,7 @@
                             RenderOptions.ClearTypeHint="Enabled"
                             SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
                             Style="{DynamicResource VectorScrollViewerStyle}"
-                            UseLayoutRounding="True"
+                            UseLayoutRounding="False"
                             VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
                             VirtualizingPanel.IsVirtualizing="True">
                             <ItemsPresenter />

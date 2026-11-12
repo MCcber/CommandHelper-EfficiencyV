@@ -839,7 +839,7 @@
             Command="{Binding ReturnCommand}"
             CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
             FontSize="15"
-            Style="{DynamicResource IconTextButton}"
+            Style="{DynamicResource VectorFlatIconButtonStyle}"
             ToolTipService.BetweenShowDelay="0"
             ToolTipService.InitialShowDelay="0">
             <VectorButton:VectorFlatIconButton.ToolTip>
@@ -978,7 +978,7 @@
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
             </Input:VectorTextBox>
-            <TreeView
+            <Container:VectorTreeView
                 Grid.Row="2"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
@@ -988,7 +988,7 @@
                 ItemsSource="{Binding DatapackTreeViewItems, IsAsync=True}"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                Style="{DynamicResource TreeViewWithScrollBar}"
+                Style="{DynamicResource VectorTreeViewStyle}"
                 VirtualizingStackPanel.IsVirtualizing="True"
                 VirtualizingStackPanel.VirtualizationMode="Recycling">
                 <behavior:Interaction.Triggers>
@@ -996,7 +996,7 @@
                         <behavior:CallMethodAction MethodName="SolutionViewer_SelectedItemChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </TreeView>
+            </Container:VectorTreeView>
         </Grid>
     </Grid>
 </Page>

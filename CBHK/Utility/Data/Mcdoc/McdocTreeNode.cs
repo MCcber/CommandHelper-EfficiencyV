@@ -30,7 +30,7 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 由 <see cref="McdocTreeBuilder"/> 注入：用"给定成员类型 + 当前 JSON 值"重建一个分支子节点。
         /// 切换分支时靠它重算子树（成员是自包含类型，所以平铺后的列表也能正确切换）。
         /// </summary>
-        public Func<McdocType, McdocJsonValue, McdocTreeNode> UnionBranchBuilder { get; set; }
+        public Func<McdocType, McdocJsonValue, McdocType, McdocTreeNode> UnionBranchBuilder { get; set; }
 
         /// <summary>值/分支被用户改动时回调宿主（宿主据此回写文本并重算）。</summary>
         public Action<McdocTreeNode> ValueChanged { get; set; }
@@ -67,9 +67,14 @@ namespace CBHK.Utility.Data.Mcdoc
         public System.Windows.Input.ICommand SetDefaultCommand { get; set; }
 
         /// <summary>数值行的 -/+（模板的数据上下文是节点，不是行）。</summary>
-        public System.Windows.Input.ICommand DecreaseCommand => new McdocCommand(() => McdocCollectionEditor.Default.StepNumber(this, -1m));
+        // 命令按节点缓存：每次读取都新造一个对象的话，WPF 的可用性重问会一直换实例（按钮状态跟着抖）
+        private System.Windows.Input.ICommand decreaseCommand;
+        public System.Windows.Input.ICommand DecreaseCommand
+            => decreaseCommand ??= new McdocCommand(() => McdocCollectionEditor.Default.StepNumber(this, -1m));
 
-        public System.Windows.Input.ICommand IncreaseCommand => new McdocCommand(() => McdocCollectionEditor.Default.StepNumber(this, 1m));
+        private System.Windows.Input.ICommand increaseCommand;
+        public System.Windows.Input.ICommand IncreaseCommand
+            => increaseCommand ??= new McdocCommand(() => McdocCollectionEditor.Default.StepNumber(this, 1m));
 
         /// <summary>列表头部的 ⊕（插到 0）。</summary>
         public System.Windows.Input.ICommand AddItemTopCommand { get; set; }
@@ -78,6 +83,17 @@ namespace CBHK.Utility.Data.Mcdoc
         public System.Windows.Input.ICommand RemoveSelfCommand { get; set; }
         public System.Windows.Input.ICommand MoveUpCommand { get; set; }
         public System.Windows.Input.ICommand MoveDownCommand { get; set; }
+
+        /// <summary>
+        /// 列表项的可用性变了（Items 增删/移动/重建之后）：WPF 只在 CanExecuteChanged 时重问 CanExecute，
+        /// 不通知就会出现"新加进来的项上移按钮一直灰着 / 点了没反应"。
+        /// </summary>
+        public void RaiseListItemCommandStateChanged()
+        {
+            (RemoveSelfCommand as McdocCommand)?.RaiseCanExecuteChanged();
+            (MoveUpCommand as McdocCommand)?.RaiseCanExecuteChanged();
+            (MoveDownCommand as McdocCommand)?.RaiseCanExecuteChanged();
+        }
 
         /// <summary>可选字段的"移除"（misode 的 unset）：把自己从父对象里删掉。</summary>
         public System.Windows.Input.ICommand RemoveFieldCommand { get; set; }
@@ -240,6 +256,12 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 那是显示同步、不是用户编辑——不静默就会把 value 的布尔写进文档，把对象覆盖成 true/false。
         /// </summary>
         internal bool SuppressValueNotifications;
+
+        /// <summary>把"值真的变了"通知出去（同一个闸门：建树期/分支镜像期一律不发）。</summary>
+        internal void RaiseValueChanged()
+        {
+            if (!SuppressValueNotifications) ValueChanged?.Invoke(this);
+        }
         /// <summary>求值后的类型（模板分派依据）。</summary>
         public McdocType Type { get; set; } = McdocType.Any();
 
@@ -600,13 +622,20 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 if (Equals(selectedUnionTypeName, value)) return;
                 var previous = selectedUnionTypeName;
+                // 切走之前的成员类型：分支子树的 getChange 要拿它当"旧类型"，否则 X↔[X] / {k:X}↔X
+                // 的搬运规则永远不成立（旧类型是 union 声明，跟哪个成员都不"同型"）。
+                var previousMember = SelectedUnionMember;
                 selectedUnionTypeName = value;
                 // 切成员只有一条规则：旧成员声明、新成员不声明的键要剪掉。
                 // 以前只有 SwitchTo 里做，走下拉/重建这条 setter 路径时旧键会留在文档里（现场：terms 残影）。
-                McdocUnionSwitch.DropAbandonedKeys(this, previous, value);
+                var changed = McdocUnionSwitch.ResetSelectedBranch(this, previous, value);
                 // 先重建再通知：行上的 Head 是按当前分支算的，通知里重算时必须已经能看到新分支
-                if (!suppressUnionRebuild) RebuildUnionBranch();
+                if (!suppressUnionRebuild) RebuildUnionBranch(previousMember);
                 OnPropertyChanged();
+                // 分支改写真的动过文档（剪键/补默认结构）→ 必须走值通知：文本同步与"这一支的重建"
+                // 都挂在这条通道上。以前这里一声不响，下拉切到 Modifier 支后右侧 JSON 停在 {}、
+                // 行也停在上一支（截图现场）。SwitchTo 会压住这条、在自己的收尾里只发一次。
+                if (changed) RaiseValueChanged();
             }
         }
 
@@ -628,14 +657,21 @@ namespace CBHK.Utility.Data.Mcdoc
         /// （表现：切到 modifier 支看得见字段，改完保存的却还是 value 支的布尔）。
         /// 形状相同就不动，避免覆盖用户已有数据。
         /// </summary>
-        internal void ConvertJsonToSelectedBranch()
+        internal void ConvertJsonToSelectedBranch(McdocType previousMember = null, bool replaceWhenUnfit = false)
         {
             var members = Type?.Members;
             var index = SelectedUnionMemberIndex();
             if (members is null || index < 0 || index >= members.Count) return;
-            var converted = McdocHelpers.GetChange(members[index], Type, Json);
+            // 旧类型 = 切走的那个成员（不是 union 声明）：getChange 的四条搬运规则全靠它判"同型"
+            var converted = McdocHelpers.GetChange(members[index], previousMember ?? DeclaredType ?? Type, Json);
             if (converted is null) return;
-            if (Json is not null && converted.Kind == Json.Kind) return;
+            if (Json is not null)
+            {
+                // 形状相同：默认一个字都不动（不替用户改数据）。但**值落不进这一支**时必须转换 ——
+                // 否则文档与分支各说一套（[int] 切到 [string] 支，行上一条条"值与类型不符"）。
+                if (converted.Kind == Json.Kind && !replaceWhenUnfit) return;
+                if (replaceWhenUnfit && McdocUnionSwitch.ValueFitsMember(members[index], Json, null)) return;
+            }
             // 顺序与值回写一致：EnsurePath → 改 node.Json → WriteIntoParent（颠倒会把父级 null 写回去）
             McdocCollectionEditor.Default.EnsurePath(this);
             Json = converted;
@@ -681,7 +717,7 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         /// <summary>按当前选中的成员名重建分支子树；值不兼容时用 GetChange 尽量保留旧值。</summary>
-        private void RebuildUnionBranch()
+        private void RebuildUnionBranch(McdocType previousMember)
         {
             var members = Type?.Members;
             if (members is null || members.Count == 0 || UnionBranchBuilder is null) return;
@@ -694,7 +730,7 @@ namespace CBHK.Utility.Data.Mcdoc
             try
             {
                 SelectedUnionMember = member;
-                ApplyUnionBranch(UnionBranchBuilder(member, Json));
+                ApplyUnionBranch(UnionBranchBuilder(member, Json, previousMember));
             }
             finally
             {

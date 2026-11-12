@@ -86,7 +86,12 @@ namespace CBHK.Utility.Data.Mcdoc
                 // JSON 里写的是 null 也算"没有值"：不补的话同层 spread 拿到 %none，
                 // 整支只出 type 一行（现场：weighted_list 条目里 data.type = null）。
                 var existing = json.Get(name);
-                if (existing is { Kind: not McdocJsonKind.Null }) continue;
+                // 空串同样算"没有值"：McdocDefaults 对必填字符串给的就是 ""，把它当成"有值"
+                // 会让判别键永远不落盘（[[type]] 读成 %none → 同层 spread 一个成员都解不出来）。
+                var absent = existing is null
+                    || existing.Kind == McdocJsonKind.Null
+                    || (existing.Kind == McdocJsonKind.String && string.IsNullOrWhiteSpace(existing.StringValue));
+                if (!absent) continue;
                 var literal = FirstCandidateLiteral(field.Type, runtime);
                 if (string.IsNullOrEmpty(literal)) continue;
                 if (existing is null)
@@ -202,7 +207,8 @@ namespace CBHK.Utility.Data.Mcdoc
         private static string FirstCandidateLiteral(McdocType type, McdocRuntime runtime)
         {
             if (type is null || runtime?.IdSpaces is null) return null;
-            foreach (var candidate in WithUnionMembers(type))
+            foreach (var candidate in WithUnionMembers(type, member => runtime?.Attributes is null
+                || runtime.Attributes.ShouldKeep(member.Attributes, runtime)))
             {
                 var spec = McdocIdSpec.FromAttributes(candidate.Attributes);
                 if (spec is null || string.IsNullOrEmpty(spec.Registry)) continue;
@@ -214,7 +220,7 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             return null;
 
-            static IEnumerable<McdocType> WithUnionMembers(McdocType type)
+            static IEnumerable<McdocType> WithUnionMembers(McdocType type, Func<McdocType, bool> applies)
             {
                 // 模板字段替换后 #[id] 常常被 Mapped/Concrete/Indexed/Template 包着：
                 // 只看顶层 Attributes 会整条漏掉（候选取不到，判别键就不写）。
@@ -228,7 +234,12 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (type.Kind != McdocTypeKind.Union) yield break;
                 foreach (var member in type.Members ?? [])
                 {
-                    if (member is not null) yield return member;
+                    if (member is null) continue;
+                    // union 的成员常常是**同一字段的版本变体**（infiniburn 就有 4 支，各自的 #[id] 语义不同：
+                    // implicit 允许方块 id、required 只认 tag）。不问版本就把第一支的候选写进文档，
+                    // 会得到一个"当前版本不合法"的默认值（现场 infiniburn=minecraft:acacia_button + 值不在候选内）。
+                    if (!applies(member)) continue;
+                    yield return member;
                 }
             }
         }
@@ -326,7 +337,12 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             // 声明/求值是容器、文档里却是标量（或反过来）：这是**非法文档**，树上必须给"诚实的形状" ——
             // 一行原始 JSON + 错误诊断，绝不按声明类型摊开子级（否则会长出"父是字符串、子却在展开"的幽灵行）。
-            if (json is not null && type is not null && IsContainerKind(type.Kind) && IsScalarJson(json.Kind))
+            // 容器之间也会错配（声明 Struct、文档却是数组 —— 现场：loot_table 根是一份"函数数组"，
+            // 引擎照样把 type/pools/functions/random_sequence 四个字段摊在一份数组上，行全是幽灵行）。
+            var containerMismatch = json is not null && type is not null && IsContainerKind(type.Kind)
+                && !ContainerMatchesJson(type.Kind, json.Kind);
+            if (json is not null && type is not null && IsContainerKind(type.Kind)
+                && (IsScalarJson(json.Kind) || containerMismatch))
             {
                 evaluationError ??= "值与类型不符：期望 " + type.Kind + "，实际 " + json.Kind + "（在右侧 JSON 修正）";
                 type = McdocType.Any();
@@ -361,7 +377,9 @@ namespace CBHK.Utility.Data.Mcdoc
                 StructureChanged = onStructureChanged,
                 Error = evaluationError,
             };
-            if (declaredType?.Kind is McdocTypeKind.Dispatcher or McdocTypeKind.Indexed)
+            // 只在"**静默**解不出来"时自报：已经有诊断（形状不符 / 未解开的包装）的降级是**有意**的，
+            // 再记一条 resolved=False 会让 --check-trace 把"非法文档的诚实降级"当成求解失败。
+            if (evaluationError is null && declaredType?.Kind is McdocTypeKind.Dispatcher or McdocTypeKind.Indexed)
         {
             // 靠兄弟键/调度器解出来的类型：解不出来时求值退成 any —— 行上就是空下拉或动态键占位
             McdocWriteTrace.Trace("index-resolve", "path=" + (jsonPath ?? "?")
@@ -374,7 +392,9 @@ namespace CBHK.Utility.Data.Mcdoc
             // 否则按下一个永远 CanExecute=true 的按钮，什么都写不出来（表现是"按了没反应/结果不对"）
             bool CanAppendItems() => node.Type?.IsListLike == true
                 || (node.UnionListLike && node.SelectedUnionMember?.IsListLike == true);
-            node.AddItemCommand = new McdocCommand(() => editor.AppendItem(node, runtime), CanAppendItems);
+            // 追加与"在顶部新增"必须是同一个出口：AppendItem 那条旧路既不揭开新项、也不记展开态，
+            // 于是"点了 ⊕，右侧 JSON 多了一条、左侧树什么都不动"（新项被折叠的列表挡住）。
+            node.AddItemCommand = new McdocCommand(() => editor.AddItem(node, runtime), CanAppendItems);
             node.AddItemTopCommand = new McdocCommand(() => editor.AddItem(node, runtime, atTop: true), CanAppendItems);
             node.SetDefaultCommand = new McdocCommand(() => editor.SetDefault(node, runtime),
                 () => node.Json is null && node.Parent is not null && !node.IsRequired);
@@ -475,7 +495,10 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     // 缺省字段只留一行 ⊕（与 misode 一致）：json 为 null 时"记住的展开态"不许把子级撑开，
                     // 否则关窗体重开后会看到"树上凭空多出子行、父行还是个 ⊕"。
-                    node.IsExpanded = remembered.Value && hasChildren && json is not null;
+                    // 但**不许**再按 hasChildren 拦：加项那一刻是"先把展开态记在路径上、节点随后才重建"，
+                    // 这一拍的 hasChildren 可能是 false（数组刚写进去、子级还没建），
+                    // 拦下来就变成"点了 ⊕，右侧 JSON 多一条、左侧树一动不动"。
+                    node.IsExpanded = remembered.Value && json is not null;
                 }
                 else if (json is not null && hasChildren && depth < DefaultExpandDepth
                     && !McdocHelpers.IsDefaultCollapsedType(declaredType ?? type))
@@ -504,6 +527,12 @@ namespace CBHK.Utility.Data.Mcdoc
 
         private static bool IsScalarJson(McdocJsonKind kind)
             => kind is McdocJsonKind.String or McdocJsonKind.Number or McdocJsonKind.Boolean or McdocJsonKind.Null;
+
+        /// <summary>容器的期望形状：结构要对象，列表/元组/原始数组要数组。错配就是非法文档。</summary>
+        private static bool ContainerMatchesJson(McdocTypeKind typeKind, McdocJsonKind jsonKind)
+            => typeKind == McdocTypeKind.Struct
+                ? jsonKind == McdocJsonKind.Object
+                : jsonKind == McdocJsonKind.Array;
     }
 
     /// <summary>老入口的过渡壳：对拍工具（e2e）与探针无需改动即可继续使用。</summary>

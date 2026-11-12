@@ -50,7 +50,7 @@
             RenderOptions.BitmapScalingMode="HighQuality"
             SnapsToDevicePixels="True"
             Source="{StaticResource Slot}"
-            UseLayoutRounding="True" />
+            UseLayoutRounding="False" />
         <Button
             Grid.Row="0"
             Grid.Column="0"
@@ -77,7 +77,7 @@
             AllowDrop="True"
             RenderOptions.BitmapScalingMode="HighQuality"
             SnapsToDevicePixels="True"
-            UseLayoutRounding="True">
+            UseLayoutRounding="False">
             <behaviors:Interaction.Triggers>
                 <behaviors:EventTrigger EventName="Loaded">
                     <behaviors:CallMethodAction MethodName="Material_Loaded" TargetObject="{Binding}" />
@@ -222,7 +222,7 @@
                                 Source="{Binding Path=ImagePath, IsAsync=True, Mode=OneWay}"
                                 ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.InitialShowDelay="0"
-                                UseLayoutRounding="True">
+                                UseLayoutRounding="False">
                                 <Image.ToolTip>
                                     <ToolTip
                                         Background="#484848"
@@ -340,7 +340,7 @@
             RenderOptions.EdgeMode="Aliased"
             SnapsToDevicePixels="True"
             Source="{StaticResource cellBackground}"
-            UseLayoutRounding="True" />
+            UseLayoutRounding="False" />
         <Image
             Width="120"
             Height="115"
@@ -352,7 +352,7 @@
             RenderOptions.BitmapScalingMode="HighQuality"
             RenderOptions.EdgeMode="Aliased"
             SnapsToDevicePixels="True"
-            UseLayoutRounding="True">
+            UseLayoutRounding="False">
             <behaviors:Interaction.Triggers>
                 <behaviors:EventTrigger EventName="Loaded">
                     <behaviors:CallMethodAction MethodName="ResultItem_Loaded" TargetObject="{Binding}" />
@@ -503,7 +503,7 @@
                                 Source="{Binding Path=ImagePath, IsAsync=True, Mode=OneWay}"
                                 ToolTipService.BetweenShowDelay="0"
                                 ToolTipService.InitialShowDelay="0"
-                                UseLayoutRounding="True">
+                                UseLayoutRounding="False">
                                 <Image.ToolTip>
                                     <ToolTip
                                         Background="#484848"

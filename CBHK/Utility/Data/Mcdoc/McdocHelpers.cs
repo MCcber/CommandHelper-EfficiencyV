@@ -134,6 +134,74 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         /// <summary>按类型造一个默认 JSON 值。对应 misode 的 getDefault。</summary>
+        /// <summary>
+        /// 这个 JSON 值在新声明下还成不成立（切成员/切依赖键时决定"旧值能不能带过去"）。
+        /// 只做形态与取值域的判定，不猜语义：枚举必须命中候选、字面量必须相等、
+        /// 数字/布尔/字符串/对象/数组要求种类一致；any / 未知类型一律放过（判不了就不判）。
+        /// </summary>
+        /// <summary>
+        /// 文档根的**形状**是否与声明一致：结构要对象、列表/元组/原始数组要数组、any/解不开不判。
+        /// 用途：拦住"入口模板本身就是另一种资源"这类坏数据（现场：loot_table 的模板是一份函数数组），
+        /// 否则整页会退化成 any 原始行，看着像求解/渲染坏了。
+        /// </summary>
+        public static bool RootShapeMatches(McdocJsonValue root, McdocType declared, out string mismatch)
+        {
+            mismatch = "";
+            if (root is null || declared is null) return true;
+            if (declared.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe) return true;
+            if (declared.Kind is not (McdocTypeKind.Struct or McdocTypeKind.List or McdocTypeKind.Tuple
+                or McdocTypeKind.ByteArray or McdocTypeKind.IntArray or McdocTypeKind.LongArray)) return true;
+            var wantsArray = declared.Kind is McdocTypeKind.List or McdocTypeKind.Tuple
+                or McdocTypeKind.ByteArray or McdocTypeKind.IntArray or McdocTypeKind.LongArray;
+            var expected = wantsArray ? McdocJsonKind.Array : McdocJsonKind.Object;
+            if (root.Kind == expected) return true;
+            mismatch = "期望 " + declared.Kind + "，实际 " + root.Kind;
+            return false;
+        }
+
+        public static bool ValueFits(McdocJsonValue value, McdocType type)
+        {
+            if (value is null) return true;
+            if (type is null || type.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe) return true;
+            switch (type.Kind)
+            {
+                case McdocTypeKind.Enum:
+                    if (value.Kind != McdocJsonKind.String) return type.EnumKind != McdocTypeKind.String;
+                    var text = value.StringValue ?? "";
+                    return (type.EnumValues ?? []).Any(entry => string.Equals(entry.Identifier, text, StringComparison.Ordinal)
+                        || string.Equals(Convert.ToString(entry.Value), text, StringComparison.Ordinal));
+                case McdocTypeKind.Literal:
+                    return type.LiteralKind switch
+                    {
+                        McdocLiteralKind.String => value.Kind == McdocJsonKind.String
+                            && string.Equals(value.StringValue, type.LiteralText(), StringComparison.Ordinal),
+                        McdocLiteralKind.Boolean => value.Kind == McdocJsonKind.Boolean && Equals(value.BooleanValue, type.Value),
+                        _ => value.Kind == McdocJsonKind.Number,
+                    };
+                case McdocTypeKind.Boolean:
+                    return value.Kind == McdocJsonKind.Boolean;
+                case McdocTypeKind.Byte:
+                case McdocTypeKind.Short:
+                case McdocTypeKind.Int:
+                case McdocTypeKind.Long:
+                case McdocTypeKind.Float:
+                case McdocTypeKind.Double:
+                    return value.Kind == McdocJsonKind.Number;
+                case McdocTypeKind.String:
+                    return value.Kind == McdocJsonKind.String;
+                case McdocTypeKind.List:
+                case McdocTypeKind.ByteArray:
+                case McdocTypeKind.IntArray:
+                case McdocTypeKind.LongArray:
+                case McdocTypeKind.Tuple:
+                    return value.Kind == McdocJsonKind.Array;
+                case McdocTypeKind.Struct:
+                    return value.Kind == McdocJsonKind.Object;
+                default:
+                    return true;
+            }
+        }
+
         public static McdocJsonValue GetDefault(McdocType type, McdocDefaultOptions options = null)
         {
             options ??= new McdocDefaultOptions();
@@ -182,7 +250,13 @@ namespace CBHK.Utility.Data.Mcdoc
                         foreach (var field in type.Fields ?? [])
                         {
                             if (field == null || field.Optional || field.IsSpread || field.Name == null) continue;
-                            result.Add(field.Name, GetDefault(Evaluate(field.Type, options), options));
+                            var fieldDefault = GetDefault(Evaluate(field.Type, options), options);
+                            // 解不出可物化的默认值（字面量以外的东西、空枚举、未解开的指令…）时**不许写 null**：
+                            // null 不是合法值，会把必填键钉成"值与类型不符"（现场：attribute modifier 的
+                            // `modifier: null`（期望 Literal）、`argument: null`（期望 Struct））。
+                            // 宁可缺这个键，让校验报"缺少必填键"—— 那是真话，用户也知道该填什么。
+                            if (fieldDefault is null || fieldDefault.Kind == McdocJsonKind.Null) continue;
+                            result.Add(field.Name, fieldDefault);
                         }
                     }
                     return result;
@@ -301,6 +375,10 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             if (ReferenceEquals(a, b)) return true;
             if (a == null || b == null) return false;
+            // 指令不是归一形态（Mapped/Template/Reference…）：两个指令之间没有"同型"可言。
+            // 按 kind 比会退化成"任何 Mapped 都等于任何 Mapped"，getChange 的 {k:X} 搬运就会把
+            // 整个旧值塞进第一个必填字段（现场：Modifier 支的 modifier 行拿到整个父对象）。
+            if (a.IsDirective || b.IsDirective) return false;
             if (a.Kind != b.Kind) return false;
             if (a.Kind == McdocTypeKind.Literal && b.Kind == McdocTypeKind.Literal)
             {

@@ -11,7 +11,7 @@ namespace CBHK.Utility.Data
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var text = System.Convert.ToString(value)?.Trim();
-            if (string.IsNullOrEmpty(text) || !text.StartsWith("#")) return Colors.Transparent;
+            if (string.IsNullOrEmpty(text) || !text.StartsWith('#')) return Colors.Transparent;
             try
             {
                 return (Color)ColorConverter.ConvertFromString(text);

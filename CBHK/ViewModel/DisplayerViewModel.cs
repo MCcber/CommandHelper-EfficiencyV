@@ -6,7 +6,6 @@ using System.Windows.Documents;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using CBHK.CustomControl;
 using System.Windows.Media.Imaging;
 using System.IO;
 using CBHK.CustomControl.Container;
@@ -53,12 +52,12 @@ namespace CBHK.ViewModel
             VectorRichTabItem currentTabItem = null;
             foreach (VectorRichTabItem tab in ResultTabControl.Items)
             {
-                ExistSamePage = tab.Header.ToString() == headerText;
+                ExistSamePage = tab.Title == headerText;
                 if (ExistSamePage)
                 {
                     currentTabItem = tab;
                     break;
-                }
+                }                                  
             }
             #endregion
 
@@ -75,21 +74,23 @@ namespace CBHK.ViewModel
                 EnabledFlowDocument flowDocument = new() { LineHeight = 1 };
                 #region 显示生成器图标
                 Paragraph firstParagraph = new() { FontSize = 15, TextAlignment = TextAlignment.Center };
-                firstParagraph.Inlines.Add(new Run("------------ "));
+                firstParagraph.Inlines.Add(new Run("------------ ") { Foreground = Brushes.Black });
                 if (File.Exists(headImagePath) || (headImagePath.StartsWith("pack") && Application.GetResourceStream(new Uri(headImagePath, UriKind.RelativeOrAbsolute)) is not null))
+                {
                     firstParagraph.Inlines.Add(new Image()
                     {
                         Source = new BitmapImage(new Uri(headImagePath, UriKind.RelativeOrAbsolute)),
                         Width = 20,
                         Height = 20
                     });
-                firstParagraph.Inlines.Add(new Run(" ------------"));
+                }
+                firstParagraph.Inlines.Add(new Run(" ------------") { Foreground = Brushes.Black });
                 #endregion
                 Paragraph paragraph = new() { TextAlignment = TextAlignment.Left };
                 Paragraph splitParagraph = new() { TextAlignment = TextAlignment.Center };
-                Run splitRun = new("---------- " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ----------");
+                Run splitRun = new("---------- " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ----------") { Foreground = Brushes.Black };
                 splitParagraph.Inlines.Add(splitRun);
-                Run newResult = new() { ToolTip = toolTip, Text = spawnResult, FontFamily = fontFamily, Cursor = Cursors.Hand };
+                Run newResult = new() { ToolTip = toolTip, Text = spawnResult, FontFamily = fontFamily, Cursor = Cursors.Hand, Foreground = Brushes.Black };
                 ToolTipService.SetBetweenShowDelay(newResult, 0);
                 ToolTipService.SetInitialShowDelay(newResult, 0);
                 newResult.MouseEnter += (a, b) =>
@@ -121,15 +122,15 @@ namespace CBHK.ViewModel
                     VerticalAlignment = VerticalAlignment.Stretch,
                     CaretBrush = new SolidColorBrush(Colors.White)
                 };
-                VectorScrollViewer.SetVerticalScrollBarVisibility(result_box, ScrollBarVisibility.Auto);
-                VectorScrollViewer.SetHorizontalScrollBarVisibility(result_box, ScrollBarVisibility.Disabled);
+                ScrollViewer.SetVerticalScrollBarVisibility(result_box, ScrollBarVisibility.Auto);
+                ScrollViewer.SetHorizontalScrollBarVisibility(result_box, ScrollBarVisibility.Disabled);
 
                 VectorRichTabItem itt = new()
                 {
                     Content = result_box,
-                    Header = headerText,
+                    Title = headerText,
                     Foreground = new SolidColorBrush(Colors.White),
-                    Style = Application.Current.Resources["RichTabItemStyle"] as Style
+                    Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style
                 };
                 ResultTabControl.Items.Add(itt);
                 ResultTabControl.SelectedItem = itt;
@@ -140,11 +141,11 @@ namespace CBHK.ViewModel
                 Paragraph firstParagraph = richTextBox.Document.Blocks.ElementAt(0) as Paragraph;
                 #region 用于分割的段落
                 Paragraph splitParagraph = new() { FontSize = 15, TextAlignment = TextAlignment.Center };
-                Run splitRun = new("---------- " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ----------");
+                Run splitRun = new("---------- " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ----------") { Foreground = Brushes.Black };
                 splitParagraph.Inlines.Add(splitRun);
                 #endregion
                 Paragraph newParagraph = new() { TextAlignment = TextAlignment.Left };
-                Run newResult = new() { ToolTip = toolTip, FontFamily = fontFamily, Cursor = Cursors.Hand, Text = spawnResult };
+                Run newResult = new() { ToolTip = toolTip, FontFamily = fontFamily, Cursor = Cursors.Hand, Text = spawnResult, Foreground = Brushes.Black };
                 newResult.MouseLeftButtonDown += (a, b) => { Clipboard.SetText(spawnResult); };
                 newResult.MouseEnter += (a, b) =>
                 {

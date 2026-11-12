@@ -36,7 +36,7 @@ namespace CBHK.Utility.Data.Mcdoc
 
         public string ChildLabel(McdocTreeNode parent, int index) => For(parent).ChildLabel(parent, index);
 
-        public bool IsListLike(McdocTreeNode node) => For(node).IsListLike || node?.UnionListLike == true;
+        public bool IsListLike(McdocTreeNode node) => For(node).IsListLikeFor(node) || node?.UnionListLike == true;
 
         /// <summary>有没有子级：懒建时不能数 Children.Count（那时子级还没建）。</summary>
         public bool CanHaveChildren(McdocTreeNode node) => For(node).CanHaveChildren(node);

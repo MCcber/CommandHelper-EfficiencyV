@@ -12,7 +12,6 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TimelineClip.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TimelineKeyFrame.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TagRichTextBox.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/GossipsItem.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/MetaType.xaml" />
         <ResourceDictionary>
             <selector:MetaTypeTemplateSelector

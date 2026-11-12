@@ -1,4 +1,4 @@
-﻿<Container:VectorWindow
+<Container:VectorWindow
     x:Class="CBHK.View.Generator.WrittenBookView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -12,7 +12,7 @@
     xmlns:prism="http://prismlibrary.com/"
     Title="成书生成器"
     Width="490"
-    Height="730"
+    Height="760"
     prism:ViewModelLocator.AutoWireViewModel="True"
     ContextMenu="{x:Null}"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconWrittenBook.png"
@@ -29,7 +29,7 @@
             CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}" />
     </Window.InputBindings>
 
-    <Grid Background="#2F2F2F">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -78,10 +78,10 @@
             <Input:VectorNumbericUpDown
                 Width="130"
                 Style="{DynamicResource VectorNumbericUpDownStyle}"
-                Text="{Binding JumpSpecificPageNumber, Mode=OneWayToSource}"
                 WaterMarkerBrush="Gray"
                 WaterMarkerMargin="5 0 0 0"
-                WaterMarkerText="跳转到">
+                WaterMarkerText="跳转到"
+                Value="{Binding JumpSpecificPageNumber, Mode=OneWayToSource}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="KeyDown">
                         <behavior:CallMethodAction MethodName="JumpToSpecificPage_KeyDown" TargetObject="{Binding}" />
@@ -104,7 +104,6 @@
             </VectorComboBox:VectorTextComboBox>
             <VectorButton:VectorToggleIconTextButton
                 Margin="5,0,0,0"
-                Foreground="White"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
@@ -128,6 +127,7 @@
                     Background="#EFF2F1"
                     Command="{Binding BoldTextCommand}"
                     FontWeight="Bold"
+                    OriginBottomHeight="3"
                     Style="{DynamicResource VectorTextButtonStyle}"
                     Text="Bold"
                     ToolTipService.BetweenShowDelay="0"
@@ -146,6 +146,7 @@
                     Background="#EFF2F1"
                     Command="{Binding ItalicTextCommand}"
                     FontStyle="Italic"
+                    OriginBottomHeight="3"
                     Style="{DynamicResource VectorTextButtonStyle}"
                     Text="Italic"
                     ToolTipService.BetweenShowDelay="0"
@@ -163,7 +164,10 @@
                     VerticalAlignment="Bottom"
                     Background="#EFF2F1"
                     Command="{Binding UnderlinedTextCommand}"
+                    OriginBottomHeight="3"
                     Style="{DynamicResource VectorTextButtonStyle}"
+                    Text="Underlined"
+                    TextDecoration="Underline"
                     ToolTipService.BetweenShowDelay="0"
                     ToolTipService.InitialShowDelay="0">
                     <VectorButton:VectorTextButton.ToolTip>
@@ -172,18 +176,16 @@
                             Content="下划线"
                             Foreground="White" />
                     </VectorButton:VectorTextButton.ToolTip>
-                    <TextBlock Text="Underlined">
-                        <TextBlock.TextDecorations>
-                            <TextDecoration />
-                        </TextBlock.TextDecorations>
-                    </TextBlock>
                 </VectorButton:VectorTextButton>
                 <VectorButton:VectorTextButton
                     Grid.Column="3"
                     VerticalAlignment="Bottom"
                     Background="#EFF2F1"
                     Command="{Binding StrikethroughTextCommand}"
+                    OriginBottomHeight="3"
                     Style="{DynamicResource VectorTextButtonStyle}"
+                    Text="Strikethrough"
+                    TextDecoration="Strikethrough"
                     ToolTipService.BetweenShowDelay="0"
                     ToolTipService.InitialShowDelay="0">
                     <VectorButton:VectorTextButton.ToolTip>
@@ -192,17 +194,13 @@
                             Content="删除线"
                             Foreground="White" />
                     </VectorButton:VectorTextButton.ToolTip>
-                    <TextBlock Text="Strikethrough">
-                        <TextBlock.TextDecorations>
-                            <TextDecoration PenOffset="-5" />
-                        </TextBlock.TextDecorations>
-                    </TextBlock>
                 </VectorButton:VectorTextButton>
                 <VectorButton:VectorTextButton
                     Grid.Column="4"
                     VerticalAlignment="Bottom"
                     Background="#EFF2F1"
                     Command="{Binding ObfuscateTextCommand}"
+                    OriginBottomHeight="3"
                     Style="{DynamicResource VectorTextButtonStyle}"
                     Text="Obfuscate"
                     ToolTipService.BetweenShowDelay="0"
@@ -219,6 +217,7 @@
                     VerticalAlignment="Bottom"
                     Background="#EFF2F1"
                     Command="{Binding ResetTextCommand}"
+                    OriginBottomHeight="3"
                     Style="{DynamicResource VectorTextButtonStyle}"
                     Text="Reset"
                     ToolTipService.BetweenShowDelay="0"
@@ -235,20 +234,13 @@
                 Title="设置文本颜色"
                 Grid.Column="1"
                 Background="Black"
+                OriginBottomHeight="3"
                 SelectedColor="{Binding SelectionColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 Style="{DynamicResource VectorColorPickerStyle}"
+                ToolTip="设置选定文本颜色"
                 ToolTipService.BetweenShowDelay="0"
                 ToolTipService.InitialShowDelay="0">
-                <Input:VectorColorPicker.ToolTip>
-                    <ToolTip
-                        Background="#424242"
-                        Content="设置选定文本颜色"
-                        Foreground="White" />
-                </Input:VectorColorPicker.ToolTip>
                 <behavior:Interaction.Triggers>
-                    <behavior:EventTrigger EventName="PropertyChanged">
-                        <behavior:CallMethodAction MethodName="SetSelectionColor" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
                     <behavior:EventTrigger EventName="Loaded">
                         <behavior:CallMethodAction MethodName="ColorPickerLoaded" TargetObject="{Binding}" />
                     </behavior:EventTrigger>

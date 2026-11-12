@@ -292,6 +292,14 @@
     <Resource Include="Resource\Common\Image\SliderButtonLocked.png" />
     <Resource Include="Resource\Common\Image\Slot.png" />
     <Resource Include="Resource\Common\Image\SmithingTemplate.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconAdvancement.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconDimension.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconEntity.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconFirework.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconItem.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconRecipe.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconTag.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconVillager.png" />
     <Resource Include="Resource\Common\Image\spyglass_scope.png" />
     <Resource Include="Resource\Common\Image\Submit.png" />
     <Resource Include="Resource\Common\Image\TabItemLeft.png">
@@ -373,20 +381,10 @@
     <Resource Include="Resource\Common\Image\TradeRightArrow.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resource\Common\Image\SpawnerIcon\IconAdvancements.png" />
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconArmorStand.png" />
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconBiome.png" />
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconCommandBlock.png" />
-    <Resource Include="Resource\Common\Image\SpawnerIcon\IconDimensions.png" />
-    <Resource Include="Resource\Common\Image\SpawnerIcon\IconEntities.png" />
-    <Resource Include="Resource\Common\Image\SpawnerIcon\IconFireworks.png" />
-    <Resource Include="Resource\Common\Image\SpawnerIcon\IconItems.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\SpawnerIcon\IconRecipes.png" />
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconSpawner.png" />
-    <Resource Include="Resource\Common\Image\SpawnerIcon\IconTags.png" />
-    <Resource Include="Resource\Common\Image\SpawnerIcon\IconVillagers.png" />
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconWrittenBook.png" />
   </ItemGroup>
   <ItemGroup>
@@ -458,6 +456,15 @@
     <None Remove="Resource\CBHK\Image\Generator\villager.png" />
     <None Remove="Resource\CBHK\Image\Generator\writtenbook.png" />
     <None Remove="Resource\CBHK\Image\Generator\分类.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconAdvancement.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconDimension.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconEntity.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconFirework.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconItem.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconRecipe.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconSign.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconTag.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconVillager.png" />
     <None Remove="Utility\jsonReader - v1.3.js" />
     <None Remove="Resource\CBHK\Image\Error.png" />
     <None Remove="Resource\CBHK\Image\eyeHide.png" />
@@ -539,6 +546,9 @@
     <None Remove="Resource\Common\Image\TrimMaterial.png" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconSign.png" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
     <!-- 运行期配置（Resource.Init 读 Registries/Generator，McdocItemTextures 读 ItemTextures）：
          必须躺在 exe 旁边，缺了会走代码里的默认值 -->
@@ -551,6 +561,6 @@
     <ProjectReference Include="..\CBHK.Domain\CBHK.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="ViewModel\Component\Villager\" />
+    <Folder Include="Utility\Event\" />
   </ItemGroup>
 </Project>

@@ -93,7 +93,7 @@
                         BorderBrush="Black"
                         BorderThickness="1"
                         SnapsToDevicePixels="true"
-                        UseLayoutRounding="True">
+                        UseLayoutRounding="False">
                         <!--  F1 M 0,0 L 2.667,2.66665 L 5.3334,0 L 5.3334,-1.78168 L 2.6667,0.88501 L0,-1.78168 L0,0 Z  -->
                         <Grid Background="{TemplateBinding Background}">
                             <Grid.RowDefinitions>
@@ -173,7 +173,7 @@
                                 VerticalAlignment="Center"
                                 BorderBrush="Transparent"
                                 SnapsToDevicePixels="True"
-                                UseLayoutRounding="True">
+                                UseLayoutRounding="False">
                                 <Grid HorizontalAlignment="Right" VerticalAlignment="Center">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="1" />

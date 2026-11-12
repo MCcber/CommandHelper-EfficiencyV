@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:UserControlContainer="clr-namespace:CBHK.View.Component.Villager.Control"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:VirtualizingWrapPanel="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
@@ -15,13 +16,13 @@
     xmlns:prism="http://prismlibrary.com/"
     xmlns:utility="clr-namespace:CBHK.Utility.Visual"
     Title="村民生成器"
-    Width="1120"
+    Width="1220"
     Height="715"
-    MinWidth="1120"
+    MinWidth="1220"
     MinHeight="715"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
-    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconVillagers.png"
+    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconVillager.png"
     IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
@@ -59,8 +60,7 @@
         <DockPanel
             Grid.Row="0"
             Height="35"
-            Margin="5,0,0,0"
-            Background="Transparent">
+            Margin="5,0,0,0">
             <VectorButton:VectorFlatImageButton
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
@@ -107,7 +107,7 @@
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"
-                SelectedItem="{Binding SelectedVersion, Mode=OneWay}"
+                SelectedItem="{Binding SelectedVersion}"
                 Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
@@ -131,6 +131,33 @@
                 OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
+            <Input:VectorTextBox
+                Width="200"
+                utility:TextSizeHelper.AutoFontSize="True"
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding LeastPlayerUUID}"
+                Visibility="{Binding LeastPlayerUUIDVisibility, Mode=OneWay}"
+                WaterMarkerText="玩家低位UUID" />
+            <Input:VectorTextBox
+                Width="200"
+                utility:TextSizeHelper.AutoFontSize="True"
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding MostPlayerUUID}"
+                Visibility="{Binding MostPlayerUUIDVisibility, Mode=OneWay}"
+                WaterMarkerText="玩家高位UUID" />
+            <Input:VectorTextBox
+                Width="250"
+                utility:TextSizeHelper.AutoFontSize="True"
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding PlayerUUID}"
+                Visibility="{Binding PlayerUUIDVisibility, Mode=OneWay}"
+                WaterMarkerText="玩家UUID" />
+            <VectorButton:VectorTextButton
+                Command="{Binding RespawnPlayerUUIDCommand}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="生成UUID"
+                Visibility="{Binding IsEditGossips}" />
             <VectorButton:VectorToggleIconTextButton
                 HorizontalAlignment="Left"
                 Foreground="Black"
@@ -190,222 +217,209 @@
                     Style="{DynamicResource VectorScrollViewerStyle}"
                     VerticalScrollBarVisibility="Auto">
                     <Grid>
-                        <ItemsControl Background="Transparent" ItemsSource="{Binding TransactionItemList}">
+                        <ItemsControl ItemsSource="{Binding TransactionItemList}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <VirtualizingStackPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                                    <VirtualizingStackPanel
+                                        VirtualizingPanel.IsVirtualizing="True"
+                                        VirtualizingPanel.ScrollUnit="Item"
+                                        VirtualizingPanel.VirtualizationMode="Recycling" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <UserControlContainer:TransactionItemView />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
                         </ItemsControl>
+
                         <StackPanel Background="#555956" Visibility="{Binding TransactionDataGridVisibility, Mode=OneWay}">
                             <VectorButton:VectorFlatImageButton
                                 Width="30"
                                 Height="30"
-                                HorizontalAlignment="Right"
+                                Margin="10,10,0,0"
+                                HorizontalAlignment="Left"
                                 VerticalAlignment="Top"
-                                Command="{Binding CloseTransactionDataGridCommand}"
+                                Command="{Binding CloseTransactionPanelCommand}"
                                 Image="/Resource/Common/Image/CloseWhite.png"
                                 Style="{DynamicResource VectorFlatImageButtonStyle}" />
                             <Grid Margin="10,20,10,5">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
+                                <!--#region Buy-->
                                 <Input:VectorNumbericUpDown
                                     Grid.Row="1"
                                     Grid.Column="0"
-                                    Width="50"
-                                    Height="25"
-                                    Margin="0,5,0,0"
-                                    HorizontalAlignment="Right"
-                                    Background="#D0D1D4"
+                                    HorizontalAlignment="Stretch"
                                     Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                    Text="{Binding BuyCount, Mode=TwoWay}" />
-                                <Input:VectorNumbericUpDown
-                                    Grid.Row="1"
-                                    Grid.Column="1"
-                                    Width="50"
-                                    Height="25"
-                                    Margin="0,5,0,0"
-                                    HorizontalAlignment="Right"
-                                    Background="#D0D1D4"
-                                    Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                    Text="{Binding BuyBCount, Mode=TwoWay}" />
-                                <Input:VectorNumbericUpDown
-                                    Grid.Row="1"
-                                    Grid.Column="3"
-                                    Width="50"
-                                    Height="25"
-                                    Margin="0,5,0,0"
-                                    HorizontalAlignment="Center"
-                                    Background="#D0D1D4"
-                                    Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                    Text="{Binding SellCount, Mode=TwoWay}" />
+                                    WaterMarkerText="BuyCount"
+                                    Value="{Binding BuyCount, Mode=TwoWay}" />
                                 <Image
+                                    Grid.Row="0"
                                     Grid.Column="0"
                                     Width="45"
                                     Height="45"
-                                    Margin="30,0,0,0"
+                                    HorizontalAlignment="Left"
                                     Panel.ZIndex="0"
                                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                                     Source="/CBHK;component/Resource/Common/Image/itemFrame.png" />
                                 <Image
-                                    Grid.Column="0"
+                                    Grid.Row="0"
                                     Width="45"
                                     Height="45"
-                                    Margin="28,0,0,0"
+                                    HorizontalAlignment="Left"
                                     Panel.ZIndex="1"
                                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                                     Source="{Binding BuyItemIcon, Mode=OneWay}"
                                     Tag="{Binding BuyItemData, Mode=OneWay}" />
+                                <!--#endregion-->
+
+                                <!--#region BuyB-->
+                                <Input:VectorNumbericUpDown
+                                    Grid.Row="3"
+                                    HorizontalAlignment="Stretch"
+                                    Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                    WaterMarkerText="BuyBCount"
+                                    Value="{Binding BuyBCount, Mode=TwoWay}" />
                                 <Image
-                                    Grid.Column="1"
+                                    Grid.Row="2"
                                     Width="45"
                                     Height="45"
-                                    Margin="30,0,0,0"
+                                    HorizontalAlignment="Left"
                                     Panel.ZIndex="0"
                                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                                     Source="/CBHK;component/Resource/Common/Image/itemFrame.png" />
                                 <Image
-                                    Grid.Column="1"
+                                    Grid.Row="2"
                                     Width="45"
                                     Height="45"
-                                    Margin="28,0,0,0"
+                                    HorizontalAlignment="Left"
                                     Panel.ZIndex="1"
                                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                                     Source="{Binding BuyBItemIcon, Mode=OneWay}"
                                     Tag="{Binding BuyBItemData, Mode=OneWay}" />
+                                <!--#endregion-->
+
+                                <!--#region Sell-->
+                                <Input:VectorNumbericUpDown
+                                    Grid.Row="5"
+                                    HorizontalAlignment="Stretch"
+                                    Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                    WaterMarkerText="SellCount"
+                                    Value="{Binding SellCount, Mode=TwoWay}" />
                                 <Image
-                                    Grid.Column="2"
+                                    Grid.Row="4"
                                     Width="45"
                                     Height="45"
-                                    Margin="20,0,0,0"
-                                    HorizontalAlignment="Center"
-                                    RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                    RenderOptions.ClearTypeHint="Enabled"
-                                    Source="/CBHK;component/Resource/Common/Image/TradeRightArrow.png" />
-                                <Image
-                                    Grid.Column="3"
-                                    Width="45"
-                                    Height="45"
+                                    HorizontalAlignment="Left"
                                     Panel.ZIndex="0"
                                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                                     Source="/CBHK;component/Resource/Common/Image/itemFrame.png" />
                                 <Image
-                                    Grid.Column="3"
+                                    Grid.Row="4"
                                     Width="45"
                                     Height="45"
+                                    HorizontalAlignment="Left"
                                     Panel.ZIndex="1"
                                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                                     Source="{Binding SellItemIcon, Mode=OneWay}"
                                     Tag="{Binding SellItemData, Mode=OneWay}" />
+                                <!--#endregion-->
                             </Grid>
-                            <Container:VectorScrollViewer
-                                Margin="5,0"
-                                Background="Transparent"
-                                HorizontalScrollBarVisibility="Auto"
-                                Style="{DynamicResource VectorScrollViewerStyle}"
-                                VerticalScrollBarVisibility="Auto">
-                                <Grid>
+                            <Grid Margin="5,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <VectorButton:VectorToggleIconTextButton
+                                    Grid.Row="0"
+                                    Margin="0,5,0,0"
+                                    HorizontalAlignment="Left"
+                                    Foreground="White"
+                                    IsChecked="{Binding RewardExp, Mode=TwoWay}"
+                                    OriginBottomHeight="4"
+                                    Style="{DynamicResource VectorToggleIconTextButtonStyle}"
+                                    Text="是否奖励经验"
+                                    ToolTip="1 或 0 (true/false) - true代表交易会提供经验球。Java版中所有自然生成的村民的交易都会给予经验球。" />
+                                <Grid Grid.Row="1" VerticalAlignment="Top">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
-                                    <VectorButton:VectorToggleIconTextButton
+                                    <Input:VectorNumbericUpDown
                                         Grid.Row="0"
-                                        Margin="0,5,0,0"
-                                        HorizontalAlignment="Left"
+                                        AllowDrop="False"
+                                        Background="#D0D1D4"
                                         Foreground="White"
-                                        IsChecked="{Binding RewardExp, Mode=TwoWay}"
-                                        Style="{DynamicResource VectorToggleIconTextButtonStyle}"
-                                        Text="RewardExp">
-                                        <VectorButton:VectorToggleIconTextButton.ToolTip>
-                                            <ToolTip
-                                                Background="#424242"
-                                                Content="1 或 0 (true/false) - true代表交易会提供经验球。Java版中所有自然生成的村民的交易都会给予经验球。"
-                                                Foreground="White" />
-                                        </VectorButton:VectorToggleIconTextButton.ToolTip>
-                                    </VectorButton:VectorToggleIconTextButton>
-                                    <Grid Grid.Row="1" VerticalAlignment="Top">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="*" />
-                                            <RowDefinition Height="*" />
-                                            <RowDefinition Height="*" />
-                                            <RowDefinition Height="*" />
-                                            <RowDefinition Height="*" />
-                                            <RowDefinition Height="*" />
-                                        </Grid.RowDefinitions>
-                                        <Input:VectorNumbericUpDown
-                                            Grid.Row="0"
-                                            AllowDrop="False"
-                                            Background="#D0D1D4"
-                                            Foreground="White"
-                                            Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                            Text="{Binding MaxUses, Mode=TwoWay}"
-                                            WaterMarkerBrush="Gray"
-                                            WaterMarkerMargin="5 0 0 0"
-                                            WaterMarkerText="maxUses:代表在交易选项失效前能进行的最大交易次数。" />
-                                        <Input:VectorNumbericUpDown
-                                            Grid.Row="1"
-                                            AllowDrop="False"
-                                            Background="#D0D1D4"
-                                            Foreground="White"
-                                            Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                            Text="{Binding Uses, Mode=TwoWay}"
-                                            WaterMarkerBrush="Gray"
-                                            WaterMarkerMargin="5 0 0 0"
-                                            WaterMarkerText="uses:已经交易的次数。" />
-                                        <Input:VectorNumbericUpDown
-                                            Grid.Row="2"
-                                            AllowDrop="False"
-                                            Background="#D0D1D4"
-                                            Foreground="White"
-                                            Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                            Text="{Binding VillagerGetXp, Mode=TwoWay}"
-                                            WaterMarkerBrush="Gray"
-                                            WaterMarkerMargin="5 0 0 0"
-                                            WaterMarkerText="xp:村民从此交易选项中能获得的经验值。" />
-                                        <Input:VectorNumbericUpDown
-                                            Grid.Row="3"
-                                            AllowDrop="False"
-                                            Background="#D0D1D4"
-                                            Foreground="White"
-                                            Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                            Text="{Binding Demand, Mode=TwoWay}"
-                                            WaterMarkerBrush="Gray"
-                                            WaterMarkerMargin="5 0 0 0"
-                                            WaterMarkerText="demand:根据需求确定的第一个收购物品的价格调节。" />
-                                        <Input:VectorNumbericUpDown
-                                            Grid.Row="4"
-                                            HorizontalAlignment="Stretch"
-                                            AllowDrop="False"
-                                            Background="#D0D1D4"
-                                            Foreground="White"
-                                            Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                            Text="{Binding SpecialPrice, Mode=TwoWay}"
-                                            WaterMarkerBrush="Gray"
-                                            WaterMarkerMargin="5 0 0 0"
-                                            WaterMarkerText="specialPrice:添加到第一个收购物品的价格调节。" />
-                                        <Input:VectorNumbericUpDown
-                                            Grid.Row="5"
-                                            HorizontalAlignment="Stretch"
-                                            AllowDrop="False"
-                                            Background="#D0D1D4"
-                                            Foreground="White"
-                                            Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                            Text="{Binding PriceMultiplier, Mode=TwoWay}"
-                                            WaterMarkerBrush="Gray"
-                                            WaterMarkerMargin="5 0 0 0"
-                                            WaterMarkerText="priceMultiplier:当前应用到此交易选项价格的乘数。" />
-                                    </Grid>
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                        ToolTip="代表在交易选项失效前能进行的最大交易次数。"
+                                        WaterMarkerMargin="5 0 0 0"
+                                        WaterMarkerText="maxUses"
+                                        Value="{Binding MaxUses, Mode=TwoWay}" />
+                                    <Input:VectorNumbericUpDown
+                                        Grid.Row="1"
+                                        AllowDrop="False"
+                                        Background="#D0D1D4"
+                                        Foreground="White"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                        ToolTip="已经交易的次数。"
+                                        WaterMarkerMargin="5 0 0 0"
+                                        WaterMarkerText="uses"
+                                        Value="{Binding Uses, Mode=TwoWay}" />
+                                    <Input:VectorNumbericUpDown
+                                        Grid.Row="2"
+                                        AllowDrop="False"
+                                        Background="#D0D1D4"
+                                        Foreground="White"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                        ToolTip="村民从此交易选项中能获得的经验值。"
+                                        WaterMarkerMargin="5 0 0 0"
+                                        WaterMarkerText="xp"
+                                        Value="{Binding VillagerGetXp, Mode=TwoWay}" />
+                                    <Input:VectorNumbericUpDown
+                                        Grid.Row="3"
+                                        AllowDrop="False"
+                                        Background="#D0D1D4"
+                                        Foreground="White"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                        ToolTip="根据需求确定的第一个收购物品的价格调节。"
+                                        WaterMarkerMargin="5 0 0 0"
+                                        WaterMarkerText="demand"
+                                        Value="{Binding Demand, Mode=TwoWay}" />
+                                    <Input:VectorNumbericUpDown
+                                        Grid.Row="4"
+                                        HorizontalAlignment="Stretch"
+                                        AllowDrop="False"
+                                        Background="#D0D1D4"
+                                        Foreground="White"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                        ToolTip="添加到第一个收购物品的价格调节。"
+                                        WaterMarkerMargin="5 0 0 0"
+                                        WaterMarkerText="specialPrice"
+                                        Value="{Binding SpecialPrice, Mode=TwoWay}" />
+                                    <Input:VectorNumbericUpDown
+                                        Grid.Row="5"
+                                        HorizontalAlignment="Stretch"
+                                        AllowDrop="False"
+                                        Background="#D0D1D4"
+                                        Foreground="White"
+                                        Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                        ToolTip="当前应用到此交易选项价格的乘数。"
+                                        WaterMarkerMargin="5 0 0 0"
+                                        WaterMarkerText="priceMultiplier"
+                                        Value="{Binding PriceMultiplier, Mode=TwoWay}" />
                                 </Grid>
-                            </Container:VectorScrollViewer>
+                            </Grid>
                         </StackPanel>
                     </Grid>
                 </Container:VectorScrollViewer>
@@ -467,39 +481,29 @@
                     <VectorButton:VectorToggleTextButton
                         Grid.Column="4"
                         Background="#D77A34"
+                        Command="{Binding ClickGossipEditButtonCommand}"
                         Foreground="Black"
                         IsChecked="{Binding CanEditGossip, Mode=TwoWay}"
                         IsHitTestVisible="{Binding CanTouchGossip, Mode=OneWay}"
                         OriginBottomHeight="3"
                         Style="{DynamicResource VectorToggleTextButtonStyle}"
-                        Text="开启言论">
-                        <behavior:Interaction.Triggers>
-                            <behavior:EventTrigger EventName="Click">
-                                <behavior:CallMethodAction MethodName="GossipEditButton_Click" TargetObject="{Binding}" />
-                            </behavior:EventTrigger>
-                        </behavior:Interaction.Triggers>
-                    </VectorButton:VectorToggleTextButton>
+                        Text="开启言论" />
                     <VectorButton:VectorToggleTextButton
                         Grid.Column="5"
                         Background="#D77A34"
+                        Command="{Binding ClickBrainEditButtonCommand}"
                         Foreground="Black"
                         IsChecked="{Binding CanEditBrain, Mode=TwoWay}"
                         IsHitTestVisible="{Binding CanTouchBrain, Mode=OneWay}"
                         OriginBottomHeight="3"
                         Style="{DynamicResource VectorToggleTextButtonStyle}"
-                        Text="开启记忆">
-                        <behavior:Interaction.Triggers>
-                            <behavior:EventTrigger EventName="Click">
-                                <behavior:CallMethodAction MethodName="BrainEditButton_Click" TargetObject="{Binding}" />
-                            </behavior:EventTrigger>
-                        </behavior:Interaction.Triggers>
-                    </VectorButton:VectorToggleTextButton>
+                        Text="开启记忆" />
                 </Grid>
                 <Container:VectorTabControl
                     Grid.Row="1"
                     Background="Transparent"
                     BorderThickness="0"
-                    SelectedIndex="{Binding SelectedItemListIndex, Mode=OneWayToSource}"
+                    SelectedIndex="{Binding SelectedItemListIndex}"
                     Style="{DynamicResource VectorTabControlStyle}">
                     <!--  原版背包  -->
                     <Container:VectorTextTabItem
@@ -516,12 +520,12 @@
                                 HorizontalAlignment="Stretch"
                                 utility:TextSizeHelper.AutoFontSize="True"
                                 Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
+                                Text="{Binding SearchOriginItemText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
                                 WaterMarkerMargin="5 0 0 0"
                                 WaterMarkerText="搜索物品">
                                 <behavior:Interaction.Triggers>
                                     <behavior:EventTrigger EventName="TextChanged">
-                                        <behavior:CallMethodAction MethodName="SearchTextBox_TextChanged" TargetObject="{Binding}" />
+                                        <behavior:CallMethodAction MethodName="SearchOriginItemTextBox_TextChanged" TargetObject="{Binding}" />
                                     </behavior:EventTrigger>
                                 </behavior:Interaction.Triggers>
                             </Input:VectorTextBox>
@@ -536,7 +540,7 @@
                                 SelectedItem="{Binding SelectedItem, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
                                 Style="{DynamicResource VectorListViewStyle}"
                                 VirtualizingPanel.IsVirtualizing="True"
-                                VirtualizingPanel.ScrollUnit="Pixel"
+                                VirtualizingPanel.ScrollUnit="Item"
                                 VirtualizingPanel.VirtualizationMode="Recycling">
                                 <Container:VectorListView.ItemTemplate>
                                     <DataTemplate>
@@ -555,16 +559,10 @@
                                                 RenderOptions.ClearTypeHint="Enabled"
                                                 SnapsToDevicePixels="True"
                                                 Source="{Binding Path=ImagePath, Mode=OneWay, IsAsync=True}"
+                                                ToolTip="{Binding IDAndName}"
                                                 ToolTipService.BetweenShowDelay="0"
                                                 ToolTipService.InitialShowDelay="0"
-                                                UseLayoutRounding="True">
-                                                <Image.ToolTip>
-                                                    <ToolTip
-                                                        Background="#424242"
-                                                        Content="{Binding Path=IDAndName, Mode=OneWay, IsAsync=True}"
-                                                        Foreground="White" />
-                                                </Image.ToolTip>
-                                            </Image>
+                                                UseLayoutRounding="False" />
                                         </Grid>
                                     </DataTemplate>
                                 </Container:VectorListView.ItemTemplate>
@@ -606,13 +604,12 @@
                                 CaretBrush="White"
                                 Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
-                                WaterMarkerBrush="Gray"
+                                Text="{Binding SearchCustomItemText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
                                 WaterMarkerMargin="5 0 0 0"
                                 WaterMarkerText="搜索物品">
                                 <behavior:Interaction.Triggers>
                                     <behavior:EventTrigger EventName="TextChanged">
-                                        <behavior:CallMethodAction MethodName="SearchTextBox_TextChanged" TargetObject="{Binding}" />
+                                        <behavior:CallMethodAction MethodName="SearchCustomItemTextBox_TextChanged" TargetObject="{Binding}" />
                                     </behavior:EventTrigger>
                                 </behavior:Interaction.Triggers>
                             </Input:VectorTextBox>
@@ -628,7 +625,7 @@
                                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
                                 Style="{DynamicResource VectorListViewStyle}"
                                 VirtualizingPanel.IsVirtualizing="true"
-                                VirtualizingPanel.ScrollUnit="Pixel"
+                                VirtualizingPanel.ScrollUnit="Item"
                                 VirtualizingPanel.VirtualizationMode="Recycling">
                                 <Container:VectorListView.ItemTemplate>
                                     <DataTemplate>
@@ -648,16 +645,10 @@
                                                 SnapsToDevicePixels="True"
                                                 Source="{Binding Path=ImagePath, IsAsync=True}"
                                                 Tag="{Binding Path=NBT, Mode=OneWay, IsAsync=True}"
+                                                ToolTip="{Binding IDAndName}"
                                                 ToolTipService.BetweenShowDelay="0"
                                                 ToolTipService.InitialShowDelay="0"
-                                                UseLayoutRounding="True">
-                                                <Image.ToolTip>
-                                                    <ToolTip
-                                                        Background="#424242"
-                                                        Content="{Binding Path=IDAndName, Mode=OneWay, IsAsync=True}"
-                                                        Foreground="White" />
-                                                </Image.ToolTip>
-                                            </Image>
+                                                UseLayoutRounding="False" />
                                         </Grid>
                                     </DataTemplate>
                                 </Container:VectorListView.ItemTemplate>
@@ -696,10 +687,10 @@
                                 Background="#D0D1D4"
                                 Foreground="White"
                                 Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                Text="{Binding LastRestock, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
+                                ToolTip="此村民最后一次前往工作站点重新供应交易的刻。"
                                 WaterMarkerMargin="5 0 0 0"
-                                WaterMarkerText="此村民最后一次前往工作站点重新供应交易的刻。" />
+                                WaterMarkerText="LastRestock"
+                                Value="{Binding LastRestock, Mode=TwoWay}" />
                             <Input:VectorNumbericUpDown
                                 Grid.Row="1"
                                 AllowDrop="False"
@@ -707,10 +698,10 @@
                                 BorderThickness="0"
                                 Foreground="White"
                                 Style="{DynamicResource VectorNumbericUpDownStyle}"
-                                Text="{Binding Xp, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
+                                ToolTip="此村民交易后获得的经验。"
                                 WaterMarkerMargin="5 0 0 0"
-                                WaterMarkerText="此村民交易后获得的经验。" />
+                                WaterMarkerText="Xp"
+                                Value="{Binding Xp, Mode=TwoWay}" />
                         </Grid>
                     </Container:VectorTextTabItem>
                     <!--  言论  -->
@@ -738,15 +729,12 @@
                                     CaretBrush="White"
                                     Foreground="White"
                                     Style="{DynamicResource VectorTextBoxStyle}"
-                                    WaterMarkerBrush="Gray"
+                                    Text="{Binding SearchGossipText, UpdateSourceTrigger=PropertyChanged}"
                                     WaterMarkerMargin="5 0 0 0"
-                                    WaterMarkerText="搜索言论目标">
+                                    WaterMarkerText="搜索言论">
                                     <behavior:Interaction.Triggers>
                                         <behavior:EventTrigger EventName="TextChanged">
                                             <behavior:CallMethodAction MethodName="SearchGossipsTextChanged" TargetObject="{Binding}" />
-                                        </behavior:EventTrigger>
-                                        <behavior:EventTrigger EventName="Loaded">
-                                            <behavior:CallMethodAction MethodName="GossipSearchTargetLoaded" TargetObject="{Binding}" />
                                         </behavior:EventTrigger>
                                     </behavior:Interaction.Triggers>
                                 </Input:VectorTextBox>
@@ -755,18 +743,20 @@
                                     Grid.Column="1"
                                     ArrowMargin="0 2 10 0"
                                     Foreground="White"
+                                    ItemsSource="{Binding GossipTypeList}"
                                     SelectedIndex="0"
                                     SelectedItem="{Binding SelectedSearchGossipItem}"
                                     Style="{DynamicResource VectorTextComboBoxStyle}">
                                     <behavior:Interaction.Triggers>
-                                        <behavior:EventTrigger EventName="Loaded">
-                                            <behavior:CallMethodAction MethodName="GossipSearchTypeLoaded" TargetObject="{Binding}" />
+                                        <behavior:EventTrigger EventName="SelectionChanged">
+                                            <behavior:CallMethodAction MethodName="SearchType_SelectionChanged" TargetObject="{Binding}" />
                                         </behavior:EventTrigger>
                                     </behavior:Interaction.Triggers>
                                 </VectorComboBox:VectorTextComboBox>
                             </Grid>
                             <Grid Grid.Row="1">
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
@@ -780,6 +770,14 @@
                                     Text="添加" />
                                 <VectorButton:VectorTextButton
                                     Grid.Column="1"
+                                    Background="#D0D1D4"
+                                    Command="{Binding ApplyAllGossipItemCommand}"
+                                    Foreground="Black"
+                                    OriginBottomHeight="3"
+                                    Style="{DynamicResource VectorTextButtonStyle}"
+                                    Text="全部应用" />
+                                <VectorButton:VectorTextButton
+                                    Grid.Column="2"
                                     Background="#D0D1D4"
                                     Command="{Binding ClearGossipItemCommand}"
                                     Foreground="Black"
@@ -807,9 +805,17 @@
                                     Visibility="{Binding IsEditGossips, Mode=OneWay}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <VirtualizingStackPanel />
+                                            <VirtualizingStackPanel
+                                                VirtualizingPanel.IsVirtualizing="True"
+                                                VirtualizingPanel.ScrollUnit="Item"
+                                                VirtualizingPanel.VirtualizationMode="Recycling" />
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <UserControlContainer:GossipsItemView />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </Container:VectorScrollViewer>
                         </Grid>
@@ -843,7 +849,6 @@
                                 Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding MeetingPointX, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
                                 WaterMarkerText="聚集点X坐标" />
                             <Input:VectorTextBox
                                 Grid.Row="0"
@@ -854,7 +859,6 @@
                                 Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding MeetingPointY, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
                                 WaterMarkerText="聚集点Y坐标" />
                             <Input:VectorTextBox
                                 Grid.Row="0"
@@ -865,7 +869,6 @@
                                 Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding MeetingPointZ, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
                                 WaterMarkerText="聚集点Z坐标" />
                             <VectorComboBox:VectorTextComboBox
                                 Title="聚集点维度"
@@ -889,7 +892,6 @@
                                 Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding HomeX, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
                                 WaterMarkerText="床X坐标" />
                             <Input:VectorTextBox
                                 Grid.Row="2"
@@ -900,7 +902,6 @@
                                 Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding HomeY, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
                                 WaterMarkerText="床Y坐标" />
                             <Input:VectorTextBox
                                 Grid.Row="2"
@@ -911,7 +912,6 @@
                                 Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding HomeZ, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
                                 WaterMarkerText="床Z坐标" />
                             <VectorComboBox:VectorTextComboBox
                                 Title="床维度"
@@ -935,7 +935,6 @@
                                 Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding JobSiteX, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
                                 WaterMarkerText="工作点X坐标" />
                             <Input:VectorTextBox
                                 Grid.Row="4"
@@ -947,7 +946,6 @@
                                 Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding JobSiteY, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
                                 WaterMarkerText="工作点Y坐标" />
                             <Input:VectorTextBox
                                 Grid.Row="4"
@@ -958,7 +956,6 @@
                                 Foreground="White"
                                 Style="{DynamicResource VectorTextBoxStyle}"
                                 Text="{Binding JobSiteZ, Mode=TwoWay}"
-                                WaterMarkerBrush="Gray"
                                 WaterMarkerText="工作点Z坐标" />
                             <VectorComboBox:VectorTextComboBox
                                 Title="工作点维度"

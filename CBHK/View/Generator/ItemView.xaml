@@ -17,7 +17,7 @@
     MinHeight="500"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
-    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItems.png"
+    Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItem.png"
     IconMargin="5"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
@@ -99,7 +99,7 @@
                 Background="#EFF2F1"
                 Command="{Binding AddItemCommand}"
                 Foreground="Black"
-                OriginBottomHeight="4"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="添加" />
             <VectorButton:VectorTextButton
@@ -107,7 +107,7 @@
                 Background="#EFF2F1"
                 Command="{Binding ClearItemCommand}"
                 Foreground="Black"
-                OriginBottomHeight="4"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="清空" />
             <VectorButton:VectorTextButton
@@ -115,7 +115,7 @@
                 Background="#EFF2F1"
                 Command="{Binding ImportItemFromClipboardCommand}"
                 Foreground="Black"
-                OriginBottomHeight="4"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从剪切板导入" />
             <VectorButton:VectorTextButton
@@ -123,7 +123,7 @@
                 Background="#EFF2F1"
                 Command="{Binding ImportItemFromFileCommand}"
                 Foreground="Black"
-                OriginBottomHeight="4"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
             <VectorButton:VectorTextButton
@@ -131,7 +131,7 @@
                 Background="#EFF2F1"
                 Command="{Binding ClearUnnecessaryDataCommand}"
                 Foreground="Black"
-                OriginBottomHeight="4"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="冻结数据" />
             <VectorButton:VectorToggleIconTextButton

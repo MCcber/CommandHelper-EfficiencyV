@@ -19,10 +19,10 @@
             VerticalAlignment="Center"
             Orientation="Horizontal">
             <VectorComboBox:VectorTextComboBox
+                Title="版本"
                 Width="150"
                 Height="26"
                 VerticalAlignment="Center"
-                Title="版本"
                 ItemsSource="{Binding GameVersionOptions, Converter={StaticResource McdocChromeComboConverter}}"
                 SelectedItem="{Binding SelectedGameVersionOption, Converter={StaticResource McdocChromeComboConverter}}"
                 Style="{DynamicResource VectorTextComboBoxStyle}"

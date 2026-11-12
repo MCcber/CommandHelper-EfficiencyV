@@ -547,5 +547,56 @@ namespace CBHK.Probe
             index.RegisterDispatch(IntProviderRegistry, "uniform_alias", UniformAliasMember());
         }
 
+        // ── 现场形状（bug 1/3）：必填描别键的代数默认值是空串 → 同层 spread 解成 %none ──────
+        // 与真 schema java/data/loot/mod.mcdoc:124-130 同形：type 是 #[id="<space>_type"] string，
+        // 同层 ...dispatch[[type]] 靠它做动态索引。两者差的只有"空串算不算没有值"。
+
+        public const string LootEntryRegistry = "mcdoc:probe_loot_entry";
+        public const string LootEntryTypeRegistry = "mcdoc:probe_loot_entry_type";
+
+        /// <summary>struct { entries: [ struct { type: #[id="…_type"] string, ...dispatch[[type]] } ] }。</summary>
+        public static McdocType LootEntryRootType()
+        {
+            var entries = McdocType.Create(McdocTypeKind.List);
+            entries.Item = LootEntryShape();
+            // 刻意多包一层：条目落在 depth 3，正是"懒建 + 投影首次展开才建出来"的那一档，
+            // 也就是界面里"结构变更闸门内建出子级"的现场。
+            var pool = McdocType.Create(McdocTypeKind.Struct);
+            pool.Fields = [ Static("entries", entries) ];
+            var root = McdocType.Create(McdocTypeKind.Struct);
+            root.Fields = [ Static("pool", pool) ];
+            return root;
+        }
+
+        private static McdocType LootEntryShape()
+        {
+            var spread = McdocType.Create(McdocTypeKind.Dispatcher);
+            spread.Registry = LootEntryRegistry;
+            spread.Indices = [ McdocIndex.Dynamic(new List<string> { "type" }) ];
+            var entry = McdocType.Create(McdocTypeKind.Struct);
+            entry.Fields =
+            [
+                new McdocStructField
+                {
+                    Name = "type", Key = McdocType.LiteralString("type"),
+                    Type = IdString(LootEntryTypeRegistry)
+                },
+                new McdocStructField { IsSpread = true, Type = spread }
+            ];
+            return entry;
+        }
+
+        /// <summary>两个调度器成员各带一个"只有自己才有"的字段，用来断言 spread 真的解出来了。</summary>
+        public static int RegisterLootEntryDispatchers(McdocTypeIndex index)
+        {
+            var alpha = McdocType.Create(McdocTypeKind.Struct);
+            alpha.Fields = [ Static("alpha_value", McdocType.Create(McdocTypeKind.Int)) ];
+            var beta = McdocType.Create(McdocTypeKind.Struct);
+            beta.Fields = [ Static("beta_value", McdocType.Create(McdocTypeKind.Int)) ];
+            index.RegisterDispatch(LootEntryRegistry, "alpha", alpha);
+            index.RegisterDispatch(LootEntryRegistry, "beta", beta);
+            return 2;
+        }
+
     }
 }
