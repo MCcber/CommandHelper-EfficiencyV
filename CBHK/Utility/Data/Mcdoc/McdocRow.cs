@@ -250,15 +250,39 @@ namespace CBHK.Utility.Data.Mcdoc
                && parent.Get(Node.FieldName) is null;
 
         /// <summary>
-        /// 遗留键的删除入口。两种现场分开走：键还在 → 走节点级删除（父级重建，行随之消失）；
-        /// 键已被换版本清掉 → 只把这一行从树上摘掉再重拼父行。**不能**走父级重建：
-        /// 那种重建是"按 JSON 重亲子级"，同一父级下其它幽灵行会一起被清走。
+        /// 遗留键的删除入口。三种现场分开走：
+        /// ① 键还在活文档里 → 由文档按路径解析活父容器后删键（缓存父级可能已经换代）；
+        /// ② 键已经不在文档里（幽灵行） → 从**活父级**摘掉这一行；
+        /// ③ 父容器实例已换代/找不到 → 请求宿主整篇重载，别在旧壳上做无效手术。
+        /// 都不能走"父级重建"：那会按 JSON 重亲子级，把同一父级下其它幽灵行一起清走。
         /// </summary>
         public System.Windows.Input.ICommand UnknownDeleteCommand => new McdocCommand(() =>
         {
+            var document = projector?.Document;
+            McdocTreeNode liveParent = null;
+            var outcome = document is null
+                ? LegacyDeleteOutcome.NotFound
+                : document.TryRemoveLegacyOrGhost(Node, out liveParent);
             McdocWriteTrace.Trace("unknown-delete", "path=" + (Node.JsonPath ?? "?")
+                + " outcome=" + outcome
                 + " removeField=" + (Node.RemoveFieldCommand?.CanExecute(null) == true)
-                + " field=" + (Node.FieldName ?? "<空>"));
+                + " field=" + (Node.FieldName ?? "<空>")
+                + " liveParent=" + (liveParent?.JsonPath ?? "<null>"));
+            if (outcome == LegacyDeleteOutcome.Notified && liveParent is not null)
+            {
+                // 活父级是当前这一代：走正常结构刷新（投影/诊断/文本都由管线收口）
+                (liveParent.StructureChanged ?? document.NodeStructureChanged)?.Invoke(liveParent);
+                return;
+            }
+            if (outcome == LegacyDeleteOutcome.NeedsReload)
+            {
+                if (projector?.RequestReload is { } reload)
+                {
+                    reload();
+                    return;
+                }
+            }
+            // 没有 document 的旧测试/兜底：保持原有两条路（键还在 → RemoveField；键没了 → 只摘行）
             if (Node.RemoveFieldCommand?.CanExecute(null) == true)
             {
                 Node.RemoveFieldCommand.Execute(null);
@@ -397,7 +421,32 @@ namespace CBHK.Utility.Data.Mcdoc
 
         public System.Windows.Input.ICommand AddBottomCommand => Node.AddItemCommand;
         public System.Windows.Input.ICommand AddTopCommand => Node.AddItemTopCommand;
-        public System.Windows.Input.ICommand SetDefaultCommand => Node.SetDefaultCommand;
+        public System.Windows.Input.ICommand SetDefaultCommand
+        {
+            get
+            {
+                if (setDefaultCommand is not null) return setDefaultCommand;
+                return setDefaultCommand = new McdocCommand(() =>
+                {
+                    var command = Node.SetDefaultCommand;
+                    // 结构通知可能被管线延后/局部刷新覆盖不到：命令执行后至少把这一行的 Head 重算，
+                    // 保证 Properties 从“添加”立刻变成“删除”（否则按钮可见但命令已不可用）。
+                    if (command?.CanExecute(null) == true) command.Execute(null);
+                    RefreshHead();
+                    // SetDefault 是结构手势：WPF 行容器在局部 Splice 后可能仍复用旧 Head
+                    // （现场：子结构已出现，Properties 的 ⊕ 还停在"添加且不可用"，改一次子值才恢复）。
+                    // 这里做一次结构对账，让新 Head/按钮从当前文档重新生成。
+                    if (projector?.Document is { } document)
+                    {
+                        projector.Reset(document.Nodes.ToList());
+                    }
+                    McdocWriteTrace.Trace("row-set-default", "path=" + (Node.JsonPath ?? "?")
+                        + " json=" + (Node.Json?.Kind.ToString() ?? "<null>")
+                        + " clear=" + ClearVisibility + " add=" + SetDefaultVisibility);
+                }, () => Node.SetDefaultCommand?.CanExecute(null) == true);
+            }
+        }
+        private System.Windows.Input.ICommand setDefaultCommand;
         public System.Windows.Input.ICommand RemoveSelfCommand => Node.RemoveSelfCommand;
         public System.Windows.Input.ICommand MoveUpCommand => Node.MoveUpCommand;
         public System.Windows.Input.ICommand MoveDownCommand => Node.MoveDownCommand;
@@ -715,11 +764,39 @@ namespace CBHK.Utility.Data.Mcdoc
             OnPropertyChanged(string.Empty);
         }
 
+        /// <summary>
+        /// 值编辑后的轻量刷新：更新诊断与值摘要快照，**不**重发 Kind/Head/空属性。
+        /// 标量值变化不会改变行形状或编辑器种类；整轮 Head 通知会让 ContentControl 重新求值模板，
+        /// 把正在输入的数字/文本编辑器换掉（"每敲一个字符就丢焦点"）。
+        /// </summary>
+        public void RefreshDiagnosticsOnly()
+        {
+            head = McdocPresenterRegistry.Default.Describe(Node);
+            OnPropertyChanged(nameof(Diagnostics));
+            OnPropertyChanged(nameof(DiagnosticSummary));
+            OnPropertyChanged(nameof(DiagnosticBadgeVisibility));
+            OnPropertyChanged(nameof(DiagnosticsVisibility));
+            OnPropertyChanged(nameof(Tooltip));
+            OnPropertyChanged(nameof(ErrorBrush));
+            OnPropertyChanged(nameof(ErrorBorderBrush));
+            // 值/键存在性会改这几个只读摘要的结论，但它们不参与行模板选择，可以安全重读。
+            OnPropertyChanged(nameof(PreviewText));
+            OnPropertyChanged(nameof(SetDefaultVisibility));
+            OnPropertyChanged(nameof(ClearVisibility));
+        }
+
         /// <summary>行被丢弃时退订，避免节点长期持有已死行。</summary>
         public void Detach() => Node.PropertyChanged -= OnNodePropertyChanged;
 
         private void OnNodePropertyChanged(object sender, PropertyChangedEventArgs args)
         {
+            if (args.PropertyName == nameof(McdocTreeNode.Json))
+            {
+                // JSON 是“添加/删除/清空”按钮的唯一真相：只刷值摘要，不重发 Kind/Head/空属性，
+                // 避免把正在输入的编辑器换掉；结构子行仍由管线的 StructureChanged 负责。
+                RefreshDiagnosticsOnly();
+                return;
+            }
             if (args.PropertyName == nameof(McdocTreeNode.SelectedEnumOption) && Node.AllowCustomValue)
             {
                 // 从候选里选了一项：把值同步到 Node.Value（同一个写回出口），输入框才不会"弹回"

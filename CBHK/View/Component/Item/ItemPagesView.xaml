@@ -1,12 +1,14 @@
-﻿<UserControl
+<UserControl
     x:Class="CBHK.View.Component.Item.ItemPageView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:Mcdoc="clr-namespace:CBHK.Utility.Data.Mcdoc"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:data="clr-namespace:CBHK.Utility.Data"
     xmlns:local="clr-namespace:CBHK.View.Component.Item"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
@@ -25,12 +27,16 @@
         <KeyBinding Key="F5" Command="{Binding RunCommand}" />
     </UserControl.InputBindings>
 
+    <UserControl.Resources>
+        <data:EnumMemberToTextComboBoxItemConverter x:Key="McdocChromeComboConverter" />
+    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="9*" />
         </Grid.RowDefinitions>
-        <DockPanel Grid.Row="0" Height="35">
+        <DockPanel Grid.Row="0" Height="40">
             <VectorButton:VectorFlatImageButton
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
@@ -49,19 +55,20 @@
             </VectorButton:VectorFlatImageButton>
             <VectorButton:VectorFlatImageButton
                 HorizontalAlignment="Left"
-                VerticalAlignment="Center"
+                VerticalAlignment="Stretch"
                 Command="{Binding SaveCommand}"
                 Image="/Resource/Common/Image/Save.png"
                 ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}" />
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
+                Width="100"
                 HorizontalAlignment="Left"
-                VerticalAlignment="Center"
+                VerticalAlignment="Stretch"
                 IsReadOnly="True"
-                ItemsSource="{Binding VersionSource, IsAsync=True}"
+                ItemsSource="{Binding GameVersionOptions, Converter={StaticResource McdocChromeComboConverter}}"
                 SelectedIndex="0"
-                SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+                SelectedItem="{Binding GameVersion, Mode=TwoWay, Converter={StaticResource McdocChromeComboConverter}}"
                 Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
@@ -69,20 +76,21 @@
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
             </VectorComboBox:VectorTextComboBox>
-            <VectorComboBox:VectorTextComboBox
+            <VectorComboBox:VectorIconTextComboBox
                 Title="物品ID"
+                MinWidth="150"
                 HorizontalAlignment="Left"
-                VerticalContentAlignment="Center"
+                VerticalContentAlignment="Stretch"
                 Foreground="White"
                 ItemsSource="{Binding ItemList, Mode=OneWay}"
                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
-                Style="{DynamicResource VectorTextComboBoxStyle}">
+                Style="{DynamicResource VectorIconTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
                         <behavior:CallMethodAction MethodName="ItemID_SelectionChanged" TargetObject="{Binding}" />
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
-            </VectorComboBox:VectorTextComboBox>
+            </VectorComboBox:VectorIconTextComboBox>
             <VectorButton:VectorToggleTextButton
                 Background="#CC6C24"
                 Foreground="White"
@@ -98,46 +106,12 @@
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
         </DockPanel>
-        <Container:VectorTabControl
+        <!--  与实体页/进度页同一套行视图：行集合、容器样式与行模板选择器都来自 McdocRows.xaml  -->
+        <Mcdoc:McdocTreeRowView
             Grid.Row="1"
-            Margin="0,-2,0,0"
             Background="Transparent"
-            BorderThickness="0"
-            SelectedIndex="0"
-            Style="{DynamicResource VectorTabControlStyle}">
-            <behavior:Interaction.Triggers>
-                <behavior:EventTrigger EventName="SelectionChanged">
-                    <behavior:CallMethodAction MethodName="TabControl_SelectionChanged" TargetObject="{Binding}" />
-                </behavior:EventTrigger>
-                <behavior:EventTrigger EventName="Loaded">
-                    <behavior:CallMethodAction MethodName="SpecialTagsPanelLoaded" TargetObject="{Binding}" />
-                </behavior:EventTrigger>
-            </behavior:Interaction.Triggers>
-            <Container:VectorTextTabItem
-                Title="专属NBT"
-                Background="#48382C"
-                Foreground="White"
-                SelectedBackground="#CC6B23"
-                Style="{DynamicResource VectorTextTabItemStyle}">
-                <Container:VectorScrollViewer
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    Style="{DynamicResource VectorScrollViewerStyle}"
-                    VerticalScrollBarVisibility="Auto" />
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Title="物品共通标签"
-                Background="#48382C"
-                Foreground="White"
-                SelectedBackground="#CC6B23"
-                Style="{DynamicResource VectorTextTabItemStyle}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    Style="{DynamicResource VectorScrollViewerStyle}"
-                    VerticalScrollBarVisibility="Auto" />
-            </Container:VectorTextTabItem>
-        </Container:VectorTabControl>
+            ItemContainerStyle="{StaticResource McdocRowItemContainerStyle}"
+            ItemTemplateSelector="{StaticResource McdocRowTemplateSelector}"
+            ItemsSource="{Binding Rows}" />
     </Grid>
 </UserControl>

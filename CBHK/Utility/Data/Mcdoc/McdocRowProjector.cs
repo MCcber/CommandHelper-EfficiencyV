@@ -19,6 +19,13 @@ namespace CBHK.Utility.Data.Mcdoc
 
         /// <summary>某节点刚把子级建出来（懒建首次展开）：宿主在这里补物化，再自行安排重建。</summary>
         public Action<McdocTreeNode> AfterChildrenBuilt { get; set; }
+
+        /// <summary>行命令需要按活文档路径解析删除落点（遗留键/幽灵行）；由宿主装配时注入。</summary>
+        public McdocTreeDocument Document { get; set; }
+
+        /// <summary>父容器实例已经换代、无法从节点树局部修时，请求宿主整篇重载（含文本与投影）。</summary>
+        public Action RequestReload { get; set; }
+
         public int SpliceCount { get; private set; }
         public long LastSpliceMs { get; private set; }
 

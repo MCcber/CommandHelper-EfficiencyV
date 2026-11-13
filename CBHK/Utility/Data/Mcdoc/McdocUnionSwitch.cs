@@ -24,7 +24,7 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         /// <summary>按成员下标切换（探针/命令用；与下拉等价）。</summary>
-        public static bool Switch(McdocTreeNode node, int memberIndex)
+        public static bool Switch(McdocTreeNode node, int memberIndex, McdocRuntime runtime = null)
         {
             if (node?.Type is not { Kind: McdocTypeKind.Union }) return false;
             var option = node.UnionTypeNameList?.FirstOrDefault(item =>
@@ -39,7 +39,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 };
                 return index == memberIndex;
             });
-            return option is not null && SwitchTo(node, option);
+            return option is not null && SwitchTo(node, option, runtime);
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 Convert.ToString(right.Value?.LiteralValue), StringComparison.Ordinal);
         }
 
-        public static bool SwitchTo(McdocTreeNode node, EnumMember option)
+        public static bool SwitchTo(McdocTreeNode node, EnumMember option, McdocRuntime runtime = null)
         {
             if (node is null) return false;
             if (IsUnsetOption(option))
@@ -100,6 +100,12 @@ namespace CBHK.Utility.Data.Mcdoc
             if (IsSameOption(node.SelectedUnionTypeName, option)) return false;
             // 切走的成员：getChange 的"旧类型"（是它才有搬运语义，union 声明没有）
             var previousMember = node.SelectedUnionMember;
+            // 切到"文档里还没有值"的**容器**分支：先把这一支的空壳写进文档，再换选中。
+            // 不先落值，分支会在"没有 JSON"的状态下建出来 —— 可选成员不摊开子级（StructPresenter 的
+            // "缺省成员不摊开"守卫），空分支随即被 ApplyUnionBranch 丢掉，选中落回（未设置）。
+            // 现场：物品组件 profile 的 properties 切 Object 支（[string]:[string] 的 map），
+            // 行上直接回到（未设置），而文档里连 properties 都没写进去。
+            SeedContainerBranchValue(node, option, runtime);
 
             // 切支会改文档（剪旧键 / 补新支的默认结构 / getChange 改形状）：整段只通知宿主一次。
             // "一次"是硬约束 —— 两侧（文本同步 + 这一支的重建）都挂在这条通知上，重复会让重建排两遍；
@@ -158,6 +164,21 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
                 // misode 的 UnionHead.onSelect：切分支当场按新分支改写文档（getChange）
                 node.ConvertJsonToSelectedBranch(previousMember, replaceWhenUnfit: true);
+                // getChange 是"没有运行期上下文"的代数：成员里必填字段是**引用类型**时（TextComponent 的
+                // `keybind: Keybind`）它会把这个字段丢掉，写出一个 `{}` —— 值落不进这一支，下一次重建
+                // 按值重选就弹回 String（用户看到的是"选了 Keybind 立刻弹回"）。
+                // 这里用**带运行期的默认值代数**补一份落得进去的值：宁可写默认坐标，也不留一条写不出合法值的死分支。
+                EnsureValueFitsSelectedMember(node, runtime);
+                // 有的结构支"建支那一刻文档里还没有值"就立不住（ProfilePropertyMap 只有动态键、没有静态字段，
+                // 分支建出来 0 子级，选中会落回（未设置））。值现在已经写进文档了，再选一次就能立住；
+                // 同时记成"用户显式选择"，重建时按路径提示（UnionSelectionHints）保回来。
+                if (node.Json is not null
+                    && (node.SelectedUnionTypeName is null || IsUnsetOption(node.SelectedUnionTypeName))
+                    && !IsUnsetOption(option))
+                {
+                    node.UnionSelectionExplicit = true;
+                    node.SelectedUnionTypeName = option;
+                }
                 // 值刚落盘：分支节点与行上镜像按新值重新派生（否则镜像停在建支那一刻的（未设置））
                 node.RefreshUnionBranchMirror();
                 // 切到列表分支：值必须是数组，否则列表动作没有落点（标量就地包成一条，不丢用户的值）。
@@ -191,6 +212,63 @@ namespace CBHK.Utility.Data.Mcdoc
                 node.SuppressValueNotifications = wasSuppressed;
             }
             return Notify();
+        }
+
+        /// <summary>求值后的成员（下标与下拉选项一致）。</summary>
+        private static McdocType EvaluatedMemberAt(McdocTreeNode node, EnumMember option)
+        {
+            var index = option?.Value?.LiteralValue switch
+            {
+                int value => value,
+                decimal number => (int)number,
+                string text when int.TryParse(text, out var parsed) => parsed,
+                _ => -1,
+            };
+            var members = node?.Type?.Members;
+            return members is not null && index >= 0 && index < members.Count ? members[index] : null;
+        }
+
+        /// <summary>切到缺值的容器分支前，先把这一支的空壳写进文档（详见调用点注释）。</summary>
+        private static void SeedContainerBranchValue(McdocTreeNode node, EnumMember option, McdocRuntime runtime)
+        {
+            if (node?.Json is not null) return;
+            if (node.Parent?.Json is not { Kind: McdocJsonKind.Object }) return;
+            var member = EvaluatedMemberAt(node, option);
+            if (member is null) return;
+            if (member.Kind is not (McdocTypeKind.Struct or McdocTypeKind.List or McdocTypeKind.Tuple
+                or McdocTypeKind.ByteArray or McdocTypeKind.IntArray or McdocTypeKind.LongArray)) return;
+            var seeded = McdocDefaults.Resolve(member, runtime ?? node.Runtime);
+            if (seeded is null) return;
+            node.Json = seeded;
+            McdocCollectionEditor.Default.WriteIntoParent(node, seeded);
+            McdocWriteTrace.Trace("union-branch-seed", "path=" + (node.JsonPath ?? "?")
+                + " member=" + member.Kind + " value=" + seeded.Kind);
+        }
+
+        /// <summary>
+        /// 值必须落得进刚切到的这个成员：落不进（缺必填字段 / 形状不对）就用**带运行期的默认值代数**
+        /// 重新生成一份并写回父容器。没有 runtime 时什么也不做（探针/命令这类入口不算改文档的时机）。
+        /// </summary>
+        private static void EnsureValueFitsSelectedMember(McdocTreeNode node, McdocRuntime runtime)
+        {
+            if (node?.SelectedUnionMember is not { } member) return;
+            // null 也按"落不进"处理：`ValueFitsMember(null) == true` 是给"可选字段没值"用的，
+            // 但切支的结果是 null 就等于这一支没落地 —— 现场：profile.properties 切到 Object 支
+            // （只有动态键的 ProfilePropertyMap）会拿到 null，行上直接回到（未设置）。
+            if (node.Json is not null && ValueFitsMember(
+                    McdocDefaults.ResolveType(member, runtime ?? node.Runtime, node.ValueNode) ?? member, node.Json, null)) return;
+            runtime ??= node.Runtime;
+            if (runtime is null) return;
+            // 判据用**求值后**的成员：成员声明常常是个 Reference（ProfilePropertyMap / KeybindText），
+            // 拿声明去 Matches 永远 false，会把自己挡在门外。
+            var resolved = McdocDefaults.ResolveType(member, runtime, node.ValueNode) ?? member;
+            var fitted = McdocDefaults.Resolve(member, runtime);
+            if (fitted is null || !ValueFitsMember(resolved, fitted, null)) return;
+            if (!node.SuppressValueNotifications) node.SuppressValueNotifications = true;
+            node.Json = fitted;
+            McdocCollectionEditor.Default.WriteIntoParent(node, fitted);
+            McdocWriteTrace.Trace("union-branch-fit", "path=" + (node.JsonPath ?? "?")
+                + " member=" + member.Kind + " value=" + (fitted.Kind.ToString()));
         }
 
         /// <summary>
@@ -444,7 +522,21 @@ namespace CBHK.Utility.Data.Mcdoc
                 _ => -1,
             };
             var members = node?.DeclaredType?.Members;
-            return members is not null && index >= 0 && index < members.Count ? members[index] : null;
+            if (members is null || index < 0) return null;
+            // 声明里的成员会被版本门控成"新老两种写法"（Profile.properties 就是
+            // `[ProfileProperty]` + `[ProfileProperty] @ 0..16` + `ProfilePropertyMap`），
+            // 而求值后的 Members 只剩一种 —— 直接按下标取会错位（option=Object 取到第二个 List，
+            // 于是"切到结构支"既补不出默认结构、也判不对解不解得出来）。
+            // 先按同一套版本规则过滤，下标才对得上。
+            var attributes = node?.Runtime?.Attributes;
+            if (attributes is not null)
+            {
+                var kept = members
+                    .Where(member => member is not null && attributes.ShouldKeep(member.Attributes, node.Runtime))
+                    .ToList();
+                if (kept.Count > 0 && kept.Count <= members.Count) members = kept;
+            }
+            return index < members.Count ? members[index] : null;
         }
     }
 }

@@ -25,6 +25,14 @@ namespace CBHK.Utility.Data.Mcdoc
         }
     }
 
+    /// <summary>遗留键 / 幽灵行删除的落点判定：直接通知活父级、需要整篇重载、或找不到落点。</summary>
+    public enum LegacyDeleteOutcome
+    {
+        NotFound,
+        Notified,
+        NeedsReload,
+    }
+
     /// <summary>
     /// 一次编辑会话的视图状态：符号索引 + 运行期 + 可绑定树 + 日志。
     /// 用法：RegisterTypeDefs(...) → Load(rootType, jsonText) → 绑定 Nodes。
@@ -111,6 +119,67 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             foreach (var root in Nodes) Walk(root);
             return count;
+        }
+
+        /// <summary>
+        /// 遗留键 / 幽灵行的删除落点：**按 JsonPath 在活的 RootJson 里**解析父容器，而不是拿
+        /// <see cref="McdocTreeNode.Parent"/> 缓存的那份 JSON。缓存父级可能是上一代节点、union 分支壳，
+        /// 在它上面删键活文档一点没动 —— 投影一对账，行又回来（用户看到"闪一下、两侧都没删掉"）。
+        /// 返回值告诉调用方：已经能从活父级通知（Notified）、父级实例已换代要整篇重载（NeedsReload），
+        /// 或连父路径都解析不到（NotFound，调用方保留旧兜底）。
+        /// </summary>
+        public LegacyDeleteOutcome TryRemoveLegacyOrGhost(McdocTreeNode node, out McdocTreeNode liveParent)
+        {
+            liveParent = null;
+            if (node is null || string.IsNullOrEmpty(node.FieldName)) return LegacyDeleteOutcome.NotFound;
+            var path = node.JsonPath ?? "";
+            var suffix = "." + node.FieldName;
+            if (!path.EndsWith(suffix, StringComparison.Ordinal)) return LegacyDeleteOutcome.NotFound;
+            var parentPath = path.Substring(0, path.Length - suffix.Length);
+            if (string.IsNullOrEmpty(parentPath)) return LegacyDeleteOutcome.NotFound;
+
+            var parentJson = ResolvePath(RootJson, parentPath);
+            if (parentJson is not { Kind: McdocJsonKind.Object } parentObject) return LegacyDeleteOutcome.NotFound;
+            liveParent = parentPath == "$" ? RootNode : FindNode(parentPath);
+
+            var removed = parentObject.Properties?.RemoveAll(pair => pair.Key == node.FieldName) ?? 0;
+            if (McdocWriteTrace.Enabled)
+            {
+                McdocWriteTrace.Trace("legacy-remove", "path=" + path + " parentPath=" + parentPath
+                    + " field=" + node.FieldName + " removed=" + removed
+                    + " keys=" + string.Join(",", parentObject.Properties?.Select(pair => pair.Key) ?? [])
+                    + " sameJson=" + ReferenceEquals(liveParent?.Json, parentObject)
+                    + " liveParent=" + (liveParent?.JsonPath ?? "<null>"));
+            }
+            if (removed > 0)
+            {
+                Detach(node);
+                return ReferenceEquals(liveParent?.Json, parentObject)
+                    ? LegacyDeleteOutcome.Notified
+                    : LegacyDeleteOutcome.NeedsReload;
+            }
+
+            // 键已经不在文档里（右侧删键 / 切支剪键之后的幽灵行）：从**活父级**的子级集合摘掉再通知。
+            // 活父级找不到时不能只摘缓存父级：那正是"摘了旧壳、投影又从根长回来"的来源。
+            if (liveParent is null) return LegacyDeleteOutcome.NeedsReload;
+            liveParent.Children.Remove(node);
+            liveParent.Items.Remove(node);
+            liveParent.SelectedUnionChildren.Remove(node);
+            node.Parent = null;
+            return ReferenceEquals(liveParent.Json, parentObject)
+                ? LegacyDeleteOutcome.Notified
+                : LegacyDeleteOutcome.NeedsReload;
+
+            static void Detach(McdocTreeNode detached)
+            {
+                detached.Json = null;
+                detached.Children.Clear();
+                detached.Items.Clear();
+                detached.SelectedUnionChildren.Clear();
+                detached.ChildrenBuilt = true;
+                detached.SyncScalarFromJson();
+                detached.Parent = null;
+            }
         }
 
         /// <summary>
@@ -270,7 +339,12 @@ namespace CBHK.Utility.Data.Mcdoc
                     };
                 }
             }
-            var rebuilt = factory.CreateNode(node.FieldName, node.DeclaredType, node.Json, rebuildRuntime,
+            // 值必须取**活文档里的那一份**，不许拿节点自己的旧快照：切 union 分支 / 值刚写进父容器时，
+            // 节点上的 Json 可能还停在上代（UpdateOne 的锚点也可能是上一代实例），
+            // 定向重建于是把上一支又建回来 —— 现场：Potion contents 从 String 支选 Object 支，
+            // 下拉当场变了、右侧文本也已经是 {}，一拍重建之后行又弹回 String（必须走「未设置」才切得过去）。
+            var liveJson = TryLiveValue(node, out var current) ? current : node.Json;
+            var rebuilt = factory.CreateNode(node.FieldName, node.DeclaredType, liveJson, rebuildRuntime,
                 node.ValueNode?.Parent, node.ValueNode?.RuntimeKey, node.Depth, true,
                 NodeValueChanged, node.JsonPath, null, NodeStructureChanged, null);
             if (rebuilt is null) return null;
@@ -366,6 +440,30 @@ namespace CBHK.Utility.Data.Mcdoc
                 collection[index] = rebuilt;
                 return true;
             }
+        }
+
+        /// <summary>
+        /// 这个节点在**活文档**里对应的值：父容器按键身份（对象取同名键 / 数组按下标）现取。
+        /// 判不了（没有父级、父级没值、字段名不是下标）时返回 false，调用方退回节点自己的快照。
+        /// 键被删掉时返回 true + null：那也是一份"活值"，拿旧快照重建会把删掉的键复活。
+        /// </summary>
+        private static bool TryLiveValue(McdocTreeNode node, out McdocJsonValue value)
+        {
+            value = null;
+            if (node?.Parent?.Json is not { } parentJson) return false;
+            if (parentJson.Kind == McdocJsonKind.Object)
+            {
+                if (string.IsNullOrEmpty(node.FieldName)) return false;
+                value = parentJson.Get(node.FieldName);
+                return true;
+            }
+            if (parentJson.Kind == McdocJsonKind.Array && int.TryParse(node.FieldName, out var index))
+            {
+                var items = parentJson.Items;
+                value = items is not null && index >= 0 && index < items.Count ? items[index] : null;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>构建期造出的合成根（摊平根时它不进 Nodes，但仍是顶层节点的父容器）。</summary>
@@ -635,7 +733,7 @@ namespace CBHK.Utility.Data.Mcdoc
 
         /// <summary>
         /// 从文本重建整棵树。解析后统一走 AST 重载，保证两条入口的回调接线完全一致
-        /// （曾经这里单独 Build，漏了结构变更回调，导致列表 ⊕/⊖ 改了 JSON 却不通知宿主）。
+        /// （曾经这里单独 BuildResult，漏了结构变更回调，导致列表 ⊕/⊖ 改了 JSON 却不通知宿主）。
         /// </summary>
         public void Load(McdocType rootType, string jsonText)
             => Load(rootType, McdocJsonTextParser.Parse(jsonText).Root);

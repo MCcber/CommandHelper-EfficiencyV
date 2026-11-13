@@ -53,7 +53,16 @@ namespace CBHK.Utility.Data.Mcdoc
                 return;
             }
             var written = MaterializeChildDefaults(node);
-            if (written > 0) ScheduleRebuild?.Invoke(node.RebuildAnchor ?? node);
+            if (written > 0)
+            {
+                // 写进去的是 AST：文本还是载入那一刻的那份。不在这里推一次，
+                // 就出现"行上显示 Oak、AST 里有 variant、右侧 JSON 没有"——
+                // 第二次载入后展开 type_specific 正是这条路（载入时子级还没建，物化没得写；
+                // 展开时才补写，而补写过去只排了重建、没同步文本）。
+                // 投影不在这里动（钩子就在投影里跑，Reset 会自激），交给排出去的这一拍重建收口。
+                TextDirty?.Invoke();
+                ScheduleRebuild?.Invoke(node.RebuildAnchor ?? node);
+            }
         }
 
         /// <summary>
@@ -163,9 +172,32 @@ namespace CBHK.Utility.Data.Mcdoc
                 + " rows=" + Projector.Rows.Count + " resets=" + Projector.ResetCount);
             if (node.IsRuntimeDependent)
             {
-                // 运行期依赖（动态索引/调度器解出新字段）：重建最近容器，延后一拍
+                // 运行期依赖（动态索引/调度器解出新字段）：重建最近容器，延后一拍。
+                // 但**添加/展开**这类手势不能只排延后：用户点完 ⊕ 必须当场看到新子行，
+                // 否则要点一次折叠/展开（现场：block_state_property 的 Properties 添加后子结构空白）。
+                // 先用当前模型把这一层拼进投影，延后重建随后再按新解出的类型校正。
+                var wasDeferredLoading = GetLoading?.Invoke() ?? false;
+                var wasDeferredRebuilding = Rebuilding;
+                Rebuilding = true;
+                SetLoading?.Invoke(true);
+                try
+                {
+                    node.EnsureChildren();
+                    if (!Projector.RefreshAround(node))
+                    {
+                        Projector.Reset(Document.Nodes.ToList());
+                    }
+                    RefreshDiagnostics(node, refreshHead: true);
+                    McdocWriteTrace.Trace("structure-runtime-splice", "path=" + (node.JsonPath ?? "?"));
+                }
+                finally
+                {
+                    SetLoading?.Invoke(wasDeferredLoading);
+                    Rebuilding = wasDeferredRebuilding;
+                }
                 ScheduleRebuild?.Invoke(node.RebuildAnchor);
                 TextDirty?.Invoke();
+                DrainPendingChildBuilds();
                 return;
             }
             // 闸门必须覆盖【刷新 → 物化到不动点 → 投影 → 回写】整段：
@@ -182,7 +214,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     Projector.Reset(Document.Nodes.ToList());
                 }
-                RefreshDiagnostics(node);
+                RefreshDiagnostics(node, refreshHead: true);
                 EnsureProjectionCurrent();
                 TextDirty?.Invoke();
             }
@@ -386,7 +418,7 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 行的徽标读的是 Head（构造/RefreshHead 时算的），只调 Document.ValidateNode 的话
         /// 文档级清单变了、行上那个黄色/红色感叹号却还在（现场就是这么卡住的）。
         /// </summary>
-        public void RefreshDiagnostics(McdocTreeNode node)
+        public void RefreshDiagnostics(McdocTreeNode node, bool refreshHead = false)
         {
             if (node is null || Document is null) return;
             using var stage = McdocWriteTrace.Stage("diag.refresh");
@@ -402,7 +434,7 @@ namespace CBHK.Utility.Data.Mcdoc
                     current = current.Parent;
                     continue;
                 }
-                row.RefreshHead();
+                if (refreshHead) row.RefreshHead(); else row.RefreshDiagnosticsOnly();
                 if (depth >= 1 && string.Equals(before, row.DiagnosticSummary, StringComparison.Ordinal)) break;
                 current = current.Parent;
             }
@@ -414,8 +446,24 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 var child = stack.Pop();
                 foreach (var next in McdocPresenterRegistry.Default.Children(child)) stack.Push(next);
-                if (!ReferenceEquals(child, node)) Projector?.Find(child)?.RefreshHead();
+                if (!ReferenceEquals(child, node))
+                {
+                    var row = Projector?.Find(child);
+                    if (row is null) continue;
+                    if (refreshHead) row.RefreshHead(); else row.RefreshDiagnosticsOnly();
+                }
             }
+        }
+
+        /// <summary>
+        /// 用户在行内编辑框里连续键入时走的值路径：只刷诊断与文本，不重建依赖。
+        /// 依赖重建由调用方按"这个键是否真的参与索引"延后到失焦补跑 —— 同步重建会把承载光标的行换掉。
+        /// </summary>
+        public void RefreshValueOnly(McdocTreeNode node)
+        {
+            if (node is null || Document is null) return;
+            RefreshDiagnostics(node);
+            TextDirty?.Invoke();
         }
 
         /// <summary>
@@ -446,18 +494,26 @@ namespace CBHK.Utility.Data.Mcdoc
         private void OnValueChangedCore(McdocTreeNode node)
         {
             RefreshDiagnostics(node);
-            var rebuilt = RebuildDependents([node]);
+            var rebuilt = RebuildDependents([node], out var parentRebuilds, out var droppedDerivedContainers);
+            // 父级重建/派生容器被摘掉时，子行集合和行命令都换代了：局部 RefreshAround 在
+            // 嵌套 list/union 的已展开子树上不保证覆盖（现场：item_modifier 的 Properties 展开着切
+            // 无属性方块，旧行/旧 trash 留着；再切回来添加按钮点不动）。这一拍必须整表对账。
+            var forceProjectionReconcile = parentRebuilds > 0 || droppedDerivedContainers > 0;
             foreach (var dependent in rebuilt)
             {
                 // 重建出来的新成员在懒建下是"只有壳"的：不先把子级建出来，投影画不出行、
                 // 物化也遍历不到 —— 现场就是"切成员后 block 有行没值、properties 没有方块上下文"。
                 // 这里已经在 Rebuilding 闸门里，补建抬起的钩子不会再排第二次重建（不自我驱动）。
                 dependent.EnsureChildren();
-                if (!Projector.RefreshAround(dependent)) Projector.Reset(Document.Nodes.ToList());
-                RefreshDiagnostics(dependent);
+                if (!forceProjectionReconcile && !Projector.RefreshAround(dependent))
+                {
+                    Projector.Reset(Document.Nodes.ToList());
+                }
+                RefreshDiagnostics(dependent, refreshHead: true);
             }
             // 重建会把"必填 + 闭合候选"的判别键写进文档（工厂的判别键物化），写过就得重排一次
-            if (rebuilt.Count > 0 && MaterializeUntilStable() > 0)
+            var materialized = rebuilt.Count > 0 ? MaterializeUntilStable() : 0;
+            if (forceProjectionReconcile || materialized > 0)
             {
                 Projector.Reset(Document.Nodes.ToList());
             }
@@ -476,7 +532,13 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 文本→树通道（McdocSyncEngine 的值补丁）也走这一份，否则"右侧把 block 改空、左侧 properties 还留着旧子级"。
         /// </summary>
         public List<McdocTreeNode> RebuildDependents(IReadOnlyList<McdocTreeNode> changed)
+            => RebuildDependents(changed, out _, out _);
+
+        internal List<McdocTreeNode> RebuildDependents(IReadOnlyList<McdocTreeNode> changed,
+            out int parentRebuilds, out int droppedDerivedContainers)
         {
+            parentRebuilds = 0;
+            droppedDerivedContainers = 0;
             var rebuilt = new List<McdocTreeNode>();
             if (changed is null || Document is null) return rebuilt;
             using var stage = McdocWriteTrace.Stage("dep.rebuild");
@@ -502,8 +564,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 if ((flattenedBranch || parent.Parent is not null)
                     && parent.Json is { Kind: McdocJsonKind.Object }
                     && seen.Add(parent)
-                    && (parent.DependsOnRuntimeData
-                        || HasSpreadIndex(EffectiveStruct(parent) ?? parent.DeclaredType, node.Key)))
+                    && ParentDrivesDependents(node))
                 {
                     McdocWriteTrace.Trace("dependents-parent", "path=" + (parent.JsonPath ?? "?") + " key=" + node.Key);
                     parents.Add(parent);
@@ -545,7 +606,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 // 它们的 ⊕ 判据是 Json == null，留着空对象就是一条既没子行、又点不动的死行
                 // （现场：Properties 展开着切到无属性方块，行还在但 ⊕ 灰着）。
                 // **必须按声明求值**：重建出来的父级这一拍还没建子级，遍历 Children 会一个都碰不到。
-                DropEmptyDerivedContainers(freshParent);
+                droppedDerivedContainers += DropEmptyDerivedContainers(freshParent);
+                parentRebuilds++;
                 reshapes.Add((parent.JsonPath, parent.Type));
                 rebuilt.Add(freshParent);
             }
@@ -622,12 +684,6 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         /// <summary>
-        /// 声明类型里是否有「按这个键做动态索引」的 dispatcher/indexed（探针也用它断言反向）。
-        /// 声明常被指令包着（Mapped{copy} / Concrete / Indexed 空壳——它们只换上下文、不带自己的索引，
-        /// 见 McdocSimplifier.SimplifyIndexed 的"外壳"规则），而索引挂在里层的 Dispatcher 上：
-        /// 只看顶层 Kind 会漏掉整条链，表现就是"兄弟键落值了、依赖它的子树不重新求值"。
-        /// </summary>
-        /// <summary>
         /// 这个键的值变了，是否**真的**需要"重新求值依赖方"。
         /// 以前只看 <see cref="McdocTreeNode.IsRuntimeDependent"/>（"这一段里有人读过运行期数据"），
         /// 于是容器里任何一个数字/布尔改动都会rebuild 一层：整表 Reset → 行容器重建 → 滚动视图跳一下，
@@ -638,9 +694,7 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             if (node?.Parent is null || string.IsNullOrEmpty(node.Key)) return false;
             var parent = node.Parent;
-            // 判别键的宿主可能被 union 摊平（字段行直接挂在 union 行下）：这一层判不准，保守重建
-            if (parent.Type?.Kind == McdocTypeKind.Union) return true;
-            if (HasSpreadIndex(EffectiveStruct(parent) ?? parent.DeclaredType, node.Key)) return true;
+            if (ParentDrivesDependents(node)) return true;
             foreach (var sibling in McdocPresenterRegistry.Default.Children(parent))
             {
                 if (sibling is null || ReferenceEquals(sibling, node)) continue;
@@ -649,6 +703,88 @@ namespace CBHK.Utility.Data.Mcdoc
             return false;
         }
 
+        /// <summary>
+        /// 父级自己是否"按这个键求值"：只认生效结构上声明了按 key 索引的 spread，或父级类型
+        /// 自身的 Indices 访问器。以前用 parent.DependsOnRuntimeData 当兜底，把"结构里任何角落
+        /// 读过运行期数据"都当成依赖方 —— 改一个不参与索引的数字也会重建父级，行被换掉、输入框丢焦点。
+        /// </summary>
+        private bool ParentDrivesDependents(McdocTreeNode node)
+        {
+            var parent = node?.Parent;
+            if (parent is null || string.IsNullOrEmpty(node.Key)) return false;
+            return ParentDrivesDependentsCore(node, parent);
+        }
+
+        private bool ParentDrivesDependentsCore(McdocTreeNode node, McdocTreeNode parent)
+        {
+            // 求值后的 type 已经把 spread 摊进字段（IsSpread 没了），按声明再找一遍；
+            // 声明里的 LootCondition/Predicate 这类还是 Reference，要沿符号表解到定义体。
+            // 真 schema 的根常常是 dispatcher（predicate = dispatch ... to Predicate）：父节点
+            // declaredType 是 Dispatcher，声明里找不到 spread；但"候选表 + 父级读过运行期数据"
+            // 就是判别键的现场（condition / block 这类），必须重建父级让同层 spread 重新求解。
+            // 普通数字/纯文本没有候选表，不会走这条兜底；候选行里允许自由输入的文本框在 VM 侧
+            // 已由 IsTextEditorFocused 延后重建，不会每敲一字换行。
+            if (parent.DependsOnRuntimeData && node.EnumOptionList is { Count: > 0 }) return true;
+            if (DeclaredSpreadIndexesKey(parent.DeclaredType, node.Key)) return true;
+            var effective = EffectiveStruct(parent) ?? parent.DeclaredType;
+            if (HasSpreadIndex(effective, node.Key)) return true;
+            return IndexesByKey(effective, node.Key) || IndexesByKey(parent.DeclaredType, node.Key);
+        }
+
+        /// <summary>
+        /// 声明里有没有"按 key 做动态索引的 spread"：结构体字段、union 成员、指令壳和 Reference 都要看穿。
+        /// 求值后的 <see cref="McdocTreeNode.Type"/> 会把 spread 摊平（字段不再带 IsSpread），
+        /// 只查求值形态会漏掉 condition / block_states 这类"父级 spread 消费判别键"的现场。
+        /// </summary>
+        private bool DeclaredSpreadIndexesKey(McdocType type, string key, int depth = 0)
+        {
+            if (type is null || depth > 12) return false;
+            if (IndexesByKey(type, key)) return true;
+            if (type.Kind == McdocTypeKind.Struct)
+            {
+                foreach (var field in type.Fields ?? [])
+                {
+                    if (field is not { IsSpread: true }) continue;
+                    if (IndexesByKey(field.Type, key)) return true;
+                }
+                return false;
+            }
+            if (type.Kind == McdocTypeKind.Union)
+            {
+                foreach (var member in type.Members ?? [])
+                {
+                    if (DeclaredSpreadIndexesKey(member, key, depth + 1)) return true;
+                }
+                return false;
+            }
+            if (type.Kind == McdocTypeKind.Reference)
+            {
+                McdocType target = null;
+                try
+                {
+                    target = string.IsNullOrEmpty(type.Path)
+                        ? null
+                        : Document?.Symbols?.GetTypeDef(type.Path, Document.DocumentUri ?? "",
+                            string.IsNullOrEmpty(type.Module) ? Document.ModulePath : type.Module);
+                }
+                catch (Exception)
+                {
+                    // 符号表对相对名/未绑定形参不保证返回 null：判定只是启发式，查不到就交给后续兜底
+                    target = null;
+                }
+                return target is not null && !ReferenceEquals(target, type)
+                    && DeclaredSpreadIndexesKey(target, key, depth + 1);
+            }
+            return type.IsDirective && type.Item is not null
+                && DeclaredSpreadIndexesKey(type.Item, key, depth + 1);
+        }
+
+        /// <summary>
+        /// 声明类型里是否有「按这个键做动态索引」的 dispatcher/indexed（探针也用它断言反向）。
+        /// 声明常被指令包着（Mapped{copy} / Concrete / Indexed 空壳——它们只换上下文、不带自己的索引，
+        /// 见 McdocSimplifier.SimplifyIndexed 的"外壳"规则），而索引挂在里层的 Dispatcher 上：
+        /// 只看顶层 Kind 会漏掉整条链，表现就是"兄弟键落值了、依赖它的子树不重新求值"。
+        /// </summary>
         public static bool IndexesByKey(McdocType type, string key)
         {
             if (type is null || string.IsNullOrEmpty(key)) return false;

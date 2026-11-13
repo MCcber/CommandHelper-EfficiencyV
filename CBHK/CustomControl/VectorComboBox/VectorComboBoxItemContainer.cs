@@ -90,6 +90,18 @@ namespace CBHK.CustomControl.VectorComboBox
             }
         }
 
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            AddHandler(RequestBringIntoViewEvent, new RequestBringIntoViewEventHandler(ComboBoxItem_RequestBringIntoView), true);
+        }
+
+        private void ComboBoxItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
+        {
+            //阻止自动滚动
+            e.Handled = true;
+        }
+
         protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(e);

@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.Container;
 using CBHK.CustomControl.Input;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Data;
@@ -749,8 +749,10 @@ namespace CBHK.Utility.Common
                 if (filePath.Length > 0 && File.Exists(filePath))
                     context.ExternFilePath = filePath;
                 context.ExternallyReadEntityData = externData;
+                // 旧页面是"NBT 面板 + 手写版本源"，现在版本只有一个出口（mcdoc 的版本下拉）：
+                // 1.12 的老数据落在最旧的可用版本上，schema 会按版本过滤掉不存在的字段
                 if (version1_12)
-                    context.SelectedVersion = context.VersionSource[^1];
+                    context.SelectedGameVersionOption = context.GameVersionOptions.LastOrDefault();
                 context.SelectedEntityId = context.EntityIDList.Where(item => item.Text == selectedEntityID).First();
             }
             richTabItems.Content = entityPages;

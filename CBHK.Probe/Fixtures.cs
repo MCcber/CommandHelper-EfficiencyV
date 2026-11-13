@@ -409,6 +409,50 @@ namespace CBHK.Probe
             return 2;
         }
 
+        /// <summary>
+        /// 父 union 的 spread 读了运行期数据，但 count 不参与索引：
+        /// 值编辑后被误判成"父级依赖"就会重建父级、换掉承载焦点的行。
+        /// </summary>
+        public static McdocType NumberUnderRuntimeParentType()
+        {
+            var value = McdocType.Create(McdocTypeKind.Int);
+            var dispatcher = McdocType.Create(McdocTypeKind.Dispatcher);
+            dispatcher.Registry = IntProviderRegistry;
+            dispatcher.Indices = [ McdocIndex.Dynamic(new List<string> { "type" }) ];
+            var indexed = McdocType.Create(McdocTypeKind.Indexed);
+            indexed.Item = dispatcher;
+            var concrete = McdocType.Create(McdocTypeKind.Concrete);
+            concrete.Items = [ value ];
+            concrete.Item = indexed;
+
+            var provider = McdocType.Create(McdocTypeKind.Struct);
+            provider.Fields =
+            [
+                new McdocStructField { Name = "type", Key = McdocType.LiteralString("type"), Type = IdString(IntProviderRegistry) },
+                new McdocStructField { Name = "count", Key = McdocType.LiteralString("count"), Type = McdocType.Create(McdocTypeKind.Int) },
+                new McdocStructField { IsSpread = true, Type = concrete }
+            ];
+            var union = McdocType.Create(McdocTypeKind.Union);
+            union.Members = [ value, provider ];
+            var root = McdocType.Create(McdocTypeKind.Struct);
+            root.Fields = [ Static("u", union) ];
+            return root;
+        }
+
+        /// <summary>列表元素是 union（Text 那种 String | struct 的形状），用来验证列表项动作组/命令。</summary>
+        public static McdocType UnionListRootType()
+        {
+            var text = McdocType.Create(McdocTypeKind.Struct);
+            text.Fields = [ Static("text", McdocType.Create(McdocTypeKind.String)) ];
+            var union = McdocType.Create(McdocTypeKind.Union);
+            union.Members = [ McdocType.Create(McdocTypeKind.String), text ];
+            var list = McdocType.Create(McdocTypeKind.List);
+            list.Item = union;
+            var root = McdocType.Create(McdocTypeKind.Struct);
+            root.Fields = [ Static("list", list) ];
+            return root;
+        }
+
         // ── 泛型实参自带动态索引：NonEmptyWeightedList<T> / WeightedEntry<T> 的真形状 ──────────
         // 现场：distribution: NonEmptyWeightedList<IntProvider<T>>，实参 IntProvider 自己带 [[type]]。
 

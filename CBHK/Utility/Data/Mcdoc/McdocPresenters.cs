@@ -886,12 +886,14 @@ namespace CBHK.Utility.Data.Mcdoc
             RowKind = RowKindFor(node),
             Diagnostics = DiagnosticsFor(node),
             IsRawKey = IsRawKeyNode(node),
-            IsInlineTuple = McdocHelpers.IsInlineTuple(node.Type),
-            EditorKind = McdocHelpers.IsInlineTuple(node.Type) ? McdocEditorKind.InlineTuple : McdocEditorKind.None,
-            // 定长结构：不提供增删/默认值（显式置 false，别依赖 init 默认值——曾经把 tuple 当列表给了 ⊕）
+            IsInlineTuple = McdocHelpers.IsInlineTuple(node),
+            EditorKind = McdocHelpers.IsInlineTuple(node) ? McdocEditorKind.InlineTuple : McdocEditorKind.None,
+            // 定长结构：不提供增删（显式置 false，别依赖 init 默认值——曾经把 tuple 当列表给了 ⊕）；
+            // 但缺值的 tuple 要有一个"起默认值"入口：Pos/Motion/Rotation 这类固定三元组在实体的
+            // position_source[block] 里是**必填**字段，不给 ⊕ 就只剩一行标签，既没有编辑器也没有展开箭头。
             CanAddTop = false,
             CanAddBottom = false,
-            CanSetDefault = false,
+            CanSetDefault = CanSetDefaultField(node),
         };
 
         /// <summary>
@@ -904,12 +906,13 @@ namespace CBHK.Utility.Data.Mcdoc
         public override string ChildLabel(McdocTreeNode parent, int index) => index.ToString();
 
         public override IReadOnlyList<McdocTreeNode> Children(McdocTreeNode node)
-            // inline tuple 的项节点只供行内编辑器使用，不作为子行投影
-            => McdocHelpers.IsInlineTuple(node.Type) ? Array.Empty<McdocTreeNode>()
+            // inline tuple 的项节点只供行内编辑器使用，不作为子行投影；
+            // 值缺项 / 长度不符时不再内联（见 McdocHelpers.IsInlineTuple(node)），元素行照常出
+            => McdocHelpers.IsInlineTuple(node) ? Array.Empty<McdocTreeNode>()
                 : node.Items.Count > 0 ? node.Items : node.Children;
 
         public override bool CanHaveChildren(McdocTreeNode node)
-            => !McdocHelpers.IsInlineTuple(node.Type) && (node.Type?.Items?.Count ?? 0) > 0;
+            => !McdocHelpers.IsInlineTuple(node) && (node.Type?.Items?.Count ?? 0) > 0;
 
         public override void PopulateChildren(McdocTreeNode node, McdocType type, McdocJsonValue json, McdocBuildContext context)
         {

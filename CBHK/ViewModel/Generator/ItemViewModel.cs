@@ -112,20 +112,6 @@ namespace CBHK.ViewModel.Generator
 
         [RelayCommand]
         /// <summary>
-        /// 清除不需要的特指数据
-        /// </summary>
-        private void ClearUnnecessaryData()
-        {
-            ItemPageViewModel itemPageDataContext = (SelectedItemPage.Content as ItemPageView).DataContext as ItemPageViewModel;
-            if (itemPageDataContext.specialDataDictionary.TryGetValue(itemPageDataContext.SelectedItem.Text, out Grid grid))
-                grid = itemPageDataContext.specialDataDictionary[itemPageDataContext.SelectedItem.Text];
-            itemPageDataContext.specialDataDictionary.Clear();
-            grid ??= new();
-            itemPageDataContext.specialDataDictionary.Add(itemPageDataContext.SelectedItem.Text, grid);
-        }
-
-        [RelayCommand]
-        /// <summary>
         /// 添加物品
         /// </summary>
         private void AddItem()

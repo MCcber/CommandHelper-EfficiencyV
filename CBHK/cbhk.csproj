@@ -60,21 +60,25 @@
     <Compile Remove="CustomControl\VectorTabItem\**" />
     <Compile Remove="Utility\Displayer\**" />
     <Compile Remove="Model\CustomControl\**" />
+    <Compile Remove="Utility\Event\**" />
     <Compile Remove="纹理\**" />
     <EmbeddedResource Remove="Common\**" />
     <EmbeddedResource Remove="CustomControl\VectorTabItem\**" />
     <EmbeddedResource Remove="Utility\Displayer\**" />
     <EmbeddedResource Remove="Model\CustomControl\**" />
+    <EmbeddedResource Remove="Utility\Event\**" />
     <EmbeddedResource Remove="纹理\**" />
     <None Remove="Common\**" />
     <None Remove="CustomControl\VectorTabItem\**" />
     <None Remove="Utility\Displayer\**" />
     <None Remove="Model\CustomControl\**" />
+    <None Remove="Utility\Event\**" />
     <None Remove="纹理\**" />
     <Page Remove="Common\**" />
     <Page Remove="CustomControl\VectorTabItem\**" />
     <Page Remove="Utility\Displayer\**" />
     <Page Remove="Model\CustomControl\**" />
+    <Page Remove="Utility\Event\**" />
     <Page Remove="纹理\**" />
   </ItemGroup>
   <ItemGroup>
@@ -550,17 +554,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
-    <!-- 运行期配置（Resource.Init 读 Registries/Generator，McdocItemTextures 读 ItemTextures）：
-         必须躺在 exe 旁边，缺了会走代码里的默认值 -->
-    <None Update="Configuration.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <!-- 运行期配置（Registries/Generator/ItemTextures）由部署目录提供，项目源码不携带 Configuration.json -->
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\MinecraftLanguageModelLibrary\MinecraftLanguageModelLibrary.csproj" />
     <ProjectReference Include="..\CBHK.Domain\CBHK.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Utility\Event\" />
+    <Folder Include="Model\Generator\Entity\" />
   </ItemGroup>
 </Project>

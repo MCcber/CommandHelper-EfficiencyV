@@ -111,6 +111,16 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     Add(node, "warn", "未在 schema 中声明的键：" + node.FieldName);
                 }
+                // 声明不是 any、求值却退成 any：这就是"静默降级"。最典型的现场是**靠同级/父级键取值的
+                // dispatcher**（`minecraft:block[[BlockState.Name]]`、`mcdoc:block_item_states[[%parent.id]]`）
+                // 在根上求值 —— 解不出来是诚实的，但用户必须看得见，否则就是"这一行退成原始 JSON、没有任何提示"。
+                if (node.Type?.Kind == McdocTypeKind.Any
+                    && node.DeclaredType is { Kind: not (McdocTypeKind.Any or McdocTypeKind.Unsafe) }
+                    && string.IsNullOrEmpty(node.Error)
+                    && node.Diagnostics.Count == 0)
+                {
+                    Add(node, "warn", "声明在当前上下文解不出具体类型（已按 any 显示）：" + node.DeclaredType.Kind);
+                }
                 if (!string.IsNullOrEmpty(node.DeclaredType?.Path) && missed.Contains(node.DeclaredType.Path))
                 {
                     Add(node, "error", "未解析的类型引用：" + node.DeclaredType.Path);
@@ -126,6 +136,12 @@ namespace CBHK.Utility.Data.Mcdoc
                     {
                         Add(node, "warn", "列表长度 " + count + " > 上限 " + max);
                     }
+                }
+                if (node.Json is { Kind: McdocJsonKind.Number } number
+                    && (node.Type?.Range ?? node.DeclaredType?.Range) is { } numberRange
+                    && !numberRange.Contains(number.NumberValue))
+                {
+                    Add(node, "warn", RangeWarning(number.NumberValue, numberRange));
                 }
                 foreach (var message in AttributeViolations(node, registryOptions, version)) Add(node, "warn", message);
                 if (Mismatch(node))
@@ -157,6 +173,36 @@ namespace CBHK.Utility.Data.Mcdoc
                 result.Add(new McdocDiagnostic { Path = node.JsonPath ?? "$", Severity = severity, Message = message });
             }
         }
+
+        /// <summary>
+        /// 数值超出声明 Range：只给 warning，不夹取、不改 JSON（用户可以保留越界值）。
+        /// 走行右侧的黄色 DiagnosticBadge，Tooltip 就是这个字符串。
+        /// </summary>
+        private static string RangeWarning(decimal value, McdocRange range)
+        {
+            var current = FormatNumber(value);
+            if (range.Min is { } min && range.Max is { } max)
+            {
+                var left = range.MinExclusive ? "(" : "";
+                var right = range.MaxExclusive ? ")" : "";
+                return "数值 " + current + " 超出范围，应在 " + left + FormatNumber(min)
+                    + "-" + FormatNumber(max) + right + " 之间";
+            }
+            if (range.Min is { } onlyMin)
+            {
+                return "数值 " + current + " 超出范围，应" + (range.MinExclusive ? "大于 " : "不小于 ")
+                    + FormatNumber(onlyMin);
+            }
+            if (range.Max is { } onlyMax)
+            {
+                return "数值 " + current + " 超出范围，应" + (range.MaxExclusive ? "小于 " : "不大于 ")
+                    + FormatNumber(onlyMax);
+            }
+            return "数值 " + current + " 超出范围";
+        }
+
+        private static string FormatNumber(decimal value)
+            => value.ToString("0.############################", CultureInfo.InvariantCulture);
 
         /// <summary>
         /// 属性取值域校验（spyglass 内建属性里"文档自身可判定"的那几条）：

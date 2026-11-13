@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -20,17 +21,26 @@ namespace CBHK.Utility.Data.Mcdoc
         private ScrollViewer scrollViewer;
         private double anchorOffset = -1;
 
+        /// <summary>List 条目拖拽的进程内数据格式；只有带这个格式的拖拽才会被本视图接管。</summary>
+        private const string ListItemDragFormat = "CBHK.Mcdoc.ListItem";
+        private Point dragStartPoint;
+        private McdocRow dragCandidate;
+        private bool dragging;
+
         public McdocTreeRowView()
         {
             BorderThickness = new Thickness(0);
             Background = Brushes.Transparent;
             SelectionMode = SelectionMode.Single;
+            AllowDrop = true;
             VirtualizingPanel.SetIsVirtualizing(this, true);
             VirtualizingPanel.SetVirtualizationMode(this, VirtualizationMode.Recycling);
             VirtualizingPanel.SetScrollUnit(this, ScrollUnit.Pixel);
             VirtualizingPanel.SetCacheLength(this, new VirtualizationCacheLength(1.0, 1.0));
             VirtualizingPanel.SetCacheLengthUnit(this, VirtualizationCacheLengthUnit.Page);
             ScrollViewer.SetCanContentScroll(this, true);
+            PreviewDragOver += OnRowPreviewDragOver;
+            PreviewDrop += OnRowPreviewDrop;
         }
 
         private string lastSelectedPath;
@@ -173,32 +183,158 @@ namespace CBHK.Utility.Data.Mcdoc
             }
         }
 
+        /// <summary>
+        /// 这一格是不是"行内展开按钮"。模板早就是普通 Button（McdocRowExpanderStyle）了，
+        /// 按 ToggleButton 认的话 Ctrl+点击会被静默吞掉（整棵子树展开/折叠失效，行上还看不出来）。
+        /// 按 Style 认：控件模板里是本地值，比较同一份资源实例最稳。
+        /// </summary>
+        private static bool IsExpanderButton(DependencyObject element)
+        {
+            if (element is not ButtonBase button) return false;
+            if (button is ToggleButton) return true;
+            var style = Application.Current?.TryFindResource("McdocRowExpanderStyle");
+            return style is not null && ReferenceEquals(button.Style, style);
+        }
+
         /// <summary>Ctrl+点击展开按钮 = 展开/折叠整棵子树（misode 的 expand_all / collapse_all）。</summary>
         protected override void OnPreviewMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
         {
             base.OnPreviewMouseLeftButtonDown(e);
-            if ((System.Windows.Input.Keyboard.Modifiers & System.Windows.Input.ModifierKeys.Control) == 0) return;
-            McdocRow row = null;
-            var onExpander = false;
-            for (var current = e.OriginalSource as DependencyObject; current is not null; current = ParentOf(current))
+            var source = e.OriginalSource as DependencyObject;
+            if ((System.Windows.Input.Keyboard.Modifiers & System.Windows.Input.ModifierKeys.Control) != 0)
             {
-                if (current is System.Windows.Controls.Primitives.ToggleButton) onExpander = true;
-                if (current is ListBoxItem { DataContext: McdocRow hit })
+                McdocRow row = null;
+                var onExpander = false;
+                for (var current = source; current is not null; current = ParentOf(current))
                 {
-                    row = hit;
-                    break;
+                    if (IsExpanderButton(current)) onExpander = true;
+                    if (current is ListBoxItem { DataContext: McdocRow hit })
+                    {
+                        row = hit;
+                        break;
+                    }
                 }
+                if (row is not null && onExpander)
+                {
+                    var command = row.IsExpanded ? row.CollapseAllCommand : row.ExpandAllCommand;
+                    if (command.CanExecute(null)) command.Execute(null);
+                    e.Handled = true;
+                }
+                return;
             }
-            if (row is null || !onExpander) return;
-            var command = row.IsExpanded ? row.CollapseAllCommand : row.ExpandAllCommand;
-            if (command.CanExecute(null)) command.Execute(null);
-            e.Handled = true;
+
+            // 普通左键按下只登记候选；真正开始拖拽要等移动超过系统阈值。
+            dragCandidate = null;
+            if (e.LeftButton != System.Windows.Input.MouseButtonState.Pressed) return;
+            var hitRow = RowFrom(source);
+            if (hitRow is null || !CanStartListDrag(hitRow) || IsDragBlocker(source)) return;
+            dragStartPoint = e.GetPosition(this);
+            dragCandidate = hitRow;
         }
 
         protected override void OnPreviewMouseMove(System.Windows.Input.MouseEventArgs e)
         {
             base.OnPreviewMouseMove(e);
             ActivateFrom(e.OriginalSource as DependencyObject);
+
+            if (dragging || dragCandidate is null) return;
+            if (e.LeftButton != System.Windows.Input.MouseButtonState.Pressed)
+            {
+                dragCandidate = null;
+                return;
+            }
+            var current = e.GetPosition(this);
+            if (Math.Abs(current.X - dragStartPoint.X) < SystemParameters.MinimumHorizontalDragDistance
+                && Math.Abs(current.Y - dragStartPoint.Y) < SystemParameters.MinimumVerticalDragDistance)
+            {
+                return;
+            }
+
+            var row = dragCandidate;
+            dragCandidate = null;
+            if (row?.Node is null) return;
+            dragging = true;
+            try
+            {
+                var data = new DataObject(ListItemDragFormat, row);
+                DragDrop.DoDragDrop(this, data, DragDropEffects.Move);
+            }
+            finally
+            {
+                dragging = false;
+            }
+        }
+
+        protected override void OnPreviewMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+        {
+            base.OnPreviewMouseLeftButtonUp(e);
+            dragCandidate = null;
+        }
+
+        private static bool CanStartListDrag(McdocRow row)
+        {
+            if (row?.Node is null || !row.IsListChild
+                || row.Kind is McdocRowKind.More or McdocRowKind.AddTail)
+            {
+                return false;
+            }
+            var editor = McdocCollectionEditor.Default;
+            return editor.TryLocateListItem(row.Node, out var owner, out _)
+                && editor.CanReorderList(owner);
+        }
+
+        /// <summary>行内编辑器/按钮/滚动条上按下鼠标时不能开始拖拽，否则会抢文本选择或按钮点击。</summary>
+        private static bool IsDragBlocker(DependencyObject source)
+        {
+            for (var current = source; current is not null; current = ParentOf(current))
+            {
+                if (current is McdocKeyBox or TextBoxBase or PasswordBox or ComboBox
+                    or ButtonBase or Thumb or ScrollBar or Slider)
+                {
+                    return true;
+                }
+                if (current is ListBoxItem) return false;
+            }
+            return false;
+        }
+
+        private bool TryGetDragPair(DragEventArgs e, out McdocRow source, out McdocRow target)
+        {
+            source = null;
+            target = null;
+            if (!e.Data.GetDataPresent(ListItemDragFormat)) return false;
+            source = e.Data.GetData(ListItemDragFormat) as McdocRow;
+            target = RowFrom(e.OriginalSource as DependencyObject);
+            if (source?.Node is null || target?.Node is null) return false;
+            if (!source.IsListChild || !target.IsListChild) return false;
+            if (source.Kind is McdocRowKind.More or McdocRowKind.AddTail
+                || target.Kind is McdocRowKind.More or McdocRowKind.AddTail)
+            {
+                return false;
+            }
+            return McdocCollectionEditor.Default.CanSwapListItems(source.Node, target.Node);
+        }
+
+        private void OnRowPreviewDragOver(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(ListItemDragFormat)) return;
+            e.Effects = TryGetDragPair(e, out _, out _) ? DragDropEffects.Move : DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        private void OnRowPreviewDrop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(ListItemDragFormat)) return;
+            if (TryGetDragPair(e, out var source, out var target)
+                && McdocCollectionEditor.Default.SwapListItems(source.Node, target.Node))
+            {
+                e.Effects = DragDropEffects.Move;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
         }
 
 

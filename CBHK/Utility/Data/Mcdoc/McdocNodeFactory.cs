@@ -39,7 +39,7 @@ namespace CBHK.Utility.Data.Mcdoc
 
         public McdocPresenterRegistry Registry => registry;
 
-        /// <summary>最近一次 Build 造出的合成根节点：摊平后它不进 Nodes，但仍是顶层节点的父容器。</summary>
+        /// <summary>最近一次 BuildResult 造出的合成根节点：摊平后它不进 Nodes，但仍是顶层节点的父容器。</summary>
         public McdocTreeNode RootNode { get; private set; }
 
         /// <summary>只构建根节点（不摊平）。narrow=false 供"纯 simplify"对拍使用。</summary>
@@ -81,6 +81,11 @@ namespace CBHK.Utility.Data.Mcdoc
             foreach (var field in fields)
             {
                 if (field is null || field.Optional || field.IsSpread) continue;
+                // 版本门控同样适用于判别键：旧版本的必填字段（如 AdvancementIcon.item）不能
+                // 在当前版本被"按声明预写"重新塞回 JSON，否则删掉之后一重建又长回来。
+                if (field.Attributes is { Count: > 0 }
+                    && runtime?.Attributes is { } fieldAttributes
+                    && !fieldAttributes.ShouldKeep(field.Attributes, runtime)) continue;
                 var name = field.Name;
                 if (string.IsNullOrEmpty(name)) continue;
                 // JSON 里写的是 null 也算"没有值"：不补的话同层 spread 拿到 %none，
@@ -186,6 +191,11 @@ namespace CBHK.Utility.Data.Mcdoc
                     if (json is not { Kind: McdocJsonKind.Object }) return null;
                     foreach (var member in declaredType.Members ?? [])
                     {
+                        // 按声明找宿主也必须过版本门控：旧成员（#[until]）在当前版本已经不存在，
+                        // 拿它当宿主会把旧字段名预写回文档（AdvancementIcon.item 就是这样复活的）。
+                        if (member is null) continue;
+                        if (runtime?.Attributes is { } unionAttributes
+                            && !unionAttributes.ShouldKeep(member.Attributes, runtime)) continue;
                         var host = WalkDeclaredHost(member, json, runtime, bindings, pendingArgs, depth + 1);
                         if (host is { Kind: McdocTypeKind.Struct }) return host;
                     }
@@ -376,6 +386,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 Key = name ?? "",
                 StructureChanged = onStructureChanged,
                 Error = evaluationError,
+                Runtime = runtime,
             };
             // 只在"**静默**解不出来"时自报：已经有诊断（形状不符 / 未解开的包装）的降级是**有意**的，
             // 再记一条 resolved=False 会让 --check-trace 把"非法文档的诚实降级"当成求解失败。
@@ -396,14 +407,20 @@ namespace CBHK.Utility.Data.Mcdoc
             // 于是"点了 ⊕，右侧 JSON 多了一条、左侧树什么都不动"（新项被折叠的列表挡住）。
             node.AddItemCommand = new McdocCommand(() => editor.AddItem(node, runtime), CanAppendItems);
             node.AddItemTopCommand = new McdocCommand(() => editor.AddItem(node, runtime, atTop: true), CanAppendItems);
+            // ⊕ 的判据只有"还没有值"：必选字段缺值是非法文档，那一行同样要有一个起值入口
+            // （必选容器既不能删、又没有编辑器，⊕ 是它唯一的出口；可选/必选的差别由删除入口自己守）。
             node.SetDefaultCommand = new McdocCommand(() => editor.SetDefault(node, runtime),
-                () => node.Json is null && node.Parent is not null && !node.IsRequired);
+                () => node.Json is null && node.Parent is not null);
             node.ShowMoreCommand = new McdocCommand(() => node.ItemsShown += Math.Max(1, McdocRowProjector.PageSize));
             node.ShowAllCommand = new McdocCommand(() => node.ItemsShown = int.MaxValue);
             node.RemoveItemCommand = new McdocCommand(() => editor.RemoveLastItem(node),
                 () => node.Json is { Kind: McdocJsonKind.Array } list && list.Items is { Count: > 0 });
             node.DuplicateCommand = new McdocCommand(() => editor.DuplicateItem(node),
-                () => node.Json is not null && node.Parent?.Json is { Kind: McdocJsonKind.Array });
+                () => node.Json is not null
+                    && node.Parent?.Json is { Kind: McdocJsonKind.Array } list
+                    && list.Items is not null
+                    && node.Parent.Type?.Kind != McdocTypeKind.Tuple
+                    && !(node.Parent.Type?.LengthRange is { Max: { } max } && list.Items.Count >= max));
             node.RemoveFieldCommand = new McdocCommand(() => editor.RemoveField(node),
                 // 必选字段删了就是非法文档：删除原语自己就得拒绝（行上的按钮与 union 的 unset 都已按可选性收口）
                 () => !node.IsRequired
@@ -474,8 +491,13 @@ namespace CBHK.Utility.Data.Mcdoc
                 // deferChildren：父级已经知道"这是缺省成员"（文档里没有这个键）——
                 // 投影对这类节点一列子行都不画（缺省字段只留一行 ⊕），此时建出来的子级全是"看不见的节点"。
                 // 但 union 不能 defer：分支候选是行的状态（下拉要能切支），不是"值的子级"。
-                var eager = (!deferChildren || type.Kind == McdocTypeKind.Union)
-                    && (!LazyChildren || depth < DefaultExpandDepth || type.Kind == McdocTypeKind.Union);
+                // 内联元组（≤4 项全数值）的项节点是**这一行的编辑器内容**，不是子行：懒建把它们省掉，
+                // 行上就是三个空槽（一个数字框都不出现），而内联又按设计不产子行、没有展开箭头 ——
+                // 嵌套层级的 pos 这类定长三元组永远点不动。所以内联元组一律不受懒建闸门影响。
+                var inlineTuple = McdocHelpers.IsInlineTuple(node);
+                var eager = inlineTuple
+                    || ((!deferChildren || type.Kind == McdocTypeKind.Union)
+                        && (!LazyChildren || depth < DefaultExpandDepth || type.Kind == McdocTypeKind.Union));
                 if (eager)
                 {
                     node.RefreshChildren();

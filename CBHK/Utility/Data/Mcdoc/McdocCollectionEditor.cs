@@ -63,9 +63,13 @@ namespace CBHK.Utility.Data.Mcdoc
                     : McdocDefaults.ResolveType(node.DeclaredType, runtime, node.ValueNode)?.Kind;
                 if (containerKind is McdocTypeKind.Struct or McdocTypeKind.List or McdocTypeKind.Tuple)
                 {
+                    // 空壳必须**本身成立**：结构是空对象（里面的必填键交给不动点循环逐个补），
+                    // 数组却不能用空数组 —— 定长容器（tuple / #[length=N] 的 list）的 [] 是非法值，
+                    // 行上会永远挂着"列表长度 0 < 下限 N"，内联编辑器也因此一个可编辑项都没有。
+                    // 数组空壳一律取默认值代数给出的形状（下限这么多个元素），与 ⊕ / 默认文档同一个出口。
                     WriteDisplayed(node, containerKind == McdocTypeKind.Struct
                         ? McdocJsonValue.Object()
-                        : McdocJsonValue.Array());
+                        : ArrayShell(node, runtime));
                 }
             }
             // union 行：行上显示着某个成员，文档里却没有它的值 —— 按"所见即所得"把成员默认结构落盘。
@@ -132,6 +136,15 @@ namespace CBHK.Utility.Data.Mcdoc
             foreach (var root in roots ?? []) Walk(root);
             return written;
         }
+
+        /// <summary>
+        /// 必填数组容器的空壳：取默认值代数给出的数组（定长时长度已经满足下限），解不出才退空数组。
+        /// 手写 [] 会让定长容器从第一拍就非法：行上挂着长度告警，内联元组也没有可编辑的项。
+        /// </summary>
+        private static McdocJsonValue ArrayShell(McdocTreeNode node, McdocRuntime runtime)
+            => McdocDefaults.Resolve(node.DeclaredType, runtime, node.ValueNode) is { Kind: McdocJsonKind.Array } array
+                ? array
+                : McdocJsonValue.Array();
 
         /// <summary>
         /// 行上当前"显示"的标量值（数字 / bool / union 的标量支）。没有就不物化：
@@ -261,6 +274,10 @@ namespace CBHK.Utility.Data.Mcdoc
             var value = ReadEditedValue(node);
             if (value is null)
             {
+                // 可选 bool 两个按钮都取消：这是 unset，不是"默认 false"。
+                // union 标量 bool 必须回到未设置（删键/清分支），普通 bool 删键；
+                // 否则界面已取消选中、JSON 还停在上一代。
+                if (TryUnsetOptionalBool(node)) return true;
                 // 候选下拉行（#[id] / 枚举的文本变体）：编辑器里显示的是候选，空文本不等于"用户要写空串"。
                 // 写 "" 会让这个键带着一个非法值留在文档里 —— 依赖它的 dispatcher 索引
                 // （properties: mcdoc:block_states[[block]]）整片解不出来，行上还会挂"值不在候选内"。
@@ -288,6 +305,38 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             ApplyValue(node, value);
             return true;
+        }
+
+        /// <summary>
+        /// 可选 bool 两个按钮都取消：普通字段删键；union 标量 bool 回到未设置分支。
+        /// 必选 bool 不在这里处理（IsTrue/IsFalse 的互斥仍保证恰有一个选中）。
+        /// </summary>
+        private bool TryUnsetOptionalBool(McdocTreeNode node)
+        {
+            if (node is null || node.IsRequired || node.IsTrue || node.IsFalse) return false;
+            if (node.Type?.Kind == McdocTypeKind.Union && node.ScalarEditorKind == "Bool")
+            {
+                if (node.Parent?.Json is not { Kind: McdocJsonKind.Object }) return false;
+                var unset = node.UnionTypeNameList?.FirstOrDefault(McdocUnionSwitch.IsUnsetOption)
+                    ?? new EnumMember
+                    {
+                        Name = McdocNodePresenter.UnsetLabel,
+                        Value = new MetaValue { LiteralValue = -1 }
+                    };
+                return McdocUnionSwitch.SwitchTo(node, unset);
+            }
+            if (node.Json is not { Kind: McdocJsonKind.Boolean }) return false;
+            if (node.RemoveFieldCommand?.CanExecute(null) == true)
+            {
+                node.RemoveFieldCommand.Execute(null);
+                return true;
+            }
+            if (node.Parent?.Json is { Kind: McdocJsonKind.Object })
+            {
+                RemoveField(node);
+                return node.Json is null;
+            }
+            return false;
         }
 
         /// <summary>
@@ -323,7 +372,14 @@ namespace CBHK.Utility.Data.Mcdoc
                 && McdocUnionSwitch.IsUnsetOption(options[0])
                 && McdocUnionSwitch.IsUnsetOption(node.SelectedEnumOption))
             {
-                return null;
+                // 选中的是（未设置）哨兵 = 正常 unset。但 **可输入下拉里用户自己敲的值** 走的是 Value 这一面，
+                // 哨兵不会因为"敲了字"而换掉 —— 一律当 unset 会让"敲完等于没敲"
+                // （现场：advancement.parent 写进 Value、文档里还是空）。
+                var typed = node.Value as string;
+                if (string.IsNullOrEmpty(typed) || string.Equals(typed, options[0]?.Name, StringComparison.Ordinal))
+                {
+                    return null;
+                }
             }
             return head.EditorKind switch
             {
@@ -782,6 +838,53 @@ namespace CBHK.Utility.Data.Mcdoc
             NotifyStructure(node);
         }
 
+        /// <summary>拖拽/测试用：条目在哪个 List owner 的第几项（entry 自己不能猜 Parent.Items）。</summary>
+        public bool TryLocateListItem(McdocTreeNode item, out McdocTreeNode owner, out int index)
+            => TryLocateItem(item, item?.Parent, out owner, out index);
+
+        /// <summary>拖拽/测试用：这个 owner 是否是允许拖拽重排的 List（tuple / 定长数组不算）。</summary>
+        public bool CanReorderList(McdocTreeNode owner) => IsReorderableList(owner);
+
+        /// <summary>两个条目是否属于同一个可重排 List（tuple / 定长数组 / map 条目都不算）。</summary>
+        public bool CanSwapListItems(McdocTreeNode source, McdocTreeNode target)
+        {
+            if (source is null || target is null || ReferenceEquals(source, target)) return false;
+            if (!TryLocateListItem(source, out var sourceOwner, out var sourceIndex)
+                || !TryLocateListItem(target, out var targetOwner, out var targetIndex))
+            {
+                return false;
+            }
+            if (!ReferenceEquals(sourceOwner, targetOwner)) return false;
+            if (!IsReorderableList(sourceOwner)) return false;
+            return sourceIndex >= 0 && targetIndex >= 0;
+        }
+
+        /// <summary>
+        /// 交换同一 List 父节点内两个条目的槽位（不是插入/移动）。JSON 数组是唯一真相：
+        /// 交换值后走既有的列表命令状态 + 结构通知，投影与右侧文本由管线同步。
+        /// </summary>
+        public bool SwapListItems(McdocTreeNode source, McdocTreeNode target)
+        {
+            if (!CanSwapListItems(source, target)) return false;
+            if (!TryLocateListItem(source, out var owner, out var sourceIndex)) return false;
+            if (!TryLocateListItem(target, out _, out var targetIndex)) return false;
+            if (owner.Json is not { Kind: McdocJsonKind.Array } array || array.Items is null) return false;
+            if (sourceIndex < 0 || targetIndex < 0
+                || sourceIndex >= array.Items.Count || targetIndex >= array.Items.Count) return false;
+            (array.Items[sourceIndex], array.Items[targetIndex]) = (array.Items[targetIndex], array.Items[sourceIndex]);
+            NotifyItemCommandState(owner);
+            NotifyStructure(owner);
+            return true;
+        }
+
+        private static bool IsReorderableList(McdocTreeNode owner)
+        {
+            if (owner?.Json is not { Kind: McdocJsonKind.Array }) return false;
+            if (owner.Type?.Kind == McdocTypeKind.List) return true;
+            // union 的列表分支：条目被上提到 SelectedUnionChildren，owner 自己是 union 节点。
+            return owner.UnionListLike && owner.SelectedUnionMember?.Kind == McdocTypeKind.List;
+        }
+
         /// <summary>
         /// 缺省字段的 ⊕：按声明类型造默认值写进父对象（misode StructHead 的 set default）。
         /// 值与"页面默认文档 / 列表追加 / 动态键提交"同一个出口，必选子字段递归带上。
@@ -796,11 +899,57 @@ namespace CBHK.Utility.Data.Mcdoc
                 return;
             }
             var value = McdocDefaults.Resolve(declared, runtime);
+            // 派生容器（mcdoc:block_states[[block]] 这类）在无属性方块上解出零字段：
+            // 点 ⊕ 不能把 {} 写进文档，否则切回有属性方块后 Json 已非空、⊕ 直接失效，
+            // 用户看到的就是"点添加没反应"。普通空结构仍允许写 {}。
+            var resolved = McdocDefaults.ResolveType(declared, runtime, node.ValueNode);
+            if (value is { Kind: McdocJsonKind.Object } empty
+                && (empty.Properties?.Count ?? 0) == 0
+                && resolved is { Kind: McdocTypeKind.Struct } resolvedStruct
+                && (resolvedStruct.Fields?.Count ?? 0) == 0
+                && IsDerivedContainerDeclaration(declared, runtime))
+            {
+                return;
+            }
             // 解不开按 any 处理（默认 {}），但必须让人看得见
             node.Error = McdocDefaults.IsUnresolved(declared, runtime) ? "该字段的类型没解出来（已按 any 生成空结构）" : null;
             ApplyValue(node, value);
             // 一键之后应该立刻看得到子字段行：与其它添加手势同一出口
             RevealCreated(node);
+        }
+
+        /// <summary>声明是不是调度器/索引派生容器（含 Reference/Mapped/Concrete/Template 壳）。</summary>
+        private static bool IsDerivedContainerDeclaration(McdocType type, McdocRuntime runtime, int depth = 0)
+        {
+            if (type is null || depth > 8) return false;
+            if (type.Kind is McdocTypeKind.Dispatcher or McdocTypeKind.Indexed) return true;
+            if (type.Kind == McdocTypeKind.Reference)
+            {
+                McdocType target = null;
+                try
+                {
+                    target = string.IsNullOrEmpty(type.Path)
+                        ? null
+                        : runtime?.Symbols?.GetTypeDef(type.Path, runtime.DocumentUri ?? "",
+                            string.IsNullOrEmpty(type.Module) ? runtime.ModulePath : type.Module);
+                }
+                catch (Exception)
+                {
+                    target = null;
+                }
+                return target is not null && !ReferenceEquals(target, type)
+                    && IsDerivedContainerDeclaration(target, runtime, depth + 1);
+            }
+            if (type.Kind == McdocTypeKind.Union)
+            {
+                foreach (var member in type.Members ?? [])
+                {
+                    if (IsDerivedContainerDeclaration(member, runtime, depth + 1)) return true;
+                }
+                return false;
+            }
+            return type.IsDirective && type.Item is not null
+                && IsDerivedContainerDeclaration(type.Item, runtime, depth + 1);
         }
 
         /// <summary>
@@ -816,11 +965,6 @@ namespace CBHK.Utility.Data.Mcdoc
                 current = parsed;
             }
             var next = current + delta;
-            if (node.Type?.Range is { } range)
-            {
-                if (range.Min.HasValue && next < range.Min.Value) next = range.Min.Value;
-                if (range.Max.HasValue && next > range.Max.Value) next = range.Max.Value;
-            }
             var value = McdocJsonValue.Number(next, next == decimal.Truncate(next));
             var wasAbsent = node.Json is null;
             ApplyValue(node, value);
@@ -851,13 +995,25 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 return;
             }
+            // 定长结构（tuple / #[length=N]）复制会改坏长度：与 AddItem / RemoveItemAt 同一判据
+            if (parent.Type?.Kind == McdocTypeKind.Tuple) return;
+            if (parent.Type?.LengthRange is { Max: { } max } && array.Items.Count >= max) return;
             var index = array.Items.FindIndex(item => ReferenceEquals(item, node.Json));
             if (index < 0)
             {
                 return;
             }
             array.Items.Insert(index + 1, node.Json.Clone());
-            NotifyStructure(node);
+            // 与 AddItem 同一条收尾：通知目标是**列表 owner**，不是被复制的那一项。
+            // 只通知 item 的话宿主只刷新它的子树 —— 右侧 JSON 多了一项、左侧列表没有对应行。
+            NotifyItemCommandState(parent);
+            KeepListBranchExpanded(parent);
+            // 新项此刻还没有节点（要等列表重建）：按路径预约展开态，重建出来才是可见的
+            var path = parent.JsonPath ?? "$";
+            McdocExpandState.Set(path + "[" + (index + 1) + "]", true);
+            McdocExpandState.Set(path, true);
+            NotifyStructure(parent);
+            RevealCreated(parent);
         }
 
         /// <summary>节点还没有 JSON 时（如可选字段缺省），先在父对象里把容器建出来。</summary>

@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.Model.Data;
@@ -39,10 +39,6 @@ namespace CBHK.ViewModel.Generator
         private MainView home = mainView;
         //本生成器的图标路径
         string iconPath = "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntity.png";
-        private string ModifierOperationTypeFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\AttributeModifierOperationType.ini";
-        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
-        public ObservableCollection<string> ModifierOperationTypeSource = [];
-        public JArray SpecialArray = null;
         #endregion
 
         #region Property
@@ -115,7 +111,7 @@ namespace CBHK.ViewModel.Generator
                     EntityPageViewModel pageContext = entityPages.DataContext as EntityPageViewModel;
                     StringBuilder currentResult = pageContext.Create();
                     pageContext.CollectionData(currentResult);
-                    pageContext.Build(currentResult);
+                    pageContext.BuildResult(currentResult);
                     string nbt = "";
                     string result = currentResult.ToString();
                     if (result.Contains('{'))
@@ -168,21 +164,9 @@ namespace CBHK.ViewModel.Generator
             #region 载入实体预设数据
             await Task.Run(() =>
             {
-                if (File.Exists(ModifierOperationTypeFilePath))
-                {
-                    List<string> data = File.ReadLines(ModifierOperationTypeFilePath).ToList();
-                    for (int i = 0; i < data.Count; i++)
-                    {
-                        ModifierOperationTypeSource.Add(data[i]);
-                    }
-                }
-                string SpecialData = File.ReadAllText(SpecialNBTStructureFilePath);
-                SpecialArray = JArray.Parse(SpecialData);
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     EntityPageView entityPages = container.Resolve<EntityPageView>();
-                    EntityPageViewModel entityPagesDataContext = entityPages.DataContext as EntityPageViewModel;
-                    entityPagesDataContext.UseForTool = !IsCloseable;
                     EntityPageList[0].Content = entityPages;
                 });
             });
@@ -195,18 +179,8 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ClearUnnecessaryData()
         {
-            EntityPageView entityPages = SelectedEntityPage.Content as EntityPageView;
-            EntityPageViewModel entityPagesDataContext = entityPages.DataContext as EntityPageViewModel;
-            Grid currentGrid = entityPagesDataContext.SpecialDataDictionary[entityPagesDataContext.SelectedEntityId.Text];
-            entityPagesDataContext.SpecialDataDictionary.Clear();
-            entityPagesDataContext.SpecialDataDictionary.Add(entityPagesDataContext.SelectedEntityId.Text, currentGrid);
-            foreach (var item in entityPagesDataContext.SpecialTagsResult)
-            {
-                if (item.Key != entityPagesDataContext.SelectedEntityId.Text)
-                {
-                    item.Value.Clear();
-                }
-            }
+            // 实体页已经是 mcdoc 树：原来的"切换实体时缓存过的 NBT 面板 / 标签页"不存在了，
+            // 文档本身就是唯一状态，没有需要清理的陈旧缓存。保留入口（视图上还有这颗按钮）。
         }
 
         [RelayCommand]
@@ -311,7 +285,7 @@ namespace CBHK.ViewModel.Generator
                 EntityPageViewModel pageContext = entityPages.DataContext as EntityPageViewModel;
                 StringBuilder currentResult = pageContext.Create();
                 pageContext.CollectionData(currentResult);
-                pageContext.Build(currentResult);
+                pageContext.BuildResult(currentResult);
                 string result = currentResult.ToString();
                 Result.AppendLine(result);
             }

@@ -126,15 +126,8 @@
                 OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
-            <VectorButton:VectorTextButton
-                HorizontalAlignment="Left"
-                Background="#EFF2F1"
-                Command="{Binding ClearUnnecessaryDataCommand}"
-                Foreground="Black"
-                OriginBottomHeight="3"
-                Style="{DynamicResource VectorTextButtonStyle}"
-                Text="冻结数据" />
             <VectorButton:VectorToggleIconTextButton
+                Margin="5,0,0,0"
                 HorizontalAlignment="Left"
                 Foreground="Black"
                 IsChecked="{Binding ShowGeneratorResult, Mode=OneWayToSource}"

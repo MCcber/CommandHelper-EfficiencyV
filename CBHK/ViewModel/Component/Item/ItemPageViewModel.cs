@@ -1,504 +1,256 @@
-﻿using CBHK.CustomControl.Container;
-using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.Interface.Visual;
+using CBHK.Model.Constant;
 using CBHK.Model.Data;
-using CBHK.Utility.Common;
+using CBHK.Utility.Data;
+using CBHK.Utility.Data.Mcdoc;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
-using CBHK.View.Component.Item;
-using CBHK.View.Generator;
 using CBHK.ViewModel.Generator;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DryIoc;
-using DryIoc.ImTools;
+using MinecraftLanguageModelLibrary.Data;
 using Newtonsoft.Json.Linq;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Item
 {
-    public partial class ItemPageViewModel : ObservableObject, IPageViewModel
+    public partial class ItemPageViewModel : McdocGeneratorViewModelBase, IPageViewModel
     {
         #region Field
-        private object obj = new();
-        string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Item\Data\SpecialTags.json";
-        JArray SpecialArray = null;
-        private IContainerProvider container;
-        private CBHKDataContext context;
-        private DataService dataService = null;
+        private const string dispatcherRegistry = "minecraft:item";
 
-        private IProgress<VectorIconTextComboBoxItem> AddItemProgress = null;
-        private IProgress<(int, string, string, string)> SetItemProgress = null;
-        /// <summary>
-        /// 需要适应版本变化的特指数据所属控件的事件
-        /// </summary>
-        public Dictionary<FrameworkElement, Action<FrameworkElement, RoutedEventArgs>> VersionNBTList = [];
-        //特殊实体特指标签字典,用于动态切换内容
-        public Dictionary<string, Grid> specialDataDictionary = [];
-        //白色画刷
-        SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-        //黑色画刷
-        SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
-        //橙色画刷
-        SolidColorBrush orangeBrush = new((Color)ColorConverter.ConvertFromString("#FFE5B663"));
-        //存储外部读取进来的实体数据
-        public JObject ExternallyReadEntityData { get; set; } = null;
+        private readonly IContainerProvider container;
+        private readonly CBHKDataContext context;
+        private readonly DataService dataService;
+        private readonly Resource resource;
+        private readonly string iconPath =
+            "pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconItem.png";
 
-        string buttonNormalImage = "pack://application:,,,/CBHK;component/Resource/Data/Image/ButtonNormal.png";
-        string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Data/Image/ButtonPressed.png";
-        ImageBrush buttonNormalBrush;
-        ImageBrush buttonPressedBrush;
-
-        //最终结果
-        public string Result { get; set; }
-
-        //本生成器的图标路径
-        string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconItems.png";
-        private string ImageSetFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-        //Data页
-        //public DataList data = null;
-        //Function页
-        //public Function function = null;
-        //Common页
-        //public View.Component.Item.Data common = null;
-        //特指标签页视图容器
-        VectorScrollViewer SpecialViewer = null;
-        /// <summary>
-        /// 物品页
-        /// </summary>
-        VectorRichTabItem currentItemPages = null;
-
-        ItemViewModel itemDataContext = null;
+        private bool loadingItemIds;
         #endregion
 
         #region Property
+        public MessagePopup MessagePopup { get; set; } = new();
 
         #region 给予
+        /// <summary>召唤（掉落物）模式；不勾就是给予。</summary>
         [ObservableProperty]
-        private bool _summon = false;
+        private bool summon;
 
+        /// <summary>给予模式下允许纯文本样式（旧调用面保留）。</summary>
+        [ObservableProperty]
         private bool isNoStyleText = true;
-
-        public bool IsNoStyleText
-        {
-            get => isNoStyleText;
-            set
-            {
-                SetProperty(ref isNoStyleText, value);
-                if (!IsNoStyleText)
-                {
-                    Summon = false;
-                }
-            }
-        }
-
-        #endregion
-
-        #region 已选择的版本
-        private VectorTextComboBoxItem selectedVersion;
-        public VectorTextComboBoxItem SelectedVersion
-        {
-            get => selectedVersion;
-            set
-            {
-                SetProperty(ref selectedVersion, value);
-                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
-            }
-        }
-
-        public int CurrentMinVersion = 1202;
-        private bool IsVersionUpdating = false;
-        #endregion
-
-        #region 版本数据源
-        [ObservableProperty]
-        private ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
-        #endregion
-
-        #region 物品ID列表
-        [ObservableProperty]
-        private ObservableCollection<VectorIconTextComboBoxItem> _itemList = [];
-        public Dictionary<int, List<VectorIconTextComboBoxItem>> ItemIDListCopy = [];
-        #endregion
-
-        #region 方块ID列表
-        [ObservableProperty]
-        public ObservableCollection<VectorIconTextComboBoxItem> _blockList = [];
-        #endregion
-
-        #region 附魔ID列表
-        [ObservableProperty]
-        public ObservableCollection<VectorIconTextComboBoxItem> _enchantmentIDList = [];
-        #endregion
-
-        #region 属性相关的列表
-        [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _attributeIDList = [];
-        [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _attributeSlotList = [];
-        [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _attributeValueTypeList = [];
-        #endregion
-
-        #region 药水效果ID列表
-        [ObservableProperty]
-        public ObservableCollection<VectorIconTextComboBoxItem> _effectItemList = [];
-        #endregion
-
-        #region 保存物品ID
-        private VectorIconTextComboBoxItem selectedItem;
-        public VectorIconTextComboBoxItem SelectedItem
-        {
-            get => selectedItem;
-            set
-            {
-                SetProperty(ref selectedItem, value);
-                SpecialViewer?.Dispatcher.Invoke(UpdateUILayOut);
-                LowVersionId = "";
-                if (CurrentMinVersion < 1130)
-                {
-                    List<VersionID> matchVersionIDList = [.. VersionIDList.Where(item => item.HighVersionID == selectedItem.Text)];
-                    if (matchVersionIDList.Count > 0)
-                        LowVersionId = matchVersionIDList.First().LowVersionID;
-                }
-            }
-        }
-
-        private string LowVersionId = "";
-        #endregion
-
-        #region 版本ID数据源
-        [ObservableProperty]
-        public ObservableCollection<VersionID> _versionIDList = [];
         #endregion
 
         #region 显示结果
         [ObservableProperty]
-        private bool _showGeneratorResult = false;
+        private bool showGeneratorResult;
+        #endregion
+
+        #region 已选择的版本
+
+        [ObservableProperty]
+        private VectorTextComboBoxItem selectedVersion;
+        #endregion
+
+        #region 保存物品ID
+        [ObservableProperty]
+        private VectorIconTextComboBoxItem selectedItem;
+        #endregion
+
+        #region 版本数据源
+        /// <summary>版本下拉候选（旧视图绑的是这个名字，内容来自基类的 GameVersionOptions）。</summary>
+        [ObservableProperty]
+        private ObservableCollection<VectorTextComboBoxItem> versionSource = [];
+        #endregion
+
+        #region 物品ID列表
+        [ObservableProperty]
+        private ObservableCollection<VectorIconTextComboBoxItem> itemList = [];
         #endregion
 
         #region 是否作为工具或引用
-        [ObservableProperty]
-        public bool _useForTool = false;
-        [ObservableProperty]
-        public bool _useForReference = false;
-        #endregion
 
+        [ObservableProperty]
+        private bool useForTool;
 
-        #region 是否同步到文件、存储外部数据
-        public bool SyncToFile { get; set; }
-        public string ExternFilePath { get; set; }
+        [ObservableProperty]
+        private bool useForReference;
         #endregion
 
         #region 导入外部数据模式
         [ObservableProperty]
-        private bool _importMode = false;
+        private bool importMode;
+
+        /// <summary>外部读进来的数据（导入模式用）。</summary>
+        public JObject ExternallyReadEntityData { get; set; }
         #endregion
 
-        /// <summary>
-        /// 特指结果集合
-        /// </summary>
-        public Dictionary<string, ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
-        public MessagePopup MessagePopup { get; set; }
+        #region 是否同步到文件、存储外部数据
+        public string ExternFilePath { get; set; }
 
+        /// <summary>最近一次生成的命令（旧调用面在读取它）。</summary>
+        public string Result { get; set; }
+        #endregion
         #endregion
 
         #region Method
-        public ItemPageViewModel(IContainerProvider Container,CBHKDataContext Context, DataService DataService)
+        public ItemPageViewModel(IContainerProvider Container, CBHKDataContext Context, DataService DataService, Resource Resource)
+            : base(Resource, dispatcherRegistry, null)
         {
-            #region 初始化数据
             container = Container;
             context = Context;
             dataService = DataService;
-            buttonNormalBrush = new ImageBrush(new BitmapImage(new Uri(buttonNormalImage, UriKind.RelativeOrAbsolute)));
-            buttonPressedBrush = new ImageBrush(new BitmapImage(new Uri(buttonPressedImage, UriKind.RelativeOrAbsolute)));
-            string SpecialData = File.ReadAllText(SpecialNBTStructureFilePath);
-            SpecialArray = JArray.Parse(SpecialData);
-            #endregion
-
-            AddItemProgress = new Progress<VectorIconTextComboBoxItem>(ItemList.Add);
-            SetItemProgress = new Progress<(int, string, string, string)>(item =>
-            {
-                ItemList[item.Item1].Text = item.Item2;
-                ItemList[item.Item1].Image = File.Exists(item.Item4) ? new BitmapImage(new Uri(item.Item4, UriKind.Absolute)) : null;
-                if (item.Item1 == 0)
-                {
-                    SelectedItem = ItemList[0];
-                }
-            });
+            resource = Resource;
+            // 旧调用方（ExternalDataImportManager）会直接写 context.SelectedVersion.Text，
+            // 所以在构造期就把它建出来：版本候选来自基类已经填好的 GameVersionOptions。
+            foreach (var option in GameVersionOptions)
+                VersionSource.Add(new VectorTextComboBoxItem { Text = option.Name });
+            SelectedVersion = VersionSource.FirstOrDefault(candidate => candidate.Text == GameVersion)
+                ?? VersionSource.FirstOrDefault();
         }
 
-        /// <summary>
-        /// 初始化物品ID与版本物品ID列表
-        /// </summary>
-        private async void InitItemList()
+        #region 搜索当前物品ID对应的JSON对象
+
+        /// <summary>按当前版本重建物品下拉（id 来自注册表 item，带物品图标）。</summary>
+        private void LoadItemIdsForVersion()
         {
-            if (!IsVersionUpdating)
+            string version = SelectedVersion?.Text ?? GameVersion;
+            if (string.IsNullOrEmpty(version)) return;
+            loadingItemIds = true;
+            try
             {
-                return;
-            }
-
-            ItemList.Clear();
-            Dictionary<string, string> ItemIDAndNameMap = dataService.GetItemIDAndNameGroupByVersionMap()
-            .Where(pair => pair.Key <= CurrentMinVersion)
-            .SelectMany(pair => pair.Value)
-            .ToDictionary(
-                pair => pair.Key,
-                pair => pair.Value
-            );
-
-            List<string> ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
-            ItemKeyList.Sort();
-
-            ParallelOptions parallelOptions = new();
-            await Parallel.ForAsync(0, ItemIDAndNameMap.Count, parallelOptions, (i, cancellationToken) =>
-            {
-                AddItemProgress.Report(new VectorIconTextComboBoxItem());
-                return new ValueTask();
-            });
-
-            Parallel.For(0, ItemList.Count, (i) =>
-            {
-                string currentKey = ItemKeyList[i];
-                string imagePath = "";
-                if (File.Exists(ImageSetFolderPath + currentKey + ".png"))
+                var previous = SelectedItem?.Text;
+                ItemList.Clear();
+                SelectedItem = null;
+                string imageSetFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
+                foreach (string item in resource.GetIds("item", version))
                 {
-                    imagePath = ImageSetFolderPath + currentKey + ".png";
-                }
-                else
-                if (File.Exists(ImageSetFolderPath + currentKey + "_spawn_egg.png"))
-                {
-                    imagePath = ImageSetFolderPath + currentKey + "_spawn_egg.png";
-                }
-                SetItemProgress.Report(new ValueTuple<int, string, string, string>(i, currentKey, ItemIDAndNameMap[currentKey], imagePath));
-            });
-        }
-
-        /// <summary>
-        /// 初始化药水效果列表
-        /// </summary>
-        private void InitEffectList()
-        {
-            if (!IsVersionUpdating)
-            {
-                return;
-            }
-            EffectItemList.Clear();
-
-            List<string> currentEffectIDList = [..context.MobEffectSet.SelectMany(item =>
-            {
-                if(VersionComparer.IsInRange(item.Key, CurrentMinVersion.ToString()))
-                {
-                    return item.Value;
-                }
-                return [];
-            })];
-            foreach (var item in currentEffectIDList)
-            {
-                string imagePath = ImageSetFolderPath + item + ".png";
-                if (item is not null && File.Exists(imagePath))
-                {
-                    imagePath = ImageSetFolderPath + item + ".png";
-                    VectorIconTextComboBoxItem iconComboBoxItem = new()
+                    string iconPath = imageSetFolderPath + item + ".png";
+                    ItemList.Add(new VectorIconTextComboBoxItem
                     {
-                        Text = item,
-                        Image = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
-                    };
-                    EffectItemList.Add(iconComboBoxItem);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 初始化附魔列表
-        /// </summary>
-        private void InitEnchantmentList()
-        {
-            if (!IsVersionUpdating)
-            {
-                return;
-            }
-            EnchantmentIDList.Clear();
-
-            List<string> currentEnchantmentIDList = [..context.MobEffectSet.SelectMany(item =>
-            {
-                if(VersionComparer.IsInRange(item.Key, CurrentMinVersion.ToString()))
-                {
-                    return item.Value;
-                }
-                return [];
-            })];
-
-            foreach (var item in currentEnchantmentIDList)
-            {
-                string imagePath = ImageSetFolderPath + item + ".png";
-                if (item is not null && File.Exists(imagePath))
-                {
-                    imagePath = ImageSetFolderPath + item + ".png";
-                    VectorIconTextComboBoxItem iconComboBoxItem = new()
-                    {
-                        Text = item,
-                        Image = imagePath.Length > 0 ? new BitmapImage(new Uri(imagePath, UriKind.Absolute)) : new BitmapImage()
-                    };
-                    EnchantmentIDList.Add(iconComboBoxItem);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 初始化属性ID和值类型列表
-        /// </summary>
-        private void InitAttributeIDAndValueTypeAndSlotList()
-        {
-            if (!IsVersionUpdating)
-            {
-                return;
-            }
-            AttributeIDList.Clear();
-
-            foreach (var item in context.MobAttributeSet)
-            {
-                if (item.Version is not null && int.Parse(item.Version.Replace(".", "")) > CurrentMinVersion)
-                {
-                    continue;
-                }
-                if (item.ID is not null)
-                {
-                    VectorTextComboBoxItem textComboBoxItem = new()
-                    {
-                        Text = item.ID
-                    };
-                    AttributeIDList.Add(textComboBoxItem);
-                }
-            }
-
-            AttributeSlotList.Clear();
-
-            foreach (var item in context.AttributeSlotSet)
-            {
-                if (item.Value is not null && item.Value.Length > 0)
-                {
-                    AttributeSlotList.Add(new VectorTextComboBoxItem()
-                    {
-                        Text = item.Value
+                        Image = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
+                        Text = item
                     });
                 }
+                SelectedItem = ItemList.FirstOrDefault(candidate => candidate.Text == previous) ?? ItemList.FirstOrDefault();
             }
-
-            AttributeValueTypeList.Clear();
-
-            foreach (var item in context.AttributeSlotSet)
+            finally
             {
-                if (item.Value is not null)
-                {
-                    AttributeValueTypeList.Add(new VectorTextComboBoxItem()
-                    {
-                        Text = item.ID
-                    });
-                }
+                loadingItemIds = false;
             }
         }
 
-        [RelayCommand]
-        /// <summary>
-        /// 保存指令
-        /// </summary>
-        private void Save()
+        /// <summary>换物品：按 dispatcher 重新开一棵树（schema 决定这一页显示什么）。</summary>
+        public void UpdateItemDataTree()
         {
-            //执行生成
-
-            Microsoft.Win32.SaveFileDialog saveFileDialog = new()
-            {
-                AddExtension = true,
-                RestoreDirectory = true,
-                CheckPathExists = true,
-                DefaultExt = ".command",
-                Filter = "Command files (*.command;)|*.command;",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                Title = "保存为命令文件"
-            };
-            if (saveFileDialog.ShowDialog().Value)
-            {
-                if (Directory.Exists(Path.GetDirectoryName(saveFileDialog.FileName)))
-                    File.WriteAllText(saveFileDialog.FileName, Result);
-                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\itemView\\");
-                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "resources\\saves\\itemView\\" + Path.GetFileName(saveFileDialog.FileName), Result);
-            }
+            if (loadingItemIds || SelectedItem is null || string.IsNullOrEmpty(GameVersion)) return;
+            OpenMcdocTreeFromDispatcher(GameVersion, dispatcherRegistry,
+                McdocIndex.Static(SelectedItem.Text), resource.McdocTypes);
         }
 
-        [RelayCommand]
+        #endregion
+
+        #region 旧调用面（命令拼装）
+        public StringBuilder Create() => new();
+
+        /// <summary>实体数据就在 JsonText（mcdoc 文档）里，直接交出去。</summary>
+        public void CollectionData(StringBuilder Result) => Result?.Append(JsonText ?? "");
+
+        public void Build(StringBuilder Result) => BuildResult(Result);
+
         /// <summary>
-        /// 执行生成
+        /// 把缓冲里的物品 NBT 包成命令：**给予**（默认）或 **召唤掉落物**。
+        /// - 给予 1.13+：`give @p minecraft:&lt;id&gt;{&lt;nbt&gt;} 1`（没有 NBT 就不带花括号）
+        /// - 给予 ≤1.12：`give @p minecraft:&lt;id&gt; 1 0 {&lt;nbt&gt;}`
+        /// - 召唤：`summon item ~ ~ ~ {Item:{id:"minecraft:&lt;id&gt;",Count:1b,tag:{&lt;nbt&gt;}}}`
         /// </summary>
-        private void Run()
+        public void BuildResult(StringBuilder Result)
         {
-            StringBuilder nbt = new();
-
-            if (SpecialTagsResult.Count > 0)
-            {
-                ObservableCollection<NBTDataStructure> SpecialData = SpecialTagsResult[SelectedItem.Text];
-                nbt.Append(string.Join(',', SpecialData.Select(item => item.Result)));
-            }
-
-            if (nbt.ToString().EndsWith(','))
-                nbt.Remove(nbt.ToString().Length - 1, 1);
-
-            string CurrentItemID = LowVersionId.Length > 0 ? LowVersionId : SelectedItem.Text;
-
+            if (Result is null) return;
+            var body = Result.ToString().Trim();
+            var item = SelectedItem?.Text ?? "stone";
+            var legacy = VersionRangeChecker.IsLessThan(GameVersion, "1.13");
+            string command;
             if (Summon)
             {
-                bool HaveTagNBT = nbt.Length > 0;
-                string appendId = "id:\"minecraft:" + CurrentItemID + "\",";
-                nbt.Insert(0, appendId);
-                if (HaveTagNBT)
-                {
-                    nbt.Insert(appendId.Length, "tag:{");
-                    nbt.Append("},");
-                }
+                command = "summon item ~ ~ ~ {Item:{id:\"minecraft:" + item + "\",Count:1b"
+                    + (body.Length > 0 ? ",tag:{" + body + "}" : "") + "}}";
             }
-
-            if (UseForTool)
+            else if (legacy)
             {
-                //Result = "{id:\"minecraft:" + CurrentItemID + "\",Count:" + data?.ItemCount.LeftValue + "b" + (nbt.ToString().Trim(',').Length > 0 ? ",tag:{" + nbt.ToString().Trim(',') + "}" : "") + "}";
-                ItemView item = Window.GetWindow(SpecialViewer) as ItemView;
-                item.DialogResult = true;
-                return;
-            }
-
-            if (nbt.ToString().Length > 0)
-            {
-                nbt.Insert(0, '{');
-                nbt.Append('}');
-            }
-            if (!Summon)
-            {
-                //if (CurrentMinVersion < 1130)
-                //    Result = "give @p " + CurrentItemID + " " + data?.ItemCount.LeftValue + " " + data?.ItemDamage.LeftValue + " " + nbt;
-                //else
-                //    Result = "give @p " + CurrentItemID + nbt + " " + data?.ItemCount.LeftValue;
+                command = "give @p minecraft:" + item + " 1 0" + (body.Length > 0 ? " {" + body + "}" : "");
             }
             else
-                Result = "summon item" + " ~ ~ ~ {itemView:" + nbt + "}";
+            {
+                command = "give @p minecraft:" + item + (body.Length > 0 ? "{" + body + "}" : "") + " 1";
+            }
+            Result.Clear();
+            Result.Append(command);
+        }
 
-            if (CurrentMinVersion < 1130 /*&& (common.ItemNameValue.Length > 0 || common.ItemLoreValue.Length > 0)*/)
-                Result = @"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""右击执行\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""value\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + Result + @"\\\""}\""}}""}}";
+        #endregion
+        #endregion
 
-            if (ShowGeneratorResult)
+        #region Event
+        #region 更新子控件的版本以及执行数据更新事件
+
+        public void ItemPages_Loaded(object sender, RoutedEventArgs e)
+        {
+            // 旧视图的版本下拉绑 VersionSource：用它包一层基类的 GameVersionOptions
+            VersionSource.Clear();
+            foreach (var option in GameVersionOptions)
+                VersionSource.Add(new VectorTextComboBoxItem { Text = option.Name });
+            SelectedVersion = VersionSource.FirstOrDefault(candidate => candidate.Text == GameVersion)
+                ?? VersionSource.FirstOrDefault();
+            LoadItemIdsForVersion();
+            UpdateItemDataTree();
+        }
+
+        public void ItemID_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            UpdateItemDataTree();
+        }
+
+        public void Version_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (loadingItemIds || SelectedVersion is null) return;
+            // 版本只有一个出口（基类）：把旧下拉的选择映射回 mcdoc 的版本选项
+            var target = GameVersionOptions.FirstOrDefault(option => option.Name == SelectedVersion.Text);
+            if (target is not null) SelectedGameVersionOption = target;
+            LoadItemIdsForVersion();
+            UpdateItemDataTree();
+        }
+
+        #endregion
+
+        #region 生成与保存
+        [RelayCommand]
+        private void Run() => _ = Run(ShowGeneratorResult);
+
+        /// <summary>
+        /// 生成：把当前文档包成命令并按"显示结果"分流；同时把命令留在 <see cref="Result"/> 上，
+        /// 供 ItemViewModel / ArmorStandViewModel 这些旧调用方直接取用。
+        /// </summary>
+        public Task<string> Run(bool showResult)
+        {
+            var buffer = Create();
+            CollectionData(buffer);
+            Build(buffer);
+            Result = buffer.ToString();
+            if (showResult)
             {
                 DisplayerView displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
@@ -510,283 +262,47 @@ namespace CBHK.ViewModel.Component.Item
             else
             {
                 Clipboard.SetText(Result);
-                MessagePopup.PushMessage(new GeneratorMessage()
+                MessagePopup.PushMessage(new GeneratorMessage
                 {
-                    Message = "物品生成成功!数据已进入剪切板",
+                    Message = "物品生成成功！数据已复制",
+                    MessageBrush = Brushes.Red,
                     SubMessage = "物品生成器",
+                    SubMessageBrush = Brushes.DarkGray,
                     Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\item_frame.png", UriKind.RelativeOrAbsolute))
                 });
             }
+            return Task.FromResult(Result);
         }
 
-        public async Task<string> Run(bool showResult)
+        /// <summary>另存为 .command：内容同样是那条命令（同时留一份到 Resource\Saves\Item\）。</summary>
+        [RelayCommand]
+        private void Save()
         {
-            return "";
-        }
-
-        /// <summary>
-        /// JSON转控件
-        /// </summary>
-        /// <param name="grid"></param>
-        /// <param name="nbtStructure"></param>
-        private List<FrameworkElement> JsonToComponentConverter(JObject nbtStructure, string NBTType = "")
-        {
-            string tag = JArray.Parse(nbtStructure["tag"].ToString())[0].ToString();
-            JToken resultObj = nbtStructure["ResultType"];
-            string result = resultObj is not null ? resultObj.ToString() : "";
-            string key = nbtStructure["Key"].ToString();
-            JToken children = nbtStructure["Children"];
-            JToken descriptionObj = nbtStructure["Description"];
-            string description = descriptionObj is not null ? descriptionObj.ToString() : "";
-            JToken toolTipObj = nbtStructure["PrelimToolTip"];
-            string toolTip = toolTipObj is not null ? toolTipObj.ToString() : "";
-            JToken dependencyObj = nbtStructure["Dependency"];
-            string dependency = dependencyObj is not null ? dependencyObj.ToString() : "";
-            ComponentData componentData = new()
+            Microsoft.Win32.SaveFileDialog dialog = new()
             {
-                dataType = tag,
-                key = key,
-                resultType = result,
-                toolTip = toolTip,
-                description = description,
-                dependency = dependency,
-                nbtType = NBTType
+                AddExtension = true,
+                RestoreDirectory = true,
+                CheckPathExists = true,
+                DefaultExt = ".command",
+                Filter = "Command files (*.command;)|*.command;",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
+                Title = "保存为命令文件"
             };
-            if (children is not null)
-                componentData.children = children.ToString();
-            List<FrameworkElement> componentGroup = [];
-            return componentGroup;
-        }
-
-        /// <summary>
-        /// 根据物品ID实时显示隐藏特指数据
-        /// </summary>
-        private async Task UpdateUILayOut()
-        {
-            SelectedItem ??= ItemList[0];
-            currentItemPages.Header = SelectedItem.Text + ":" + SelectedItem.Text;
-
-            #region 搜索当前物品ID对应的JSON对象
-            List<JToken> targetList = SpecialArray.Where(item =>
+            if (dialog.ShowDialog() != true) return;
+            var buffer = Create();
+            CollectionData(buffer);
+            Build(buffer);
+            Result = buffer.ToString();
+            string folder = Path.GetDirectoryName(dialog.FileName);
+            if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
             {
-                JObject currentObj = item as JObject;
-                if (currentObj["type"].ToString() == SelectedItem.Text)
-                    return true;
-                return false;
-            }).ToList();
-            #endregion
-
-            if (targetList.Count > 0)
-            {
-                await Task.Run(async () =>
-                {
-                    JObject targetObj = targetList.First() as JObject;
-                    #region 处理特指NBT
-                    if (!specialDataDictionary.TryGetValue(SelectedItem.Text, out Grid value))
-                    {
-                        JArray children = JArray.Parse(targetObj["Children"].ToString());
-                        List<FrameworkElement> components = [];
-                        Grid newGrid = null;
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            newGrid = new();
-                            newGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
-                            newGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                        });
-
-                        #region 更新控件集合
-                        foreach (JObject nbtStructure in children.Cast<JObject>())
-                        {
-                            List<FrameworkElement> result = JsonToComponentConverter(nbtStructure);
-                            components.AddRange(result);
-                        }
-                        #endregion
-                        #region 应用更新后的集合
-                        bool LeftIndex = true;
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            for (int j = 0; j < components.Count; j++)
-                            {
-                                components[j].DataContext = this;
-                                if (LeftIndex || newGrid.RowDefinitions.Count == 0)
-                                    newGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
-                                newGrid.Children.Add(components[j]);
-                                if (components[j] is VectorRichExpander || components[j] is VectorTextCheckBox)
-                                {
-                                    Grid.SetRow(components[j], newGrid.RowDefinitions.Count - 1);
-                                    Grid.SetColumn(components[j], 0);
-                                    Grid.SetColumnSpan(components[j], 2);
-                                    LeftIndex = true;
-                                }
-                                else
-                                {
-                                    Grid.SetRow(components[j], newGrid.RowDefinitions.Count - 1);
-                                    Grid.SetColumn(components[j], LeftIndex ? 0 : 1);
-                                    LeftIndex = !LeftIndex;
-                                }
-                            }
-                        });
-                        #endregion
-
-                        if (!specialDataDictionary.ContainsKey(SelectedItem.Text))
-                            specialDataDictionary.Add(SelectedItem.Text, newGrid);
-                        await SpecialViewer.Dispatcher.InvokeAsync(() =>
-                        {
-                            SpecialViewer.Content = newGrid;
-                        });
-                    }
-                    else
-                    {
-                        await SpecialViewer.Dispatcher.InvokeAsync(() =>
-                        {
-                            Grid cacheGrid = value;
-                            SpecialViewer.Content = cacheGrid;
-                        });
-                    }
-                    #endregion
-                });
+                _ = File.WriteAllTextAsync(dialog.FileName, Result);
             }
-            else
-                SpecialViewer.Content = null;
+            string cacheFolder = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Item\";
+            Directory.CreateDirectory(cacheFolder);
+            _ = File.WriteAllTextAsync(cacheFolder + Path.GetFileName(dialog.FileName), Result);
         }
-
-        private void UpdateItemDamageAndID()
-        {
-        }
-
         #endregion
-
-        #region Event
-
-        /// <summary>
-        /// 载入物品页
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ItemPages_Loaded(object sender, RoutedEventArgs e)
-        {
-            currentItemPages ??= (sender as ItemPageView).Parent as VectorRichTabItem;
-            itemDataContext ??= Window.GetWindow(sender as ItemPageView).DataContext as ItemViewModel;
-            if (VersionSource.Count == 0)
-            {
-                VersionSource = itemDataContext.VersionList;
-                SelectedVersion = VersionSource[0];
-            }
-        }
-
-        /// <summary>
-        /// 载入标签页
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SpecialTagsPanelLoaded(object sender, RoutedEventArgs e)
-        {
-            TabControl tabControl = sender as TabControl;
-            ItemView window = Window.GetWindow(tabControl) as ItemView;
-            ItemViewModel datacontext = window.DataContext as ItemViewModel;
-            foreach (TabItem item in tabControl.Items)
-            {
-                item.DataContext = this;
-            }
-            SpecialViewer = (tabControl.Items[0] as TabItem).Content as VectorScrollViewer;
-        }
-
-        /// <summary>
-        /// 切换后载入共通标签数据
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            TabControl tabControl = sender as TabControl;
-            JObject externData = ExternallyReadEntityData;
-            if (ImportMode && ExternallyReadEntityData is not null)
-            {
-            }
-        }
-
-        /// <summary>
-        /// 版本更新事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ComboBox comboBox = sender as ComboBox;
-            ItemViewModel itemDataContext = Window.GetWindow(comboBox).DataContext as ItemViewModel;
-            CancellationTokenSource cancellationTokenSource = new();
-
-            IsVersionUpdating = true;
-            InitItemList();
-            InitEffectList();
-            InitAttributeIDAndValueTypeAndSlotList();
-            InitEnchantmentList();
-            IsVersionUpdating = false;
-
-            #region 更新子控件的版本以及执行数据更新事件
-            await Parallel.ForAsync(0, /*VersionComponents.Count*/1, async (i, cancellationTokenSource) =>
-            {
-                //if (VersionComponents[i] is StylizedTextBox && CurrentMinVersion < 1130)
-                //{
-                //    StylizedTextBox stylizedTextBox = VersionComponents[i] as StylizedTextBox;
-                //    if (stylizedTextBox.richTextBox.Document.Blocks.Count > 0)
-                //    {
-                //        Paragraph paragraph = stylizedTextBox.richTextBox.Document.Blocks.FirstBlock as Paragraph;
-                //        if (paragraph.Inlines.Count > 0)
-                //        {
-                //            RichRun richRun = paragraph.Inlines.FirstInline as RichRun;
-                //            Application.Current.Dispatcher.Invoke(() =>
-                //            {
-                //                IsNoStyleText = richRun.Text.Trim().Length > 0;
-                //            });
-                //        }
-                //        else
-                //            IsNoStyleText = false;
-                //    }
-                //    else
-                //        IsNoStyleText = false;
-                //}
-                //else
-                //    IsNoStyleText = true;
-                //更新版本控件的版本
-                //await VersionComponents[i].Upgrade(CurrentMinVersion);
-            });
-            await Parallel.ForEachAsync(VersionNBTList, async (item, cancellationToken) =>
-            {
-                await Task.Delay(0, cancellationToken);
-                item.Value.Invoke(item.Key, null);
-            });
-            #endregion
-        }
-
-        /// <summary>
-        /// 物品ID更新事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ItemID_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if(!IsVersionUpdating)
-            {
-                UpdateItemDamageAndID();
-            }
-        }
-
         #endregion
-    }
-
-    /// <summary>
-    /// 动态控件数据结构
-    /// </summary>
-    public class ComponentData
-    {
-        public string children { get; set; }
-        public string dataType { get; set; }
-        public string resultType { get; set; }
-        public string nbtType { get; set; }
-        public string key { get; set; }
-        public string description { get; set; }
-        public string toolTip { get; set; }
-        public string dependency { get; set; }
     }
 }

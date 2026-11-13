@@ -4,10 +4,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:CustomControl="clr-namespace:CBHK.CustomControl"
+    xmlns:Mcdoc="clr-namespace:CBHK.Utility.Data.Mcdoc"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:data="clr-namespace:CBHK.Utility.Data"
     xmlns:local="clr-namespace:CBHK.View.Component.Entity"
     xmlns:localContext="clr-namespace:CBHK.View.Component.Entity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -29,6 +31,7 @@
     </UserControl.InputBindings>
 
     <UserControl.Resources>
+        <data:EnumMemberToTextComboBoxItemConverter x:Key="McdocChromeComboConverter" />
         <sys:Boolean x:Key="BoolFalse">False</sys:Boolean>
         <Geometry x:Key="ModifyIcon">
             M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L362.3 51.7l97.9 97.9 30.1-30.1c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.8 15.7-7.4 21.9-13.5L437.7 172.3 339.7 74.3 172.4 241.7zM96 64C43 64 0 107 0 160V416c0 53 43 96 96 96H352c53 0 96-43 96-96V320c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96z
@@ -36,20 +39,11 @@
         <Geometry x:Key="DeleteIcon">
             M10 104 c0 -4 10 -15 22 -25 l21 -19 -23 -20 c-13 -11 -20 -23 -17 -27 4 -3 16 4 27 17 l20 23 20 -23 c11 -13 23 -20 27 -17 3 4 -4 16 -17 27 l-23 20 23 20 c13 11 20 23 17 27 -4 3 -16 -4 -27 -17 l-20 -23 -19 21 c-18 22 -31 28 -31 16z
         </Geometry>
-        <ImageBrush x:Key="Save" ImageSource="/CBHK;component/Resource/Common/Image/Save.png" />
-        <ImageBrush x:Key="ButtonNormal" ImageSource="/CBHK;component/Resource/Common/Image/ButtonNormal.png" />
-        <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
-        <ImageBrush x:Key="IssueIcon" ImageSource="/CBHK;component/Resource/Common/Image/Issue.png" />
-        <ImageBrush x:Key="TextBoxBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextEditBox.png" />
-        <ImageBrush x:Key="DataButtonBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextToggleButtonNormal.png" />
-        <ImageBrush x:Key="DataButtonPressedBackground" ImageSource="/CBHK;component/Resource/Common/Image/TextToggleButtonPressed.png" />
-        <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
-        <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
     </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="35" />
+            <RowDefinition Height="45" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0" Margin="5,0,0,0">
@@ -76,11 +70,11 @@
                 Title="版本"
                 Width="70"
                 HorizontalAlignment="Left"
-                VerticalAlignment="Center"
+                VerticalAlignment="Stretch"
+                VerticalContentAlignment="Center"
                 ArrowMargin="0 0 5 0"
-                ItemsSource="{Binding VersionSource, Mode=OneWay}"
-                SelectedIndex="0"
-                SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+                ItemsSource="{Binding GameVersionOptions, Converter={StaticResource McdocChromeComboConverter}}"
+                SelectedItem="{Binding SelectedGameVersionOption, Converter={StaticResource McdocChromeComboConverter}}"
                 Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">
@@ -90,7 +84,7 @@
             </VectorComboBox:VectorTextComboBox>
             <VectorComboBox:VectorIconTextComboBox
                 Title="实体ID"
-                Width="235"
+                MinWidth="235"
                 HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
                 ArrowMargin="0 0 5 0"
@@ -107,6 +101,7 @@
             </VectorComboBox:VectorIconTextComboBox>
             <VectorButton:VectorToggleTextButton
                 x:Name="EnableButton"
+                MinWidth="50"
                 HorizontalAlignment="Left"
                 Background="#D77A34"
                 Foreground="Black"
@@ -115,6 +110,7 @@
                 Style="{DynamicResource VectorToggleTextButtonStyle}"
                 Text="给予" />
             <VectorButton:VectorToggleTextButton
+                MinWidth="50"
                 HorizontalAlignment="Left"
                 Background="#D77A34"
                 Foreground="Black"
@@ -131,6 +127,7 @@
                 Style="{DynamicResource VectorToggleTextButtonStyle}"
                 Text="同步到文件" />
             <VectorButton:VectorToggleIconTextButton
+                Margin="5,0,0,0"
                 HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
                 Foreground="Black"
@@ -138,377 +135,13 @@
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
         </DockPanel>
-        <Container:VectorTabControl
+        <Mcdoc:McdocTreeRowView
             Grid.Row="1"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
             Background="Transparent"
-            BorderThickness="0"
-            SelectedIndex="0"
-            Style="{DynamicResource VectorTabControlStyle}"
-            VirtualizingPanel.IsVirtualizing="False">
-            <behavior:Interaction.Triggers>
-                <behavior:EventTrigger EventName="SelectionChanged">
-                    <behavior:CallMethodAction MethodName="TagsTab_SelectionChanged" TargetObject="{Binding}" />
-                </behavior:EventTrigger>
-                <behavior:EventTrigger EventName="Loaded">
-                    <behavior:CallMethodAction MethodName="SpecialTagsPanelLoaded" TargetObject="{Binding}" />
-                </behavior:EventTrigger>
-            </behavior:Interaction.Triggers>
-            <Container:VectorTextTabItem
-                Uid="SpecialTags"
-                Title="专属NBT"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}">
-                <Container:VectorScrollViewer
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    Style="{DynamicResource VectorScrollViewerStyle}"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="string"
-                Title="字符串"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="number"
-                Title="数值"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="boolean"
-                Title="是/否"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="compound"
-                Title="集合"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="list"
-                Title="列表"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="BreedableMobExtraFields"
-                Title="可繁殖生物额外字段"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding BreedableMobExtraFieldsVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions />
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="AngryCreatureExtraField"
-                Title="可愤怒生物额外字段"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding AngryCreatureExtraFieldVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="TameableMobExtraFields"
-                Title="可驯服生物额外字段"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding TameableMobExtraFieldsVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="CommonTagsForRideableEntities"
-                Title="可骑乘实体共通标签"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding CommonTagsForRideableEntitiesVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="CommonTagsForZombies"
-                Title="僵尸共通标签"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding CommonTagsForZombiesVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="CommonTagsForMobsSpawnedInRaids"
-                Title="生成于袭击中的生物共通标签"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding CommonTagsForMobsSpawnedInRaidsVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="ArrowProjectileCommonTags"
-                Title="箭类投掷物共通标签"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding ArrowProjectileCommonTagsVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="ContainerEntityCommonTags"
-                Title="容器实体共通标签"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding ContainerEntityCommonTagsVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="FireballProjectileCommonTags"
-                Title="火球类投掷物共通标签"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding FireballProjectileCommonTagsVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="ItemProjectileCommonTags"
-                Title="物品类投掷物共通标签"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding ItemProjectileCommonTagsVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="MineCartCommonTags"
-                Title="矿车共通标签"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding MineCartCommonTagsVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="PotionEffectCommonTags"
-                Title="药水效果共通标签"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding PotionEffectCommonTagsVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-            <Container:VectorTextTabItem
-                Uid="ProjectileCommonTags"
-                Title="投掷物共通标签"
-                Foreground="White"
-                Style="{DynamicResource VectorTextTabItemStyle}"
-                Visibility="{Binding ProjectileCommonTagsVisibility, Mode=TwoWay}">
-                <Container:VectorScrollViewer
-                    Background="#2F2F2F"
-                    FontWeight="Normal"
-                    HorizontalScrollBarVisibility="Disabled"
-                    VerticalScrollBarVisibility="Auto">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                </Container:VectorScrollViewer>
-            </Container:VectorTextTabItem>
-        </Container:VectorTabControl>
+            ItemContainerStyle="{StaticResource McdocRowItemContainerStyle}"
+            ItemTemplateSelector="{StaticResource McdocRowTemplateSelector}"
+            ItemsSource="{Binding Rows}" />
     </Grid>
 </UserControl>

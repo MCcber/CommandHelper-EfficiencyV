@@ -138,24 +138,6 @@
                 OriginBottomHeight="4"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
-            <VectorButton:VectorTextButton
-                MinWidth="50"
-                HorizontalAlignment="Left"
-                Background="#EFF2F1"
-                Command="{Binding ClearUnnecessaryDataCommand}"
-                Foreground="Black"
-                OriginBottomHeight="4"
-                Style="{DynamicResource VectorTextButtonStyle}"
-                Text="冻结数据"
-                ToolTipService.BetweenShowDelay="0"
-                ToolTipService.InitialShowDelay="0">
-                <VectorButton:VectorTextButton.ToolTip>
-                    <ToolTip
-                        Background="#2F2F2F"
-                        Content="点击后清除历史实体的特指数据"
-                        Foreground="White" />
-                </VectorButton:VectorTextButton.ToolTip>
-            </VectorButton:VectorTextButton>
             <VectorButton:VectorToggleIconTextButton
                 HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"

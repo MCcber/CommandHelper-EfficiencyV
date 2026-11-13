@@ -56,6 +56,11 @@ namespace CBHK.Model.Constant
         #endregion
 
         #region Method
+        public List<string> GetVersionList()
+        {
+            return [.. RunningDataObject.Properties().Select(item => item.Name)];
+        }
+
         /// <summary>
         /// 载入一个目录下的全部注册表数据（Registries/*.json）：文件名当版本键，内容并进 RunningDataObject。
         /// Init 与探针共用这一份：探针不走 Init，但没有这批数据时 #[id] 字段会全部退化成文本框。
@@ -77,6 +82,35 @@ namespace CBHK.Model.Constant
                 count++;
             }
             return count;
+        }
+
+        /// <summary>
+        /// 从对应版本的注册表数据里取指定注册表的成员，按英文字母 A-Z 排序。
+        /// 不缓存副本：版本缺失时沿用 GetRegistriesData 的“回退到最高可用版本”规则。
+        /// </summary>
+        public IReadOnlyList<string> GetIds(string registry, string version)
+        {
+            JToken idsToken = null;
+            if (!string.IsNullOrWhiteSpace(registry) && GetRegistriesData(version) is { } data)
+            {
+                // dispatcher registry 名不总是等于注册表键：minecraft:entity 的成员在 entity_type 里。
+                // 先按原名查，查不到再试 <name>_type；直接传 entity_type 也仍然可用。
+                var key = registry.Replace("minecraft:", "", StringComparison.Ordinal);
+                idsToken = data.SelectToken(key);
+                if (idsToken is not JArray && data.SelectToken(key + "_type") is JArray typedIds)
+                {
+                    idsToken = typedIds;
+                }
+            }
+            if (idsToken is not JArray resultArray)
+            {
+                return [];
+            }
+            return [.. resultArray
+                .Select(item => item?.ToString())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(id => id, StringComparer.OrdinalIgnoreCase)];
         }
 
         /// <summary>

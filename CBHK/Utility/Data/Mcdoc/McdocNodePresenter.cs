@@ -98,11 +98,13 @@ namespace CBHK.Utility.Data.Mcdoc
             => node is not null && (node.IsDynamicKey || node.IsMapEntry);
 
         /// <summary>
-        /// 可选字段的"⊕ 设默认值"：只给结构行。标量的落点是它自己的编辑器、列表靠 add、
+        /// 容器行的"⊕ 设默认值"：只给结构 / 元组这类容器行。标量的落点是它自己的编辑器、列表靠 add、
         /// 联合靠下拉里的 unset —— 给它们加 ⊕ 会变成"点了没反应"的死按钮。
+        /// 必选 + 缺值同样给：那一行没有编辑器、更不能有删除按钮，⊕ 是它唯一的起值入口
+        /// （position_source[block] 的 pos、实体的 Pos/Motion 这类定长三元组在 schema 里就是必填的）。
         /// </summary>
         protected static bool CanSetDefaultField(McdocTreeNode node)
-            => node is not null && node.Json is null && node.Parent is not null && !node.IsRequired
+            => node is not null && node.Json is null && node.Parent is not null
                && !node.IsDynamicKey && !node.IsMapEntry;
 
         /// <summary>

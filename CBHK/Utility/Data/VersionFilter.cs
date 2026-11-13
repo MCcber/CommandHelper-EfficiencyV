@@ -100,7 +100,7 @@ namespace CBHK.Utility.Data
         }
 
         /// <summary>
-        /// 逐段比较两个Version，Build/Revision=-1视为"未指定"（等同0参与比较）。
+        /// 逐段比较两个Version，BuildResult/Revision=-1视为"未指定"（等同0参与比较）。
         /// </summary>
         private static int CompareVersions(Version a, Version b)
         {

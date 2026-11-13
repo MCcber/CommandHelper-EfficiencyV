@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.Container;
+using CBHK.CustomControl.Container;
 using CBHK.CustomControl.Input;
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
@@ -36,7 +36,7 @@ using System.Windows.Media.Media3D;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class ArmorStandViewModel : ObservableObject, IGenerator
+    public partial class ArmorStandViewModel : ObservableObject
     {
         #region Field
         private MessagePopup messagePopup;
@@ -986,13 +986,6 @@ namespace CBHK.ViewModel.Generator
         [ObservableProperty]
         private VectorTextComboBoxItem selectedVersion;
 
-        public IEventAggregator EventAggregator { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public bool ShowResult { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        string IGenerator.SelectedVersion { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public bool SyncToFile { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public string ExternFilePath { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public JToken ExternallyData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public bool ImportMode { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         #endregion
 
         #endregion

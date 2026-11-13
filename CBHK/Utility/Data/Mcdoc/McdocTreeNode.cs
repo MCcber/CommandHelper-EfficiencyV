@@ -352,6 +352,12 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>局部队列重建：由工厂用同一份构建上下文挂上（结构变更时避免整树重建）。</summary>
         public System.Action RefreshChildren { get; set; }
 
+        /// <summary>
+        /// 建这个节点时的运行期（注册表/符号表/版本）。切 union 分支要用它跑"带运行期的默认值代数"——
+        /// 只靠声明算默认值时，必填字段是引用类型的成员（TextComponent 的 `keybind: Keybind`）会给不出值。
+        /// </summary>
+        public McdocRuntime Runtime { get; set; }
+
         /// <summary>子级是否已构建（懒建）。</summary>
         public bool ChildrenBuilt { get; set; }
 
@@ -420,6 +426,9 @@ namespace CBHK.Utility.Data.Mcdoc
             set
             {
                 json = value;
+                // 行上的“添加/删除”按钮看的是 Json 是否存在；写入/删除 JSON 后必须让行重读摘要，
+                // 否则 ⊕ 已经执行、子结构也出来了，按钮还停在“添加且不可用”。
+                OnPropertyChanged(nameof(Json));
                 // 键被删掉（值变 null）时必须折叠：否则"文档里没有它"却还展开着，
                 // 投影会把老早就建好的子级重新摊到行下面（现象：右侧删了整段 display，左侧子级还在）
                 if (value is null && !IsRequired && isExpanded)

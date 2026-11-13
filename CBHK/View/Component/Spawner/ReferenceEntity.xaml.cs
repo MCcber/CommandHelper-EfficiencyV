@@ -146,9 +146,8 @@ namespace CBHK.View.Component.Spawner
             if (entity.ShowDialog().Value)
             {
                 EntityPageViewModel entityPagesDataContext = (context.EntityPageList[0].Content as EntityPageView).DataContext as EntityPageViewModel;
-                StringBuilder Result = entityPagesDataContext.Create();
-                entityPagesDataContext.CollectionData(Result);
-                entityPagesDataContext.Build(Result);
+                StringBuilder Result = new(entityPagesDataContext.JsonText);
+                entityPagesDataContext.BuildResult(Result);
                 string data = ExternalDataImportManager.GetEntityDataHandler(Result.ToString(),messagePopup, false);
                 Tag = data;
                 string entityID = "";

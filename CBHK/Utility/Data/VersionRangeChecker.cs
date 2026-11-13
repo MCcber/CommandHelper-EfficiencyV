@@ -4,7 +4,7 @@ namespace CBHK.Utility.Data
 {
     /// <summary>
     /// 版本区间判定：给一个区间字符串和一个目标版本号，回答"目标在不在区间里"。
-    /// 比较沿用 <see cref="VersionFilter"/> 的口径（Major/Minor/Build/Revision 逐段，未指定段按 0），
+    /// 比较沿用 <see cref="VersionFilter"/> 的口径（Major/Minor/BuildResult/Revision 逐段，未指定段按 0），
     /// 但它只做单点判定，不涉及 since/until 的可见性语义。
     /// 支持的写法："1.20.5"（单版本，精确相等）、"1.20-1.21"（闭区间，两端都含）、"1.13+"（上不封顶）、
     /// "-1.21"（左端缺省，只有上界）、"1.20-"（右端缺省，只有下界）。

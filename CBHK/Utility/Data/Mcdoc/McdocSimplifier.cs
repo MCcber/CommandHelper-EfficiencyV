@@ -780,9 +780,12 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 // 实参里带动态索引：这里**连试求值都不做**。试求值会按当前节点（多半是列表容器/父结构）
                 // 去解 [[key]]，读成 %none 之后不仅结果没用，还会把整条链烤成 any（现场：data 整支解不出来）。
+                // 但当前上下文里的泛型映射必须保留：IntProvider<T> 作为实参延后到 data 节点求值时，
+                // 外层 T 的绑定已经不在；直接存原参会让 Reference T 在节点处解成 Any（min/max 变任意编辑器）。
+                // 这里只做**引用替换**，不包 Mapped 指令：包指令会改变后续 spread/索引的求值形态。
                 if (ContainsDynamicIndex(argument, context.Runtime))
                 {
-                    simplifiedArgs.Add(argument);
+                    simplifiedArgs.Add(SubstituteReferences(argument, context.TypeMapping));
                     dynamicData = true;
                     continue;
                 }
@@ -868,6 +871,62 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (target is not null && ContainsDynamicIndex(target, runtime, depth + 1)) return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// 只替换引用（含模块前缀/末段匹配），不求值、不拆指令：给"含动态索引而延后求值"的泛型实参用。
+        /// 这样 IntProvider&lt;T&gt; 里的 T 会先变成外层实参；data 节点随后再解 [[type]] 时不会丢 T。
+        /// </summary>
+        private static McdocType SubstituteReferences(McdocType type,
+            IReadOnlyDictionary<string, McdocType> mapping, int depth = 0)
+        {
+            if (type is null || mapping is not { Count: > 0 } || depth > 12) return type;
+            if (type.Kind == McdocTypeKind.Reference)
+            {
+                if (mapping.TryGetValue(type.Path ?? "", out var exact) && exact is not null) return exact;
+                var segment = LastSegment(type.Path);
+                foreach (var pair in mapping)
+                {
+                    if (pair.Value is null) continue;
+                    if (string.Equals(pair.Key, segment, StringComparison.Ordinal)
+                        || string.Equals(LastSegment(pair.Key), segment, StringComparison.Ordinal))
+                    {
+                        return pair.Value;
+                    }
+                }
+                return type;
+            }
+
+            var clone = type.Clone();
+            if (clone.Item is not null) clone.Item = SubstituteReferences(clone.Item, mapping, depth + 1);
+            if (clone.Items is { Count: > 0 } items)
+            {
+                clone.Items = items.Select(item => SubstituteReferences(item, mapping, depth + 1)).ToList();
+            }
+            if (clone.Members is { Count: > 0 } members)
+            {
+                clone.Members = members.Select(member => SubstituteReferences(member, mapping, depth + 1)).ToList();
+            }
+            if (clone.Fields is { Count: > 0 } fields)
+            {
+                var replaced = new List<McdocStructField>(fields.Count);
+                foreach (var field in fields)
+                {
+                    if (field is null) { replaced.Add(null); continue; }
+                    var fieldClone = field.Clone();
+                    fieldClone.Type = SubstituteReferences(field.Type, mapping, depth + 1);
+                    fieldClone.Key = SubstituteReferences(field.Key, mapping, depth + 1);
+                    replaced.Add(fieldClone);
+                }
+                clone.Fields = replaced;
+            }
+            if (clone.Mapping is { Count: > 0 } inner)
+            {
+                clone.Mapping = inner.ToDictionary(pair => pair.Key,
+                    pair => SubstituteReferences(pair.Value, mapping, depth + 1),
+                    StringComparer.Ordinal);
+            }
+            return clone;
         }
 
         private static McdocSimplifyResult SimplifyTemplate(McdocType typeDef, McdocSimplifyContext context)

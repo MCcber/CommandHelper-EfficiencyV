@@ -1,661 +1,232 @@
-﻿using CBHK.CustomControl.Container;
-using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
-using CBHK.Domain;
-using CBHK.Interface.Data;
 using CBHK.Interface.Visual;
+using CBHK.Model.Constant;
 using CBHK.Model.Data;
-using CBHK.Model.Generator.Entity;
-using CBHK.Utility.Common;
-using CBHK.Utility.Visual.MessageTip;
+using CBHK.Model.Data;
+using CBHK.Utility.Data;
+using CBHK.Utility.Data.Mcdoc;
 using CBHK.View;
-using CBHK.View.Component.Entity;
-using CBHK.View.Generator;
-using CBHK.ViewModel.Generator;
+using CBHK.ViewModel;
+using CBHK.Utility.Visual.MessageTip;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
-using Prism.Events;
 using Prism.Ioc;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.IO;
 using System.Linq;
-using System.Numerics;
-using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Entity
 {
-    public partial class EntityPageViewModel : ObservableObject, IGenerator, IPageViewModel
+    public partial class EntityPageViewModel(IContainerProvider Container, Resource Resource) : Generator.McdocGeneratorViewModelBase(Resource, dispatcherRegistry, null), IPageViewModel
     {
         #region Field
-        public bool HaveCustomName = false;
-        public int CurrentMinVersion = 1202;
-        private string iconPath = "pack://application:,,,/CBHK;component/Resource/Data/Image/SpawnerIcon/IconEntities.png";
-        private string buttonNormalImage = "pack://application:,,,/CBHK;component/Resource/Data/Image/ButtonNormal.png";
-        private string buttonPressedImage = "pack://application:,,,/CBHK;component/Resource/Data/Image/ButtonPressed.png";
-        private ImageBrush buttonNormalBrush;
-        private ImageBrush buttonPressedBrush;
-        private UpdateEntityComponentVersionEvent versionUpdateEvent;
-        private string NBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\";
-        private string CommonNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\Data";
-        private string DependencyNBTStructureFolderPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\Dependency";
-        //专属结果集合
-        public Dictionary<string, ObservableCollection<NBTDataStructure>> SpecialTagsResult { get; set; } = [];
-        /// <summary>
-        /// 在生成时标记当前实体拥有哪些共通标签
-        /// </summary>
-        private List<string> CurrentCommonTags = [];
-        /// <summary>
-        /// 白色画刷
-        /// </summary>
-        SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-        /// <summary>
-        /// 黑色画刷
-        /// </summary>
-        SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
-        /// <summary>
-        /// 橙色画刷
-        /// </summary>
-        SolidColorBrush orangeBrush = new((Color)ColorConverter.ConvertFromString("#FFE5B663"));
-        private IContainerProvider container;
-        private DataService dataService;
-        private IEventAggregator eventAggregator;
-        private CBHKDataContext context = null;
-        /// <summary>
-        /// 当前实体页引用
-        /// </summary>
-        private EntityPageView currentEntityPage = null;
-        /// <summary>
-        /// 无专属NBT时提示
-        /// </summary>
-        VisualBrush emptyDataTip = new()
-        {
-            AlignmentX = AlignmentX.Center,
-            AlignmentY = AlignmentY.Center,
-            Stretch = Stretch.None
-        };
-
-        private Style textCheckBoxStyle = Application.Current.Resources["TextCheckBox"] as Style;
-        private Style RadiusToggleButtonStyle = Application.Current.Resources["RadiusToggleButton"] as Style;
-        private Style NumberBoxStyle = Application.Current.Resources["NumberBoxStyle"] as Style;
-        private Style AccordionStyle = Application.Current.Resources["AccordionStyle"] as Style;
-        
-        /// <summary>
-        /// 缓存面板
-        /// </summary>
-        private Grid CacheGrid = null;
-
-        private string SpecialNBTStructureFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Entity\Data\SpecialTags.json";
-
-        /// <summary>
-        /// 特殊实体的共通标签链表
-        /// </summary>
-        List<string> specialEntityCommonTagList = [];
-        /// <summary>
-        /// 特殊实体专属标签字典,用于动态切换内容
-        /// </summary>
-        public Dictionary<string, Grid> SpecialDataDictionary = [];
-        /// <summary>
-        /// 特殊标签面板
-        /// </summary>
-        VectorScrollViewer SpecialViewer = null;
-
+        private const string dispatcherRegistry = "minecraft:entity";
+        private readonly IContainerProvider container = Container;
+        private readonly Resource resource = Resource;
+        private string iconPath = @"pack://application:,,,/CBHK;component/Resource/Common/Image/SpawnerIcon/IconEntity.png";
+        private bool loadingEntityIds;
         #endregion
 
         #region Property
-        public MessagePopup MessagePopup { get; set; }
-        /// <summary>
-        /// 指示是否需要展示生成结果
-        /// </summary>
-        [ObservableProperty]
-        private bool _showResult = false;
-        /// <summary>
-        /// 生成方式
-        /// </summary>
-        [ObservableProperty]
-        private bool _give = false;
-        /// <summary>
-        /// 实体ID
-        /// </summary>
-        [ObservableProperty]
-        private VectorTextComboBoxItem _selectedEntityId = null;
-        /// <summary>
-        /// 实体数据源
-        /// </summary>
-        [ObservableProperty]
-        public ObservableCollection<VectorIconTextComboBoxItem> _entityIDList = [];
+        public MessagePopup MessagePopup { get; set; } = new();
 
-        /// <summary>
-        /// 属性数据
-        /// </summary>
+        #region 给予与召唤
+        /// <summary>生成方式：true = 给予（刷怪蛋），false = 召唤。</summary>
         [ObservableProperty]
-        public ObservableCollection<NBTDataStructure> _attributeResult = [];
-        /// <summary>
-        /// 存储当前实体的乘客
-        /// </summary>
-        [ObservableProperty]
-        public ObservableCollection<NBTDataStructure> _passengerResult = [];
+        private bool give;
 
-        /// <summary>
-        /// 实体、活体、生物结果集合
-        /// </summary>
+        /// <summary>召唤与否（视图里与 Give 互斥的一组按钮）。</summary>
         [ObservableProperty]
-        public ObservableCollection<NBTDataStructure> _commonResult = [];
-        //存储外部读取进来的实体数据
-        public JObject ExternallyReadEntityData { get; set; } = null;
+        private bool summon = true;
 
-        /// <summary>
-        /// 标记当前是否为导入外部数据的模式
-        /// </summary>
+        #endregion
+
+        #region 显示结果
         [ObservableProperty]
-        private bool _importMode = false;
+        private bool showResult;
+        #endregion
 
-        /// <summary>
-        /// 获取实体英文id
-        /// </summary>
-        /// <returns></returns>
-        [GeneratedRegex("[a-zA-Z_]+")]
-        private partial Regex GetEntityID();
+        #region 实体ID列表
 
-        /// <summary>
-        /// 版本数据源
-        /// </summary>
         [ObservableProperty]
-        private ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
+        private VectorTextComboBoxItem selectedEntityId;
 
-        /// <summary>
-        /// 已选版本
-        /// </summary>
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedVersion;
+        private ObservableCollection<VectorIconTextComboBoxItem> entityIDList = [];
+        #endregion
 
         #region 作为工具或引用
         [ObservableProperty]
-        public bool _useForTool = false;
+        private bool useForTool;
+
         [ObservableProperty]
-        public bool _useForReference = false;
+        private bool useForReference;
+
         #endregion
 
-        #region 通用NBT
+        #region 导入外部数据模式
+        /// <summary>外部导入模式：导入的实体数据由 mcdoc 树承载（不再是 NBT 面板）。</summary>
+        [ObservableProperty]
+        private bool importMode;
 
-        /// <summary>
-        /// 允许编辑实体共通标签
-        /// </summary>
-        [ObservableProperty]
-        private bool _entityCommonTagsEnabled = true;
-        [ObservableProperty]
-        /// <summary>
-        /// 允许编辑活体共通标签
-        /// </summary>
-        private bool _livingBodyCommonTagsEnabled = true;
-        [ObservableProperty]
-        /// <summary>
-        /// 允许编辑活体共通标签
-        /// </summary>
-        private bool _mobCommonTagsEnabled = true;
-        /// <summary>
-        /// 实体共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _entityCommonTagsVisibility = Visibility.Visible;
-        /// <summary>
-        /// 活体共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _livingBodyCommonTagsVisibility = Visibility.Visible;
-        /// <summary>
-        /// 生物共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _mobCommonTagsVisibility = Visibility.Visible;
-        /// <summary>
-        /// 可愤怒生物额外字段可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _angryCreatureExtraFieldVisibility = Visibility.Collapsed;
-        /// <summary>
-        /// 可繁殖生物额外字段可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _breedableMobExtraFieldsVisibility = Visibility.Collapsed;
-        /// <summary>
-        /// 可在袭击中生成的生物共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _commonTagsForMobsSpawnedInRaidsVisibility = Visibility.Collapsed;
-        /// <summary>
-        /// 可骑乘生物共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _commonTagsForRideableEntitiesVisibility = Visibility.Collapsed;
-        /// <summary>
-        /// 僵尸类生物共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _commonTagsForZombiesVisibility = Visibility.Collapsed;
-
-        /// <summary>
-        /// 可驯服生物共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _tameableMobExtraFieldsVisibility = Visibility.Collapsed;
-
-        /// <summary>
-        /// 箭类投掷物共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _arrowProjectileCommonTagsVisibility = Visibility.Collapsed;
-
-        /// <summary>
-        /// 容器实体共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _containerEntityCommonTagsVisibility = Visibility.Collapsed;
-
-        /// <summary>
-        /// 火球类投掷物共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _fireballProjectileCommonTagsVisibility = Visibility.Collapsed;
-
-        /// <summary>
-        /// 物品类投掷物共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _itemProjectileCommonTagsVisibility = Visibility.Collapsed;
-
-        /// <summary>
-        /// 矿车共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _mineCartCommonTagsVisibility = Visibility.Collapsed;
-
-        /// <summary>
-        /// 药水效果共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _potionEffectCommonTagsVisibility = Visibility.Collapsed;
-
-        /// <summary>
-        /// 投掷物共通标签可见性
-        /// </summary>
-        [ObservableProperty]
-        private Visibility _projectileCommonTagsVisibility = Visibility.Collapsed;
+        /// <summary>外部读号进来的实体数据（导入模式用）。</summary>
+        public JObject ExternallyReadEntityData { get; set; }
 
         #endregion
 
         #region 是否同步到文件
         public bool SyncToFile { get; set; }
         public string ExternFilePath { get; set; }
-        public IEventAggregator EventAggregator { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        string IGenerator.SelectedVersion { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public JToken ExternallyData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        /// <summary>页面上"是否有自定义名"的开关（旧调用面在用）。</summary>
+        public bool HaveCustomName { get; set; }
+
         #endregion
 
         #endregion
 
         #region Method
-        public EntityPageViewModel(IContainerProvider Container,CBHKDataContext Context,IEventAggregator EventAggregator,DataService DataService)
-        {
-            context = Context;
-            container = Container;
-            eventAggregator = EventAggregator;
-            dataService = DataService;
-            buttonNormalBrush = new ImageBrush(new BitmapImage(new Uri(buttonNormalImage, UriKind.RelativeOrAbsolute)));
-            Grid contentGrid = new();
-            Binding widthBinding = new()
-            {
-                Path = new PropertyPath("ActualWidth"),
-                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor,typeof(VectorScrollViewer),1)
-            };
-            Binding heightBinding = new()
-            {
-                Path = new PropertyPath("ActualHeight"),
-                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(VectorScrollViewer), 1)
-            };
-            BindingOperations.SetBinding(contentGrid, FrameworkElement.WidthProperty, widthBinding);
-            BindingOperations.SetBinding(contentGrid, FrameworkElement.HeightProperty, heightBinding);
-            TextBlock emptyTip = new()
-            {
-                Text = "此实体无专属NBT",
-                Background = Brushes.Transparent,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                FontSize = 15,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D6D6D6")),
-                TextAlignment = TextAlignment.Center
-            };
-            contentGrid.Children.Add(emptyTip);
-            emptyDataTip.Visual = contentGrid;
-            buttonPressedBrush = new ImageBrush(new BitmapImage(new Uri(buttonPressedImage, UriKind.RelativeOrAbsolute)));
-
-            versionUpdateEvent = eventAggregator.GetEvent<UpdateEntityComponentVersionEvent>();
-        }
-
+        #region 搜索当前实体ID对应的JSON对象
         /// <summary>
-        /// 更新控件集合
+        /// 按当前版本重建实体下拉（id 来自注册表 entity_type，A-Z 排序，带刷怪蛋图标）。
         /// </summary>
-        /// <param name="RawDataArray">数据列表</param>
-        /// <param name="container">目标容器</param>
-        private void UpdateSpecialNBTPage(JArray RawDataArray, Grid container)
+        private void LoadEntityIdsForVersion()
         {
-            List<string> sortOrder = ["EntityCommonTags", "LivingBodyCommonTags", "MobCommonTags"];
-            //currentResult.Sort((x, y) => sortOrder.IndexOf(x.Uid).CompareTo(sortOrder.IndexOf(y.Uid)));
-            foreach (var nbt in RawDataArray)
+            string version = SelectedGameVersionOption?.Name ?? GameVersion;
+            if (string.IsNullOrEmpty(version)) return;
+            loadingEntityIds = true;
+            try
             {
-                if(nbt is null)
+                var previous = SelectedEntityId?.Text;
+                EntityIDList.Clear();
+                SelectedEntityId = null;
+                string entityImageFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
+                foreach (string item in resource.GetIds("entity_type", version))
                 {
-                    continue;
-                }
-
-                container.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
-
-                string tag = JArray.Parse(nbt["Tag"].ToString())[0].ToString().Replace("TAG_","");
-                string key = nbt["Key"].ToString();
-                JToken displayToken = nbt["Display"];
-                string display = displayToken is not null ? displayToken.ToString() : "";
-                JArray branch = nbt["Branch"] as JArray;
-                JToken descriptionObj = nbt["Description"];
-                string description = descriptionObj is not null ? descriptionObj.ToString() : "";
-                JToken toolTipObj = nbt["PrelimToolTip"];
-                string toolTip = toolTipObj is not null ? toolTipObj.ToString() : "";
-                JToken dependencyObj = nbt["Dependency"];
-                string dependency = dependencyObj is not null ? dependencyObj.ToString() : "";
-                JToken referenceObj = nbt["Reference"];
-                string reference = referenceObj is not null ? referenceObj.ToString() : "";
-
-                TextBlock displayText = null;
-                VectorRichExpander accordion = null;
-                if(tag != "List" && tag != "List" && tag != "Compound")
-                {
-                    displayText = new()
+                    string iconPath = File.Exists(entityImageFolderPath + item + "_spawn_egg.png")
+                        ? entityImageFolderPath + item + "_spawn_egg.png"
+                        : entityImageFolderPath + item + ".png";
+                    EntityIDList.Add(new VectorIconTextComboBoxItem
                     {
-                        HorizontalAlignment = HorizontalAlignment.Right,
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    if (display is not null)
-                    {
-                        displayText.Text = display;
-                    }
-                    else
-                    {
-                        displayText.Text = string.Join(' ', key.Split('_').Select(item => item[0].ToString().ToUpper() + item[1..]));
-                    }
+                        Image = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
+                        Text = item
+                    });
                 }
-                else
-                {
-                    accordion = new()
-                    {
-                        Header = display
-                    };
-                }
-
-                switch (tag)
-                {
-                    case "Boolean":
-                        {
-                            VectorTextCheckBox textCheckBoxs = new()
-                            {
-                                Style = textCheckBoxStyle
-                            };
-                            break;
-                        }
-                    case "Short":
-                    case "Int":
-                    case "Float":
-                    case "Double":
-                    case "Long":
-                        {
-                            JArray rangeArray = nbt["Range"] as JArray;
-                            break;
-                        }
-                    case "String":
-                        {
-                            break;
-                        }
-                    case "Compound":
-                    case "List":
-                    case "Array":
-                        {
-                            JArray children = nbt["Children"] as JArray;
-                            break;
-                        }
-                }
+                SelectedEntityId = EntityIDList.FirstOrDefault(candidate => candidate.Text == previous) ?? EntityIDList.FirstOrDefault();
+            }
+            finally
+            {
+                loadingEntityIds = false;
             }
         }
 
         /// <summary>
-        /// 根据当前切换的实体ID来动态切换UI元素的显隐
+        /// 切实体：按 dispatcher 重新开一棵树（schema 决定这一页显示什么）。
         /// </summary>
-        public void UpdateUILayOut(Task task = null)
+        public void UpdateEntityDataTree()
         {
-            SelectedEntityId ??= EntityIDList[0];
-            string data = File.ReadAllText(SpecialNBTStructureFilePath);
-            JArray specialDataArray = JArray.Parse(data);
-            //更新标签页显示文本
-            if (currentEntityPage.Parent is TabItem currentTab)
-            {
-                currentTab.Header = SelectedEntityId.Text + ":" + SelectedEntityId.Text;
-            }
-
-            #region 搜索当前实体ID对应的JSON对象
-            JToken targetEntityObject = specialDataArray.First(item =>
-            {
-                return item["Type"] is not null && item["Type"].ToString() == SelectedEntityId.Text;
-            });
-            #endregion
-
-            if (targetEntityObject is not null)
-            {
-                JArray commonTags = JArray.Parse(targetEntityObject["Data"].ToString());
-                List<string> commonTagList = commonTags.ToList().ConvertAll(item => item.ToString());
-                //计算本次与上次共通标签的差集,关闭指定菜单，而不是全部关闭再依次判断打开
-                List<string> closedCommonTagList = specialEntityCommonTagList.Except(commonTagList).ToList();
-
-                #region 处理专属NBT
-                if (!SpecialDataDictionary.TryGetValue(SelectedEntityId.Text, out Grid newGrid))
-                {
-                    JArray children = JArray.Parse(targetEntityObject["Children"].ToString());
-                    CacheGrid = new();
-                    CacheGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
-                    CacheGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                    UpdateSpecialNBTPage(children, CacheGrid);
-                }
-                else
-                {
-                    if (newGrid.Children.Count == 0)
-                        newGrid.Background = emptyDataTip;
-                    if (SpecialViewer is not null)
-                        SpecialViewer.Content = newGrid;
-                }
-                #endregion
-
-                #region 处理额外字段与共通标签的显示隐藏
-                Type currentClassType = GetType();
-
-                #region 需要隐藏的共通标签
-                TabControl tabControl = (SpecialViewer?.Parent as VectorTextTabItem).Parent as TabControl;
-                foreach (var item in closedCommonTagList)
-                {
-                    PropertyInfo visibilityPropertyInfo = currentClassType.GetProperty(item + "Visibility");
-                    if (visibilityPropertyInfo is not null)
-                    {
-                        object visibility = Convert.ChangeType(Visibility.Collapsed, visibilityPropertyInfo.PropertyType);
-                        currentClassType.GetProperty(item + "Visibility")?.SetValue(this, visibility, null);
-                    }
-                    PropertyInfo enabledPropertyInfo = currentClassType.GetProperty(item + "Enabled");
-                    if (enabledPropertyInfo is not null)
-                    {
-                        object enable = Convert.ChangeType(false, enabledPropertyInfo.PropertyType);
-                        currentClassType.GetProperty(item + "Enabled")?.SetValue(this, enable, null);
-                    }
-                }
-                if (closedCommonTagList.Count == 0)
-                {
-                    for (int i = 6; i < tabControl.Items.Count; i++)
-                        (tabControl.Items[i] as FrameworkElement).Visibility = Visibility.Collapsed;
-                }
-                #endregion
-
-                #region 需要显示的共通标签
-                foreach (var item in commonTagList)
-                {
-                    PropertyInfo visibilityPropertyInfo = currentClassType.GetProperty(item + "Visibility");
-                    if (visibilityPropertyInfo is not null)
-                    {
-                        object visibility = Convert.ChangeType(Visibility.Visible, visibilityPropertyInfo.PropertyType);
-                        if (currentClassType.GetProperty(item + "Visibility") is PropertyInfo propertyInfo)
-                            propertyInfo.SetValue(this, visibility, null);
-                    }
-                    PropertyInfo enabledPropertyInfo = currentClassType.GetProperty(item + "Enabled");
-                    if (enabledPropertyInfo is not null)
-                    {
-                        object enable = Convert.ChangeType(true, enabledPropertyInfo.PropertyType);
-                        if (currentClassType.GetProperty(item + "Enabled") is PropertyInfo propertyInfo)
-                            propertyInfo.SetValue(this, enable, null);
-                    }
-                }
-                #endregion
-
-                #region 同步本次计算后的特殊实体共通标签链表
-                if (specialEntityCommonTagList.Count > 0)
-                    specialEntityCommonTagList.Clear();
-                specialEntityCommonTagList.AddRange(commonTagList);
-                #endregion
-
-                #endregion
-            }
+            if (loadingEntityIds || SelectedEntityId is null || string.IsNullOrEmpty(GameVersion)) return;
+            OpenMcdocTreeFromDispatcher(GameVersion, dispatcherRegistry,
+                McdocIndex.Static(SelectedEntityId.Text), resource.McdocTypes);
         }
+
+        #endregion
+
+        #region 旧调用面（命令拼装）
+        /// <summary>旧"开一个空缓冲"入口：命令拼装从空串开始。</summary>
+        public StringBuilder Create() => new();
+
+        /// <summary>旧"收集数据"入口：实体数据现在就在 JsonText（mcdoc 文档）里，直接交出去。</summary>
+        public void CollectionData(StringBuilder Result) => Result?.Append(JsonText ?? "");
+
+        /// <summary>
+        /// 把缓冲里的实体数据包成命令（实体页的业务：**召唤** 与 **给予刷怪蛋** 两种模式）：
+        /// - 召唤：`summon minecraft:&lt;id&gt; ~ ~ ~ {&lt;数据&gt;}`
+        /// - 给予：1.13+ `give @p minecraft:pig_spawner_egg{EntityTag:{id:"minecraft:&lt;id&gt;",&lt;数据&gt;}} 1`；
+        ///   1.12 及以前是 `spawner_egg`，带自定义名时改成"右键执行的牌子"（旧实现的同一套写法）。
+        /// </summary>
+        public void BuildResult(StringBuilder Result)
+        {
+            if (Result is null) return;
+            var body = Result.ToString().Trim();
+            var entity = SelectedEntityId?.Text ?? "entity";
+            var legacy = VersionRangeChecker.IsLessThan(GameVersion, "1.13");
+            var hasCustomName = HaveCustomName
+                || (JsonText?.Contains("\"CustomName\"", StringComparison.Ordinal) ?? false);
+            var tag = body.Length > 0 ? "," + body : "";
+            string command;
+            if (!Give)
+            {
+                command = body.Length > 0
+                    ? "summon minecraft:" + entity + " ~ ~ ~ {" + body + "}"
+                    : "summon minecraft:" + entity + " ~ ~ ~";
+                if (legacy && hasCustomName) command = RightClickSignCommand(command);
+            }
+            else if (legacy)
+            {
+                command = hasCustomName
+                    ? RightClickSignCommand("give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + entity + "\"" + tag + "}}")
+                    : "give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + entity + "\"" + tag + "}}";
+            }
+            else
+            {
+                command = "give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + entity + "\"" + tag + "}} 1";
+            }
+            command = command.Replace("\\n","").Replace("\\r","");
+            Result.Clear();
+            Result.Append(command);
+        }
+
+        /// <summary>
+        /// 1.13 以前"右键执行"的牌子：把命令塞进牌子的 run_command 点击事件里（与旧实现同形）。
+        /// </summary>
+        private static string RightClickSignCommand(string command)
+        {
+            var value = "\"/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:" + Quoted(command) + "}\"";
+            var text = "{\"text\":\"Right Click To Run\",\"clickEvent\":{\"action\":\"run_command\",\"value\":" + value + "}}";
+            return "give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:" + Quoted(text) + "}}";
+        }
+
+        /// <summary>
+        /// 1.13 以前的 NBT 字符串写法：外层双引号、内部引号与反斜杠转义。
+        /// </summary>
+        private static string Quoted(string text)
+            => "\"" + (text ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+        #endregion
+
         #endregion
 
         #region Event
-        /// <summary>
-        /// 载入实体页
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void EntityPages_Loaded(object sender,RoutedEventArgs e)
+        #region 更新子控件的版本以及执行数据更新事件
+        public void EntityPages_Loaded(object sender, RoutedEventArgs e)
         {
-            currentEntityPage = sender as EntityPageView;
-            EntityViewModel entityDataContext = Window.GetWindow(currentEntityPage).DataContext as EntityViewModel;
-            VersionSource = entityDataContext.VersionSource;
-            string entityImageFolderPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-            List<string> currentEntityIDList = [..context.EntitySet.SelectMany(item =>
-            {
-                if(VersionComparer.IsInRange(item.Key, CurrentMinVersion.ToString()))
-                {
-                    return item.Value;
-                }
-                return [];
-            })];
-            foreach (var item in currentEntityIDList)
-            {
-                #region 设置实体图标、名称和ID
-                if (item is not null)
-                {
-                    string iconPath = File.Exists(entityImageFolderPath + item + "_spawn_egg.png") ? entityImageFolderPath + item + "_spawn_egg.png" : entityImageFolderPath + item + ".png";
-                    VectorIconTextComboBoxItem iconComboBoxItem = new()
-                    {
-                        Image = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
-                        Text = item ?? ""
-                    };
-                    EntityIDList.Add(iconComboBoxItem);
-                }
-                #endregion
-            }
+            LoadEntityIdsForVersion();
+            UpdateEntityDataTree();
         }
 
-        /// <summary>
-        /// 实体ID更新
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         public void EntityIDBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //更新专属和共通标签、额外字段
-            Task.Run(async () =>
-            {
-                await currentEntityPage.Dispatcher.InvokeAsync(() =>
-                {
-                    UpdateUILayOut();
-                });
-            });
+            UpdateEntityDataTree();
         }
 
-        /// <summary>
-        /// 版本更新事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         public void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (SelectedVersion is not null)
-            {
-                CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
-            }
-
-            //处理版本控件的数据更新
-            versionUpdateEvent.Publish(SelectedVersion.Text);
-
-            #region 处理版本实体ID的更新
-            EntityIDList.Clear();
-            foreach (var pair in dataService.GetEntityIDAndNameGroupByVersionMap())
-            {
-                if(CurrentMinVersion >= pair.Key)
-                {
-                    EntityIDList.AddRange(pair.Value.Select(item => new VectorIconTextComboBoxItem() { Text = item.Value }));
-                }
-            }
-            SelectedEntityId = EntityIDList[0];
-            #endregion
+            // 版本切换本身由基类收口（重建会话 + 同一份 JSON 重解）；这里只跟着换实体 id 列表
+            if (loadingEntityIds) return;
+            LoadEntityIdsForVersion();
+            UpdateEntityDataTree();
         }
 
-        [RelayCommand]
-        /// <summary>
-        /// 运行保存
-        /// </summary>
-        private void Save()
-        {
-            //执行生成
-            Microsoft.Win32.SaveFileDialog saveFileDialog = new()
-            {
-                AddExtension = true,
-                RestoreDirectory = true,
-                CheckPathExists = true,
-                DefaultExt = ".command",
-                Filter = "Command files (*.command;)|*.command;",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                Title = "保存为命令文件"
-            };
-            if (saveFileDialog.ShowDialog().Value)
-            {
-                StringBuilder Result = new();
-                Create();
-                CollectionData(Result);
-                Build(Result);
+        #endregion
 
-                if (Directory.Exists(Path.GetDirectoryName(saveFileDialog.FileName)))
-                {
-                    _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result.ToString());
-                }
-                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Entity\");
-                {
-                    _ = File.WriteAllTextAsync(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Entity\" + Path.GetFileName(saveFileDialog.FileName), Result.ToString());
-                }
-            }
-        }
-
+        #region 生成与保存
         [RelayCommand]
         /// <summary>
         /// 运行生成
@@ -664,7 +235,7 @@ namespace CBHK.ViewModel.Component.Entity
         {
             StringBuilder Result = Create();
             CollectionData(Result);
-            Build(Result);
+            BuildResult(Result);
             if (ShowResult)
             {
                 DisplayerView displayer = container.Resolve<DisplayerView>();
@@ -689,218 +260,34 @@ namespace CBHK.ViewModel.Component.Entity
             }
         }
 
-        /// <summary>
-        /// 根据菜单UID分配可见性绑定器
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void AccordionVisibilitylLoaded(object sender, RoutedEventArgs e)
+        /// <summary>另存为 .command：内容同样是那条命令（同时留一份到 Resource\Saves\Entity\）。</summary>
+        [RelayCommand]
+        private void Save()
         {
-            VectorRichExpander accordion = sender as VectorRichExpander;
-            //if(accordion.ModifyVisibility == Visibility.Collapsed)
-            //{
-            //    accordion.ModifyVisibility = Visibility.Hidden;
-            //    accordion.ModifyName = "";
-            //}
-            Binding visibilityBinder = new()
+            Microsoft.Win32.SaveFileDialog dialog = new()
             {
-                Path = new PropertyPath(accordion.Uid + "Visibility"),
-                Mode = BindingMode.OneWay
+                AddExtension = true,
+                RestoreDirectory = true,
+                CheckPathExists = true,
+                DefaultExt = ".command",
+                Filter = "Command files (*.command;)|*.command;",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
+                Title = "保存为命令文件"
             };
-            BindingOperations.SetBinding(accordion, UIElement.VisibilityProperty, visibilityBinder);
+            if (dialog.ShowDialog() != true) return;
+            StringBuilder Result = Create();
+            CollectionData(Result);
+            BuildResult(Result);
+            string folder = Path.GetDirectoryName(dialog.FileName);
+            if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
+            {
+                _ = File.WriteAllTextAsync(dialog.FileName, Result.ToString());
+            }
+            string cacheFolder = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Saves\Entity\";
+            Directory.CreateDirectory(cacheFolder);
+            _ = File.WriteAllTextAsync(cacheFolder + Path.GetFileName(dialog.FileName), Result.ToString());
         }
-
-        /// <summary>
-        /// 加入专属数据
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SpecialTagsPanelLoaded(object sender, RoutedEventArgs e)
-        {
-            TabControl tabControl = sender as TabControl;
-            foreach (TabItem item in tabControl.Items)
-                item.DataContext = this;
-            SpecialViewer = (tabControl.Items[0] as TabItem).Content as VectorScrollViewer;
-            if (SpecialViewer.Content is Grid grid && grid.Children.Count == 0)
-                SpecialViewer.Content = CacheGrid;
-        }
-
-        /// <summary>
-        /// 切换专属或共通标签顶级页面
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void TagsTab_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            TabControl tabControl = sender as TabControl;
-            if (tabControl.SelectedItem is not VectorTextTabItem textTabItem) return;
-            string currentUID = textTabItem.Uid;
-            VectorScrollViewer tabContent = textTabItem.Content as VectorScrollViewer;
-            Grid subGrid = tabContent.Content as Grid;
-            if (subGrid.Children.Count > 0) return;
-            Grid newGrid = new();
-            newGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
-            newGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-            //分辨当前是实体、生物还是活体,都不是则为其它共通标签
-            bool IsSubContainer = tabControl.SelectedIndex > 5;
-            //检查实体、活体、生物三大共通标签是否都被添加
-            List<string> AddedCommonTags = [];
-            for (int i = 0; i < subGrid.Children.Count; i++)
-            {
-                FrameworkElement frameworkElement = subGrid.Children[i] as FrameworkElement;
-                if (frameworkElement.Tag is NBTDataStructure dataStructure && !AddedCommonTags.Contains(dataStructure.NBTGroup))
-                    AddedCommonTags.Add(dataStructure.NBTGroup);
-            }
-            if ((currentUID == "string" || currentUID == "number" || currentUID == "boolean" || currentUID == "list" || currentUID == "compound") && AddedCommonTags.Count >= 3)
-            {
-                return;
-            }
-
-            #region 搜索当前实体ID对应的JSON对象
-            string data = File.ReadAllText(SpecialNBTStructureFilePath);
-            JArray array = JArray.Parse(data);
-            JToken targetObj = array.First(item =>
-            {
-                return item["Type"].ToString() == SelectedEntityId.Text;
-            });
-            string type = targetObj["Type"].ToString();
-            string commonTagData = targetObj["Data"].ToString();
-            JArray commonTagArray = JArray.Parse(commonTagData);
-            #endregion
-
-
-            #region 处理共通标签
-            if(IsSubContainer)
-            {
-                UpdateSpecialNBTPage(commonTagArray, null);
-            }
-            #endregion
-        }
-
-        [RelayCommand]
-        /// <summary>
-        /// 反选所有bool型NBT
-        /// </summary>
-        /// <param name="ele"></param>
-        private void ReverseAllBoolNBTs(FrameworkElement ele)
-        {
-            VectorRichExpander accordion = ele as VectorRichExpander;
-            VectorScrollViewer scrollViewer = accordion.Content as VectorScrollViewer;
-            Grid grid = scrollViewer.Content as Grid;
-            foreach (var item in grid.Children)
-            {
-                if (item is VectorTextCheckBox)
-                {
-                    VectorTextCheckBox textCheckBoxs = item as VectorTextCheckBox;
-                    textCheckBoxs.Focus();
-                    textCheckBoxs.IsChecked = !textCheckBoxs.IsChecked.Value;
-                }
-            }
-        }
-
-        [RelayCommand]
-        /// <summary>
-        /// 全选所有bool型NBT
-        /// </summary>
-        private void SelectAllBoolNBTs(FrameworkElement ele)
-        {
-            VectorRichExpander accordion = ele as VectorRichExpander;
-            VectorScrollViewer scrollViewer = accordion.Content as VectorScrollViewer;
-            Grid grid = scrollViewer.Content as Grid;
-            foreach (var item in grid.Children)
-            {
-                if(item is VectorTextCheckBox)
-                {
-                    VectorTextCheckBox textCheckBoxs = item as VectorTextCheckBox;
-                    textCheckBoxs.Focus();
-                    textCheckBoxs.IsChecked = true;
-                }
-            }
-        }
-
-        public StringBuilder Create()
-        {
-            StringBuilder Result = new();
-            return Result;
-        }
-
-        public void CollectionData(StringBuilder Result)
-        {
-            string data = File.ReadAllText(SpecialNBTStructureFilePath);
-            JArray array = JArray.Parse(data);
-            List<JToken> result = [.. array.Where(item =>
-            {
-                JObject currentObj = item as JObject;
-                if (currentObj["Type"].ToString() == SelectedEntityId.Text)
-                    return true;
-                return false;
-            })];
-            if (result.Count == 0)
-            {
-                return;
-            }
-            JObject targetObj = result[0] as JObject;
-
-            CurrentCommonTags.Clear();
-            CurrentCommonTags = JArray.Parse(targetObj["Data"].ToString()).ToList().ConvertAll(item => item.ToString());
-        }
-
-        public void Build(StringBuilder Result)
-        {
-            Result = new((SpecialTagsResult.TryGetValue(SelectedEntityId.Text, out ObservableCollection<NBTDataStructure> value) ? string.Join(",", value.Select(item =>
-            {
-                if (item is not null && item.Result.Length > 0)
-                    return item.Result;
-                return "";
-            })) + "," : "") + string.Join(",", CommonResult.Select(item =>
-            {
-                if (CurrentCommonTags.Contains(item.NBTGroup) && item.Result.Length > 0)
-                    return item.Result;
-                else
-                    return "";
-            })));
-            if (Result.Length > 0 && (Result[^1] == ' ' || Result[^1] == ','))
-            {
-                Result.Length--;
-            }
-
-            if (UseForTool)
-            {
-                Result = new("{id:\"minecraft:" + SelectedEntityId.Text + "\"" + (Result is not null && Result.Length > 0 ? "," + Result : "") + "}");
-                EntityView entity = Window.GetWindow(currentEntityPage) as EntityView;
-                entity.DialogResult = true;
-                return;
-            }
-
-            if (!Give)
-            {
-                if (CurrentMinVersion < 1130 && HaveCustomName)
-                    Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""Right Click To Run\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""newGrid\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""" + (Result.Length > 0 ? "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~") + @"\\\""}\""}}""}}");
-                else
-                    Result = new(Result.ToString().Trim() != "" ? "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~ {" + Result + "}" : "summon minecraft:" + SelectedEntityId.Text + " ~ ~ ~");
-            }
-            else
-            {
-                if (CurrentMinVersion < 1130)
-                {
-                    if (!HaveCustomName)
-                    {
-                        Result = new("give @p minecraft:spawner_egg 1 0 {EntityTag:{id:\"minecraft:" + SelectedEntityId.Text + "\" " + (Result.Length > 0 ? "," + Result : "") + "}}");
-                    }
-                    else
-                    {
-                        Result = new(@"give @p minecraft:sign 1 0 {BlockEntityTag:{Text1:""{\""text\"":\""Right Click To Run\"",\""clickEvent\"":{\""action\"":\""run_command\"",\""newGrid\"":\""/setblock ~ ~ ~ minecraft:command_block 0 replace {Command:\\\""give @p minecraft:spawner_egg 1 0 {EntityTag:{id:""minecraft:" + SelectedEntityId.Text + "\" " + (Result.Length > 0 ? "," + Result : "") + @"}}\\\""}\""}}""}}");
-                    }
-                }
-                else
-                    Result = new("give @p minecraft:pig_spawner_egg{EntityTag:{id:\"minecraft:" + SelectedEntityId.Text + "\"" + (Result.Length > 0 ? "," + Result : "") + "}} 1");
-            }
-
-            if (SyncToFile && ExternFilePath.Length > 0 && File.Exists(ExternFilePath))
-            {
-                File.WriteAllText(ExternFilePath, Result.ToString());
-            }
-        }
+        #endregion
         #endregion
     }
 }
