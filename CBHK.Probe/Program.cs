@@ -19,6 +19,14 @@ namespace CBHK.Probe
                     ? args[1]
                     : System.IO.Path.Combine(System.IO.Path.GetTempPath(), "mcdoc-trace.log"));
             }
+            if (args.Length >= 2 && args[0] == "--perf" && args[1] == "item")
+            {
+                return Perf.Item();
+            }
+            if (args.Length >= 1 && args[0] == "--render")
+            {
+                return Render.Rows(args.Length >= 2 ? args[1] : null);
+            }
             var mode = args.Length >= 2 ? args[0] + " " + args[1] : "";
             try
             {
@@ -116,6 +124,9 @@ namespace CBHK.Probe
                     "--case map-entry-has-no-list-item-commands" => Gates.MapEntryHasNoListItemCommands(),
                     "--case perf-stages" => Gates.PerfStages(),
                     "--case number-step-quiet" => Gates.NumberStepQuiet(),
+                    "--case item-custom-tag-entry" => Gates.ItemCustomTagEntry(),
+                    "--case external-command-parser" => Gates.ExternalCommandParser(),
+                    "--case resource-dispatcher-keys" => Gates.ResourceDispatcherKeys(),
                     _ => Usage()
                 };
             }

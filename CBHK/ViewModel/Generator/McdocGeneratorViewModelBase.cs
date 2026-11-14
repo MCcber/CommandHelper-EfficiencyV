@@ -125,11 +125,14 @@ namespace CBHK.ViewModel.Generator
         /// <summary>dispatcher 入口名（如 advancement / dimension_type / loot_table）。</summary>
         public string EntryId { get; private set; }
 
+        /// <summary>没选过版本时的兜底（与旧默认一致）。</summary>
+        private const string DefaultGameVersion = "1.20.5";
+
         /// <summary>
-        /// #[since]/#[until] 过滤用的游戏版本（McdocAttributeRegistry 在每次 Load 时按它重建）。
-        /// 改动后调用 LoadMcdocTree 生效；页面暂时都固定 1.21。
+        /// 当前版本名：**唯一状态是 <see cref="SelectedGameVersionOption"/>**，这里只是它的投影。
+        /// #[since]/#[until] 过滤、pack_format 默认值、注册表取数都按它走；换版本只走下拉 setter。
         /// </summary>
-        protected string GameVersion { get; set; } = "1.20.5";
+        private string SelectedGameVersionName => SelectedGameVersionOption?.Name ?? DefaultGameVersion;
 
         /// <summary>页面 chrome 的版本下拉候选（运行数据里实际可用的注册表版本，倒序）。</summary>
         public ObservableCollection<EnumMember> GameVersionOptions { get; } = [];
@@ -140,16 +143,16 @@ namespace CBHK.ViewModel.Generator
 
         #region Method
         /// <summary>
-        /// 换版本：重建会话（McdocAttributeRegistry 与 pack_format 默认值都按 GameVersion 走），
+        /// 换版本：重建会话（McdocAttributeRegistry 与 pack_format 默认值都按下拉选中项走），
         /// 再用同一份 JSON 重新建树 —— misode 切版本时也不重置用户文档。
         /// </summary>
         private void ApplyGameVersion(string version)
         {
-            if (string.IsNullOrWhiteSpace(version) || string.Equals(version, GameVersion, StringComparison.Ordinal))
+            // 同一版本不重建：判据是**文档现在用的版本**（版本状态只存在下拉选中项里）
+            if (string.IsNullOrWhiteSpace(version) || string.Equals(version, document?.GameVersion, StringComparison.Ordinal))
             {
                 return;
             }
-            GameVersion = version;
             var text = JsonText;
             CreateDocument();
             if (string.IsNullOrWhiteSpace(text))
@@ -188,13 +191,14 @@ namespace CBHK.ViewModel.Generator
             }
             versions.Sort((left, right) => Version.Parse(right).CompareTo(Version.Parse(left)));
             // 默认版本跟注册表走：写死 1.21 会把 #[since="1.21.x"] 的字段静默隐掉（页面看起来"少字段"）
-            if (versions.Count > 0 && !versions.Contains(GameVersion))
+            var desired = SelectedGameVersionOption?.Name;
+            if (versions.Count > 0 && (string.IsNullOrEmpty(desired) || !versions.Contains(desired)))
             {
-                GameVersion = versions[0];
+                desired = versions[0];
             }
-            if (!versions.Contains(GameVersion))
+            if (!string.IsNullOrEmpty(desired) && !versions.Contains(desired))
             {
-                versions.Insert(0, GameVersion);
+                versions.Insert(0, desired);
             }
             foreach (var version in versions)
             {
@@ -204,8 +208,33 @@ namespace CBHK.ViewModel.Generator
                     Value = new MetaValue { LiteralValue = version },
                 });
             }
-            // 走属性：赋值时 GameVersion 还没变，OnSelectedGameVersionOptionChanged 会按"同版本"直接返回
-            SelectedGameVersionOption = GameVersionOptions.FirstOrDefault(item => item.Name == GameVersion);
+            // 直接落字段 + 手工通知：建树期（document 还是 null）走属性会触发一次多余的重建
+            selectedGameVersionOption = GameVersionOptions.FirstOrDefault(item => item.Name == desired);
+            OnPropertyChanged(nameof(SelectedGameVersionOption));
+            // ItemsSource 走 EnumMemberToTextComboBoxItemConverter，它给的是一份快照集合；
+            // 集合填充如果晚于绑定求值，下拉会是空的 —— 这里补一次通知，让转换器重跑
+            OnPropertyChanged(nameof(GameVersionOptions));
+        }
+
+        /// <summary>
+        /// 把版本落到下拉选中项上（唯一状态），**不触发重建**：调用方随后自己 CreateDocument。
+        /// 候选里没有这个版本时补一个，保证下拉不空。
+        /// </summary>
+        private void AdoptGameVersion(string version)
+        {
+            if (string.IsNullOrWhiteSpace(version)) return;
+            if (!GameVersionOptions.Any(option => string.Equals(option?.Name, version, StringComparison.Ordinal)))
+            {
+                GameVersionOptions.Insert(0, new EnumMember
+                {
+                    Name = version,
+                    Value = new MetaValue { LiteralValue = version },
+                });
+            }
+            var option = GameVersionOptions.FirstOrDefault(item => string.Equals(item?.Name, version, StringComparison.Ordinal));
+            if (ReferenceEquals(option, selectedGameVersionOption)) return;
+            selectedGameVersionOption = option;
+            OnPropertyChanged(nameof(SelectedGameVersionOption));
         }
 
         /// <summary>
@@ -1034,7 +1063,7 @@ namespace CBHK.ViewModel.Generator
             // 折叠状态是页面级静态表：换入口必须清掉，否则上一个页面的展开状态会串过来
             McdocExpandState.BeginSession(EntryId, this);
             FillGameVersionOptions();
-            if (!string.IsNullOrWhiteSpace(gameVersion)) GameVersion = gameVersion;
+            AdoptGameVersion(gameVersion);
             if (json is not null)
             {
                 // 构造期直接灌数据：不读入口配置，按当前 root 求值这一份 JSON
@@ -1095,20 +1124,8 @@ namespace CBHK.ViewModel.Generator
             // XAML 的版本下拉会在 Clear/Repopulate 期间连续触发 SelectionChanged，
             // 页面侧会跟着清实体列表，表现就是启动/切换时"假死"。
             if (GameVersionOptions.Count == 0) FillGameVersionOptions();
-            if (!string.IsNullOrWhiteSpace(gameVersion))
-            {
-                GameVersion = gameVersion;
-                if (!GameVersionOptions.Any(option => option.Name == gameVersion))
-                {
-                    GameVersionOptions.Insert(0, new EnumMember
-                    {
-                        Name = gameVersion,
-                        Value = new MetaValue { LiteralValue = gameVersion },
-                    });
-                }
-                // GameVersion 已经是目标值，setter 里的 ApplyGameVersion 会按同版本直接返回
-                SelectedGameVersionOption = GameVersionOptions.FirstOrDefault(option => option.Name == gameVersion);
-            }
+            // 版本只是"选中项"，这里落值不触发重建（紧接着就会 CreateDocument + Load）
+            AdoptGameVersion(gameVersion);
             McdocExpandState.BeginSession(EntryId, this);
             CreateDocument();
             if (json is not null)
@@ -1126,7 +1143,7 @@ namespace CBHK.ViewModel.Generator
         {
             document = new McdocTreeDocument(sessionSymbols ?? resource.McdocTypes)
             {
-                GameVersion = GameVersion,
+                GameVersion = SelectedGameVersionName,
                 DocumentUri = "file:///generator/" + EntryId + ".json",
                 RegistryOptions = new MdocRegistryOptions(resource),
             };
@@ -1135,13 +1152,13 @@ namespace CBHK.ViewModel.Generator
             projector.RequestReload = ReloadKeepingEditor;
             // BlockState 资产 → mcdoc:block_states 调度器成员：schema 自带 [[block]] 索引，这里只提供成员表。
             // 换版本会重新走 CreateDocument，所以注册一次即可按版本刷新。
-            McdocBlockStates.Register(sessionSymbols ?? resource.McdocTypes, GameVersion);
+            McdocBlockStates.Register(sessionSymbols ?? resource.McdocTypes, SelectedGameVersionName);
             // 数据没就绪就建的文档：必选判别键只能落成空串，等数据到位要按同一份来源重来一次
             if (!IsRuntimeReady()) needsRuntimeRefresh = true;
             // 日志第一行就暴露"跑的是哪一版"：VS 调试用的是启动那一刻装进内存的 DLL，重新生成不会换掉它，
             // 没有这行标记，就分不清"代码没生效"和"跑的是旧进程"。
             McdocWriteTrace.Trace("mcdoc-build", "marker=" + McdocWriteTrace.BuildMarker
-                + " entry=" + EntryId + " version=" + GameVersion);
+                + " entry=" + EntryId + " version=" + SelectedGameVersionName);
             // 同步时序只有一份实现（McdocPipeline），探针跑的也是它：探针自己抄一份的话，绿了也说明不了界面绿
             pipeline = new McdocPipeline
             {

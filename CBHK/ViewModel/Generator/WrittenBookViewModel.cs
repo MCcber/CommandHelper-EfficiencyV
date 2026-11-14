@@ -181,11 +181,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         [ObservableProperty]
         private Visibility leftArrowVisibility = Visibility.Collapsed;
-        /// <summary>
-        /// 是否显示右箭头
-        /// </summary>
-        [ObservableProperty]
-        private Visibility rightArrowVisibility = Visibility.Visible;
+
         /// <summary>
         /// 显示结果
         /// </summary>
@@ -218,13 +214,10 @@ namespace CBHK.ViewModel.Generator
         {
             MaxPage = WrittenBookPages.Count;
             PageData = "页面 ：" + (CurrentPageIndex + 1).ToString() + "/" + MaxPage.ToString();
+            LeftArrowVisibility = Visibility.Collapsed;
             if (CurrentPageIndex > 0)
             {
                 LeftArrowVisibility = Visibility.Visible;
-            }
-            else
-            {
-                RightArrowVisibility = Visibility.Collapsed;
             }
         }
 
@@ -451,6 +444,15 @@ namespace CBHK.ViewModel.Generator
                     CurrentPageIndex = JumpSpecificPageNumber - 1;
                     UpdatePageViewDisplay();
                 }
+                else if (JumpSpecificPageNumber < 1)
+                {
+                    JumpSpecificPageNumber = 1;
+                }
+                if (JumpSpecificPageNumber <= 1)
+                {
+                    LeftArrowVisibility = Visibility.Collapsed;
+                }
+                CurrentPageIndex = JumpSpecificPageNumber - 1;
             }
         }
 
@@ -1121,9 +1123,12 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void LeftArrowMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            --CurrentPageIndex;
+            if (CurrentPageIndex > 0)
+            {
+                --CurrentPageIndex;
+                WrittenBookEditor.Document = WrittenBookPages[CurrentPageIndex];
+            }
             UpdatePageViewDisplay();
-            WrittenBookEditor.Document = WrittenBookPages[CurrentPageIndex];
         }
 
         /// <summary>

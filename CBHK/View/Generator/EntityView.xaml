@@ -52,7 +52,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="35" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0">
@@ -121,7 +121,7 @@
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="清空" />
             <VectorButton:VectorTextButton
-                MinWidth="50"
+                MinWidth="100"
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
                 Command="{Binding ImportEntityFromClipboardCommand}"
@@ -130,7 +130,7 @@
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从剪切板导入" />
             <VectorButton:VectorTextButton
-                MinWidth="80"
+                MinWidth="100"
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
                 Command="{Binding ImportEntityFromFileCommand}"

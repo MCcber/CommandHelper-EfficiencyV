@@ -50,6 +50,16 @@ namespace CBHK.Utility.Data.Mcdoc
         public static McdocJsonValue Resolve(McdocType declared, McdocRuntime runtime, McdocValueNode node = null)
         {
             var options = Options(runtime);
+            // 声明**本身就是 any**：新值取 AnyHead 的首分支（Boolean → false），与下拉首项一致。
+            // 只认"真的写着 any"的声明：① 不认下面"解不开退化成的 any"（那条兜底必须留 {}，
+            // 否则会把 false 写进结构槽）；② 被 Mapped / Reference / Concrete 包着的 any 也进不来
+            // （这里判的是外壳 Kind，有意保守——外壳里是结构还是 any 只有求值后才知道）。
+            // 新键 / ⊕ / 列表新项都走这里，口径只此一处。
+            if (declared?.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe)
+            {
+                var branch = McdocHelpers.AnyTypeOf(McdocHelpers.AnyBranchNames[0]);
+                if (branch is not null) return McdocHelpers.GetDefault(branch, options);
+            }
             var resolved = McdocHelpers.GetDefault(ResolveType(declared, runtime, node), options);
             // GetDefault 对"空联合 / 空枚举 / 没解出的指令"回的是 JsonValue.Null（不是 C# null，所以 ?? 拦不住）：
             // 那东西不是文档值，写进页面就是整份文档变成 null（"载入后没有内容"），

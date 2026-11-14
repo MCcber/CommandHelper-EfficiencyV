@@ -68,7 +68,7 @@
                 IsReadOnly="True"
                 ItemsSource="{Binding GameVersionOptions, Converter={StaticResource McdocChromeComboConverter}}"
                 SelectedIndex="0"
-                SelectedItem="{Binding GameVersion, Mode=TwoWay, Converter={StaticResource McdocChromeComboConverter}}"
+                SelectedItem="{Binding SelectedGameVersionOption, Mode=TwoWay, Converter={StaticResource McdocChromeComboConverter}}"
                 Style="{DynamicResource VectorTextComboBoxStyle}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="SelectionChanged">

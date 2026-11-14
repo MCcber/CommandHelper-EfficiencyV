@@ -209,7 +209,7 @@ namespace CBHK.Utility.Data.Mcdoc
             // 只有一个出口：必选字段由代数递归带上，不许按类型写"struct 就给空对象"
             var inserted = McdocDefaults.Resolve(row.DeclaredType, runtime, self);
             row.Error = McdocDefaults.IsUnresolved(row.DeclaredType, runtime, self)
-                ? "该键的值类型没解出来（已按 any 生成空结构）"
+                ? "该键的值类型没解出来（已按 any 的首分支生成默认值）"
                 : null;
             // 追加位置：紧跟"同一个动态字段的最后一个已有键"之后（该字段还没键时追加到末尾）。
             var insertIndex = EntryInsertIndex(mapNode, row, map);
@@ -354,6 +354,16 @@ namespace CBHK.Utility.Data.Mcdoc
         public void ApplyEmptyValue(McdocTreeNode node)
         {
             if (node is null) return;
+            // map 条目：清空 = **只把键从文档里去掉，行留在树上**（README「条目的（未设置）」）。
+            // 走 RemoveField 会连整棵子树一起断掉 —— 用户看到的是"清个值，行直接没了"。
+            if (node.IsMapEntry && !node.IsRequired && node.Json is not null
+                && node.RemoveEntryCommand?.CanExecute(null) == true)
+            {
+                UnsetEntryValue(node);
+                // UnsetEntryValue 按设计不发通知（父级重建会把这一行冲掉）：这里清完镜像后只发一次
+                node.RaiseValueChanged();
+                return;
+            }
             if (!node.IsRequired && node.Json is not null && node.RemoveFieldCommand?.CanExecute(null) == true)
             {
                 node.RemoveFieldCommand.Execute(null);
@@ -365,6 +375,10 @@ namespace CBHK.Utility.Data.Mcdoc
         private static McdocJsonValue ReadEditedValue(McdocTreeNode node)
         {
             if (node?.Head is not { } head) return null;
+            // any 行（AnyHead）：值控件是按 SelectedAnyType 换的，写回也必须按同一个类型出口。
+            // 以前这条一律落到 Raw 分支 return null → ApplyEmptyValue → RemoveField，
+            // 表现就是"选中 string 后敲第一个字符，键从 JSON 里消失、行也没了"。
+            if (node.Type?.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe) return ReadAnyValue(node);
             // 下拉里选中（未设置）= unset（走 ApplyEmptyValue 删键），与这一行用的是 Enum 还是
             // "#[id] 只有下拉"的 Text 变体无关。union 行不算：它的（未设置）在分支下拉里。
             if (node.Type?.Kind != McdocTypeKind.Union
@@ -397,6 +411,25 @@ namespace CBHK.Utility.Data.Mcdoc
                     : McdocJsonValue.String(Convert.ToString(node.Value)),
                 // Raw 编辑器自己解析成 Json 了；None / InlineTuple 没有行内值（子项各走各的行）
                 _ => null,
+            };
+        }
+
+        /// <summary>
+        /// any 行的值出口，与 AnyHead 的控件一一对应：string→文本、double→数字、boolean→False/True。
+        /// list / struct / 认不出的形状这一行**没有行内值**（值在子行里、或已由 RawJson 写在 node.Json 上）——
+        /// 返回**当前值**让写回幂等；返回 null 会被 ApplyEmptyValue 当成 unset，把键删掉。
+        /// 哨兵（未设置）仍然返回 null：那才是"这个键不存在"。
+        /// </summary>
+        private static McdocJsonValue ReadAnyValue(McdocTreeNode node)
+        {
+            if (McdocUnionSwitch.IsUnsetOption(node.SelectedAnyType)) return null;
+            // 只看稳定键（显示名是大写的 Boolean/String…，不能拿它当判据）
+            return node.AnyTypeKey switch
+            {
+                "string" => McdocJsonValue.String(System.Convert.ToString(node.Value) ?? ""),
+                "double" => ToNumber(node.Value),
+                "boolean" => McdocJsonValue.Boolean(node.IsTrue),
+                _ => node.Json,
             };
         }
 
@@ -774,7 +807,10 @@ namespace CBHK.Utility.Data.Mcdoc
             if (node?.Type is null || node.Type.Kind == McdocTypeKind.Tuple) return;
             if (EnsureContainer(node, McdocJsonKind.Array) is not { Kind: McdocJsonKind.Array } array) return;
             if (node.Type?.LengthRange is { Max: { } max } && (array.Items?.Count ?? 0) >= max) return;
-            var itemType = McdocHelpers.GetItemType(ItemOwnerType(node));
+            // any 行的 list 分支：元素类型就是 any（GetItemType 的 default 已经是 any，这里只把语义写清）
+            var itemType = node.Type.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe
+                ? McdocType.Any()
+                : McdocHelpers.GetItemType(ItemOwnerType(node));
             var value = McdocDefaults.Resolve(itemType, runtime);
             array.Items ??= [];
             if (atTop) array.Items.Insert(0, value); else array.Items.Add(value);

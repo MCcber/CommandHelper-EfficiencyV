@@ -26,6 +26,18 @@ namespace CBHK.Utility.Data.Mcdoc
         public override bool IsListLikeFor(McdocTreeNode node)
             => node?.Json?.Kind == McdocJsonKind.Array;
 
+        /// <summary>
+        /// list 形态的 any：行上必须有 ⊕（加一项）——不然"选了 List 之后一行按钮都没有"。
+        /// 值的形状就是分支本身，any 没有 #[length] 约束，不设上限。
+        /// </summary>
+        public override McdocNodeHead Describe(McdocTreeNode node)
+        {
+            var head = base.Describe(node);
+            return node?.Json?.Kind == McdocJsonKind.Array
+                ? head.With(canAddTop: true, canAddBottom: true)
+                : head;
+        }
+
         /// <summary>数组形态的 any：子行就是数组项（list Body 把它们挂在 Items 上）。</summary>
         public override IReadOnlyList<McdocTreeNode> Children(McdocTreeNode node)
             => node.Items.Count > 0 ? node.Items : node.Children;
@@ -87,18 +99,24 @@ namespace CBHK.Utility.Data.Mcdoc
                 or McdocTypeKind.Reference
                 or McdocTypeKind.Mapped or McdocTypeKind.Concrete or McdocTypeKind.Template or McdocTypeKind.Indexed;
 
-        /// <summary>misode ANY_TYPES：boolean / double / string / list / struct（可选再加 unset）。</summary>
+        /// <summary>
+        /// misode ANY_TYPES（顺序见 <see cref="McdocHelpers.AnyBranchNames"/>）：可选再加 unset。
+        /// 显示名首字母大写（Boolean…），稳定键（LiteralValue）保持小写 —— 判据只认稳定键。
+        /// </summary>
         private static void FillAnyTypeOptions(McdocTreeNode node, McdocJsonValue json)
         {
-            string[] names = ["boolean", "double", "string", "list", "struct"];
             var options = new ObservableCollection<EnumMember>();
             if (!node.IsRequired || json is null)
             {
                 options.Add(new EnumMember { Name = UnsetLabel, Value = new MetaValue { LiteralValue = -1 } });
             }
-            foreach (var name in names)
+            foreach (var key in McdocHelpers.AnyBranchNames)
             {
-                options.Add(new EnumMember { Name = name, Value = new MetaValue { LiteralValue = name } });
+                options.Add(new EnumMember
+                {
+                    Name = McdocHelpers.AnyBranchLabel(key),
+                    Value = new MetaValue { LiteralValue = key }
+                });
             }
             node.AnyTypeOptions = options;
             var current = json?.Kind switch
@@ -110,7 +128,11 @@ namespace CBHK.Utility.Data.Mcdoc
                 McdocJsonKind.Object => "struct",
                 _ => null,
             };
-            node.SetAnyTypeSilently(options.FirstOrDefault(option => option.Name == current));
+            var selected = options.FirstOrDefault(
+                option => string.Equals(McdocHelpers.AnyBranchKey(Convert.ToString(option.Value?.LiteralValue)), current, StringComparison.Ordinal));
+            // 没有值（json 为 null）或形状认不出：落到哨兵（没有哨兵就是首项）——
+            // 否则下拉是空白，行上既看不到（未设置）也看不到类型，用户不知道这一行现在是什么
+            node.SetAnyTypeSilently(selected ?? options[0]);
         }
 
         public override McdocNodeHead Describe(McdocTreeNode node)
@@ -119,7 +141,11 @@ namespace CBHK.Utility.Data.Mcdoc
             var mirrored = MirroredEditorKind(node);
             return new McdocNodeHead
             {
-                Label = node.FieldName,
+                // 动态键的占位行没有字段名（FieldName 为空）：标签取父级给它的显示名（Key，如 "Custom Data"），
+                // 否则整行只有输入框，用户不知道这一格是干什么的
+                Label = node.IsDynamicKey && node.Json is null && !string.IsNullOrEmpty(node.Key)
+                    ? node.Key
+                    : node.FieldName,
                 Documentation = node.Desc,
                 RowKind = RowKindFor(node),
                 EditorKind = mirrored == McdocEditorKind.None ? EditorKindFor(node.Type, node.UseSelect) : mirrored,
@@ -343,6 +369,7 @@ namespace CBHK.Utility.Data.Mcdoc
             child.IsRequired = !field.Optional;
             // 可选字段的下拉第 0 项要有（未设置）：选中即删键。顺序是硬约束（IsRequired 落定之后）
             McdocSelectOptions.EnsureUnsetOption(child);
+            child.EnsureAnyUnsetOption();
             child.Desc = field.Desc ?? "";
             if (!string.IsNullOrEmpty(child.Desc)) child.Key = child.Desc;
             // misode：必填字段缺键 → missing key 错误指示
@@ -352,6 +379,9 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             return child;
         }
+
+        /// <summary>取值是 any 的动态键（自定义数据 map）在占位行上的显示名：只是名字，不进文档。</summary>
+        private const string CustomDataLabel = "Custom Data";
 
         /// <summary>动态字段的「新键」占位行：只负责起键（键输入 + 候选 + ⊕）。</summary>
         private static McdocTreeNode BuildDynamicPlaceholder(McdocTreeNode container, McdocStructField field, int index,
@@ -380,6 +410,14 @@ namespace CBHK.Utility.Data.Mcdoc
                     ? "新键（" + spec.Prefix + " 前缀）"
                     : "新键（" + spec.Registry + "）";
             }
+            // 取值是 any 的动态键（[string]: any 这类"自定义数据"map）：给这一行一个能看懂的名字。
+            // 名字走 Key（纯标签），Desc 给一句真说明（否则标签被当成"有文档"，点开只有个标题）。
+            // 两者都只写节点字段，**绝不当键写进 JSON**（JsonPath / 导出都不受影响）。
+            else if (valueType?.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe)
+            {
+                placeholder.Key = CustomDataLabel;
+                placeholder.Desc = "自定义数据：随物品一起保存的任意 NBT 标签（键名与值都会写进物品 NBT）";
+            }
             McdocSelectOptions.ApplyKeyOptions(placeholder, keyType, context.Runtime,
                 (json?.Properties ?? []).Select(pair => pair.Key).ToList());
             placeholder.AddEntryCommand = new McdocCommand(
@@ -401,6 +439,8 @@ namespace CBHK.Utility.Data.Mcdoc
             var child = context.Child(key, UnwrapDynamicFieldValueType(field), value, itemKeyNode,
                 context.Depth + 1, context.JsonPath + "." + key, deferChildren: value is null);
             child.IsRequired = false;
+            // 可选性定稿之后才补 any 的（未设置）哨兵（建树期父级还没写 IsRequired）
+            child.EnsureAnyUnsetOption();
             child.IsDynamicKey = false;
             child.IsMapEntry = true;
             child.EditingKey = key;

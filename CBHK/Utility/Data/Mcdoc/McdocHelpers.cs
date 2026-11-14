@@ -36,8 +36,22 @@ namespace CBHK.Utility.Data.Mcdoc
         ];
 
         /// <summary>版本 → 数据包格式；未知版本按最近的下界回退，再不行用 48。</summary>
-        /// <summary>misode ANY_TYPES：AnyHead 类型下拉的五个候选。</summary>
-        public static McdocType AnyTypeOf(string name) => name switch
+        /// <summary>
+        /// misode ANY_TYPES 的分支顺序：**首项就是"新建 any 值"的默认分支**（Boolean），
+        /// 也是 AnyHead 下拉的显示顺序。显示名首字母大写，稳定键（LiteralValue）一律小写。
+        /// </summary>
+        public static readonly string[] AnyBranchNames = ["boolean", "double", "string", "list", "struct"];
+
+        /// <summary>AnyHead 分支的显示名：稳定键 → 首字母大写（Boolean / Double / String / List / Struct）。</summary>
+        public static string AnyBranchLabel(string key)
+            => string.IsNullOrEmpty(key) ? key : char.ToUpperInvariant(key[0]) + key.Substring(1);
+
+        /// <summary>AnyHead 分支的稳定键（小写）：下拉里选中的那一项 → 语义键。判据一律走它，别用显示名。</summary>
+        public static string AnyBranchKey(string nameOrKey)
+            => string.IsNullOrEmpty(nameOrKey) ? null : nameOrKey.Trim().ToLowerInvariant();
+
+        /// <summary>misode ANY_TYPES：AnyHead 类型下拉的五个候选（大小写不敏感，按稳定键解释）。</summary>
+        public static McdocType AnyTypeOf(string name) => AnyBranchKey(name) switch
         {
             "boolean" => McdocType.Create(McdocTypeKind.Boolean),
             "double" => McdocType.Create(McdocTypeKind.Double),

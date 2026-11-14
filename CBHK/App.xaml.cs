@@ -1,7 +1,6 @@
 using CBHK.Domain;
 using CBHK.Model.Constant;
 using CBHK.ViewModel.Generator;
-using CBHK.Utility.Common;
 using CBHK.Utility.Data;
 using CBHK.View;
 using DryIoc;
@@ -18,6 +17,7 @@ using System.Threading;
 using System.Windows;
 using CBHK.View.Component.Villager.Control;
 using CBHK.ViewModel.Component.Villager.Control;
+using CBHK.ViewModel.Component.Recipe.Strategy;
 
 namespace CBHK
 {
@@ -42,8 +42,6 @@ namespace CBHK
         /// <returns></returns>
         protected override Window CreateShell()
         {
-            ExternalDataImportManager.Init();
-
             return Container.Resolve<MainView>();
         }
 
@@ -60,7 +58,7 @@ namespace CBHK
                 MessageBox.Show("CommandHelper-EfficiencyV is already Running!", "CommandHelper-EfficiencyV", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 var currentProcess = Process.GetCurrentProcess();
-                var processes = Process.GetProcessesByName(currentProcess.ProcessName);
+                _ = Process.GetProcessesByName(currentProcess.ProcessName);
                 Current.Shutdown();
             }
 
@@ -88,6 +86,8 @@ namespace CBHK
             containerRegistry.RegisterSingleton<DataService>();
             containerRegistry.RegisterSingleton<RegexService>();
             containerRegistry.RegisterSingleton<DisplayerView>();
+            containerRegistry.RegisterSingleton<RecipeStrategyRegistry>(() => RecipeStrategyRegistry.Create());
+            containerRegistry.RegisterSingleton<SlotDropStrategyRegistry>(() => SlotDropStrategyRegistry.Create());
             containerRegistry.Register<MCDocumentMetaTypeDTOHelper>();
             containerRegistry.Register<MetaTypeDTOValidator>();
 

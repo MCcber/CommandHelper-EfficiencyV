@@ -209,41 +209,10 @@
     <Resource Include="Resource\Common\Image\Attribute.png" />
     <Resource Include="Resource\Common\Image\BlackEdit.png" />
     <Resource Include="Resource\Common\Image\Boots.png" />
-    <Resource Include="Resource\Common\Image\ButtonFrame.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resource\Common\Image\ButtonLocked.png" />
-    <Resource Include="Resource\Common\Image\ButtonNormal.png" />
-    <Resource Include="Resource\Common\Image\ButtonNormalBottom.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\ButtonNormalLeft.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\ButtonNormalRight.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\ButtonNormalTop.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\ButtonPressed.png" />
-    <Resource Include="Resource\Common\Image\ButtonPressedBottom.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\ButtonPressedLeft.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\ButtonPressedRight.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\ButtonPressedTop.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\CheckboxChecked.png" />
-    <Resource Include="Resource\Common\Image\CheckboxEmpty.png" />
     <Resource Include="Resource\Common\Image\Chestplate.png" />
     <Resource Include="Resource\Common\Image\ColorPicker.png" />
-    <Resource Include="Resource\Common\Image\ContentBox.png" />
     <Resource Include="Resource\Common\Image\Copy.png" />
     <Resource Include="Resource\Common\Image\CopyAll.png" />
     <Resource Include="Resource\Common\Image\Cut.png" />
@@ -275,25 +244,9 @@
     <Resource Include="Resource\Common\Image\Open2.png" />
     <Resource Include="Resource\Common\Image\OpenTerminal.png" />
     <Resource Include="Resource\Common\Image\Paste.png" />
-    <Resource Include="Resource\Common\Image\RadiusToggleButtonOff.png" />
-    <Resource Include="Resource\Common\Image\RadiusToggleButtonOffLocked.png" />
-    <Resource Include="Resource\Common\Image\RadiusToggleButtonOn.png" />
-    <Resource Include="Resource\Common\Image\RadiusToggleButtonOnLocked.png" />
     <Resource Include="Resource\Common\Image\Revoke.png" />
     <Resource Include="Resource\Common\Image\Save.png" />
     <Resource Include="Resource\Common\Image\SaveAs.png" />
-    <Resource Include="Resource\Common\Image\SelectedTabItemLeft.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\SelectedTabItemRight.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\SelectedTabItemTop.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\SliderBar.png" />
-    <Resource Include="Resource\Common\Image\SliderButton.png" />
-    <Resource Include="Resource\Common\Image\SliderButtonLocked.png" />
     <Resource Include="Resource\Common\Image\Slot.png" />
     <Resource Include="Resource\Common\Image\SmithingTemplate.png" />
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconAdvancement.png" />
@@ -306,59 +259,11 @@
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconVillager.png" />
     <Resource Include="Resource\Common\Image\spyglass_scope.png" />
     <Resource Include="Resource\Common\Image\Submit.png" />
-    <Resource Include="Resource\Common\Image\TabItemLeft.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TabItemRight.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TabItemTop.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TextEditBox.png" />
-    <Resource Include="Resource\Common\Image\TextToggleButtonFalseBottomFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TextToggleButtonFalseFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TextToggleButtonFalseLeftFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TextToggleButtonFalseRightFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TextToggleButtonFalseTopFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TextToggleButtonLocked.png" />
-    <Resource Include="Resource\Common\Image\TextToggleButtonNormal.png" />
-    <Resource Include="Resource\Common\Image\TextToggleButtonPressed.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resource\Common\Image\Switch.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resource\Common\Image\AccordionArrow.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resource\Common\Image\Close.png" />
-    <Resource Include="Resource\Common\Image\CloseHover.png" />
-    <Resource Include="Resource\Common\Image\TextToggleButtonTrueBottomFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TextToggleButtonTrueFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TextToggleButtonTrueLeftFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TextToggleButtonTrueRightFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resource\Common\Image\TextToggleButtonTrueTopFrame.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
     <Resource Include="Resource\Common\Image\TrimMaterial.png" />
     <Resource Include="Resource\Common\Image\WhiteEdit.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -367,19 +272,8 @@
     <Resource Include="Resource\Common\Image\MaxmizeHover.png" />
     <Resource Include="Resource\Common\Image\Minimize.png" />
     <Resource Include="Resource\Common\Image\MinimizeHover.png" />
-    <Resource Include="Resource\Common\Image\Remove.png" />
     <Resource Include="Resource\Common\Image\Window.png" />
     <Resource Include="Resource\Common\Image\WindowHover.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resource\Common\Image\AccordionArrowHightLight.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resource\Common\Image\CloseWhite.png" />
-    <Resource Include="Resource\Common\Image\CloseWhiteHover.png" />
-    <Resource Include="Resource\Common\Image\Divide.png" />
-    <Resource Include="Resource\Common\Image\TabBack.png" />
-    <Resource Include="Resource\Common\Image\TabFront.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resource\Common\Image\TradeRightArrow.png" />
@@ -562,5 +456,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Model\Generator\Entity\" />
+    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>

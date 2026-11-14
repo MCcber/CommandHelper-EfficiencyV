@@ -1,397 +1,157 @@
-﻿using CBHK.Domain;
-using CBHK.Interface.Visual;
+using CBHK.Domain;
+using CBHK.Interface.Component.Recipe;
 using CBHK.Model.Data;
-using CBHK.Utility.Visual.MessageTip;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using CBHK.ViewModel.Component.Recipe.Strategy;
 using Newtonsoft.Json.Linq;
+using Prism.Events;
 using System;
 using System.IO;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
+using System.Text;
 using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Recipe
 {
-    public partial class SmithingTableViewModel(CBHKDataContext context) : ObservableObject, IPageViewModel
+    /// <summary>
+    /// 锻造台：模板/基础/修饰三个材料槽 + 一个结果槽
+    /// </summary>
+    public class SmithingTableViewModel : RecipeEditorViewModelBase
     {
-        #region Field
-        private CBHKDataContext context = context;
-        /// <summary>
-        /// 存储最终结果
-        /// </summary>
-        public string Result = "";
-        /// <summary>
-        /// 需要保存
-        /// </summary>
-        public bool NeedSave = true;
-        /// <summary>
-        /// 当前物品
-        /// </summary>
-        private Image CurrentItem = null;
-        /// <summary>
-        /// 模板物品
-        /// </summary>
-        public Image TemplateItem = null;
-        /// <summary>
-        /// 基础物品你
-        /// </summary>
-        public Image BaseItem = null;
-        /// <summary>
-        /// 修饰物品
-        /// </summary>
-        public Image AdditionItem = null;
-        /// <summary>
-        /// 结果物品
-        /// </summary>
-        public Image ResultItem = null;
-        BitmapImage emptyImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Recipe\Image\Empty.png"));
-        SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-        SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#484848"));
-        SolidColorBrush greenBrush = new((Color)ColorConverter.ConvertFromString("#00FF00"));
-        SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
-
-        #region 存储外部导入的数据
-        public bool ImportMode = false;
-        public JObject ExternalData = null;
-        #endregion
-
-        #endregion
-
-        #region Proprety
-        /// <summary>
-        /// 结果数量
-        /// </summary>
-        [ObservableProperty]
-        private double _count = 1;
-
-        /// <summary>
-        /// 当前Tag
-        /// </summary>
-        [ObservableProperty]
-        private string _currentTag = "";
-
-        /// <summary>
-        /// 模板的Tag
-        /// </summary>
-        [ObservableProperty]
-        private string _templateTag = "";
-
-        /// <summary>
-        /// 基础的Tag
-        /// </summary>
-        [ObservableProperty]
-        private string _baseTag = "";
-
-        /// <summary>
-        /// 修饰物的Tag
-        /// </summary>
-        [ObservableProperty]
-        private string _additionTag = "";
-
-        /// <summary>
-        /// 配方文件名
-        /// </summary>
-        [ObservableProperty]
-        private string _fileName = "";
-
-        public MessagePopup MessagePopup { get; set; }
-        #endregion
-
-        #region Event
-        [RelayCommand]
-        /// <summary>
-        /// 执行配方
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void Run()
+        public SmithingTableViewModel(IEventAggregator EventAggregator, SlotDropStrategyRegistry DropStrategies) : base(EventAggregator, DropStrategies)
         {
-            #region 合成最终数据
-            Result = ResultItem.Tag is not null && ((ResultItem.Tag as ItemStructure).ImagePath != new BitmapImage(emptyImage.UriSource)) ? "{\r\n  \"type\": \"minecraft:smithing_transform\"," : "{\r\n  \"type\": \"minecraft:smithing_trim\",";
+            TemplateSlot = new RecipeSlotViewModel(this, "template", RecipeSlotRole.Material, "模板");
+            BaseSlot = new RecipeSlotViewModel(this, "base", RecipeSlotRole.Material, "基础");
+            AdditionSlot = new RecipeSlotViewModel(this, "addition", RecipeSlotRole.Material, "修饰");
+            Slots.Add(TemplateSlot);
+            Slots.Add(BaseSlot);
+            Slots.Add(AdditionSlot);
+            ResultSlot = new RecipeSlotViewModel(this, "result", RecipeSlotRole.Result, "结果");
+        }
+
+        #region Property
+        public RecipeSlotViewModel TemplateSlot { get; }
+        public RecipeSlotViewModel BaseSlot { get; }
+        public RecipeSlotViewModel AdditionSlot { get; }
+
+        public override RecipeType Kind => RecipeType.SmithingTable;
+
+        public override bool SupportsCount => true;
+
+        public override bool SupportsMultiSelect => false;
+
+        public override bool SupportsTrimPattern => true;
+
+        /// <summary>
+        /// 锻造台没有组标识符
+        /// </summary>
+        public override bool SupportsGroupName => false;
+
+        protected override string SuccessMessage => "锻造台配方生成成功！";
+        #endregion
+
+        /// <summary>
+        /// 必填槽为空时的占位材料
+        /// </summary>
+        private const string PlaceholderItemId = "stone";
+
+        /// <summary>
+        /// 取槽位材料；必填且为空时用占位并记一条缺材料告警
+        /// </summary>
+        private string ResolveSmithingPart(RecipeSlotViewModel slot, bool optional, string slotName)
+        {
+            if (slot.Items.Count > 0)
+                return RecipeSlotViewModel.GetItemId(slot.Items[0]);
+            if (optional)
+                return "";
+
+            AddBuildWarning(slotName + "没放材料，已用 minecraft:" + PlaceholderItemId + " 占位");
+            return PlaceholderItemId;
+        }
+
+        #region Method
+        public override string BuildResult()
+        {
+            ClearBuildWarnings();
+            StringBuilder result = new(ResultSlot.Items.Count > 0 ? "{\r\n  \"type\": \"minecraft:smithing_transform\"," : "{\r\n  \"type\": \"minecraft:smithing_trim\",");
             #region 合并模板数据
-            string templateItemID;
-            string templateData = "";
-            if (TemplateItem.Tag is ItemStructure templateStructure)
-            {
-                templateItemID = templateStructure.IDAndName[..templateStructure.IDAndName.IndexOf(':')];
-                templateData = "\"template\":{\"item\":\"minecraft:" + templateItemID + "\"" + (TemplateTag.Length > 0 ? ",\"tag\":\"" + TemplateTag + "\"}," : "},");
-            }
+            // base 在所有版本都是必填；template/addition 在 1.21.2 之前必填，空槽用占位材料补齐
+            string templateItemID = ResolveSmithingPart(TemplateSlot, Format.SmithingPartsOptional, "模板槽");
+            string templateData = templateItemID.Length > 0
+                ? "\"template\":" + Format.Ingredient(templateItemID, GetTag(TemplateSlot)) + ","
+                : "";
             #endregion
             #region 合并基础数据
-            string baseItemID;
-            string baseData = "";
-            if (BaseItem.Tag is ItemStructure baseStructure)
-            {
-                baseItemID = baseStructure.IDAndName[..baseStructure.IDAndName.IndexOf(':')];
-                baseData = "\"base\":{\"item\":\"minecraft:" + baseItemID + "\"" + (BaseTag.Length > 0 ? ",\"tag\":\"" + BaseTag + "\"}," : "},");
-            }
+            string baseItemID = ResolveSmithingPart(BaseSlot, false, "基础槽");
+            string baseData = "\"base\":" + Format.Ingredient(baseItemID, GetTag(BaseSlot)) + ",";
             #endregion
             #region 合并修饰数据
-            string additionItemID;
-            string additionData = "";
-            if (AdditionItem.Tag is ItemStructure additionStructure)
-            {
-                additionItemID = additionStructure.IDAndName[..additionStructure.IDAndName.IndexOf(':')];
-                additionData = "\"addition\":{\"item\":\"minecraft:" + additionItemID + "\"" + (AdditionTag.Length > 0 ? ",\"tag\":\"" + AdditionTag + "\"}," : "},");
-            }
+            string additionItemID = ResolveSmithingPart(AdditionSlot, Format.SmithingPartsOptional, "修饰槽");
+            string additionData = additionItemID.Length > 0
+                ? "\"addition\":" + Format.Ingredient(additionItemID, GetTag(AdditionSlot)) + ","
+                : "";
             #endregion
             #region 合并结果数据
-            string resultItemID;
             string resultData = "";
-            if (ResultItem.Tag is ItemStructure resultItemStructure)
+            if (ResultSlot.Items.Count > 0)
             {
-                resultItemID = resultItemStructure.IDAndName[..resultItemStructure.IDAndName.IndexOf(':')];
-                resultData = "\"result\":{\"item\":\"minecraft:" + resultItemID + "\",\"count\":" + int.Parse(Count.ToString()) + "}";
+                string resultItemID = RecipeSlotViewModel.GetItemId(ResultSlot.Items[0]);
+                resultData = "\"result\":" + Format.ResultObject(resultItemID) + ",\"count\":" + int.Parse(Count.ToString()) + "}";
             }
             #endregion
             #region 合并最终结果
-            Result += (templateData + baseData + additionData + resultData).TrimEnd(',') + "}";
+            // 1.21.5 起 smithing_trim 必须带 pattern
+            string patternData = ResultSlot.Items.Count == 0 && Format.TrimNeedsPattern && TrimPattern.Length > 0
+                ? "\"pattern\":\"minecraft:" + TrimPattern + "\","
+                : "";
+            result.Append((templateData + baseData + additionData + patternData + resultData).TrimEnd(','));
+            result.Append("}");
             #endregion
-            #endregion
+            return result.ToString();
+        }
 
-            #region 选择生成路径，执行生成
-            if (NeedSave)
-            {
-                Microsoft.Win32.SaveFileDialog saveFileDialog = new()
-                {
-                    AddExtension = true,
-                    Filter = "Json文件|*.json;",
-                    DefaultExt = ".json",
-                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                    RestoreDirectory = true,
-                    Title = "选择配方文件存储路径"
-                };
-                if (saveFileDialog.ShowDialog().Value)
-                {
-                    _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
-                    MessagePopup.PushMessage(new GeneratorMessage()
-                    {
-                        Message = "锻造台配方生成成功！",
-                        MessageBrush = Brushes.Red,
-                        SubMessage = "配方生成器",
-                        SubMessageBrush = Brushes.DarkGray,
-                        Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
-                    });
-                    //OpenFolderThenSelectFiles.ExplorerFile(saveFileDialog.FileName);
-                }
-            }
-            #endregion
+        public override void LoadExternalData(JObject json)
+        {
+            LoadSlot(json.SelectToken("template") as JObject, TemplateSlot);
+            LoadSlot(json.SelectToken("base") as JObject, BaseSlot);
+            LoadSlot(json.SelectToken("addition") as JObject, AdditionSlot);
+            LoadSlot(json.SelectToken("result") as JObject, ResultSlot);
+
+            if (json.SelectToken("result.count") is JToken countToken && int.TryParse(countToken.ToString(), out int count))
+                Count = count;
         }
 
         /// <summary>
-        /// 载入模板材料
+        /// 载入外部导入的一个槽位数据
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void TemplateMaterial_Loaded(object sender, RoutedEventArgs e)
+        private void LoadSlot(JObject ingredient, RecipeSlotViewModel slot)
         {
-            TemplateItem = sender as Image;
-            TemplateItem.Source ??= emptyImage;
-            if (ImportMode)
-            {
-                if (ExternalData.SelectToken("template") is JObject ingredient)
-                {
-                    JToken itemIDObj = ingredient.SelectToken("item");
-                    JToken itemTagObj = ingredient.SelectToken("tag");
-                    if (itemIDObj is not null)
-                    {
-                        string itemID = itemIDObj.ToString().Replace("minecraft:", "");
-                        Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID.ToString() + ".png");
+            if (ingredient?.SelectToken("item") is not JToken itemToken)
+                return;
 
-                        string itemName = "";
-                        TemplateItem.Source = new BitmapImage(iconUri);
-                        TemplateItem.Tag = new ItemStructure()
-                        {
-                            ImagePath = new BitmapImage(iconUri),
-                            IDAndName = itemID + ":" + itemName
-                        };
-                        if (itemTagObj is not null)
-                            TemplateTag = itemTagObj.ToString();
-                    }
-                }
+            string itemID = itemToken.ToString().Replace("minecraft:", "");
+            slot.Items.Add(CreateItem(itemID));
+            slot.EnsureTagSlots();
+            if (ingredient.SelectToken("tag") is JToken tagToken)
+            {
+                if (slot.Tags.Count == 0)
+                    slot.Tags.Add("");
+                slot.Tags[0] = tagToken.ToString();
             }
+            slot.Refresh();
         }
 
-        /// <summary>
-        /// 载入基础材料
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void BaseMaterial_Loaded(object sender, RoutedEventArgs e)
+        private ItemStructure CreateItem(string itemID)
         {
-            BaseItem = sender as Image;
-            BaseItem.Source ??= emptyImage;
-            if (ImportMode)
+            string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID + ".png";
+            return new ItemStructure()
             {
-                if (ExternalData.SelectToken("base") is JObject ingredient)
-                {
-                    JToken itemIDObj = ingredient.SelectToken("item");
-                    JToken itemTagObj = ingredient.SelectToken("tag");
-                    if (itemIDObj is not null)
-                    {
-                        string itemID = itemIDObj.ToString().Replace("minecraft:", "");
-                        Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = "";
-                        BaseItem.Source = new BitmapImage(iconUri);
-                        BaseItem.Tag = new ItemStructure()
-                        {
-                            ImagePath = new BitmapImage(iconUri),
-                            IDAndName = itemID + ":" + itemName
-                        };
-                        if (itemTagObj is not null)
-                            BaseTag = itemTagObj.ToString();
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 载入修饰材料
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void AdditionMaterial_Loaded(object sender, RoutedEventArgs e)
-        {
-            AdditionItem = sender as Image;
-            AdditionItem.Source ??= emptyImage;
-            if (ImportMode)
-            {
-                if (ExternalData.SelectToken("addition") is JObject ingredient)
-                {
-                    JToken itemIDObj = ingredient.SelectToken("item");
-                    JToken itemTagObj = ingredient.SelectToken("tag");
-                    if (itemIDObj is not null)
-                    {
-                        string itemID = itemIDObj.ToString().Replace("minecraft:", "");
-                        Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = "";
-                        AdditionItem.Source = new BitmapImage(iconUri);
-                        AdditionItem.Tag = new ItemStructure()
-                        {
-                            ImagePath = new BitmapImage(iconUri),
-                            IDAndName = itemID + ":" + itemName
-                        };
-                        if (itemTagObj is not null)
-                            AdditionTag = itemTagObj.ToString();
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 载入结果物品
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ResultItem_Loaded(object sender, RoutedEventArgs e)
-        {
-            ResultItem = sender as Image;
-            if (ImportMode)
-            {
-                if (ExternalData.SelectToken("result") is JObject ingredient)
-                {
-                    JToken itemIDObj = ingredient.SelectToken("item");
-                    JToken itemCountObj = ingredient.SelectToken("count");
-                    if (itemIDObj is not null)
-                    {
-                        string itemID = itemIDObj.ToString().Replace("minecraft:", "");
-                        Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = "";
-                        ResultItem.Source = new BitmapImage(iconUri);
-                        TemplateItem.Tag = new ItemStructure()
-                        {
-                            ImagePath = new BitmapImage(iconUri),
-                            IDAndName = itemID + ":" + itemName
-                        };
-                        if (itemCountObj is not null)
-                            Count = int.Parse(itemCountObj.ToString());
-                    }
-                }
-            }
-            else
-                ResultItem.Source ??= emptyImage;
-        }
-
-        /// <summary>
-        /// 处理被拖拽的物品数据
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void GetDropData(object sender, DragEventArgs e)
-        {
-            Image image = e.Data.GetData(typeof(Image).ToString()) as Image;
-            Image currentImage = sender as Image;
-            ItemStructure itemStructure = image.Tag as ItemStructure;
-
-            ToolTip toolTip = new()
-            {
-                Foreground = whiteBrush,
-                Background = grayBrush,
-                Content = itemStructure.IDAndName
+                ImagePath = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath)) : null,
+                IDAndName = itemID
             };
-            ToolTipService.SetBetweenShowDelay(currentImage, 0);
-            ToolTipService.SetInitialShowDelay(currentImage, 0);
-            currentImage.Source = image.Source;
-            currentImage.Tag = itemStructure;
-            if (Equals(currentImage, ResultItem))
-                toolTip.Content += "(右击删除)";
-            currentImage.ToolTip = toolTip;
         }
 
-        /// <summary>
-        /// 左击槽位打开槽位数据页面
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SetSlotData_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private static string GetTag(RecipeSlotViewModel slot)
         {
-            if (CurrentItem is not null && !Equals(CurrentItem, sender))
-                (CurrentItem.Parent as Border).BorderBrush = transparentBrush;
-            if (!Equals(CurrentItem, sender))
-            {
-                if (Equals(CurrentItem, TemplateItem))
-                    TemplateTag = CurrentTag;
-                else
-                if (Equals(CurrentItem, BaseItem))
-                    BaseTag = CurrentTag;
-                else
-                if (Equals(CurrentItem, AdditionItem))
-                    AdditionTag = CurrentTag;
-            }
-
-            if (Equals(sender, TemplateItem))
-            {
-                CurrentTag = TemplateTag;
-                CurrentItem = TemplateItem;
-            }
-            else
-            if (Equals(sender, BaseItem))
-            {
-                CurrentTag = BaseTag;
-                CurrentItem = BaseItem;
-            }
-            else
-            if (Equals(sender, AdditionItem))
-            {
-                CurrentTag = AdditionTag;
-                CurrentItem = AdditionItem;
-            }
-
-            (CurrentItem.Parent as Border).BorderBrush = greenBrush;
-        }
-
-        /// <summary>
-        /// 删除结果数据
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void DeleteResult_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            ResultItem.Tag = null;
-            ResultItem.Source = emptyImage;
+            return slot.Tags.Count > 0 ? slot.Tags[0] ?? "" : "";
         }
         #endregion
     }

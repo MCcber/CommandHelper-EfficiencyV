@@ -55,7 +55,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <DockPanel Grid.Row="0" Height="35">
+        <DockPanel Grid.Row="0" Height="40">
             <VectorButton:VectorFlatImageButton
                 HorizontalAlignment="Left"
                 BorderThickness="0"
@@ -95,35 +95,39 @@
                 ImageMargin="5"
                 Style="{DynamicResource VectorFlatImageButtonStyle}" />
             <VectorButton:VectorTextButton
+                MinWidth="50"
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
                 Command="{Binding AddItemCommand}"
                 Foreground="Black"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="添加" />
             <VectorButton:VectorTextButton
+                MinWidth="50"
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
                 Command="{Binding ClearItemCommand}"
                 Foreground="Black"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="清空" />
             <VectorButton:VectorTextButton
+                MinWidth="100"
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
                 Command="{Binding ImportItemFromClipboardCommand}"
                 Foreground="Black"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从剪切板导入" />
             <VectorButton:VectorTextButton
+                MinWidth="100"
                 HorizontalAlignment="Left"
                 Background="#EFF2F1"
                 Command="{Binding ImportItemFromFileCommand}"
                 Foreground="Black"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
             <VectorButton:VectorToggleIconTextButton

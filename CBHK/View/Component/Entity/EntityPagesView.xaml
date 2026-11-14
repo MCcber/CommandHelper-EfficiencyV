@@ -68,7 +68,7 @@
                 Style="{DynamicResource VectorFlatImageButtonStyle}" />
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
-                Width="70"
+                MinWidth="70"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Stretch"
                 VerticalContentAlignment="Center"
@@ -84,7 +84,7 @@
             </VectorComboBox:VectorTextComboBox>
             <VectorComboBox:VectorIconTextComboBox
                 Title="实体ID"
-                MinWidth="235"
+                MinWidth="250"
                 HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
                 ArrowMargin="0 0 5 0"
@@ -106,7 +106,7 @@
                 Background="#D77A34"
                 Foreground="Black"
                 IsChecked="{Binding Give, Mode=TwoWay}"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorToggleTextButtonStyle}"
                 Text="给予" />
             <VectorButton:VectorToggleTextButton
@@ -115,17 +115,9 @@
                 Background="#D77A34"
                 Foreground="Black"
                 IsChecked="{Binding Summon, Mode=TwoWay}"
-                OriginBottomHeight="3"
+                OriginBottomHeight="4"
                 Style="{DynamicResource VectorToggleTextButtonStyle}"
                 Text="召唤" />
-            <VectorButton:VectorToggleTextButton
-                HorizontalAlignment="Left"
-                Background="#D77A34"
-                Foreground="Black"
-                IsChecked="{Binding SyncToFile, Mode=OneWayToSource}"
-                OriginBottomHeight="3"
-                Style="{DynamicResource VectorToggleTextButtonStyle}"
-                Text="同步到文件" />
             <VectorButton:VectorToggleIconTextButton
                 Margin="5,0,0,0"
                 HorizontalAlignment="Left"

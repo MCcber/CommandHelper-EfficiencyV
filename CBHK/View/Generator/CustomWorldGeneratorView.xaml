@@ -38,11 +38,17 @@
         </Grid.RowDefinitions>
         <VectorComboBox:VectorTextComboBox
             Grid.Row="0"
-            Height="30"
+            Height="40"
             ItemsSource="{Binding GeneratorList}"
             SelectedIndex="0"
-            SelectedItem="{Binding CurrentGenerator}"
-            Style="{StaticResource VectorTextComboBoxStyle}" />
+            SelectedItem="{Binding SelectedGenerator}"
+            Style="{StaticResource VectorTextComboBoxStyle}">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="SelectionChanged">
+                    <behaviors:CallMethodAction MethodName="GeneratorComboBox_SelectionChanged" TargetObject="{Binding}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
+        </VectorComboBox:VectorTextComboBox>
         <DockPanel Grid.Row="1" Grid.Column="0">
             <ContentControl
                 Content="{Binding}"

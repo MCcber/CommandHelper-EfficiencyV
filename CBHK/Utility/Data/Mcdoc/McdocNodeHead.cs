@@ -59,5 +59,34 @@ namespace CBHK.Utility.Data.Mcdoc
 
         /// <summary>行上的诊断（未解析引用 / 求值失败），对应 misode 的 Errors。</summary>
         public IReadOnlyList<string> Diagnostics { get; init; }
+
+        /// <summary>
+        /// 复制一份并替换几个能力位：属性是 init-only，presenter 覆写 Head 时不能就地改。
+        /// </summary>
+        public McdocNodeHead With(bool? canAddTop = null, bool? canAddBottom = null) => new()
+        {
+            Label = Label,
+            Documentation = Documentation,
+            RowKind = RowKind,
+            EditorKind = EditorKind,
+            IsSelect = IsSelect,
+            AllowCustomValue = AllowCustomValue,
+            Options = Options,
+            BranchOptions = BranchOptions,
+            Watermark = Watermark,
+            CanAddTop = canAddTop ?? CanAddTop,
+            CanAddBottom = canAddBottom ?? CanAddBottom,
+            CanSetDefault = CanSetDefault,
+            IsInlineTuple = IsInlineTuple,
+            IsRawKey = IsRawKey,
+            CanUnset = CanUnset,
+            IsColorPicker = IsColorPicker,
+            IsColorEnum = IsColorEnum,
+            IsIconSelect = IsIconSelect,
+            Category = Category,
+            TypeHint = TypeHint,
+            ColorKind = ColorKind,
+            Diagnostics = Diagnostics,
+        };
     }
 }

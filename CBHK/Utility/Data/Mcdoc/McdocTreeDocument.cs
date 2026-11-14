@@ -353,6 +353,9 @@ namespace CBHK.Utility.Data.Mcdoc
             rebuilt.IsRequired = node.IsRequired;
             // 重建出来的是新节点：可选字段下拉的（未设置）哨兵与"缺键就显示未设置"的预选要补回来
             McdocSelectOptions.EnsureUnsetOption(rebuilt);
+            rebuilt.EnsureAnyUnsetOption();
+            // any 行的分支草稿同理：父级重建换了实例，草稿不搬过去 → 切回原分支只能拿到默认值
+            rebuilt.AdoptAnyBranchDrafts(node);
             rebuilt.Desc = node.Desc;
             rebuilt.Key = node.Key;
             // 用户显式选过的 union 分支：重建后必须还是那一支，否则一改别的字段就自己弹回去

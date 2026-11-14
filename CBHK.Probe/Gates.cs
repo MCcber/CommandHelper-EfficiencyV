@@ -63,6 +63,9 @@ namespace CBHK.Probe
             pipeline.Fallback = () => pipeline.Reload();
             projector.Document = document;
             projector.RequestReload = () => pipeline.Reload();
+            // 值通道这里只接"通知"：宿主那条 lambda 里还有"先把值写回文档"（ApplyNodeValue）与
+            // 建树/物化期的 loading 闸门，逐条抄进来会改掉既有用例的判定对象（"选候选"会被当成一次写回）。
+            // 需要验"编辑器能不能写回"的用例请自己按 VM 顺序显式调 ApplyNodeValue（见 item-custom-tag-entry）。
             document.NodeValueChanged = node => pipeline.OnValueChanged(node);
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             // 与界面一致：投影首次建出子级时要补物化（VM 在 McdocGeneratorViewModelBase.cs:857 接的同一个钩子）。
@@ -1293,6 +1296,64 @@ namespace CBHK.Probe
                 => string.Equals(spec?.Registry, "environment_attribute", StringComparison.Ordinal)
                     ? spec.Apply(Attributes)
                     : [];
+        }
+
+        /// <summary>
+        /// minecraft:resource 这个 dispatcher 的成员键是 "worldgen/biome" 这种**带目录前缀的原文**，
+        /// 界面上传的是"目录名 → 驼峰转下划线"，其中 PlaceFeature / FlatWorldPreset 两条对不上。
+        /// 这里在真实 schema 上验：正确键能解出 struct，错键解不出东西（说明键是硬约束）。
+        /// </summary>
+        public static int ResourceDispatcherKeys()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+
+            // (名字, 覆盖表里的正确键, 旧拼法会拼出的错键)
+            var cases = new (string Name, string Key, string WrongKey)[]
+            {
+                ("PlaceFeature", "worldgen/placed_feature", "worldgen/place_feature"),
+                ("FlatWorldPreset", "worldgen/flat_level_generator_preset", "worldgen/flat_world_preset"),
+            };
+
+            // 判据：喂一个**任何成员都没声明过**的键名。
+            // 键对 → 真的解出了那个 struct，于是这个键被判成遗留键（IsUnknownField=true）；
+            // 键错 → dispatcher 落成宽松兜底（any），什么键都收，于是不是遗留键。
+            const string bogusJson = @"{ ""zzz_not_declared_anywhere"": 1 }";
+            const string bogusField = "zzz_not_declared_anywhere";
+            foreach (var item in cases)
+            {
+                var (goodNode, goodRows) = ResolveDispatcherMember(index, item.Key, bogusJson, bogusField);
+                var good = goodNode is null ? "<找不到节点>" : "IsUnknownField=" + goodNode.IsUnknownField + " rows=" + goodRows;
+                Console.WriteLine("[信息] " + item.Name + " 正确键 " + item.Key + " → " + good);
+                checks.That(goodNode is not null && goodNode.IsUnknownField,
+                    item.Name + " 的正确键解出真 struct（杂键被判遗留键）", good);
+
+                var (badNode, badRows) = ResolveDispatcherMember(index, item.WrongKey, bogusJson, bogusField);
+                var bad = badNode is null ? "<找不到节点>" : "IsUnknownField=" + badNode.IsUnknownField + " rows=" + badRows;
+                Console.WriteLine("[信息] " + item.Name + " 错键 " + item.WrongKey + " → " + bad);
+                checks.That(badNode is null || !badNode.IsUnknownField,
+                    item.Name + " 的错键落成宽松兜底（所以必须走覆盖表）", bad);
+            }
+            return checks.Finish("--case resource-dispatcher-keys");
+        }
+
+        /// <summary>用给定成员键建一棵 resource 文档，返回指定字段的节点与行数。</summary>
+        private static (McdocTreeNode Node, int Rows) ResolveDispatcherMember(McdocTypeIndex index, string key, string json, string field)
+        {
+            var root = McdocType.Create(McdocTypeKind.Dispatcher);
+            root.Registry = "minecraft:resource";
+            root.Indices = [McdocIndex.Static(key)];
+            var (document, projector, _) = Harness(index, root, json);
+            var node = document.FindNode("$." + field);
+            return (node, projector.Rows.Count);
         }
 
         // ── attributes：动态键 → %key 调度 → 链式索引 → union（整个 mcdoc 池最复杂的一处）──────
@@ -6752,6 +6813,582 @@ namespace CBHK.Probe
             return checks.Finish("--case map-entry-has-no-list-item-commands");
         }
 
+        // ── 现场：物品生成器 acacia_boat 的「自定义 NBT 标签」动态键（`[string]: any`）──────
+        // SpawnItem = { ...ItemBase, EntityTag?: AnyEntity }，ItemBase 末尾是 [string]: any：
+        // 键是自由文本（无 #[id] 候选）、值是 any。占位行要给"起键输入框"，提交出来的条目行
+        // 必须按 any 求值（原始 JSON 编辑器），不许退成"没有编辑器"或结构壳。
+        public static int ItemCustomTagEntry()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            var rootType = new McdocType
+            {
+                Kind = McdocTypeKind.Dispatcher,
+                Registry = "minecraft:item",
+                Indices = [McdocIndex.Static("acacia_boat")],
+            };
+            var (document, projector, pipeline) = Harness(index, rootType, "{ }",
+                doc => doc.GameVersion = "1.21.11");
+
+            foreach (var top in document.Nodes) top.EnsureChildren();
+            Console.WriteLine("[信息] 顶层行=" + string.Join(",", document.Nodes.Select(child =>
+                (string.IsNullOrEmpty(child.FieldName) ? "<空键>" : child.FieldName)
+                + (child.IsDynamicKey ? "(新键)" : "") + (child.IsMapEntry ? "(条目)" : "")
+                + ":" + (child.Type?.Kind.ToString() ?? "null"))));
+
+            var placeholder = document.Nodes.Select(FindPlaceholder).FirstOrDefault(found => found is not null);
+            checks.That(placeholder is not null, "acacia_boat 有动态键占位行", placeholder is null ? "<无>" : placeholder.JsonPath);
+            if (placeholder is null) return checks.Finish("--case item-custom-tag-entry");
+
+            var keyType = placeholder.DeclaredType;
+            var placeholderRow = projector.Find(placeholder);
+            Console.WriteLine("[信息] 占位节点：keyType(声明)=" + (keyType?.Kind.ToString() ?? "<null>")
+                + " useKeySelect=" + placeholder.UseKeySelect
+                + " 键候选=" + (placeholder.KeyOptionList?.Count ?? -1)
+                + " isDynamicKey=" + placeholder.IsDynamicKey
+                + " isMapEntry=" + placeholder.IsMapEntry
+                + " editingKey='" + placeholder.EditingKey + "'");
+            Console.WriteLine("[信息] 占位行：kind=" + (placeholderRow?.Kind.ToString() ?? "<无行>")
+                + " keyText=" + (placeholderRow?.KeyTextVisibility.ToString() ?? "-")
+                + " keyCombo=" + (placeholderRow?.KeyComboVisibility.ToString() ?? "-")
+                + " keyLabel=" + (placeholderRow?.KeyLabelVisibility.ToString() ?? "-")
+                + " addEntry=" + (placeholderRow?.AddEntryVisibility.ToString() ?? "-"));
+            checks.That(placeholderRow?.KeyTextVisibility == System.Windows.Visibility.Visible,
+                "占位行给起键输入框（键类型是自由文本，不是候选下拉）",
+                "keyText=" + (placeholderRow?.KeyTextVisibility.ToString() ?? "<无行>"));
+
+            // 用户输入键名 → ⊕ 变为可用 → 提交
+            placeholder.EditingKey = "my_tag";
+            var canAdd = placeholder.AddEntryCommand?.CanExecute(null) == true;
+            checks.That(canAdd, "输入键名之后 ⊕ 可用", "canAdd=" + canAdd);
+            placeholder.AddEntryCommand?.Execute(null);
+            PumpDispatcher();
+
+            foreach (var top in document.Nodes) top.EnsureChildren();
+            Console.WriteLine("[信息] 提交后顶层行=" + string.Join(",", document.Nodes.Select(child =>
+                (string.IsNullOrEmpty(child.FieldName) ? "<空键>" : child.FieldName)
+                + (child.IsDynamicKey ? "(新键)" : "") + (child.IsMapEntry ? "(条目)" : "")
+                + ":" + (child.Type?.Kind.ToString() ?? "null"))));
+            var entry = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+            Console.WriteLine("[信息] 提交后 JSON=" + (document.RootJson is null ? "<null>"
+                : McdocJsonFormatter.Format(document.RootJson).Replace("\n", " ").Replace("  ", " ")));
+            checks.That(entry is not null, "新条目节点建出来了", entry is null ? "<无>" : entry.JsonPath);
+            if (entry is null) return checks.Finish("--case item-custom-tag-entry");
+
+            var entryRow = projector.Find(entry);
+            Console.WriteLine("[信息] 条目节点：type=" + (entry.Type?.Kind.ToString() ?? "<null>")
+                + " 声明=" + (entry.DeclaredType?.Kind.ToString() ?? "<null>")
+                + " json=" + (entry.Json?.Kind.ToString() ?? "<null>")
+                + " 诊断=" + (entry.Error ?? "-"));
+            Console.WriteLine("[信息] 条目行：kind=" + (entryRow?.Kind.ToString() ?? "<无行>")
+                + " editor=" + (entryRow?.Head?.EditorKind.ToString() ?? "<无>")
+                + " keyLabel=" + (entryRow?.KeyLabelVisibility.ToString() ?? "-")
+                + " removeEntry=" + (entryRow?.RemoveEntryVisibility.ToString() ?? "-")
+                + " clear=" + (entryRow?.ClearVisibility.ToString() ?? "-")
+                + " setDefault=" + (entryRow?.SetDefaultVisibility.ToString() ?? "-"));
+            checks.That(entryRow?.KeyLabelVisibility == System.Windows.Visibility.Visible,
+                "条目行显示键名（键以只读标签顶替编辑框）",
+                "keyLabel=" + (entryRow?.KeyLabelVisibility.ToString() ?? "<无行>"));
+            checks.That(entryRow?.Head?.EditorKind == McdocEditorKind.Raw,
+                "any 值的条目行给 AnyEditor（类型下拉 + 该类型的编辑器）",
+                "editor=" + (entryRow?.Head?.EditorKind.ToString() ?? "<无行>"));
+            // 类型下拉的选中项必须跟着文档里的形状走：XAML 那一侧的值编辑器就是按它切控件的
+            // （struct/list → 子行；string→文本；double→数字；boolean→False/True；只有"认不出"才退原始 JSON）
+            // 新建 any 值的默认分支 = 首项 Boolean（JSON 写 false），不是 struct
+            checks.That(entry.AnyTypeKey == "boolean", "新建 any 值默认落在首分支 Boolean",
+                "AnyTypeKey=" + (entry.AnyTypeKey ?? "<null>") + " 显示名=" + (entry.SelectedAnyType?.Name ?? "<null>"));
+            checks.That(document.RootJson?.Get("my_tag") is { Kind: McdocJsonKind.Boolean } created && !created.BooleanValue,
+                "新键的默认值写 false", document.RootJson?.Get("my_tag")?.Kind.ToString() ?? "<null>");
+            checks.That(entry.SelectedAnyType?.Name == "Boolean", "下拉显示名首字母大写（Boolean）",
+                entry.SelectedAnyType?.Name ?? "<null>");
+            var labelList = string.Join(",", entry.AnyTypeOptions?.Select(option => option.Name) ?? []);
+            checks.That(labelList == "（未设置）,Boolean,Double,String,List,Struct",
+                "五个分支按固定顺序、显示名首字母大写", "候选=" + labelList);
+            var keyList = string.Join(",", entry.AnyTypeOptions
+                ?.Select(option => McdocUnionSwitch.IsUnsetOption(option)
+                    ? "（未设置）"
+                    : McdocHelpers.AnyBranchKey(Convert.ToString(option.Value?.LiteralValue))) ?? []);
+            checks.That(keyList == "（未设置）,boolean,double,string,list,struct",
+                "稳定键仍是小写（判据只认它）", "键=" + keyList);
+
+            // 显式切到 struct：这一支才有「新键」子行（AppendItem 之外的第二条加键入口）
+            entry.SelectedAnyType = AnyOption(entry, "struct");
+            PumpDispatcher();
+            foreach (var top in document.Nodes) top.EnsureChildren();
+            var structEntry = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+            var entryChildrenBefore = structEntry?.Children.Count ?? -1;
+            checks.That(entryChildrenBefore == 1 && structEntry.Children[0].IsDynamicKey,
+                "切到 struct 之后有一条「新键」子行", "子级=" + entryChildrenBefore);
+            entry = structEntry;
+
+            // 换成 string：值跟着变，旧形状的子行（「新键」）必须当场作废 —— 现场是它一直挂在下面
+            var stringOption = AnyOption(entry, "string");
+            checks.That(stringOption is not null, "any 值行有 string 候选",
+                "候选=" + string.Join(",", entry.AnyTypeOptions?.Select(option => option.Name) ?? []));
+            if (stringOption is not null)
+            {
+                entry.SelectedAnyType = stringOption;
+                PumpDispatcher();
+                foreach (var top in document.Nodes) top.EnsureChildren();
+                var switched = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+                var value = document.RootJson?.Get("my_tag");
+                Console.WriteLine("[信息] 切 string 后：json=" + (value?.Kind.ToString() ?? "<null>")
+                    + " 子级=" + (switched?.Children.Count ?? -1)
+                    + " 行上选中的类型=" + (switched?.SelectedAnyType?.Name ?? "<null>")
+                    + " 行数=" + projector.Rows.Count);
+                checks.That(value is { Kind: McdocJsonKind.String }, "切 string 后文档落成字符串", value?.Kind.ToString() ?? "<null>");
+                checks.That(switched?.AnyTypeKey == "string", "类型下拉跟着新形状走",
+                    switched?.AnyTypeKey ?? "<null>");
+                checks.That(switched?.Children.Count == 0,
+                    "切 string 之后旧形状的「新键」子行必须消失（控件不跟着类型走就是它留下的）",
+                    "子级=" + (switched?.Children.Count ?? -1));
+
+                // 值控件必须**真的能写回**：any 行的 Head 是 Raw，写回出口按 EditorKind 分派时
+                // 一律返回 null → ApplyEmptyValue 会把键删掉（敲第一个字符，键和行一起没）。
+                // 按 VM 同序显式走一遍值通道（Harness 只接通知，见上面那行注释）：
+                // 只设 Value 不会自己落盘，缺了 ApplyNodeValue 这一拍，"编辑器能不能写回"根本没被测到。
+                switched.Value = "abc";
+                McdocCollectionEditor.Default.ApplyNodeValue(switched);
+                pipeline.OnValueChanged(switched);
+                PumpDispatcher();
+                foreach (var top in document.Nodes) top.EnsureChildren();
+                var typed = document.RootJson?.Get("my_tag");
+                var typedRow = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+                Console.WriteLine("[信息] 键入 abc 后：json=" + (typed?.Kind.ToString() ?? "<null>")
+                    + " 值=" + (typed?.StringValue ?? "-") + " 行还在=" + (typedRow is not null));
+                checks.That(typed is { Kind: McdocJsonKind.String } text && text.StringValue == "abc",
+                    "any 行的 string 编辑器敲进去要落进文档", "json=" + (typed?.StringValue ?? "<null>"));
+                checks.That(typedRow is not null, "写回之后行还在（不许把键删掉）",
+                    typedRow is null ? "<无行>" : "在");
+
+                // 数字 / 布尔两个编辑器同样必须有写回（三个控件都绑自己的属性，写回出口不合就都写不进去）
+                var liveRow = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+                var doubleOption = AnyOption(liveRow, "double");
+                if (doubleOption is not null)
+                {
+                    liveRow.SelectedAnyType = doubleOption;
+                    PumpDispatcher();
+                    liveRow = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+                    liveRow.NumberText = "12";
+                    McdocCollectionEditor.Default.ApplyNodeValue(liveRow);
+                    pipeline.OnValueChanged(liveRow);
+                    PumpDispatcher();
+                    var number = document.RootJson?.Get("my_tag");
+                    Console.WriteLine("[信息] 键入 12 后：json=" + (number?.Kind.ToString() ?? "<null>")
+                        + " 值=" + (number?.NumberValue.ToString() ?? "-"));
+                    checks.That(number is { Kind: McdocJsonKind.Number } n && n.NumberValue == 12m,
+                        "any 行的数字编辑器敲进去要落进文档", "json=" + (number?.NumberValue.ToString() ?? "<null>"));
+                }
+
+                var liveBool = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+                var boolOption = AnyOption(liveBool, "boolean");
+                if (boolOption is not null)
+                {
+                    liveBool.SelectedAnyType = boolOption;
+                    PumpDispatcher();
+                    liveBool = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+                    liveBool.IsTrue = true;
+                    McdocCollectionEditor.Default.ApplyNodeValue(liveBool);
+                    pipeline.OnValueChanged(liveBool);
+                    PumpDispatcher();
+                    var flag = document.RootJson?.Get("my_tag");
+                    Console.WriteLine("[信息] 选 True 后：json=" + (flag?.Kind.ToString() ?? "<null>")
+                        + " 值=" + (flag?.BooleanValue.ToString() ?? "-"));
+                    checks.That(flag is { Kind: McdocJsonKind.Boolean } flagValue && flagValue.BooleanValue,
+                        "any 行的 False/True 编辑器要落进文档", "json=" + (flag?.BooleanValue.ToString() ?? "<null>"));
+                }
+
+                // list 分支：行上必须有 ⊕（加一项）、每项有 ⊖（删这一项），两个都真的改文档
+                var listOwner = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+                var listOption = AnyOption(listOwner, "list");
+                checks.That(listOption is not null, "any 值行有 List 候选",
+                    "候选=" + string.Join(",", listOwner?.AnyTypeOptions?.Select(option => option.Name) ?? []));
+                if (listOption is not null)
+                {
+                    listOwner.SelectedAnyType = listOption;
+                    PumpDispatcher();
+                    foreach (var top in document.Nodes) top.EnsureChildren();
+                    var listNode = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+                    var listRow = listNode is null ? null : projector.Find(listNode);
+                    Console.WriteLine("[信息] 切 List 后：json=" + (document.RootJson?.Get("my_tag")?.Kind.ToString() ?? "<null>")
+                        + " AnyTypeKey=" + (listNode?.AnyTypeKey ?? "<null>")
+                        + " ListAddTop=" + (listRow?.ListAddTopVisibility.ToString() ?? "<无行>")
+                        + " 项数=" + ((document.RootJson?.Get("my_tag")?.Items?.Count) ?? -1));
+                    checks.That(document.RootJson?.Get("my_tag") is { Kind: McdocJsonKind.Array },
+                        "切 List 后文档落成数组", document.RootJson?.Get("my_tag")?.Kind.ToString() ?? "<null>");
+                    checks.That(listRow?.ListAddTopVisibility == System.Windows.Visibility.Visible,
+                        "list 分支行上有 ⊕（添加一项）",
+                        "ListAddTop=" + (listRow?.ListAddTopVisibility.ToString() ?? "<无行>"));
+                    checks.That(listNode?.AddItemTopCommand?.CanExecute(null) == true,
+                        "list 分支的 ⊕ 真的可用（命令守卫认 any 数组）",
+                        "canAdd=" + (listNode?.AddItemTopCommand?.CanExecute(null) ?? false));
+
+                    listNode.AddItemTopCommand?.Execute(null);
+                    PumpDispatcher();
+                    foreach (var top in document.Nodes) top.EnsureChildren();
+                    var afterAdd = document.RootJson?.Get("my_tag");
+                    var itemJson = afterAdd?.Items is { Count: > 0 } items ? items[0] : null;
+                    Console.WriteLine("[信息] 点 ⊕ 后：项数=" + (afterAdd?.Items?.Count ?? -1)
+                        + " 首项=" + (itemJson?.Kind.ToString() ?? "<null>"));
+                    checks.That(afterAdd is { Kind: McdocJsonKind.Array } addedArray && addedArray.Items?.Count == 1,
+                        "点 ⊕ 之后文档多了一项", "项数=" + (afterAdd?.Items?.Count ?? -1));
+                    checks.That(itemJson is { Kind: McdocJsonKind.Boolean },
+                        "新列表项走 any 的首分支默认值（Boolean）", itemJson?.Kind.ToString() ?? "<null>");
+
+                    // 项行：投影里必须挂上 ⊖（RemoveSelf），执行后回到空数组
+                    var itemNode = document.Nodes.Select(top => FindItem(top)).FirstOrDefault(found => found is not null);
+                    var itemRow = itemNode is null ? null : projector.Find(itemNode);
+                    checks.That(itemRow?.RemoveSelfVisibility == System.Windows.Visibility.Visible,
+                        "列表项行上有 ⊖（删掉这一项）",
+                        itemRow is null ? "<无行>" : itemRow.RemoveSelfVisibility.ToString());
+                    checks.That(itemNode?.RemoveSelfCommand?.CanExecute(null) == true,
+                        "列表项的 ⊖ 真的可用", "canRemove=" + (itemNode?.RemoveSelfCommand?.CanExecute(null) ?? false));
+                    itemNode?.RemoveSelfCommand?.Execute(null);
+                    PumpDispatcher();
+                    foreach (var top in document.Nodes) top.EnsureChildren();
+                    var afterRemove = document.RootJson?.Get("my_tag");
+                    Console.WriteLine("[信息] 点 ⊖ 后：项数=" + (afterRemove?.Items?.Count ?? -1));
+                    checks.That(afterRemove is { Kind: McdocJsonKind.Array } removedArray && (removedArray.Items?.Count ?? 0) == 0,
+                        "点 ⊖ 之后这一项从文档里消失", "项数=" + (afterRemove?.Items?.Count ?? -1));
+                }
+            }
+
+            // （未设置）：any 行的哨兵 = 这个键不存在（删键、行留在树上）
+            var liveEntry = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+            var unsetOption = liveEntry?.AnyTypeOptions?.FirstOrDefault(option => McdocUnionSwitch.IsUnsetOption(option));
+            checks.That(unsetOption is not null, "any 值行有（未设置）哨兵", "<无>");
+            if (unsetOption is not null)
+            {
+                var live = liveEntry;
+                live.SelectedAnyType = unsetOption;
+                PumpDispatcher();
+                foreach (var top in document.Nodes) top.EnsureChildren();
+                var keyGone = document.RootJson?.Get("my_tag") is null
+                    || document.RootJson is not { Kind: McdocJsonKind.Object };
+                var rowStill = document.Nodes.Select(top => FindEntry(top, "my_tag")).FirstOrDefault(found => found is not null);
+                Console.WriteLine("[信息] （未设置）后：键在文档里=" + !keyGone + " 行还在=" + (rowStill is not null)
+                    + " 选中=" + (rowStill?.SelectedAnyType?.Name ?? "<null>"));
+                checks.That(keyGone, "（未设置）把键从文档里去掉", "json=" + (document.RootJson?.Get("my_tag")?.Kind.ToString() ?? "<null>"));
+                checks.That(rowStill is not null, "（未设置）之后行仍留在树上（用户还能删掉这一行）", rowStill is null ? "<无>" : "在");
+
+                // 没有值的 any 行（合成夹具）：建树期必须把（未设置）预选上，下拉不许空白
+                var anyRoot = Struct(("tag", McdocType.Any()));
+                anyRoot.Fields[0].Optional = true;
+                var (anyDoc, anyProjector, _) = Harness(new McdocTypeIndex(), anyRoot, "{ }");
+                var anyNode = anyDoc.FindNode("$.tag");
+                var anyRow = anyNode is null ? null : anyProjector.Find(anyNode);
+                Console.WriteLine("[信息] 必选/可选 any 空值行：选中=" + (anyNode?.SelectedAnyType?.Name ?? "<空白>")
+                    + " AnyTypeKey=" + (anyNode?.AnyTypeKey ?? "<null>")
+                    + " 下拉候选=" + (anyNode?.AnyTypeOptions?.Count ?? -1));
+                checks.That(anyNode?.SelectedAnyType is not null,
+                    "没有值的 any 行，下拉必须预选（未设置）而不是空白",
+                    anyNode?.SelectedAnyType?.Name ?? "<空白>");
+                checks.That(anyNode?.AnyTypeKey is null, "（未设置）的稳定键为空（没有分支）",
+                    anyNode?.AnyTypeKey ?? "<null>");
+            }
+
+            // 占位行的键输入：必须是"自己能输入"的文本框（不是候选下拉、也不是被提示语盖住的一格）
+            var placeholderRowAgain = projector.Rows.Select(row => row.Node)
+                .FirstOrDefault(node => node?.IsDynamicKey == true && node.Json is null);
+            Console.WriteLine("[信息] 占位行仍是可输入的键框：useKeySelect=" + (placeholderRowAgain?.UseKeySelect ?? false));
+            checks.That(placeholderRowAgain?.UseKeySelect == false,
+                "「新键」行的键控件是文本框（键类型是自由字符串，没有候选空间可用）",
+                "useKeySelect=" + (placeholderRowAgain?.UseKeySelect ?? false));
+
+            // 占位行要有能看懂的名字（只显示、不落盘）
+            var placeholderRow0 = placeholderRow;
+            Console.WriteLine("[信息] 占位行标签=" + (placeholderRow0?.Head?.Label ?? "<空>")
+                + " 文档里有没有 Custom Data 这个键=" + (document.RootJson?.Get("Custom Data") is not null));
+            checks.That(placeholderRow0?.Head?.Label == "Custom Data",
+                "「新键」占位行显示 Custom Data", placeholderRow0?.Head?.Label ?? "<空>");
+            checks.That(document.RootJson?.Get("Custom Data") is null,
+                "Custom Data 只是显示名，不许落成 JSON 键",
+                "RootJson.Custom Data=" + (document.RootJson?.Get("Custom Data") is null ? "<无>" : "<有>"));
+            checks.That(placeholderRow0?.Head?.Documentation is { Length: > 0 } doc && doc != "Custom Data",
+                "标签点开要有真说明（不是只有个标题）", placeholderRow0?.Head?.Documentation ?? "<空>");
+
+            if (!KeepValueOnBranchSwitch(index, checks)) return checks.Finish("--case item-custom-tag-entry");
+            return checks.Finish("--case item-custom-tag-entry");
+        }
+
+        /// <summary>
+        /// 切 any 分支时的保值口径 + 清空不删行：新开一份文档，按 VM 顺序走值通道。
+        /// </summary>
+        private static bool KeepValueOnBranchSwitch(McdocTypeIndex index, Checks checks)
+        {
+            var rootType = new McdocType
+            {
+                Kind = McdocTypeKind.Dispatcher,
+                Registry = "minecraft:item",
+                Indices = [McdocIndex.Static("acacia_boat")],
+            };
+            var (document, projector, pipeline) = Harness(index, rootType, "{ }",
+                doc => doc.GameVersion = "1.21.11");
+            var placeholder = document.Nodes.Select(FindPlaceholder).FirstOrDefault(found => found is not null);
+            if (placeholder is null) return false;
+            placeholder.EditingKey = "cd";
+            placeholder.AddEntryCommand?.Execute(null);
+            PumpDispatcher();
+
+            McdocTreeNode Entry() => document.Nodes.Select(top => FindEntry(top, "cd")).FirstOrDefault(found => found is not null);
+            McdocJsonValue Value() => document.RootJson?.Get("cd");
+            void Switch(McdocTreeNode node, string branch)
+            {
+                var option = AnyOption(node, branch);
+                if (option is null) return;
+                node.SelectedAnyType = option;
+                PumpDispatcher();
+                foreach (var top in document.Nodes) top.EnsureChildren();
+            }
+            void Type(McdocTreeNode node, string text)
+            {
+                node.Value = text;
+                McdocCollectionEditor.Default.ApplyNodeValue(node);
+                pipeline.OnValueChanged(node);
+                PumpDispatcher();
+                foreach (var top in document.Nodes) top.EnsureChildren();
+            }
+
+            var entry = Entry();
+            if (entry is null) return false;
+            Switch(entry, "string");
+            entry = Entry();
+            Type(entry, "12");
+            Console.WriteLine("[信息] string 输入 12 后：json=" + (Value()?.Kind.ToString() ?? "<null>"));
+            checks.That(Value() is { Kind: McdocJsonKind.String } s1 && s1.StringValue == "12",
+                "String 分支键入 12 → 文档是 \"12\"", Value()?.StringValue ?? "<null>");
+
+            // String → Double：标量互转，值落盘（不是 0）
+            Switch(entry, "double");
+            var asNumber = Value();
+            checks.That(asNumber is { Kind: McdocJsonKind.Number } && asNumber.NumberValue == 12m,
+                "切到 Double 时把已有值落盘（不是回到 0）", asNumber?.NumberValue.ToString() ?? "<null>");
+
+            // 切回 String：草稿/互转都要拿回 "12"
+            Switch(Entry(), "string");
+            var backToString = Value();
+            checks.That(backToString is { Kind: McdocJsonKind.String } s2 && s2.StringValue == "12",
+                "切回 String 拿回 \"12\"（不丢用户输入）", backToString?.StringValue ?? "<null>");
+
+            // 切容器再切回来：容器分支值必然换成 []/{}
+            Switch(Entry(), "list");
+            checks.That(Value() is { Kind: McdocJsonKind.Array }, "切到 List 落成 []", Value()?.Kind.ToString() ?? "<null>");
+            Switch(Entry(), "string");
+            var restored = Value();
+            checks.That(restored is { Kind: McdocJsonKind.String } s3 && s3.StringValue == "12",
+                "从 List 切回 String 仍能拿回 \"12\"（分支草稿）", restored?.StringValue ?? "<null>");
+
+            // 结构分支的往返：{"a": ...} 切走再切回不许丢
+            Switch(Entry(), "struct");
+            var structEntry = Entry();
+            structEntry?.EnsureChildren();
+            var structPlaceholder = structEntry?.Children.FirstOrDefault(child => child.IsDynamicKey);
+            structPlaceholder.EditingKey = "a";
+            structPlaceholder.AddEntryCommand?.Execute(null);
+            PumpDispatcher();
+            foreach (var top in document.Nodes) top.EnsureChildren();
+            var withKey = Value();
+            Console.WriteLine("[信息] struct 加 a 后：json=" + (withKey is null ? "<null>" : McdocJsonFormatter.Format(withKey).Replace("\n", " ")));
+            Switch(Entry(), "list");
+            Switch(Entry(), "struct");
+            var structBack = Value();
+            checks.That(structBack is { Kind: McdocJsonKind.Object } && structBack.Get("a") is not null,
+                "结构分支的值切走再切回不许丢", structBack is null ? "<null>" : McdocJsonFormatter.Format(structBack).Replace("\n", " "));
+
+            // 当前值优先：String 打 "true" → 切 Boolean 要得到 true（不许被 Boolean 分支的旧草稿 false 顶掉）
+            Switch(Entry(), "string");
+            Type(Entry(), "true");
+            Switch(Entry(), "boolean");
+            checks.That(Value() is { Kind: McdocJsonKind.Boolean } asBool && asBool.BooleanValue,
+                "String 打 true → 切 Boolean 得到 true（当前值优先，草稿只当兜底）",
+                Value()?.Kind.ToString() ?? "<null>");
+
+            // 数字 99 → 切 String：得到 "99"（同理不被草稿顶掉）
+            Switch(Entry(), "double");
+            Entry().NumberText = "99";
+            McdocCollectionEditor.Default.ApplyNodeValue(Entry());
+            pipeline.OnValueChanged(Entry());
+            PumpDispatcher();
+            Switch(Entry(), "string");
+            var asText = Value();
+            checks.That(asText is { Kind: McdocJsonKind.String } n99 && n99.StringValue == "99",
+                "数字 99 → 切 String 得到 \"99\"", asText?.StringValue ?? "<null>");
+
+            // 草稿要能跨"这一行被重建"：String 打 abc → 切 Double（0）→ 重建 → 切回 String 仍是 abc
+            Switch(Entry(), "string");
+            Type(Entry(), "abc");
+            checks.That(Value() is { Kind: McdocJsonKind.String } abc0 && abc0.StringValue == "abc",
+                "String 打 abc 落盘", Value()?.StringValue ?? "<null>");
+            Switch(Entry(), "double");
+            var rebuilt = document.RebuildNode(Entry());
+            PumpDispatcher();
+            foreach (var top in document.Nodes) top.EnsureChildren();
+            Console.WriteLine("[信息] 重建这一行：new=" + (rebuilt is not null) + " json=" + (Value()?.Kind.ToString() ?? "<null>"));
+            Switch(Entry(), "string");
+            var afterRebuild = Value();
+            checks.That(afterRebuild is { Kind: McdocJsonKind.String } abc1 && abc1.StringValue == "abc",
+                "分支草稿要跨节点重建（重建后再切回 String 仍是 abc）", afterRebuild?.StringValue ?? "<null>");
+
+            // 清空标量：键从文档消失，但行必须留着（不许走 RemoveField 把行删掉）
+            Switch(Entry(), "double");
+            var clearTarget = Entry();
+            clearTarget.NumberText = "";
+            McdocCollectionEditor.Default.ApplyNodeValue(clearTarget);
+            pipeline.OnValueChanged(clearTarget);
+            PumpDispatcher();
+            foreach (var top in document.Nodes) top.EnsureChildren();
+            var afterClear = Entry();
+            Console.WriteLine("[信息] 清空 Double 后：键在文档里=" + (Value() is not null)
+                + " 行还在=" + (afterClear is not null)
+                + " AnyTypeKey=" + (afterClear?.AnyTypeKey ?? "<null>"));
+            checks.That(Value() is null, "清空数字 → 键从文档里去掉", Value()?.Kind.ToString() ?? "<null>");
+            checks.That(afterClear is not null, "清空数字之后行仍留在树上（不许整行消失）",
+                afterClear is null ? "<无行>" : "在");
+            checks.That(afterClear?.AnyTypeKey == "double", "清空之后类型下拉仍停在原分支",
+                afterClear?.AnyTypeKey ?? "<null>");
+            return true;
+        }
+
+        /// <summary>按稳定键（小写）取 AnyHead 的分支项：显示名是大写，判据别用名字。</summary>
+        private static EnumMember AnyOption(McdocTreeNode node, string key)
+            => node?.AnyTypeOptions?.FirstOrDefault(option => string.Equals(
+                McdocHelpers.AnyBranchKey(Convert.ToString(option.Value?.LiteralValue)), key, StringComparison.Ordinal));
+
+        private static McdocTreeNode FindPlaceholder(McdocTreeNode node)
+        {
+            if (node is null) return null;
+            if (node.IsDynamicKey && node.Json is null) return node;
+            foreach (var child in node.Children ?? [])
+            {
+                var found = FindPlaceholder(child);
+                if (found is not null) return found;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 外部命令解析器（取代旧导入工具）：give / summon / setblock 刷怪笼各两条，再加两条非法输入。
+        /// 纯函数，不碰界面。
+        /// </summary>
+        public static int ExternalCommandParser()
+        {
+            var checks = new Checks();
+
+            // ① give（1.13+）：NBT 里的数值单位要被清掉，物品 id 要抠出来
+            var ok = CBHK.Utility.Common.ExternalCommandParser.TryGetItemNbt(
+                "give @p minecraft:diamond_sword 1 {Damage:5,Unbreakable:1b}", out var nbt, out var itemId, out _);
+            checks.That(ok && itemId == "minecraft:diamond_sword", "give(1.13+) 抠出物品 id", "id=" + itemId);
+            checks.That(nbt.Contains("\"Damage\":5") && nbt.Contains("\"Unbreakable\":1"),
+                "give(1.13+) NBT 落成合法 JSON 且清掉数值单位", "nbt=" + (nbt ?? "<null>"));
+
+            // ② give（≤1.12，带数据值）：命令里没有命名空间前缀
+            ok = CBHK.Utility.Common.ExternalCommandParser.TryGetItemNbt(
+                "give @p diamond_sword 1 0 {display:{Name:\"x\"}}", out nbt, out itemId, out _);
+            checks.That(ok && itemId == "diamond_sword", "give(≤1.12) 抠出物品 id", "id=" + itemId);
+
+            // ③ summon 实体：NBT 里没有 oldID 时按命令补齐
+            ok = CBHK.Utility.Common.ExternalCommandParser.TryGetEntityNbt(
+                "summon minecraft:pig ~ ~ ~ {CustomName:'\"a\"'}", out nbt, out var entityId, out _);
+            checks.That(ok && entityId == "minecraft:pig", "summon 抠出实体 id", "id=" + entityId);
+            checks.That(nbt.Contains("oldID") && nbt.Contains("minecraft:pig") && !nbt.Contains("minecraft:minecraft:"),
+                "summon 补齐 oldID（且不出现双重命名空间）", "nbt=" + (nbt ?? "<null>"));
+
+            // ④ summon 缺 oldID 时一律补（与旧工具同口径：summon item 也会被补）
+            ok = CBHK.Utility.Common.ExternalCommandParser.TryGetEntityNbt(
+                "summon item ~ ~ ~ {Item:{id:\"minecraft:stone\"},Count:1b}", out nbt, out _, out _);
+            checks.That(ok && nbt.Contains("oldID"), "summon 缺 oldID 时补齐（旧工具口径）", "nbt=" + (nbt ?? "<null>"));
+
+            // ⑤ 刷怪笼：legacy 判据与旧工具逐字一致（`^/setblock (minecraft:)?mob_spawner`）——
+            // 带坐标的真实命令不命中，所以判 1.13+：这是既有口径，这轮不改行为
+            ok = CBHK.Utility.Common.ExternalCommandParser.TryGetSpawnerNbt(
+                "/setblock mob_spawner{Delay:20s}", out nbt, out var legacy);
+            checks.That(ok && legacy, "setblock mob_spawner（无坐标，旧正则命中）判成 1.12", "legacy=" + legacy);
+            ok = CBHK.Utility.Common.ExternalCommandParser.TryGetSpawnerNbt(
+                "/setblock ~ ~ ~ minecraft:mob_spawner{SpawnData:{}}", out nbt, out legacy);
+            checks.That(ok && !legacy, "带坐标的 setblock 仍判 1.13+（旧工具既有口径）", "legacy=" + legacy);
+
+            // ⑥ 裸 id 归一 + oldID 剥离（页面导入要靠这两条才不会灌错 schema）
+            checks.That(CBHK.Utility.Common.ExternalCommandParser.StripNamespace("minecraft:diamond_sword") == "diamond_sword"
+                && CBHK.Utility.Common.ExternalCommandParser.StripNamespace("diamond_sword") == "diamond_sword",
+                "StripNamespace 归一资源 id", "");
+            ok = CBHK.Utility.Common.ExternalCommandParser.TryGetEntityNbt(
+                "summon minecraft:pig ~ ~ ~ {CustomName:'\"a\"'}", out nbt, out _, out var summon);
+            checks.That(ok && summon, "summon 命令被标成召唤写法", "summon=" + summon);
+            checks.That(!CBHK.Utility.Common.ExternalCommandParser.RemoveOldId(nbt).Contains("oldID"),
+                "RemoveOldId 把旧页面的 oldID 清掉", "nbt=" + (nbt ?? "<null>"));
+            ok = CBHK.Utility.Common.ExternalCommandParser.TryGetItemNbt(
+                "give @p minecraft:stone 1 0 {Damage:1}", out nbt, out _, out summon);
+            checks.That(ok && !summon, "give 命令不算召唤写法", "summon=" + summon);
+
+            // ⑦ 命令里没有 NBT 也要能用（summon / give 都不带花括号）
+            ok = CBHK.Utility.Common.ExternalCommandParser.TryGetEntityNbt(
+                "summon minecraft:pig ~ ~ ~", out nbt, out var bareEntity, out _);
+            checks.That(ok && Newtonsoft.Json.Linq.JObject.Parse(nbt)["id"]?.ToString() == "minecraft:pig"
+                && bareEntity == "minecraft:pig", "无 NBT 的 summon 合成最小 NBT（严格 JSON，id 可读）",
+                "nbt=" + (nbt ?? "<null>"));
+            ok = CBHK.Utility.Common.ExternalCommandParser.TryGetEntityNbt(
+                "give @p pig_spawn_egg", out nbt, out bareEntity, out _);
+            checks.That(ok && bareEntity == "pig" && nbt.Contains("minecraft:pig"),
+                "无 NBT 的 give 刷怪蛋认出实体 id（去掉 _spawn_egg）", "id=" + bareEntity + " nbt=" + (nbt ?? "<null>"));
+            ok = CBHK.Utility.Common.ExternalCommandParser.TryGetItemNbt(
+                "give @p minecraft:stone", out nbt, out var bareItem, out _);
+            checks.That(ok && bareItem == "minecraft:stone" && nbt == "{}", "无 NBT 的 give 物品返回空对象",
+                "id=" + bareItem + " nbt=" + nbt);
+
+            // ⑧ 下拉项的相等语义：代码设置选中项要靠它（WPF 的 Selector 用 Equals 校验"在不在集合里"）
+            var stone = new CBHK.CustomControl.VectorComboBox.VectorIconTextComboBoxItem { Text = "stone", ItemID = "stone" };
+            var stone2 = new CBHK.CustomControl.VectorComboBox.VectorIconTextComboBoxItem { Text = "stone", ItemID = "stone" };
+            var pig = new CBHK.CustomControl.VectorComboBox.VectorIconTextComboBoxItem { Text = "pig", ItemID = "pig" };
+            var noId = new CBHK.CustomControl.VectorComboBox.VectorIconTextComboBoxItem { Text = "stone" };
+            checks.That(stone.Equals(stone) && stone.Equals(stone2), "有 ItemID 的项 Equals 自反且对称", "");
+            checks.That(!stone.Equals(pig), "不同 ItemID 不相等", "");
+            checks.That(!noId.Equals(noId), "没 ItemID 的项 Equals 连自反都不成立（所以列表必须给 ItemID）", "");
+
+            // ⑧ 非法输入：返回 false 且不抛
+            checks.That(!CBHK.Utility.Common.ExternalCommandParser.TryGetItemNbt("", out _, out _, out _), "空串解析失败但不抛", "");
+            checks.That(!CBHK.Utility.Common.ExternalCommandParser.TryGetEntityNbt("随便写点什么", out _, out _, out _),
+                "乱写解析失败但不抛", "");
+            return checks.Finish("--case external-command-parser");
+        }
+
+        /// <summary>map 条目 my_tag 下面那个列表项节点（any 的 list 分支）。</summary>
+        private static McdocTreeNode FindItem(McdocTreeNode node)
+        {
+            if (node is null) return null;
+            if (node.IsMapEntry && node.FieldName == "my_tag" && node.Items.Count > 0) return node.Items[0];
+            foreach (var child in node.Children ?? [])
+            {
+                var found = FindItem(child);
+                if (found is not null) return found;
+            }
+            foreach (var item in node.Items ?? [])
+            {
+                var found = FindItem(item);
+                if (found is not null) return found;
+            }
+            return null;
+        }
+
+        private static McdocTreeNode FindEntry(McdocTreeNode node, string key)
+        {
+            if (node is null) return null;
+            if (node.IsMapEntry && string.Equals(node.FieldName, key, StringComparison.Ordinal)) return node;
+            foreach (var child in node.Children ?? [])
+            {
+                var found = FindEntry(child, key);
+                if (found is not null) return found;
+            }
+            return null;
+        }
+
         private static int CountNodes(IEnumerable<McdocTreeNode> roots)
         {
             var count = 0;
@@ -6770,3 +7407,5 @@ namespace CBHK.Probe
             => (node.JsonPath ?? "?") + " type=" + (node.Type?.Kind.ToString() ?? "null") + " field=" + (node.FieldName ?? "<空>");
     }
 }
+
+

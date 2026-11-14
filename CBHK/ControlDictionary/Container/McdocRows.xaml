@@ -414,7 +414,14 @@
         </ItemsControl>
     </DataTemplate>
 
-    <!--  misode AnyHead：先选 JSON 类型，再给该类型的编辑器  -->
+    <!--
+        misode AnyHead：先选 JSON 类型，再给**该类型自己的**编辑器。
+        以前不管选的是哪一项，右边永远是"原始 JSON 文本框"：选 string 要用户自己写引号、
+        选 struct/list 明明已经按类型摊开了子行、行上还挂着一个空 JSON 框（用户原话：
+        "添加出来的子节点求解得不太对，因为交互控件不跟着类型走"）。
+        现在按选中的类型换控件：string→文本、double→数字、boolean→False/True、
+        list/struct→不留值编辑器（值在子行里编），只有"没有值/认不出形状"才退回原始 JSON。
+    -->
     <DataTemplate x:Key="McdocRawEditor">
         <StackPanel Orientation="Horizontal">
             <VectorComboBox:VectorTextComboBox
@@ -427,13 +434,76 @@
                 ItemsSource="{Binding AnyTypeOptions, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
                 SelectedItem="{Binding SelectedAnyType, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
                 Style="{StaticResource MdocTransparentComboBoxStyle}" />
-            <Input:VectorTextBox
-                Width="236"
-                Height="34"
-                VerticalAlignment="Center"
-                Style="{StaticResource MdocTransparentTextBoxStyle}"
-                Text="{Binding RawJson, UpdateSourceTrigger=LostFocus}" />
+            <Grid VerticalAlignment="Center">
+                <Input:VectorTextBox
+                    x:Name="anyStringEditor"
+                    Width="236"
+                    Height="34"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource MdocTransparentTextBoxStyle}"
+                    Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                    Visibility="Collapsed" />
+                <Input:VectorTextBox
+                    x:Name="anyNumberEditor"
+                    Width="140"
+                    Height="34"
+                    VerticalAlignment="Center"
+                    Style="{DynamicResource VectorTextBoxStyle}"
+                    Text="{Binding NumberText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Visibility="Collapsed" />
+                <StackPanel
+                    x:Name="anyBoolEditor"
+                    Orientation="Horizontal"
+                    Visibility="Collapsed">
+                    <VectorButton:VectorToggleTextButton
+                        Height="34"
+                        FontSize="14"
+                        IsChecked="{Binding IsFalse, Mode=TwoWay}"
+                        OriginBottomHeight="4"
+                        Style="{DynamicResource VectorToggleTextButtonStyle}"
+                        Text="False" />
+                    <VectorButton:VectorToggleTextButton
+                        Height="34"
+                        FontSize="14"
+                        IsChecked="{Binding IsTrue, Mode=TwoWay}"
+                        OriginBottomHeight="4"
+                        Style="{DynamicResource VectorToggleTextButtonStyle}"
+                        Text="True" />
+                </StackPanel>
+                <Input:VectorTextBox
+                    x:Name="anyRawEditor"
+                    Width="236"
+                    Height="34"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource MdocTransparentTextBoxStyle}"
+                    Text="{Binding RawJson, UpdateSourceTrigger=LostFocus}" />
+            </Grid>
         </StackPanel>
+        <DataTemplate.Triggers>
+            <!--  判据一律用稳定键 AnyTypeKey（显示名是大写 Boolean/String…，不许拿来比较）  -->
+            <DataTrigger Binding="{Binding AnyTypeKey}" Value="string">
+                <Setter TargetName="anyStringEditor" Property="Visibility" Value="Visible" />
+                <Setter TargetName="anyRawEditor" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding AnyTypeKey}" Value="double">
+                <Setter TargetName="anyNumberEditor" Property="Visibility" Value="Visible" />
+                <Setter TargetName="anyRawEditor" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding AnyTypeKey}" Value="boolean">
+                <Setter TargetName="anyBoolEditor" Property="Visibility" Value="Visible" />
+                <Setter TargetName="anyRawEditor" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+            <!--  list / struct：值就在子行里，行上不留第二个编辑入口，也不放说明文字  -->
+            <DataTrigger Binding="{Binding AnyTypeKey}" Value="list">
+                <Setter TargetName="anyRawEditor" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding AnyTypeKey}" Value="struct">
+                <Setter TargetName="anyRawEditor" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding AnyTypeKey}" Value="{x:Null}">
+                <Setter TargetName="anyRawEditor" Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
     </DataTemplate>
 
     <DataTemplate x:Key="McdocColorEditor">
@@ -1016,6 +1086,17 @@
                 </StackPanel>
             </Border>
             <StackPanel Grid.Column="4" Style="{StaticResource McdocActionGroupStyle}">
+                <!--  any 行的 list 分支：⊕ 加一项（CanAddTop 只在"值是数组"时为真，别的条目行不显示）  -->
+                <VectorButton:VectorFlatIconButton
+                    Command="{Binding AddTopCommand}"
+                    Icon="{DynamicResource TreeNodePlusGeometry}"
+                    IconBrush="{DynamicResource CommonForeground}"
+                    IconHeight="15"
+                    IconMargin="5"
+                    IconWidth="15"
+                    Style="{DynamicResource VectorFlatIconButtonStyle}"
+                    ToolTip="添加一项"
+                    Visibility="{Binding ListAddTopVisibility}" />
                 <VectorButton:VectorFlatIconButton
                     Command="{Binding Node.AddEntryCommand}"
                     CommandParameter="{Binding}"
@@ -1042,6 +1123,14 @@
         </Grid>
     </DataTemplate>
 
+    <!--
+        动态键的「新键」占位行：键控件（自由文本用输入框、#[id] 键用候选下拉）+ 右侧 ⊕。
+        以前输入框是 Stretch + Auto 列，宽度由同格的提示语撑开、字压在框里 ——
+        整行看起来就是一句说明文字（用户的原话是"这个节点没有 Key"）。
+        现在：输入框自己固定 236 宽（与其它行的值编辑器同宽），提示语叠在**框内**（ClipToBounds 夹住），
+        且只在"自由文本输入框 + 键名还空着"时显示；候选下拉形态不叠字（下拉皮肤自带亮带会横穿文字），
+        靠下拉自己的 ToolTip 说明。
+    -->
     <DataTemplate x:Key="McdocPlaceholderRow">
         <Grid
             MinHeight="38"
@@ -1052,41 +1141,41 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="Auto" MinWidth="72" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ContentControl
                 Grid.Column="0"
                 Content="{Binding}"
                 ContentTemplate="{StaticResource MdocRowMarkerTemplate}" />
-            <Grid Grid.Column="2">
+            <!--
+                占位行的显示名（如 "Custom Data"）：取自父级给的 Desc，**不进 JSON**。
+                真没有名字时（候选键 map）Auto 列宽为 0，布局跟以前一样。
+            -->
+            <ContentControl
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocKeyTemplate}" />
+            <!--
+                Grid 夹住键格的 236 宽：提示语（水印）叠在输入框**里面**，靠 ClipToBounds + 内侧边距
+                保证字不会越出键入范围；键名一敲就 Collapsed。
+            -->
+            <Grid
+                Grid.Column="3"
+                Width="236"
+                ClipToBounds="True">
                 <data:McdocKeyBox
+                    Width="236"
                     Height="34"
                     HorizontalAlignment="Stretch"
                     Style="{StaticResource MdocTransparentTextBoxStyle}"
                     Text="{Binding Node.EditingKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    ToolTip="新键：在这里敲名字，再点右侧 +"
                     Visibility="{Binding KeyTextVisibility}" />
-                <!--  VectorTextBox 的 WaterMarkerText 在行内看不见（被内容宿主盖住），空键时自己叠一层提示  -->
-                <TextBlock
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Center"
-                    FontSize="14"
-                    Foreground="{DynamicResource CommonForeground}"
-                    IsHitTestVisible="False"
-                    Opacity="0.55"
-                    Text="新键：先起个名字，再点右侧 +">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Node.EditingKey}" Value="">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
                 <VectorComboBox:VectorTextComboBox
+                    Width="236"
                     Height="34"
                     HorizontalAlignment="Stretch"
                     Background="Transparent"
@@ -1095,10 +1184,36 @@
                     ItemsSource="{Binding KeyOptions, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
                     SelectedItem="{Binding SelectedKey, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
                     Style="{StaticResource MdocTransparentComboBoxStyle}"
+                    ToolTip="新键：从候选里选一个键名，再点右侧 +"
                     Visibility="{Binding KeyComboVisibility}" />
+                <TextBlock
+                    Margin="10,0,8,0"
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    Foreground="{DynamicResource CommonForeground}"
+                    IsHitTestVisible="False"
+                    Opacity="0.55"
+                    Text="新键：起个名字，再点 +"
+                    TextTrimming="CharacterEllipsis">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <!--  只有"自由文本输入框 + 键名还空着"才叠水印：候选下拉的皮肤自带亮带，字压上去会被横穿  -->
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Node.EditingKey}" Value="" />
+                                        <Condition Binding="{Binding KeyTextVisibility}" Value="Visible" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </Grid>
             <VectorButton:VectorFlatIconButton
-                Grid.Column="3"
+                Grid.Column="4"
                 Command="{Binding Node.AddEntryCommand}"
                 CommandParameter="{Binding}"
                 Icon="{DynamicResource TreeNodePlusGeometry}"

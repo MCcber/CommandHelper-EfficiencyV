@@ -1,5 +1,4 @@
-﻿using CBHK.CustomControl.Container;
-using CBHK.CustomControl.VectorComboBox;
+using CBHK.CustomControl.Container;
 using CBHK.Model.Data;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;
@@ -48,16 +47,10 @@ namespace CBHK.ViewModel.Generator
         private bool _showGeneratorResult = false;
 
         /// <summary>
-        /// 能否关闭标签页
-        /// </summary>
-        [ObservableProperty]
-        private bool _isCloseable = true;
-
-        /// <summary>
         /// 当前选中的物品页
         /// </summary>
         [ObservableProperty]
-        private VectorRichTabItem _selectedItemPage = null;
+        private VectorRichTabItem selectedItemPage = null;
 
         /// <summary>
         /// 物品页数据源
@@ -73,41 +66,12 @@ namespace CBHK.ViewModel.Generator
                 FontWeight = FontWeights.Normal
             }
         ];
-
-
-        /// <summary>
-        /// 版本列表
-        /// </summary>
-        [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _versionList = [
-            new VectorTextComboBoxItem() { Text = "1.20.4" }, 
-            new VectorTextComboBoxItem() { Text = "1.20.2" },
-            new VectorTextComboBoxItem() { Text = "1.20.0" },
-            new VectorTextComboBoxItem() { Text = "1.19.4" },
-            new VectorTextComboBoxItem() { Text = "1.19.3" },
-            new VectorTextComboBoxItem() { Text = "1.19.0" },
-            new VectorTextComboBoxItem() { Text = "1.16.2" },
-            new VectorTextComboBoxItem() { Text = "1.16.0" },
-            new VectorTextComboBoxItem() { Text = "1.15.0" },
-            new VectorTextComboBoxItem() { Text = "1.14.0" },
-            new VectorTextComboBoxItem() { Text = "1.13.1" },
-            new VectorTextComboBoxItem() { Text = "1.13.0" }, 
-            new VectorTextComboBoxItem() { Text = "1.12.0" }];
-
-        /// <summary>
-        /// 版本ID数据源
-        /// </summary>
-        [ObservableProperty]
-        private ObservableCollection<VersionID> _versionIDList = [];
         #endregion
 
         #region Event
         public void Item_Loaded(object sender,RoutedEventArgs e)
         {
-            ItemPageView itemPages = new();
-            ItemPageViewModel itemPageDataContext = itemPages.DataContext as ItemPageViewModel;
-            itemPageDataContext.UseForTool = !IsCloseable;
-            ItemPageList[0].Content = itemPages;
+            ItemPageList[0].Content = container.Resolve<ItemPageView>();
         }
 
         [RelayCommand]
@@ -116,27 +80,16 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void AddItem()
         {
-            if(ItemPageList.Count > 0)
-            {
-                ItemPageViewModel itemPageDataContext = (ItemPageList[0].Content as ItemPageView).DataContext as ItemPageViewModel;
-                if (itemPageDataContext.UseForTool)
-                {
-                    return;
-                }
-            }
             VectorRichTabItem richTabItems = new()
             {
-                Header = "物品",
+                Title = "物品",
                 FontWeight = FontWeights.Normal,
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style
+                Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style
             };
             ItemPageView itemPage = new() 
             { 
                 FontWeight = FontWeights.Normal
             };
-            ItemPageViewModel pageContext = itemPage.DataContext as ItemPageViewModel;
-            pageContext.UseForReference = false;
-            pageContext.UseForTool = !IsCloseable;
             richTabItems.Content = itemPage;
             ItemPageList.Add(richTabItems);
             if (ItemPageList.Count == 1)
@@ -150,13 +103,7 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 清空物品
         /// </summary>
-        private void ClearItem()
-        {
-            if (IsCloseable)
-            {
-                ItemPageList.Clear();
-            }
-        }
+        private void ClearItem() => ItemPageList.Clear();
 
         [RelayCommand]
         /// <summary>
@@ -174,8 +121,7 @@ namespace CBHK.ViewModel.Generator
             };
             if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
             {
-                ObservableCollection<VectorRichTabItem> result = ItemPageList;
-                ExternalDataImportManager.ImportItemDataHandler(dialog.FileName, ref result,messagePopup);
+                ImportIntoMcDocPage(dialog.FileName, true);
             }
         }
 
@@ -185,8 +131,37 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportItemFromClipboard()
         {
-            ObservableCollection<VectorRichTabItem> result = ItemPageList;
-            ExternalDataImportManager.ImportItemDataHandler(Clipboard.GetText(), ref result,messagePopup, false);
+            ImportIntoMcDocPage(Clipboard.GetText(), false);
+        }
+
+        /// <summary>
+        /// 导入只灌 mcdoc 页的 JsonText（命令里的 NBT 原样进去，引擎自己同步树）；
+        /// 不再造旧的物品页面。失败提示沿用窗口原来的样式。
+        /// </summary>
+        private void ImportIntoMcDocPage(string textOrPath, bool isPath)
+        {
+            var page = (SelectedItemPage?.Content as FrameworkElement)?.DataContext as ItemPageViewModel;
+            if (page is not null)
+            {
+                var failure = "";
+                if (page.ImportFromCommand(textOrPath, isPath, message => failure = message)) return;
+                PushImportFailure(failure);
+                return;
+            }
+            PushImportFailure("页面还没就绪，稍后再试");
+        }
+
+        /// <summary>导入失败只给一句话原因（解析失败 / 注册表里没有这个 id / 页面没就绪）。</summary>
+        private void PushImportFailure(string reason)
+        {
+            messagePopup.PushMessage(new GeneratorMessage()
+            {
+                Message = "导入失败！" + reason,
+                MessageBrush = Brushes.Red,
+                SubMessage = "物品生成器",
+                SubMessageBrush = Brushes.DarkGray,
+                Icon = new BitmapImage(new Uri(iconPath))
+            });
         }
 
         [RelayCommand]
@@ -293,12 +268,5 @@ namespace CBHK.ViewModel.Generator
             }
         }
         #endregion
-    }
-
-    public class VersionID
-    {
-        public string HighVersionID { get; set; } = "";
-        public string LowVersionID { get; set; } = "";
-        public int Damage { get; set; } = 0;
     }
 }

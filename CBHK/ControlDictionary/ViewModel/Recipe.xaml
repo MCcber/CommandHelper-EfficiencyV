@@ -1,0 +1,42 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:view="clr-namespace:CBHK.View.Component.Recipe"
+    xmlns:vm="clr-namespace:CBHK.ViewModel.Component.Recipe">
+
+    <DataTemplate DataType="{x:Type vm:CraftingTableViewModel}">
+        <view:CraftingTableView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:FurnaceViewModel}">
+        <view:FurnaceView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:SmokerViewModel}">
+        <view:SmokerView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:BlastFurnaceViewModel}">
+        <view:BlastFurnaceView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:CampfireViewModel}">
+        <view:CampfireView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:SmithingTableViewModel}">
+        <view:SmithingTableView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:StonecutterViewModel}">
+        <view:StonecutterView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+        <view:SettingsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:SearchViewModel}">
+        <view:SearchView />
+    </DataTemplate>
+</ResourceDictionary>

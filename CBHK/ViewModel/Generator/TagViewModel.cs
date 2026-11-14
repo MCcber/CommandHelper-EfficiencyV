@@ -23,6 +23,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Text;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -203,9 +204,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFromClipboard()
         {
-            ObservableCollection<TagItemTemplate> items = TagItemList;
-            TagViewModel context = this;
-            ExternalDataImportManager.ImportTagDataHandler(Clipboard.GetText(),ref items,ref context,messagePopup,false);
+            ImportTagData(Clipboard.GetText(), messagePopup, isPath: false);
         }
 
         [RelayCommand]
@@ -214,8 +213,6 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFromFile()
         {
-            ObservableCollection<TagItemTemplate> items = TagItemList;
-            TagViewModel context = this;
             OpenFileDialog dialog = new()
             {
                 Filter = "Json文件|*.json;",
@@ -227,7 +224,7 @@ namespace CBHK.ViewModel.Generator
                 Title = "请选择一个标签文件"
             };
             if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
-                ExternalDataImportManager.ImportTagDataHandler(dialog.FileName, ref items, ref context,messagePopup);
+                ImportTagData(dialog.FileName, messagePopup);
         }
 
         /// <summary>
@@ -603,6 +600,63 @@ namespace CBHK.ViewModel.Generator
                         }
                     }
                 }
+            }
+        }
+        #endregion
+
+        #region 外部数据导入（并入本类，不再单独成文件）
+        public void ImportTagData(string filePathOrData, MessagePopup messagePopup, bool isPath = true)
+        {
+            string data = isPath ? File.ReadAllText(filePathOrData) : filePathOrData;
+
+            try
+            {
+                JObject content = JObject.Parse(data);
+                if (content.SelectToken("replace") is JToken replace)
+                    Replace = replace.ToString().ToString().ToLower() == "true";
+                if (content.SelectToken("values") is JArray valuesArray)
+                {
+                    List<string> values = valuesArray.ToList().ConvertAll(item => item.ToString().Replace("minecraft:", ""));
+                    StringBuilder id = new();
+                    foreach (var item in TagItemList)
+                    {
+                        id.Clear();
+                        id.Append(item.DisplayId);
+                        item.BeChecked = values.Where(value => value == id.ToString()).Any();
+                        if (item.BeChecked.Value)
+                        {
+                            switch (item.DataType)
+                            {
+                                case "itemView":
+                                    Items.Add(id.ToString());
+                                    break;
+                                case "Block&itemView":
+                                    Blocks.Add(id.ToString());
+                                    break;
+                                case "EntityView":
+                                    Entities.Add(id.ToString());
+                                    break;
+                                case "GameEvent":
+                                    GameEvent.Add(id.ToString());
+                                    break;
+                                case "Biome":
+                                    Biomes.Add(id.ToString());
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                messagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "标签生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\name_tag.png"))
+                });
             }
         }
         #endregion

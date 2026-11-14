@@ -402,7 +402,10 @@ namespace CBHK.Utility.Data.Mcdoc
             // 只有"列表语义"的节点才有列表追加：map/struct 的 ⊕ 必须走"起键"（CommitEntry），
             // 否则按下一个永远 CanExecute=true 的按钮，什么都写不出来（表现是"按了没反应/结果不对"）
             bool CanAppendItems() => node.Type?.IsListLike == true
-                || (node.UnionListLike && node.SelectedUnionMember?.IsListLike == true);
+                || (node.UnionListLike && node.SelectedUnionMember?.IsListLike == true)
+                // any 的 list 分支：类型是 any、形状是数组，⊕ 同样要能加项
+                || (node.Type?.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe
+                    && node.Json?.Kind == McdocJsonKind.Array);
             // 追加与"在顶部新增"必须是同一个出口：AppendItem 那条旧路既不揭开新项、也不记展开态，
             // 于是"点了 ⊕，右侧 JSON 多了一条、左侧树什么都不动"（新项被折叠的列表挡住）。
             node.AddItemCommand = new McdocCommand(() => editor.AddItem(node, runtime), CanAppendItems);

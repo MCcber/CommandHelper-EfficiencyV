@@ -30,6 +30,16 @@ namespace CBHK.Domain.DataContext
             string filePathOrContent,
             string baseDocumentPath,
             CancellationToken cancellationToken = default)
+            => (await AnalysisMCDocumentFileOrContentWithRaw(filePathOrContent, baseDocumentPath, cancellationToken)).File;
+
+        /// <summary>
+        /// 同上，但把服务器**原始 JSON** 一起交出去：磁盘缓存要存的就是这一份（反序列化走同一份选项，
+        /// 零保真风险）。没有响应时 Raw 为 null。
+        /// </summary>
+        public static async Task<(MCDocumentFile File, string Raw)> AnalysisMCDocumentFileOrContentWithRaw(
+            string filePathOrContent,
+            string baseDocumentPath,
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -48,7 +58,7 @@ namespace CBHK.Domain.DataContext
             }
         }
 
-        private static async Task<MCDocumentFile?> SendAsync(string filePathOrContent, string baseDocumentPath, CancellationToken cancellationToken)
+        private static async Task<(MCDocumentFile File, string Raw)> SendAsync(string filePathOrContent, string baseDocumentPath, CancellationToken cancellationToken)
         {
             if (filePathOrContent is null)
             {
@@ -98,7 +108,7 @@ namespace CBHK.Domain.DataContext
                 await pipe.ReadExactlyAsync(resultArray, ioSource.Token);
 
                 string json = Encoding.UTF8.GetString(resultArray);
-                return JsonSerializer.Deserialize<MCDocumentFile>(json, DeserializeOptions);
+                return (JsonSerializer.Deserialize<MCDocumentFile>(json, DeserializeOptions), json);
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {

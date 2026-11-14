@@ -37,7 +37,7 @@
         </Grid.RowDefinitions>
         <DockPanel
             Grid.Row="0"
-            Height="35"
+            Height="40"
             HorizontalAlignment="Left"
             VerticalAlignment="Center">
             <VectorButton:VectorFlatImageButton
@@ -76,7 +76,7 @@
                 </VectorButton:VectorFlatImageButton.ToolTip>
             </VectorButton:VectorFlatImageButton>
             <Input:VectorNumbericUpDown
-                Width="130"
+                Width="150"
                 Style="{DynamicResource VectorNumbericUpDownStyle}"
                 WaterMarkerBrush="Gray"
                 WaterMarkerMargin="5 0 0 0"
@@ -91,7 +91,6 @@
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
                 Width="100"
-                ArrowMargin="0 0 5 0"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion}"

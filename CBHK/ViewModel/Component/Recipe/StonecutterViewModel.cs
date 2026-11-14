@@ -1,273 +1,45 @@
-﻿using CBHK.Domain;
-using CBHK.Interface.Visual;
+using CBHK.Domain;
+using CBHK.Interface.Component.Recipe;
 using CBHK.Model.Data;
-using CBHK.Utility.Common;
-using CBHK.Utility.Visual.MessageTip;
-using CBHK.View.Component.Recipe;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using CBHK.ViewModel.Component.Recipe.Strategy;
 using Newtonsoft.Json.Linq;
+using Prism.Events;
 using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Component.Recipe
 {
-    public partial class StonecutterViewModel : ObservableObject, IPageViewModel
+    /// <summary>
+    /// 切石机：一个材料槽（可多选）+ 一个结果槽
+    /// </summary>
+    public class StonecutterViewModel : RecipeEditorViewModelBase
     {
-        #region Field
-        private CBHKDataContext context;
-        /// <summary>
-        /// 存储最终结果
-        /// </summary>
-        public string Result = "";
-        BitmapImage emptyImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Recipe\Image\Empty.png"));
-        SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-        SolidColorBrush grayBrush = new((Color)ColorConverter.ConvertFromString("#484848"));
-        /// <summary>
-        /// 需要保存
-        /// </summary>
-        public bool NeedSave = true;
-        public Image MaterialItem = null;
-        /// <summary>
-        /// 结果物品
-        /// </summary>
-        public Image ResultItem = null;
-        /// <summary>
-        /// 多选材质面板
-        /// </summary>
-        private Grid MultiMaterialGrid = null;
-        /// <summary>
-        /// 多选材质视图
-        /// </summary>
-        private ListView MultiMaterialViewer = null;
-        /// <summary>
-        /// 记录多选模式当前选中的物品索引,用于设置Tag数据
-        /// </summary>
-        int MultiModeCurrentSelectedItemIndex = 0;
-        /// <summary>
-        /// 多选模式材料视图数据源
-        /// </summary>
-        private CollectionViewSource MultiMaterialSource = new();
-
-        #region 存储外部导入的数据
-        public bool ImportMode = false;
-        public JObject ExternalData = null;
-        #endregion
-
-        #endregion
+        public StonecutterViewModel(IEventAggregator EventAggregator, SlotDropStrategyRegistry DropStrategies) : base(EventAggregator, DropStrategies)
+        {
+            MaterialSlot = new RecipeSlotViewModel(this, "material", RecipeSlotRole.Material, "材料");
+            Slots.Add(MaterialSlot);
+            ResultSlot = new RecipeSlotViewModel(this, "result", RecipeSlotRole.Result, "结果");
+        }
 
         #region Property
-        /// <summary>
-        /// 材料列表
-        /// </summary>
-        [ObservableProperty]
-        public ObservableCollection<ItemStructure> _materialList = [];
-        [ObservableProperty]
-        public ObservableCollection<string> _materialTag = [];
+        public RecipeSlotViewModel MaterialSlot { get; }
 
-        /// <summary>
-        /// 记录当前的Tag
-        /// </summary>
-        [ObservableProperty]
-        private string _currentTag = "";
+        public override RecipeType Kind => RecipeType.Stonecutter;
 
-        /// <summary>
-        /// 物品搜索字符串
-        /// </summary>
-        [ObservableProperty]
-        private string _searchText = "";
+        public override bool SupportsCount => true;
 
-        /// <summary>
-        /// 多选与单选
-        /// </summary>
-        [ObservableProperty]
-        private bool _multiSelect = false;
-
-        /// <summary>
-        /// 组标识符
-        /// </summary>
-        [ObservableProperty]
-        private string _groupName = "";
-
-        /// <summary>
-        /// 配方文件名
-        /// </summary>
-        [ObservableProperty]
-        private string _fileName = "";
-
-        /// <summary>
-        /// 结果数量
-        /// </summary>
-        [ObservableProperty]
-        private double _count = 1;
-
-        [ObservableProperty]
-        private Visibility _materialMultiItemVisibility = Visibility.Collapsed;
-
-        public MessagePopup MessagePopup { get; set; }
+        protected override string SuccessMessage => "切石机配方生成成功！";
         #endregion
 
         #region Method
-        public StonecutterViewModel(CBHKDataContext context)
+        public override string BuildResult()
         {
-            context = context;
-            MaterialTag.Add("");
-        }
-
-        /// <summary>
-        /// 异步载入外部材料数据
-        /// </summary>
-        /// <returns></returns>
-        private async Task MaterialsLoaded()
-        {
-            StonecutterView stonecutter = MaterialItem.FindParent<StonecutterView>();
-            await stonecutter.Dispatcher.InvokeAsync(() =>
-            {
-                if (ExternalData.SelectToken("ingredient") is JObject ingredient)
-                {
-                    JToken itemIDObj = ExternalData.SelectToken("ingredient.item");
-                    JToken itemTagObj = ExternalData.SelectToken("ingredient.tag");
-                    if (itemIDObj is not null)
-                    {
-                        string itemID = itemIDObj.ToString().Replace("minecraft:", "");
-                        Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                        string itemName = "";
-                        MaterialList.Add(new()
-                        {
-                            ImagePath = new BitmapImage(iconUri),
-                            IDAndName = itemID + ":" + itemName
-                        });
-                        if (itemTagObj is not null)
-                            MaterialTag.Add(itemTagObj.ToString());
-                    }
-                }
-                else
-                    if (ExternalData.SelectToken("ingredient") is JArray ingredients)
-                {
-                    foreach (JToken item in ingredients)
-                    {
-                        JToken itemIDObj = item.SelectToken("item");
-                        JToken itemTagObj = item.SelectToken("tag");
-                        if (itemIDObj is not null)
-                        {
-                            string itemID = itemIDObj.ToString().Replace("minecraft:", "");
-                            Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID + ".png");
-                            string itemName = "";
-                            MaterialList.Add(new()
-                            {
-                                ImagePath = new BitmapImage(iconUri),
-                                IDAndName = itemID + ":" + itemName
-                            });
-                            if (itemTagObj is not null)
-                                MaterialTag.Add(itemTagObj.ToString());
-                        }
-                    }
-                    MaterialMultiItemVisibility = Visibility.Visible;
-                }
-            });
-        }
-
-        /// <summary>
-        /// 异步载入外部结果数据
-        /// </summary>
-        /// <returns></returns>
-        private void ResultItemLoaded()
-        {
-            if (ExternalData.SelectToken("result") is JToken recipeResult)
-            {
-                string itemID = recipeResult.ToString().Replace("minecraft:", "");
-                Uri iconUri = new(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + itemID.ToString() + ".png");
-                string itemName = "";
-                ResultItem.Source = new BitmapImage(iconUri);
-                ResultItem.Tag = new ItemStructure()
-                {
-                    ImagePath = new BitmapImage(iconUri),
-                    IDAndName = itemID + ":" + itemName
-                };
-            }
-        }
-        #endregion
-
-        #region Event
-        /// <summary>
-        /// 载入多选材质面板
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void MultiMaterialGrid_Loaded(object sender, RoutedEventArgs e)
-        {
-            MultiMaterialGrid = sender as Grid;
-            StonecutterView stonecutter = MultiMaterialGrid.FindParent<StonecutterView>();
-            MultiMaterialSource = stonecutter.Resources["MultiModeItemViewSource"] as CollectionViewSource;
-            MultiMaterialSource.Filter += MultiMaterialSource_Filter;
-        }
-
-        /// <summary>
-        /// 载入材料
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public async void Material_Loaded(object sender, RoutedEventArgs e)
-        {
-            MaterialItem = sender as Image;
-            MaterialItem.Source ??= emptyImage;
-            if (ImportMode)
-                await MaterialsLoaded();
-        }
-
-        /// <summary>
-        /// 载入结果物品
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ResultItem_Loaded(object sender, RoutedEventArgs e)
-        {
-            ResultItem = sender as Image;
-            ResultItem.Source ??= emptyImage;
-            if (ImportMode)
-                ResultItemLoaded();
-        }
-
-        /// <summary>
-        /// 载入多选模式视图
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void MultiMaterialViewer_Loaded(object sender, RoutedEventArgs e)
-        {
-            MultiMaterialViewer = sender as ListView;
-        }
-
-        /// <summary>
-        /// 搜索文本更新
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SearchTextBox_SelectionChanged(object sender,TextChangedEventArgs e)
-        {
-            if (MultiMaterialGrid?.Visibility == Visibility.Visible && MultiMaterialViewer?.Visibility == Visibility.Visible)
-                MultiMaterialSource.View?.Refresh();
-        }
-
-        [RelayCommand]
-        /// <summary>
-        /// 执行配方
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void Run()
-        {
-            #region 合成最终数据
-            Result = "{\r\n  \"type\": \"minecraft:stonecutting\",";
+            List<ItemStructure> materials = [.. MaterialSlot.Items];
+            List<string> tags = [.. MaterialSlot.Tags];
+            StringBuilder result = new("{\r\n  \"type\": \"minecraft:stonecutting\",");
             #region 组标识符
             string groupData = GroupName.Length > 0 ? "\"group\":\"" + GroupName + "\"," : "";
             #endregion
@@ -277,10 +49,10 @@ namespace CBHK.ViewModel.Component.Recipe
             if (MultiSelect)
             {
                 keyData.Append("\"ingredient\":[");
-                for (int i = 0; i < MaterialList.Count; i++)
+                for (int i = 0; i < materials.Count; i++)
                 {
-                    string itemID = MaterialList[i].IDAndName[..MaterialList[i].IDAndName.IndexOf(':')];
-                    keyData.Append("{\"item\":\"minecraft:" + itemID + "\"" + (MaterialTag.Count > 0 && i < MaterialTag.Count && MaterialTag[i].Length > 0 ? ",\"tag\":\"" + MaterialTag[i] + "\"}," : "},"));
+                    string itemID = RecipeSlotViewModel.GetItemId(materials[i]);
+                    keyData.Append(Format.Ingredient(itemID, tags.Count > 0 && i < tags.Count ? tags[i] : "") + ",");
                 }
                 //去除末尾逗号并追加闭中括号
                 if (keyData.ToString().EndsWith(","))
@@ -290,250 +62,79 @@ namespace CBHK.ViewModel.Component.Recipe
             else
             {
                 keyData.Append("\"ingredient\":");
-                string itemID = MaterialList[0].IDAndName[..MaterialList[0].IDAndName.IndexOf(':')];
-                keyData.Append("{\"item\":\"minecraft:" + itemID + "\"" + (MaterialTag.Count > 0 && MaterialTag[0].Length > 0 ? ",\"tag\":\"" + MaterialTag[0] + "\"}," : "},"));
+                string itemID = materials.Count > 0 ? RecipeSlotViewModel.GetItemId(materials[0]) : "";
+                keyData.Append(Format.Ingredient(itemID, tags.Count > 0 ? tags[0] : "") + ",");
             }
-            ItemStructure resultItemStructure = ResultItem.Tag as ItemStructure;
-            string resultItemID = resultItemStructure.IDAndName[..resultItemStructure.IDAndName.IndexOf(':')];
-            string countData = ",\"count\":" + int.Parse(Count.ToString()) + "}";
-            string resultData = "\"result\":\"minecraft:" + resultItemID + "\"";
+            string resultItemID = ResultSlot.Items.Count > 0 ? RecipeSlotViewModel.GetItemId(ResultSlot.Items[0]) : "";
+            string countValue = int.Parse(Count.ToString()).ToString();
+            string resultData;
+            string countData;
+            if (Format.ResultUsesItemStack)
+            {
+                // 1.20.5 起 count 收进结果的 ItemStack，外层不再有 count 字段；双括号：结果对象 + 根对象
+                resultData = "\"result\":" + Format.ResultObject(resultItemID) + ",\"count\":" + countValue + "}}";
+                countData = "";
+            }
+            else
+            {
+                resultData = "\"result\":\"minecraft:" + resultItemID + "\"";
+                countData = ",\"count\":" + countValue + "}";
+            }
             #endregion
             #endregion
             #region 合并最终结果
-            Result += groupData + keyData + resultData + countData;
+            result.Append(groupData + keyData + resultData + countData);
             #endregion
-            #endregion
-
-            #region 选择生成路径，执行生成
-            if (NeedSave)
-            {
-                Microsoft.Win32.SaveFileDialog saveFileDialog = new()
-                {
-                    AddExtension = true,
-                    Filter = "Json文件|*.json;",
-                    DefaultExt = ".json",
-                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                    RestoreDirectory = true,
-                    Title = "选择配方文件存储路径"
-                };
-                if (saveFileDialog.ShowDialog().Value)
-                {
-                    _ = File.WriteAllTextAsync(saveFileDialog.FileName, Result);
-                    MessagePopup.PushMessage(new GeneratorMessage()
-                    {
-                        Message = "切石机配方生成成功！",
-                        MessageBrush = Brushes.Red,
-                        SubMessage = "配方生成器",
-                        SubMessageBrush = Brushes.DarkGray,
-                        Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
-                    });
-                    //OpenFolderThenSelectFiles.ExplorerFile(saveFileDialog.FileName);
-                }
-            }
-            #endregion
+            return result.ToString();
         }
 
-        [RelayCommand]
-        public void SwitchMultipleMode()
+        public override void LoadExternalData(JObject json)
         {
-            MaterialMultiItemVisibility = Visibility.Collapsed;
-            if (MaterialList.Count > 0 && !MultiSelect)
+            if (json.SelectToken("ingredient") is JObject ingredient)
             {
-                MaterialItem.Source = MaterialList[0].ImagePath;
-                ToolTip toolTip = new()
-                {
-                    Foreground = whiteBrush,
-                    Background = grayBrush,
-                    Content = MaterialList[0].IDAndName
-                };
-                MaterialItem.ToolTip = toolTip;
+                LoadMaterial(ingredient);
             }
             else
-            if (MaterialList.Count > 1 && MultiSelect)
+                if (json.SelectToken("ingredient") is JArray ingredients)
             {
-                MaterialMultiItemVisibility = Visibility.Visible;
-                ToolTip toolTip = new()
-                {
-                    Foreground = whiteBrush,
-                    Background = grayBrush,
-                    Content = "物品组，左击编辑"
-                };
-                MaterialItem.ToolTip = toolTip;
+                foreach (JToken item in ingredients)
+                    LoadMaterial(item as JObject);
+            }
+
+            if (json.SelectToken("result") is JToken resultToken)
+            {
+                string itemID = resultToken.ToString().Replace("minecraft:", "");
+                ResultSlot.Items.Add(CreateItem(itemID));
+                ResultSlot.Refresh();
+                if (json.SelectToken("result.count") is JToken countToken && int.TryParse(countToken.ToString(), out int count))
+                    Count = count;
             }
         }
 
         /// <summary>
-        /// 处理被拖拽的物品数据
+        /// 载入外部导入的一个材料
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void GetDropData(object sender, DragEventArgs e)
+        private void LoadMaterial(JObject ingredient)
         {
-            Image image = e.Data.GetData(typeof(Image).ToString()) as Image;
-            Image currentImage = sender as Image;
-            ItemStructure itemStructure = image.Tag as ItemStructure;
+            if (ingredient?.SelectToken("item") is not JToken itemToken)
+                return;
 
-            ToolTip toolTip = new()
+            string itemID = itemToken.ToString().Replace("minecraft:", "");
+            MaterialSlot.Items.Add(CreateItem(itemID));
+            MaterialSlot.EnsureTagSlots();
+            if (ingredient.SelectToken("tag") is JToken tagToken)
+                MaterialSlot.Tags[MaterialSlot.Items.Count - 1] = tagToken.ToString();
+            MaterialSlot.Refresh();
+        }
+
+        private ItemStructure CreateItem(string itemID)
+        {
+            string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID + ".png";
+            return new ItemStructure()
             {
-                Foreground = whiteBrush,
-                Background = grayBrush,
-                Content = itemStructure.IDAndName
+                ImagePath = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath)) : null,
+                IDAndName = itemID
             };
-            ToolTipService.SetBetweenShowDelay(currentImage, 0);
-            ToolTipService.SetInitialShowDelay(currentImage, 0);
-
-            MaterialMultiItemVisibility = Visibility.Collapsed;
-            if (!MultiSelect)
-            {
-                if (currentImage.Uid.Length > 0 && MaterialList.Count > 0)
-                    MaterialList[0] = itemStructure;
-                else
-                    if (currentImage.Uid.Length > 0)
-                    MaterialList.Add(itemStructure);
-                currentImage.Source = image.Source;
-            }
-            else
-            {
-                if (currentImage.Uid.Length > 0)
-                    MaterialList.Add(itemStructure);
-                if (MaterialList.Count > 1 && currentImage.Uid.Length > 0)
-                {
-                    MaterialMultiItemVisibility = Visibility.Visible;
-                    toolTip.Content = "物品组，左击编辑";
-                }
-                else
-                    currentImage.Source = image.Source;
-            }
-            currentImage.Tag = itemStructure;
-            currentImage.ToolTip = toolTip;
-        }
-
-        [RelayCommand]
-        /// <summary>
-        /// 左击槽位打开槽位数据页面
-        /// </summary>
-        public void SetSlotData()
-        {
-            MultiMaterialViewer.SelectedIndex = MultiModeCurrentSelectedItemIndex = 0;
-            CurrentTag = MaterialTag[0];
-            MultiMaterialGrid.Visibility = Visibility.Visible;
-            MultiMaterialViewer.Visibility = Visibility.Visible;
-            MaterialMultiItemVisibility = Visibility.Collapsed;
-        }
-
-        [RelayCommand]
-        /// <summary>
-        /// 更新并关闭多选模式面板
-        /// </summary>
-        public void UpdateAndCloseSlotGrid()
-        {
-            MultiMaterialGrid.Visibility = Visibility.Collapsed;
-            MaterialMultiItemVisibility = Visibility.Collapsed;
-
-            if (!MultiSelect)
-            {
-                MaterialTag[0] = CurrentTag;
-            }
-            else
-            {
-                if(MaterialList.Count > 1)
-                {
-                    MaterialMultiItemVisibility = Visibility.Visible;
-                }
-                MaterialTag[MultiModeCurrentSelectedItemIndex] = CurrentTag;
-            }
-        }
-
-        /// <summary>
-        /// 选中物品设置Tag数据
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void SelectItemToSetTag_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            // 获取鼠标指针下的元素
-            var element = e.OriginalSource as DependencyObject;
-
-            // 遍历可视化树，直到找到ListView的子项
-            while (element is not null && element is not ListViewItem)
-                element = VisualTreeHelper.GetParent(element);
-
-            // 获取子项
-            if (element is ListViewItem item)
-            {
-                // 获取子项在ListView中的索引
-                int index = MultiMaterialViewer.ItemContainerGenerator.IndexFromContainer(item);
-                //切换时赋值Tag数据
-                if (MultiModeCurrentSelectedItemIndex >= 0 && MultiModeCurrentSelectedItemIndex < MaterialTag.Count)
-                    MaterialTag[MultiModeCurrentSelectedItemIndex] = CurrentTag;
-                //填充标签集合
-                while ((MaterialTag.Count - 1) < index)
-                    MaterialTag.Add("");
-                //更新当前选中的Tag进行编辑
-                CurrentTag = MaterialTag[index];
-                MultiModeCurrentSelectedItemIndex = index;
-            }
-        }
-
-        /// <summary>
-        /// 右击删除多选库中的指定物品
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void DeleteAppointItem_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            // 获取鼠标指针下的元素
-            var element = e.OriginalSource as DependencyObject;
-
-            // 遍历可视化树，直到找到ListView的子项
-            while (element is not null && element is not ListViewItem)
-                element = VisualTreeHelper.GetParent(element);
-
-            // 获取子项
-            if (element is ListViewItem item)
-            {
-                // 获取子项在ListView中的索引
-                int index = MultiMaterialViewer.ItemContainerGenerator.IndexFromContainer(item);
-                if (index >= 0 && index < MaterialList.Count)
-                    MaterialList.RemoveAt(index);
-            }
-
-            //GenerateBubbleChart.Generator(ref MaterialItem, MaterialList);
-            if (MaterialList.Count == 1)
-            {
-                MaterialItem.Source = MaterialList[0].ImagePath;
-                ToolTip toolTip = new()
-                {
-                    Foreground = whiteBrush,
-                    Background = grayBrush,
-                    Content = MaterialList[0].IDAndName
-                };
-                MaterialItem.ToolTip = toolTip;
-            }
-            else
-                if (MaterialList.Count == 0)
-                MaterialItem.ToolTip = null;
-        }
-
-        /// <summary>
-        /// 多选模式物品过滤事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        public void MultiMaterialSource_Filter(object sender, FilterEventArgs e)
-        {
-            if (MultiMaterialGrid?.Visibility == Visibility.Collapsed || MultiMaterialViewer?.Visibility == Visibility.Collapsed) return;
-            if (SearchText.Length > 0)
-            {
-                string[] searchList = SearchText.ToString().Split(' ');
-                ItemStructure itemStructure = e.Item as ItemStructure;
-                string itemID = itemStructure.IDAndName.Split(':')[0];
-                bool result = (searchList.Length > 1 && (itemStructure.IDAndName.StartsWith(searchList[0]) || itemStructure.IDAndName.EndsWith(searchList[1]))) || (searchList.Length == 1 && itemID.Contains(SearchText.ToString()));
-                e.Accepted = result;
-            }
-            else
-                e.Accepted = true;
         }
         #endregion
     }

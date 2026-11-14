@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
@@ -26,6 +26,7 @@ using Prism.Events;
 using CBHK.ViewModel.Component.Villager.Event;
 using CBHK.ViewModel.Component.Villager.Control;
 using CBHK.Utility.Data;
+using System.Text.RegularExpressions;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -670,175 +671,38 @@ namespace CBHK.ViewModel.Generator
         }
 
         /// <summary>
-        /// 初始化物品ID与版本物品ID列表
+        /// 初始化原版物品列表（物品库后台与配方页共用）
         /// </summary>
         private void InitOriginItemList()
         {
-            _ = Task.Run(() =>
+            _ = ApplyOriginalItemsAsync();
+        }
+
+        private async Task ApplyOriginalItemsAsync()
+        {
+            List<ItemStructure> items = await ItemLibraryLoader.LoadOriginalItemsAsync(resource);
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                var imageDir = AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath;
-
-                if (!resource.RunningDataObject.TryGetValue("1.20.5", out var token)
-                    || token.SelectToken("item") is not JArray itemArray)
-                    return;
-
-                //目录只扫一次，别在循环里 File.Exists
-                var fileSet = new HashSet<string>(
-                    Directory.EnumerateFiles(imageDir, "*.png")
-                             .Select(Path.GetFileNameWithoutExtension),
-                    StringComparer.OrdinalIgnoreCase);
-
-                //先做"匹配 + 排序"的计划表（纯字符串操作，很快）
-                var plans = itemArray
-                    .Select(t => t.Value<string>())
-                    .Select(key =>
-                    {
-                        string file =
-                            fileSet.Contains(key) ? key + ".png"
-                          : fileSet.Contains(key + "_spawn_egg") ? key + "_spawn_egg.png"
-                          : null;
-                        return (key, file);
-                    })
-                    .Where(p => p.file is not null)
-                    // 按文件名 a–z；这里用 OrdinalIgnoreCase，稳定且与区域设置无关
-                    .OrderBy(p => p.file, StringComparer.OrdinalIgnoreCase)
-                    .ToArray();
-
-                //预分配数组：索引即最终顺序，与并行完成顺序无关
-                var result = new ItemStructure[plans.Length];
-
-                Parallel.For(0, plans.Length, i =>
-                {
-                    var (key, file) = plans[i];
-                    try
-                    {
-                        var bmp = new BitmapImage();
-                        bmp.BeginInit();
-                        bmp.CacheOption = BitmapCacheOption.OnLoad;   // 立即解码，不留文件锁
-                        bmp.UriSource = new Uri(Path.Combine(imageDir, file), UriKind.Absolute);
-                        bmp.EndInit();
-                        bmp.Freeze();                                  // 冻结 → 可跨线程，UI 零解码
-
-                        result[i] = new ItemStructure { IDAndName = key, ImagePath = bmp };
-                    }
-                    catch
-                    {
-                        // 单张坏图丢掉即可，不要影响整体
-                    }
-                });
-
-                //一次性按序推回 UI
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    OriginalItemList.Clear();
-                    foreach (var it in result)
-                    {
-                        if (it is not null)
-                        {
-                            OriginalItemList.Add(it);
-                        }
-                    }
-                });
+                OriginalItemList.Clear();
+                foreach (ItemStructure item in items)
+                    OriginalItemList.Add(item);
             });
         }
 
         /// <summary>
-        /// 初始化自定义物品列表
+        /// 初始化自定义物品列表（物品库后台与配方页共用）
         /// </summary>
         private void InitCustomItemList()
         {
-            _ = Task.Run(() =>
+            _ = ApplyCustomItemsAsync();
+        }
+
+        private async Task ApplyCustomItemsAsync()
+        {
+            List<ItemStructure> items = await ItemLibraryLoader.LoadCustomItemsAsync(resource);
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                if (!Directory.Exists(ItemSaveFolderPath))
-                    return;
-
-                var imageDir = AppDomain.CurrentDomain.BaseDirectory + resource.ImageSetDirectoryPath;
-
-                // 1) 图像目录只扫一次，之后 O(1) 查询，替代多次 File.Exists
-                var imageFileSet = new HashSet<string>(
-                    Directory.EnumerateFiles(imageDir, "*.png")
-                             .Select(Path.GetFileNameWithoutExtension),
-                    StringComparer.OrdinalIgnoreCase);
-
-                // 2) 每个存档文件只读一次，构建 (保存名, nbt, key, 图像文件) 计划表
-                var plans = Directory.EnumerateFiles(ItemSaveFolderPath)
-                    .Select(path =>
-                    {
-                        string saveName = Path.GetFileNameWithoutExtension(path);
-
-                        string nbt;
-                        try
-                        {
-                            nbt = ExternalDataImportManager.GetItemDataHandler(path, true);
-                        }
-                        catch
-                        {
-                            return (saveName, nbt: (string)null, key: (string)null, file: (string)null);
-                        }
-
-                        string key = null;
-                        try
-                        {
-                            if (JObject.Parse(nbt)["oldID"] is JToken idToken)
-                                key = idToken.Value<string>()?.Replace("minecraft:", "");
-                        }
-                        catch
-                        {
-                            return (saveName, nbt, key: (string)null, file: (string)null);
-                        }
-
-                        string file = null;
-                        if (key is not null)
-                        {
-                            if (imageFileSet.Contains(key))
-                                file = key + ".png";
-                            else if (imageFileSet.Contains(key + "_spawn_egg"))
-                                file = key + "_spawn_egg.png";
-                        }
-
-                        return (saveName, nbt, key, file);
-                    })
-                    .Where(p => p.nbt is not null && p.key is not null && p.file is not null)
-                    // 按保存的文件名 a–z 排序（与 UI 上看到的"文件名"一致）
-                    .OrderBy(p => p.saveName, StringComparer.OrdinalIgnoreCase)
-                    .ToArray();
-
-                // 3) 预分配数组，索引即最终顺序，与并行完成顺序无关
-                var result = new ItemStructure[plans.Length];
-
-                Parallel.For(0, plans.Length, i =>
-                {
-                    var (saveName, nbt, key, file) = plans[i];
-                    try
-                    {
-                        var bmp = new BitmapImage();
-                        bmp.BeginInit();
-                        bmp.CacheOption = BitmapCacheOption.OnLoad;  // 立即解码，不留文件锁
-                        bmp.DecodePixelWidth = 64;                        // 按实际显示尺寸解码
-                        bmp.UriSource = new Uri(Path.Combine(imageDir, file), UriKind.Absolute);
-                        bmp.EndInit();
-                        bmp.Freeze();                                     // 冻结 → 跨线程安全、UI 零解码
-
-                        result[i] = new ItemStructure
-                        {
-                            IDAndName = key,
-                            NBT = nbt,
-                            ImagePath = bmp,
-                        };
-                    }
-                    catch
-                    {
-                        // 单张坏图丢弃，不影响整体
-                    }
-                });
-
-                // 4) 一次性替换集合，只触发 1 次 PropertyChanged
-                var items = result.Where(x => x is not null).ToList();
-
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    CustomItemList = new ObservableCollection<ItemStructure>(items);
-                });
+                CustomItemList = new ObservableCollection<ItemStructure>(items);
             });
         }
 
@@ -932,7 +796,7 @@ namespace CBHK.ViewModel.Generator
                 LeastPlayerUUIDVisibility = MostPlayerUUIDVisibility = Visibility.Collapsed;
             }
 
-            if (VersionRangeChecker.IsGreaterThan(selectedVersion, "1.16") || selectedVersion == "1.16" && IsEditGossips is Visibility.Visible)
+            if ((VersionRangeChecker.IsGreaterThan(selectedVersion, "1.16") || selectedVersion == "1.16") && IsEditGossips is Visibility.Visible)
             {
                 PlayerUUIDVisibility = Visibility.Visible;
             }
@@ -1131,7 +995,7 @@ namespace CBHK.ViewModel.Generator
                 Title = "请选择一个Minecraft村民数据文件"
             };
             if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
-                ExternalDataImportManager.ImportVillagerDataHandler(dialog.FileName,messagePopup, this);
+                ImportVillagerData(dialog.FileName, messagePopup);
         }
 
         [RelayCommand]
@@ -1140,7 +1004,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFromClipboard()
         {
-            ExternalDataImportManager.ImportVillagerDataHandler(Clipboard.GetText(),messagePopup,this,false);
+            ImportVillagerData(Clipboard.GetText(), messagePopup, isPath: false);
         }
 
         /// <summary>
@@ -1425,6 +1289,235 @@ namespace CBHK.ViewModel.Generator
                     IsGrabingItem = false;
                 }
             }
+        }
+        #endregion
+
+        #region 外部数据导入（并入本类，不再单独成文件）
+        public void ImportVillagerData(string filePathOrData, MessagePopup messagePopup, bool isPath = true)
+        {
+            string data = isPath ? File.ReadAllText(filePathOrData) : filePathOrData;
+
+            #region 提取可用NBT数据和村民ID
+            string nbtData = "";
+            if (data.Contains('{') && data.Contains('}'))
+                nbtData = data[data.IndexOf('{')..(data.LastIndexOf('}') + 1)];
+            //补齐缺失双引号对的key
+            nbtData = Regex.Replace(nbtData, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
+            //清除数值型数据的单位
+            nbtData = Regex.Replace(nbtData, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
+            #endregion
+
+            try
+            {
+                JObject nbtObj = JObject.Parse(nbtData);
+                if (nbtObj.SelectToken("EntitTag") is JObject entityTag)
+                    nbtObj = JObject.Parse(entityTag.ToString());
+                AddVillagerData(nbtObj);
+            }
+            catch
+            {
+                messagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "村民生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\villager.png", UriKind.Relative))
+                });
+            }
+        }
+
+        /// <summary>
+        /// 设置村民数据
+        /// </summary>
+        /// <param name="nbtObj"></param>
+        /// <param name="context"></param>
+        private void AddVillagerData(JObject nbtObj)
+        {
+            #region 处理交易数据
+            if (nbtObj.SelectToken("Offers.Recipes") is JArray Recipes)
+            {
+                string rootPath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\";
+                foreach (JObject recipe in Recipes.Cast<JObject>())
+                {
+                    #region 读取数据
+                    #region buy,buyB,sell
+                    string buyID = "";
+                    JToken buyCountObj = recipe.SelectToken("buy.Count");
+
+                    string buyBID = "";
+                    JToken buyBCountObj = recipe.SelectToken("buyB.Count");
+
+                    string sellID = "";
+                    JToken sellCountObj = recipe.SelectToken("sell.Count");
+                    #endregion
+                    #region other
+                    JToken demand = recipe.SelectToken("demand");
+                    JToken maxUses = recipe.SelectToken("maxUses");
+                    JToken priceMultiplier = recipe.SelectToken("priceMultiplier");
+                    JToken rewardExp = recipe.SelectToken("rewardExp");
+                    JToken specialPrice = recipe.SelectToken("specialPrice");
+                    JToken uses = recipe.SelectToken("uses");
+                    JToken xp = recipe.SelectToken("xp");
+                    #endregion
+                    #endregion
+
+                    #region 应用数据
+                    #region buy
+                    if (recipe.SelectToken("buy.oldID") is JToken buyIDObj)
+                        buyID = buyIDObj.ToString().Replace("minecraft:", "");
+                    bool ExistItem = false;
+                    if (buyID.Length > 0)
+                    {
+                        ExistItem = true;
+                        AddTransactionItem();
+                        TransactionItemViewModel transactionItemsViewModel = TransactionItemList[^1];
+                        string iconPath = rootPath + buyID + ".png";
+                        if (File.Exists(iconPath))
+                            transactionItemsViewModel.BuyImageSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+
+                        if (buyCountObj is not null)
+                        {
+                            transactionItemsViewModel.BuyCountDisplayText = "x" + int.Parse(buyCountObj.ToString());
+                        }
+                        Uri iconUri = new(iconPath, UriKind.Absolute);
+                        ItemStructure imageTag = new()
+                        {
+                            ImagePath = new BitmapImage(iconUri),
+                            IDAndName = buyID,
+                            NBT = recipe.SelectToken("buy.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
+                        };
+                        transactionItemsViewModel.BuyImageSource = new BitmapImage(iconUri);
+                        transactionItemsViewModel.BuyTag = imageTag;
+                    }
+                    #endregion
+                    #region buyB
+                    if (ExistItem)
+                    {
+                        if (recipe.SelectToken("buyB.oldID") is JToken buyBIDObj)
+                            buyBID = buyBIDObj.ToString().Replace("minecraft:", "");
+                        if (buyBID.Length > 0)
+                        {
+                            string iconPath = rootPath + buyBID + ".png";
+                            TransactionItemViewModel transactionItemsViewModel = TransactionItemList[^1];
+                            if (File.Exists(iconPath))
+                                transactionItemsViewModel.BuyBImageSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+
+                            if (buyBCountObj is not null)
+                            {
+                                transactionItemsViewModel.BuyBCountDisplayText = "x" + int.Parse(buyCountObj.ToString());
+                            }
+                            Uri iconUri = new(iconPath, UriKind.Absolute);
+                            ItemStructure imageTag = new()
+                            {
+                                ImagePath = new BitmapImage(iconUri),
+                                IDAndName = buyBID,
+                                NBT = recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
+                            };
+                            transactionItemsViewModel.BuyBImageSource = new BitmapImage(iconUri);
+                            transactionItemsViewModel.BuyBTag = imageTag;
+                        }
+                    }
+                    #endregion
+                    #region sell
+                    if (ExistItem)
+                    {
+                        if (recipe.SelectToken("sell.oldID") is JToken sellIDObj)
+                            sellID = sellIDObj.ToString().Replace("minecraft:", "");
+                        if (sellID.Length > 0)
+                        {
+                            string iconPath = rootPath + sellID + ".png";
+                            TransactionItemViewModel transactionItemsViewModel = TransactionItemList[^1];
+                            if (File.Exists(iconPath))
+                                transactionItemsViewModel.SellImageSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
+
+                            if (sellCountObj is not null)
+                            {
+                                transactionItemsViewModel.SellCountDisplayText = "x" + int.Parse(sellCountObj.ToString());
+                            }
+                            Uri iconUri = new(iconPath, UriKind.Absolute);
+                            ItemStructure imageTag = new()
+                            {
+                                ImagePath = new BitmapImage(iconUri),
+                                IDAndName = buyBID,
+                                NBT = recipe.SelectToken("buyB.tag") is JObject buyTagObj ? buyTagObj.ToString() : ""
+                            };
+                            transactionItemsViewModel.SellImageSource = new BitmapImage(iconUri);
+                            transactionItemsViewModel.SellTag = imageTag;
+                        }
+                    }
+                    #endregion
+                    #region other
+                    if (ExistItem)
+                    {
+                        TransactionItemViewModel transactionItemsViewModel = TransactionItemList[^1];
+                        transactionItemsViewModel.Demand = int.Parse(demand.ToString());
+                        transactionItemsViewModel.MaxUses = int.Parse(maxUses.ToString());
+                        transactionItemsViewModel.PriceMultiplier = int.Parse(priceMultiplier.ToString());
+                        transactionItemsViewModel.RewardExp = rewardExp.ToString() == "1" || rewardExp.ToString() == "true";
+                        transactionItemsViewModel.SpecialPrice = int.Parse(specialPrice.ToString());
+                        transactionItemsViewModel.Uses = int.Parse(uses.ToString());
+                        transactionItemsViewModel.Xp = int.Parse(xp.ToString());
+                    }
+                    #endregion
+                    #endregion
+                }
+            }
+            #endregion
+
+            #region 处理言论数据
+            if (nbtObj.SelectToken("Gossips") is JArray Gossips)
+            {
+                foreach (JObject gossip in Gossips.Cast<JObject>())
+                {
+                    AddGossipItem();
+                    JToken value = gossip.SelectToken("Text");
+                    GossipsItemViewModel gossipsItemsViewModel = GossipItemList[^1];
+                    if (gossip.SelectToken("Target") is JArray targetUID)
+                        gossipsItemsViewModel.TargetText = targetUID[0].ToString() + "," + targetUID[1].ToString() + "," + targetUID[2].ToString() + "," + targetUID[3].ToString();
+                    if (gossip.SelectToken("Type") is JObject type)
+                        gossipsItemsViewModel.SelectedTypeItemPath = type.ToString();
+                    if (value is not null)
+                        gossipsItemsViewModel.GossipValue = int.Parse(value.ToString());
+                }
+            }
+            #endregion
+
+            #region 处理种类、职业、等级等数据
+            if (nbtObj.SelectToken("VillagerData") is JObject VillagerData)
+            {
+                JToken level = VillagerData.SelectToken("level");
+                JToken profession = VillagerData.SelectToken("profession");
+                JToken type = VillagerData.SelectToken("type");
+                if (level is not null)
+                    VillagerLevel = VillagerLevelSource.Where(item => item.Text == level.ToString()).First();
+                if (profession is not null)
+                {
+                    string professionType = VillagerProfessionTypeDataBase.Where(item => item.Key == profession.ToString().Replace("minecraft:", "")).First().Value;
+                    VillagerProfessionType = VillagerProfessionTypeSource.Where(item => item.Text == professionType).First();
+                }
+                if (type is not null)
+                {
+                    string villagerType = VillagerTypeDataBase.Where(item => item.Key == type.ToString().Replace("minecraft:", "")).First().Value;
+                    VillagerType = VillagerTypeSource.Where(item => item.Text == villagerType).First();
+                }
+            }
+            #endregion
+
+            #region 交配意愿
+            if (nbtObj.SelectToken("Willing") is JToken Willing)
+                Willing = Willing.ToString() == "1" || Willing.ToString() == "true";
+            #endregion
+
+            #region 补货间隔
+            if (nbtObj.SelectToken("LastRestock") is JToken LastRestock)
+                LastRestock = double.Parse(LastRestock.ToString());
+            #endregion
+
+            #region 当前经验
+            if (nbtObj.SelectToken("Xp") is JToken Xp)
+                Xp = int.Parse(Xp.ToString());
+            #endregion
         }
         #endregion
     }

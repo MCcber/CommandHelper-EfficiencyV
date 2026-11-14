@@ -1,4 +1,4 @@
-﻿using CBHK.Utility.Visual;
+using CBHK.Utility.Visual;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -263,7 +263,9 @@ namespace CBHK.CustomControl.VectorButton
                 ThumbHeight = BackgroundHeight + 5;
             }
 
-            OriginThumbMargin = ThumbMargin = new(2, -5, 0, 0);
+            OriginThumbMargin = new(2, -5, 0, 0);
+            // 初始就处于选中态时（如设置页重新打开），Loaded 不能把滑块复位到未选中位置
+            ThumbMargin = IsChecked == true ? new(BackgroundWidth / 2, -5, 0, 0) : OriginThumbMargin;
 
             UpdateBorderColorByBackgroundColor();
         }

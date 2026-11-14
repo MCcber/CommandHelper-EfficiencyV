@@ -1,6 +1,5 @@
 using CBHK.CustomControl.Container;
 using CBHK.CustomControl.VectorComboBox;
-using CBHK.Domain;
 using CBHK.Model.Data;
 using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;
@@ -16,7 +15,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -27,12 +25,11 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Generator
 {
-    public partial class EntityViewModel(IContainerProvider container,CBHKDataContext Context, MainView mainView) : ObservableObject
+    public partial class EntityViewModel(IContainerProvider container, MainView mainView) : ObservableObject
     {
         #region Field
         private MessagePopup messagePopup = new();
         private IContainerProvider container = container;
-        private CBHKDataContext context = Context;
         /// <summary>
         /// 主页引用
         /// </summary>
@@ -65,7 +62,7 @@ namespace CBHK.ViewModel.Generator
         /// 已选中的实体页
         /// </summary>
         [ObservableProperty]
-        private VectorRichTabItem _selectedEntityPage;
+        private VectorRichTabItem selectedEntityPage;
 
         /// <summary>
         /// 版本数据源
@@ -199,8 +196,7 @@ namespace CBHK.ViewModel.Generator
             };
             if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
             {
-                ObservableCollection<VectorRichTabItem> result = EntityPageList;
-                ExternalDataImportManager.ImportEntityDataHandler(dialog.FileName, ref result,messagePopup);
+                ImportIntoMcDocPage(dialog.FileName, true);
             }
         }
 
@@ -210,8 +206,34 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportEntityFromClipboard()
         {
-            ObservableCollection<VectorRichTabItem> result = EntityPageList;
-            ExternalDataImportManager.ImportEntityDataHandler(Clipboard.GetText(), ref result,messagePopup,false);
+            ImportIntoMcDocPage(Clipboard.GetText(), false);
+        }
+
+        /// <summary>导入只灌实体页的 JsonText，不再造旧页面；失败提示沿用窗口原来的样式。</summary>
+        private void ImportIntoMcDocPage(string textOrPath, bool isPath)
+        {
+            var page = (SelectedEntityPage?.Content as FrameworkElement)?.DataContext as EntityPageViewModel;
+            if (page is not null)
+            {
+                var failure = "";
+                if (page.ImportFromCommand(textOrPath, isPath, message => failure = message)) return;
+                PushImportFailure(failure);
+                return;
+            }
+            PushImportFailure("页面还没就绪，稍后再试");
+        }
+
+        /// <summary>导入失败只给一句话原因（解析失败 / 注册表里没有这个 id / 页面没就绪）。</summary>
+        private void PushImportFailure(string reason)
+        {
+            messagePopup.PushMessage(new GeneratorMessage()
+            {
+                Message = "导入失败！" + reason,
+                MessageBrush = Brushes.Red,
+                SubMessage = "实体生成器",
+                SubMessageBrush = Brushes.DarkGray,
+                Icon = new BitmapImage(new Uri(iconPath))
+            });
         }
 
         [RelayCommand]
@@ -232,27 +254,17 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         public void AddEntity()
         {
-            if(EntityPageList.Count > 0)
+            VectorRichTabItem richTabItem = new()
             {
-                EntityPageViewModel entityPagesDataContext = (EntityPageList[0].Content as EntityPageView).DataContext as EntityPageViewModel;
-                if (entityPagesDataContext.UseForTool)
-                {
-                    return;
-                }
-            }
-            VectorRichTabItem richTabItems = new()
-            {
-                Style = Application.Current.Resources["RichTabItemStyle"] as Style,
-                Header = "实体"
+                Style = Application.Current.Resources["VectorRichTabItemStyle"] as Style,
+                Title = "实体"
             };
             EntityPageView entityPages = new() { FontWeight = FontWeights.Normal };
-            EntityPageViewModel pageContext = entityPages.DataContext as EntityPageViewModel;
-            pageContext.UseForTool = !IsCloseable;
-            richTabItems.Content = entityPages;
-            EntityPageList.Add(richTabItems);
+            richTabItem.Content = entityPages;
+            EntityPageList.Add(richTabItem);
             if (EntityPageList.Count == 1)
             {
-                TabControl tabControl = richTabItems.FindParent<TabControl>();
+                TabControl tabControl = richTabItem.FindParent<TabControl>();
                 if(tabControl is not null)
                 tabControl.SelectedIndex = 0;
             }
@@ -286,8 +298,8 @@ namespace CBHK.ViewModel.Generator
                 StringBuilder currentResult = pageContext.Create();
                 pageContext.CollectionData(currentResult);
                 pageContext.BuildResult(currentResult);
-                string result = currentResult.ToString();
-                Result.AppendLine(result);
+                string result = currentResult.ToString().Replace("\r","").Replace("\n","");
+                Result.Append(result);
             }
             if (ShowGeneratorResult)
             {

@@ -1481,7 +1481,6 @@ namespace CBHK.ViewModel.Generator
             Button iconTextButtons = element as Button;
             ItemView item = new();
             ItemViewModel itemContext = item.DataContext as ItemViewModel;
-            itemContext.IsCloseable = false;
 
             #region 设置已生成的数据
             string Result = "";
@@ -1490,74 +1489,10 @@ namespace CBHK.ViewModel.Generator
                 ItemPageViewModel pageContext = (itemContext.ItemPageList[0].Content as ItemPageView).DataContext as ItemPageViewModel;
 
                 #region 如果已有数据，则导入
-                //switch (iconTextButtons.Uid)
-                //{
-                //    case "Head":
-                //        if (HeadItem is not null && HeadItem.Length > 0)
-                //        {
-                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
-                //            ExternalDataImportManager.ImportItemDataHandler(HeadItem, ref richTabItems, false);
-                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                //            string HeadData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                //            pageContext.ExternallyReadEntityData = JObject.Parse(HeadData);
-                //        }
-                //        break;
-                //    case "Body":
-                //        if (BodyItem is not null && BodyItem.Length > 0)
-                //        {
-                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
-                //            ExternalDataImportManager.ImportItemDataHandler(BodyItem, ref richTabItems, false);
-                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                //            string BodyData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                //            pageContext.ExternallyReadEntityData = JObject.Parse(BodyData);
-                //        }
-                //        break;
-                //    case "LeftHand":
-                //        if (LeftHandItem is not null && LeftHandItem.Length > 0)
-                //        {
-                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
-                //            ExternalDataImportManager.ImportItemDataHandler(LeftHandItem, ref richTabItems, false);
-                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                //            string LeftHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                //            pageContext.ExternallyReadEntityData = JObject.Parse(LeftHandData);
-                //        }
-                //        break;
-                //    case "RightHand":
-                //        if (RightHandItem is not null && RightHandItem.Length > 0)
-                //        {
-                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
-                //            ExternalDataImportManager.ImportItemDataHandler(RightHandItem, ref richTabItems, false);
-                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                //            string RightHandData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                //            pageContext.ExternallyReadEntityData = JObject.Parse(RightHandData);
-                //        }
-                //        break;
-                //    case "Legs":
-                //        if (LegsItem is not null && LegsItem.Length > 0)
-                //        {
-                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
-                //            ExternalDataImportManager.ImportItemDataHandler(LegsItem, ref richTabItems, false);
-                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                //            string LegsData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                //            pageContext.ExternallyReadEntityData = JObject.Parse(LegsData);
-                //        }
-                //        break;
-                //    case "Feet":
-                //        if (FeetItem is not null && FeetItem.Length > 0)
-                //        {
-                //            ObservableCollection<VectorRichTabItem> richTabItems = itemContext.ItemPageList;
-                //            ExternalDataImportManager.ImportItemDataHandler(FeetItem, ref richTabItems, false);
-                //            itemContext.ItemPageList.Remove(itemContext.ItemPageList[0]);
-                //            string FeetData = ExternalDataImportManager.GetItemDataHandler(HeadItem, false);
-                //            pageContext.ExternallyReadEntityData = JObject.Parse(FeetData);
-                //        }
-                //        break;
-                //}
                 #endregion
 
                 Result = pageContext.Result;
-                string nbt = ExternalDataImportManager.GetItemDataHandler(Result, false);
-                if (nbt.Length == 0) return;
+                if (!ExternalCommandParser.TryGetItemNbt(Result, out string nbt, out _, out _) || nbt.Length == 0) return;
                 JObject data = JObject.Parse(nbt);
                 string itemID = data.SelectToken("oldID").ToString().Replace("minecraft:", "");
                 string filePath = AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + itemID + ".png";

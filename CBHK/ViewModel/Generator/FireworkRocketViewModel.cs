@@ -24,6 +24,8 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
+using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -308,8 +310,7 @@ namespace CBHK.ViewModel.Generator
             if (dialog.ShowDialog().Value)
                 if (File.Exists(dialog.FileName))
                 {
-                    ObservableCollection<VectorTextTabItem> result = FireworkRocketPageList;
-                    ExternalDataImportManager.ImportFireworkDataHandler(dialog.FileName, ref result,messagePopup);
+                    ImportFireworkData(dialog.FileName, messagePopup);
                 }
         }
 
@@ -319,8 +320,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private void ImportFireworkRocketFromClipboard()
         {
-            ObservableCollection<VectorTextTabItem> result = FireworkRocketPageList;
-            ExternalDataImportManager.ImportFireworkDataHandler(Clipboard.GetText(), ref result,messagePopup, false);
+            ImportFireworkData(Clipboard.GetText(), messagePopup, isPath: false);
         }
 
         [RelayCommand]
@@ -405,6 +405,118 @@ namespace CBHK.ViewModel.Generator
                     for (int i = 0; i < Result.Count; i++)
                         File.WriteAllText(openFolderDialog.FolderName + FileNameList[i] + ".command", Result[i]);
             }
+        }
+        #endregion
+
+        #region 外部数据导入（并入本类，不再单独成文件）
+        public void ImportFireworkData(string filePathOrData, MessagePopup messagePopup, bool isPath = true)
+        {
+            string GeneratorMode;
+            bool version1_12 = false;
+
+
+            string data = isPath ? File.ReadAllText(filePathOrData) : filePathOrData;
+
+            #region 提取可用NBT数据和烟花ID
+            string nbtData = "";
+            if (data.Contains('{') && data.Contains('}'))
+                nbtData = data[data.IndexOf('{')..(data.LastIndexOf('}') + 1)];
+            //补齐缺失双引号对的key
+            nbtData = Regex.Replace(nbtData, @"([\{\[,])([\s+]?\w+[\s+]?):", "$1\"$2\":");
+            //清除数值型数据的单位
+            nbtData = Regex.Replace(nbtData, @"(\d+[\,\]\}]?)([a-zA-Z])", "$1").Replace("I;", "");
+
+            //召唤实体
+            if (Regex.IsMatch(data, @"^/?summon"))
+                GeneratorMode = "Summon";
+            else//给予怪物蛋
+                if (Regex.IsMatch(data, @"^/?give (@[apesr])|(\w+) ((minecraft:)?(firework_rocket))"))
+            {
+                GeneratorMode = "Give";
+                bool v1_13 = Regex.IsMatch(data, @"(?<=/?give\s@[apesr]\s)(\w+)");
+                if (!v1_13)
+                    version1_12 = true;
+            }
+            else
+            {
+                messagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "烟花火箭生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                });
+                return;
+            }
+
+            try
+            {
+                JToken itemTagID = JObject.Parse(nbtData).SelectToken("itemView.oldID");
+            }
+            catch
+            {
+                messagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "烟花火箭生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                });
+                return;
+            }
+            #endregion
+
+            try
+            {
+                JObject nbtObj = JObject.Parse(nbtData);
+                //添加实体命令
+                AddFireworkCommand(nbtObj, version1_12, GeneratorMode, isPath ? filePathOrData : "");
+            }
+            catch
+            {
+                messagePopup.PushMessage(new GeneratorMessage()
+                {
+                    Message = "导入失败！文件内容格式不合法",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "烟花火箭生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
+                });
+            }
+        }
+
+        /// <summary>
+        /// 添加烟花
+        /// </summary>
+        private void AddFireworkCommand(JObject externData, bool version1_12, string mode, string filePath)
+        {
+            VectorTextTabItem richTabItems = new()
+            {
+                Style = Application.Current.Resources["VectorTextTabItemStyle"] as Style,
+                Title = "烟花",
+                Foreground = new SolidColorBrush(Colors.White)
+            };
+            FireworkRocketPageView itemPages = new() { FontWeight = FontWeights.Normal };
+            FireworkRocketPageViewModel context = itemPages.DataContext as FireworkRocketPageViewModel;
+            if (externData is not null)
+            {
+                context.Give = mode != "Summon";
+                context.ImportMode = true;
+                if (filePath.Length > 0 && File.Exists(filePath))
+                    context.ExternFilePath = filePath;
+                context.ExternallyReadEntityData = externData;
+                if (version1_12)
+                    context.SelectedVersion.Text = "1.12-";
+            }
+            FireworkRocketPageList.Add(richTabItems);
+            if (FireworkRocketPageList.Count == 1)
+            {
+                TabControl tabControl = richTabItems.FindParent<TabControl>();
+                tabControl.SelectedIndex = 0;
+            }
+            richTabItems.Content = itemPages;
         }
         #endregion
     }

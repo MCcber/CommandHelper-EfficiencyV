@@ -1,4 +1,4 @@
-﻿<Container:VectorWindow
+<Container:VectorWindow
     x:Class="CBHK.View.Generator.VillagerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -37,8 +37,6 @@
         <ImageBrush x:Key="ButtonPressed" ImageSource="/CBHK;component/Resource/Common/Image/ButtonPressed.png" />
         <ImageBrush x:Key="LeftArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowLeft.png" />
         <ImageBrush x:Key="RightArrow" ImageSource="/CBHK;component/Resource/Common/Image/IconArrowRight.png" />
-        <ImageBrush x:Key="CloseWhite" ImageSource="/CBHK;component/Resource/Common/Image/CloseWhite.png" />
-        <ImageBrush x:Key="CloseWhiteHover" ImageSource="/CBHK;component/Resource/Common/Image/CloseWhiteHover.png" />
         <ImageBrush x:Key="WhiteEdit" ImageSource="/CBHK;component/Resource/Common/Image/WhiteEdit.png" />
         <ImageBrush x:Key="BlackEdit" ImageSource="/CBHK;component/Resource/Common/Image/BlackEdit.png" />
         <ImageBrush x:Key="SaveIcon" ImageSource="/CBHK;component/Resource/Common/Image/Save.png" />
@@ -54,12 +52,12 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="35" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel
             Grid.Row="0"
-            Height="35"
+            Height="40"
             Margin="5,0,0,0">
             <VectorButton:VectorFlatImageButton
                 Command="{Binding ReturnCommand}"
@@ -103,7 +101,6 @@
                 Title="版本"
                 MinWidth="100"
                 HorizontalAlignment="Left"
-                ArrowMargin="0 2 5 0"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"
@@ -159,6 +156,7 @@
                 Text="生成UUID"
                 Visibility="{Binding IsEditGossips}" />
             <VectorButton:VectorToggleIconTextButton
+                Margin="5,0,0,0"
                 HorizontalAlignment="Left"
                 Foreground="Black"
                 IsChecked="{Binding ShowResult, Mode=OneWayToSource}"
@@ -191,14 +189,18 @@
                         FontWeight="Bold"
                         Foreground="White"
                         Text="交易" />
-                    <VectorButton:VectorFlatImageButton
+                    <VectorButton:VectorFlatIconButton
+                        Width="30"
+                        Height="30"
                         Margin="0,5,0,0"
                         HorizontalAlignment="Right"
                         Command="{Binding ClearTransactionItemCommand}"
                         DockPanel.Dock="Right"
-                        Image="/Resource/Common/Image/CloseWhite.png"
-                        ImageMargin="5"
-                        Style="{DynamicResource VectorFlatImageButtonStyle}" />
+                        Icon="{StaticResource CloseMark}"
+                        IconBrush="White"
+                        IconHeight="10"
+                        IconWidth="10"
+                        Style="{DynamicResource VectorFlatIconButtonStyle}" />
                     <VectorButton:VectorFlatImageButton
                         Margin="0,5,0,0"
                         HorizontalAlignment="Right"
@@ -234,15 +236,18 @@
                         </ItemsControl>
 
                         <StackPanel Background="#555956" Visibility="{Binding TransactionDataGridVisibility, Mode=OneWay}">
-                            <VectorButton:VectorFlatImageButton
+                            <VectorButton:VectorFlatIconButton
                                 Width="30"
                                 Height="30"
                                 Margin="10,10,0,0"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Top"
                                 Command="{Binding CloseTransactionPanelCommand}"
-                                Image="/Resource/Common/Image/CloseWhite.png"
-                                Style="{DynamicResource VectorFlatImageButtonStyle}" />
+                                Icon="{StaticResource CloseMark}"
+                                IconBrush="White"
+                                IconHeight="10"
+                                IconWidth="10"
+                                Style="{DynamicResource VectorFlatIconButtonStyle}" />
                             <Grid Margin="10,20,10,5">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -447,7 +452,6 @@
                         Title="种类"
                         Grid.Column="0"
                         AllowDrop="False"
-                        ArrowMargin="0 2 10 0"
                         ItemsSource="{Binding VillagerTypeSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerType, Mode=TwoWay}"
@@ -456,7 +460,6 @@
                         Title="职业"
                         Grid.Column="1"
                         AllowDrop="False"
-                        ArrowMargin="0 2 10 0"
                         ItemsSource="{Binding VillagerProfessionTypeSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerProfessionType, Mode=TwoWay}"
@@ -465,7 +468,6 @@
                         Title="交易等级"
                         Grid.Column="2"
                         AllowDrop="False"
-                        ArrowMargin="0 2 10 0"
                         ItemsSource="{Binding VillagerLevelSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerLevel, Mode=TwoWay}"
@@ -741,7 +743,6 @@
                                 <VectorComboBox:VectorTextComboBox
                                     Title="搜索言论类型"
                                     Grid.Column="1"
-                                    ArrowMargin="0 2 10 0"
                                     Foreground="White"
                                     ItemsSource="{Binding GossipTypeList}"
                                     SelectedIndex="0"
@@ -840,36 +841,39 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Input:VectorTextBox
+                            <Input:VectorNumbericUpDown
                                 Grid.Row="0"
                                 Grid.Column="0"
+                                utility:TextSizeHelper.AutoFontSize="True"
                                 AllowDrop="False"
                                 Background="Transparent"
                                 BorderBrush="Black"
                                 Foreground="White"
-                                Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding MeetingPointX, Mode=TwoWay}"
-                                WaterMarkerText="聚集点X坐标" />
-                            <Input:VectorTextBox
+                                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                WaterMarkerText="聚集点X坐标"
+                                Value="{Binding MeetingPointX, Mode=TwoWay}" />
+                            <Input:VectorNumbericUpDown
                                 Grid.Row="0"
                                 Grid.Column="1"
+                                utility:TextSizeHelper.AutoFontSize="True"
                                 AllowDrop="False"
                                 Background="Transparent"
                                 BorderBrush="Black"
                                 Foreground="White"
-                                Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding MeetingPointY, Mode=TwoWay}"
-                                WaterMarkerText="聚集点Y坐标" />
-                            <Input:VectorTextBox
+                                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                WaterMarkerText="聚集点Y坐标"
+                                Value="{Binding MeetingPointY, Mode=TwoWay}" />
+                            <Input:VectorNumbericUpDown
                                 Grid.Row="0"
                                 Grid.Column="2"
+                                utility:TextSizeHelper.AutoFontSize="True"
                                 AllowDrop="False"
                                 Background="Transparent"
                                 BorderBrush="Black"
                                 Foreground="White"
-                                Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding MeetingPointZ, Mode=TwoWay}"
-                                WaterMarkerText="聚集点Z坐标" />
+                                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                WaterMarkerText="聚集点Z坐标"
+                                Value="{Binding MeetingPointZ, Mode=TwoWay}" />
                             <VectorComboBox:VectorTextComboBox
                                 Title="聚集点维度"
                                 Grid.Row="1"
@@ -877,42 +881,44 @@
                                 Grid.ColumnSpan="3"
                                 AllowDrop="False"
                                 ArrowBrush="White"
-                                ArrowMargin="0 5 5 0"
                                 BorderThickness="0"
                                 Foreground="White"
                                 ItemsSource="{Binding DimensionTypeSource}"
                                 SelectedItem="{Binding MeetingPointDimension, Mode=TwoWay}"
                                 Style="{DynamicResource VectorTextComboBoxStyle}" />
-                            <Input:VectorTextBox
+                            <Input:VectorNumbericUpDown
                                 Grid.Row="2"
                                 Grid.Column="0"
+                                utility:TextSizeHelper.AutoFontSize="True"
                                 AllowDrop="False"
                                 Background="Transparent"
                                 BorderBrush="Black"
                                 Foreground="White"
-                                Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding HomeX, Mode=TwoWay}"
-                                WaterMarkerText="床X坐标" />
-                            <Input:VectorTextBox
+                                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                WaterMarkerText="床X坐标"
+                                Value="{Binding HomeX, Mode=TwoWay}" />
+                            <Input:VectorNumbericUpDown
                                 Grid.Row="2"
                                 Grid.Column="1"
+                                utility:TextSizeHelper.AutoFontSize="True"
                                 AllowDrop="False"
                                 Background="Transparent"
                                 BorderBrush="Black"
                                 Foreground="White"
-                                Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding HomeY, Mode=TwoWay}"
-                                WaterMarkerText="床Y坐标" />
-                            <Input:VectorTextBox
+                                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                WaterMarkerText="床Y坐标"
+                                Value="{Binding HomeY, Mode=TwoWay}" />
+                            <Input:VectorNumbericUpDown
                                 Grid.Row="2"
                                 Grid.Column="2"
+                                utility:TextSizeHelper.AutoFontSize="True"
                                 AllowDrop="False"
                                 Background="Transparent"
                                 BorderBrush="Black"
                                 Foreground="White"
-                                Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding HomeZ, Mode=TwoWay}"
-                                WaterMarkerText="床Z坐标" />
+                                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                WaterMarkerText="床Z坐标"
+                                Value="{Binding HomeZ, Mode=TwoWay}" />
                             <VectorComboBox:VectorTextComboBox
                                 Title="床维度"
                                 Grid.Row="3"
@@ -920,43 +926,45 @@
                                 Grid.ColumnSpan="3"
                                 AllowDrop="False"
                                 ArrowBrush="White"
-                                ArrowMargin="0 5 5 0"
                                 BorderThickness="0"
                                 Foreground="White"
                                 ItemsSource="{Binding DimensionTypeSource}"
                                 SelectedItem="{Binding HomeDimension, Mode=TwoWay}"
                                 Style="{DynamicResource VectorTextComboBoxStyle}" />
-                            <Input:VectorTextBox
+                            <Input:VectorNumbericUpDown
                                 Grid.Row="4"
                                 Grid.Column="0"
+                                utility:TextSizeHelper.AutoFontSize="True"
                                 AllowDrop="False"
                                 Background="Transparent"
                                 BorderBrush="Black"
                                 Foreground="White"
-                                Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding JobSiteX, Mode=TwoWay}"
-                                WaterMarkerText="工作点X坐标" />
-                            <Input:VectorTextBox
+                                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                WaterMarkerText="工作点X坐标"
+                                Value="{Binding JobSiteX, Mode=TwoWay}" />
+                            <Input:VectorNumbericUpDown
                                 Grid.Row="4"
                                 Grid.Column="1"
                                 Margin="0,0,5,0"
+                                utility:TextSizeHelper.AutoFontSize="True"
                                 AllowDrop="False"
                                 Background="Transparent"
                                 BorderBrush="Black"
                                 Foreground="White"
-                                Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding JobSiteY, Mode=TwoWay}"
-                                WaterMarkerText="工作点Y坐标" />
-                            <Input:VectorTextBox
+                                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                WaterMarkerText="工作点Y坐标"
+                                Value="{Binding JobSiteY, Mode=TwoWay}" />
+                            <Input:VectorNumbericUpDown
                                 Grid.Row="4"
                                 Grid.Column="2"
+                                utility:TextSizeHelper.AutoFontSize="True"
                                 AllowDrop="False"
                                 Background="Transparent"
                                 BorderBrush="Black"
                                 Foreground="White"
-                                Style="{DynamicResource VectorTextBoxStyle}"
-                                Text="{Binding JobSiteZ, Mode=TwoWay}"
-                                WaterMarkerText="工作点Z坐标" />
+                                Style="{DynamicResource VectorNumbericUpDownStyle}"
+                                WaterMarkerText="工作点Z坐标"
+                                Value="{Binding JobSiteZ, Mode=TwoWay}" />
                             <VectorComboBox:VectorTextComboBox
                                 Title="工作点维度"
                                 Grid.Row="5"
@@ -964,7 +972,6 @@
                                 Grid.ColumnSpan="3"
                                 AllowDrop="False"
                                 ArrowBrush="White"
-                                ArrowMargin="0 5 5 0"
                                 BorderThickness="0"
                                 Foreground="White"
                                 ItemsSource="{Binding DimensionTypeSource}"

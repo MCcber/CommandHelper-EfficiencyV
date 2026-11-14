@@ -573,8 +573,19 @@ namespace CBHK.Utility.Data.Mcdoc
             }
         }
 
-        /// <summary>misode AnyHead：先选 JSON 类型（boolean/double/string/list/struct），再给该类型的编辑器。</summary>
+        /// <summary>misode AnyHead：先选 JSON 类型（Boolean/Double/String/List/Struct），再给该类型的编辑器。</summary>
         public ObservableCollection<EnumMember> AnyTypeOptions { get; set; }
+
+        /// <summary>
+        /// 当前选中分支的**稳定键**（小写 boolean/double/string/list/struct；哨兵回空）。
+        /// 显示名可以大写/本地化，判据（值控件、写回通道、XAML 触发器）一律只看这个键。
+        /// </summary>
+        public string AnyTypeKey => AnyTypeKeyOf(selectedAnyType);
+
+        internal static string AnyTypeKeyOf(EnumMember option)
+            => option is null || McdocUnionSwitch.IsUnsetOption(option)
+                ? null
+                : McdocHelpers.AnyBranchKey(Convert.ToString(option.Value?.LiteralValue));
 
         private EnumMember selectedAnyType;
         public EnumMember SelectedAnyType
@@ -583,14 +594,149 @@ namespace CBHK.Utility.Data.Mcdoc
             set
             {
                 if (Equals(selectedAnyType, value)) return;
+                var previousKey = AnyTypeKeyOf(selectedAnyType);
                 selectedAnyType = value;
                 OnPropertyChanged();
-                var type = McdocHelpers.AnyTypeOf(value?.Name);
-                if (type is not null)
+                OnPropertyChanged(nameof(AnyTypeKey));
+                // （未设置）哨兵：any 行的"没有值"就是这个键不存在（与枚举 / #[id] 下拉同一语义）。
+                // 顺序钉死（README「条目的（未设置）」）：静默删键 → 清镜像 → **最后**只发一次值通知。
+                // 以前这里直接 return，行上留着一个点了没反应的选项。
+                if (McdocUnionSwitch.IsUnsetOption(value))
                 {
-                    McdocCollectionEditor.Default.ApplyValue(this, McdocHelpers.GetDefault(type));
+                    if (IsMapEntry)
+                    {
+                        // UnsetEntryValue 自己会清子级并把 ChildrenBuilt 钉成 true（键不在了，不该再重建）
+                        McdocCollectionEditor.Default.UnsetEntryValue(this);
+                        RaiseValueChanged();
+                    }
+                    else
+                    {
+                        McdocCollectionEditor.Default.ApplyEmptyValue(this);
+                    }
+                    return;
                 }
+                var type = McdocHelpers.AnyTypeOf(AnyTypeKeyOf(value));
+                if (type is null) return;
+                // 换 JSON 类型 = 这一行的"值编辑器 + 子级形状"一起换：旧类型建出来的子级必须当场作废。
+                // 漏掉这一步，切成 string 之后 struct 才有的「新键」子行还挂在下面（用户现场：
+                // "添加出来的子节点求解得不太对，因为交互控件不跟着类型走了"）。
+                ForgetChildren();
+                McdocCollectionEditor.Default.ApplyValue(this, BranchValue(previousKey, AnyTypeKeyOf(value), type));
+                // 值通知只刷摘要、既不重算 Head 也不碰子行：换类型必须抬结构变更，
+                // 让宿主按新形状重算这一行的编辑器与子行
+                StructureChanged?.Invoke(this);
             }
+        }
+
+        /// <summary>每个分支最后落过的值（切分支保值用；父级重建时要跟着搬到新实例）。</summary>
+        private readonly Dictionary<string, McdocJsonValue> anyBranchDrafts = new(StringComparer.Ordinal);
+
+        /// <summary>重建换了节点实例：把分支草稿搬过去，否则切回原分支只能拿到默认值。</summary>
+        internal void AdoptAnyBranchDrafts(McdocTreeNode source)
+        {
+            if (source?.anyBranchDrafts is not { Count: > 0 }) return;
+            foreach (var pair in source.anyBranchDrafts) anyBranchDrafts[pair.Key] = pair.Value;
+        }
+
+        /// <summary>
+        /// 切 any 分支时该落什么值（顺序即优先级）：
+        /// ① 现有值在新分支成立 → 原样留（比"是不是对象"更严，list/tuple 连条目一起判）；
+        /// ② 现有值是**用户/文档里的真值**（不等于上一支的默认值）→ 先标量互转、再走 getChange 搬运；
+        /// ③ 现有值只是上一支的默认壳 → 优先还目标分支的草稿（切走时记下的那一支的值）；
+        /// ④ 都没有 → getChange（无搬运规则时它自己就是默认值）/ Resolve 默认值。
+        /// 顺序钉死：草稿若排在当前值前面，"刚在别的分支敲的值"会被旧草稿顶掉（现场：String 打 true，切回 Boolean 是 false）。
+        /// </summary>
+        private McdocJsonValue BranchValue(string previousKey, string nextKey, McdocType nextType)
+        {
+            var current = Json;
+            var previousType = McdocHelpers.AnyTypeOf(previousKey);
+            if (current is not null && !string.IsNullOrEmpty(previousKey)) anyBranchDrafts[previousKey] = current;
+            var options = McdocDefaults.Options(Runtime);
+            McdocJsonValue draft = null;
+            var hasDraft = !string.IsNullOrEmpty(nextKey) && anyBranchDrafts.TryGetValue(nextKey, out draft);
+            // ① 当前值在新分支成立：原样留（一个字都不改）
+            if (current is not null && ValueFitsBranch(nextType, current)) return current;
+            // ② 当前值是"用户/文档里的真值"（不是上一支的默认壳）→ 先转它、再搬它，别被草稿顶掉。
+            //    顺序不能反：反了就是"刚在 String 里打 true，切回 Boolean 却是 false"。
+            if (current is not null && !IsBranchDefault(previousKey, current))
+            {
+                if (CoerceScalar(nextType, current) is { } coerced) return coerced;
+                if (previousType is not null) return McdocHelpers.GetChange(nextType, previousType, current, options);
+            }
+            // ③ 当前值只是上一支的默认值（用户没动过）→ 优先用目标分支的草稿，把之前敲的还回去
+            if (hasDraft && ValueFitsBranch(nextType, draft)) return draft;
+            // ④ 都没有：getChange（无搬运规则时它自己就是新分支默认值）
+            if (current is not null && previousType is not null)
+            {
+                return McdocHelpers.GetChange(nextType, previousType, current, options);
+            }
+            return McdocDefaults.Resolve(nextType, Runtime);
+        }
+
+        /// <summary>
+        /// 这个值是不是"上一个分支的默认值"（= 用户没在那一支动过）。
+        /// 用来决定切走时"优先转当前值"还是"优先还草稿"：默认壳不该压过用户真正敲过的草稿。
+        /// </summary>
+        private bool IsBranchDefault(string branchKey, McdocJsonValue value)
+        {
+            if (value is null || string.IsNullOrEmpty(branchKey)) return false;
+            var type = McdocHelpers.AnyTypeOf(branchKey);
+            if (type is null) return false;
+            var fallback = McdocDefaults.Resolve(type, Runtime);
+            return fallback is not null
+                && string.Equals(McdocJsonFormatter.Format(fallback), McdocJsonFormatter.Format(value), StringComparison.Ordinal);
+        }
+
+        private static bool ValueFitsBranch(McdocType type, McdocJsonValue value)
+            => type is not null && value is not null && McdocUnionSwitch.ValueFitsMember(type, value, null);
+
+        /// <summary>
+        /// 标量互转：只在"能解析"时返回，不猜（注意会规范化文本形态：`"007"`→`7`、`"1.50"`→`1.5`、
+        /// `true`→`1`、`5`→`true`）。
+        /// </summary>
+        private static McdocJsonValue CoerceScalar(McdocType nextType, McdocJsonValue value)
+        {
+            if (nextType is null || value is null) return null;
+            switch (nextType.Kind)
+            {
+                case McdocTypeKind.Double:
+                case McdocTypeKind.Float:
+                case McdocTypeKind.Int:
+                case McdocTypeKind.Long:
+                case McdocTypeKind.Short:
+                case McdocTypeKind.Byte:
+                    if (value.Kind == McdocJsonKind.Boolean) return McdocJsonValue.Number(value.BooleanValue ? 1 : 0, true);
+                    if (value.Kind != McdocJsonKind.String) return null;
+                    return decimal.TryParse(value.StringValue, System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out var number)
+                        ? McdocJsonValue.Number(number, number == decimal.Truncate(number))
+                        : null;
+                case McdocTypeKind.String:
+                    if (value.Kind == McdocJsonKind.Number)
+                    {
+                        return McdocJsonValue.String(Convert.ToString(value.NumberValue,
+                            System.Globalization.CultureInfo.InvariantCulture));
+                    }
+                    return value.Kind == McdocJsonKind.Boolean
+                        ? McdocJsonValue.String(value.BooleanValue ? "true" : "false")
+                        : null;
+                case McdocTypeKind.Boolean:
+                    if (value.Kind == McdocJsonKind.Number) return McdocJsonValue.Boolean(value.NumberValue != 0m);
+                    return value.Kind == McdocJsonKind.String && bool.TryParse(value.StringValue, out var flag)
+                        ? McdocJsonValue.Boolean(flag)
+                        : null;
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>值的形状换了：旧形状的子级一个都不留（残留行既点不动，又违反"键 ↔ 行双射"）。</summary>
+        private void ForgetChildren()
+        {
+            Children.Clear();
+            Items.Clear();
+            SelectedUnionChildren.Clear();
+            ChildrenBuilt = false;
         }
 
         /// <summary>建树期直接落枚举选中项（不触发 ValueChanged）。</summary>
@@ -598,6 +744,24 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             selectedEnumOption = option;
             OnPropertyChanged(nameof(SelectedEnumOption));
+        }
+
+        /// <summary>
+        /// 可选 any 行的（未设置）哨兵：父级是**建完子节点之后**才写下可选性的（<see cref="IsRequired"/> 默认必选），
+        /// 建树期 FillAnyTypeOptions 判"可选"恒为 false —— 候选表里于是没有哨兵，这个键永远清不掉。
+        /// 父级定稿后补一次；幂等。
+        /// </summary>
+        internal void EnsureAnyUnsetOption()
+        {
+            if (IsRequired || AnyTypeOptions is not { Count: > 0 } options) return;
+            if (McdocUnionSwitch.IsUnsetOption(options[0])) return;
+            options.Insert(0, new EnumMember
+            {
+                Name = McdocNodePresenter.UnsetLabel,
+                Value = new MetaValue { LiteralValue = -1 }
+            });
+            // 不在这里预选：json 为 null 的行，FillAnyTypeOptions 建树期就已经把哨兵选好了
+            // （那时 IsRequired 还是默认必选，哨兵本来就在候选表里），预选对已有值的行只会把下拉拨回未设置
         }
 
         /// <summary>建树期直接落选中项（不触发回写）。</summary>

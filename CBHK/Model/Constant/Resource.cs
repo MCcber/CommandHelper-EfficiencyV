@@ -224,7 +224,16 @@ namespace CBHK.Model.Constant
                                 MCDocumentFile file;
                                 try
                                 {
-                                    file = await MinecraftLanguageCommunicater.AnalysisMCDocumentFileOrContent(fileEntry, documentFilePath + fileName, cancellationToken);
+                                    // 文档没变就直接用磁盘缓存里的那份 JSON（省掉每个文件一次管道往返）；
+                                    // 未命中才去问服务器，并把服务器原样返回的 JSON 落盘
+                                    file = McdocIndexCache.TryRead(fileEntry);
+                                    if (file is null)
+                                    {
+                                        var response = await MinecraftLanguageCommunicater.AnalysisMCDocumentFileOrContentWithRaw(
+                                            fileEntry, documentFilePath + fileName, cancellationToken);
+                                        file = response.File;
+                                        if (file is not null) McdocIndexCache.Write(fileEntry, response.Raw);
+                                    }
                                 }
                                 catch (Exception error)
                                 {

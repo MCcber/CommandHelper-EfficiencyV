@@ -2,15 +2,13 @@ using CBHK.CustomControl.VectorComboBox;
 using CBHK.Interface.Visual;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
-using CBHK.Model.Data;
 using CBHK.Utility.Data;
+using CBHK.Utility.Common;
 using CBHK.Utility.Data.Mcdoc;
 using CBHK.View;
-using CBHK.ViewModel;
 using CBHK.Utility.Visual.MessageTip;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Newtonsoft.Json.Linq;
 using Prism.Ioc;
 using System;
 using System.Collections.ObjectModel;
@@ -37,24 +35,25 @@ namespace CBHK.ViewModel.Component.Entity
         #region Property
         public MessagePopup MessagePopup { get; set; } = new();
 
-        #region 给予与召唤
-        /// <summary>生成方式：true = 给予（刷怪蛋），false = 召唤。</summary>
+        /// <summary>
+        /// 生成方式：true = 给予（刷怪蛋），false = 召唤。
+        /// </summary>
         [ObservableProperty]
         private bool give;
 
-        /// <summary>召唤与否（视图里与 Give 互斥的一组按钮）。</summary>
+        /// <summary>
+        /// 召唤与否（视图里与 Give 互斥的一组按钮）。
+        /// /summary>
         [ObservableProperty]
         private bool summon = true;
 
-        #endregion
-
-        #region 显示结果
+        /// <summary>
+        /// 显示结果
+        /// </summary>
         [ObservableProperty]
         private bool showResult;
-        #endregion
 
         #region 实体ID列表
-
         [ObservableProperty]
         private VectorTextComboBoxItem selectedEntityId;
 
@@ -62,44 +61,22 @@ namespace CBHK.ViewModel.Component.Entity
         private ObservableCollection<VectorIconTextComboBoxItem> entityIDList = [];
         #endregion
 
-        #region 作为工具或引用
-        [ObservableProperty]
-        private bool useForTool;
-
-        [ObservableProperty]
-        private bool useForReference;
-
-        #endregion
-
-        #region 导入外部数据模式
-        /// <summary>外部导入模式：导入的实体数据由 mcdoc 树承载（不再是 NBT 面板）。</summary>
-        [ObservableProperty]
-        private bool importMode;
-
-        /// <summary>外部读号进来的实体数据（导入模式用）。</summary>
-        public JObject ExternallyReadEntityData { get; set; }
-
-        #endregion
-
-        #region 是否同步到文件
-        public bool SyncToFile { get; set; }
-        public string ExternFilePath { get; set; }
-
-        /// <summary>页面上"是否有自定义名"的开关（旧调用面在用）。</summary>
+        /// <summary>
+        /// 页面上"是否有自定义名"的开关（旧调用面在用）。
+        /// </summary>
         public bool HaveCustomName { get; set; }
 
         #endregion
 
-        #endregion
-
         #region Method
+
         #region 搜索当前实体ID对应的JSON对象
         /// <summary>
         /// 按当前版本重建实体下拉（id 来自注册表 entity_type，A-Z 排序，带刷怪蛋图标）。
         /// </summary>
         private void LoadEntityIdsForVersion()
         {
-            string version = SelectedGameVersionOption?.Name ?? GameVersion;
+            string version = SelectedGameVersionOption?.Name;
             if (string.IsNullOrEmpty(version)) return;
             loadingEntityIds = true;
             try
@@ -115,6 +92,8 @@ namespace CBHK.ViewModel.Component.Entity
                         : entityImageFolderPath + item + ".png";
                     EntityIDList.Add(new VectorIconTextComboBoxItem
                     {
+                        // ItemID 必须给：Equals 只在有 ItemID 时才自反，否则代码设的选中项会被 Selector 丢掉
+                        ItemID = item,
                         Image = File.Exists(iconPath) ? new BitmapImage(new Uri(iconPath, UriKind.Absolute)) : null,
                         Text = item
                     });
@@ -130,11 +109,69 @@ namespace CBHK.ViewModel.Component.Entity
         /// <summary>
         /// 切实体：按 dispatcher 重新开一棵树（schema 决定这一页显示什么）。
         /// </summary>
+        /// <summary>
+        /// 窗口上的"从剪切板/文件导入"走这里：把 summon 命令里的 NBT 直接灌进 mcdoc 文本，
+        /// 之后由引擎同步到左侧树 —— 不再造旧的实体页面。返回 false 表示没有可用 NBT。
+        /// </summary>
+        public bool ImportFromCommand(string textOrPath, bool isPath = false, Action<string> report = null)
+        {
+            var data = ExternalCommandParser.Read(textOrPath, isPath);
+            if (!ExternalCommandParser.TryGetEntityNbt(data, out var nbt, out var entityId, out _))
+            {
+                report?.Invoke("文件内容格式不合法");
+                return false;
+            }
+            var version = SelectedGameVersionOption?.Name;
+            if (string.IsNullOrEmpty(version))
+            {
+                report?.Invoke("还没选版本，先选一个版本再导入");
+                return false;
+            }
+            // 命令里带命名空间、下拉是裸 id：归一后再找；找不到就不导入（别灌到别的 schema 上）
+            var bare = ExternalCommandParser.StripNamespace(entityId);
+            var target = string.IsNullOrEmpty(bare)
+                ? null
+                : EntityIDList.FirstOrDefault(item => string.Equals(item?.Text, bare, StringComparison.Ordinal));
+            if (target is null)
+            {
+                report?.Invoke("命令里的实体不在注册表里：" + (string.IsNullOrEmpty(bare) ? "<没有 id>" : bare));
+                return false;
+            }
+            var wasLoading = loadingEntityIds;
+            loadingEntityIds = true;
+            try
+            {
+                SelectedEntityId = target;
+            }
+            finally
+            {
+                loadingEntityIds = wasLoading;
+            }
+            // summon 命令 → 召唤模式；give 刷怪蛋 → 给予模式
+            Give = !ExternalCommandParser.IsSummonCommand(data);
+            // oldID 是旧页面的产物，mcdoc 页留着它只会多一行"未声明键"
+            pendingImportNbt = ExternalCommandParser.RemoveOldId(nbt);
+            SelectedEntityId = target;
+            UpdateEntityDataTree();
+            return true;
+        }
+
+        /// <summary>导入时"待落盘"的 NBT：选中项变化引起的那次重建要把它一起带进去。</summary>
+        private string pendingImportNbt;
+
+        /// <summary>已经按哪个实体开过树：同样的选择不再重建（否则会把导入的 NBT 冲成默认文档）。</summary>
+        private string openedEntityId;
+
         public void UpdateEntityDataTree()
         {
-            if (loadingEntityIds || SelectedEntityId is null || string.IsNullOrEmpty(GameVersion)) return;
-            OpenMcdocTreeFromDispatcher(GameVersion, dispatcherRegistry,
-                McdocIndex.Static(SelectedEntityId.Text), resource.McdocTypes);
+            var version = SelectedGameVersionOption?.Name;
+            if (loadingEntityIds || SelectedEntityId is null || string.IsNullOrEmpty(version)) return;
+            var json = pendingImportNbt;
+            pendingImportNbt = null;
+            if (json is null && string.Equals(SelectedEntityId.Text, openedEntityId, StringComparison.Ordinal)) return;
+            openedEntityId = SelectedEntityId.Text;
+            OpenMcdocTreeFromDispatcher(version, dispatcherRegistry,
+                McdocIndex.Static(SelectedEntityId.Text), resource.McdocTypes, json);
         }
 
         #endregion
@@ -157,7 +194,7 @@ namespace CBHK.ViewModel.Component.Entity
             if (Result is null) return;
             var body = Result.ToString().Trim();
             var entity = SelectedEntityId?.Text ?? "entity";
-            var legacy = VersionRangeChecker.IsLessThan(GameVersion, "1.13");
+            var legacy = VersionRangeChecker.IsLessThan(SelectedGameVersionOption?.Name ?? "", "1.13");
             var hasCustomName = HaveCustomName
                 || (JsonText?.Contains("\"CustomName\"", StringComparison.Ordinal) ?? false);
             var tag = body.Length > 0 ? "," + body : "";
@@ -204,7 +241,7 @@ namespace CBHK.ViewModel.Component.Entity
         #endregion
 
         #region Event
-        #region 更新子控件的版本以及执行数据更新事件
+
         public void EntityPages_Loaded(object sender, RoutedEventArgs e)
         {
             LoadEntityIdsForVersion();
@@ -224,9 +261,6 @@ namespace CBHK.ViewModel.Component.Entity
             UpdateEntityDataTree();
         }
 
-        #endregion
-
-        #region 生成与保存
         [RelayCommand]
         /// <summary>
         /// 运行生成
@@ -287,7 +321,7 @@ namespace CBHK.ViewModel.Component.Entity
             Directory.CreateDirectory(cacheFolder);
             _ = File.WriteAllTextAsync(cacheFolder + Path.GetFileName(dialog.FileName), Result.ToString());
         }
-        #endregion
+
         #endregion
     }
 }
