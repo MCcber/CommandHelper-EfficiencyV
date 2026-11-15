@@ -32,22 +32,6 @@
         <ResourceDictionary Source="/ControlDictionary/Container/McdocRows.xaml" />
         <ResourceDictionary Source="/ControlDictionary/Container/McdocGeneratorChrome.xaml" />
         <ResourceDictionary>
-            <data:MCDocumentTreeViewTemplateSelector
-                x:Key="MCDocumentTreeViewTemplateSelector"
-                AddButtonTemlate="{StaticResource AddButtonItem}"
-                ArrayTemplate="{StaticResource TreeViewArrayItem}"
-                BoolTemplate="{StaticResource TreeViewBoolItem}"
-                ColorTemplate="{StaticResource TreeViewColorItem}"
-                CompositeTemplate="{StaticResource TreeViewCompositeItem}"
-                EnumTemplate="{StaticResource TreeViewEnumItem}"
-                ListTemplate="{StaticResource TreeViewListItem}"
-                NumberTemplate="{StaticResource TreeViewNumberTemplate}"
-                RemoveTemplate="{StaticResource RemoveButtonItem}"
-                StringTemplate="{StaticResource TreeViewStringItem}"
-                StructTemplate="{StaticResource TreeViewStructItem}"
-                UUIDTemplate="{StaticResource TreeViewUUIDItem}"
-                UnionTemplate="{StaticResource TreeViewUnionItem}" />
-
             <!--
                 新 mcdoc 求值管线（McdocTreeNode）。与上面旧选择器完全同一模式：
                 直接内联在这里，才能 StaticResource 到 TreeViewCommon.xaml / VectorTreeViewItem.xaml 里的资源

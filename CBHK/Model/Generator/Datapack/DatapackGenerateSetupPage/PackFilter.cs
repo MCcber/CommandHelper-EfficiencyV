@@ -8,9 +8,9 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackGenerateSetupPage
     public partial class PackFilter:ObservableObject
     {
         [ObservableProperty]
-        private string _nameSpace = "";
+        private string namespaceText = "";
 
         [ObservableProperty]
-        private string _path = "";
+        private string path = "";
     }
 }

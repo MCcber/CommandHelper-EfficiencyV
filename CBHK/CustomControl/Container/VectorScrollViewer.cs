@@ -17,10 +17,11 @@ namespace CBHK.CustomControl.Container
         private Brush OriginRightTopBorderBrush;
         private Brush OriginBottomBorderBrush;
 
-        private Point _scrollStartPoint;
-        private Point _scrollStartOffset;
-        private bool _isDragging = false;
-        private readonly double _dragThreshold = 5.0; // 移动超过5像素才判定为拖拽
+        private Point scrollStartPoint;
+        private Point scrollStartOffset;
+        private bool isDragging = false;
+        private bool pressOnInteractiveChild = false;
+        private readonly double dragThreshold = 5.0; // 移动超过5像素才判定为拖拽
         private ScrollBar VerticalScrollBar;
         private ScrollBar HorizontalScrollBar;
         #endregion
@@ -156,18 +157,23 @@ namespace CBHK.CustomControl.Container
         {
             var sv = sender as ScrollViewer;
 
+            pressOnInteractiveChild = false;
             if(!IsAllowDragToScroll)
             {
                 return;
             }
-            _scrollStartPoint = e.GetPosition(sv);
-            _scrollStartOffset = new Point(sv.HorizontalOffset, sv.VerticalOffset);
-            _isDragging = false;
+            // 按在"自己有鼠标语义"的控件上（文本框选字 / 按钮按住 / 滑块 / 滚动条）时，
+            // 这一次按住不许升级成拖拽滚动：CaptureMouse 会把鼠标从正在拖选文字的编辑器手里抢走，
+            // 现场就是"行内文本框拖不出选区"（选区在越过拖拽阈值那一下就停了）。
+            pressOnInteractiveChild = IsInteractiveSource(e.OriginalSource as DependencyObject, sv);
+            scrollStartPoint = e.GetPosition(sv);
+            scrollStartOffset = new Point(sv.HorizontalOffset, sv.VerticalOffset);
+            isDragging = false;
         }
 
         private void ScrollViewer_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if (!IsAllowDragToScroll)
+            if (!IsAllowDragToScroll || pressOnInteractiveChild)
             {
                 return;
             }
@@ -177,21 +183,21 @@ namespace CBHK.CustomControl.Container
                 Point currentPoint = e.GetPosition(sv);
 
                 // 判断是否达到了拖拽的最小距离
-                if (!_isDragging &&
-                    (Math.Abs(currentPoint.X - _scrollStartPoint.X) > _dragThreshold ||
-                     Math.Abs(currentPoint.Y - _scrollStartPoint.Y) > _dragThreshold) && HorizontalScrollBar.Visibility is not Visibility.Visible && VerticalScrollBar.Visibility is not Visibility.Visible)
+                if (!isDragging &&
+                    (Math.Abs(currentPoint.X - scrollStartPoint.X) > dragThreshold ||
+                     Math.Abs(currentPoint.Y - scrollStartPoint.Y) > dragThreshold) && HorizontalScrollBar.Visibility is not Visibility.Visible && VerticalScrollBar.Visibility is not Visibility.Visible)
                 {
-                    _isDragging = true;
+                    isDragging = true;
                     sv.CaptureMouse(); // 确定是拖拽后，再强行夺取鼠标控制权
                 }
 
-                if (_isDragging)
+                if (isDragging)
                 {
-                    double deltaX = currentPoint.X - _scrollStartPoint.X;
-                    double deltaY = currentPoint.Y - _scrollStartPoint.Y;
+                    double deltaX = currentPoint.X - scrollStartPoint.X;
+                    double deltaY = currentPoint.Y - scrollStartPoint.Y;
 
-                    sv.ScrollToHorizontalOffset(_scrollStartOffset.X - deltaX);
-                    sv.ScrollToVerticalOffset(_scrollStartOffset.Y - deltaY);
+                    sv.ScrollToHorizontalOffset(scrollStartOffset.X - deltaX);
+                    sv.ScrollToVerticalOffset(scrollStartOffset.Y - deltaY);
 
                     // 改变光标增加反馈
                     sv.Cursor = Cursors.Hand;
@@ -212,13 +218,44 @@ namespace CBHK.CustomControl.Container
                 sv.ReleaseMouseCapture();
                 sv.Cursor = Cursors.Arrow;
 
-                if (_isDragging)
+                if (isDragging)
                 {
                     e.Handled = true;
                 }
             }
 
-            _isDragging = false;
+            isDragging = false;
+            pressOnInteractiveChild = false;
+        }
+
+        /// <summary>按下点（含祖先，到本 ScrollViewer 为止）是不是"自己做主鼠标"的控件。</summary>
+        private static bool IsInteractiveSource(DependencyObject source, DependencyObject stopAt)
+        {
+            for (var current = source; current is not null && !ReferenceEquals(current, stopAt); current = ParentOf(current))
+            {
+                if (current is TextBoxBase or PasswordBox or ComboBox or ButtonBase or Thumb or ScrollBar or Slider)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 上溯父级：富文本的 Run 是 FrameworkContentElement、不是 Visual，
+        /// 直接 VisualTreeHelper.GetParent 会抛"不是 Visual"（与行视图同一套兜底）。
+        /// </summary>
+        private static DependencyObject ParentOf(DependencyObject current)
+        {
+            if (current is Visual or System.Windows.Media.Media3D.Visual3D)
+            {
+                return VisualTreeHelper.GetParent(current);
+            }
+            if (current is ContentElement content)
+            {
+                return ContentOperations.GetParent(content) ?? (content as FrameworkContentElement)?.Parent;
+            }
+            return null;
         }
         #endregion
     }

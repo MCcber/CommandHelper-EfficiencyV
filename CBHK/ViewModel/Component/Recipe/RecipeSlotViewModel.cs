@@ -41,16 +41,16 @@ namespace CBHK.ViewModel.Component.Recipe
         public ObservableCollection<string> Tags { get; } = [""];
 
         [ObservableProperty]
-        private string _key = "";
+        private string key = "";
 
         [ObservableProperty]
-        private ImageSource _image;
+        private ImageSource image;
 
         [ObservableProperty]
-        private string _toolTipText;
+        private string toolTipText;
 
         [ObservableProperty]
-        private Visibility _multiItemVisibility = Visibility.Collapsed;
+        private Visibility multiItemVisibility = Visibility.Collapsed;
 
         public IRelayCommand<ItemStructure> DropCommand { get; }
         public IRelayCommand OpenCommand { get; }

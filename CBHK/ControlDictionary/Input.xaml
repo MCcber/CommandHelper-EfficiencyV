@@ -12,22 +12,5 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TimelineClip.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TimelineKeyFrame.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TagRichTextBox.xaml" />
-        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/MetaType.xaml" />
-        <ResourceDictionary>
-            <selector:MetaTypeTemplateSelector
-                x:Key="MetaTypeTemplateSelector"
-                AddButtonTemlate="{StaticResource AddButtonItem}"
-                ArrayTemplate="{StaticResource ArrayItem}"
-                BoolTemplate="{StaticResource BoolItem}"
-                ColorTemplate="{StaticResource ColorItem}"
-                EnumTemplate="{StaticResource EnumItem}"
-                ListTemplate="{StaticResource ListItem}"
-                NumberTemplate="{StaticResource NumberItem}"
-                RemoveTemplate="{StaticResource RemoveButtonItem}"
-                StringTemplate="{StaticResource StringItem}"
-                StructTemplate="{StaticResource StructItem}"
-                UUIDTemplate="{StaticResource UUIDItem}"
-                UnionTemplate="{StaticResource UnionItem}" />
-        </ResourceDictionary>
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

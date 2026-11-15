@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <!--
+      只生成中性资源，不再为第三方程序集的本地化资源产出附属程序集目录
+      （cs / de / es / fr / it / ja / ko / pl / pt-BR / ru / tr / zh-Hans / zh-Hant）。
+      这些 *.resources.dll 只影响第三方库（StreamJsonRpc、Microsoft.VisualStudio.* 等）的异常文案，
+      本程序自身的界面与资源走中性资源，不依赖它们；缺了它们运行时会自动回退到中性资源，不会报错。
+    -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+</Project>

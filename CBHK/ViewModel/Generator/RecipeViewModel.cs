@@ -79,53 +79,53 @@ namespace CBHK.ViewModel.Generator
         /// 原版物品库
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<ItemStructure> _originalItemList = [];
+        public ObservableCollection<ItemStructure> originalItemList = [];
         /// <summary>
         /// 自定义物品库
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<ItemStructure> _customItemList = [];
+        public ObservableCollection<ItemStructure> customItemList = [];
         /// <summary>
         /// 已选中的成员
         /// </summary>
         [ObservableProperty]
-        private ItemStructure _selectedItem = null;
+        private ItemStructure selectedItem = null;
 
         /// <summary>
         /// 已选中的物品库索引
         /// </summary>
         [ObservableProperty]
-        private int _selectedItemListIndex;
+        private int selectedItemListIndex;
 
         /// <summary>
         /// 搜索值
         /// </summary>
         [ObservableProperty]
-        private string _searchText = "";
+        private string searchText = "";
 
         /// <summary>
         /// 配方标签页数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<RecipeTabViewModel> _recipeList = [];
+        public ObservableCollection<RecipeTabViewModel> recipeList = [];
 
         /// <summary>
         /// 当前选中的配方页签
         /// </summary>
         [ObservableProperty]
-        private RecipeTabViewModel _selectedTab;
+        private RecipeTabViewModel selectedTab;
 
         /// <summary>
         /// 配方格式版本下拉数据源
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
+        private ObservableCollection<VectorTextComboBoxItem> versionSource = [];
 
         /// <summary>
         /// 当前选中的配方格式版本
         /// </summary>
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem selectedVersion;
 
         #endregion
 

@@ -189,19 +189,18 @@
     </PackageReference>
     <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.27.3" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.161" />
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.4</Version>
     </PackageReference>
     <PackageReference Include="Prism.Core" Version="9.0.537" />
     <PackageReference Include="Prism.DryIoc" Version="9.0.537" />
     <PackageReference Include="Prism.Wpf" Version="9.0.537" />
-    <PackageReference Include="Serilog" Version="4.3.1" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="SharpNBT" Version="1.3.1" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
-    <PackageReference Include="VirtualizingWrapPanel" Version="2.5.1" />
+    <PackageReference Include="VirtualizingWrapPanel" Version="2.5.4" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resource\CBHK\Image\empty.png" />
@@ -216,7 +215,12 @@
     <Resource Include="Resource\Common\Image\Copy.png" />
     <Resource Include="Resource\Common\Image\CopyAll.png" />
     <Resource Include="Resource\Common\Image\Cut.png" />
-    <Resource Include="Resource\Common\Image\Delete.png" />
+    <Resource Include="Resource\Common\Image\Delete.png" />
+    <Resource Include="Resource\Common\Image\ButtonNormal.png" />
+    <Resource Include="Resource\Common\Image\ButtonPressed.png" />
+    <Resource Include="Resource\Common\Image\TextEditBox.png" />
+    <Resource Include="Resource\Common\Image\TextToggleButtonNormal.png" />
+    <Resource Include="Resource\Common\Image\TextToggleButtonPressed.png" />
     <Resource Include="Resource\Common\Image\eyeHide.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -318,7 +322,6 @@
     <Resource Include="Resource\CBHK\Image\More\Thanks\8Hover.png" />
     <Resource Include="Resource\CBHK\Image\More\Thanks\9.png" />
     <Resource Include="Resource\CBHK\Image\More\Thanks\9Hover.png" />
-    <Resource Include="Resource\CBHK\Image\More\Thanks\Title.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resource\Common\Image\Datapack\dataPackIcon.png" />
@@ -397,7 +400,12 @@
     <None Remove="Resource\Common\Image\Copy.png" />
     <None Remove="Resource\Common\Image\CopyAll.png" />
     <None Remove="Resource\Common\Image\Cut.png" />
-    <None Remove="Resource\Common\Image\Delete.png" />
+    <None Remove="Resource\Common\Image\Delete.png" />
+    <None Remove="Resource\Common\Image\ButtonNormal.png" />
+    <None Remove="Resource\Common\Image\ButtonPressed.png" />
+    <None Remove="Resource\Common\Image\TextEditBox.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonNormal.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonPressed.png" />
     <None Remove="Resource\Common\Image\eyeHide.png" />
     <None Remove="Resource\Common\Image\eyeShow.png" />
     <None Remove="Resource\Common\Image\Fold.png" />
@@ -449,6 +457,12 @@
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
     <!-- 运行期配置（Registries/Generator/ItemTextures）由部署目录提供，项目源码不携带 Configuration.json -->
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 只放注册表与 mcdoc 都没有的命令枚举；注册表数据由 RegistryDataService 直接读部署目录 -->
+    <Content Include="Resource\CBHK\Data\SupplementalData.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\MinecraftLanguageModelLibrary\MinecraftLanguageModelLibrary.csproj" />

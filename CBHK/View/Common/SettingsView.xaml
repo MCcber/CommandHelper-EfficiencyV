@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
     xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton"
     xmlns:VectorCheckBox="clr-namespace:CBHK.CustomControl.VectorCheckBox"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
@@ -83,6 +84,32 @@
             SelectedValue="{Binding SelectedThemeTypeString}"
             SelectedValuePath="Text"
             Style="{DynamicResource VectorTextComboBoxStyle}" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Input:VectorColorPicker
+                Title="设置主题前景色"
+                Grid.Column="0"
+                Height="35"
+                Margin="0,0,0,5"
+                Background="Black"
+                OriginBottomHeight="3"
+                SelectedColor="{Binding CustomForeground, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Style="{DynamicResource VectorColorPickerStyle}"
+                Visibility="{Binding CustomColorPickerVisibility}" />
+            <Input:VectorColorPicker
+                Title="设置主题背景色"
+                Grid.Column="1"
+                Height="35"
+                Margin="0,0,0,5"
+                Background="Black"
+                OriginBottomHeight="3"
+                SelectedColor="{Binding CustomBackground, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Style="{DynamicResource VectorColorPickerStyle}"
+                Visibility="{Binding CustomColorPickerVisibility}" />
+        </Grid>
         <VectorComboBox:VectorTextComboBox
             Title="主题特效"
             Grid.Row="1"
@@ -99,6 +126,15 @@
             SelectedValue="{Binding SelectedVisualTypeString}"
             SelectedValuePath="Text"
             Style="{DynamicResource VectorTextComboBoxStyle}" />
+        <Input:VectorColorPicker
+            Title="设置窗体背景色"
+            Grid.Column="0"
+            Height="35"
+            Margin="0,0,0,5"
+            Background="Black"
+            OriginBottomHeight="3"
+            SelectedColor="{Binding CustomWindowBackground, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            Style="{DynamicResource VectorColorPickerStyle}" />
         <VectorComboBox:VectorTextComboBox
             Title="窗体边框风格"
             Grid.Row="1"

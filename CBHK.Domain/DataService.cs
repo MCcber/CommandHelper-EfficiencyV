@@ -6,7 +6,8 @@ namespace CBHK.Domain
     public partial class DataService
     {
         #region Field
-        private CBHKDataContext context;
+        private RegistryDataService registry;
+        private ICatalogEnumProvider enumProvider;
         private RegexService regexService;
         private List<string> ItemSlotList = [];
         private List<string> Enchantments = [];
@@ -38,267 +39,121 @@ namespace CBHK.Domain
         private Dictionary<int, Dictionary<string, string>> EntityGroupByVersionDictionary = [];
         #endregion
 
-        public DataService(CBHKDataContext Context,RegexService RegexService)
+        /// <summary>
+        /// 数据只来自两处：<see cref="RegistryDataService"/>（原版注册表，按版本分组）与
+        /// <see cref="ICatalogEnumProvider"/>（命令语法闭合枚举，由 mcdoc 资产库解析）。
+        /// 两者都取不到时列表为空——不再有数据库可读。
+        /// </summary>
+        public DataService(RegistryDataService Registry,ICatalogEnumProvider EnumProvider,RegexService RegexService)
         {
-            context = Context;
+            registry = Registry;
+            enumProvider = EnumProvider;
             regexService = RegexService;
 
             #region 根据版本分类所有物品ID
-            if (ItemGroupByVersionDicionary.Count == 0)
+            foreach (string version in registry.Versions)
             {
-                foreach (var pair in context.ItemSet)
-                {
-                    int version = int.Parse(pair.Key.Replace(".", ""));
-                    if(!ItemGroupByVersionDicionary.ContainsKey(version))
-                    {
-                        ItemGroupByVersionDicionary.Add(version, pair.Value.Select(item => item.Split('|', StringSplitOptions.RemoveEmptyEntries)).Where(item => item.Length == 2).ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim()));
-                    }
-                    else
-                    {
-                        ItemGroupByVersionDicionary[version] = pair.Value.Select(item => item.Split('|', StringSplitOptions.RemoveEmptyEntries)).Where(item => item.Length == 2).ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim());
-                    }
-                }
+                ItemGroupByVersionDicionary[ToVersionNumber(version)] = registry.GetIds("item", version)
+                    .ToDictionary(id => id, id => id);
             }
             #endregion
 
             #region 根据版本分类所有附魔ID
-            if (EnchantmentGroupByVersionDicionary.Count == 0)
+            foreach (string version in registry.Versions)
             {
-                foreach (var item in context.EnchantmentSet)
-                {
-                    //if (pair.ID is not null && pair.ID.Length > 0)
-                    //{
-                    //    _ = int.TryParse(pair.Version is not null ? pair.Version.Replace(".", "") : "0", out int version);
-                    //    if (!EnchantmentGroupByVersionDicionary.TryAdd(version, new Dictionary<string, string> { { pair.ID, pair.Name } }))
-                    //    {
-                    //        EnchantmentGroupByVersionDicionary[version].Add(pair.ID, pair.Name);
-                    //    }
-                    //}
-                }
+                EnchantmentGroupByVersionDicionary[ToVersionNumber(version)] = registry.GetIds("enchantment", version)
+                    .ToDictionary(id => id, id => id);
             }
             #endregion
 
-            #region 根据方块ID为方块数据分组
-            if (BlockIDAndName.Count == 0)
+            #region 根据版本分类所有实体ID
+            foreach (string version in registry.Versions)
             {
-                //foreach (var pair in context.BlockSet)
-                //{
-                //    if (pair.ID is not null && pair.ID.Length > 0)
-                //    {
-                //        if (!BlockIDAndName.TryAdd(pair.ID, new Tuple<string, string?>(pair.Name, pair.LowVersionID)))
-                //        {
-                //        }
-                //    }
-                //}
+                EntityGroupByVersionDictionary[ToVersionNumber(version)] = registry.GetIds("entity_type", version)
+                    .ToDictionary(id => id, id => id);
             }
             #endregion
 
-            #region 根据实体ID为实体数据分组
-            if (EntityGroupByVersionDictionary.Count == 0)
+            #region 扁平列表一律取最高可用版本
+            ItemIDList.AddRange(registry.GetIds("item"));
+            BlockIDList.AddRange(registry.GetIds("block"));
+            EntityIDList.AddRange(registry.GetIds("entity_type"));
+            ParticleIDList.AddRange(registry.GetIds("particle_type"));
+            DamageTypeList.AddRange(registry.GetIds("damage_type"));
+            AdvancementValueList.AddRange(registry.GetIds("advancement"));
+            MobAttributeList.AddRange(registry.GetIds("attribute"));
+            EffectIDList.AddRange(registry.GetIds("mob_effect"));
+            foreach (string sound in registry.GetIds("sound_event"))
             {
-                //foreach (var pair in context.EntitySet)
-                //{
-                //    if (pair.ID is not null && pair.ID.Length > 0)
-                //    {
-                //        _ = int.TryParse(pair.Version is not null ? pair.Version.Replace(".", "") : "0", out int version);
-                //        if (!EntityGroupByVersionDictionary.TryAdd(version, new Dictionary<string, string> { { pair.ID, pair.Name } }))
-                //        {
-                //            EntityGroupByVersionDictionary[version].Add(pair.ID, pair.Name);
-                //        }
-                //    }
-                //}
-            }
-            #endregion
-
-            #region 添加进度
-            #endregion
-
-            #region 添加物品Id
-            //if (context.ItemSet is not null)
-            //{
-            //    foreach (var pair in context.ItemSet)
-            //    {
-            //        if (pair.ID is not null)
-            //            ItemIDList.Add(pair.ID);
-            //    }
-            //}
-            #endregion
-
-            #region 添加方块Id
-            //foreach (var pair in context.BlockSet)
-            //{
-            //    if (pair.ID is not null)
-            //        BlockIDList.Add(pair.ID);
-            //}
-            #endregion
-
-            #region 添加附魔ID
-            //if (context.EnchantmentSet is not null)
-            //{
-            //    foreach (var pair in context.EnchantmentSet)
-            //    {
-            //        if (pair.ID is not null)
-            //            Enchantments.Add(pair.ID);
-            //    }
-            //}
-            #endregion
-
-            #region 添加物品槽位编号
-            foreach (var item in context.ItemSlotSet)
-            {
-                if (item.Value is not null)
-                {
-                    string value = item.Value;
-                    string subContent = regexService.ItemSlotMatcher().Match(value).ToString();
-                    if (subContent is not null && subContent.Length > 0)
-                    {
-                        #region 处理区间,与后面引用的数据拼接成完整的数据
-                        string prefix = value[..(value.LastIndexOf('.') + 1)];
-                        int dashIndex = subContent.IndexOf('-');
-                        int start = int.Parse(subContent[..dashIndex]);
-                        int end = int.Parse(subContent[(dashIndex + 1)..]);
-                        for (int i = start; i <= end; i++)
-                            ItemSlotList.Add(prefix + i);
-                        #endregion
-                    }
-                    else
-                        ItemSlotList.Add(value);
-                }
-            }
-            #endregion
-
-            #region 添加伤害类型
-            //foreach (var pair in context.DamageTypeSet)
-            //{
-            //    if (pair.Value is not null)
-            //        DamageTypeList.Add(pair.Value);
-            //}
-            #endregion
-
-            #region 添加维度
-            DimensionIDList.Add("minecraft:over_world");
-            DimensionIDList.Add("minecraft:nether");
-            DimensionIDList.Add("minecraft:the_end");
-            #endregion
-
-            #region 添加选择器参数
-            foreach (var item in context.SelectorParameterSet)
-            {
-                if (item.Value is not null)
-                    SelectorParameterList.Add(item.Value);
-            }
-            #endregion
-
-            #region 添加选择器参数值
-            foreach (var item in context.SelectorParameterValueSet)
-            {
-                if (item.Name is not null && item.Value is not null)
-                    SelectorParameterValueList.Add(item.Name, item.Value);
+                // 注册表只给 id，没有可读名：用 id 充当名称
+                SoundDictionary[sound] = sound;
             }
             #endregion
 
             #region 添加游戏规则名称
-            foreach (var item in context.GameRuleSet)
+            foreach (string gameRule in registry.GetIds("game_rule"))
             {
-                if (item.Name is not null)
-                {
-                    GameRuleItem gameRuleItem = new();
-                    GameRuleList.Add(item.Name, gameRuleItem);
-                    if (item.Description is not null)
-                        gameRuleItem.Description = item.Description;
-                    if (item.DefaultValue is not null)
-                        gameRuleItem.Value = item.DefaultValue;
-                    if (item.DataType is not null)
-                        gameRuleItem.ItemType = item.DataType == "Bool" ? GameRuleItem.DataType.Bool : GameRuleItem.DataType.Int;
-                }
+                GameRuleList[gameRule] = new GameRuleItem();
             }
             #endregion
 
-            #region 添加队伍颜色
-            foreach (var item in context.TeamColorSet)
+            #region 添加维度
+            DimensionIDList.AddRange(registry.GetIds("dimension"));
+            if (DimensionIDList.Count == 0)
             {
-                if (item.Value is not null)
-                    TeamColorList.Add(item.Value);
+                DimensionIDList.AddRange(["minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"]);
             }
             #endregion
 
-            #region 添加bossbar颜色
-            foreach (var item in context.BossbarColorSet)
+            #region 添加物品槽位编号
+            ItemSlotList.AddRange(enumProvider.ItemSlots);
+            #endregion
+
+            #region 添加选择器参数和取值
+            SelectorParameterList.AddRange(enumProvider.SelectorParameters);
+            foreach (KeyValuePair<string, string> pair in enumProvider.SelectorParameterValues)
             {
-                if (item.Value is not null)
-                    BossbarColorList.Add(item.Value);
+                SelectorParameterValueList[pair.Key] = pair.Value;
             }
             #endregion
 
-            #region 添加bossbar样式
-            foreach (var item in context.BossbarStyleSet)
+            #region 添加队伍颜色、bossbar 颜色与样式
+            TeamColorList.AddRange(enumProvider.TeamColors);
+            BossbarColorList.AddRange(enumProvider.BossbarColors);
+            BossbarStyleList.AddRange(enumProvider.BossbarStyles);
+            #endregion
+
+            #region 添加记分板准则与 Custom 命名空间 ID
+            ScoreboardTypeList.AddRange(enumProvider.ScoreboardTypes);
+            // custom 命名空间下的 ID 就是原版统计项（custom_stat 注册表），比手写常量可靠
+            ScoreboardCustomIDList.AddRange(registry.GetIds("custom_stat"));
+            if (ScoreboardCustomIDList.Count == 0)
             {
-                if (item.Value is not null)
-                    BossbarStyleList.Add(item.Value);
-            }
-            #endregion
-
-            #region 添加实体Id
-            //foreach (var pair in context.EntitySet)
-            //{
-            //    if (pair.ID is not null)
-            //        EntityIDList.Add(pair.ID);
-            //}
-            #endregion
-
-            #region 添加粒子路径
-            //foreach (var pair in context.ParticleSet)
-            //{
-            //    if (pair.Value is not null)
-            //        ParticleIDList.Add(pair.Value);
-            //}
-            #endregion
-
-            #region 添加音效路径
-            //foreach (var pair in context.SoundSet)
-            //{
-            //    if (pair.ID is not null)
-            //        SoundDictionary.Add(pair.ID, pair.Name);
-            //}
-            #endregion
-
-            #region 添加生物属性
-            foreach (var item in context.MobAttributeSet)
-            {
-                if (item.ID is not null)
-                    MobAttributeList.Add(item.ID);
-            }
-            #endregion
-
-            #region 添加药水id/生物状态
-            foreach (var item in context.MobEffectSet)
-            {
-                EffectIDList.AddRange(item.Value);
+                ScoreboardCustomIDList.AddRange(enumProvider.ScoreboardCustomIds);
             }
             #endregion
 
             #region 添加战利品表工具
             LootToolList.Add("mainhand");
             LootToolList.Add("offhand");
-            LootToolList.AddRange([.. ItemIDList]);
-            #endregion
-
-            #region 添加记分板准则
-            foreach (var item in context.ScoreboardTypeSet)
-            {
-                if (item.Value is not null)
-                    ScoreboardTypeList.Add(item.Value);
-            }
-            #endregion
-
-            #region 添加custom命令空间下的ID
-            foreach (var item in context.ScoreboardCustomIDSet)
-            {
-                if (item.Value is not null)
-                    ScoreboardCustomIDList.Add(item.Value);
-            }
+            LootToolList.AddRange(ItemIDList);
             #endregion
         }
+
+        /// <summary>
+        /// 版本键转成调用方沿用的整数形（1.21.11 → 12111）。数据目录里的键是文件名字符串。
+        /// </summary>
+        private static int ToVersionNumber(string version)
+            => int.Parse(version.Replace(".", ""), System.Globalization.CultureInfo.InvariantCulture);
+
+        /// <summary>注册表数据里出现过的版本键（升序）；目录没读到数据时为空。</summary>
+        public IReadOnlyList<string> GetVersionList() => registry.Versions;
+
+        /// <summary>指定版本下某个注册表的成员 id；该版本没有这个注册表时返回空。</summary>
+        public IReadOnlyList<string> GetIds(string registryName, string version) => registry.GetIds(registryName, version);
+
+        /// <summary>指定版本下出现过的注册表名（tag 目录候选），按名字排序。</summary>
+        public IReadOnlyList<string> GetRegistryNames(string version) => registry.GetRegistryNames(version);
 
         /// <summary>
         /// 获取所有物品的ID列表
@@ -494,6 +349,16 @@ namespace CBHK.Domain
         {
             return ScoreboardTypeList;
         }
+
+        /// <summary>
+        /// 获取生物群系ID列表
+        /// </summary>
+        public List<string> GetBiomeIDList() => [.. registry.GetIds("biome")];
+
+        /// <summary>
+        /// 获取游戏事件标签列表
+        /// </summary>
+        public List<string> GetGameEventTagList() => [.. registry.GetIds("game_event_tag")];
 
         /// <summary>
         /// 获取记分板CustomID列表

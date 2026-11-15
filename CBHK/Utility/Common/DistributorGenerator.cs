@@ -1,5 +1,5 @@
 ﻿using CBHK.Domain;
-using CBHK.Domain.Model.Database;
+using CBHK.Domain.Model;
 using CBHK.View;
 using CBHK.View.Generator;
 using CBHK.ViewModel;
@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 
 namespace CBHK.Utility
@@ -17,15 +16,15 @@ namespace CBHK.Utility
         #region Field
         private MainViewModel CBHK;
         private readonly IContainerProvider container;
-        private readonly EnvironmentConfig config;
+        private readonly EnvironmentSettings config;
         private Dictionary<string, IRelayCommand> commandDictionary = [];
         #endregion
 
         #region Method
-        public DistributorGenerator(IContainerProvider Container,MainView cbhk,CBHKDataContext context)
+        public DistributorGenerator(IContainerProvider Container,MainView cbhk,EnvironmentSettingsService settingsService)
         {
             container = Container;
-            config = context.EnvironmentConfigSet.First();
+            config = settingsService.Current;
             if(cbhk.DataContext is MainViewModel mainViewModel)
             {
                 CBHK = mainViewModel;

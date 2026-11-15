@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
@@ -19,7 +19,6 @@ using Prism.Ioc;
 using CBHK.Model.Data;
 using CBHK.Domain;
 using CBHK.Utility.Visual.MessageTip;
-using CBHK.Utility.Common;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Constant;
 using Prism.Events;
@@ -35,7 +34,6 @@ namespace CBHK.ViewModel.Generator
         #region Field
         private Resource resource;
         private MessagePopup messagePopup = new();
-        private CBHKDataContext context = null;
         private IEventAggregator eventAggregator = null;
 
         /// <summary>
@@ -126,12 +124,12 @@ namespace CBHK.ViewModel.Generator
         [ObservableProperty]
         private string playerUUID = "";
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem selectedVersion;
         /// <summary>
         /// 版本源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+        public ObservableCollection<VectorTextComboBoxItem> versionSource = [
             new VectorTextComboBoxItem() { Text = "1.20.2+" },
             new VectorTextComboBoxItem() { Text = "1.16" },
             new VectorTextComboBoxItem() { Text = "1.13.0" }
@@ -140,9 +138,9 @@ namespace CBHK.ViewModel.Generator
         /// 是否显示结果
         /// </summary>
         [ObservableProperty]
-        public bool _showResult;
+        public bool showResult;
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _gossipTypeList = [];
+        public ObservableCollection<VectorTextComboBoxItem> gossipTypeList = [];
 
         [ObservableProperty]
         private string searchGossipText = "";
@@ -151,12 +149,12 @@ namespace CBHK.ViewModel.Generator
         /// 左侧交易项数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TransactionItemViewModel> _transactionItemList = [];
+        public ObservableCollection<TransactionItemViewModel> transactionItemList = [];
         /// <summary>
         /// 言论数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<GossipsItemViewModel> _gossipItemList = [];
+        public ObservableCollection<GossipsItemViewModel> gossipItemList = [];
         /// <summary>
         /// 当前选中的交易项
         /// </summary>
@@ -166,94 +164,94 @@ namespace CBHK.ViewModel.Generator
         /// 主项数量
         /// </summary>
         [ObservableProperty]
-        public int _buyCount = 1;
+        public int buyCount = 1;
         /// <summary>
         /// 副项数量
         /// </summary>
         [ObservableProperty]
-        public int _buyBCount = 1;
+        public int buyBCount = 1;
         /// <summary>
         /// 售卖数量
         /// </summary>
         [ObservableProperty]
-        public int _sellCount = 1;
+        public int sellCount = 1;
         /// <summary>
         /// 已选中的搜索言论成员
         /// </summary>
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedSearchGossipItem;
+        private VectorTextComboBoxItem selectedSearchGossipItem;
         /// <summary>
         /// 原版物品库
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<ItemStructure> _originalItemList = [];
+        public ObservableCollection<ItemStructure> originalItemList = [];
         /// <summary>
         /// 自定义物品库
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<ItemStructure> _customItemList = [];
+        public ObservableCollection<ItemStructure> customItemList = [];
         //物品描述引用
         [ObservableProperty]
-        public ObservableCollection<string> _bagItemToolTips = [];
+        public ObservableCollection<string> bagItemToolTips = [];
         //言论搜索类型数据源
         [ObservableProperty]
-        ObservableCollection<VectorTextComboBoxItem> _gossipSearchTypeList = [];
+        ObservableCollection<VectorTextComboBoxItem> gossipSearchTypeList = [];
 
         /// <summary>
         /// 维度数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _dimensionTypeSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> dimensionTypeSource = [];
         /// <summary>
         /// 交易项数据面板可见性
         /// </summary>
         [ObservableProperty]
-        private Visibility _transactionDataGridVisibility = Visibility.Collapsed;
+        private Visibility transactionDataGridVisibility = Visibility.Collapsed;
         /// <summary>
         /// 言论面板收放
         /// </summary>
         [ObservableProperty]
-        private Visibility _isEditGossips = Visibility.Collapsed;
+        private Visibility isEditGossips = Visibility.Collapsed;
         /// <summary>
         /// 是否可以编辑言论
         /// </summary>
         [ObservableProperty]
-        private bool _canEditGossip = false;
+        private bool canEditGossip = false;
         /// <summary>
         /// 是否可以点击言论
         /// </summary>
         [ObservableProperty]
-        private bool _canTouchGossip = true;
+        private bool canTouchGossip = true;
         /// <summary>
         /// 是否可以点击记忆
         /// </summary>
         [ObservableProperty]
-        private bool _canTouchBrain = true;
+        private bool canTouchBrain = true;
         /// <summary>
         /// 记忆面板收放
         /// </summary>
         [ObservableProperty]
-        private Visibility _isEditBrain = Visibility.Collapsed;
+        private Visibility isEditBrain = Visibility.Collapsed;
         /// <summary>
         /// 是否可以编辑记忆
         /// </summary>
         [ObservableProperty]
-        private bool _canEditBrain = false;
+        private bool canEditBrain = false;
         /// <summary>
         /// 言论与记忆面板收放
         /// </summary>
         [ObservableProperty]
-        private Visibility _onlyEditItem = Visibility.Visible;
+        private Visibility onlyEditItem = Visibility.Visible;
         /// <summary>
         /// 已选中的成员
         /// </summary>
         [ObservableProperty]
-        private ItemStructure _selectedItem = null;
+        private ItemStructure selectedItem = null;
         /// <summary>
         /// 已选中的物品库索引
         /// </summary>
         [ObservableProperty]
-        private int _selectedItemListIndex;
+        private int selectedItemListIndex;
         /// <summary>
         /// 搜索原版物品
         /// </summary>
@@ -270,17 +268,17 @@ namespace CBHK.ViewModel.Generator
         /// 村民类型数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _villagerTypeSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> villagerTypeSource = [];
         /// <summary>
         /// 村民职业数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _villagerProfessionTypeSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> villagerProfessionTypeSource = [];
         /// <summary>
         /// 村民交易等级数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _villagerLevelSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> villagerLevelSource = [];
         /// <summary>
         /// 村民数据
         /// </summary>
@@ -302,48 +300,48 @@ namespace CBHK.ViewModel.Generator
 
         #region 主、副、结果物品图像源
         [ObservableProperty]
-        private ImageSource _buyItemIcon = null;
+        private ImageSource buyItemIcon = null;
 
         [ObservableProperty]
-        private ImageSource _buyBItemIcon = null;
+        private ImageSource buyBItemIcon = null;
 
         [ObservableProperty]
-        private ImageSource _sellItemIcon = null;
+        private ImageSource sellItemIcon = null;
         #endregion
 
         #region 主、副、结果物品数据
         [ObservableProperty]
-        private object _buyItemData = null;
+        private object buyItemData = null;
         [ObservableProperty]
-        private object _buyBItemData = null;
+        private object buyBItemData = null;
         [ObservableProperty]
-        private object _sellItemData = null;
+        private object sellItemData = null;
         #endregion
 
         #region 主、副、结果数量
         [ObservableProperty]
-        private object _buyItemCount = null;
+        private object buyItemCount = null;
         [ObservableProperty]
-        private object _buyBItemCount = null;
+        private object buyBItemCount = null;
         [ObservableProperty]
-        private object _sellItemCount = null;
+        private object sellItemCount = null;
         #endregion
 
         #region 交易特指数据
         [ObservableProperty]
-        private bool? _rewardExp = null;
+        private bool? rewardExp = null;
         [ObservableProperty]
-        private int _maxUses = 1;
+        private int maxUses = 1;
         [ObservableProperty]
-        private int _uses = 0;
+        private int uses = 0;
         [ObservableProperty]
-        private int _villagerGetXp = 0;
+        private int villagerGetXp = 0;
         [ObservableProperty]
-        private int _demand = 0;
+        private int demand = 0;
         [ObservableProperty]
-        private int _specialPrice = 0;
+        private int specialPrice = 0;
         [ObservableProperty]
-        private float _priceMultiplier = 0;
+        private float priceMultiplier = 0;
         #endregion
 
         #region Offers
@@ -381,13 +379,13 @@ namespace CBHK.ViewModel.Generator
 
         #region 聚集点
         [ObservableProperty]
-        private double _meetingPointX = 0;
+        private double meetingPointX = 0;
         [ObservableProperty]
-        private double _meetingPointY = 0;
+        private double meetingPointY = 0;
         [ObservableProperty]
-        private double _meetingPointZ = 0;
+        private double meetingPointZ = 0;
         [ObservableProperty]
-        private VectorTextComboBoxItem _meetingPointDimension = null;
+        private VectorTextComboBoxItem meetingPointDimension = null;
         private string MeetingPointDimensionString
         {
             get
@@ -412,13 +410,13 @@ namespace CBHK.ViewModel.Generator
 
         #region 床位置
         [ObservableProperty]
-        private double _homeX = 0;
+        private double homeX = 0;
         [ObservableProperty]
         private double homeY = 0;
         [ObservableProperty]
         private double homeZ = 0;
         [ObservableProperty]
-        private VectorTextComboBoxItem _homeDimension = null;
+        private VectorTextComboBoxItem homeDimension = null;
         private string HomeDimensionString
         {
             get
@@ -443,13 +441,13 @@ namespace CBHK.ViewModel.Generator
 
         #region 工作站点
         [ObservableProperty]
-        private double _jobSiteX = 0;
+        private double jobSiteX = 0;
         [ObservableProperty]
-        private double _jobSiteY = 0;
+        private double jobSiteY = 0;
         [ObservableProperty]
-        private double _jobSiteZ = 0;
+        private double jobSiteZ = 0;
         [ObservableProperty]
-        private VectorTextComboBoxItem _jobSiteDimension = null;
+        private VectorTextComboBoxItem jobSiteDimension = null;
         private string JobSiteDimensionString
         {
             get
@@ -490,7 +488,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 村民种类
         [ObservableProperty]
-        private VectorTextComboBoxItem _villagerType;
+        private VectorTextComboBoxItem villagerType;
         private string VillagerTypeString
         {
             get
@@ -507,7 +505,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 村民职业
         [ObservableProperty]
-        private VectorTextComboBoxItem _villagerProfessionType;
+        private VectorTextComboBoxItem villagerProfessionType;
         private string VillagerProfessionTypeString
         {
             get
@@ -524,7 +522,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 村民交易等级
         [ObservableProperty]
-        private VectorTextComboBoxItem _villagerLevel;
+        private VectorTextComboBoxItem villagerLevel;
         private string VillagerLevelString
         {
             get
@@ -542,7 +540,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 是否愿意交配
         [ObservableProperty]
-        private bool _willing = false;
+        private bool willing = false;
         private string WillingString
         {
             get => Willing ? "Willing:1b," : "";
@@ -551,7 +549,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 此村民最后一次前往工作站点重新供应交易的刻
         [ObservableProperty]
-        private double _lastRestock = 0;
+        private double lastRestock = 0;
         private string LastRestockString
         {
             get
@@ -563,7 +561,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 此村民当前的经验值
         [ObservableProperty]
-        private double _xp = 1;
+        private double xp = 1;
         private string XpString
         {
             get
@@ -576,12 +574,11 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Method
-        public VillagerViewModel(IContainerProvider Container,IEventAggregator EventAggregator,MainView mainView,CBHKDataContext Context,DataService DataService,Resource resource)
+        public VillagerViewModel(IContainerProvider Container,IEventAggregator EventAggregator,MainView mainView,DataService DataService,Resource Resource)
         {
             #region Inject
-            this.resource = resource;
+            resource = Resource;
             dataService = DataService;
-            context = Context;
             container = Container;
             home = mainView;
             eventAggregator = EventAggregator;
@@ -826,6 +823,14 @@ namespace CBHK.ViewModel.Generator
         #endregion
 
         #region Event
+        public void Villager_Loaded(object sender,RoutedEventArgs e)
+        {
+            if (sender is Window window)
+            {
+                messagePopup = new(window);
+            }
+        }
+
         /// <summary>
         /// 原版物品库视图载入
         /// </summary>

@@ -1,14 +1,13 @@
-﻿using CBHK.CustomControl;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.Model.Data;
 using CBHK.Model.Generator.Tag;
-using CBHK.Utility.Common;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Prism.Ioc;
 using System;
@@ -16,201 +15,330 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Text;
 
 namespace CBHK.ViewModel.Generator
 {
+    /// <summary>
+    /// 标签生成器。
+    /// tag 不是 mcdoc 描述的 resource（vanilla 资产里只有一份没人引用的 `type Tag&lt;E&gt;`），
+    /// 所以这页不走求值管线：候选一律来自 `Resource\Registries\&lt;版本&gt;.json` 的注册表成员，
+    /// 形状按 tag 文件的真实结构拼（`{ replace, values }`，value 允许字符串 / `#tag` 引用 / `{id, required}`）。
+    /// </summary>
     public partial class TagViewModel : ObservableObject
     {
         #region Field
-        private MessagePopup messagePopup = new();
-        ListView TagZone = null;
-        SolidColorBrush LightOrangeBrush = new((Color)ColorConverter.ConvertFromString("#F0D08C"));
-        private IContainerProvider container = null;
-        private CBHKDataContext context = null;
-        private DataService _dataService;
-        private IProgress<TagItemTemplate> AddItemProgress = null;
-        private IProgress<(int, string, string, string, string, bool)> SetItemProgress = null;
-        private IProgress<bool> InitSelectedTypeItemProgress = null;
-        private int LastSelectedIndex = 0;
-        /// <summary>
-        /// 主页引用
-        /// </summary>
-        private Window home = null;
-        /// <summary>
-        /// 对象数据源
-        /// </summary>
-        CollectionViewSource TagViewSource = null;
+        private const string DefaultNamespace = "minecraft";
+        private readonly MessagePopup messagePopup = new();
+        private readonly IContainerProvider container;
+        private readonly DataService dataService;
+        /// <summary>主页引用</summary>
+        private readonly Window home;
 
-        #region 存储最终生成的列表
-        public List<string> Blocks = [];
-        public List<string> Items = [];
-        public List<string> Entities = [];
-        public List<string> GameEvent = [];
-        public List<string> Biomes = [];
-        #endregion
-
+        private ListView TagZone;
+        /// <summary>对象数据源</summary>
+        private CollectionViewSource TagViewSource;
+        private int LastSelectedIndex;
+        /// <summary>同一个实例只载入一次（重开窗口是新的 VM，展开态与输入都不带过来）</summary>
+        private bool loaded;
+        /// <summary>换版本时正在重建目录列表：期间的选择变化不各自触发一次重载</summary>
+        private bool reloadSuspended;
         #endregion
 
         #region Property
-        /// <summary>
-        /// 标签生成器的过滤类型数据源
-        /// </summary>
+        /// <summary>注册表数据里出现过的版本键（新的在前）</summary>
         [ObservableProperty]
-        private ObservableCollection<VectorTextComboBoxItem> _typeItemSource = [];
-        /// <summary>
-        /// 是否替换
-        /// </summary>
+        private ObservableCollection<VectorTextComboBoxItem> versionList = [];
+
         [ObservableProperty]
-        private bool _replace = false;
-        /// <summary>
-        /// 所有标签成员
-        /// </summary>
+        private VectorTextComboBoxItem selectedVersion;
+
+        /// <summary>tag 目录候选：所选版本里出现过的注册表名（item / block / entity_type / …）</summary>
         [ObservableProperty]
-        private ObservableCollection<TagItemTemplate> _tagItemList = [];
-        /// <summary>
-        /// 版本列表
-        /// </summary>
+        private ObservableCollection<VectorTextComboBoxItem> tagRegistryList = [];
+
         [ObservableProperty]
-        private ObservableCollection<VectorTextComboBoxItem> _versionList = [new VectorTextComboBoxItem() { Text = "1.20.4" }];
-        /// <summary>
-        /// 已选中版本
-        /// </summary>
+        private VectorTextComboBoxItem selectedTagRegistry;
+
+        /// <summary>是否替换</summary>
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedVersion = null;
-        /// <summary>
-        /// 当前选中的值成员
-        /// </summary>
+        private bool replace;
+
+        /// <summary>当前目录下的候选成员</summary>
         [ObservableProperty]
-        private TagItemTemplate _selectedItem = null;
-        /// <summary>
-        /// 搜索内容
-        /// </summary>
+        private ObservableCollection<TagItemTemplate> tagItemList = [];
+
         [ObservableProperty]
-        private string _searchText;
-        /// <summary>
-        /// 当前选中的类型成员
-        /// </summary>
+        private TagItemTemplate selectedItem;
+
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedTypeItem = null;
-        /// <summary>
-        /// 全选
-        /// </summary>
+        private string searchText;
+
         [ObservableProperty]
-        private bool _selectedAll = false;
-        /// <summary>
-        /// 反选
-        /// </summary>
+
+        private bool selectedAll;
+
         [ObservableProperty]
-        private bool _reverseAll = false;
+        private bool reverseAll;
+
+        /// <summary>标签所在命名空间（决定 `ns:id` 的前缀与导出目录）</summary>
+        [ObservableProperty]
+        private string namespaceText = DefaultNamespace;
+
+        /// <summary>标签文件名（不带 .json）</summary>
+        [ObservableProperty]
+        private string tagName;
+
+        /// <summary>附加条目：每行一条，支持 `ns:path` / `#ns:tag` / 原始 `{"id":…,"required":false}`</summary>
+        [ObservableProperty]
+        private string extraValuesText;
+
+        /// <summary>勾选项输出成 `{"id":…}` 而不是裸字符串</summary>
+        [ObservableProperty]
+        private bool useObjectForm;
+
+        /// <summary>导出路径提示：data/&lt;ns&gt;/tags/&lt;目录&gt;/&lt;名字&gt;.json</summary>
+        [ObservableProperty]
+        private string targetPath;
         #endregion
 
         #region Method
-        public TagViewModel(IContainerProvider Container,DataService DataService, CBHKDataContext Context, MainView mainView)
+        public TagViewModel(IContainerProvider Container, DataService DataService, MainView mainView)
         {
             home = mainView;
             container = Container;
-            context = Context;
-            _dataService = DataService;
+            dataService = DataService;
+            UpdateTargetPath();
+        }
 
-            InitSelectedTypeItemProgress = new Progress<bool>(item =>
+        partial void OnSelectedVersionChanged(VectorTextComboBoxItem value)
+        {
+            reloadSuspended = true;
+            try
             {
-                SelectedTypeItem = TypeItemSource[0];
-            });
-            AddItemProgress = new Progress<TagItemTemplate>(TagItemList.Add);
-            SetItemProgress = new Progress<(int, string, string, string, string, bool)>(item =>
+                RebuildTagRegistryList();
+            }
+            finally
             {
-                Uri uri = null;
-                if (File.Exists(item.Item2 + ".png"))
-                {
-                    uri = new Uri(item.Item2 + ".png", UriKind.RelativeOrAbsolute);
-                }
-                else
-                if (File.Exists(item.Item2 + "_spawn_egg.png"))
-                {
-                    uri = new Uri(item.Item2 + "_spawn_egg.png", UriKind.RelativeOrAbsolute);
-                }
-                TagItemList[item.Item1].Icon = uri;
-                TagItemList[item.Item1].DisplayId = item.Item3;
-                TagItemList[item.Item1].DisplayName = item.Item4;
-                TagItemList[item.Item1].DataType = item.Item5;
-                TagItemList[item.Item1].BeChecked = item.Item6;
-            });
+                reloadSuspended = false;
+            }
+            UpdateTargetPath();
+            ReloadCandidates();
+        }
+
+        partial void OnSelectedTagRegistryChanged(VectorTextComboBoxItem value)
+        {
+            if (reloadSuspended)
+            {
+                return;
+            }
+            UpdateTargetPath();
+            ReloadCandidates();
+        }
+
+        partial void OnNamespaceTextChanged(string value) => UpdateTargetPath();
+
+        partial void OnTagNameChanged(string value) => UpdateTargetPath();
+
+        /// <summary>把所选版本里出现过的注册表名灌进 tag 目录下拉；默认挑 item（最常用的 tag 目录）。</summary>
+        private void RebuildTagRegistryList()
+        {
+            string version = SelectedVersion?.Text;
+            IReadOnlyList<string> names = string.IsNullOrEmpty(version) ? [] : dataService.GetRegistryNames(version);
+            TagRegistryList = [.. names.Select(name => new VectorTextComboBoxItem { ItemID = name, Text = name })];
+            SelectedTagRegistry = TagRegistryList.FirstOrDefault(item => item.Text == "item") ?? TagRegistryList.FirstOrDefault();
+        }
+
+        /// <summary>按"所选版本 + 所选 tag 目录"重建候选。整表替换，不做逐项增删。</summary>
+        private void ReloadCandidates()
+        {
+            string version = SelectedVersion?.Text;
+            string registryName = SelectedTagRegistry?.Text;
+            if (string.IsNullOrEmpty(version) || string.IsNullOrEmpty(registryName))
+            {
+                TagItemList = [];
+                return;
+            }
+
+            TagItemList = [.. dataService.GetIds(registryName, version).Select(id => new TagItemTemplate
+            {
+                DisplayId = id,
+                DisplayName = string.Empty,
+                DataType = registryName,
+                Icon = ResolveIcon(id)
+            })];
+            TagViewSource?.View?.Refresh();
+        }
+
+        private void UpdateTargetPath()
+        {
+            string namespaceValue = string.IsNullOrWhiteSpace(NamespaceText) ? "<命名空间>" : NamespaceText.Trim();
+            string registryText = SelectedTagRegistry?.Text ?? "<标签目录>";
+            string name = string.IsNullOrWhiteSpace(TagName) ? "<标签名>" : TagName.Trim();
+            TargetPath = "data/" + namespaceValue + "/tags/" + registryText + "/" + name + ".json";
         }
 
         /// <summary>
-        /// 反转目标成员的值
+        /// 列表里的图标：仓里贴图是平铺的（`ImageSet\&lt;id&gt;.png`），先试平铺再试命名空间分层。
+        /// 找不到就留空 —— 列表行有定宽图标列，不要因为缺贴图让文字左右跳。
         /// </summary>
-        /// <param name="CurrentItem"></param>
-        private void ReverseValue(TagItemTemplate CurrentItem)
+        private static Uri ResolveIcon(string id)
         {
-            int index = TagItemList.IndexOf(CurrentItem);
-            int itemCount = context.ItemSet.Count();
-            int entityCount = context.EntitySet.Count();
-            string itemString = CurrentItem.DisplayId;
-            if (itemString.Trim().Length > 0)
+            string imageSet = AppDomain.CurrentDomain.BaseDirectory + "ImageSet" + Path.DirectorySeparatorChar;
+            string bare = id.Contains(':') ? id[(id.IndexOf(':') + 1)..] : id;
+            string[] candidates =
+            [
+                imageSet + bare + ".png",
+                imageSet + bare + "_spawn_egg.png",
+                imageSet + id.Replace(':', Path.DirectorySeparatorChar) + ".png"
+            ];
+            foreach (string candidate in candidates)
             {
-                CurrentItem.BeChecked = !CurrentItem.BeChecked;
-                if (CurrentItem.BeChecked.Value)
-                    CurrentItem.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F0D08C"));
-                else
-                    CurrentItem.Background = null;
-                if (CurrentItem.BeChecked.Value)
+                if (File.Exists(candidate))
                 {
-                    if (CurrentItem.DataType == "itemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
-                        Items.Add("\"minecraft:" + itemString + "\",");
-                    else
-                    if (CurrentItem.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
-                        Entities.Add("\"minecraft:" + itemString + "\",");
-                    else
-                    if (CurrentItem.DataType == "Block&itemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
-                        Blocks.Add("\"minecraft:" + itemString + "\",");
-                    else
-                    if (CurrentItem.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
-                        Biomes.Add("\"minecraft:" + itemString + "\",");
-                    else
-                    if (CurrentItem.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                        GameEvent.Add("\"minecraft:" + itemString + "\",");
-                }
-                else
-                {
-                    if (CurrentItem.DataType == "itemView" && Items.Contains("\"minecraft:" + itemString + "\","))
-                        Items.Remove("\"minecraft:" + itemString + "\",");
-                    if (CurrentItem.DataType == "EntityView" && Entities.Contains("\"minecraft:" + itemString + "\","))
-                        Entities.Remove("\"minecraft:" + itemString + "\",");
-                    if (CurrentItem.DataType == "Block&itemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
-                        Blocks.Remove("\"minecraft:" + itemString + "\",");
-                    if (CurrentItem.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
-                        Biomes.Remove("\"minecraft:" + itemString + "\",");
-                    if (CurrentItem.DataType == "GameEvent" && GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                        GameEvent.Remove("\"minecraft:" + itemString + "\",");
+                    return new Uri(candidate, UriKind.RelativeOrAbsolute);
                 }
             }
+            return null;
         }
 
+        /// <summary>把裸 id 补成 `ns:path`；tag 引用走 `#ns:path`。</summary>
+        private string Qualify(string raw, bool asTag)
+        {
+            string value = (raw ?? string.Empty).Trim().Trim('"');
+            if (value.Length == 0)
+            {
+                return value;
+            }
+            if (asTag && value.StartsWith('#'))
+            {
+                value = value[1..].Trim();
+            }
+            if (!value.Contains(':'))
+            {
+                string namespaceValue = string.IsNullOrWhiteSpace(NamespaceText) ? DefaultNamespace : NamespaceText.Trim();
+                value = namespaceValue + ":" + value;
+            }
+            return asTag ? "#" + value : value;
+        }
+
+        private static string StripNamespace(string id)
+        {
+            string value = (id ?? string.Empty).Trim();
+            int separator = value.IndexOf(':');
+            return separator < 0 ? value : value[(separator + 1)..];
+        }
+
+        /// <summary>
+        /// 拼 values：勾选项 + 附加条目，按最终 JSON 形态去重。
+        /// 三种形态都落在这一个出口上：`"ns:id"` / `"#ns:tag"` / `{"id":…,"required":false}`。
+        /// </summary>
+        private bool TryBuildValues(out JArray values, out string error)
+        {
+            JArray built = [];
+            values = built;
+            error = null;
+            HashSet<string> seen = new(StringComparer.Ordinal);
+
+            void Add(JToken token)
+            {
+                if (seen.Add(token.ToString(Formatting.None)))
+                {
+                    built.Add(token);
+                }
+            }
+
+            foreach (TagItemTemplate item in TagItemList)
+            {
+                if (item.BeChecked != true || string.IsNullOrWhiteSpace(item.DisplayId))
+                {
+                    continue;
+                }
+                string id = Qualify(item.DisplayId, asTag: false);
+                if (!UseObjectForm)
+                {
+                    Add(new JValue(id));
+                    continue;
+                }
+                Add(new JObject { ["id"] = id });
+            }
+
+            foreach (string rawLine in (ExtraValuesText ?? string.Empty).Split('\n'))
+            {
+                string line = rawLine.Trim().TrimEnd(',');
+                if (line.Length == 0)
+                {
+                    continue;
+                }
+                if (line.StartsWith('{'))
+                {
+                    try
+                    {
+                        Add(JObject.Parse(line));
+                    }
+                    catch
+                    {
+                        error = "附加条目不是合法的 JSON 对象：" + line;
+                        return false;
+                    }
+                    continue;
+                }
+                if (line.StartsWith('#'))
+                {
+                    Add(new JValue(Qualify(line, asTag: true)));
+                    continue;
+                }
+                string qualified = Qualify(line, asTag: false);
+                Add(UseObjectForm ? new JObject { ["id"] = qualified } : new JValue(qualified));
+            }
+
+            if (values.Count == 0)
+            {
+                error = "没有勾选任何成员，也没有附加条目";
+                return false;
+            }
+            return true;
+        }
+
+        private void PushMessage(string message, string subMessage, string iconFileName)
+        {
+            messagePopup.PushMessage(new GeneratorMessage()
+            {
+                Message = message,
+                MessageBrush = Brushes.Red,
+                SubMessage = subMessage,
+                SubMessageBrush = Brushes.DarkGray,
+                Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + iconFileName, UriKind.RelativeOrAbsolute))
+            });
+        }
+
+        /// <summary>当前视图里真正可见的成员（全选 / 反选只作用于过滤后的行）。</summary>
+        private IEnumerable<TagItemTemplate> VisibleItems()
+            => TagViewSource?.View is { } view ? view.Cast<TagItemTemplate>() : TagItemList;
+
+        /// <summary>反转目标成员的值</summary>
+        private void ReverseValue(TagItemTemplate currentItem)
+        {
+            if (currentItem is null || string.IsNullOrWhiteSpace(currentItem.DisplayId))
+            {
+                return;
+            }
+            currentItem.BeChecked = !(currentItem.BeChecked ?? false);
+        }
         #endregion
 
         #region Event
         [RelayCommand]
-        /// <summary>
-        /// 从剪切板导入标签数据
-        /// </summary>
-        private void ImportFromClipboard()
-        {
-            ImportTagData(Clipboard.GetText(), messagePopup, isPath: false);
-        }
+        /// <summary>从剪切板导入标签数据</summary>
+        private void ImportFromClipboard() => ImportTagData(Clipboard.GetText(), messagePopup, isPath: false);
 
         [RelayCommand]
-        /// <summary>
-        /// 从文件导入标签数据
-        /// </summary>
+        /// <summary>从文件导入标签数据</summary>
         private void ImportFromFile()
         {
             OpenFileDialog dialog = new()
@@ -223,189 +351,68 @@ namespace CBHK.ViewModel.Generator
                 RestoreDirectory = true,
                 Title = "请选择一个标签文件"
             };
-            if (dialog.ShowDialog().Value && File.Exists(dialog.FileName))
+            if (dialog.ShowDialog() == true && File.Exists(dialog.FileName))
+            {
                 ImportTagData(dialog.FileName, messagePopup);
+            }
         }
 
-        /// <summary>
-        /// 过滤与搜索内容不相关的成员
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <summary>按搜索词过滤成员（目录已经是单选，不再按数据类型过滤）。</summary>
         private void CollectionViewSource_Filter(object sender, FilterEventArgs e)
         {
-            if (SelectedTypeItem is null)
+            if (e.Item is not TagItemTemplate item)
             {
                 return;
             }
-            TagItemTemplate currentItem = e.Item as TagItemTemplate;
-
-            #region 执行搜索
-            if (currentItem is not null)
-            {
-                bool needDisplay = e.Accepted = (currentItem.DataType is not null && currentItem.DataType.Contains(SelectedTypeItem.Text)) || SelectedTypeItem.Text == "All";
-
-                if (needDisplay)
-                {
-                    if (SearchText.Trim().Length > 0 && currentItem.DisplayId is not null)
-                    {
-                        string currentItemIDAndName = currentItem.DisplayId;
-                        e.Accepted = currentItemIDAndName.Contains(SearchText);
-                    }
-                    else
-                        e.Accepted = true;
-                }
-            }
-            #endregion
+            string search = SearchText?.Trim();
+            e.Accepted = string.IsNullOrEmpty(search)
+                || (item.DisplayId?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false);
         }
 
-        /// <summary>
-        /// 载入类型过滤列表
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <summary>载入版本与 tag 目录，并挑一个默认目录建候选。</summary>
         public void TagView_Loaded(object sender, RoutedEventArgs e)
         {
-            #region 加载过滤类型
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\Data\TypeFilter.ini"))
+            if (loaded)
             {
-                string[] Types = File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Tag\Data\TypeFilter.ini");
-                for (int i = 0; i < Types.Length; i++)
-                {
-                    TypeItemSource.Add(new VectorTextComboBoxItem() { Text = Types[i] });
-                }
+                UpdateTargetPath();
+                return;
             }
-            #endregion
+            loaded = true;
 
-            #region 启动异步载入标签成员任务
-            
+            VersionList = [.. dataService.GetVersionList()
+                .Reverse()
+                .Select(version => new VectorTextComboBoxItem { ItemID = version, Text = version })];
+            if (VersionList.Count == 0)
+            {
+                PushMessage("没有读到注册表数据", "Resource\\Registries 下没有可用的 *.json，无法枚举版本与候选", "name_tag.png");
+                UpdateTargetPath();
+                return;
+            }
+
             SelectedVersion = VersionList[0];
-            int ItemIDCount = _dataService.GetItemIDList().Count;
-            List<string> BlockIDList = [.. context.BlockSet.SelectMany(item =>
-            {
-                if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
-                {
-                    return item.Value;
-                }
-                return [];
-            })];
-            int EntityIDCount = _dataService.GetEntityIDList().Count;
-            int BiomeIDCount = context.BiomeIDSet.Count;
-            int GameEventValueCount = context.GameEventTagSet.Count;
-            List<string> IDOrValueList = [.. context.ItemSet.SelectMany(item =>
-            {
-                if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
-                {
-                    return item.Value;
-                }
-                return [];
-            }),
-                .. context.EntitySet.SelectMany(item =>
-            {
-                if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
-                {
-                    return item.Value;
-                }
-                return [];
-            }),
-                .. context.BiomeIDSet.SelectMany(item =>
-            {
-                if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
-                {
-                    return item.Value;
-                }
-                return [];
-            }),
-                .. context.GameEventTagSet.SelectMany(item =>
-            {
-                if(VersionComparer.IsInRange(SelectedVersion.Text, item.Key))
-                {
-                    return item.Value;
-                }
-                return [];
-            })];
-
-            Task.Run(async () =>
-            {
-                ParallelOptions parallelOptions = new();
-                await Parallel.ForAsync(0, IDOrValueList.Count, parallelOptions, (i, cancellationToken) =>
-                {
-                    AddItemProgress.Report(new TagItemTemplate());
-                    return new ValueTask();
-                });
-
-                #region 物品
-                string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-
-                Dictionary<string, string> ItemIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap()
-                .SelectMany(pair => pair.Value)
-                .ToDictionary(
-                    pair => pair.Key,
-                    pair => pair.Value
-                );
-
-                List<string> ItemKeyList = [.. ItemIDAndNameMap.Select(item => item.Key)];
-                ItemKeyList.Sort();
-
-                Parallel.For(0, context.ItemSet.Count, i =>
-                {
-                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, currentPath + IDOrValueList[i], IDOrValueList[i], ItemIDAndNameMap[IDOrValueList[i]], BlockIDList.Contains(IDOrValueList[i]) ? "Block&itemView" : "itemView", false));
-                });
-                #endregion
-
-                #region 实体
-                Dictionary<string, string> EntityIDAndNameMap = _dataService.GetItemIDAndNameGroupByVersionMap()
-                .SelectMany(pair => pair.Value)
-                .ToDictionary(
-                    pair => pair.Key,
-                    pair => pair.Value
-                );
-
-                await Parallel.ForAsync(ItemIDCount, ItemIDCount + EntityIDCount,parallelOptions, (i,cancellationToken) =>
-                {
-                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, currentPath + IDOrValueList[i], IDOrValueList[i], EntityIDAndNameMap[IDOrValueList[i]], "EntityView", false));
-                    return new ValueTask();
-                });
-                #endregion
-
-                #region 生物群系
-                Parallel.For(ItemIDCount + EntityIDCount, ItemIDCount + EntityIDCount + BiomeIDCount, i =>
-                {
-                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, null, IDOrValueList[i], "", "Biome", false));
-                });
-                #endregion
-
-                #region 游戏事件
-                Parallel.For(ItemIDCount + EntityIDCount + BiomeIDCount, ItemIDCount + EntityIDCount + BiomeIDCount + GameEventValueCount, (i) =>
-                {
-                    SetItemProgress.Report(new ValueTuple<int, string, string, string, string, bool>(i, null, IDOrValueList[i], "", "GameEvent", false));
-                });
-                #endregion
-
-                InitSelectedTypeItemProgress.Report(true);
-            });
-
-            #endregion
         }
 
-        /// <summary>
-        /// 背包视图载入事件
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <summary>背包视图载入事件</summary>
         public void ListViewLoaded(object sender, RoutedEventArgs e)
         {
-            TagZone = sender as ListView;
-            Window parent = Window.GetWindow(TagZone);
-            TagViewSource = parent.FindResource("TagItemSource") as CollectionViewSource;
-            TagViewSource.Filter += CollectionViewSource_Filter;
+            if (sender is not ListView listView)
+            {
+                return;
+            }
+            TagZone = listView;
+            if (listView.Parent is FrameworkElement parent)
+            {
+                TagViewSource = parent.FindResource("TagItemSource") as CollectionViewSource;
+            }
+            if (TagViewSource is not null)
+            {
+                TagViewSource.Filter -= CollectionViewSource_Filter;
+                TagViewSource.Filter += CollectionViewSource_Filter;
+                TagViewSource.View?.Refresh();
+            }
         }
 
         [RelayCommand]
-        /// <summary>
-        /// 返回主页
-        /// </summary>
-        /// <param name="win"></param>
         private void Return(Window win)
         {
             home.WindowState = WindowState.Normal;
@@ -416,15 +423,21 @@ namespace CBHK.ViewModel.Generator
         }
 
         [RelayCommand]
-        /// <summary>
-        /// 执行生成
-        /// </summary>
+        /// <summary>执行生成</summary>
         private void Run()
         {
-            string result = (string.Join("\r\n",Items) + "\r\n" + string.Join("\r\n",Blocks) + "\r\n" + string.Join("\r\n",Entities) + "\r\n" + string.Join("\r\n",Biomes) + "\r\n" + string.Join("\r\n",GameEvent)).TrimEnd().TrimEnd(',');
-            result = "{\r\n  \"replace\": " + Replace.ToString().ToLower() + ",\r\n\"values\": [\r\n" + result.Trim('\n').Trim('\r') + "\r\n]\r\n}";
-            JToken resultToken = JToken.Parse(result);
-            result = resultToken.ToString(Newtonsoft.Json.Formatting.Indented);
+            if (!TryBuildValues(out JArray values, out string error))
+            {
+                PushMessage("生成失败", error, "name_tag.png");
+                return;
+            }
+
+            JObject root = new()
+            {
+                ["replace"] = Replace,
+                ["values"] = values
+            };
+            string result = root.ToString(Formatting.Indented);
 
             SaveFileDialog saveFileDialog = new()
             {
@@ -432,220 +445,117 @@ namespace CBHK.ViewModel.Generator
                 CheckPathExists = true,
                 DefaultExt = "json",
                 Filter = "JSON files (*.json;)|*.json;",
+                FileName = string.IsNullOrWhiteSpace(TagName) ? "tag.json" : TagName.Trim() + ".json",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
                 Title = "保存为JSON文件"
             };
-            if (saveFileDialog.ShowDialog().Value)
+            if (saveFileDialog.ShowDialog() != true)
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
-                File.WriteAllText(saveFileDialog.FileName, result);
-                messagePopup.PushMessage(new GeneratorMessage()
-                {
-                    Message = "标签生成成功！",
-                    MessageBrush = Brushes.Red,
-                    SubMessage = "标签生成器",
-                    SubMessageBrush = Brushes.DarkGray,
-                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\ImageSet\firework_rocket.png", UriKind.Relative))
-                });
-                //OpenFolderThenSelectFiles.ExplorerFile(saveFileDialog.FileName);
+                return;
             }
+
+            string directory = Path.GetDirectoryName(saveFileDialog.FileName);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+            File.WriteAllText(saveFileDialog.FileName, result);
+            PushMessage("标签生成成功！", "应放到 " + TargetPath, "firework_rocket.png");
         }
 
-        /// <summary>
-        /// 左击选中成员
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <summary>左击选中成员</summary>
         public void ListBoxClick(object sender, MouseButtonEventArgs e)
         {
             if (e.OriginalSource is not Border)
             {
-                LastSelectedIndex = TagZone.SelectedIndex;
+                LastSelectedIndex = TagZone?.SelectedIndex ?? 0;
                 SelectedItem = null;
             }
-            else
-                if(SelectedItem is null && LastSelectedIndex > 0 && LastSelectedIndex < TagZone.Items.Count)
+            else if (SelectedItem is null && TagZone is not null && LastSelectedIndex > 0 && LastSelectedIndex < TagZone.Items.Count)
+            {
                 SelectedItem = TagZone.Items[LastSelectedIndex] as TagItemTemplate;
+            }
+
             if (SelectedItem is not null)
+            {
                 ReverseValue(SelectedItem);
+            }
         }
 
-        /// <summary>
-        /// 更新过滤类型
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void TypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => TagViewSource?.View?.Refresh();
-
-        /// <summary>
-        /// 更新搜索结果视图
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <summary>更新搜索结果视图</summary>
         public void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e) => TagViewSource?.View?.Refresh();
 
-        /// <summary>
-        /// 全选
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <summary>全选（只作用于当前过滤后可见的行）</summary>
         public void SelectAll_Click(object sender, RoutedEventArgs e)
         {
-            SolidColorBrush brush;
-            if (SelectedAll)
+            foreach (TagItemTemplate item in VisibleItems().ToList())
             {
-                brush = LightOrangeBrush;
-            }
-            else
-            {
-                brush = null;
-            }
-            if (TagViewSource is not null)
-            {
-                foreach (TagItemTemplate tagItemTemplate in TagViewSource.View)
+                if (string.IsNullOrWhiteSpace(item.DisplayId))
                 {
-                    if (tagItemTemplate.DisplayId.Trim().Length > 0)
-                    {
-                        string itemString = tagItemTemplate.DisplayId;
-                        tagItemTemplate.BeChecked = SelectedAll;
-                        tagItemTemplate.Background = brush;
-
-                        if (tagItemTemplate.BeChecked.Value)
-                        {
-                            if (tagItemTemplate.DataType == "itemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
-                                Items.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
-                                Entities.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "Block&itemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
-                                Blocks.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
-                                Biomes.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                                GameEvent.Add("\"minecraft:" + itemString + "\",");
-                        }
-                        else
-                        {
-                            if (tagItemTemplate.DataType == "itemView" && Items.Contains("\"minecraft:" + itemString + "\","))
-                                Items.Remove("\"minecraft:" + itemString + "\",");
-                            if (tagItemTemplate.DataType == "EntityView" && Entities.Contains("\"minecraft:" + itemString + "\","))
-                                Entities.Remove("\"minecraft:" + itemString + "\",");
-                            if (tagItemTemplate.DataType == "Block&itemView" && Blocks.Contains("\"minecraft:" + itemString + "\","))
-                                Blocks.Remove("\"minecraft:" + itemString + "\",");
-                            if (tagItemTemplate.DataType == "Biome" && Biomes.Contains("\"minecraft:" + itemString + "\","))
-                                Biomes.Remove("\"minecraft:" + itemString + "\",");
-                            if (tagItemTemplate.DataType == "GameEvent" && GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                                GameEvent.Remove("\"minecraft:" + itemString + "\",");
-                        }
-                    }
+                    continue;
                 }
+                item.BeChecked = SelectedAll;
             }
         }
 
-        /// <summary>
-        /// 反选
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <summary>反选（只作用于当前过滤后可见的行）</summary>
         public void ReverseAll_Click(object sender, RoutedEventArgs e)
         {
-            if (TagViewSource is not null)
+            foreach (TagItemTemplate item in VisibleItems().ToList())
             {
-                foreach (TagItemTemplate tagItemTemplate in TagViewSource.View)
+                if (string.IsNullOrWhiteSpace(item.DisplayId))
                 {
-                    if (tagItemTemplate.DisplayId.Trim().Length > 0)
-                    {
-                        string itemString = tagItemTemplate.DisplayId.Contains(' ') ? tagItemTemplate.DisplayId[..tagItemTemplate.DisplayId.IndexOf(' ')] : tagItemTemplate.DisplayId;
-                        tagItemTemplate.BeChecked = !tagItemTemplate.BeChecked.Value;
-                        if (tagItemTemplate.BeChecked.Value)
-                            tagItemTemplate.Background = LightOrangeBrush;
-                        else
-                            tagItemTemplate.Background = null;
-                        if (tagItemTemplate.BeChecked.Value)
-                        {
-                            if (tagItemTemplate.DataType == "itemView" && !Items.Contains("\"minecraft:" + itemString + "\","))
-                                Items.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "EntityView" && !Entities.Contains("\"minecraft:" + itemString + "\","))
-                                Entities.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "Block&itemView" && !Blocks.Contains("\"minecraft:" + itemString + "\","))
-                                Blocks.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "Biome" && !Biomes.Contains("\"minecraft:" + itemString + "\","))
-                                Biomes.Add("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "GameEvent" && !GameEvent.Contains("\"minecraft:" + itemString + "\","))
-                                GameEvent.Add("\"minecraft:" + itemString + "\",");
-                        }
-                        else
-                        {
-                            if (tagItemTemplate.DataType == "itemView")
-                                Items.Remove("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "EntityView")
-                                Entities.Remove("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "Block&itemView")
-                                Blocks.Remove("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "Biome")
-                                Biomes.Remove("\"minecraft:" + itemString + "\",");
-                            else
-                            if (tagItemTemplate.DataType == "GameEvent")
-                                GameEvent.Remove("\"minecraft:" + itemString + "\",");
-                        }
-                    }
+                    continue;
                 }
+                item.BeChecked = !(item.BeChecked ?? false);
             }
         }
         #endregion
 
-        #region 外部数据导入（并入本类，不再单独成文件）
+        #region 外部数据导入
+        /// <summary>
+        /// 导入一份已有 tag：`replace` 直接回填，能对上当前目录的字符串项勾上，
+        /// 对不上的（`#tag` 引用、对象形态）原样进"附加条目"，导出时不会丢。
+        /// </summary>
         public void ImportTagData(string filePathOrData, MessagePopup messagePopup, bool isPath = true)
         {
-            string data = isPath ? File.ReadAllText(filePathOrData) : filePathOrData;
-
             try
             {
+                string data = isPath ? File.ReadAllText(filePathOrData) : filePathOrData;
                 JObject content = JObject.Parse(data);
-                if (content.SelectToken("replace") is JToken replace)
-                    Replace = replace.ToString().ToString().ToLower() == "true";
-                if (content.SelectToken("values") is JArray valuesArray)
+                if (content["replace"] is JValue replaceValue && replaceValue.Value is bool replace)
                 {
-                    List<string> values = valuesArray.ToList().ConvertAll(item => item.ToString().Replace("minecraft:", ""));
-                    StringBuilder id = new();
-                    foreach (var item in TagItemList)
+                    Replace = replace;
+                }
+
+                HashSet<string> ids = new(StringComparer.Ordinal);
+                List<string> extras = [];
+                if (content["values"] is JArray valuesArray)
+                {
+                    foreach (JToken token in valuesArray)
                     {
-                        id.Clear();
-                        id.Append(item.DisplayId);
-                        item.BeChecked = values.Where(value => value == id.ToString()).Any();
-                        if (item.BeChecked.Value)
+                        if (token is JValue { Value: string text })
                         {
-                            switch (item.DataType)
+                            if (text.StartsWith('#'))
                             {
-                                case "itemView":
-                                    Items.Add(id.ToString());
-                                    break;
-                                case "Block&itemView":
-                                    Blocks.Add(id.ToString());
-                                    break;
-                                case "EntityView":
-                                    Entities.Add(id.ToString());
-                                    break;
-                                case "GameEvent":
-                                    GameEvent.Add(id.ToString());
-                                    break;
-                                case "Biome":
-                                    Biomes.Add(id.ToString());
-                                    break;
+                                extras.Add(text);
                             }
+                            else
+                            {
+                                ids.Add(StripNamespace(text));
+                            }
+                            continue;
                         }
+                        extras.Add(token.ToString(Formatting.None));
                     }
                 }
+
+                foreach (TagItemTemplate item in TagItemList)
+                {
+                    item.BeChecked = ids.Contains(StripNamespace(item.DisplayId));
+                }
+                ExtraValuesText = string.Join("\r\n", extras);
+                TagViewSource?.View?.Refresh();
             }
             catch
             {

@@ -55,7 +55,61 @@
                         Background="{TemplateBinding Background}"
                         BorderThickness="0"
                         CornerRadius="5">
-                        <ContentPresenter />
+                        <Grid>
+                            <!--
+                                祖先竖线：McdocRow.Depth 决定要画几条，每条 16px 一层。
+                                用节距 16px 的斜接画刷一次铺出来，宽度绑 Depth*16，深度 0 时宽度为 0 自然不画。
+                            -->
+                            <Rectangle
+                                Width="{Binding AncestorLineWidth}"
+                                HorizontalAlignment="Left"
+                                IsHitTestVisible="False"
+                                Opacity="0.5">
+                                <Rectangle.Fill>
+                                    <DrawingBrush
+                                        Stretch="None"
+                                        TileMode="Tile"
+                                        Viewport="0,0,16,16"
+                                        ViewportUnits="Absolute">
+                                        <DrawingBrush.Drawing>
+                                            <!--
+                                                伪 3D 凹槽：1px 暗边 + 1px 反光。整套皮肤都是"描边 + 亮带/暗带"的立体语言，
+                                                只画一根 1px 灰线在那排按钮旁边就显得很"2D"。
+                                            -->
+                                            <DrawingGroup>
+                                                <GeometryDrawing Brush="{DynamicResource CommonForeground}" Geometry="M7.5,0 L8.5,0 L8.5,16 L7.5,16 Z" />
+                                                <DrawingGroup Opacity="0.35">
+                                                    <GeometryDrawing Brush="{DynamicResource CommonForeground}" Geometry="M8.5,0 L9.5,0 L9.5,16 L8.5,16 Z" />
+                                                </DrawingGroup>
+                                            </DrawingGroup>
+                                        </DrawingBrush.Drawing>
+                                    </DrawingBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <!--
+                                子级连线：父行只画"行中线 → 行底"这半截（下半个 Grid 行），
+                                子行自己的竖线从它上沿开始画，两截在行边界接上，
+                                于是这条线看上去是从父行中线长出来的（不再凭空从行边界开始）。
+                            -->
+                            <Grid IsHitTestVisible="False" Visibility="{Binding ChildGuideVisibility}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <StackPanel
+                                    Grid.Row="1"
+                                    Margin="{Binding ChildGuideMargin}"
+                                    HorizontalAlignment="Left"
+                                    Orientation="Horizontal">
+                                    <Rectangle Width="1" Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle
+                                        Width="1"
+                                        Fill="{DynamicResource CommonForeground}"
+                                        Opacity="0.35" />
+                                </StackPanel>
+                            </Grid>
+                            <ContentPresenter />
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -98,13 +152,81 @@
     <Style
         x:Key="MdocTransparentTextBoxStyle"
         BasedOn="{StaticResource VectorTextBoxStyle}"
-        TargetType="{x:Type Input:VectorTextBox}" />
+        TargetType="{x:Type Input:VectorTextBox}">
+        <!--
+            VectorTextBox.UpdateBorderColorByBackgroundColor 在 ThemeBackground 透明时会直接 return，
+            BorderBrush 保持 null —— 行内框就只剩一块底色、四周没有边。
+            下面模板用 1px Border 画完整的四边，并把描边显式钉成主题前景色。
+        -->
+        <Setter Property="BorderBrush" Value="{DynamicResource CommonForeground}" />
+        <!--  顶部那条定位线的颜色（控件自身在透明主题下不会给它赋值，这里给个兜底）  -->
+        <Setter Property="LocateLineBrush" Value="{DynamicResource CommonForeground}" />
+        <!--  行内框的字号比正文小一档，这里补回来  -->
+        <Setter Property="FontSize" Value="16" />
+        <!--  文字竖直居中（TextBoxView 撑着内容宿主，靠 VerticalContentAlignment 居中）+ 一律靠左  -->
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="TextAlignment" Value="Left" />
+        <!--
+            左侧内边距不写 Padding：TextBoxBase 会把 TextBox.Padding 推给内容宿主（ScrollViewer.Padding），
+            模板里若再拿 Margin 绑一次 Padding 就成了两倍（真机量到字形离左边框 7px = 1 边框 + 2 边距 + 2 边距 + 2 光标内缩）。
+            Padding 归零后字形距边框内沿正好 2px（剩 TextBoxView 自带的 2px 光标内缩）。
+        -->
+        <Setter Property="Padding" Value="0" />
+        <!--
+            模板与控件字典里那份保持一致：可编辑宿主必须是 Container:VectorScrollViewer 且
+            IsAllowDragToScroll="False"（外层行列表的拖拽滚动不许把鼠标抢走，见 VectorScrollViewer.IsInteractiveSource）。
+            顶部 5px 定位线仍是基岩版启动器皮肤，但改画在宿主**之上**：
+            内容宿主跨两行，文字才会在整块内区里竖直居中（只占第二行时字贴着上沿）。
+        -->
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Input:VectorTextBox}">
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="1"
+                        SnapsToDevicePixels="True">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="5" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Container:VectorScrollViewer
+                                x:Name="PART_ContentHost"
+                                Grid.Row="0"
+                                Grid.RowSpan="2"
+                                VerticalAlignment="Stretch"
+                                Panel.ZIndex="1"
+                                Focusable="False"
+                                HorizontalScrollBarVisibility="Hidden"
+                                IsAllowDragToScroll="False"
+                                Style="{DynamicResource VectorScrollViewerStyle}"
+                                VerticalScrollBarVisibility="Hidden" />
+                            <!--  定位线必须压在宿主上面（宿主底色不透明），且不参与命中测试  -->
+                            <Rectangle
+                                Grid.Row="0"
+                                Panel.ZIndex="2"
+                                Fill="{TemplateBinding LocateLineBrush}"
+                                IsHitTestVisible="False"
+                                Opacity="0.6" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
     <Style
         x:Key="MdocTransparentComboBoxStyle"
         BasedOn="{StaticResource VectorTextComboBoxStyle}"
         TargetType="{x:Type VectorComboBox:VectorTextComboBox}">
-        <Setter Property="FontSize" Value="14" />
+        <!--
+            行内下拉必须是 34：行高 MinHeight=38，皮肤自己还要 2.5+2.5 的上下边带 + 1px 边框。
+            给 40 就比行还高，被行容器（ListBoxItem 模板的圆角 Border）连边框一起裁掉，
+            现象就是"顶部和底部没了"（跟顶栏那个 45 高的版本下拉没得比）。
+        -->
+        <Setter Property="Height" Value="34" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="{DynamicResource CommonForeground}" />
     </Style>
@@ -118,54 +240,31 @@
     </Style>
 
     <!--
-        展开/折叠：行内模板按钮（矢量箭头；DrawingImage 不能给 Path.Data）。
-        用 Button + ToggleExpandedCommand，不再靠 ToggleButton 的选中态绑 IsExpanded。
+        展开/折叠：与行内 ⊕ / 🗑 同一套 VectorFlatIconButton（34×34，Icon 15 + Margin 5），
+        图标只换形状不旋转：折叠 ▸ / 展开 ▾。
+        仍然保留独立 Style 键 —— McdocTreeRowView.IsExpanderButton 按这个 Style 实例认"展开按钮"，
+        认不出来时 Ctrl+点击整棵子树展开/折叠会静默失效。
     -->
-    <Style x:Key="McdocRowExpanderStyle" TargetType="Button">
-        <Setter Property="Width" Value="16" />
-        <Setter Property="Height" Value="16" />
+    <Style
+        x:Key="McdocRowExpanderStyle"
+        BasedOn="{StaticResource VectorFlatIconButtonStyle}"
+        TargetType="{x:Type VectorButton:VectorFlatIconButton}">
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="34" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="ToolTip" Value="展开 / 折叠" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="shell" Background="Transparent">
-                        <Path
-                            x:Name="chevron"
-                            Width="5"
-                            Height="9"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Data="{DynamicResource MdocChevronGeometry}"
-                            Fill="{DynamicResource CommonForeground}"
-                            Opacity="0.75"
-                            RenderTransformOrigin="0.5,0.5"
-                            Stretch="Uniform">
-                            <Path.RenderTransform>
-                                <RotateTransform Angle="0" />
-                            </Path.RenderTransform>
-                        </Path>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <!--  展开态：箭头转 90°（与 misode 一致：折叠▸ / 展开▾）  -->
-                        <DataTrigger Binding="{Binding IsExpanded}" Value="True">
-                            <Setter TargetName="chevron" Property="RenderTransform">
-                                <Setter.Value>
-                                    <RotateTransform Angle="90" />
-                                </Setter.Value>
-                            </Setter>
-                        </DataTrigger>
-                        <!--  悬停给一点反馈：这一格现在是个真按钮，不再是"点了没反应"的装饰  -->
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="chevron" Property="Opacity" Value="1" />
-                            <Setter TargetName="shell" Property="Background" Value="{DynamicResource CommonBackground}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="Icon" Value="{DynamicResource MdocChevronGeometry}" />
+        <Setter Property="IconBrush" Value="{DynamicResource CommonForeground}" />
+        <Setter Property="IconWidth" Value="15" />
+        <Setter Property="IconHeight" Value="15" />
+        <Setter Property="IconMargin" Value="5" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                <Setter Property="Icon" Value="{DynamicResource MdocChevronDownGeometry}" />
+            </DataTrigger>
+        </Style.Triggers>
     </Style>
 
     <Style x:Key="McdocRowLabelStyle" TargetType="TextBlock">
@@ -174,7 +273,8 @@
         <Setter Property="FontSize" Value="13" />
         <Setter Property="Foreground" Value="{DynamicResource CommonForeground}" />
         <Setter Property="Margin" Value="6,0" />
-        <Setter Property="Opacity" Value="0.78" />
+        <!--  满不透明：旁边按钮的图标/文字都是实心的，标签半透就会被读成"平的"  -->
+        <Setter Property="Opacity" Value="1" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
 
@@ -195,7 +295,8 @@
 
     <!--  行内小图标：一律内联 Vector path（Icon.xaml 多为 DrawingImage/png，不能给 Path.Data）  -->
     <!--  展开箭头用本文件私有 key，不能复用 RightArrow：Generator 的 Window.Resources 常把它重定义成 ImageBrush  -->
-    <Geometry x:Key="MdocChevronGeometry">M 0,0 L 4,3.5 L 0,7 Z</Geometry>
+    <Geometry x:Key="MdocChevronGeometry">M 0,0 L 6,5 L 0,10 Z</Geometry>
+    <Geometry x:Key="MdocChevronDownGeometry">M 0,0 L 10,0 L 5,6 Z</Geometry>
     <Geometry x:Key="MdocSyncGeometry">F1 M 11,2 A 9,9 0 1 0 20,11 L 17,11 A 6,6 0 1 1 11,5 L 11,8 L 16,4 L 11,0 Z</Geometry>
     <Geometry x:Key="MdocArrowUpGeometry">M 0,10 L 6,0 L 12,10 Z</Geometry>
     <Geometry x:Key="MdocArrowDownGeometry">M 0,0 L 6,10 L 12,0 Z</Geometry>
@@ -204,6 +305,7 @@
     <Geometry x:Key="MdocTrashGeometry">F1 M 2,2 L 12,2 L 12,4 L 2,4 Z M 3,5 L 11,5 L 10,13 L 4,13 Z</Geometry>
 
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <data:MdocItemIconConverter x:Key="MdocItemIconConverter" />
     <cbhkData:HexToBrushConverter x:Key="HexToBrushConverter" />
     <cbhkData:HexStringToColorConverter x:Key="HexStringToColorConverter" />
     <cbhkData:CategoryToBrushConverter x:Key="CategoryToBrushConverter" />
@@ -231,7 +333,6 @@
             <Grid x:Name="customSelectEditor" Visibility="Collapsed">
                 <VectorComboBox:VectorTextComboBox
                     Width="236"
-                    Height="34"
                     VerticalAlignment="Center"
                     Background="Transparent"
                     DisplayMemberPath="Text"
@@ -254,15 +355,23 @@
     <DataTemplate x:Key="McdocNumberEditor">
         <StackPanel Orientation="Horizontal">
             <!--  数字框沿用本地主题资产：底色/前景/光标色都来自 VectorTextBoxStyle（换主题自动跟随）  -->
+            <!--
+                别给 VerticalAlignment="Center"：VectorTextBoxStyle 的模板根 Border 绑了 VerticalAlignment，
+                控件一居中，Border 就按内容高度（定位线 5 + 一行字）收缩，画出来只有 22 高，
+                比右边那两颗 34 高的 加/减 按钮矮两圈。拉伸（默认）才画满 34。
+            -->
+            <!--
+                数字框直接走行内文本框那套皮肤（MdocTransparentTextBoxStyle）：字号 16、竖直居中、左侧内边距 2
+                都是它带来的；用裸的 VectorTextBoxStyle 时字贴在定位线下面（5px 那条占位行没人补），看着就是"小字靠上"。
+            -->
             <Input:VectorTextBox
                 Width="140"
                 Height="34"
-                VerticalAlignment="Center"
-                Style="{DynamicResource VectorTextBoxStyle}"
+                Style="{StaticResource MdocTransparentTextBoxStyle}"
                 Text="{Binding NumberText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <!--
                 减 / 加并排一行：左减（箭头向左）、右加（箭头向右）。
-                单个按钮占满 28×34，交互面积约是原来竖排 24×17 的两倍。
+                单个按钮占满 28×34，与左侧输入框同高（数字框画满 34，见上面那条注释）。
             -->
             <Grid
                 Width="56"
@@ -303,6 +412,7 @@
                     ToolTip="加一（按住连续加）" />
             </Grid>
             <VectorButton:VectorFlatIconButton
+                Width="34"
                 Command="{Binding RegenerateSeedCommand}"
                 Icon="{DynamicResource MdocSyncGeometry}"
                 IconBrush="{DynamicResource CommonForeground}"
@@ -339,7 +449,6 @@
     <DataTemplate x:Key="McdocEnumEditor">
         <VectorComboBox:VectorTextComboBox
             Width="236"
-            Height="34"
             VerticalAlignment="Center"
             Background="Transparent"
             DisplayMemberPath="Text"
@@ -367,8 +476,7 @@
                         <Input:VectorTextBox
                             Width="58"
                             Height="34"
-                            VerticalAlignment="Center"
-                            Style="{DynamicResource VectorTextBoxStyle}"
+                            Style="{StaticResource MdocTransparentTextBoxStyle}"
                             Text="{Binding NumberText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <Grid
                             Width="40"
@@ -426,7 +534,6 @@
         <StackPanel Orientation="Horizontal">
             <VectorComboBox:VectorTextComboBox
                 Width="130"
-                Height="34"
                 VerticalAlignment="Center"
                 Background="Transparent"
                 DisplayMemberPath="Text"
@@ -447,8 +554,7 @@
                     x:Name="anyNumberEditor"
                     Width="140"
                     Height="34"
-                    VerticalAlignment="Center"
-                    Style="{DynamicResource VectorTextBoxStyle}"
+                    Style="{StaticResource MdocTransparentTextBoxStyle}"
                     Text="{Binding NumberText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     Visibility="Collapsed" />
                 <StackPanel
@@ -544,53 +650,64 @@
             Style="{DynamicResource VectorColorPickerStyle}" />
     </DataTemplate>
 
-    <DataTemplate x:Key="McdocIconSelectEditor">
-        <StackPanel Orientation="Horizontal">
-            <!--
-                ItemIdPreview：有真实纹理就画图，没有就用确定性瓷砖（id 的 hash → 色相 + 首字母）。
-                这一格的 DataContext 是节点，预览相关的属性在行上，所以走 RelativeSource 取行的。
-            -->
-            <Grid
-                Width="26"
-                Height="26"
-                Margin="2,0,4,0"
+    <!--
+        带图标的下拉项：图标直接画在框**里面**（闭合态显示选中项、展开态显示每一行），
+        所以行上不再单独摆一个 Image + 瓷砖占位方块。
+        Image 的源由 MdocItemIconConverter 按 id 去 ImageSet 找 png，没有贴图就留空（该项只显示文字）。
+    -->
+    <DataTemplate x:Key="MdocIconComboItemTemplate">
+        <!--  图标列定宽：没有贴图的 id 也留出这一格，文字才不会跟着左右跳  -->
+        <!--
+            行高写在模板上（皮肤那版是把 Grid.Height 绑到 combo 的 ActualHeight，我们这版没绑）：
+            MinHeight=30 让展开后每行都有地方站；闭合框把 Padding 的上下改成 0（见 McdocIconSelectEditor），
+            34 高的框里正好放下 30 高的一行、且上下留白相等。
+        -->
+        <Grid
+            MinHeight="30"
+            VerticalAlignment="Center"
+            Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="22" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Image
+                Grid.Column="0"
+                Width="22"
+                Height="22"
                 VerticalAlignment="Center"
-                ToolTip="{Binding DataContext.Node.Value, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
-                Visibility="{Binding DataContext.ShowItemPreview, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource BoolToVisibility}}">
-                <Image
-                    RenderOptions.BitmapScalingMode="HighQuality"
-                    Source="{Binding DataContext.ItemTexture, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
-                    Stretch="Uniform"
-                    Visibility="{Binding DataContext.ItemImageVisibility, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
-                <Border
-                    Background="{Binding DataContext.ItemTileBrush, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
-                    BorderBrush="{DynamicResource CommonForeground}"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    Visibility="{Binding DataContext.ItemTileVisibility, RelativeSource={RelativeSource AncestorType=ListBoxItem}}">
-                    <TextBlock
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        FontSize="11"
-                        FontWeight="Bold"
-                        Foreground="{DynamicResource CommonForeground}"
-                        Text="{Binding DataContext.ItemPreviewText, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
-                </Border>
-            </Grid>
-            <!--
-                候选项必须过转换器：VectorIconTextComboBoxItemTemplate 绑的是 item.Text（还有 item.Image），
-                直接喂 EnumMember 时每一行都是空的（"物品枚举节点里成员看不见文本"）。
-                DisplayMemberPath 也没用 —— 样式里的 ItemTemplate 会压掉它。
-            -->
-            <VectorComboBox:VectorIconTextComboBox
-                Width="260"
-                Height="34"
+                RenderOptions.BitmapScalingMode="HighQuality"
+                Source="{Binding ItemID, Converter={StaticResource MdocItemIconConverter}}" />
+            <TextBlock
+                Grid.Column="1"
+                Margin="6,0,0,0"
                 VerticalAlignment="Center"
+                FontSize="15"
                 Foreground="{DynamicResource CommonForeground}"
-                ItemsSource="{Binding EnumOptionList, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
-                SelectedItem="{Binding SelectedEnumOption, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
-                Style="{DynamicResource VectorIconTextComboBoxStyle}" />
-        </StackPanel>
+                Text="{Binding Text}"
+                TextTrimming="CharacterEllipsis" />
+        </Grid>
+    </DataTemplate>
+
+
+
+    <!--
+        misode 的 ItemIdPreview：方块 / 物品 id 用带图标的下拉，图标就在框里，不再另占一格。
+        候选项必须过转换器：VectorIconTextComboBox 的模板绑的是 item.Text / item.Image，
+        直接喂 EnumMember 时每一行都是空的（"物品枚举节点里成员看不见文本"）；
+        DisplayMemberPath 也没用 —— ItemTemplate 会压掉它。
+    -->
+    <DataTemplate x:Key="McdocIconSelectEditor">
+        <VectorComboBox:VectorIconTextComboBox
+            Width="260"
+            Height="34"
+            Padding="6,0,5,0"
+            VerticalAlignment="Center"
+            VerticalContentAlignment="Center"
+            Foreground="{DynamicResource CommonForeground}"
+            ItemTemplate="{StaticResource MdocIconComboItemTemplate}"
+            ItemsSource="{Binding EnumOptionList, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+            SelectedItem="{Binding SelectedEnumOption, Converter={StaticResource EnumMemberToTextComboBoxItemConverter}}"
+            Style="{DynamicResource VectorIconTextComboBoxStyle}" />
     </DataTemplate>
 
     <data:McdocValueEditorTemplateSelector
@@ -618,6 +735,7 @@
                 按钮本体 = 边框 1+1 + 描边列 3+3 + (15+5+5) = 33，所以行首列宽必须 ≥33（这里给 34），列窄了就会左右被裁。
             -->
             <VectorButton:VectorFlatIconButton
+                Width="34"
                 Command="{Binding UnknownDeleteCommand}"
                 Icon="{DynamicResource MdocTrashGeometry}"
                 IconBrush="{DynamicResource CommonForeground}"
@@ -632,6 +750,7 @@
                 值被（未设置）清掉后键已经不在文档里、这一行还在 —— 那时点它就是摘掉这一行。
             -->
             <VectorButton:VectorFlatIconButton
+                Width="34"
                 Command="{Binding RemoveEntryCommand}"
                 Icon="{DynamicResource TreeNodeMinusGeometry}"
                 IconBrush="{DynamicResource CommonForeground}"
@@ -659,7 +778,7 @@
         可选且缺省的字段只有一行 ⊕，不挂这个按钮。
     -->
     <DataTemplate x:Key="MdocRowExpander">
-        <Button
+        <VectorButton:VectorFlatIconButton
             Command="{Binding ToggleExpandedCommand}"
             Style="{StaticResource McdocRowExpanderStyle}"
             Visibility="{Binding ExpanderVisibility}" />
@@ -670,6 +789,7 @@
         <Grid>
             <!--  只有真的有文档时才是"可点的标签"：没有文档不给手型、不弹空面板  -->
             <Button
+                HorizontalContentAlignment="Stretch"
                 Command="{Binding ToggleDocCommand}"
                 Focusable="False"
                 IsHitTestVisible="{Binding HasDocumentation}">
@@ -683,17 +803,29 @@
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
-                <TextBlock Text="{Binding DisplayLabel}">
-                    <TextBlock.Style>
-                        <Style BasedOn="{StaticResource McdocRowLabelStyle}" TargetType="TextBlock">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding HasDocumentation}" Value="True">
-                                    <Setter Property="TextDecorations" Value="Underline" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+                <!--
+                    名称底板：主题底色、直角，横向撑满"键"这一格（列是 Auto/MinWidth=72，撑满的是**已经占住**的格宽，
+                    Border 的 DesiredWidth 仍然只有文字宽，所以既不会把右边的编辑器挤走，也不会动左边的箭头列）。
+                    没有编辑器的行还会跨过那根空列（KeyPlateColumnSpan），右沿直接贴到动作按钮上。
+                -->
+                <Border
+                    Height="34"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource CommonBackground}"
+                    SnapsToDevicePixels="True"
+                    Visibility="{Binding KeyPlateVisibility}">
+                    <TextBlock Text="{Binding DisplayLabel}">
+                        <TextBlock.Style>
+                            <Style BasedOn="{StaticResource McdocRowLabelStyle}" TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasDocumentation}" Value="True">
+                                        <Setter Property="TextDecorations" Value="Underline" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
             </Button>
             <Popup
                 AllowsTransparency="True"
@@ -723,8 +855,15 @@
         只给 PlainRow 会让 union 列表成员没有 ▲▼/复制/⊖（截图里的 Entry 就是这种）。
     -->
     <DataTemplate x:Key="MdocListItemActions">
-        <StackPanel Style="{StaticResource McdocActionGroupStyle}">
+        <!--
+            间距挂在按钮上，不挂在容器上：这一组在非列表行里是**空**的，
+            容器带 margin 时那 4px 会凭空留在底板和动作按钮之间（真机实测 10px 空隙就是这么来的）。
+        -->
+        <StackPanel Margin="0" Style="{StaticResource McdocActionGroupStyle}">
             <VectorButton:VectorFlatIconButton
+                Width="34"
+                Height="34"
+                VerticalAlignment="Center"
                 Command="{Binding MoveUpCommand}"
                 Focusable="False"
                 Icon="{DynamicResource MdocArrowUpGeometry}"
@@ -736,6 +875,9 @@
                 ToolTip="上移"
                 Visibility="{Binding ItemActionsVisibility}" />
             <VectorButton:VectorFlatIconButton
+                Width="34"
+                Height="34"
+                VerticalAlignment="Center"
                 Command="{Binding MoveDownCommand}"
                 Focusable="False"
                 Icon="{DynamicResource MdocArrowDownGeometry}"
@@ -747,6 +889,9 @@
                 ToolTip="下移"
                 Visibility="{Binding ItemActionsVisibility}" />
             <VectorButton:VectorFlatIconButton
+                Width="34"
+                Height="34"
+                VerticalAlignment="Center"
                 Command="{Binding DuplicateCommand}"
                 Focusable="False"
                 Icon="{DynamicResource MdocDuplicateGeometry}"
@@ -758,6 +903,9 @@
                 ToolTip="复制这一项"
                 Visibility="{Binding DuplicateVisibility}" />
             <VectorButton:VectorFlatIconButton
+                Width="34"
+                Height="34"
+                VerticalAlignment="Center"
                 Command="{Binding RemoveSelfCommand}"
                 Focusable="False"
                 Icon="{DynamicResource TreeNodeMinusGeometry}"
@@ -780,11 +928,14 @@
             Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="34" />
-                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <VectorButton:VectorFlatIconButton
                 Grid.Column="2"
+                Width="34"
+                Height="34"
+                VerticalAlignment="Center"
                 Command="{Binding AddTailCommand}"
                 Icon="{DynamicResource TreeNodePlusGeometry}"
                 IconBrush="{DynamicResource CommonForeground}"
@@ -806,7 +957,7 @@
             Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="34" />
-                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="Auto" MinWidth="72" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -821,6 +972,8 @@
                 ContentTemplate="{StaticResource MdocRowExpander}" />
             <ContentControl
                 Grid.Column="2"
+                Grid.ColumnSpan="{Binding KeyPlateColumnSpan}"
+                HorizontalAlignment="Stretch"
                 VerticalAlignment="Center"
                 Content="{Binding}"
                 ContentTemplate="{StaticResource MdocKeyTemplate}" />
@@ -877,8 +1030,13 @@
                     </Grid>
                 </StackPanel>
             </Border>
-            <StackPanel Grid.Column="4" Style="{StaticResource McdocActionGroupStyle}">
+            <StackPanel
+                Grid.Column="4"
+                Margin="{Binding ActionGroupMargin}"
+                Style="{StaticResource McdocActionGroupStyle}">
                 <VectorButton:VectorFlatIconButton
+                    Width="34"
+                    Margin="0,0,4,0"
                     Command="{Binding AddTopCommand}"
                     Icon="{DynamicResource TreeNodePlusGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
@@ -890,6 +1048,8 @@
                     Visibility="{Binding ListAddTopVisibility}" />
                 <!--  misode 的列表行只有一个 add（add_top）；追加到尾部走 AddBottomCommand，不占行的按钮位  -->
                 <VectorButton:VectorFlatIconButton
+                    Width="34"
+                    Margin="0,0,4,0"
                     Command="{Binding SetDefaultCommand}"
                     Icon="{DynamicResource TreeNodePlusGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
@@ -902,6 +1062,7 @@
                 <ContentControl Content="{Binding}" ContentTemplate="{StaticResource MdocListItemActions}" />
                 <!--  可选且编辑器自己清不空（容器 / 取色器 / Raw）：行尾只留这一个删除入口  -->
                 <VectorButton:VectorFlatIconButton
+                    Width="34"
                     Command="{Binding ClearCommand}"
                     Icon="{DynamicResource MdocTrashGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
@@ -934,7 +1095,7 @@
             Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="34" />
-                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="Auto" MinWidth="72" />
                 <ColumnDefinition
                     Width="Auto"
@@ -958,7 +1119,6 @@
                 ContentTemplate="{StaticResource MdocKeyTemplate}" />
             <VectorComboBox:VectorTextComboBox
                 Grid.Column="3"
-                Height="34"
                 VerticalAlignment="Center"
                 Background="Transparent"
                 DisplayMemberPath="Text"
@@ -973,6 +1133,8 @@
                 ContentTemplateSelector="{StaticResource McdocValueEditorTemplateSelector}" />
             <StackPanel Grid.Column="5" Style="{StaticResource McdocActionGroupStyle}">
                 <VectorButton:VectorFlatIconButton
+                    Width="34"
+                    Margin="0,0,4,0"
                     Command="{Binding Node.AddItemCommand}"
                     Icon="{DynamicResource TreeNodePlusGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
@@ -996,7 +1158,7 @@
             Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="34" />
-                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="Auto" MinWidth="72" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -1009,7 +1171,7 @@
                 Grid.Column="1"
                 Content="{Binding}"
                 ContentTemplate="{StaticResource MdocRowExpander}" />
-            <Grid Grid.Column="2">
+            <Grid Grid.Column="2" Grid.ColumnSpan="{Binding KeyPlateColumnSpan}">
                 <!--  条目行的键以标签显示（键编辑框收起时必须有人顶上去）  -->
                 <ContentControl
                     Content="{Binding}"
@@ -1022,7 +1184,6 @@
                     Text="{Binding Node.EditingKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     Visibility="{Binding KeyTextVisibility}" />
                 <VectorComboBox:VectorTextComboBox
-                    Height="34"
                     HorizontalAlignment="Stretch"
                     Background="Transparent"
                     DisplayMemberPath="Text"
@@ -1085,9 +1246,13 @@
                     </Grid>
                 </StackPanel>
             </Border>
-            <StackPanel Grid.Column="4" Style="{StaticResource McdocActionGroupStyle}">
+            <StackPanel
+                Grid.Column="4"
+                Margin="{Binding ActionGroupMargin}"
+                Style="{StaticResource McdocActionGroupStyle}">
                 <!--  any 行的 list 分支：⊕ 加一项（CanAddTop 只在"值是数组"时为真，别的条目行不显示）  -->
                 <VectorButton:VectorFlatIconButton
+                    Width="34"
                     Command="{Binding AddTopCommand}"
                     Icon="{DynamicResource TreeNodePlusGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
@@ -1098,6 +1263,7 @@
                     ToolTip="添加一项"
                     Visibility="{Binding ListAddTopVisibility}" />
                 <VectorButton:VectorFlatIconButton
+                    Width="34"
                     Command="{Binding Node.AddEntryCommand}"
                     CommandParameter="{Binding}"
                     Icon="{DynamicResource TreeNodePlusGeometry}"
@@ -1109,6 +1275,7 @@
                     ToolTip="加入"
                     Visibility="{Binding AddEntryVisibility}" />
                 <VectorButton:VectorFlatIconButton
+                    Width="34"
                     Command="{Binding RenameKeyCommand}"
                     Icon="{DynamicResource MdocRenameGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
@@ -1140,7 +1307,7 @@
             Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="34" />
-                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -1176,7 +1343,6 @@
                     Visibility="{Binding KeyTextVisibility}" />
                 <VectorComboBox:VectorTextComboBox
                     Width="236"
-                    Height="34"
                     HorizontalAlignment="Stretch"
                     Background="Transparent"
                     DisplayMemberPath="Text"
@@ -1214,6 +1380,9 @@
             </Grid>
             <VectorButton:VectorFlatIconButton
                 Grid.Column="4"
+                Width="34"
+                Height="34"
+                VerticalAlignment="Center"
                 Command="{Binding Node.AddEntryCommand}"
                 CommandParameter="{Binding}"
                 Icon="{DynamicResource TreeNodePlusGeometry}"
@@ -1235,7 +1404,7 @@
             Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="34" />
-                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="34" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
@@ -1253,6 +1422,7 @@
                 Text="{Binding MoreLabel}" />
             <StackPanel Grid.Column="3" Style="{StaticResource McdocActionGroupStyle}">
                 <VectorButton:VectorFlatIconButton
+                    Width="34"
                     Command="{Binding ShowMoreCommand}"
                     Icon="{DynamicResource TreeNodePlusGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
@@ -1262,6 +1432,7 @@
                     Style="{DynamicResource VectorFlatIconButtonStyle}"
                     ToolTip="再多显示 50 条" />
                 <VectorButton:VectorFlatIconButton
+                    Width="34"
                     Command="{Binding ShowAllCommandRow}"
                     Icon="{DynamicResource Checkmark}"
                     IconBrush="{DynamicResource CommonForeground}"

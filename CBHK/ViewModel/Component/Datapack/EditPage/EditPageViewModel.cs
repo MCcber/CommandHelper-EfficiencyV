@@ -1,4 +1,4 @@
-﻿using MinecraftLanguageModelLibrary.Data;
+using MinecraftLanguageModelLibrary.Data;
 using MinecraftLanguageModelLibrary.Utility;
 using CBHK.CustomControl.Container;
 using CBHK.CustomControl.Input;
@@ -72,7 +72,6 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush transparentBrush = new((Color)ColorConverter.ConvertFromString("Transparent"));
         private SolidColorBrush darkGrayBrush = new((Color)ColorConverter.ConvertFromString("#1E1E1E"));
-        private CBHKDataContext context = null;
         private RegexService regexService;
         private DataService dataService = null;
         private IContainerProvider container;
@@ -148,35 +147,35 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// 数据包搜索文本框内容
         /// </summary>
         [ObservableProperty]
-        private string _datapackSeacherText = "";
+        private string datapackSeacherText = "";
         [ObservableProperty]
-        public ObservableCollection<VectorRichTabItem> _functionModifyTabItems = [];
+        public ObservableCollection<VectorRichTabItem> functionModifyTabItems = [];
         [ObservableProperty]
-        public ObservableCollection<TreeViewItem> _datapackTreeViewItems = [];
+        public ObservableCollection<TreeViewItem> datapackTreeViewItems = [];
         [ObservableProperty]
-        public ObservableCollection<TreeViewItem> _datapackTreeViewSearchResult = [];
+        public ObservableCollection<TreeViewItem> datapackTreeViewSearchResult = [];
         /// <summary>
         /// 函数编辑器标签页容器可见性
         /// </summary>
         [ObservableProperty]
-        private Visibility _functionModifyTabControlVisibility = Visibility.Visible;
+        private Visibility functionModifyTabControlVisibility = Visibility.Visible;
 
         /// <summary>
         /// 当前选中的文本编辑器
         /// </summary>
         [ObservableProperty]
-        private VectorRichTabItem _selectedFileItem = null;
+        private VectorRichTabItem selectedFileItem = null;
         /// <summary>
         /// 解决方案视图被选中的成员
         /// </summary>
         [ObservableProperty]
-        TreeViewItem _solutionViewSelectedItem = null;
+        TreeViewItem solutionViewSelectedItem = null;
         [ObservableProperty]
-        public Dictionary<string, Dictionary<int, string>> _runtimeVariables = new() { { "bossbarID", [] }, { "storageID", [] }, { "targetObjective", [] }, { "tagValue", [] }, { "triggerObjective", [] }, { "teamID", [] } };
+        public Dictionary<string, Dictionary<int, string>> runtimeVariables = new() { { "bossbarID", [] }, { "storageID", [] }, { "targetObjective", [] }, { "tagValue", [] }, { "triggerObjective", [] }, { "teamID", [] } };
         #endregion
 
         #region Method
-        public EditPageViewModel(IContainerProvider container,MainView mainView,CBHKDataContext context,DataService dataService,RegexService regexService)
+        public EditPageViewModel(IContainerProvider container,MainView mainView,DataService dataService,RegexService regexService)
         {
             #region 客户端连接语言服务器
             client.Connect(new IPEndPoint(IPAddress.Parse(ipString), port));
@@ -184,7 +183,6 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
 
             this.regexService = regexService;
             this.dataService = dataService;
-            this.context = context;
             this.container = container;
             home = mainView;
         }
@@ -494,7 +492,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
                 //添加Bossbar颜色
                 BossbarColorList = dataService.GetBossbarColorList();
                 //添加Bossbar样式
-                BossbarStyles = dataService.GetBossbarColorList();
+                BossbarStyles = dataService.GetBossbarStyleList();
                 //添加物品ID
                 ItemIDList = dataService.GetItemIDList();
                 //添加方块Id

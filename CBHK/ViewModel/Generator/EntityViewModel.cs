@@ -43,13 +43,13 @@ namespace CBHK.ViewModel.Generator
         /// 是否展示生成结果
         /// </summary>
         [ObservableProperty]
-        private bool _showGeneratorResult = false;
+        private bool showGeneratorResult = false;
 
         /// <summary>
         /// 实体标签页的数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorRichTabItem> _entityPageList = [
+        public ObservableCollection<VectorRichTabItem> entityPageList = [
             new VectorRichTabItem()
             {
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#48382C")),
@@ -68,7 +68,7 @@ namespace CBHK.ViewModel.Generator
         /// 版本数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+        public ObservableCollection<VectorTextComboBoxItem> versionSource = [
             new VectorTextComboBoxItem() { Text = "1.20.5" },
             new VectorTextComboBoxItem() { Text = "1.20.2" },
             new VectorTextComboBoxItem() { Text = "1.20.1" },
@@ -87,7 +87,7 @@ namespace CBHK.ViewModel.Generator
         /// 能否关闭标签页
         /// </summary>
         [ObservableProperty]
-        private bool _isCloseable = true;
+        private bool isCloseable = true;
         #endregion
 
         #region Method

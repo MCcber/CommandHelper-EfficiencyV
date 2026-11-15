@@ -48,8 +48,8 @@ namespace CBHK.ViewModel.Generator
         /// 开始三轴合一
         /// </summary>
         private bool UsingThreeAxis = false;
-        private ArmorStandCameraMovementType _armorStandCameraMovementType;
-        private ArmorStandCameraOverTheShoulderType _armorStandCameraOverTheShoulderType;
+        private ArmorStandCameraMovementType armorStandCameraMovementType;
+        private ArmorStandCameraOverTheShoulderType armorStandCameraOverTheShoulderType;
         private bool IsLeftShoulder = false;
         private bool isSelectedAll = false;
         //右上角Gizimo中圆锥的底面半径
@@ -173,43 +173,43 @@ namespace CBHK.ViewModel.Generator
         /// 生成器标题
         /// </summary>
         [ObservableProperty]
-        public string _title = "盔甲架生成器";
+        public string title = "盔甲架生成器";
 
         /// <summary>
         /// 预览文本
         /// </summary>
         [ObservableProperty]
-        public string _previewModeText = "预览";
+        public string previewModeText = "预览";
 
         /// <summary>
         /// 预览功能菜单可见性
         /// </summary>
         [ObservableProperty]
-        private Visibility _previewMenuVisibility = Visibility.Visible;
+        private Visibility previewMenuVisibility = Visibility.Visible;
 
         /// <summary>
         /// 显示结果
         /// </summary>
         [ObservableProperty]
-        private bool _showGeneratorResult = false;
+        private bool showGeneratorResult = false;
 
         /// <summary>
         /// 名称
         /// </summary>
         [ObservableProperty]
-        private string _customName = "";
+        private string customName = "";
 
         /// <summary>
         /// 标签列表
         /// </summary>
         [ObservableProperty]
-        private string _tagList = "";
+        private string tagList = "";
 
         /// <summary>
         /// 整体水平旋转
         /// </summary>
         [ObservableProperty]
-        private float _rotationX = 0f;
+        private float rotationX = 0f;
 
         #region 是否拥有副手权限
         private Visibility haveOffHandPermission = Visibility.Visible;
@@ -249,23 +249,23 @@ namespace CBHK.ViewModel.Generator
 
         #region 为盔甲架和坐标轴映射纹理
         [ObservableProperty]
-        public BitmapImage _armImage = null;
+        public BitmapImage armImage = null;
         /// <summary>
         /// 木头纹理
         /// </summary>
         [ObservableProperty]
-        public BitmapImage _woodenImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\oak_planks.png"));
+        public BitmapImage woodenImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\oak_planks.png"));
         [ObservableProperty]
-        public BitmapImage _horizontalImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\HorizontalPlanks.png"));
+        public BitmapImage horizontalImage = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\HorizontalPlanks.png"));
         [ObservableProperty]
-        public BitmapImage _stone = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\smooth_stone.png"));
+        public BitmapImage stone = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\smooth_stone.png"));
         [ObservableProperty]
-        public BitmapImage _stoneSide = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\stoneSide.png"));
+        public BitmapImage stoneSide = new(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\ArmorStand\Image\stoneSide.png"));
         #endregion
 
         #region 名称可见性
         [ObservableProperty]
-        private bool _customNameVisible = false;
+        private bool customNameVisible = false;
         private string CustomNameVisibleString
         {
             get => CustomNameVisible ? "CustomNameVisible:1b," : "";
@@ -342,7 +342,7 @@ namespace CBHK.ViewModel.Generator
         /// 重置所有动作的按钮前景
         /// </summary>
         [ObservableProperty]
-        private Brush _resetAllPoseButtonForeground;
+        private Brush resetAllPoseButtonForeground;
 
         #region 是否可以重置头部动作
         private bool canResetHeadPose;
@@ -361,7 +361,7 @@ namespace CBHK.ViewModel.Generator
         /// 重置头部动作的按钮前景
         /// </summary>
         [ObservableProperty]
-        private Brush _resetHeadPoseButtonForeground;
+        private Brush resetHeadPoseButtonForeground;
 
         #region 是否可以重置身体动作
         private bool canResetBodyPose;
@@ -378,7 +378,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 重置身体动作的按钮前景
         [ObservableProperty]
-        private Brush _resetBodyPoseButtonForeground;
+        private Brush resetBodyPoseButtonForeground;
         #endregion
 
         #region 是否可以重置左臂动作
@@ -398,7 +398,7 @@ namespace CBHK.ViewModel.Generator
         /// 重置左臂动作的按钮前景
         /// </summary>
         [ObservableProperty]
-        private Brush _resetLeftArmPoseButtonForeground;
+        private Brush resetLeftArmPoseButtonForeground;
 
         #region 是否可以重置右臂动作
         private bool canResetRightArmPose;
@@ -417,7 +417,7 @@ namespace CBHK.ViewModel.Generator
         /// 重置右臂动作的按钮前景
         /// </summary>
         [ObservableProperty]
-        private Brush _resetRightArmPoseButtonForeground;
+        private Brush resetRightArmPoseButtonForeground;
 
         #region 是否可以重置左腿动作
         private bool canResetLeftLegPose;
@@ -436,7 +436,7 @@ namespace CBHK.ViewModel.Generator
         /// 重置左臂动作的按钮前景
         /// </summary>
         [ObservableProperty]
-        private Brush _resetLeftLegPoseButtonForeground;
+        private Brush resetLeftLegPoseButtonForeground;
 
         #region 是否可以重置右腿动作
         private bool canResetRightLegPose;
@@ -455,7 +455,7 @@ namespace CBHK.ViewModel.Generator
         /// 重置右臂动作的按钮前景
         /// </summary>
         [ObservableProperty]
-        private Brush _resetRightLegPoseButtonForeground;
+        private Brush resetRightLegPoseButtonForeground;
         #endregion
 
         #region 头部XYZ
@@ -706,65 +706,65 @@ namespace CBHK.ViewModel.Generator
         /// Head
         /// </summary>
         [ObservableProperty]
-        private string _headItem = "";
+        private string headItem = "";
 
         /// <summary>
         /// Body
         /// </summary>
         [ObservableProperty]
-        private string _bodyItem = "";
+        private string bodyItem = "";
 
         /// <summary>
         /// LeftHand
         /// </summary>
         [ObservableProperty]
-        private string _leftHandItem = "";
+        private string leftHandItem = "";
 
         /// <summary>
         /// RightHand
         /// </summary>
         [ObservableProperty]
-        private string _rightHandItem = "";
+        private string rightHandItem = "";
 
         /// <summary>
         /// Legs
         /// </summary>
         [ObservableProperty]
-        private string _legItem = "";
+        private string legItem = "";
 
         /// <summary>
         /// Boots
         /// </summary>
         [ObservableProperty]
-        private string _feetItem = "";
+        private string feetItem = "";
 
         #endregion
 
         #region 控制注视旋转的旋转角度
         [ObservableProperty]
-        private double _horizontalAngle = 0;
+        private double horizontalAngle = 0;
         [ObservableProperty]
-        private double _verticalAngle = 0;
+        private double verticalAngle = 0;
         #endregion
 
         #region 各部位装备图像源
         [ObservableProperty]
-        private ImageSource _leftHandItemImage;
+        private ImageSource leftHandItemImage;
 
         [ObservableProperty]
-        private ImageSource _rightHandItemImage;
+        private ImageSource rightHandItemImage;
 
         [ObservableProperty]
-        private ImageSource _headItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Helmet.png", UriKind.RelativeOrAbsolute));
+        private ImageSource headItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Helmet.png", UriKind.RelativeOrAbsolute));
 
         [ObservableProperty]
-        private ImageSource _chestItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Chestplate.png", UriKind.RelativeOrAbsolute));
+        private ImageSource chestItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Chestplate.png", UriKind.RelativeOrAbsolute));
 
         [ObservableProperty]
-        private ImageSource _legItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Leggings.png", UriKind.RelativeOrAbsolute));
+        private ImageSource legItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Leggings.png", UriKind.RelativeOrAbsolute));
 
         [ObservableProperty]
-        private ImageSource _feetItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Boots.png", UriKind.RelativeOrAbsolute));
+        private ImageSource feetItemImage = new BitmapImage(new Uri("/CBHK;component/Resource/Data/Image/Boots.png", UriKind.RelativeOrAbsolute));
         #endregion
 
         #region 禁止移除或改变头部、身体、手部、腿部、脚部装备
@@ -973,7 +973,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 版本数据源
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+        public ObservableCollection<VectorTextComboBoxItem> versionSource = [
             new VectorTextComboBoxItem() { Text = "1.20.2"},
             new VectorTextComboBoxItem() { Text = "1.13.0"},
             new VectorTextComboBoxItem() { Text = "1.12.0"},
@@ -1324,7 +1324,7 @@ namespace CBHK.ViewModel.Generator
         [RelayCommand]
         public void UpdateCameraMovementType(ArmorStandCameraMovementType type)
         {
-            _armorStandCameraMovementType = type;
+            armorStandCameraMovementType = type;
             Action action = type switch
             {
                 ArmorStandCameraMovementType.Watch => WatchMode,
@@ -1436,7 +1436,7 @@ namespace CBHK.ViewModel.Generator
             HorizontalAngle = initHorizontalAngle;
             VerticalAngle = initVerticalAngle;
             lastMousePosX = lastMousePosY = deltaMoveX = deltaMoveY = horizontalAngleDelta = verticalAngleDelta = 0;
-            switch (_armorStandCameraMovementType)
+            switch (armorStandCameraMovementType)
             {
                 case ArmorStandCameraMovementType.Watch:
                     {
@@ -1456,10 +1456,10 @@ namespace CBHK.ViewModel.Generator
                     {
                         IsLeftShoulder = !IsLeftShoulder;
 
-                        _armorStandCameraOverTheShoulderType = IsLeftShoulder ? ArmorStandCameraOverTheShoulderType.Left : ArmorStandCameraOverTheShoulderType.Right;
+                        armorStandCameraOverTheShoulderType = IsLeftShoulder ? ArmorStandCameraOverTheShoulderType.Left : ArmorStandCameraOverTheShoulderType.Right;
 
                         MainCamera.LookDirection = new(0, 0, 1);
-                        if (_armorStandCameraOverTheShoulderType is ArmorStandCameraOverTheShoulderType.Left)
+                        if (armorStandCameraOverTheShoulderType is ArmorStandCameraOverTheShoulderType.Left)
                         {
                             MainCamera.Position = new(-1.5, -1, -5.5);
                         }
@@ -2086,7 +2086,7 @@ namespace CBHK.ViewModel.Generator
 
         public void ArmorStandViewer_KeyDown(object sender, KeyEventArgs e)
         {
-            if (_armorStandCameraMovementType is ArmorStandCameraMovementType.Free)
+            if (armorStandCameraMovementType is ArmorStandCameraMovementType.Free)
             {
                 #region 前后左右
                 if (e.Key is Key.A || e.Key is Key.D)
@@ -2147,7 +2147,7 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void ModelViewMouseMove(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed && _armorStandCameraMovementType is ArmorStandCameraMovementType.Watch)
+            if (e.LeftButton == MouseButtonState.Pressed && armorStandCameraMovementType is ArmorStandCameraMovementType.Watch)
             {
                 deltaMoveX = 0.5 * (e.GetPosition(ArmorStandViewer).X - lastMousePosX);
                 deltaMoveY = 0.5 * (e.GetPosition(ArmorStandViewer).Y - lastMousePosY);
@@ -2170,7 +2170,7 @@ namespace CBHK.ViewModel.Generator
                 lastMousePosY = e.GetPosition(ArmorStandViewer).Y;
             }
 
-            if (e.LeftButton == MouseButtonState.Pressed && _armorStandCameraMovementType is ArmorStandCameraMovementType.Free)
+            if (e.LeftButton == MouseButtonState.Pressed && armorStandCameraMovementType is ArmorStandCameraMovementType.Free)
             {
                 deltaMoveX = e.GetPosition(ArmorStandViewer).X - lastMousePosX;
                 deltaMoveY = e.GetPosition(ArmorStandViewer).Y - lastMousePosY;
@@ -2197,7 +2197,7 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void ModelViewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if(_armorStandCameraMovementType is not ArmorStandCameraMovementType.Watch)
+            if(armorStandCameraMovementType is not ArmorStandCameraMovementType.Watch)
             {
                 return;
             }

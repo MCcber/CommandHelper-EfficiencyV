@@ -7,7 +7,6 @@
     xmlns:dataUtility="clr-namespace:CBHK.Utility.Data">
 
     <controls:BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-    <dataUtility:MetaTypeToComboBoxItemsConverter x:Key="MetaTypeToComboBoxItemsConverter" />
     <dataUtility:EnumMemberToTextComboBoxItemConverter x:Key="EnumMemberToTextComboBoxItemConverter" />
 
     <DataTemplate x:Key="AddButtonItem">

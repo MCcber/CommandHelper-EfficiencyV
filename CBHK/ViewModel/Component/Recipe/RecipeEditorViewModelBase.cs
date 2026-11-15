@@ -51,28 +51,28 @@ namespace CBHK.ViewModel.Component.Recipe
         public RecipeSlotViewModel ResultSlot { get; protected set; }
 
         [ObservableProperty]
-        private bool _multiSelect;
+        private bool multiSelect;
 
         [ObservableProperty]
-        private bool _shaped;
+        private bool shaped;
 
         [ObservableProperty]
-        private string _groupName = "";
+        private string groupName = "";
 
         [ObservableProperty]
-        private string _fileName = "";
+        private string fileName = "";
 
         [ObservableProperty]
-        private decimal _count = 1;
+        private decimal count = 1;
 
         [ObservableProperty]
-        private decimal _experience;
+        private decimal experience;
 
         [ObservableProperty]
-        private decimal _cookingtime = 10;
+        private decimal cookingtime = 10;
 
         [ObservableProperty]
-        private string _trimPattern = "";
+        private string trimPattern = "";
 
         /// <summary>
         /// 当前选中的配方格式，决定 JSON 的字段写法

@@ -8,8 +8,8 @@ namespace CBHK.Model.Data
     {
         public ObservableCollection<InlineData> InlineList { get; set; }
 
-        private string _fullTextCache;
-        public string FullTextCache => _fullTextCache ??= string.Concat(InlineList.Select(x => x.Text));
+        private string fullTextCache;
+        public string FullTextCache => fullTextCache ??= string.Concat(InlineList.Select(x => x.Text));
         
         public bool IsSelected { get; set; }
         public Brush MemberBrush { get; set; } = Brushes.White;

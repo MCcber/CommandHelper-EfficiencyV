@@ -36,27 +36,27 @@ namespace CBHK.ViewModel.Generator
         /// 分页框架
         /// </summary>
         [ObservableProperty]
-        private DependencyObject _frame = null;
+        private DependencyObject frame = null;
         /// <summary>
         /// 主页
         /// </summary>
         [ObservableProperty]
-        private HomePageView _homePage = new();
+        private HomePageView homePage = new();
         /// <summary>
         /// 属性设置页
         /// </summary>
         [ObservableProperty]
-        private DatapackGenerateSetupPageView _datapackGenerateSetupPage = null;
+        private DatapackGenerateSetupPageView datapackGenerateSetupPage = null;
         /// <summary>
         /// 模板选择页
         /// </summary>
         [ObservableProperty]
-        private TemplateSelectPageView _templateSelectPage = null;
+        private TemplateSelectPageView templateSelectPage = null;
         /// <summary>
         /// 编辑页
         /// </summary>
         [ObservableProperty]
-        private EditPageView _editPage = null;
+        private EditPageView editPage = null;
         #endregion
 
         public DatapackViewModel()

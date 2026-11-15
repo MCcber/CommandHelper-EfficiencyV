@@ -1,4 +1,4 @@
-﻿using CBHK.Model.Constant;
+using CBHK.Model.Constant;
 using CBHK.Utility.Visual;
 using System.Windows;
 using System.Windows.Controls;
@@ -85,7 +85,8 @@ namespace CBHK.CustomControl.VectorButton
             SolidColorBrush targetBrush = !IsManualBackground ? ThemeBackground as SolidColorBrush : Background as SolidColorBrush;
             if (targetBrush is not null)
             {
-                Foreground = new SolidColorBrush(ColorTool.GetOptimalForeground(targetBrush.Color));
+                // 不再按背景明暗自动算前景色（深底白字/浅底黑字）：文字颜色交给样式和继承的
+                // CommonForeground，避免主题或自定义配色变化时被算成与设计不一致的颜色。
                 BorderCornerBrush = OriginBorderCornerBrush = new SolidColorBrush(ColorTool.Lighten(targetBrush.Color, 0.4f));
                 RoundBorderBrush = OriginRoundBorderBrush = new SolidColorBrush(ColorTool.Lighten(targetBrush.Color, 0.2f));
                 BottomBorderBrush = new SolidColorBrush(ColorTool.Darken(targetBrush.Color, 0.5f));

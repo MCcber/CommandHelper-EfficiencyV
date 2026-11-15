@@ -24,9 +24,9 @@ namespace CBHK.ViewModel.Component.Recipe
             this.eventAggregator = eventAggregator;
 
             Slot.EnsureTagSlots();
-            _currentKey = owner.ResolveSlotKey(slot);
-            _currentTag = Slot.Tags.Count > 0 ? Slot.Tags[0] : "";
-            _selectedIndex = 0;
+            currentKey = owner.ResolveSlotKey(slot);
+            currentTag = Slot.Tags.Count > 0 ? Slot.Tags[0] : "";
+            selectedIndex = 0;
 
             ItemsView = new ListCollectionView(Slot.Items)
             {
@@ -41,16 +41,16 @@ namespace CBHK.ViewModel.Component.Recipe
         public RecipeSlotViewModel Slot { get; }
 
         [ObservableProperty]
-        private string _currentKey = "";
+        private string currentKey = "";
 
         [ObservableProperty]
-        private string _currentTag = "";
+        private string currentTag = "";
 
         [ObservableProperty]
-        private string _searchText = "";
+        private string searchText = "";
 
         [ObservableProperty]
-        private int _selectedIndex;
+        private int selectedIndex;
 
         /// <summary>
         /// 过滤后的槽位物品视图
@@ -63,7 +63,7 @@ namespace CBHK.ViewModel.Component.Recipe
         /// 列表选中项：切换时把上一个物品的 Tag 写回并载入新物品的 Tag
         /// </summary>
         [ObservableProperty]
-        private ItemStructure _selectedItem;
+        private ItemStructure selectedItem;
 
         public IRelayCommand UpdateAndCloseCommand { get; }
         public IRelayCommand<ItemStructure> DeleteItemCommand { get; }

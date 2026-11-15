@@ -64,19 +64,19 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationView
 
         #region 存储解决方案的保存路径
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedSolutionPath;
+        private VectorTextComboBoxItem selectedSolutionPath;
         #endregion
 
         #region 解决方案名称为空时的提示可见性
         [ObservableProperty]
-        private Visibility _solutionNameIsNull = Visibility.Hidden;
+        private Visibility solutionNameIsNull = Visibility.Hidden;
         #endregion
 
         #region 生成路径、描述等数据
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _generatorPathList = [];
+        public ObservableCollection<VectorTextComboBoxItem> generatorPathList = [];
         [ObservableProperty]
-        public string _description = "";
+        public string description = "";
         #endregion
 
         #endregion

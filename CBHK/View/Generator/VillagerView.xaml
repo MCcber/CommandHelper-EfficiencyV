@@ -50,6 +50,12 @@
             CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}" />
     </Window.InputBindings>
 
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:CallMethodAction MethodName="Villager_Loaded" TargetObject="{Binding}" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -101,6 +107,7 @@
                 Title="版本"
                 MinWidth="100"
                 HorizontalAlignment="Left"
+                ArrowMargin="2"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"
@@ -190,27 +197,25 @@
                         Foreground="White"
                         Text="交易" />
                     <VectorButton:VectorFlatIconButton
-                        Width="30"
-                        Height="30"
-                        Margin="0,5,0,0"
+                        Width="40"
+                        Height="40"
                         HorizontalAlignment="Right"
                         Command="{Binding ClearTransactionItemCommand}"
                         DockPanel.Dock="Right"
                         Icon="{StaticResource CloseMark}"
-                        IconBrush="White"
-                        IconHeight="10"
-                        IconWidth="10"
+                        IconBrush="{DynamicResource CommonForeground}"
                         Style="{DynamicResource VectorFlatIconButtonStyle}" />
-                    <VectorButton:VectorFlatImageButton
-                        Margin="0,5,0,0"
+                    <VectorButton:VectorFlatIconButton
+                        Width="40"
+                        Height="40"
                         HorizontalAlignment="Right"
                         Command="{Binding AddTransactionItemCommand}"
                         DockPanel.Dock="Right"
-                        Image="/Resource/Common/Image/WhiteEdit.png"
-                        ImageMargin="5"
+                        Foreground="{DynamicResource CommonForeground}"
+                        Icon="{DynamicResource EditMark}"
                         RenderOptions.BitmapScalingMode="NearestNeighbor"
                         RenderOptions.EdgeMode="Aliased"
-                        Style="{DynamicResource VectorFlatImageButtonStyle}" />
+                        Style="{DynamicResource VectorFlatIconButtonStyle}" />
                 </DockPanel>
                 <Container:VectorScrollViewer
                     Grid.Row="1"
@@ -244,9 +249,7 @@
                                 VerticalAlignment="Top"
                                 Command="{Binding CloseTransactionPanelCommand}"
                                 Icon="{StaticResource CloseMark}"
-                                IconBrush="White"
-                                IconHeight="10"
-                                IconWidth="10"
+                                IconBrush="{DynamicResource CommonForeground}"
                                 Style="{DynamicResource VectorFlatIconButtonStyle}" />
                             <Grid Margin="10,20,10,5">
                                 <Grid.RowDefinitions>
@@ -452,6 +455,7 @@
                         Title="种类"
                         Grid.Column="0"
                         AllowDrop="False"
+                        ArrowMargin="2"
                         ItemsSource="{Binding VillagerTypeSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerType, Mode=TwoWay}"
@@ -460,6 +464,7 @@
                         Title="职业"
                         Grid.Column="1"
                         AllowDrop="False"
+                        ArrowMargin="2"
                         ItemsSource="{Binding VillagerProfessionTypeSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerProfessionType, Mode=TwoWay}"
@@ -468,6 +473,7 @@
                         Title="交易等级"
                         Grid.Column="2"
                         AllowDrop="False"
+                        ArrowMargin="2"
                         ItemsSource="{Binding VillagerLevelSource}"
                         SelectedIndex="0"
                         SelectedItem="{Binding VillagerLevel, Mode=TwoWay}"
@@ -743,6 +749,7 @@
                                 <VectorComboBox:VectorTextComboBox
                                     Title="搜索言论类型"
                                     Grid.Column="1"
+                                    ArrowMargin="2"
                                     Foreground="White"
                                     ItemsSource="{Binding GossipTypeList}"
                                     SelectedIndex="0"
@@ -881,6 +888,7 @@
                                 Grid.ColumnSpan="3"
                                 AllowDrop="False"
                                 ArrowBrush="White"
+                                ArrowMargin="2"
                                 BorderThickness="0"
                                 Foreground="White"
                                 ItemsSource="{Binding DimensionTypeSource}"
@@ -926,6 +934,7 @@
                                 Grid.ColumnSpan="3"
                                 AllowDrop="False"
                                 ArrowBrush="White"
+                                ArrowMargin="2"
                                 BorderThickness="0"
                                 Foreground="White"
                                 ItemsSource="{Binding DimensionTypeSource}"
@@ -972,6 +981,7 @@
                                 Grid.ColumnSpan="3"
                                 AllowDrop="False"
                                 ArrowBrush="White"
+                                ArrowMargin="2"
                                 BorderThickness="0"
                                 Foreground="White"
                                 ItemsSource="{Binding DimensionTypeSource}"

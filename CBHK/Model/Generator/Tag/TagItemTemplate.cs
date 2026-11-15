@@ -1,26 +1,19 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using System.Windows.Media;
 
 namespace CBHK.Model.Generator.Tag
 {
     /// <summary>
     /// 载入成员的属性模板
-    /// </summary
-    public class TagItemTemplate: ObservableObject
+    /// </summary>
+    public class TagItemTemplate : ObservableObject
     {
-        private SolidColorBrush background = null;
-        public SolidColorBrush Background
-        {
-            get => background;
-            set => SetProperty(ref background, value);
-        }
-
         public Uri Icon { get; set; }
         public string DataType { get; set; }
         public string DisplayId { get; set; }
         public string DisplayName { get; set; }
 
+        /// <summary>选中态：行首的勾与导出时是否收进 values 都看这一个标记。</summary>
         private bool? beChecked = false;
         public bool? BeChecked
         {

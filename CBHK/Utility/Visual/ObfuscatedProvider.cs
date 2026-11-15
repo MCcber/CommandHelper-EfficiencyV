@@ -10,7 +10,7 @@ namespace CBHK.Utility.Visual
         #region Field
         // 使用弱引用防止内存泄露
         private static readonly HashSet<WeakReference<Run>> RegisteredRuns = [];
-        private static readonly Random _rng = new();
+        private static readonly Random rng = new();
         private const string CharPool = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()+-=";
         #endregion
 

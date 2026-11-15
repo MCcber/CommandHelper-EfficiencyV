@@ -561,12 +561,20 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (Equals(selectedEnumOption, value)) return;
                 selectedEnumOption = value;
                 OnPropertyChanged();
-                // union 行上镜像的枚举分支选「（未设置）」= 这个键整个不存在：走 union 的 unset 出口
-                // （删键 + 清分支镜像 + 回未设置），否则这个选项点了没反应、行上却显示（未设置）
-                if (Type?.Kind == McdocTypeKind.Union && !SuppressValueNotifications
-                    && McdocUnionSwitch.IsUnsetOption(value)
-                    && McdocUnionSwitch.SwitchTo(this, value))
+                // 「（未设置）」= 这个键整个不存在，**绝不能把哨兵的 -1 当成值写进文档**
+                // （现场：display.title.font 选了（未设置），JSON 里留下 "font": "-1"）。
+                if (!SuppressValueNotifications && McdocUnionSwitch.IsUnsetOption(value))
                 {
+                    // union 行上镜像的枚举分支：走 union 的 unset 出口（删键 + 清分支镜像 + 回未设置）
+                    if (Type?.Kind == McdocTypeKind.Union && McdocUnionSwitch.SwitchTo(this, value)) return;
+                    // 其余可选标量（裸枚举 / #[id] 下拉）：与"清空编辑器"同一个出口 —— 删键
+                    if (IsMapEntry)
+                    {
+                        McdocCollectionEditor.Default.UnsetEntryValue(this);
+                        RaiseValueChanged();
+                        return;
+                    }
+                    McdocCollectionEditor.Default.ApplyEmptyValue(this);
                     return;
                 }
                 ValueChanged?.Invoke(this);

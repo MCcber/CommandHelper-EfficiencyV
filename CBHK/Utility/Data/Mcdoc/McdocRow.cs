@@ -102,6 +102,36 @@ namespace CBHK.Utility.Data.Mcdoc
         public McdocRowKind? KindOverride => kindOverride;
 
         public Thickness Indent => new(Depth * 16.0, 0, 0, 0);
+
+        /// <summary>
+        /// 祖先竖线的总宽度：每层占 16px（与 <see cref="Indent"/> 的层宽一致），
+        /// 行容器按这个宽度铺一条节距 16px 的竖线画刷，就得到"逐层一条竖线"的效果。
+        /// <para>
+        /// AddTail / More（列表末尾的 ⊕ 行、"再多显示"行）要**少画最深那一格**：
+        /// 那一格竖线在它旁边没有东西可连（它下面就是行尾），看着像根悬空的孤儿线；
+        /// 而父级那条一直延伸下来的竖线要留着，否则整条分支在这里突然断掉。
+        /// </para>
+        /// </summary>
+        public double AncestorLineWidth
+            => Kind is McdocRowKind.AddTail or McdocRowKind.More
+                ? Math.Max(0, Depth - 1) * 16.0
+                : Depth * 16.0;
+
+        /// <summary>
+        /// 子级连线的横坐标：下一层竖线在"自己这一格"的右边一格（每格 16px，线在格中 7.5~8.5）。
+        /// 父行亲自画"中线 → 行底"这半截，子行那条竖线才像是从父行中线接出来的，而不是凭空从行边界长出来。
+        /// </summary>
+        public Thickness ChildGuideMargin => new(Depth * 16.0 + 7.5, 0, 0, 0);
+
+        /// <summary>
+        /// 子级连线只在"真的展开、且下面确实有子行"时画；折叠态下面什么都没有，不能留半截悬空的线。
+        /// AddTail/More 是列表末尾的入口伪行 —— 它们借的是父列表节点的 Node（本身当然"有子级且展开"），
+        /// 所以要显式排除，否则最后那行 ⊕ 底下会多出半截线。
+        /// </summary>
+        public Visibility ChildGuideVisibility
+            => Kind is McdocRowKind.AddTail or McdocRowKind.More
+                ? Visibility.Hidden
+                : (IsExpanded && HasChildren ? Visibility.Visible : Visibility.Hidden);
         public string Label => IsListChild
             ? McdocPresenterRegistry.Default.ChildLabel(Node.Parent, Index)
             : Head.Label;
@@ -137,16 +167,40 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 // 文档里没有这个键、也不是必选：只有一行 ⊕，不许有展开按钮（缺省字段不摊开子级）
                 if (!Node.IsRequired && Node.Json is null) return false;
-                // 必选却还没有值：这一行没有编辑器、也没有 ⊕，展开是它**唯一**的入口 ——
-                // 必须给箭头，点开按声明摊开子字段行（缺值的子行各自挂"缺少必填键"）。
-                if (Node.Json is null) return true;
                 var presenter = McdocPresenterRegistry.Default;
+                // 必选却还没有值：这一行没有编辑器、也没有 ⊕，展开是它**唯一**的入口 ——
+                // 按声明摊开子字段行（缺值的子行各自挂"缺少必填键"）。
+                // 但"能不能摊开"仍要问表现器：union 行只跟**当前选中分支**走，
+                // 标量支 / unset 摊开什么都没有，不能挂一个点了没反应的箭头（display.title / description 现场）。
+                if (Node.Json is null) return presenter.CanHaveChildren(Node);
                 if (presenter.Children(Node).Count > 0) return true;
                 // 建过且确实空的节点不再猜"可能能装"，免得留一个点不开的死箭头
                 return !Node.ChildrenBuilt && presenter.CanHaveChildren(Node);
             }
         }
         public Visibility ExpanderVisibility => HasChildren ? Visibility.Visible : Visibility.Hidden;
+
+        /// <summary>
+        /// 名称底色板只给"字段名"用：新键输入行（占位行）那一格显示的是"要新建的键"，旁边就是键输入框，
+        /// 再套一层圆角底板既没意义、又把可编辑的格式和只读的字段名混成一种样子。
+        /// </summary>
+        public Visibility KeyPlateVisibility
+            => Kind == McdocRowKind.Placeholder ? Visibility.Collapsed : Visibility.Visible;
+
+        /// <summary>
+        /// 名称底板要跨几列：**没有编辑器**的行（结构/容器字段）右边那一列是空的（只占 2px 错误框），
+        /// 不跨过去的话底板右沿到最近那颗按钮之间会白出 10px，看着像"没接上"。
+        /// 跨列之后底板的右沿正好落在动作列开头。
+        /// </summary>
+        public int KeyPlateColumnSpan
+            => Head.EditorKind == McdocEditorKind.None ? 2 : 1;
+
+        /// <summary>
+        /// 动作组左边那 4px 间距：前面有编辑器时是"编辑器 ↔ 按钮"的间隔；
+        /// 前面什么都没有（无编辑器的行）时不留，否则底板的右沿仍旧接不上按钮。
+        /// </summary>
+        public Thickness ActionGroupMargin
+            => Head.EditorKind == McdocEditorKind.None ? new Thickness(0) : new Thickness(4, 0, 0, 0);
 
         /// <summary>展开/折叠：行内模板按钮绑这个（控件自身不该带选中态逻辑）。</summary>
         public System.Windows.Input.ICommand ToggleExpandedCommand
@@ -161,6 +215,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 Node.IsExpanded = value;
                 McdocExpandState.Set(Node.JsonPath, value);
                 OnPropertyChanged();
+                // 子级连线的可见性跟着折叠态走（半截线不能留在折叠的父行下面）
+                OnPropertyChanged(nameof(ChildGuideVisibility));
                 projector?.SpliceExpansion(this);
             }
         }
@@ -730,8 +786,14 @@ namespace CBHK.Utility.Data.Mcdoc
 
 
 
-        /// <summary>条目行常驻"重命名"入口（键以只读标签显示，改名要点它）。</summary>
-        public Visibility RenameVisibility => Node.IsMapEntry ? Visibility.Visible : Visibility.Collapsed;
+        /// <summary>
+        /// 条目行常驻"重命名"入口（键以只读标签显示，改名要点它）。
+        /// 但键来自**固定候选表**（<see cref="McdocTreeNode.UseKeySelect"/>，例如 components 的 component id、
+        /// attributes 的 environment_attribute）时不给：那种键代表的是"类型 / 注册表成员"，不是随便起的名字，
+        /// 改成任意文本当场就是非法文档（现场：minecraft:additional_trade_cost 这种条目行挂着改名铅笔）。
+        /// </summary>
+        public Visibility RenameVisibility
+            => Node.IsMapEntry && !Node.UseKeySelect ? Visibility.Visible : Visibility.Collapsed;
         /// <summary>键下拉只给"新键占位行"，以及条目行正在重命名的时候。</summary>
         public Visibility KeyComboVisibility
             => Node.UseKeySelect && (!Node.IsMapEntry || IsRenamingKey) ? Visibility.Visible : Visibility.Collapsed;
@@ -799,6 +861,8 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             if (args.PropertyName == nameof(McdocTreeNode.SelectedEnumOption) && Node.AllowCustomValue)
             {
+                // （未设置）哨兵永不落盘：它代表"这个键不存在"，写 -1 进文档是错的（节点自己已经走删键出口）
+                if (McdocUnionSwitch.IsUnsetOption(Node.SelectedEnumOption)) return;
                 // 从候选里选了一项：把值同步到 Node.Value（同一个写回出口），输入框才不会"弹回"
                 var text = Convert.ToString(Node.SelectedEnumOption?.Value?.LiteralValue)
                     ?? Convert.ToString(Node.SelectedEnumOption?.Name) ?? "";

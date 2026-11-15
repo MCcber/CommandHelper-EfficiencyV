@@ -14,39 +14,39 @@
     <data:EnumMemberToTextComboBoxItemConverter x:Key="McdocChromeComboConverter" />
 
     <DataTemplate x:Key="McdocGeneratorChrome">
-        <StackPanel
+        <DockPanel
             Margin="2,2,2,0"
-            VerticalAlignment="Center"
-            Orientation="Horizontal">
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center">
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
                 Width="150"
-                Height="26"
+                Height="35"
                 VerticalAlignment="Center"
                 ItemsSource="{Binding GameVersionOptions, Converter={StaticResource McdocChromeComboConverter}}"
                 SelectedItem="{Binding SelectedGameVersionOption, Converter={StaticResource McdocChromeComboConverter}}"
                 Style="{DynamicResource VectorTextComboBoxStyle}"
                 ToolTip="切换游戏版本：按新版本的 #[since]/#[until] 重新求值，文档内容保留" />
             <VectorButton:VectorTextButton
-                Height="26"
+                Height="35"
                 Margin="8,0,0,0"
                 Padding="10,0"
                 VerticalAlignment="Center"
                 Command="{Binding CopyJsonCommand}"
-                OriginBottomHeight="2"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="复制"
                 ToolTip="复制当前 JSON（Ctrl+Shift+C）" />
             <VectorButton:VectorTextButton
-                Height="26"
+                Height="35"
                 Margin="6,0,0,0"
                 Padding="10,0"
                 VerticalAlignment="Center"
                 Command="{Binding SaveJsonCommand}"
-                OriginBottomHeight="2"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="保存"
                 ToolTip="另存 JSON（Ctrl+S）" />
-        </StackPanel>
+        </DockPanel>
     </DataTemplate>
 </ResourceDictionary>

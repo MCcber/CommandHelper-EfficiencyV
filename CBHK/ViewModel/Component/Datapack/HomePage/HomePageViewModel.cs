@@ -64,13 +64,13 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         /// 搜索历史解决方案文本
         /// </summary>
         [ObservableProperty]
-        private string _searchText = "";
+        private string searchText = "";
 
         /// <summary>
         /// 近期内容父级日期节点
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<TreeViewItem> _recentContentDateItemList =
+        public ObservableCollection<TreeViewItem> recentContentDateItemList =
                 [
                     new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "已固定",Tag = "Fixed",IsExpanded = true,Visibility = Visibility.Collapsed},
                     new TreeViewItem() { Margin = new Thickness(0,2,0,0), Header = "一天内",Tag = "ToDay",IsExpanded = true,Visibility = Visibility.Collapsed},
@@ -84,19 +84,19 @@ namespace CBHK.ViewModel.Component.Datapack.HomePage
         /// 搜索结果数据源
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<FrameworkElement> _recentItemSearchResults = [];
+        private ObservableCollection<FrameworkElement> recentItemSearchResults = [];
 
         /// <summary>
         /// 历史内容节点视图可见性
         /// </summary>
         [ObservableProperty]
-        private Visibility _recentItemTreeViewVisibility = Visibility.Visible;
+        private Visibility recentItemTreeViewVisibility = Visibility.Visible;
 
         /// <summary>
         /// 搜索结果视图可见性
         /// </summary>
         [ObservableProperty]
-        private Visibility _searchResultViewerVisibility = Visibility.Collapsed;
+        private Visibility searchResultViewerVisibility = Visibility.Collapsed;
 
         public MessagePopup MessagePopup { get; set; }
         #endregion

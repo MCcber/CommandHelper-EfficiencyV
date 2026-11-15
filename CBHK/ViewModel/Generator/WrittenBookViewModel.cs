@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.Input;
+using CBHK.CustomControl.Input;
 using CBHK.CustomControl.TextElement;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Interface.Visual;
@@ -36,10 +36,6 @@ namespace CBHK.ViewModel.Generator
     public partial class WrittenBookViewModel(IContainerProvider container, MainView mainView) : ObservableObject, IPageViewModel
     {
         #region Field
-        /// <summary>
-        /// 拾色器
-        /// </summary>
-        private VectorColorPicker colorPicker;
         /// <summary>
         /// 成书编辑框引用
         /// </summary>
@@ -170,7 +166,7 @@ namespace CBHK.ViewModel.Generator
         /// 被选择文本的字体颜色
         /// </summary>
         [ObservableProperty]
-        private SolidColorBrush selectionColor = new(Color.FromRgb(0,0,0));
+        private Color selectionColor = Color.FromRgb(0, 0, 0);
         /// <summary>
         /// 当前页码与总页数数据
         /// </summary>
@@ -195,7 +191,7 @@ namespace CBHK.ViewModel.Generator
 
         #region 版本数据源与已选择版本
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+        public ObservableCollection<VectorTextComboBoxItem> versionSource = [
             new VectorTextComboBoxItem() { Text = "1.20.5+" },
             new VectorTextComboBoxItem() { Text = "1.12" }
             ];
@@ -922,7 +918,7 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void SetSelectionColor()
         {
-            TextPointer currentStart = null,currentEnd = null;
+            TextPointer currentStart, currentEnd;
             if (WrittenBookEditor.Selection.Start == WrittenBookEditor.Selection.End)
             {
                 currentStart = SelectionStart;
@@ -935,7 +931,7 @@ namespace CBHK.ViewModel.Generator
             }
             WrittenBookEditor.Selection.Select(currentStart, currentEnd);
             TextRange textRange = new(WrittenBookEditor.Selection.Start, WrittenBookEditor.Selection.End);
-            textRange.ApplyPropertyValue(TextBlock.ForegroundProperty, new SolidColorBrush(colorPicker.SelectedColor));
+            textRange.ApplyPropertyValue(TextBlock.ForegroundProperty, new SolidColorBrush(SelectionColor));
         }
 
         /// <summary>
@@ -990,8 +986,15 @@ namespace CBHK.ViewModel.Generator
         /// <param name="e"></param>
         public void ColorPickerLoaded(object sender, RoutedEventArgs e)
         {
-            colorPicker = sender as VectorColorPicker;
-            colorPicker.SelectedColorGridMouseLeftButtonUpCallBack = SetSelectionColor;
+            if (sender is VectorColorPicker picker)
+            {
+                // 拖动过程中就要把颜色刷到选区：SelectedColor 是 TwoWay 实时变的，
+                // 只挂"交互结束"那条通知，表现就是"松手才见颜色"。
+                picker.UpdateSelectedColorCallBack = _ => SetSelectionColor();
+                // 松手再补一次，保证最终值落到选区（先退订再订阅：Loaded 可能被调多次）
+                picker.SelectedColorChanged -= SetSelectionColor;
+                picker.SelectedColorChanged += SetSelectionColor;
+            }
         }
 
         /// <summary>

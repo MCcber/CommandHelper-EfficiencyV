@@ -1377,6 +1377,48 @@ namespace CBHK.ViewModel.Generator
         }
 
 
+        /// <summary>
+        /// 文档根 JSON → 命令里那段 NBT：压成单行、剥掉最外层花括号、把"本来就合法"的键去引号。
+        /// 物品页与实体页共用这一份 —— 之前各自抄，抄漏一处就是"填了内容生成出来还是裸对象"。
+        /// </summary>
+        protected static string BuildNbtBody(string json)
+        {
+            string text = (json ?? string.Empty).Trim();
+            if (text.Length == 0)
+            {
+                return string.Empty;
+            }
+            try
+            {
+                using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(text);
+                // 默认编码器会把引号/中文写成 \u0022、\u4E2D —— 那不是 SNBT 的转义，命令里会变成乱码。
+                // UnsafeRelaxedJsonEscaping 只保留 JSON 必需的 \" 与 \\，中文原样带出去。
+                text = System.Text.Json.JsonSerializer.Serialize(document.RootElement, CompactJsonOptions);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // 右侧正在编辑、暂时还不是合法 JSON：只把换行压掉，别在这里抛
+                text = text.Replace("\r", " ").Replace("\n", " ");
+            }
+            // SNBT 里普通标识符不需要引号；带冒号/空格的键（如 "minecraft:custom_model_data"）必须留着引号
+            text = NbtKeyPattern.Replace(text, "$1$2$3");
+            if (text.Length >= 2 && text[0] == '{' && text[^1] == '}')
+            {
+                text = text[1..^1];
+            }
+            return text;
+        }
+
+        private static readonly System.Text.Json.JsonSerializerOptions CompactJsonOptions = new()
+        {
+            WriteIndented = false,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
+        /// <summary>能直接裸写进 SNBT 的键：字母或下划线开头，只含字母数字下划线。</summary>
+        private static readonly System.Text.RegularExpressions.Regex NbtKeyPattern =
+            new("([{,])\"([A-Za-z_][A-Za-z0-9_]*)\"(\\s*:)", System.Text.RegularExpressions.RegexOptions.Compiled);
+
         /// <summary>焦点离开行视图时把被推迟的重建 / 文本同步补跑一次（行视图与定时器都走这里）。</summary>
         public void FlushDeferredRebuild()
         {

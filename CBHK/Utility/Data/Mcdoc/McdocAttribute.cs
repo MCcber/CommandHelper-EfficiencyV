@@ -85,7 +85,7 @@ namespace CBHK.Utility.Data.Mcdoc
             // #[canonical]：spyglass 侧是空 handler（builtin.js:58-60），真正的行为硬编码在
             // simplifyUnion 里（requireCanonical 时只留带 canonical 的成员）。这里注册只为"可识别"。
             registry.Register("canonical", new McdocAttributeHandler());
-            // #[dispatcher_key="<registry>"]：候选来自该 dispatcher 的成员键（builtin.js:61-77 的 stringMocker），
+            // #[dispatcherkey="<registry>"]：候选来自该 dispatcher 的成员键（builtin.js:61-77 的 stringMocker），
             // 没有 FilterElement / MapType，取值由 McdocSelectOptions.Apply 处理。
             registry.Register("dispatcher_key", new McdocAttributeHandler());
             registry.Register("id", new McdocAttributeHandler

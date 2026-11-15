@@ -1,4 +1,4 @@
-﻿<Container:VectorWindow
+<Container:VectorWindow
     x:Class="CBHK.View.MainView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -14,13 +14,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:utility="clr-namespace:CBHK.Utility.Visual"
-    Title="CommandHelper-EfficiencyV v1.20.5"
+    Title="CommandHelper-EfficiencyV v26.4Preview2"
     Width="1020"
     Height="800"
     MinWidth="1020"
     MinHeight="800"
     prism:ViewModelLocator.AutoWireViewModel="True"
-    Background="Transparent"
     FocusVisualStyle="{x:Null}"
     Icon="/cb.ico"
     IconMargin="5"
@@ -799,7 +798,6 @@
                         OriginBottomHeight="4"
                         Style="{DynamicResource VectorTextButtonStyle}"
                         Text="点击导入文档数据" />
-                    <ItemsControl ItemTemplateSelector="{DynamicResource MetaTypeTemplateSelector}" ItemsSource="{Binding MetaTypeList}" />
                 </Grid>-->
             </Container:VectorIconTextTabItem>
         </Container:VectorTabControl>

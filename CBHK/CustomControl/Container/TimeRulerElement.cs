@@ -9,9 +9,9 @@ namespace CBHK.CustomControl.Container
     public class TimeRulerElement : FrameworkElement
     {
         #region Field
-        private readonly Pen _mainTickPen;
-        private readonly Pen _subTickPen;
-        private readonly Typeface _typeface;
+        private readonly Pen mainTickPen;
+        private readonly Pen subTickPen;
+        private readonly Typeface typeface;
         /// <summary>
         /// 定义缩放等级结构
         /// </summary>
@@ -57,13 +57,13 @@ namespace CBHK.CustomControl.Container
         public TimeRulerElement()
         {
             // 初始化画笔，冻结以提升性能
-            _mainTickPen = new Pen(new SolidColorBrush(Color.FromRgb(250,250,250)), 1);
-            _mainTickPen.Freeze();
+            mainTickPen = new Pen(new SolidColorBrush(Color.FromRgb(250,250,250)), 1);
+            mainTickPen.Freeze();
 
-            _subTickPen = new Pen(new SolidColorBrush(Color.FromRgb(250, 250, 250)), 1);
-            _subTickPen.Freeze();
+            subTickPen = new Pen(new SolidColorBrush(Color.FromRgb(250, 250, 250)), 1);
+            subTickPen.Freeze();
 
-            _typeface = new Typeface("Segoe UI");
+            typeface = new Typeface("Segoe UI");
         }
 
         // 定义你要求的缩放层级表
@@ -205,13 +205,13 @@ namespace CBHK.CustomControl.Container
                 if (isLargeTick)
                 {
                     // --- 绘制大刻度 ---
-                    drawingContext.DrawLine(_mainTickPen, new Point(renderX, 0), new Point(renderX, 15));
+                    drawingContext.DrawLine(mainTickPen, new Point(renderX, 0), new Point(renderX, 15));
 
                     // 准备文字
                     string text = FormatTimeText(currentTime);
                     FormattedText ft = new(
                         text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-                        _typeface, 10, Brushes.White, pixelsPerDip);
+                        typeface, 10, Brushes.White, pixelsPerDip);
 
                     drawingContext.DrawText(ft, new Point(renderX + 2, 16));
                 }
@@ -221,7 +221,7 @@ namespace CBHK.CustomControl.Container
                     // 只有当小刻度之间距离大于 4 像素时才画，否则糊成一团
                     if (currentLevel.SmallStepSeconds * pixelsPerSecond > 4)
                     {
-                        drawingContext.DrawLine(_subTickPen, new Point(renderX, 0), new Point(renderX, 6));
+                        drawingContext.DrawLine(subTickPen, new Point(renderX, 0), new Point(renderX, 6));
                     }
                 }
             }

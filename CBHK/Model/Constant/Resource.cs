@@ -29,22 +29,8 @@ namespace CBHK.Model.Constant
         public string ImageSetDirectoryPath { get; set; } = @"ImageSet\";
         public string MCDocumentLeadingPath { get; set; } = "Resource" + Path.DirectorySeparatorChar + "vanilla-mcdoc" + Path.DirectorySeparatorChar + "java";
         public string MCDocumentBasePath { get; set; } = @"::java";
-        public string MCDocumentEditorKey { get; set; } = Path.DirectorySeparatorChar + "data";
-        /// <summary>
-        /// 文档别名映射表
-        /// </summary>
-        //public ConcurrentDictionary<string, MetaTypeEditorFieldDTO> DocumentAliaItemMap { get; set; } = [];
-        /// <summary>
-        /// 记录所有文档的路径与对应的DTO对象的映射关系
-        /// </summary>
-        public ConcurrentDictionary<string, MetaTypeEditorFieldDTO> DocumentItemMap { get; set; } = [];
-        /// <summary>
-        /// 记录所有文档的路径与对应的use语句映射关系
-        /// </summary>
-        public ConcurrentDictionary<string, List<string>> DocumentPathItemMap { get; set; } = [];
         /// <summary>
         /// 新 mcdoc 求值管线的符号索引（由 MCDocumentFile.TypeDefList 建立）。
-        /// 与上面两张表并行存在、互不依赖：旧管线读它们，新管线只读这一份。
         /// </summary>
         public McdocTypeIndex McdocTypes { get; } = new();
 
@@ -56,11 +42,6 @@ namespace CBHK.Model.Constant
         #endregion
 
         #region Method
-        public List<string> GetVersionList()
-        {
-            return [.. RunningDataObject.Properties().Select(item => item.Name)];
-        }
-
         /// <summary>
         /// 载入一个目录下的全部注册表数据（Registries/*.json）：文件名当版本键，内容并进 RunningDataObject。
         /// Init 与探针共用这一份：探针不走 Init，但没有这批数据时 #[id] 字段会全部退化成文本框。
@@ -246,7 +227,7 @@ namespace CBHK.Model.Constant
                                     indexFailures.Add(documentFilePath + fileName + "：语言服务器没有返回内容");
                                     return;
                                 }
-                                // 新求值管线的类型索引；mod.mcdoc 的文件名是空串，这里与旧路径算法保持一致
+                                // 新求值管线的类型索引；mod.mcdoc 的文件名是空串
                                 string typeDefBasePath = documentFilePath.TrimEnd(':') + fileName;
                                 // 模块 → use 列表：引用解析的第二优先级（绝对路径 → 当前模块 → use 别名 → …）
                                 if (file.UsePathList is { Count: > 0 })
@@ -258,20 +239,6 @@ namespace CBHK.Model.Constant
                                     McdocTypes.RegisterAll(file.TypeDefList
                                         .Where(typeDef => typeDef is not null)
                                         .Select(typeDef => (typeDefBasePath + "::" + (typeDef.Name ?? typeDef.MetaTypeName ?? ""), typeDef)));
-                                }
-                                if (file.RootList is not null)
-                                {
-                                    //添加文件引用路径
-                                    DocumentPathItemMap.TryAdd(documentFilePath + fileName, file.UsePathList);
-
-                                    for (int j = 0; j < file.RootList.Count; j++)
-                                    {
-                                        //添加DTO模板
-                                        string documentItemPath = documentFilePath + fileName + "::" + file.RootList[j].FieldName;
-                                        documentFilePath = documentFilePath.TrimEnd(':');
-                                        file.RootList[j].Path = new(documentItemPath);
-                                        DocumentItemMap.TryAdd(documentItemPath, file.RootList[j]);
-                                    }
                                 }
                             }
                             finally

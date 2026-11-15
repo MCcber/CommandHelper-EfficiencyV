@@ -50,7 +50,7 @@ namespace CBHK.ViewModel.Generator
         /// 刷怪笼标签页集合
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorRichTabItem> _spawnerPageList =
+        public ObservableCollection<VectorRichTabItem> spawnerPageList =
         [
             new VectorRichTabItem()
             {
@@ -65,19 +65,19 @@ namespace CBHK.ViewModel.Generator
         /// 已选中的刷怪笼
         /// </summary>
         [ObservableProperty]
-        private VectorRichTabItem _selectedItem = null;
+        private VectorRichTabItem selectedItem = null;
 
         /// <summary>
         /// 显示结果
         /// </summary>
         [ObservableProperty]
-        private bool _showResult = false;
+        private bool showResult = false;
 
         /// <summary>
         /// 选中版本以及版本数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+        public ObservableCollection<VectorTextComboBoxItem> versionSource = [
             new VectorTextComboBoxItem() { Text = "1.20.5" },
             new VectorTextComboBoxItem() { Text = "1.12.0" }
         ];

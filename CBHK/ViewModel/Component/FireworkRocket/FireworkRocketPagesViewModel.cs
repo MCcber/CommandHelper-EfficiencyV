@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.Input;
+using CBHK.CustomControl.Input;
 using CBHK.CustomControl.VectorButton;
 using CBHK.CustomControl.VectorCheckBox;
 using CBHK.CustomControl.VectorComboBox;
@@ -102,19 +102,19 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// 已选版本
         /// </summary>
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem selectedVersion;
 
         /// <summary>
         /// 版本数据源
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
+        private ObservableCollection<VectorTextComboBoxItem> versionSource = [];
 
         /// <summary>
         /// 形状数据源
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<VectorTextComboBoxItem> _shapeList = [];
+        private ObservableCollection<VectorTextComboBoxItem> shapeList = [];
 
         /// <summary>
         /// 给予烟花
@@ -164,7 +164,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// 时长
         /// </summary>
         [ObservableProperty]
-        private double _duration = 1;
+        private double duration = 1;
 
         #region 时长字符串
         private string FireworkDurationString
@@ -191,7 +191,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
 
         #region 已飞行刻数
         [ObservableProperty]
-        private double _life = 0;
+        private double life = 0;
         private string LifeString
         {
             get
@@ -204,7 +204,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
 
         #region 发射时长
         [ObservableProperty]
-        private double _lifeTime = 20;
+        private double lifeTime = 20;
         private string LifeTimeString
         {
             get
@@ -260,7 +260,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// 按角度飞出
         /// </summary>
         [ObservableProperty]
-        public bool _flyAngle = false;
+        public bool flyAngle = false;
         private string FlyAngleString
         {
             get
@@ -335,7 +335,7 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// 已选择的形状
         /// </summary>
         [ObservableProperty]
-        private int _selectedShape = 0;
+        private int selectedShape = 0;
         private string FireworkShapeString
         {
             get
@@ -697,7 +697,8 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         public void ColorPicker_Loaded(object sender, RoutedEventArgs e)
         {
             colorPicker = sender as VectorColorPicker;
-            colorPicker.SelectedColorGridMouseLeftButtonUpCallBack = ColorPickers_PreviewMouseLeftButtonUp;
+            colorPicker.SelectedColorChanged -= ColorPickers_PreviewMouseLeftButtonUp;
+            colorPicker.SelectedColorChanged += ColorPickers_PreviewMouseLeftButtonUp;
         }
 
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)

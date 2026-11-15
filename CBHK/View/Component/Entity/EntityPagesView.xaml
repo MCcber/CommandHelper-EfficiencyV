@@ -72,7 +72,7 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Stretch"
                 VerticalContentAlignment="Center"
-                ArrowMargin="0 0 5 0"
+                ArrowMargin="0 5 2 5"
                 ItemsSource="{Binding GameVersionOptions, Converter={StaticResource McdocChromeComboConverter}}"
                 SelectedItem="{Binding SelectedGameVersionOption, Converter={StaticResource McdocChromeComboConverter}}"
                 Style="{DynamicResource VectorTextComboBoxStyle}">
@@ -87,7 +87,7 @@
                 MinWidth="250"
                 HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
-                ArrowMargin="0 0 5 0"
+                ArrowMargin="0 5 2 5"
                 Foreground="White"
                 ItemsSource="{Binding EntityIDList, Mode=OneWay}"
                 SelectedIndex="0"

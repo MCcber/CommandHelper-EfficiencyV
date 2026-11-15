@@ -60,15 +60,42 @@
                     VerticalScrollBarVisibility="Disabled">
                     <Viewbox>
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Image
-                                Width="300"
+                            <TextBlock
+                                HorizontalAlignment="Center"
                                 VerticalAlignment="Top"
-                                Source="/CBHK;component/Resource/CBHK/Image/More/Thanks/Title.png" />
+                                FontSize="60"
+                                Text="特别鸣谢" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Top"
+                                FontSize="20"
+                                Text="SPECIAL THANKS" />
                             <DockPanel
                                 Margin="0,10,0,0"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Top"
                                 LastChildFill="False">
+                                <VectorButton:VectorFlatImageButton
+                                    Uid="0"
+                                    Width="200"
+                                    Height="136"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding GoToWebSiteCommand}"
+                                    CommandParameter="{Binding Uid, RelativeSource={RelativeSource Mode=Self}}"
+                                    Style="{DynamicResource VectorFlatImageButtonStyle}">
+                                    <behaviors:Interaction.Triggers>
+                                        <behaviors:EventTrigger EventName="Loaded">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberHeadLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                        <behaviors:EventTrigger EventName="MouseEnter">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseHoverCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                        <behaviors:EventTrigger EventName="MouseLeave">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseLeaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                    </behaviors:Interaction.Triggers>
+                                </VectorButton:VectorFlatImageButton>
                                 <VectorButton:VectorFlatImageButton
                                     Uid="1"
                                     Width="200"
@@ -76,7 +103,7 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Command="{Binding GoToWebSiteCommand}"
-                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                                    CommandParameter="{Binding Uid, RelativeSource={RelativeSource Mode=Self}}"
                                     Style="{DynamicResource VectorFlatImageButtonStyle}">
                                     <behaviors:Interaction.Triggers>
                                         <behaviors:EventTrigger EventName="Loaded">
@@ -91,102 +118,13 @@
                                     </behaviors:Interaction.Triggers>
                                 </VectorButton:VectorFlatImageButton>
                                 <VectorButton:VectorFlatImageButton
-                                    Uid="9"
+                                    Uid="2"
                                     Width="200"
                                     Height="136"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Command="{Binding GoToWebSiteCommand}"
-                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                    Style="{DynamicResource VectorFlatImageButtonStyle}">
-                                    <behaviors:Interaction.Triggers>
-                                        <behaviors:EventTrigger EventName="Loaded">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberHeadLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                        <behaviors:EventTrigger EventName="MouseEnter">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseHoverCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                        <behaviors:EventTrigger EventName="MouseLeave">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseLeaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                    </behaviors:Interaction.Triggers>
-                                </VectorButton:VectorFlatImageButton>
-                                <VectorButton:VectorFlatImageButton
-                                    Uid="7"
-                                    Width="200"
-                                    Height="136"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Command="{Binding GoToWebSiteCommand}"
-                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                    Style="{DynamicResource VectorFlatImageButtonStyle}">
-                                    <behaviors:Interaction.Triggers>
-                                        <behaviors:EventTrigger EventName="Loaded">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberHeadLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                        <behaviors:EventTrigger EventName="MouseEnter">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseHoverCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                        <behaviors:EventTrigger EventName="MouseLeave">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseLeaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                    </behaviors:Interaction.Triggers>
-                                </VectorButton:VectorFlatImageButton>
-                            </DockPanel>
-                            <DockPanel
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Top"
-                                LastChildFill="False">
-                                <VectorButton:VectorFlatImageButton
-                                    Uid="4"
-                                    Width="200"
-                                    Height="136"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Command="{Binding GoToWebSiteCommand}"
-                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                    Style="{DynamicResource VectorFlatImageButtonStyle}">
-                                    <behaviors:Interaction.Triggers>
-                                        <behaviors:EventTrigger EventName="Loaded">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberHeadLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                        <behaviors:EventTrigger EventName="MouseEnter">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseHoverCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                        <behaviors:EventTrigger EventName="MouseLeave">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseLeaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                    </behaviors:Interaction.Triggers>
-                                </VectorButton:VectorFlatImageButton>
-                                <VectorButton:VectorFlatImageButton
-                                    Uid="5"
-                                    Width="200"
-                                    Height="136"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Command="{Binding GoToWebSiteCommand}"
-                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                    Style="{DynamicResource VectorFlatImageButtonStyle}">
-                                    <behaviors:Interaction.Triggers>
-                                        <behaviors:EventTrigger EventName="Loaded">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberHeadLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                        <behaviors:EventTrigger EventName="MouseEnter">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseHoverCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                        <behaviors:EventTrigger EventName="MouseLeave">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseLeaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                    </behaviors:Interaction.Triggers>
-                                </VectorButton:VectorFlatImageButton>
-                                <VectorButton:VectorFlatImageButton
-                                    Uid="6"
-                                    Width="200"
-                                    Height="136"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Command="{Binding GoToWebSiteCommand}"
-                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                                    CommandParameter="{Binding Uid, RelativeSource={RelativeSource Mode=Self}}"
                                     Style="{DynamicResource VectorFlatImageButtonStyle}">
                                     <behaviors:Interaction.Triggers>
                                         <behaviors:EventTrigger EventName="Loaded">
@@ -212,7 +150,96 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Command="{Binding GoToWebSiteCommand}"
-                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                                    CommandParameter="{Binding Uid, RelativeSource={RelativeSource Mode=Self}}"
+                                    Style="{DynamicResource VectorFlatImageButtonStyle}">
+                                    <behaviors:Interaction.Triggers>
+                                        <behaviors:EventTrigger EventName="Loaded">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberHeadLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                        <behaviors:EventTrigger EventName="MouseEnter">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseHoverCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                        <behaviors:EventTrigger EventName="MouseLeave">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseLeaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                    </behaviors:Interaction.Triggers>
+                                </VectorButton:VectorFlatImageButton>
+                                <VectorButton:VectorFlatImageButton
+                                    Uid="4"
+                                    Width="200"
+                                    Height="136"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding GoToWebSiteCommand}"
+                                    CommandParameter="{Binding Uid, RelativeSource={RelativeSource Mode=Self}}"
+                                    Style="{DynamicResource VectorFlatImageButtonStyle}">
+                                    <behaviors:Interaction.Triggers>
+                                        <behaviors:EventTrigger EventName="Loaded">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberHeadLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                        <behaviors:EventTrigger EventName="MouseEnter">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseHoverCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                        <behaviors:EventTrigger EventName="MouseLeave">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseLeaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                    </behaviors:Interaction.Triggers>
+                                </VectorButton:VectorFlatImageButton>
+                                <VectorButton:VectorFlatImageButton
+                                    Uid="5"
+                                    Width="200"
+                                    Height="136"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding GoToWebSiteCommand}"
+                                    CommandParameter="{Binding Uid, RelativeSource={RelativeSource Mode=Self}}"
+                                    Style="{DynamicResource VectorFlatImageButtonStyle}">
+                                    <behaviors:Interaction.Triggers>
+                                        <behaviors:EventTrigger EventName="Loaded">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberHeadLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                        <behaviors:EventTrigger EventName="MouseEnter">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseHoverCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                        <behaviors:EventTrigger EventName="MouseLeave">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseLeaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                    </behaviors:Interaction.Triggers>
+                                </VectorButton:VectorFlatImageButton>
+                            </DockPanel>
+                            <DockPanel
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Top"
+                                LastChildFill="False">
+                                <VectorButton:VectorFlatImageButton
+                                    Uid="6"
+                                    Width="200"
+                                    Height="136"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding GoToWebSiteCommand}"
+                                    CommandParameter="{Binding Uid, RelativeSource={RelativeSource Mode=Self}}"
+                                    Style="{DynamicResource VectorFlatImageButtonStyle}">
+                                    <behaviors:Interaction.Triggers>
+                                        <behaviors:EventTrigger EventName="Loaded">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberHeadLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                        <behaviors:EventTrigger EventName="MouseEnter">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseHoverCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                        <behaviors:EventTrigger EventName="MouseLeave">
+                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseLeaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
+                                        </behaviors:EventTrigger>
+                                    </behaviors:Interaction.Triggers>
+                                </VectorButton:VectorFlatImageButton>
+                                <VectorButton:VectorFlatImageButton
+                                    Uid="7"
+                                    Width="200"
+                                    Height="136"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding GoToWebSiteCommand}"
+                                    CommandParameter="{Binding Uid, RelativeSource={RelativeSource Mode=Self}}"
                                     Style="{DynamicResource VectorFlatImageButtonStyle}">
                                     <behaviors:Interaction.Triggers>
                                         <behaviors:EventTrigger EventName="Loaded">
@@ -233,28 +260,7 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Command="{Binding GoToWebSiteCommand}"
-                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                                    Style="{DynamicResource VectorFlatImageButtonStyle}">
-                                    <behaviors:Interaction.Triggers>
-                                        <behaviors:EventTrigger EventName="Loaded">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberHeadLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                        <behaviors:EventTrigger EventName="MouseEnter">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseHoverCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                        <behaviors:EventTrigger EventName="MouseLeave">
-                                            <behaviors:InvokeCommandAction Command="{Binding MemberButtonMouseLeaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=VectorButton:VectorFlatImageButton}}" />
-                                        </behaviors:EventTrigger>
-                                    </behaviors:Interaction.Triggers>
-                                </VectorButton:VectorFlatImageButton>
-                                <VectorButton:VectorFlatImageButton
-                                    Uid="2"
-                                    Width="200"
-                                    Height="136"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Command="{Binding GoToWebSiteCommand}"
-                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                                    CommandParameter="{Binding Uid, RelativeSource={RelativeSource Mode=Self}}"
                                     Style="{DynamicResource VectorFlatImageButtonStyle}">
                                     <behaviors:Interaction.Triggers>
                                         <behaviors:EventTrigger EventName="Loaded">

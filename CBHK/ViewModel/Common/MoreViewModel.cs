@@ -10,23 +10,22 @@ using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Common
 {
-    public partial class MoreViewModel:ObservableObject
+    public partial class MoreViewModel : ObservableObject
     {
         #region Field
         private List<string> LinkTargetList = ["https://space.bilibili.com/333868639", "https://space.bilibili.com/170651403/?spm_id_from=333.999.0.0", "https://space.bilibili.com/521673619/?spm_id_from=333.999.0.0", "https://space.bilibili.com/67131398/?spm_id_from=333.999.0.0", "https://space.bilibili.com/350848639/?spm_id_from=333.999.0.0", "https://space.bilibili.com/15174905/?spm_id_from=333.999.0.0", "https://space.bilibili.com/57030021/?spm_id_from=333.999.0.0", "https://space.bilibili.com/590541175?spm_id_from=333.337.0.0", "https://space.bilibili.com/413164365/?spm_id_from=333.999.0.0"];
         private string baseHeadLinkString = "/Resource/CBHK/Image/More/Thanks/";
-        int ColumnCount = 3;
         #endregion
 
         #region Event
         [RelayCommand]
         private void MemberHeadLoaded(object sender)
         {
-            if(sender is VectorFlatImageButton button)
+            if (sender is VectorFlatImageButton button)
             {
-                if(int.TryParse(button.Uid,out int result))
+                if (int.TryParse(button.Uid, out int result))
                 {
-                    button.Image = new BitmapImage(new Uri(baseHeadLinkString + result + ".png",UriKind.Relative));
+                    button.Image = new BitmapImage(new Uri(baseHeadLinkString + result + ".png", UriKind.Relative));
                 }
             }
         }
@@ -38,7 +37,7 @@ namespace CBHK.ViewModel.Common
             {
                 if (int.TryParse(button.Uid, out int result))
                 {
-                    button.Image = new BitmapImage(new Uri(baseHeadLinkString + result + "Hover.png",UriKind.Relative));
+                    button.Image = new BitmapImage(new Uri(baseHeadLinkString + result + "Hover.png", UriKind.Relative));
                 }
             }
         }
@@ -50,18 +49,17 @@ namespace CBHK.ViewModel.Common
         }
 
         [RelayCommand]
-        public void GoToWebSite(Button btn)
+        public void GoToWebSite(string uid)
         {
-            DockPanel dockPanel = btn.Parent as DockPanel;
-            StackPanel stackPanel = dockPanel.Parent as StackPanel;
-            int parentIndex = stackPanel.Children.IndexOf(dockPanel) - 1;
-            int LinkIndex = parentIndex * ColumnCount + dockPanel.Children.IndexOf(btn);
-            var psi = new ProcessStartInfo
+            if (int.TryParse(uid, out int index))
             {
-                FileName = LinkTargetList[LinkIndex],
-                UseShellExecute = true
-            };
-            Process.Start(psi);
+                var psi = new ProcessStartInfo
+                {
+                    FileName = LinkTargetList[index],
+                    UseShellExecute = true
+                };
+                Process.Start(psi);
+            }
         }
 
         public void ClickToJoinGroup(object sender, MouseButtonEventArgs e)
@@ -82,7 +80,7 @@ namespace CBHK.ViewModel.Common
                 UseShellExecute = true
             };
             Process.Start(psi);
-        } 
+        }
 
         #endregion
     }

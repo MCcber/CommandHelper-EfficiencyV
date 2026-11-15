@@ -1,18 +1,15 @@
-﻿using MinecraftLanguageModelLibrary.Data;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
 using CBHK.Utility.Visual;
-using MathNet.Numerics.LinearAlgebra.Factorization;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Shapes;
+using System.Windows.Shell;
 
 namespace CBHK.CustomControl.Container
 {
@@ -58,7 +55,7 @@ namespace CBHK.CustomControl.Container
         private const int HTCLOSEBUTTON = 20;
         const uint RDW_INVALIDATE = 0x0001;
         const uint RDW_UPDATENOW = 0x0100;
-        const uint RDW_FRAME = 0x0400;
+        const uint RDWframe = 0x0400;
         // 背景枚举值
         /// <summary>
         /// Mica (云母)
@@ -154,7 +151,8 @@ namespace CBHK.CustomControl.Container
         {
             [WindowThemeType.CommandBlockOrange] = Theme.CommandBlockOrangeTheme,
             [WindowThemeType.CommandBlockBlueGreen] = Theme.CommandBlockBlueGreenTheme,
-            [WindowThemeType.CommandBlockPurple] = Theme.CommandBlockPurpleTheme
+            [WindowThemeType.CommandBlockPurple] = Theme.CommandBlockPurpleTheme,
+            [WindowThemeType.Custom] = Theme.CustomTheme
         };
 
         public double TitleBarHeight
@@ -210,6 +208,52 @@ namespace CBHK.CustomControl.Container
 
         public static readonly DependencyProperty MaximizeButtonPathDataProperty =
             DependencyProperty.Register("MaximizeButtonPathData", typeof(Geometry), typeof(VectorWindow), new PropertyMetadata(default(Geometry)));
+
+        /// <summary>
+        /// 是否允许最大化。false 时：标题栏的最大化按钮隐藏、双击标题栏与系统菜单的最大化被挡掉、
+        /// Win32 样式摘掉 WS_MAXIMIZEBOX；如果此刻已经最大化，立即还原。
+        /// 用法：XAML 上写 CanMaximize="False"，或代码里 CanMaximize = false。
+        /// </summary>
+        public bool CanMaximize
+        {
+            get { return (bool)GetValue(CanMaximizeProperty); }
+            set { SetValue(CanMaximizeProperty, value); }
+        }
+
+        public static readonly DependencyProperty CanMaximizeProperty =
+            DependencyProperty.Register(nameof(CanMaximize), typeof(bool), typeof(VectorWindow),
+                new PropertyMetadata(true, OnCanMaximizeChanged));
+
+        private static void OnCanMaximizeChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+            => (sender as VectorWindow)?.ApplyCanMaximize();
+
+        /// <summary>把"能不能最大化"同时落到界面与 Win32 样式上；属性变化、按钮就位、句柄就绪时都要跑一次。</summary>
+        private void ApplyCanMaximize()
+        {
+            bool allowed = CanMaximize;
+            if (MaximizeButton is not null)
+            {
+                MaximizeButton.Visibility = allowed ? Visibility.Visible : Visibility.Collapsed;
+                MaximizeButton.IsEnabled = allowed;
+            }
+
+            if (!allowed && WindowState == WindowState.Maximized)
+            {
+                WindowState = WindowState.Normal;
+                MaximizeButtonPathData = MaximizePathData;
+            }
+
+            IntPtr handle = new WindowInteropHelper(this).Handle;
+            if (handle == IntPtr.Zero)
+            {
+                return;   // 句柄还没建：OnSourceInitialized 会再调一次
+            }
+            long style = GetWindowLongPtrCompat(handle, GWL_STYLE).ToInt64() & 0xFFFFFFFF;   // 32 位下别让符号位污染样式
+            style = allowed ? (style | WS_MAXIMIZEBOX) : (style & ~(long)WS_MAXIMIZEBOX);
+            _ = SetWindowLongPtrCompat(handle, GWL_STYLE, new IntPtr((int)style));
+            // 非客户区（系统菜单/边框命中）不会自己刷新
+            SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, 0x0037);
+        }
 
         public WindowVisualType VisualType
         {
@@ -278,8 +322,28 @@ namespace CBHK.CustomControl.Container
             ThemeManager.ApplyNewTheme(ThemeUriMap[ThemeType]);
         }
 
+        /// <summary>
+        /// 切 WindowChrome 的玻璃层范围。Style 里那一份 WindowChrome 可能已被冻结，
+        /// 不能直接改它的属性；这里克隆一份、改完厚度再挂回窗口（成为窗口的本地值）。
+        /// </summary>
+        private void ApplyGlassFrameThickness(double value)
+        {
+            if (WindowChrome.GetWindowChrome(this) is not WindowChrome current)
+            {
+                return;
+            }
+
+            WindowChrome chrome = (WindowChrome)current.Clone();
+            chrome.GlassFrameThickness = new Thickness(value);
+            WindowChrome.SetWindowChrome(this, chrome);
+        }
+
         private void SetDefaultBackground()
         {
+            // 玻璃层范围跟着模式走：Default 必须是 0，否则 WindowChrome 会一直把整窗当玻璃，
+            // 而此时又没有系统 backdrop，透出来就是黑的，WPF 画的 Background 根本看不到。
+            ApplyGlassFrameThickness(0);
+
             var handle = new WindowInteropHelper(this).Handle;
 
             int dwmSbtNone = 0;
@@ -288,11 +352,13 @@ namespace CBHK.CustomControl.Container
             MARGINS margins = new() { cxLeftWidth = 0, cxRightWidth = 0, cyTopHeight = 0, cyBottomHeight = 0 };
             _ = DwmExtendFrameIntoClientArea(handle, ref margins);
 
-            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
+            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDWframe);
         }
 
         private void SetAcrylicBackground()
         {
+            ApplyGlassFrameThickness(-1);
+
             var handle = new WindowInteropHelper(this).Handle;
             int backup = DWMSBT_TRANSIENTWINDOW;
             _ = DwmSetWindowAttribute(handle, 38, ref backup, sizeof(int));
@@ -300,12 +366,14 @@ namespace CBHK.CustomControl.Container
             MARGINS margins = new() { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
             _ = DwmExtendFrameIntoClientArea(handle, ref margins);
 
-            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
+            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDWframe);
             _ = DwmFlush();
         }
 
         private void SetMicaBackground()
         {
+            ApplyGlassFrameThickness(-1);
+
             var handle = new WindowInteropHelper(this).Handle;
             int backup = DWMSBT_MAINWINDOW;
             _ = DwmSetWindowAttribute(handle, 38, ref backup, sizeof(int));
@@ -313,12 +381,14 @@ namespace CBHK.CustomControl.Container
             MARGINS margins = new() { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
             _ = DwmExtendFrameIntoClientArea(handle, ref margins);
 
-            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
+            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDWframe);
             _ = DwmFlush();
         }
 
         private void SetMicaAltBackground()
         {
+            ApplyGlassFrameThickness(-1);
+
             var handle = new WindowInteropHelper(this).Handle;
             int backup = DWMSBT_TABBEDWINDOW;
             _ = DwmSetWindowAttribute(handle, 38, ref backup, sizeof(int));
@@ -326,12 +396,16 @@ namespace CBHK.CustomControl.Container
             MARGINS margins = new() { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
             _ = DwmExtendFrameIntoClientArea(handle, ref margins);
 
-            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
+            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDWframe);
             _ = DwmFlush();
         }
 
         public void UpdateWindowVisualStyle(WindowVisualType windowVisualType)
         {
+            // 底色跟特效绑定：Default 才画用户选的颜色，Mica/Acrylic 一律透明，
+            // 否则模板根那层画刷会把系统 backdrop 盖住。
+            ThemeManager.ApplyWindowBackgroundForVisualType(windowVisualType);
+
             switch (windowVisualType)
             {
                 case WindowVisualType.Acrylic:
@@ -366,7 +440,7 @@ namespace CBHK.CustomControl.Container
             MARGINS margins = new() { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
             _ = DwmExtendFrameIntoClientArea(handle, ref margins);
 
-            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
+            RedrawWindow(handle, IntPtr.Zero, IntPtr.Zero, RDW_INVALIDATE | RDW_UPDATENOW | RDWframe);
             _ = DwmFlush();
         }
 
@@ -538,8 +612,6 @@ namespace CBHK.CustomControl.Container
 
         public void MinimizeButton_Loaded(object sender, RoutedEventArgs e) => MinimizeButton = (sender as Button);
 
-        public void MaximizeButton_Loaded(object sender, RoutedEventArgs e) => MaximizeButton = (sender as Button);
-
         public void CloseButton_Loaded(object sender, RoutedEventArgs e) => CloseButton = (sender as Button);
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -562,7 +634,27 @@ namespace CBHK.CustomControl.Container
             HwndSource.FromHwnd(handle).AddHook(new HwndSourceHook(WndProc));
             //强制刷新窗口非客户区
             SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, 0x0037);
+            // XAML 里写的 CanMaximize="False" 要在句柄就绪后才落得到 Win32 样式上
+            ApplyCanMaximize();
             #endregion
+        }
+
+        /// <summary>最大化按钮就位后同步一次可见性（属性可能比模板先设好）。</summary>
+        public void MaximizeButton_Loaded(object sender, RoutedEventArgs e)
+        {
+            MaximizeButton = (sender as Button);
+            ApplyCanMaximize();
+        }
+
+        /// <summary>兜住所有非标题栏路径的最大化（Win+↑、拖到屏幕顶部的 Aero Snap 等）。</summary>
+        protected override void OnStateChanged(EventArgs e)
+        {
+            base.OnStateChanged(e);
+            if (!CanMaximize && WindowState == WindowState.Maximized)
+            {
+                WindowState = WindowState.Normal;
+                MaximizeButtonPathData = MaximizePathData;
+            }
         }
 
         private static void OnThemeType_Changed(DependencyObject sender, DependencyPropertyChangedEventArgs e)
@@ -679,7 +771,7 @@ namespace CBHK.CustomControl.Container
                             }
                         }
 
-                        if (MaximizeButton is not null)
+                        if (CanMaximize && MaximizeButton is not null)
                         {
                             Point btnTopLeft = MaximizeButton.PointToScreen(new Point(0, 0));
                             Point btnBottomRight = MaximizeButton.PointToScreen(new Point(MaximizeButton.ActualWidth, MaximizeButton.ActualHeight));
@@ -807,6 +899,11 @@ namespace CBHK.CustomControl.Container
                     {
                         if (wParam.ToInt32() == HTMAXBUTTON)
                         {
+                            if (!CanMaximize)
+                            {
+                                handled = true;
+                                return IntPtr.Zero;
+                            }
                             if (WindowState == WindowState.Maximized)
                             {
                                 TemporarilyUseCaptionForAction(() => SystemCommands.RestoreWindow(this));
@@ -844,6 +941,11 @@ namespace CBHK.CustomControl.Container
                     {
                         if (wParam.ToInt32() == HTCAPTION)
                         {
+                            if (!CanMaximize)
+                            {
+                                handled = true;
+                                return IntPtr.Zero;
+                            }
                             if (WindowState == WindowState.Maximized)
                             {
                                 TemporarilyUseCaptionForAction(() => SystemCommands.RestoreWindow(this));
@@ -877,6 +979,11 @@ namespace CBHK.CustomControl.Container
                 case WM_SYSCOMMAND:
                     {
                         int command = wParam.ToInt32() & 0xFFF0;
+                        if (command == SC_MAXIMIZE && !CanMaximize)
+                        {
+                            handled = true;   // 系统菜单"最大化"、Win+↑ 之类的外部通路
+                            break;
+                        }
                         if (command == SC_MINIMIZE || command == SC_RESTORE || command == SC_MAXIMIZE)
                         {
                             TemporarilyUseCaptionForAction(null);

@@ -49,53 +49,53 @@ namespace CBHK.ViewModel.Component.Spawner.Control
         /// 显示结果
         /// </summary>
         [ObservableProperty]
-        private bool _showResult = false;
+        private bool showResult = false;
         /// <summary>
         /// 选中版本以及版本数据源
         /// </summary>
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem selectedVersion;
         [ObservableProperty]
-        private ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
+        private ObservableCollection<VectorTextComboBoxItem> versionSource = [];
         /// <summary>
         /// 潜在实体数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<SpawnPotentialViewModel> _spawnPotentialList = [];
+        public ObservableCollection<SpawnPotentialViewModel> spawnPotentialList = [];
         [ObservableProperty]
-        private short _delay = 0;
+        private short delay = 0;
         [ObservableProperty]
-        private bool? _isDefaultDelay = true;
+        private bool? isDefaultDelay = true;
 
         [ObservableProperty]
-        private short _maxNearbyEntities = 0;
+        private short maxNearbyEntities = 0;
         [ObservableProperty]
-        private bool? _isDefaultMaxNearbyEntities = true;
+        private bool? isDefaultMaxNearbyEntities = true;
 
         [ObservableProperty]
-        private short _maxSpawnDelay = 0;
+        private short maxSpawnDelay = 0;
         [ObservableProperty]
-        private bool? _isDefaultMaxSpawnDelay = true;
+        private bool? isDefaultMaxSpawnDelay = true;
 
         [ObservableProperty]
-        private short _minSpawnDelay = 0;
+        private short minSpawnDelay = 0;
         [ObservableProperty]
-        private bool? _isDefaultMinSpawnDelay = true;
+        private bool? isDefaultMinSpawnDelay = true;
 
         [ObservableProperty]
-        private short _requiredPlayerRange = 0;
+        private short requiredPlayerRange = 0;
         [ObservableProperty]
-        private bool? _isDefaultRequiredPlayerRange = true;
+        private bool? isDefaultRequiredPlayerRange = true;
 
         [ObservableProperty]
-        private short _spawnCount = 0;
+        private short spawnCount = 0;
         [ObservableProperty]
-        private bool? _isDefaultSpawnCount = true;
+        private bool? isDefaultSpawnCount = true;
 
         [ObservableProperty]
-        private short _spawnRange = 0;
+        private short spawnRange = 0;
         [ObservableProperty]
-        private bool? _isDefaultSpawnRange = true;
+        private bool? isDefaultSpawnRange = true;
 
         /// <summary>SpawnData 里那个实体槽：文本与图标都在它自己的 ViewModel 里，页面只读它的 Tag。</summary>
         public ReferenceEntityViewModel EntitySlot { get; } = new();

@@ -17,7 +17,7 @@ namespace CBHK.Utility.Visual.MessageTip
         {
             Interval = TimeSpan.FromSeconds(3)
         };
-        private UIElement _child;
+        private UIElement child;
         private readonly FrameworkElement adornedElement;
         #endregion
 
@@ -75,17 +75,17 @@ namespace CBHK.Utility.Visual.MessageTip
 
         public UIElement Child
         {
-            get => _child;
+            get => child;
             set
             {
                 if (value is null)
                 {
-                    RemoveVisualChild(_child);
-                    _child = value;
+                    RemoveVisualChild(child);
+                    child = value;
                     return;
                 }
                 AddVisualChild(value);
-                _child = value;
+                child = value;
             }
         }
 
@@ -93,7 +93,7 @@ namespace CBHK.Utility.Visual.MessageTip
         {
             get
             {
-                return _child is not null ? 1 : 0;
+                return child is not null ? 1 : 0;
             }
         }
 
@@ -102,17 +102,17 @@ namespace CBHK.Utility.Visual.MessageTip
             // 计算右上角位置
             double rightMargin = 10;
             double topMargin = 10;
-            var x = adornedElement.ActualWidth - _child.DesiredSize.Width - rightMargin;
+            var x = adornedElement.ActualWidth - child.DesiredSize.Width - rightMargin;
             // 确保不超出左边界
             if (x < 0) x = 0;
             var y = topMargin; // 设置顶部边距
-            _child.Arrange(new Rect(new Point(x, y), _child.DesiredSize));
+            child.Arrange(new Rect(new Point(x, y), child.DesiredSize));
             return finalSize;
         }
 
         protected override System.Windows.Media.Visual GetVisualChild(int index)
         {
-            if (index == 0 && _child is not null) return _child;
+            if (index == 0 && child is not null) return child;
             return base.GetVisualChild(index);
         } 
         #endregion

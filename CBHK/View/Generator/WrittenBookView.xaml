@@ -32,7 +32,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel
@@ -91,6 +91,7 @@
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
                 Width="100"
+                ArrowMargin="2"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"
                 SelectedItem="{Binding SelectedVersion}"
@@ -107,131 +108,86 @@
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />
         </DockPanel>
-        <DockPanel
-            Grid.Row="1"
-            HorizontalAlignment="Center"
-            LastChildFill="False">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="63" />
-                    <ColumnDefinition Width="63" />
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="90" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <VectorButton:VectorTextButton
-                    Grid.Column="0"
-                    VerticalAlignment="Bottom"
-                    Background="#EFF2F1"
-                    Command="{Binding BoldTextCommand}"
-                    FontWeight="Bold"
-                    OriginBottomHeight="3"
-                    Style="{DynamicResource VectorTextButtonStyle}"
-                    Text="Bold"
-                    ToolTipService.BetweenShowDelay="0"
-                    ToolTipService.InitialShowDelay="0">
-                    <VectorButton:VectorTextButton.ToolTip>
-                        <ToolTip
-                            Background="#424242"
-                            Content="粗体"
-                            Foreground="White" />
-                    </VectorButton:VectorTextButton.ToolTip>
-                    <TextBlock FontWeight="Bold" Text="Bold" />
-                </VectorButton:VectorTextButton>
-                <VectorButton:VectorTextButton
-                    Grid.Column="1"
-                    VerticalAlignment="Bottom"
-                    Background="#EFF2F1"
-                    Command="{Binding ItalicTextCommand}"
-                    FontStyle="Italic"
-                    OriginBottomHeight="3"
-                    Style="{DynamicResource VectorTextButtonStyle}"
-                    Text="Italic"
-                    ToolTipService.BetweenShowDelay="0"
-                    ToolTipService.InitialShowDelay="0">
-                    <VectorButton:VectorTextButton.ToolTip>
-                        <ToolTip
-                            Background="#424242"
-                            Content="斜体"
-                            Foreground="White" />
-                    </VectorButton:VectorTextButton.ToolTip>
-                    <TextBlock FontStyle="Italic" Text="Italic" />
-                </VectorButton:VectorTextButton>
-                <VectorButton:VectorTextButton
-                    Grid.Column="2"
-                    VerticalAlignment="Bottom"
-                    Background="#EFF2F1"
-                    Command="{Binding UnderlinedTextCommand}"
-                    OriginBottomHeight="3"
-                    Style="{DynamicResource VectorTextButtonStyle}"
-                    Text="Underlined"
-                    TextDecoration="Underline"
-                    ToolTipService.BetweenShowDelay="0"
-                    ToolTipService.InitialShowDelay="0">
-                    <VectorButton:VectorTextButton.ToolTip>
-                        <ToolTip
-                            Background="#424242"
-                            Content="下划线"
-                            Foreground="White" />
-                    </VectorButton:VectorTextButton.ToolTip>
-                </VectorButton:VectorTextButton>
-                <VectorButton:VectorTextButton
-                    Grid.Column="3"
-                    VerticalAlignment="Bottom"
-                    Background="#EFF2F1"
-                    Command="{Binding StrikethroughTextCommand}"
-                    OriginBottomHeight="3"
-                    Style="{DynamicResource VectorTextButtonStyle}"
-                    Text="Strikethrough"
-                    TextDecoration="Strikethrough"
-                    ToolTipService.BetweenShowDelay="0"
-                    ToolTipService.InitialShowDelay="0">
-                    <VectorButton:VectorTextButton.ToolTip>
-                        <ToolTip
-                            Background="#424242"
-                            Content="删除线"
-                            Foreground="White" />
-                    </VectorButton:VectorTextButton.ToolTip>
-                </VectorButton:VectorTextButton>
-                <VectorButton:VectorTextButton
-                    Grid.Column="4"
-                    VerticalAlignment="Bottom"
-                    Background="#EFF2F1"
-                    Command="{Binding ObfuscateTextCommand}"
-                    OriginBottomHeight="3"
-                    Style="{DynamicResource VectorTextButtonStyle}"
-                    Text="Obfuscate"
-                    ToolTipService.BetweenShowDelay="0"
-                    ToolTipService.InitialShowDelay="0">
-                    <VectorButton:VectorTextButton.ToolTip>
-                        <ToolTip
-                            Background="#424242"
-                            Content="混淆"
-                            Foreground="White" />
-                    </VectorButton:VectorTextButton.ToolTip>
-                </VectorButton:VectorTextButton>
-                <VectorButton:VectorTextButton
-                    Grid.Column="5"
-                    VerticalAlignment="Bottom"
-                    Background="#EFF2F1"
-                    Command="{Binding ResetTextCommand}"
-                    OriginBottomHeight="3"
-                    Style="{DynamicResource VectorTextButtonStyle}"
-                    Text="Reset"
-                    ToolTipService.BetweenShowDelay="0"
-                    ToolTipService.InitialShowDelay="0">
-                    <VectorButton:VectorTextButton.ToolTip>
-                        <ToolTip
-                            Background="#424242"
-                            Content="重置选定文本样式"
-                            Foreground="White" />
-                    </VectorButton:VectorTextButton.ToolTip>
-                </VectorButton:VectorTextButton>
-            </Grid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <VectorButton:VectorTextButton
+                Grid.Column="0"
+                Background="#EFF2F1"
+                Command="{Binding BoldTextCommand}"
+                FontWeight="Bold"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="粗体"
+                ToolTip="粗体"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <TextBlock FontWeight="Bold" Text="Bold" />
+            </VectorButton:VectorTextButton>
+            <VectorButton:VectorTextButton
+                Grid.Column="1"
+                Background="#EFF2F1"
+                Command="{Binding ItalicTextCommand}"
+                FontStyle="Italic"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="斜体"
+                ToolTip="斜体"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0">
+                <TextBlock FontStyle="Italic" Text="Italic" />
+            </VectorButton:VectorTextButton>
+            <VectorButton:VectorTextButton
+                Grid.Column="2"
+                Background="#EFF2F1"
+                Command="{Binding UnderlinedTextCommand}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="下划线"
+                TextDecoration="Underline"
+                ToolTip="下划线"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0" />
+            <VectorButton:VectorTextButton
+                Grid.Column="3"
+                Background="#EFF2F1"
+                Command="{Binding StrikethroughTextCommand}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="删除线"
+                TextDecoration="Strikethrough"
+                ToolTip="删除线"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0" />
+            <VectorButton:VectorTextButton
+                Grid.Column="4"
+                Background="#EFF2F1"
+                Command="{Binding ObfuscateTextCommand}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="混淆"
+                ToolTip="混淆"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0" />
+            <VectorButton:VectorTextButton
+                Grid.Column="5"
+                Command="{Binding ResetTextCommand}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="重置"
+                ToolTip="重置选定文本样式"
+                ToolTipService.BetweenShowDelay="0"
+                ToolTipService.InitialShowDelay="0" />
             <Input:VectorColorPicker
                 Title="设置文本颜色"
-                Grid.Column="1"
+                Grid.Column="6"
                 Background="Black"
                 OriginBottomHeight="3"
                 SelectedColor="{Binding SelectionColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -245,7 +201,7 @@
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
             </Input:VectorColorPicker>
-        </DockPanel>
+        </Grid>
         <ContentControl
             Grid.Row="2"
             HorizontalAlignment="Center"

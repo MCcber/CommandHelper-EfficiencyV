@@ -1,4 +1,4 @@
-﻿<ResourceDictionary
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
@@ -7,9 +7,10 @@
 
     <Style x:Key="{x:Type Container:VectorWindow}" TargetType="{x:Type Container:VectorWindow}">
         <Setter Property="AllowsTransparency" Value="False" />
+        <Setter Property="FontFamily" Value="{DynamicResource GlobalFont}" />
         <Setter Property="ResizeMode" Value="CanResizeWithGrip" />
         <Setter Property="WindowStyle" Value="None" />
-        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Background" Value="{DynamicResource CustomWindowBackgroundBrush}" />
         <Setter Property="WindowChrome.WindowChrome">
             <Setter.Value>
                 <!--  {Binding TitleBarHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}  -->
@@ -24,7 +25,12 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Container:VectorWindow}">
                     <AdornerDecorator>
-                        <Grid Background="Transparent">
+                        <!--
+                            窗体底色画在模板里，不靠 Window.Background：
+                            这个窗口带 WindowChrome（玻璃层），WPF 在这种模式下不绘制 Window.Background，
+                            Default 特效时没有系统 backdrop 就会露出黑底。画在内容里就与玻璃无关了。
+                        -->
+                        <Grid Background="{DynamicResource CustomWindowBackgroundBrush}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />

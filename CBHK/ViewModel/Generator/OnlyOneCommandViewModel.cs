@@ -48,13 +48,13 @@ namespace CBHK.ViewModel.Generator
         /// 显示结果
         /// </summary>
         [ObservableProperty]
-        public bool _showGeneratorResult = false;
+        public bool showGeneratorResult = false;
 
         /// <summary>
         /// OOC标签页数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextTabItem> _oocTabSource = [
+        public ObservableCollection<VectorTextTabItem> oocTabSource = [
             new VectorTextTabItem()
         {
             Style = Application.Current.Resources["VectorTextTabItemStyle"] as Style,
@@ -68,7 +68,7 @@ namespace CBHK.ViewModel.Generator
         /// 当前选中的标签页
         /// </summary>
         [ObservableProperty]
-        private VectorTextTabItem _selectedItem = null;
+        private VectorTextTabItem selectedItem = null;
         #endregion
 
         #region Event

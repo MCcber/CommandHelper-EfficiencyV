@@ -180,8 +180,21 @@ namespace CBHK.ViewModel.Component.Entity
         /// <summary>旧"开一个空缓冲"入口：命令拼装从空串开始。</summary>
         public StringBuilder Create() => new();
 
-        /// <summary>旧"收集数据"入口：实体数据现在就在 JsonText（mcdoc 文档）里，直接交出去。</summary>
-        public void CollectionData(StringBuilder Result) => Result?.Append(JsonText ?? "");
+        /// <summary>
+        /// 旧"收集数据"入口：实体数据就在 JsonText（mcdoc 文档）里。
+        /// 但必须按命令要的形状交出去 —— 原来直接 Append 原文，会把带换行的整份 JSON（含最外层花括号）
+        /// 塞进 BuildResult 自己再补的那对花括号里，变成 summon ... {{...}}（多行且不合法）；
+        /// 取之前还要先补跑被推迟的一代，否则拿到的是打开实体那一刻的文本。
+        /// </summary>
+        public void CollectionData(StringBuilder Result)
+        {
+            if (Result is null)
+            {
+                return;
+            }
+            FlushDeferredRebuild();
+            Result.Append(BuildNbtBody(JsonText));
+        }
 
         /// <summary>
         /// 把缓冲里的实体数据包成命令（实体页的业务：**召唤** 与 **给予刷怪蛋** 两种模式）：

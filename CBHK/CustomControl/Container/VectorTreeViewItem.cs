@@ -1,5 +1,4 @@
 using CBHK.Utility.Data.Mcdoc;
-using MinecraftLanguageModelLibrary.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -68,24 +67,9 @@ namespace CBHK.CustomControl.Container
             }
             HorizontalBottomLineVisibility = HorizontalTopLineVisibility = Visibility.Hidden;
 
-            //自动展开必选项
-            if (sender is VectorTreeViewItem vectorTreeViewItem && vectorTreeViewItem.Header is MetaTypeEditorFieldDTO headerDTO)
-            {
-                //返回VectorTreeViewItem
-                if (headerDTO.IsRequired && (headerDTO.Children?.Count > 0 || headerDTO.SelectedUnionChildren?.Count > 0))
-                {
-                    IsExpanded = true;
-                }
-                if(headerDTO.TypeKind is MetaTypeKind.Dispatch && string.IsNullOrEmpty(headerDTO.FieldName) && !headerDTO.IsVisible)
-                {
-                    vectorTreeViewItem.Visibility = Visibility.Collapsed;
-                }
-                //定义键已并入 Tuple 管线：动态 map 的键由"输入框 + 加号"负责，加号里直接解析值类型，
-                //不再产出 Definition 节点，所以这里原先绑定的回车提交事件一并去掉
-            }
             //新求值管线的视图节点：只保留"必选有子级则自动展开"这一条 UX 规则。
             //旧分支里的 IsVisible 判断不需要复刻 —— 新管线在求值期就把 #[since]/#[until] 与不可见调度器过滤掉了
-            else if (sender is VectorTreeViewItem item && item.Header is McdocTreeNode mdNode)
+            if (sender is VectorTreeViewItem item && item.Header is McdocTreeNode mdNode)
             {
                 // 还原用户上次的展开状态；没有状态时按旧管线规则"必选且有子级就展开"。
                 // 不能只靠样式 Setter 里的 IsExpanded 绑定：用户点击写的是本地值，会盖掉那条绑定，

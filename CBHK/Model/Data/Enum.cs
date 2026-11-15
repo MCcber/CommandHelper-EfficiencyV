@@ -229,7 +229,7 @@ namespace CBHK.Model.Data
         /// <summary>
         /// 调度器键
         /// </summary>
-        dispatcher_key,
+        dispatcherkey,
         /// <summary>
         /// 被指定的数字整除
         /// </summary>
@@ -253,7 +253,7 @@ namespace CBHK.Model.Data
         /// <summary>
         /// SNBT路径
         /// </summary>
-        nbt_path,
+        nbtpath,
         /// <summary>
         /// 记分板变量名
         /// </summary>

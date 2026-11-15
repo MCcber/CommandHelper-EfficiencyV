@@ -1,4 +1,4 @@
-﻿using CBHK.CustomControl.VectorComboBox;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.View.Component.Datapack.TemplateSelectPage;
 using CBHK.View.Generator;
@@ -24,7 +24,7 @@ using System.Windows.Navigation;
 
 namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationView
 {
-    public partial class TemplateSelectPageViewModel(CBHKDataContext Context,RegexService RegexService): ObservableObject
+    public partial class TemplateSelectPageViewModel(RegistryDataService DataRegistry,RegexService RegexService): ObservableObject
     {
         #region Field
         /// <summary>
@@ -47,11 +47,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationView
         /// 近期使用的模板存放路径
         /// </summary>
         private string RecentTemplateDataFilePath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Datapack\Data\RecentTemplates";
-        /// <summary>
-        /// 数据库文件路径
-        /// </summary>
-        private string databaseFilePath = AppDomain.CurrentDomain.BaseDirectory + "Minecraft.db";
-        private CBHKDataContext context = Context;
+        private RegistryDataService dataRegistry = DataRegistry;
         private RegexService regexService = RegexService;
         private SolidColorBrush whiteBrush = new((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         private SolidColorBrush blackBrush = new((Color)ColorConverter.ConvertFromString("#000000"));
@@ -67,45 +63,45 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationView
         /// 近期使用的解决方案模板数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<RecentSolutionTemplateItem> _recentSolutionTemplateList = [];
+        public ObservableCollection<RecentSolutionTemplateItem> recentSolutionTemplateList = [];
         /// <summary>
         /// 包模板数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<SolutionTemplateItems> _solutionTemplateList = [];
+        public ObservableCollection<SolutionTemplateItems> solutionTemplateList = [];
         /// <summary>
         /// 解决方案视图集合对象
         /// </summary>
         [ObservableProperty]
-        private CollectionViewSource _solutionTemplateSource = null;
+        private CollectionViewSource solutionTemplateSource = null;
         /// <summary>
         /// 存放版本列表
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _versionList = [];
+        public ObservableCollection<VectorTextComboBoxItem> versionList = [];
         /// <summary>
         /// 存放模板类型列表
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _developerNameList = [];
+        public ObservableCollection<VectorTextComboBoxItem> developerNameList = [];
         /// <summary>
         /// 包功能类型列表
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _functionTypeList = [];
+        public ObservableCollection<VectorTextComboBoxItem> functionTypeList = [];
 
         /// <summary>
         /// 清除过滤参数可见性
         /// </summary>
         [ObservableProperty]
-        private Visibility _clearAllParametersVisibility = Visibility.Hidden;
+        private Visibility clearAllParametersVisibility = Visibility.Hidden;
 
         #region 存储已选择的版本
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem selectedVersion;
 
         [ObservableProperty]
-        private int _selectedVersionIndex = 0;
+        private int selectedVersionIndex = 0;
 
         private int RealSelectedVersion
         {
@@ -128,7 +124,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationView
         }
 
         [ObservableProperty]
-        private int _selectedDeveloperNameIndex = 0;
+        private int selectedDeveloperNameIndex = 0;
         #endregion
 
         #region 存储已选择的功能类型
@@ -146,7 +142,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationView
         }
 
         [ObservableProperty]
-        private int _selectedFunctionTypeIndex = 0;
+        private int selectedFunctionTypeIndex = 0;
         #endregion
 
         #region 存储已选择的解决方案
@@ -207,7 +203,7 @@ namespace CBHK.ViewModel.Component.Datapack.DatapackInitializationView
                     #endregion
 
                     #region 载入版本
-                    if (File.Exists(databaseFilePath))
+                    if (dataRegistry.IsLoaded)
                     {
                         List<string> versionList = [];
                         foreach (var item in versionList)

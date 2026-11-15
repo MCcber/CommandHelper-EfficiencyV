@@ -33,9 +33,9 @@ namespace CBHK_Updater
         public static UpdateInfoForcast updateInfo;
         public static string nowVersion = "Unknown";
         public static bool isSilent = false;
-        private long _totalBytes;
-        private string _currentFile = "cbhk.zip"; // 下载文件名
-        private readonly HttpClient _httpClient = new HttpClient();
+        private long totalBytes;
+        private string currentFile = "cbhk.zip"; // 下载文件名
+        private readonly HttpClient httpClient = new HttpClient();
 
         public MainWindow()
         {
@@ -95,7 +95,7 @@ namespace CBHK_Updater
             string URL = "https://gitee.com/api/v5/repos/honghuangtaichu/minecraft-correlation/releases/latest";
             try
             {
-                HttpResponseMessage result = _httpClient.GetAsync(URL).Result;
+                HttpResponseMessage result = httpClient.GetAsync(URL).Result;
                 var data = result.Content.ReadAsStringAsync().Result;
 
                 updateInfo = JsonSerializer.Deserialize<UpdateInfoForcast>(data);
@@ -139,17 +139,17 @@ namespace CBHK_Updater
         {
             try
             {
-                var response = _httpClient.GetAsync(FileUrl, HttpCompletionOption.ResponseHeadersRead).Result;
+                var response = httpClient.GetAsync(FileUrl, HttpCompletionOption.ResponseHeadersRead).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
                     var contentLength = response.Content.Headers.ContentLength;
                     if (contentLength.HasValue)
                     {
-                        _totalBytes = contentLength.Value;
+                        totalBytes = contentLength.Value;
 
                         using (var stream = response.Content.ReadAsStreamAsync().Result)
-                        using (var fileStream = new FileStream(_currentFile, FileMode.Create, FileAccess.Write, FileShare.None))
+                        using (var fileStream = new FileStream(currentFile, FileMode.Create, FileAccess.Write, FileShare.None))
                         {
                             var buffer = new byte[8192];
                             int bytesRead;
@@ -189,7 +189,7 @@ namespace CBHK_Updater
         {
             Dispatcher.Invoke(() =>
             {
-                progressBar.Value = (double)bytesRead / _totalBytes * 100;
+                progressBar.Value = (double)bytesRead / totalBytes * 100;
             });
         }
         private async Task StartDownload()

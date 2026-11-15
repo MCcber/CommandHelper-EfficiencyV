@@ -1,4 +1,4 @@
-﻿<Container:VectorWindow
+<Container:VectorWindow
     x:Class="CBHK.View.Generator.TagView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -18,8 +18,6 @@
     MinWidth="835"
     MinHeight="530"
     prism:ViewModelLocator.AutoWireViewModel="True"
-    Background="#2F2F2F"
-    Foreground="White"
     Icon="/CBHK;component/Resource/Common/Image/SpawnerIcon/IconTag.png"
     IconMargin="5"
     ResizeMode="CanResizeWithGrip"
@@ -53,9 +51,11 @@
     <Grid VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <DockPanel Grid.Row="0" Height="35">
+        <DockPanel Grid.Row="0" Height="40">
             <VectorButton:VectorFlatImageButton
                 Command="{Binding ReturnCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Container:VectorWindow}}"
@@ -87,7 +87,7 @@
             </VectorButton:VectorFlatImageButton>
             <VectorCheckBox:VectorTextCheckBox
                 Margin="5,0,0,0"
-                Foreground="White"
+                Foreground="{StaticResource CommonForeground}"
                 IsChecked="{Binding Replace, Mode=TwoWay}"
                 Style="{DynamicResource VectorTextCheckBoxStyle}"
                 Text="替换"
@@ -96,7 +96,7 @@
                 ToolTipService.ShowDuration="3000" />
             <VectorCheckBox:VectorTextCheckBox
                 Margin="5,0,0,0"
-                Foreground="White"
+                Foreground="{StaticResource CommonForeground}"
                 IsChecked="{Binding SelectedAll, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorTextCheckBoxStyle}"
                 Text="全选">
@@ -108,7 +108,7 @@
             </VectorCheckBox:VectorTextCheckBox>
             <VectorCheckBox:VectorTextCheckBox
                 Margin="5,0,0,0"
-                Foreground="White"
+                Foreground="{StaticResource CommonForeground}"
                 IsChecked="{Binding ReverseAll, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorTextCheckBoxStyle}"
                 Text="反选">
@@ -119,40 +119,32 @@
                 </behavior:Interaction.Triggers>
             </VectorCheckBox:VectorTextCheckBox>
             <VectorComboBox:VectorTextComboBox
-                Title="数据类型"
-                MinWidth="80"
+                Title="标签目录"
+                MinWidth="200"
                 Margin="5,0,0,0"
-                ArrowMargin="0 2 5 0"
+                ArrowMargin="2"
                 BorderBrush="Black"
-                Foreground="White"
                 IsReadOnly="True"
-                ItemsSource="{Binding TypeItemSource, IsAsync=True}"
-                SelectedItem="{Binding SelectedTypeItem, Mode=TwoWay}"
-                Style="{DynamicResource VectorTextComboBoxStyle}">
-                <behavior:Interaction.Triggers>
-                    <behavior:EventTrigger EventName="SelectionChanged">
-                        <behavior:CallMethodAction MethodName="TypeBox_SelectionChanged" TargetObject="{Binding}" />
-                    </behavior:EventTrigger>
-                </behavior:Interaction.Triggers>
-            </VectorComboBox:VectorTextComboBox>
+                ItemsSource="{Binding TagRegistryList}"
+                SelectedItem="{Binding SelectedTagRegistry, Mode=TwoWay}"
+                Style="{DynamicResource VectorTextComboBoxStyle}"
+                ToolTip="data/&lt;命名空间&gt;/tags/&lt;标签目录&gt;/&lt;标签名&gt;.json" />
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
-                Width="80"
-                ArrowMargin="0 2 5 0"
-                BorderBrush="Black"
-                Foreground="White"
+                MinWidth="100"
+                ArrowMargin="2"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionList}"
                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
                 Style="{DynamicResource VectorTextComboBoxStyle}" />
             <VectorButton:VectorTextButton
-                Background="#D0D1D4"
                 Command="{Binding ImportFromClipboardCommand}"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从剪切板导入" />
             <VectorButton:VectorTextButton
-                Background="#D0D1D4"
                 Command="{Binding ImportFromFileCommand}"
+                OriginBottomHeight="3"
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
             <Input:VectorTextBox
@@ -162,7 +154,6 @@
                 Background="#313233"
                 BorderBrush="Black"
                 CaretBrush="White"
-                FontSize="15"
                 Foreground="White"
                 Style="{DynamicResource VectorTextBoxStyle}"
                 Text="{Binding SearchText, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
@@ -177,74 +168,205 @@
                 </behavior:Interaction.Triggers>
             </Input:VectorTextBox>
         </DockPanel>
-        <ListView
-            Grid.Row="2"
-            Background="#555956"
-            BorderBrush="Black"
+
+        <!--  tag 元信息：命名空间 / 标签名 / 输出形态 / 目标路径提示  -->
+        <DockPanel Grid.Row="1" Height="34">
+            <TextBlock
+                VerticalAlignment="Center"
+                Foreground="{StaticResource CommonForeground}"
+                Text="命名空间" />
+            <Input:VectorTextBox
+                Width="110"
+                Height="30"
+                Margin="5,0,0,0"
+                VerticalContentAlignment="Center"
+                Background="#313233"
+                BorderBrush="Black"
+                CaretBrush="White"
+                Foreground="White"
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding NamespaceText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                TextAlignment="Left"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="minecraft" />
+            <TextBlock
+                Margin="10,0,0,0"
+                VerticalAlignment="Center"
+                Foreground="{StaticResource CommonForeground}"
+                Text="标签名" />
+            <Input:VectorTextBox
+                Width="130"
+                Height="30"
+                Margin="5,0,0,0"
+                VerticalContentAlignment="Center"
+                Background="#313233"
+                BorderBrush="Black"
+                CaretBrush="White"
+                Foreground="White"
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding TagName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                TextAlignment="Left"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="planks" />
+            <VectorCheckBox:VectorTextCheckBox
+                Margin="10,0,0,0"
+                Foreground="{StaticResource CommonForeground}"
+                IsChecked="{Binding UseObjectForm, Mode=TwoWay}"
+                Style="{DynamicResource VectorTextCheckBoxStyle}"
+                Text="对象形式"
+                ToolTip="勾选项输出为对象形态（带 id 键），而不是裸字符串"
+                ToolTipService.InitialShowDelay="0" />
+            <TextBlock
+                Margin="10,0,0,0"
+                VerticalAlignment="Center"
+                Foreground="Gray"
+                Text="{Binding TargetPath}"
+                ToolTip="导出时应放到这个路径下" />
+        </DockPanel>
+
+        <!--  附加条目：裸 id / #tag 引用 / 对象 JSON，每行一条  -->
+        <DockPanel Grid.Row="2" Height="34">
+            <TextBlock
+                VerticalAlignment="Center"
+                Foreground="{StaticResource CommonForeground}"
+                Text="附加条目" />
+            <Input:VectorTextBox
+                Height="30"
+                Margin="5,0,0,0"
+                VerticalContentAlignment="Center"
+                Background="#313233"
+                BorderBrush="Black"
+                CaretBrush="White"
+                Foreground="White"
+                Style="{DynamicResource VectorTextBoxStyle}"
+                Text="{Binding ExtraValuesText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                TextAlignment="Left"
+                WaterMarkerBrush="Gray"
+                WaterMarkerMargin="5 0 0 0"
+                WaterMarkerText="每行一条：裸 id 或 #标签引用 或 对象 JSON（重复项会自动去重）" />
+        </DockPanel>
+
+        <Container:VectorListView
+            Grid.Row="3"
             ItemsSource="{Binding Source={StaticResource TagItemSource}, IsAsync=True}"
             ScrollViewer.HorizontalScrollBarVisibility="Auto"
             ScrollViewer.VerticalScrollBarVisibility="Auto"
             SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+            Style="{DynamicResource VectorListViewStyle}"
             VirtualizingPanel.IsVirtualizing="True"
             VirtualizingPanel.ScrollUnit="Pixel"
             VirtualizingPanel.VirtualizationMode="Recycling">
-            <ListView.ItemTemplate>
+            <Container:VectorListView.ItemTemplate>
                 <DataTemplate>
-                    <Grid Background="{Binding Background, Mode=OneWay}" IsHitTestVisible="False">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <ToggleButton
-                            x:Name="checkButton"
-                            IsChecked="{Binding BeChecked, Mode=TwoWay}"
-                            IsHitTestVisible="False"
-                            Visibility="Collapsed" />
-                        <Image
-                            Grid.Row="0"
-                            Grid.RowSpan="2"
-                            Grid.Column="0"
-                            Width="65"
-                            Height="65"
-                            VerticalAlignment="Center"
-                            IsHitTestVisible="False"
-                            RenderOptions.BitmapScalingMode="NearestNeighbor"
-                            Source="{Binding Icon, IsAsync=True}" />
-                        <TextBlock
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            FontSize="25"
-                            FontStyle="Italic"
-                            IsHitTestVisible="False"
-                            Text="{Binding DisplayId, IsAsync=True}"
-                            TextAlignment="Left" />
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            FontSize="25"
-                            IsHitTestVisible="False"
-                            Text="{Binding DisplayName, IsAsync=True}"
-                            TextAlignment="Left" />
+                    <Grid>
+                        <Grid IsHitTestVisible="False">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <ToggleButton
+                                x:Name="checkButton"
+                                IsChecked="{Binding BeChecked, Mode=TwoWay}"
+                                IsHitTestVisible="False"
+                                Visibility="Collapsed" />
+                            <!--
+                                选中标记：与下拉框里的选中勾同一个画法（VectorComboBoxItemContainer.xaml 的 8 个 Rectangle 斜勾），
+                                Viewbox 统一缩到 16×16。用 Hidden 而不是 Collapsed —— 列宽保持不变，勾来勾去名字不会左右跳。
+                            -->
+                            <Viewbox
+                                Grid.Row="0"
+                                Grid.RowSpan="2"
+                                Grid.Column="0"
+                                Width="16"
+                                Height="16"
+                                Margin="10,0,6,0"
+                                VerticalAlignment="Center">
+                                <Viewbox.Style>
+                                    <Style TargetType="Viewbox">
+                                        <Setter Property="Visibility" Value="Hidden" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding BeChecked}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Viewbox.Style>
+                                <Grid UseLayoutRounding="False">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="1" />
+                                        <RowDefinition Height="1" />
+                                        <RowDefinition Height="1" />
+                                        <RowDefinition Height="1" />
+                                        <RowDefinition Height="1" />
+                                        <RowDefinition Height="1" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1" />
+                                        <ColumnDefinition Width="1" />
+                                        <ColumnDefinition Width="1" />
+                                        <ColumnDefinition Width="1" />
+                                        <ColumnDefinition Width="1" />
+                                        <ColumnDefinition Width="1" />
+                                        <ColumnDefinition Width="1" />
+                                        <ColumnDefinition Width="1" />
+                                    </Grid.ColumnDefinitions>
+                                    <Rectangle Grid.Row="3" Grid.Column="0" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle Grid.Row="4" Grid.Column="1" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle Grid.Row="5" Grid.Column="2" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle Grid.Row="4" Grid.Column="3" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle Grid.Row="3" Grid.Column="4" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle Grid.Row="2" Grid.Column="5" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle Grid.Row="1" Grid.Column="6" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle Grid.Row="0" Grid.Column="7" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
+                                </Grid>
+                            </Viewbox>
+                            <Image
+                                Grid.Row="0"
+                                Grid.RowSpan="2"
+                                Grid.Column="1"
+                                Width="65"
+                                Height="65"
+                                VerticalAlignment="Center"
+                                IsHitTestVisible="False"
+                                RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                Source="{Binding Icon, IsAsync=True}" />
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontSize="25"
+                                IsHitTestVisible="False"
+                                Text="{Binding DisplayId, IsAsync=True}"
+                                TextAlignment="Left" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontSize="25"
+                                IsHitTestVisible="False"
+                                Text="{Binding DisplayName, IsAsync=True}"
+                                TextAlignment="Left" />
+                        </Grid>
                     </Grid>
                 </DataTemplate>
-            </ListView.ItemTemplate>
-            <ListView.ItemsPanel>
+            </Container:VectorListView.ItemTemplate>
+            <Container:VectorListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <VirtualizingStackPanel
-                        Background="#555956"
                         VirtualizingPanel.CacheLengthUnit="Pixel"
                         VirtualizingPanel.IsContainerVirtualizable="True"
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.ScrollUnit="Pixel"
                         VirtualizingPanel.VirtualizationMode="Recycling" />
                 </ItemsPanelTemplate>
-            </ListView.ItemsPanel>
+            </Container:VectorListView.ItemsPanel>
             <behavior:Interaction.Triggers>
                 <behavior:EventTrigger EventName="Loaded">
                     <behavior:CallMethodAction MethodName="ListViewLoaded" TargetObject="{Binding}" />
@@ -253,6 +375,6 @@
                     <behavior:CallMethodAction MethodName="ListBoxClick" TargetObject="{Binding}" />
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
-        </ListView>
+        </Container:VectorListView>
     </Grid>
 </Container:VectorWindow>

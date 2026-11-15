@@ -27,7 +27,7 @@ namespace CBHK.ViewModel.Component.Recipe
             closePanelToken = eventAggregator.GetEvent<CloseRecipePanelEvent>()
                 .Subscribe(ClosePanel, ThreadOption.UIThread, false, panel => panel.Owner == Editor);
 
-            _activeContent = editor;
+            activeContent = editor;
             OpenSettingsCommand = new RelayCommand(ToggleSettings);
             CloseCommand = new RelayCommand(Close);
         }
@@ -41,10 +41,10 @@ namespace CBHK.ViewModel.Component.Recipe
         /// 页签内容：配方页 / 设置页 / 搜索页
         /// </summary>
         [ObservableProperty]
-        private object _activeContent;
+        private object activeContent;
 
         [ObservableProperty]
-        private bool _isUnSaved;
+        private bool isUnSaved;
 
         public IRelayCommand OpenSettingsCommand { get; }
         public IRelayCommand CloseCommand { get; }

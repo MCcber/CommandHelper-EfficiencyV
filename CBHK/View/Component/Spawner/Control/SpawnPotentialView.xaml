@@ -23,16 +23,16 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <VectorButton:VectorFlatImageButton
+        <VectorButton:VectorFlatIconButton
             Grid.Row="0"
             Grid.Column="1"
             Width="30"
             Height="30"
             HorizontalAlignment="Right"
             Command="{Binding DeleteCommand}"
-            Image="/Resource/Common/Image/Close.png"
-            ImageMargin="5"
-            Style="{DynamicResource VectorFlatImageButtonStyle}" />
+            Icon="{StaticResource CloseMark}"
+            IconBrush="{DynamicResource CommonForeground}"
+            Style="{DynamicResource VectorFlatIconButtonStyle}" />
         <TextBlock
             Grid.Row="1"
             Grid.Column="0"

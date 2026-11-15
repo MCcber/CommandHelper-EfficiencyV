@@ -65,6 +65,7 @@
                 Width="100"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Stretch"
+                ArrowMargin="2"
                 IsReadOnly="True"
                 ItemsSource="{Binding GameVersionOptions, Converter={StaticResource McdocChromeComboConverter}}"
                 SelectedIndex="0"
@@ -78,9 +79,10 @@
             </VectorComboBox:VectorTextComboBox>
             <VectorComboBox:VectorIconTextComboBox
                 Title="物品ID"
-                MinWidth="150"
+                MinWidth="200"
                 HorizontalAlignment="Left"
                 VerticalContentAlignment="Stretch"
+                ArrowMargin="2"
                 Foreground="White"
                 ItemsSource="{Binding ItemList, Mode=OneWay}"
                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"

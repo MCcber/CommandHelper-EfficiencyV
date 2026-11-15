@@ -594,6 +594,23 @@ namespace CBHK.Utility.Data.Mcdoc
                 : node.Items.Count > 0 ? node.Items
                 : node.Children;
 
+        /// <summary>
+        /// union 行能不能展开，只看**当前选中的那一支**：
+        /// 标量支（string / 枚举 / 数值 / bool）与 unset 都没有子行可摊，不许挂箭头 ——
+        /// 原来走基类默认的 true，于是 advancement 的 display.title / description / background / frame
+        /// 这种标量支的 union 行全都挂着一个"点了什么都不出来"的死箭头（S26-1 一直是红的）。
+        /// </summary>
+        public override bool CanHaveChildren(McdocTreeNode node)
+        {
+            if (node is null) return false;
+            if (Children(node).Count > 0) return true;
+            if (node.ChildrenBuilt) return false;
+            // 还没选分支（unset）或选的是标量支：下面没有子行
+            if (node.SelectedUnionMember is null || node.ScalarEditorKind is not null) return false;
+            // 结构 / 列表 / 元组支：子级等展开时再建
+            return true;
+        }
+
         public override void PopulateChildren(McdocTreeNode node, McdocType type, McdocJsonValue json, McdocBuildContext context)
         {
             // union 不塌陷：保留它（UI 上要能切换分支），用 JSON 节点挑默认分支
@@ -885,6 +902,21 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         public override bool IsListLike => true;
+
+        /// <summary>
+        /// 列表行能不能展开 = 数组里到底有没有元素。
+        /// 基类默认 true，于是**空数组**（现场：condition = minecraft:all_of 的 `terms: []`）在子级还没建的时候
+        /// 也会挂一个点开什么都没有的 ▶ —— 和 union 那边一模一样的坑。
+        /// </summary>
+        public override bool CanHaveChildren(McdocTreeNode node)
+        {
+            if (node is null) return false;
+            if (Children(node).Count > 0) return true;
+            // 值是数组：有几项就几行，空数组不许挂箭头
+            if (node.Json?.Kind == McdocJsonKind.Array) return (node.Json.Items?.Count ?? 0) > 0;
+            // 文档里没有这个键（可选 → 上层已经挡掉；必选缺值 → 摊开声明出来的元素行，元素类型未知时不猜）
+            return !node.ChildrenBuilt && McdocHelpers.GetItemType(node.Type) is not null;
+        }
 
         public override IReadOnlyList<McdocTreeNode> Children(McdocTreeNode node)
             => node.Items.Count > 0 ? node.Items : node.Children;

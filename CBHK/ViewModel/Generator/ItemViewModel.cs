@@ -27,7 +27,7 @@ namespace CBHK.ViewModel.Generator
     public partial class ItemViewModel(IContainerProvider container, MainView mainView) : ObservableObject
     {
         #region Field
-        private MessagePopup messagePopup = new();
+        private MessagePopup messagePopup;
         /// <summary>
         /// 主页引用
         /// </summary>
@@ -44,7 +44,7 @@ namespace CBHK.ViewModel.Generator
         /// 显示结果
         /// </summary>
         [ObservableProperty]
-        private bool _showGeneratorResult = false;
+        private bool showGeneratorResult = false;
 
         /// <summary>
         /// 当前选中的物品页
@@ -56,7 +56,7 @@ namespace CBHK.ViewModel.Generator
         /// 物品页数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorRichTabItem> _itemPageList =
+        public ObservableCollection<VectorRichTabItem> itemPageList =
         [
             new VectorRichTabItem()
             {
@@ -71,6 +71,10 @@ namespace CBHK.ViewModel.Generator
         #region Event
         public void Item_Loaded(object sender,RoutedEventArgs e)
         {
+            if (sender is Window window)
+            {
+                messagePopup = new(window);
+            }
             ItemPageList[0].Content = container.Resolve<ItemPageView>();
         }
 

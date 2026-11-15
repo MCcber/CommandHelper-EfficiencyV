@@ -262,7 +262,7 @@ namespace CBHK.Utility.Data.Mcdoc
             if (node is null || type is null) return;
             if (type.Kind is not (McdocTypeKind.String or McdocTypeKind.Enum or McdocTypeKind.Literal)) return;
 
-            // #[dispatcher_key="<registry>"]：候选 = 该 dispatcher 的成员键（builtin.js:61-77）
+            // #[dispatcherkey="<registry>"]：候选 = 该 dispatcher 的成员键（builtin.js:61-77）
             var dispatcherKey = McdocHelpers.AttributeValue(type, "dispatcher_key")?.Trim('"');
             if (!string.IsNullOrEmpty(dispatcherKey))
             {
@@ -319,7 +319,7 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         /// <summary>
-        /// #[dispatcher_key="&lt;registry&gt;"]：候选 = 该 dispatcher 的成员键（去掉 % 开头的兜底项 + 过属性过滤），
+        /// #[dispatcherkey="&lt;registry&gt;"]：候选 = 该 dispatcher 的成员键（去掉 % 开头的兜底项 + 过属性过滤），
         /// 对应 spyglass builtin.js:61-77 的 stringMocker（LiteralNode.mock 的 pool）。
         /// 未知 registry / 没有候选 → 不挂下拉，保持自由文本（不抛）。
         /// </summary>
@@ -338,7 +338,7 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             if (options.Count == 0) return;
 
-            // misode 的 StringHead 只按 #[id] 的 registry 决定 <select>；#[dispatcher_key] 只贡献候选
+            // misode 的 StringHead 只按 #[id] 的 registry 决定 <select>；#[dispatcherkey] 只贡献候选
             // （builtin.js:61-77 的 stringMocker → datalist），渲染上就是"可输入 + 候选提示"。
             node.UseSelect = false;
             node.AllowCustomValue = true;

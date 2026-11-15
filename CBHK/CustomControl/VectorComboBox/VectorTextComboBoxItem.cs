@@ -1,4 +1,4 @@
-﻿using System.Windows.Media;
+using System.Windows.Media;
 
 namespace CBHK.CustomControl.VectorComboBox
 {
@@ -12,22 +12,17 @@ namespace CBHK.CustomControl.VectorComboBox
         #endregion
 
         #region Method
+        /// <summary>
+        /// 身份口径：有 ItemID 用 ItemID，没有就用 Text。
+        /// 以前 ItemID 为空时会拿"对方的 ItemID"去比"自己的 Text"，结果连自己都不等于自己，
+        /// Selector 的 Items.IndexOf 恒为 -1 —— 选中项设得进去、界面却显示空（下拉永远显示不出当前值）。
+        /// </summary>
         public override bool Equals(object obj)
-        {
-            if(obj is VectorTextComboBoxItem other)
-            {
-                if(!string.IsNullOrEmpty(ItemID))
-                {
-                    return other.ItemID == ItemID;
-                }
-                else
-                {
-                    return other.ItemID == Text;
-                }
-            }
-            return false;
-        }
-        public override int GetHashCode() => ItemID?.GetHashCode() ?? 0;
+            => obj is VectorTextComboBoxItem other && string.Equals(Key, other.Key, System.StringComparison.Ordinal);
+
+        public override int GetHashCode() => Key?.GetHashCode() ?? 0;
+
+        private string Key => string.IsNullOrEmpty(ItemID) ? Text : ItemID;
         #endregion
     }
 }

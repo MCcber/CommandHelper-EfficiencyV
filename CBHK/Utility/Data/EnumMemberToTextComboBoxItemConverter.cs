@@ -69,7 +69,7 @@ namespace CBHK.Utility.Data
             {
                 return cached.Item;
             }
-            var item = MCDocumentMetaTypeDTOHelper.BuildTextComboBoxItem(literal, enumMember.Name);
+            var item = new VectorTextComboBoxItem { ItemID = literal, Text = enumMember.Name };
             byKey[key] = new Entry(item, enumMember);
             byItem[item] = enumMember;
             return item;

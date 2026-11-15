@@ -70,6 +70,7 @@
             <VectorComboBox:VectorTextComboBox
                 Title="版本"
                 MinWidth="100"
+                ArrowMargin="0 2 2 2"
                 IsReadOnly="True"
                 ItemsSource="{Binding VersionSource}"
                 SelectedIndex="0"

@@ -99,10 +99,10 @@
             VerticalAlignment="Top"
             Command="{Binding DeleteBuyItemCommand}"
             Icon="{StaticResource CloseMark}"
-            IconBrush="White"
+            IconBrush="{DynamicResource CommonForeground}"
             IconHeight="10"
             IconWidth="10"
-            Style="{DynamicResource VectorFlatImageButtonStyle}" />
+            Style="{DynamicResource VectorFlatIconButtonStyle}" />
         <VectorButton:VectorFlatIconButton
             Grid.Row="1"
             Grid.Column="1"
@@ -113,10 +113,10 @@
             VerticalAlignment="Top"
             Command="{Binding DeleteBuyBItemCommand}"
             Icon="{StaticResource CloseMark}"
-            IconBrush="White"
+            IconBrush="{DynamicResource CommonForeground}"
             IconHeight="10"
             IconWidth="10"
-            Style="{DynamicResource VectorFlatImageButtonStyle}" />
+            Style="{DynamicResource VectorFlatIconButtonStyle}" />
         <VectorButton:VectorFlatIconButton
             Grid.Row="1"
             Grid.Column="3"
@@ -127,10 +127,10 @@
             VerticalAlignment="Top"
             Command="{Binding DeleteSellItemCommand}"
             Icon="{StaticResource CloseMark}"
-            IconBrush="White"
+            IconBrush="{DynamicResource CommonForeground}"
             IconHeight="10"
             IconWidth="10"
-            Style="{DynamicResource VectorFlatImageButtonStyle}" />
+            Style="{DynamicResource VectorFlatIconButtonStyle}" />
         <Image
             Grid.Row="1"
             Grid.Column="0"

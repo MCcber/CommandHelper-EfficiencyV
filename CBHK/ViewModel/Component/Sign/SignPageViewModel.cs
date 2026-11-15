@@ -1,9 +1,11 @@
-﻿using CBHK.CustomControl.TextElement;
+using CBHK.CustomControl.Input;
+using CBHK.CustomControl.TextElement;
 using CBHK.CustomControl.VectorComboBox;
 using CBHK.Domain;
 using CBHK.Interface.Visual;
 using CBHK.Model.Data;
 using CBHK.Utility.Common;
+using CBHK.Utility.Data;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View;
 using CBHK.View.Component.Sign;
@@ -15,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -35,9 +38,8 @@ namespace CBHK.ViewModel.Component.Sign
         #region Field
         public string Result = "";
         private IContainerProvider container;
-        private CBHKDataContext context = null;
+        private RegistryDataService dataRegistry = null;
         private string iconPath = AppDomain.CurrentDomain.BaseDirectory + @"Resource\Configs\Sign\Image\icon.png";
-        private int CurrentMinVersion = 1202;
         /// <summary>
         /// 需要适应版本变化的特指数据所属控件的事件
         /// </summary>
@@ -76,48 +78,81 @@ namespace CBHK.ViewModel.Component.Sign
         #endregion
 
         #region Property
-        public MessagePopup MessagePopup { get; set; }
+        private MessagePopup messagePopup;
+        /// <summary>当前提示条挂在哪扇窗上；换窗口才重建（每次 new 都会往 AdornerLayer 多加一层）。</summary>
+        private Window messagePopupHost;
+
+        /// <summary>
+        /// 提示条：没被赋值时用到才建（那时窗口已经激活，AdornerLayer 才挂得上；构造期建会拿不到层）。
+        /// 必须保留 setter —— IPageViewModel 要求可写。
+        /// </summary>
+        public MessagePopup MessagePopup
+        {
+            get => messagePopup ??= new MessagePopup();
+            set
+            {
+                messagePopup = value;
+                messagePopupHost = null;
+            }
+        }
+
+        /// <summary>
+        /// 弹提示。宿主窗口：勾了"显示结果"就挂到结果窗口（那时本页可能被挡在后面），
+        /// 没勾就挂本页自己的窗口。
+        /// </summary>
+        private void PushMessage(GeneratorMessage message, Window displayer)
+        {
+            Window host = displayer ?? Window.GetWindow(SignTextEditor);
+            if (messagePopup is null || !ReferenceEquals(messagePopupHost, host))
+            {
+                messagePopup = new MessagePopup(host);
+                messagePopupHost = host;
+            }
+            messagePopup.PushMessage(message);
+        }
         [ObservableProperty]
-        private RichRun _currentRichRun = null;
+        private RichRun currentRichRun = null;
         /// <summary>
         /// 告示牌类型
         /// </summary>
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedSignType;
+        private VectorTextComboBoxItem selectedSignType;
         /// <summary>
         /// 告示牌背景
         /// </summary>
         [ObservableProperty]
-        public BitmapImage _signPanelSource = null;
+        public BitmapImage signPanelSource = null;
 
         /// <summary>
-        /// 生成方式
+        /// 生成方式：true = 给予（give），false = 放置（setblock）。
+        /// 注意属性名必须是 Give —— XAML 上"给予"按钮绑的就是它；
+        /// 以前这里叫 Setblock，绑定找不到属性直接静默失败，于是永远输出 setblock。
         /// </summary>
         [ObservableProperty]
-        private bool _setblock;
+        private bool give;
 
         /// <summary>
         /// 已选择的版本
         /// </summary>
         [ObservableProperty]
-        private VectorTextComboBoxItem _selectedVersion;
+        private VectorTextComboBoxItem selectedVersion;
 
         /// <summary>
         /// 版本数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> versionSource = [];
         /// <summary>
         /// 告示牌类型数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _typeSource = [];
+        public ObservableCollection<VectorTextComboBoxItem> typeSource = [];
 
         /// <summary>
         /// 正反面文档
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<EnabledFlowDocument> _signDocumentList = 
+        public ObservableCollection<EnabledFlowDocument> signDocumentList = 
         [
             new EnabledFlowDocument(),
             new EnabledFlowDocument()
@@ -127,68 +162,78 @@ namespace CBHK.ViewModel.Component.Sign
         /// 是否被裱
         /// </summary>
         [ObservableProperty]
-        public bool _isWaxed = true;
+        public bool isWaxed = true;
 
         /// <summary>
-        /// 可被裱
+        /// 版本一变就把四个"能力位"通知出去：它们现在是只读计算属性，
+        /// 不主动 OnPropertyChanged 的话按钮的 IsEnabled 绑定不会重算。
         /// </summary>
-        [ObservableProperty]
-        private bool _canWaxed = false;
+        partial void OnSelectedVersionChanged(VectorTextComboBoxItem value)
+        {
+            OnPropertyChanged(nameof(CanWaxed));
+            OnPropertyChanged(nameof(HaveBackFace));
+            OnPropertyChanged(nameof(CanHanging));
+            OnPropertyChanged(nameof(CanGlowing));
+            VersionTypesFilter(value?.Text);
+        }
+
+        /// <summary>
+        /// 可被裱（1.20+）。直接由 SelectedVersion 现算，不再靠"版本切换事件里赋一次值"——
+        /// 那条事件没跑到（换 ItemsSource 时的 null 选择 / XAML 触发器没挂上）按钮就永远是灰的。
+        /// </summary>
+        public bool CanWaxed => IsAtLeast(SelectedVersion?.Text, "1.20");
 
         /// <summary>
         /// 已选中的颜色
         /// </summary>
         [ObservableProperty]
-        private SolidColorBrush _selectionColor;
+        private Color selectionColor;
 
         /// <summary>
         /// 是否悬挂
         /// </summary>
         [ObservableProperty]
-        private bool _isHanging;
+        private bool isHanging;
 
         /// <summary>
-        /// 能否悬挂
+        /// 能否悬挂（悬挂告示牌 1.20 才有）
         /// </summary>
-        [ObservableProperty]
-        private bool _canHanging = true;
+        public bool CanHanging => IsAtLeast(SelectedVersion?.Text, "1.20");
 
         /// <summary>
-        /// 拥有正反面
+        /// 拥有正反面（front_text/back_text 1.20 才有）
         /// </summary>
-        [ObservableProperty]
-        private bool _haveBackFace = true;
+        public bool HaveBackFace => IsAtLeast(SelectedVersion?.Text, "1.20");
 
         /// <summary>
-        /// 能发光
+        /// 能发光（荧光墨 1.17 才有）
         /// </summary>
-        [ObservableProperty]
-        private bool _canGlowing = true;
+        public bool CanGlowing => IsAtLeast(SelectedVersion?.Text, "1.17");
         /// <summary>
         /// 是否为反面
         /// </summary>
         [ObservableProperty]
-        public bool _isBack = false;
+        public bool isBack = false;
 
         /// <summary>
         /// 显示结果
         /// </summary>
         [ObservableProperty]
-        private bool _showResult;
+        private bool showResult;
 
         #region 正反面发光
         [ObservableProperty]
-        private bool _isFrontGlowing;
+        private bool isFrontGlowing;
         [ObservableProperty]
-        private bool _isBackGlowing;
+        private bool isBackGlowing;
         #endregion
 
         #endregion
 
         #region Method
-        public SignPageViewModel(IContainerProvider container,CBHKDataContext context)
+        public SignPageViewModel(IContainerProvider container,RegistryDataService dataRegistry)
         {
-            this.context = context;
+            this.dataRegistry = dataRegistry;
             this.container = container;
 
             #region 处理正反面文档
@@ -348,17 +393,38 @@ namespace CBHK.ViewModel.Component.Sign
         /// <summary>
         /// 版本蒙版,关闭指定版本或版本区间里不存在的功能
         /// </summary>
-        private void VersionMask()
+        /// <summary>
+        /// 把 NBT 片段包成命令。三条版本线：
+        /// - 1.13 以前：give 的 NBT 写在 damage 位后面，物品只能用 standing_sign
+        /// - 1.13 ~ 1.20.4：give 走物品 NBT（BlockEntityTag）
+        /// - 1.20.5 起：物品 NBT 被组件取代，give 必须写 [block_entity_data=…]（setblock 不受影响）
+        /// </summary>
+        private static string BuildSignCommand(string version, string signId, string data, bool give)
         {
-            CanWaxed = HaveBackFace = CanGlowing = CanHanging = false;
-            if (CurrentMinVersion >= 1193)
-                CanGlowing = CanHanging = true;
-            if (CurrentMinVersion >= 117)
-                CanGlowing = true;
-            if (SelectedVersion == VersionSource[0])
-                CanWaxed = HaveBackFace = CanGlowing = CanHanging = true;
-            VersionTypesFilter(SelectedVersion.Text);
+            bool is1130OrLater = IsAtLeast(version, "1.13");
+            if (give)
+            {
+                if (!is1130OrLater)
+                    // 1.13 以前是 /give <玩家> <物品> [数量] [损伤值] [NBT]：NBT 前必须有空格
+                    return "/give @p standing_sign 1 0" + (data.Length > 0 ? " {BlockEntityTag:" + data + "}" : "");
+                if (IsAtLeast(version, "1.20.5"))
+                    return "/give @p " + signId + (data.Length > 0 ? "[block_entity_data=" + data + "]" : "") + " 1";
+                return "/give @p " + signId + (data.Length > 0 ? "{BlockEntityTag:" + data + "}" : "");
+            }
+
+            // 放置：方块实体的 NBT 一直是花括号写法，1.20.5 的组件改动不影响它
+            if (is1130OrLater)
+                return "/setblock ~ ~1 ~ " + signId + data;
+            return "/setblock ~ ~1 ~ standing_sign" + (data.Length > 0 ? " " + data : "");
         }
+
+        /// <summary>某个类型（按"首次出现的版本"分桶）在当前版本下是否可见。</summary>
+        private static bool IsSignTypeVisibleInVersion(string introducedVersion, string currentVersion)
+            => introducedVersion == "all" || IsAtLeast(currentVersion, introducedVersion);
+
+        /// <summary>target ≥ minimum。走 VersionRangeChecker 的逐段比较，"26.3" 这类年份式版本也成立。</summary>
+        private static bool IsAtLeast(string target, string minimum)
+            => !string.IsNullOrWhiteSpace(target) && !VersionRangeChecker.IsLessThan(target, minimum);
 
         /// <summary>
         /// 在不同版本下过滤不应该出现的告示牌类型
@@ -366,32 +432,42 @@ namespace CBHK.ViewModel.Component.Sign
         /// <param name="version"></param>
         private void VersionTypesFilter(string version)
         {
-            if (TypeVersionMap.Count == 0)
+            if (TypeVersionMap.Count == 0 || string.IsNullOrWhiteSpace(version))
                 return;
             TypeSource.Clear();
             List<string> Result = [];
-            string currentVersion = version.Replace("+", "").Replace("-", "").Replace(".", "");
             foreach (KeyValuePair<string, List<string>> item in TypeVersionMap)
             {
-                string itemCopy = item.Key.Replace("+", "").Replace("-", "").Replace(".", "");
-                if (itemCopy == "all" || itemCopy.Contains(currentVersion) || (!itemCopy.Contains('~') && !currentVersion.Contains('~') && (int.Parse(itemCopy) <= int.Parse(currentVersion))))
-                    for (int i = 0; i < item.Value.Count; i++)
-                        Result.Add(item.Value[i]);
-                else
+                // 桶的键 = 该类型"首次出现"的版本；当前版本 ≥ 它就该看得见（"all" 是基线桶，永远可见）
+                if (!IsSignTypeVisibleInVersion(item.Key, version))
                 {
-                    if (itemCopy.Contains('~'))
-                        itemCopy = itemCopy.Replace(".", "").Split('~')[1];
-                    if (currentVersion.Contains('~'))
-                        currentVersion = currentVersion.Split('~')[1];
-                    if (int.Parse(itemCopy) <= int.Parse(currentVersion) || VersionSource[^1].Text.Contains(version))
-                        for (int i = 0; i < item.Value.Count; i++)
-                            Result.Add(item.Value[i]);
+                    continue;
+                }
+                for (int i = 0; i < item.Value.Count; i++)
+                {
+                    Result.Add(item.Value[i]);
                 }
             }
             Result.Sort();
             foreach (var item in Result)
+            {
                 TypeSource.Add(new VectorTextComboBoxItem() { Text = item });
-            SelectedSignType = TypeSource[0];
+            }
+            SelectedSignType = TypeSource.FirstOrDefault();   // 过滤后可能为空，[0] 会直接抛 ArgumentOutOfRange
+        }
+
+        /// <summary>
+        /// 注册表 id → 告示牌类型裸名：`minecraft:acacia_sign` → `acacia`。
+        /// </summary>
+        private static string NormalizeSignType(string blockId)
+        {
+            string name = string.IsNullOrEmpty(blockId) ? string.Empty : blockId.Trim();
+            int separator = name.IndexOf(':');
+            if (separator >= 0)
+            {
+                name = name[(separator + 1)..];
+            }
+            return name.EndsWith("_sign", StringComparison.Ordinal) ? name[..^"_sign".Length] : name;
         }
 
         /// <summary>
@@ -414,6 +490,16 @@ namespace CBHK.ViewModel.Component.Sign
                 paragraph.Inlines.Add(new Run() { Text = dataArray[i] });
             }
         }
+
+        private void SetColor(Color color)
+        {
+            if (SignTextEditor is null || SignTextEditor.Selection is null)
+            {
+                return;
+            }
+            TextRange textRange = new(SignTextEditor.Selection.Start, SignTextEditor.Selection.End);
+            textRange.ApplyPropertyValue(TextBlock.ForegroundProperty, new SolidColorBrush(SelectionColor));
+        }
         #endregion
 
         #region Event
@@ -434,25 +520,50 @@ namespace CBHK.ViewModel.Component.Sign
             await Task.Run(() =>
             {
                 string currentPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\";
-                List<string> typeSource = [];
-                foreach (var item in context.SignTypeSet)
+                HashSet<string> knownTypes = [];
+                bool baselineLoaded = false;
+                foreach (string version in dataRegistry.Versions)
                 {
-                    string id = item.ID;
-                    string version = item.Version;
-                    if (version is not null)
+                    // 目录的 block 注册表同时收 wall/hanging 两种变体，告示牌编辑器的类型列表只要普通告示牌。
+                    // 取到的是注册表 id（minecraft:acacia_sign），这里统一折成裸类型名（acacia）：
+                    // 面板图（<类型>SignPanel.png）、命令（<类型>_sign / <类型>_hanging_sign）、图标（<类型>_sign.png）
+                    // 全都按裸名拼，带着 "minecraft:" 和 "_sign" 去拼一个都命中不了。
+                    List<string> currentTypes = [.. dataRegistry.GetIds("block", version)
+                        .Where(id => id.EndsWith("_sign") && !id.Contains("_wall_sign") && !id.Contains("_hanging_sign"))
+                        .Select(NormalizeSignType)];
+
+                    // 只记录在该版本首次出现的类型：过滤逻辑会把命中的每个键的成员整段累加，存全量会让同一类型重复出现
+                    List<string> newTypes = [];
+                    foreach (string id in currentTypes)
                     {
-                        if (!TypeVersionMap.TryGetValue(version, out List<string> value))
-                            TypeVersionMap.Add(version, [id]);
-                        else
-                            value.Add(id);
+                        if (knownTypes.Add(id))
+                            newTypes.Add(id);
                     }
-                    typeSource.Add(id);
+
+                    if (!baselineLoaded)
+                    {
+                        // 目录里最老的版本承接"一开始就有"的类型：过滤逻辑用 "all" 键表示全版本可见，
+                        // 否则 1.13.0/1.14.0 这些比目录更老的版本会过滤出空列表，SelectedSignType 直接越界
+                        TypeVersionMap["all"] = currentTypes;
+                        baselineLoaded = true;
+                    }
+                    else if (newTypes.Count > 0)
+                    {
+                        // 键用原始版本号：判定走 VersionRangeChecker 逐段比较，"26.3" 这种年份式版本也算得对
+                        // （以前是把点去掉再比整数，26.1 → 261 反而比 1.19.4 → 1194 小，只能不建桶）
+                        TypeVersionMap[version] = newTypes;
+                    }
                 }
+
+                List<string> typeSource = [.. knownTypes];
                 typeSource.Sort();
                 foreach (var item in typeSource)
                 {
                     TypeSource.Add(new VectorTextComboBoxItem() { Text = item });
                 }
+                // 类型表载入完再按当前版本过滤一次：版本切换事件比这批数据早到，
+                // 那时 TypeVersionMap 还是空的，过滤直接早退，首屏会列出所有版本的类型
+                VersionTypesFilter(SelectedVersion?.Text);
             });
             #endregion
         }
@@ -483,7 +594,14 @@ namespace CBHK.ViewModel.Component.Sign
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ColorPickers_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) => SetColor();
+        public void ColorPicker_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is VectorColorPicker colorPicker)
+            {
+                colorPicker.UpdateSelectedColorCallBack -= SetColor;
+                colorPicker.UpdateSelectedColorCallBack += SetColor;
+            }
+        }
 
         /// <summary>
         /// 告示牌类型切换事件
@@ -492,11 +610,18 @@ namespace CBHK.ViewModel.Component.Sign
         /// <param name="e"></param>
         public void SignTypeSelectComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (SelectedSignType is null)
+            if (SelectedSignType is null || string.IsNullOrWhiteSpace(SelectedSignType.Text))
             {
                 return;
             }
-            SignPanelSource = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + SelectedSignType.Text + "SignPanel.png", UriKind.Absolute));
+            // 贴图不一定齐（例如新版加的 pale_oak 还没有面板图）：缺就保留当前这张，绝不在这里抛 ——
+            // 以前这里是 new BitmapImage(new Uri(...))，文件不存在会直接把异常抛到 SelectionChanged 里。
+            string panelPath = AppDomain.CurrentDomain.BaseDirectory + "ImageSet\\" + SelectedSignType.Text + "SignPanel.png";
+            if (!File.Exists(panelPath))
+            {
+                return;
+            }
+            SignPanelSource = new BitmapImage(new Uri(panelPath, UriKind.Absolute));
         }
 
         /// <summary>
@@ -506,8 +631,13 @@ namespace CBHK.ViewModel.Component.Sign
         /// <param name="e"></param>
         public async void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            CurrentMinVersion = int.Parse(SelectedVersion.Text.Replace(".", "").Replace("+", "").Split('-')[0]);
-            VersionMask();
+            if (SelectedVersion is null || string.IsNullOrWhiteSpace(SelectedVersion.Text))
+            {
+                // 换 ItemsSource 期间 ComboBox 会先回写一次 null
+                return;
+            }
+            // 能力位（已裱/正反面/悬挂/荧光）已改成由 SelectedVersion 现算的只读属性，
+            // 这里只负责刷新版本相关的 NBT 组件
             CancellationTokenSource cancellationTokenSource = new();
             //await Parallel.ForAsync(0, VersionComponents.Count, async (i, cancellationTokenSource) =>
             //{
@@ -833,13 +963,6 @@ namespace CBHK.ViewModel.Component.Sign
             }
         }
 
-        [RelayCommand]
-        private void SetColor()
-        {
-            TextRange textRange = new(SignTextEditor.Selection.Start, SignTextEditor.Selection.End);
-            textRange.ApplyPropertyValue(TextBlock.ForegroundProperty, SelectionColor);
-        }
-
         /// <summary>
         /// 抬起鼠标左键
         /// </summary>
@@ -871,6 +994,62 @@ namespace CBHK.ViewModel.Component.Sign
             ShowHoverMenu();
         }
 
+        /// <summary>
+        /// 收集一面牌面上的非空条目：一行（段落）一条，没写字的行直接不产出。
+        /// - 1.20+：`'[{"text":"…"}]'`（交给 messages:[…]）
+        /// - 1.20 以前：`Text1:'[{"text":"…"}]'`（行号按段落位置固定，空行也占号）
+        /// </summary>
+        private static List<string> CollectSignFaceEntries(FlowDocument document, bool modern)
+        {
+            List<string> entries = [];
+            if (document is null)
+            {
+                return entries;
+            }
+
+            List<RichParagraph> paragraphs = document.Blocks.ToList().ConvertAll(block => block as RichParagraph);
+            for (int i = 0; i < paragraphs.Count; i++)
+            {
+                StringBuilder payload = new();
+                foreach (RichRun richRun in paragraphs[i].Inlines.OfType<RichRun>())
+                {
+                    if (richRun.Text.Trim().Length == 0)
+                    {
+                        continue;
+                    }
+                    payload.Append(richRun.Result);   // 每个 run 自带尾逗号
+                }
+                if (payload.Length == 0)
+                {
+                    continue;   // 空行不产出条目 —— 以前这里产出 '[]'，再靠 Replace 补救，第一条为空就漏成前导逗号
+                }
+
+                string runs = payload.ToString().TrimEnd(',');
+                entries.Add(modern ? "'[" + runs + "]'" : "Text" + (i + 1) + ":'[" + runs + "]'");
+            }
+            return entries;
+        }
+
+        /// <summary>
+        /// 一面牌面的 NBT 片段：条目之间、以及与"发光"标记之间一律用逗号 join，空集合返回空串（调用方据此不落这一组）。
+        /// </summary>
+        private static string BuildSignFaceGroup(List<string> entries, bool modern, bool glowing)
+        {
+            if (entries.Count == 0)
+            {
+                // 这一面一个字都没写：整组都不落 —— 没有文本可发光的空组留下只会变成 {front_text:{}} 这种噪音
+                return string.Empty;
+            }
+
+            List<string> parts = [];
+            parts.Add(modern ? "messages:[" + string.Join(",", entries) + "]" : string.Join(",", entries));
+            if (glowing)
+            {
+                parts.Add(modern ? "has_glowing_text:1b" : "GlowingText:1b");
+            }
+            return string.Join(",", parts);
+        }
+
         [RelayCommand]
         /// <summary>
         /// 保存告示牌
@@ -886,108 +1065,64 @@ namespace CBHK.ViewModel.Component.Sign
         public void Run()
         {
             Result = "";
-            StringBuilder frontResult = new();
-            StringBuilder backResult = new();
-            bool IsOrBigger1_20 = SelectedVersion.Text == "1.20.0";
-            if (IsOrBigger1_20)
-            {
-                frontResult.Append("messages:[");
-                backResult.Append("messages:[");
-            }
+            bool IsOrBigger1_20 = IsAtLeast(SelectedVersion?.Text, "1.20");   // 1.20.1/1.21/26.x 都算"现代格式"
 
-            #region 正面文档
-            for (int i = 0; i < SignDocumentList[0].Blocks.Count; i++)
-            {
-                List<RichParagraph> richParagraphs = SignDocumentList[0].Blocks.ToList().ConvertAll(item => item as RichParagraph);
-                RichParagraph currentRichParagraph = richParagraphs[i];
-                if (!IsOrBigger1_20)
-                    frontResult.Append("Text" + (i + 1) + ":'[");
-                else
-                    frontResult.Append("'[");
-                foreach (RichRun richRun in currentRichParagraph.Inlines.Cast<RichRun>())
-                {
-                    if (richRun.Text.Trim().Length > 0)
-                        frontResult.Append(richRun.Result);
-                }
-                if (frontResult.ToString().EndsWith(','))
-                    frontResult = frontResult.Remove(frontResult.Length - 1, 1);
-                frontResult.Append("]',");
-            }
-            frontResult = frontResult.Remove(frontResult.Length - 1, 1).Replace(",'[]'", "");
-
-            if (frontResult.ToString() == "messages:['[]'")
-                frontResult.Clear();
-            #endregion
-            #region 反面文档
-            if (IsOrBigger1_20)
-            {
-                for (int i = 0; i < SignDocumentList[1].Blocks.Count; i++)
-                {
-                    List<RichParagraph> richParagraphs = SignDocumentList[1].Blocks.ToList().ConvertAll(item => item as RichParagraph);
-                    RichParagraph currentRichParagraph = richParagraphs[i];
-                    backResult.Append("'[");
-                    foreach (RichRun richRun in currentRichParagraph.Inlines.Cast<RichRun>())
-                    {
-                        if (richRun.Text.Trim().Length > 0)
-                            backResult.Append(richRun.Result);
-                    }
-                    if (backResult.ToString().EndsWith(','))
-                        backResult = backResult.Remove(backResult.Length - 1, 1);
-                    backResult.Append("]',");
-                }
-            }
-            backResult = backResult.Remove(backResult.Length - 1, 1).Replace(",'[]'", "");
-            if (backResult.ToString() == "messages:['[]'")
-                backResult.Clear();
-            #endregion
+            // 先把"每一面有哪些非空条目"收集出来，再统一 join。
+            // 以前是边拼边补逗号、最后再 TrimEnd(',') 补救，所以没写字的时候会留下前导/后导逗号
+            // （空行产出 '[]' 再靠 Replace(",'[]'") 兜，第一条为空就直接漏出去）。
+            List<string> frontEntries = CollectSignFaceEntries(SignDocumentList[0], IsOrBigger1_20);
+            List<string> backEntries = IsOrBigger1_20 ? CollectSignFaceEntries(SignDocumentList[1], IsOrBigger1_20) : [];
+            string frontGroup = BuildSignFaceGroup(frontEntries, IsOrBigger1_20, CanGlowing && IsFrontGlowing);
+            string backGroup = BuildSignFaceGroup(backEntries, IsOrBigger1_20, CanGlowing && IsBackGlowing);
 
             if (IsOrBigger1_20)
             {
-                if (frontResult.Length > 0)
-                    frontResult.Append(']');
-                if (backResult.Length > 0)
-                    backResult.Append(']');
-            }
-
-            if (CanGlowing && IsFrontGlowing && IsOrBigger1_20)
-                frontResult.Append(",has_glowing_text:1b");
-            else
-                if (CanGlowing && IsFrontGlowing && !IsOrBigger1_20)
-                frontResult.Append(",GlowingText:1b");
-
-            if (CanGlowing && IsBackGlowing && IsOrBigger1_20)
-                backResult.Append(",has_glowing_text:1b");
-            else
-                if (CanGlowing && IsBackGlowing && !IsOrBigger1_20)
-                backResult.Append(",GlowingText:1b");
-
-            if (CanWaxed && IsWaxed)
-                Result += "is_waxed:1b,";
-
-            string signId = CanHanging && IsHanging ?SelectedSignType.Text+"_hanging_sign": SelectedSignType.Text + "_sign";
-
-            if (IsOrBigger1_20)
-                Result = Result + (frontResult.Length > 0 ? "front_text:{" + frontResult.ToString().TrimEnd(',') + "}" : "") + (backResult.Length > 0 ? (frontResult.Length > 0 ? "," : "") + "back_text:{" + backResult.ToString().TrimEnd(',') + "}" : "");
-            else
-                Result = frontResult.ToString();
-
-            if(Setblock)
-            {
-                if (CurrentMinVersion >= 1130)
-                    Result = "/give @p " + signId + "{BlockEntityTag:{" + Result + "}}";
-                else
-                    Result = "/give @p standing_sign 1 0" + "{BlockEntityTag:{" + Result + "}}";
+                List<string> parts = [];
+                if (CanWaxed && IsWaxed)
+                    parts.Add("is_waxed:1b");
+                if (frontGroup.Length > 0)
+                    parts.Add("front_text:{" + frontGroup + "}");
+                if (backGroup.Length > 0)
+                    parts.Add("back_text:{" + backGroup + "}");
+                Result = string.Join(",", parts);
             }
             else
             {
-                if (CurrentMinVersion >= 1130)
-                    Result = "/setblock ~ ~1 ~ " + signId + "{" + Result + "}";
-                else
-                    Result = "/setblock ~ ~1 ~ standing_sign {" + Result + "}";
+                // 1.20 以前只有正面：Text1:'…',Text2:'…'，发光标记是一条独立键
+                Result = frontGroup;
             }
-            if(ShowResult)
+
+            // 这个版本装不下的 NBT：上面已经按版本过滤掉了，这里只是把"去掉了什么"攒出来告诉用户
+            List<string> dropped = [];
+            if (!IsOrBigger1_20)
             {
-                DisplayerView displayer = container.Resolve<DisplayerView>();
+                if (backEntries.Count > 0)
+                    dropped.Add("反面文本（1.20 起才有）");
+                if (IsWaxed)
+                    dropped.Add("已裱 is_waxed（1.20 起才有）");
+                if (IsHanging)
+                    dropped.Add("悬挂（1.20 起才有）");
+            }
+            if (!CanGlowing)
+            {
+                if (IsFrontGlowing)
+                    dropped.Add("正面荧光（1.17 起才有）");
+                if (IsBackGlowing)
+                    dropped.Add("反面荧光（1.17 起才有）");
+            }
+
+            string version = SelectedVersion?.Text;
+            string signType = SelectedSignType?.Text ?? "oak";
+            string signId = CanHanging && IsHanging ? signType + "_hanging_sign" : signType + "_sign";
+            string data = Result.Length > 0 ? "{" + Result + "}" : "";   // 什么都没写就不要再挂一对空花括号
+
+            Result = BuildSignCommand(version, signId, data, Give);
+
+            // 结果去哪：勾了"显示结果"就进结果窗口（提示也挂那儿），没勾就复制到剪贴板（提示挂本页）
+            DisplayerView displayer = null;
+            if (ShowResult)
+            {
+                displayer = container.Resolve<DisplayerView>();
                 if (displayer is not null && displayer.DataContext is DisplayerViewModel displayerViewModel)
                 {
                     displayer.Show();
@@ -997,15 +1132,31 @@ namespace CBHK.ViewModel.Component.Sign
             else
             {
                 Clipboard.SetText(Result);
+            }
+
+            if (dropped.Count > 0)
+            {
+                PushMessage(new GeneratorMessage()
+                {
+                    Message = "当前版本不支持：" + string.Join("、", dropped) + "，已自动去除",
+                    MessageBrush = Brushes.Red,
+                    SubMessage = "告示牌生成器",
+                    SubMessageBrush = Brushes.DarkGray,
+                    Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\sign.png", UriKind.RelativeOrAbsolute))
+                }, displayer);
+            }
+
+            if (!ShowResult)
+            {
                 bool hanged = CanHanging && IsHanging;
-                string hangingStateString = hanged ?"hanging_":"";
-                string resultTypeString = SelectedSignType.Text + '_' + hangingStateString + "sign";
-                MessagePopup.PushMessage(new GeneratorMessage()
+                string hangingStateString = hanged ? "hanging_" : "";
+                string resultTypeString = signType + '_' + hangingStateString + "sign";
+                PushMessage(new GeneratorMessage()
                 {
                     Message = "生成成功！告示牌已进入剪切板",
                     SubMessage = "告示牌生成器",
                     Icon = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"ImageSet\" + resultTypeString + ".png", UriKind.RelativeOrAbsolute))
-                });
+                }, null);
             }
         }
 

@@ -207,7 +207,7 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>
         /// 属性取值域校验（spyglass 内建属性里"文档自身可判定"的那几条）：
         /// #[integer] / #[divisible_by] / #[regex_pattern] / #[match_regex]。
-        /// canonical / dispatcher_key 属组包与语义用途，这里不判定。
+        /// canonical / dispatcherkey 属组包与语义用途，这里不判定。
         /// </summary>
         private static IEnumerable<string> AttributeViolations(McdocTreeNode node,
             IMcdocRegistryOptions registryOptions, string version)

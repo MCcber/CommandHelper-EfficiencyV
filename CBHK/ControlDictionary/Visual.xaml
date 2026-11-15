@@ -9,4 +9,6 @@
             </TextDecoration.Pen>
         </TextDecoration>
     </TextDecorationCollection>
+    <FontFamily x:Key="GlobalFont">Arial</FontFamily>
+    <SolidColorBrush x:Key="CustomWindowBackgroundBrush" Color="Transparent" />
 </ResourceDictionary>

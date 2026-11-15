@@ -145,7 +145,6 @@
                 Foreground="{DynamicResource CommonForeground}"
                 Text="Entry" />
             <Container:BindableStackPanel
-                ItemTemplateSelector="{DynamicResource MCDocumentTreeViewTemplateSelector}"
                 ItemsSource="{Binding Items}"
                 Orientation="Horizontal" />
         </Grid>
@@ -446,10 +445,7 @@
     -->
     <HierarchicalDataTemplate x:Key="TreeViewCompositeItem" ItemsSource="{Binding SelectedUnionChildren}">
         <Border Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">
-            <Container:BindableStackPanel
-                ItemTemplateSelector="{DynamicResource MCDocumentTreeViewTemplateSelector}"
-                ItemsSource="{Binding Items}"
-                Orientation="Horizontal" />
+            <Container:BindableStackPanel ItemsSource="{Binding Items}" Orientation="Horizontal" />
         </Border>
     </HierarchicalDataTemplate>
 </ResourceDictionary>

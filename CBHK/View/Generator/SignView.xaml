@@ -11,14 +11,15 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="告示牌生成器"
-    Width="965"
+    Width="850"
     Height="450"
-    MinWidth="965"
+    MinWidth="850"
     MinHeight="450"
-    MaxHeight="450"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#2F2F2F"
+    CanMaximize="False"
     IconMargin="5"
+    ResizeMode="NoResize"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 

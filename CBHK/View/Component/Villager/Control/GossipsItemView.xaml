@@ -81,7 +81,7 @@
             Height="40"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Top"
-            ArrowMargin="0 0 5 0"
+            ArrowMargin="2"
             ItemsSource="{Binding GossipTypeList}"
             SelectedIndex="0"
             SelectedItem="{Binding SelectedTypeItem}"

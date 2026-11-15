@@ -292,6 +292,23 @@ namespace CBHK.ViewModel.Component.Item
         public StringBuilder Create() => new();
 
         /// <summary>
+        /// 把当前文档的 JSON 交给命令拼装。
+        /// 迁移到 mcdoc 管线时这个方法在物品页漏掉了：Create() 造出的永远是空缓冲，
+        /// 于是不管左边填了多少字段，生成出来的都是裸物品（give @p minecraft:&lt;id&gt; 1）。
+        /// 取文本前先补跑被推迟的一代（与"复制 JSON"同一条口径），
+        /// 再把文档根（就是物品那一层 NBT）剥掉最外层花括号 —— 花括号由 BuildResult 负责加。
+        /// </summary>
+        public void CollectionData(StringBuilder Result)
+        {
+            if (Result is null)
+            {
+                return;
+            }
+            FlushDeferredRebuild();
+            Result.Append(BuildNbtBody(JsonText));   // 压单行 + 合法键去引号 + 剥外层花括号（基类共用）
+        }
+
+        /// <summary>
         /// 把缓冲里的物品 NBT 包成命令：**给予**（默认）或 **召唤掉落物**。
         /// - 给予 1.13+：`give @p minecraft:&lt;id&gt;{&lt;nbt&gt;} 1`（没有 NBT 就不带花括号）
         /// - 给予 ≤1.12：`give @p minecraft:&lt;id&gt; 1 0 {&lt;nbt&gt;}`
@@ -352,6 +369,7 @@ namespace CBHK.ViewModel.Component.Item
         public Task<string> Run(bool showResult)
         {
             var buffer = Create();
+            CollectionData(buffer);
             BuildResult(buffer);
             Result = buffer.ToString();
             if (showResult)
@@ -396,6 +414,7 @@ namespace CBHK.ViewModel.Component.Item
             };
             if (dialog.ShowDialog() != true) return;
             var buffer = Create();
+            CollectionData(buffer);
             BuildResult(buffer);
             Result = buffer.ToString();
             string folder = Path.GetDirectoryName(dialog.FileName);

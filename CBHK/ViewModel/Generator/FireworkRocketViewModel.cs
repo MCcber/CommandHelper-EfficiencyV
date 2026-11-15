@@ -63,7 +63,7 @@ namespace CBHK.ViewModel.Generator
         /// 是否展示生成结果
         /// </summary>
         [ObservableProperty]
-        private bool _showGeneratorResult = false;
+        private bool showGeneratorResult = false;
 
         #region 正方体侧面、上面和下面的纹理，烟花火箭纹理
         public BitmapImage GrassBlockSide { get; set; }
@@ -76,7 +76,7 @@ namespace CBHK.ViewModel.Generator
         /// 烟花火箭标签页
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextTabItem> _fireworkRocketPageList = 
+        public ObservableCollection<VectorTextTabItem> fireworkRocketPageList = 
         [ 
             new VectorTextTabItem() { Title = "烟花",
                 BorderThickness = new(4, 4, 4, 0),
@@ -86,17 +86,17 @@ namespace CBHK.ViewModel.Generator
         ];
 
         [ObservableProperty]
-        private VectorTextTabItem _selectedFireworkRocketPage;
+        private VectorTextTabItem selectedFireworkRocketPage;
 
         /// <summary>
         /// 形状数据源
         /// </summary>
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _shapeList = [];
+        public ObservableCollection<VectorTextComboBoxItem> shapeList = [];
 
         #region 版本数据源
         [ObservableProperty]
-        public ObservableCollection<VectorTextComboBoxItem> _versionSource = [
+        public ObservableCollection<VectorTextComboBoxItem> versionSource = [
             new VectorTextComboBoxItem() { Text = "1.20.2"},
             new VectorTextComboBoxItem() { Text = "1.12.0"}
             ];

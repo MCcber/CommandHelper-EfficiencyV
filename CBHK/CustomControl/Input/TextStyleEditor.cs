@@ -31,6 +31,7 @@ namespace CBHK.CustomControl.Input
         private VectorRichTextBox editor = null;
         private bool isEnterKeyDown = false;
         private CollectionViewSource ItemView = null;
+        private VectorColorPicker colorPicker = null;
         #endregion
 
         #region Property
@@ -252,6 +253,14 @@ namespace CBHK.CustomControl.Input
             editor.Selection.ApplyPropertyValue(System.Windows.Documents.TextElement.ForegroundProperty, new SolidColorBrush(color));
         }
 
+        /// <summary>
+        /// 交互结束后把当前颜色再落一次到选区（拖动期间已由 UpdateSelectedColorCallBack 实时刷过）。
+        /// </summary>
+        private void ApplyCurrentColor()
+        {
+            UpdateColor(colorPicker.SelectedColor);
+        }
+
         private void AddNewStyleItem()
         {
             if (editor.Document.Blocks.FirstBlock is Paragraph paragraph)
@@ -390,9 +399,13 @@ namespace CBHK.CustomControl.Input
         {
             base.OnApplyTemplate();
 
-            if (GetTemplateChild("colorPicker") is VectorColorPicker vectorColorPicker)
+            colorPicker = GetTemplateChild("colorPicker") as VectorColorPicker;
+            if (colorPicker is not null)
             {
-                vectorColorPicker.UpdateSelectedColorCallBack = UpdateColor;
+                // 拖动中实时刷（SelectedColor 是 TwoWay 实时变的），松手再补一次最终值
+                colorPicker.UpdateSelectedColorCallBack = UpdateColor;
+                colorPicker.SelectedColorChanged -= ApplyCurrentColor;
+                colorPicker.SelectedColorChanged += ApplyCurrentColor;
             }
 
             OriginMargin = Margin;

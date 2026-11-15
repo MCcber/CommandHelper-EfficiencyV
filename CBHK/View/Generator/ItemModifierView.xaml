@@ -26,18 +26,7 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <VectorComboBox:VectorTextComboBox
-            Grid.Row="0"
-            Height="30"
-            ItemsSource="{Binding VersionList}"
-            SelectedIndex="0"
-            SelectedItem="{Binding CurrentVersion}"
-            Style="{StaticResource VectorTextComboBoxStyle}" />
-        <DockPanel Grid.Row="1" Grid.Column="0">
+        <DockPanel Grid.Column="0">
             <ContentControl
                 Content="{Binding}"
                 ContentTemplate="{StaticResource McdocGeneratorChrome}"
@@ -58,7 +47,6 @@
                 ItemsSource="{Binding Rows}" />
         </DockPanel>
         <GridSplitter
-            Grid.Row="1"
             Grid.Column="1"
             VerticalAlignment="Stretch"
             Background="Transparent"
@@ -66,7 +54,6 @@
             BorderThickness="1,0,1,0"
             ResizeBehavior="PreviousAndNext" />
         <json:JsonTextEditor
-            Grid.Row="1"
             Grid.Column="2"
             Margin="5"
             HorizontalAlignment="Stretch"

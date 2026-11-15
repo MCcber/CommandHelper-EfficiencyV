@@ -11,7 +11,7 @@ namespace CBHK.Utility.Visual
     {
         #region Method
         private readonly VectorRichTextBox editor;
-        private readonly Random _rng = new();
+        private readonly Random rng = new();
         private const string CharPool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
         #endregion
 
@@ -98,7 +98,7 @@ namespace CBHK.Utility.Visual
 
             // 构造随机等宽字符
             char[] chars = new char[run.Text.Length];
-            for (int i = 0; i < chars.Length; i++) chars[i] = CharPool[_rng.Next(CharPool.Length)];
+            for (int i = 0; i < chars.Length; i++) chars[i] = CharPool[rng.Next(CharPool.Length)];
 
             // 使用 FormattedText 直接绘制到 DrawingContext
             FormattedText ft = new(

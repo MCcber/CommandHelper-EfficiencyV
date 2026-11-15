@@ -4,17 +4,16 @@ using CBHK.ViewModel.Generator;
 using CBHK.Utility.Data;
 using CBHK.View;
 using DryIoc;
-using Microsoft.EntityFrameworkCore;
 using MinecraftLanguageModelLibrary.Utility;
 using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Mvvm;
 using Serilog;
-using SQLitePCL;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
+using System.Windows.Media;
 using CBHK.View.Component.Villager.Control;
 using CBHK.ViewModel.Component.Villager.Control;
 using CBHK.ViewModel.Component.Recipe.Strategy;
@@ -30,7 +29,7 @@ namespace CBHK
         private static string StartUpTimeString = "";
 
 #pragma warning disable IDE0052
-        private Mutex _mutex;
+        private Mutex mutex;
 #pragma warning disable IDE0052
         #endregion
 
@@ -52,7 +51,7 @@ namespace CBHK
         protected override void OnStartup(StartupEventArgs e)
         {
             const string applicationName = "CommandHelper-EfficiencyV @By HongHuangTaiChu Team";
-            _mutex = new Mutex(true, applicationName, out bool isCreateNew);
+            mutex = new Mutex(true, applicationName, out bool isCreateNew);
             if (!isCreateNew)
             {
                 MessageBox.Show("CommandHelper-EfficiencyV is already Running!", "CommandHelper-EfficiencyV", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -62,24 +61,43 @@ namespace CBHK
                 Current.Shutdown();
             }
 
-            //必须步骤，为了让SQLite的代码先行模式能够正常运行
-            Batteries.Init();
-
             //订阅异常处理
             SetupExceptionHandling();
 
             base.OnStartup(e);
+
+            // 全局字体：窗口样式里是 DynamicResource，改资源会传播到已经建好的窗体，
+            // 所以放在 base 之后（外壳已创建）也能生效
+            ApplyGlobalFont(Container.Resolve<EnvironmentSettingsService>().Current.FontFamily);
+        }
+
+        /// <summary>
+        /// 把设置里的字体写进 GlobalFont 资源。字体名非法时保留 Visual.xaml 里的默认值。
+        /// </summary>
+        private void ApplyGlobalFont(string fontFamilyName)
+        {
+            if (string.IsNullOrWhiteSpace(fontFamilyName))
+            {
+                return;
+            }
+
+            try
+            {
+                Resources["GlobalFont"] = new FontFamily(fontFamilyName);
+            }
+            catch
+            {
+                // 名字解析不了就用默认字体，别让启动挂在字体上
+            }
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            containerRegistry.RegisterScoped<CBHKDataContext>(() =>
-            {
-                var options = new DbContextOptionsBuilder<CBHKDataContext>()
-                    .Options;
-
-                return new CBHKDataContext(options);
-            });
+            // 数据源：仓内静态目录（Registries 的整理版）+ mcdoc 解析出来的命令枚举，两者都由本地文件驱动
+            containerRegistry.RegisterSingleton<RegistryDataService>();
+            containerRegistry.RegisterSingleton<SupplementDataService>();
+            containerRegistry.RegisterSingleton<EnvironmentSettingsService>();
+            containerRegistry.RegisterSingleton(typeof(ICatalogEnumProvider), typeof(CatalogEnumViewModel));
 
             containerRegistry.RegisterSingleton<Resource>();
             containerRegistry.RegisterSingleton<MainView>();
@@ -88,8 +106,6 @@ namespace CBHK
             containerRegistry.RegisterSingleton<DisplayerView>();
             containerRegistry.RegisterSingleton<RecipeStrategyRegistry>(() => RecipeStrategyRegistry.Create());
             containerRegistry.RegisterSingleton<SlotDropStrategyRegistry>(() => SlotDropStrategyRegistry.Create());
-            containerRegistry.Register<MCDocumentMetaTypeDTOHelper>();
-            containerRegistry.Register<MetaTypeDTOValidator>();
 
             #region 注册页面上的组件
             containerRegistry.Register<TransactionItemView>();

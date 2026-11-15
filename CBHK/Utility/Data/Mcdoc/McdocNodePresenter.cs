@@ -182,15 +182,19 @@ namespace CBHK.Utility.Data.Mcdoc
             };
         }
 
-        /// <summary>物品/方块 id 字段：走带图标的下拉框。</summary>
+        /// <summary>物品 / 方块 / 实体这种"看得见的东西"的 id 字段：走带图标的下拉框。</summary>
         protected static bool IsIconSelectFor(McdocTreeNode node)
         {
             // misode 的 StringHead 拿的是 simplify 之后的类型：只要最终是 string（Reference 本该被解析成 string），
-            // 且 #[id] 是 item/block，就给图标位（McdocRenderer.tsx:209）。未解析的 Reference 也算——
+            // 且 #[id] 指向看得见的 id 空间，就给图标位（McdocRenderer.tsx:209）。未解析的 Reference 也算——
             // 候选值已经由 McdocSelectOptions 填过，图标位与候选同源。
             if (node?.Type?.Kind is not (McdocTypeKind.String or McdocTypeKind.Enum or McdocTypeKind.Reference)) return false;
-            var registry = McdocSelectOptions.Resolve(node.DeclaredType ?? node.Type)?.Registry;
-            return registry is "item" or "block";
+            // 声明类型常被指令包装（Mapped / Union / Reference，例如 advancement 的 display.icon = until/since 联合），
+            // #[id] 实际落在**求值出来的**那一层上：只查 DeclaredType 会漏掉 `display.icon.id` 这种（真机实测 registry 在 Type 上）。
+            var registry = McdocSelectOptions.Resolve(node.DeclaredType)?.Registry;
+            if (string.IsNullOrEmpty(registry)) registry = McdocSelectOptions.Resolve(node.Type)?.Registry;
+            // 贴图在 ImageSet（按 id 平铺），缺图的项自动只显示文字，所以这里只管"这个 id 空间有没有图"。
+            return registry is "item" or "block" or "entity" or "entity_type";
         }
 
         protected static McdocRowKind RowKindFor(McdocTreeNode node)
