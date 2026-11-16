@@ -246,6 +246,58 @@ namespace CBHK.Probe
             return root;
         }
 
+        /// <summary>
+        /// 版本演进用例：**旧版本** schema。`legacyExtra` 只在旧版本里声明（结构 + 列表 + 可选标量），
+        /// 键序故意是 a → legacyExtra → b：切回来时要在**原位置**复活，不是被挪到末尾。
+        /// </summary>
+        public static McdocType VersionedHostTypeV1()
+        {
+            var point = McdocType.Create(McdocTypeKind.Struct);
+            point.Fields =
+            [
+                Static("x", McdocType.Create(McdocTypeKind.Int)),
+                Static("y", McdocType.Create(McdocTypeKind.Int))
+            ];
+            var points = McdocType.Create(McdocTypeKind.List);
+            points.Item = point;
+            var extra = McdocType.Create(McdocTypeKind.Struct);
+            extra.Fields =
+            [
+                Static("title", McdocType.Create(McdocTypeKind.String)),
+                Static("points", points),
+                Static("enabled", McdocType.Create(McdocTypeKind.Boolean), optional: true)
+            ];
+            var nested = McdocType.Create(McdocTypeKind.Struct);
+            nested.Fields = [ Static("b1", McdocType.Create(McdocTypeKind.Int)) ];
+
+            var root = McdocType.Create(McdocTypeKind.Struct);
+            root.Fields =
+            [
+                Static("a", McdocType.Create(McdocTypeKind.Int)),
+                Static("legacyExtra", extra),
+                Static("b", nested)
+            ];
+            return root;
+        }
+
+        /// <summary>
+        /// 同一份文档在**新版本**里的 schema：`legacyExtra` 这个字段整个不见了（不是改形状，是被删掉）。
+        /// 它的值必须原样留在 JSON 里、收进保留区；切回旧版本要能整棵子树复活。
+        /// </summary>
+        public static McdocType VersionedHostTypeV2()
+        {
+            var nested = McdocType.Create(McdocTypeKind.Struct);
+            nested.Fields = [ Static("b1", McdocType.Create(McdocTypeKind.Int)) ];
+
+            var root = McdocType.Create(McdocTypeKind.Struct);
+            root.Fields =
+            [
+                Static("a", McdocType.Create(McdocTypeKind.Int)),
+                Static("b", nested)
+            ];
+            return root;
+        }
+
         /// <summary>§七-1：criterion 形态——map 的值类是"只由 struct 组成的联合"。</summary>
         public static McdocType CriterionRootType()
         {

@@ -29,6 +29,16 @@ namespace CBHK.Probe
             }
         }
 
+        /// <summary>按引用比较节点：重建会换掉实例，"同一行/同一节点出现了两次"必须按引用判，不能被值相等骗过去。</summary>
+        private sealed class NodeReferenceComparer : IEqualityComparer<McdocTreeNode>
+        {
+            public static readonly NodeReferenceComparer Instance = new();
+
+            public bool Equals(McdocTreeNode left, McdocTreeNode right) => ReferenceEquals(left, right);
+
+            public int GetHashCode(McdocTreeNode node) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(node);
+        }
+
         private static void Deterministic()
         {
             // 界面默认就是懒建（CBHK\Utility\Data\Mcdoc\McdocNodeFactory.cs:30-33）：
@@ -408,6 +418,210 @@ namespace CBHK.Probe
             checks.That(document.FindNode("$.b.b1") is not null, "同层还在的键没被误删", "");
             Contracts(checks, document, projector, "清空遗留键");
             return checks.Finish("--case clear-unknown-fields");
+        }
+
+        // ── 第四顺位：版本演进。旧版本独有字段切走要收进保留区、切回要原地复活；重建不许留幽灵 ──
+        public static int VersionRoundtrip()
+        {
+            Deterministic();
+            var checks = new Checks();
+            var oldType = Fixtures.VersionedHostTypeV1();
+            var newType = Fixtures.VersionedHostTypeV2();
+            // legacyExtra 只在旧版本里声明：a → legacyExtra → b 的键序是"原位置"的判据
+            const string json = "{\"a\":1,\"legacyExtra\":{\"title\":\"t\",\"points\":[{\"x\":1,\"y\":2},{\"x\":3,\"y\":4}],\"enabled\":true},\"b\":{\"b1\":9}}";
+            const string extraJson = "{\"title\":\"t\",\"points\":[{\"x\":1,\"y\":2},{\"x\":3,\"y\":4}],\"enabled\":true}";
+            var canonical = McdocJsonFormatter.Format(McdocJsonTextParser.Parse(json).Root);
+            var extraCanonical = McdocJsonFormatter.Format(McdocJsonTextParser.Parse(extraJson).Root);
+
+            var failures = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            var labels = new List<string>();
+            void Probe(string label, bool ok, string detail)
+            {
+                if (!labels.Contains(label)) labels.Add(label);
+                if (ok) return;
+                if (!failures.TryGetValue(label, out var list)) failures[label] = list = [];
+                list.Add(detail);
+            }
+
+            static string Squash(string value) => value?.Replace("\r", "").Replace("\n", " ").Replace("  ", " ") ?? "<null>";
+
+            List<McdocTreeNode> Reachable(McdocTreeDocument document)
+            {
+                var list = new List<McdocTreeNode>();
+                var seen = new HashSet<McdocTreeNode>(NodeReferenceComparer.Instance);
+                void Walk(McdocTreeNode node)
+                {
+                    if (node is null || !seen.Add(node)) return;
+                    list.Add(node);
+                    foreach (var child in node.Children) Walk(child);
+                    foreach (var child in node.Items) Walk(child);
+                    foreach (var child in node.SelectedUnionChildren) Walk(child);
+                }
+                foreach (var node in document.Nodes) Walk(node);
+                Walk(document.PreservedGroup);
+                return list;
+            }
+
+            string text = canonical;
+            McdocTreeDocument previous = null;
+            var previousNodes = new List<McdocTreeNode>();
+            var previousRows = new List<McdocRow>();
+            long memoryBaseline = 0;
+            for (var round = 1; round <= 10; round++)
+            {
+                var useNew = round % 2 == 0;
+                // 切版本 = VM 的 ApplyGameVersion：按**同一份文本**整篇重建（CreateDocument + LoadMcdocTree）
+                var (document, projector, _) = Harness(new McdocTypeIndex(), useNew ? newType : oldType, text);
+                var collapsedRows = projector.Rows.Count;
+                // 收起态：容器行在，容器里的遗留键行不在
+                var collapsedLegacyRow = document.FindNode("$.legacyExtra") is { } early ? projector.Find(early) : null;
+                ExpandPreserved(document, projector);
+                var nodes = Reachable(document);
+
+                var formatted = McdocJsonFormatter.Format(document.RootJson);
+                Probe("每轮文本往返一致（键一个不丢、顺序不变）", string.Equals(formatted, canonical, StringComparison.Ordinal),
+                    "round=" + round + " → " + Squash(formatted));
+
+                var duplicatedPath = nodes.Where(node => !string.IsNullOrEmpty(node.JsonPath) && !(node.IsDynamicKey && node.Json is null))
+                    .GroupBy(node => node.JsonPath, StringComparer.Ordinal)
+                    .Where(group => group.Count() > 1)
+                    .Select(group => group.Key + "×" + group.Count()).ToList();
+                Probe("同一 JsonPath 不出现两个节点", duplicatedPath.Count == 0,
+                    "round=" + round + " " + string.Join(",", duplicatedPath.Take(4)));
+                var duplicatedRow = projector.Rows
+                    .Where(row => row.Node is not null && row.Kind is not (McdocRowKind.More or McdocRowKind.AddTail))
+                    .GroupBy(row => row.Node, NodeReferenceComparer.Instance)
+                    .Where(group => group.Count() > 1)
+                    .Select(group => (group.Key.JsonPath ?? "?") + "×" + group.Count()).ToList();
+                Probe("同一节点不出现两行（More / AddTail 伪行除外）", duplicatedRow.Count == 0,
+                    "round=" + round + " " + string.Join(",", duplicatedRow.Take(4)));
+                var detached = projector.Rows.Where(row => row.Node is not null && !document.IsAttached(row.Node))
+                    .Select(row => row.Node.JsonPath ?? "?").Take(4).ToList();
+                Probe("每一行都挂在当前这一代的树上", detached.Count == 0,
+                    "round=" + round + " 脱落=" + string.Join(",", detached));
+
+                if (previous is not null)
+                {
+                    var stillAttached = previousNodes.Where(document.IsAttached).Select(node => node.JsonPath ?? "?").Take(4).ToList();
+                    Probe("上一代的节点在新文档里一个都不挂", stillAttached.Count == 0,
+                        "round=" + round + " 仍挂=" + string.Join(",", stillAttached));
+                    var newer = new HashSet<McdocTreeNode>(nodes, NodeReferenceComparer.Instance);
+                    var reused = previousNodes.Count(node => newer.Contains(node));
+                    Probe("新旧两代节点集合没有复用（按引用）", reused == 0, "round=" + round + " 复用=" + reused);
+                    var rowReused = previousRows.Count(row => row.Node is not null && document.IsAttached(row.Node));
+                    Probe("上一代的行没有指向新文档的节点", rowReused == 0, "round=" + round + " 复用=" + rowReused);
+                }
+
+                var legacy = document.FindNode("$.legacyExtra");
+                if (useNew)
+                {
+                    Probe("新版本里 legacyExtra 收进保留区（unknown + 父级是合成容器）",
+                        legacy is { IsUnknownField: true } && ReferenceEquals(legacy.Parent, document.PreservedGroup)
+                            && document.PreservedGroup.Children.Any(child => ReferenceEquals(child, legacy)),
+                        "round=" + round + " unknown=" + (legacy?.IsUnknownField.ToString() ?? "<无节点>")
+                            + " parent=" + (legacy?.Parent?.JsonPath ?? "<null>"));
+                    Probe("新版本里遗留键计数 == 1", document.CountUnknownFields() == 1,
+                        "round=" + round + " count=" + document.CountUnknownFields());
+                    Probe("容器行一直在、收起时不出遗留键行，展开才多出那一行",
+                        projector.Find(document.PreservedGroup) is not null
+                            && collapsedLegacyRow is null
+                            && projector.Rows.Count - collapsedRows == 1,
+                        "round=" + round + " 收起=" + collapsedRows + " 展开=" + projector.Rows.Count
+                            + " 收起时行=" + (collapsedLegacyRow?.Kind.ToString() ?? "<无>"));
+                    var preservedRow = legacy is null ? null : projector.Find(legacy);
+                    Probe("遗留键只占一行、不给编辑器、不建子级",
+                        preservedRow is { Kind: McdocRowKind.Plain } && preservedRow.Node.Children.Count == 0,
+                        "round=" + round + " row=" + (preservedRow?.Kind.ToString() ?? "<无行>")
+                            + " children=" + (legacy?.Children.Count.ToString() ?? "?"));
+                    Probe("遗留键的值原样留在 JSON 里（整棵子树）",
+                        string.Equals(McdocJsonFormatter.Format(document.RootJson.Get("legacyExtra")), extraCanonical, StringComparison.Ordinal),
+                        "round=" + round + " value=" + Squash(McdocJsonFormatter.Format(document.RootJson.Get("legacyExtra"))));
+                }
+                else
+                {
+                    Probe("切回旧版本后 legacyExtra 复活成正常节点",
+                        legacy is { IsUnknownField: false } && !ReferenceEquals(legacy.Parent, document.PreservedGroup),
+                        "round=" + round + " node=" + (legacy is null ? "<无>" : "unknown=" + legacy.IsUnknownField));
+                    Probe("切回旧版本后保留区为空、计数归零",
+                        document.PreservedGroup.Children.Count == 0 && document.CountUnknownFields() == 0,
+                        "round=" + round + " 保留区=" + document.PreservedGroup.Children.Count + " 计数=" + document.CountUnknownFields());
+                    var order = document.RootJson.Properties?.Select(pair => pair.Key).ToList() ?? [];
+                    Probe("复活在原位置（键序 a,legacyExtra,b 不变）",
+                        order.Count == 3 && order[0] == "a" && order[1] == "legacyExtra" && order[2] == "b",
+                        "round=" + round + " order=" + string.Join(",", order));
+                    Probe("复活后值完全相同（嵌套列表 + 可选标量）",
+                        legacy?.Json is not null && string.Equals(McdocJsonFormatter.Format(legacy.Json), extraCanonical, StringComparison.Ordinal),
+                        "round=" + round + " value=" + Squash(legacy?.Json is null ? "<null>" : McdocJsonFormatter.Format(legacy.Json)));
+                    legacy?.EnsureChildren();
+                    var names = legacy?.Children.Select(child => child.FieldName).ToList() ?? [];
+                    Probe("复活后按 schema 建出子级（title / points / enabled）",
+                        names.Count == 3 && names.Contains("title") && names.Contains("points") && names.Contains("enabled"),
+                        "round=" + round + " children=" + string.Join(",", names));
+                    var revivingRow = legacy is null ? null : projector.Find(legacy);
+                    Probe("复活后有自己的行（不是保留区的行）",
+                        revivingRow is not null && ReferenceEquals(revivingRow.Node, legacy),
+                        "round=" + round + " row=" + (revivingRow?.Kind.ToString() ?? "<无行>"));
+                }
+
+                if (round == 2) { GC.Collect(); memoryBaseline = GC.GetTotalMemory(true); }
+                previous = document;
+                previousNodes = nodes;
+                previousRows = projector.Rows.ToList();
+                text = formatted;
+            }
+            GC.Collect();
+            var memoryAfter = GC.GetTotalMemory(true);
+            checks.That(memoryAfter - memoryBaseline < 16L * 1024 * 1024,
+                "快速来回切 10 次内存没有异常暴涨（第 2 轮 → 第 10 轮）",
+                "增长=" + ((memoryAfter - memoryBaseline) / 1024) + "KB（阈值 16384KB）");
+
+            // ── 极限破坏：保留区状态下删 / 再删 / 编辑 / 清光，不许 NRE，也不许留残余 ──
+            var survived = true;
+            var trouble = "";
+            try
+            {
+                var (document, projector, _) = Harness(new McdocTypeIndex(), newType, canonical);
+                ExpandPreserved(document, projector);
+                var legacy = document.FindNode("$.legacyExtra");
+                legacy?.EnsureChildren();
+                var row = legacy is null ? null : projector.Find(legacy);
+                row?.UnknownDeleteCommand.Execute(null);
+                row?.UnknownDeleteCommand.Execute(null);          // 再点一次：走 NotFound 分支，不许抛
+                document.RefreshNode(document.FindNode("$.b"));
+                projector.Reset(document.ProjectionRoots);
+                if (document.RootJson.Get("legacyExtra") is not null) trouble = "删了两次键还在";
+                var leftovers = document.FindUnknownFields().Count;
+                if (leftovers != 0) trouble = "删完了还扫到 " + leftovers + " 个遗留键";
+
+                // 编辑遗留值：文本改一个嵌套标量 → 整篇重建，仍是一行、值是新的
+                var editedText = canonical.Replace("\"t\"", "\"edited\"");
+                document.Load(newType, McdocJsonTextParser.Parse(editedText).Root);
+                var edited = document.FindNode("$.legacyExtra");
+                if (edited?.Json?.Get("title")?.StringValue != "edited") trouble = "编辑后的值没进文档";
+                projector.Reset(document.ProjectionRoots);
+                ExpandPreserved(document, projector);
+                if (edited is not null && projector.Find(edited) is null) trouble = "编辑后遗留键没有行";
+
+                var removed = document.RemoveAllUnknownFields();
+                if (removed != 1) trouble = "RemoveAllUnknownFields 返回 " + removed;
+                document.Load(newType, document.RootJson);
+                projector.Reset(document.ProjectionRoots);
+                if (document.CountUnknownFields() != 0 || document.PreservedGroup.Children.Count != 0) trouble = "清光后保留区还有东西";
+            }
+            catch (Exception error)
+            {
+                survived = false;
+                trouble = error.GetType().Name + ": " + error.Message;
+            }
+            checks.That(survived && trouble.Length == 0, "保留区状态下删 / 再删 / 编辑 / 清光全程不抛、不留残余",
+                survived ? "trouble=" + (trouble.Length == 0 ? "<无>" : trouble) : trouble);
+
+            foreach (var label in labels)
+            {
+                var detail = failures.TryGetValue(label, out var list) ? string.Join(" | ", list.Take(4)) : "";
+                checks.That(detail.Length == 0, label, detail);
+            }
+            return checks.Finish("--case version-roundtrip");
         }
 
         // ── BlockState 资产 → mcdoc:block_states 成员（判据比对真资产文件，不写死）─────
