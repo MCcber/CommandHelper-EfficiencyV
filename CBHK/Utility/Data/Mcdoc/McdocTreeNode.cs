@@ -60,11 +60,25 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>union 行从标量分支镜像过来的"物品图标位"（misode 的 ItemIdPreview 在并排的 StringHead 里）。</summary>
         public bool MirrorIconSelect { get; set; }
 
+        // 命令**一律懒建**：建树期每节点造 8~9 个 McdocCommand（各带两个闭包 + 一个事件）在 1MB 档
+        // 就是 80 多万个对象，GC 每次都得把它们全扫一遍。节点只留"怎么执行"的知识，谁绑到按钮上才造谁。
         /// <summary>右键"复制"：深拷贝本节点的 JSON 值并插到同层（仅列表项有意义）。</summary>
-        public System.Windows.Input.ICommand DuplicateCommand { get; set; }
+        private System.Windows.Input.ICommand duplicateCommand;
+        public System.Windows.Input.ICommand DuplicateCommand
+        {
+            get => duplicateCommand ??= new McdocCommand(() => McdocCollectionEditor.Default.DuplicateItem(this), CanDuplicate);
+            set => duplicateCommand = value;
+        }
 
         /// <summary>缺省结构的 ⊕ 设默认值（misode StructHead）。</summary>
-        public System.Windows.Input.ICommand SetDefaultCommand { get; set; }
+        private System.Windows.Input.ICommand setDefaultCommand;
+        public System.Windows.Input.ICommand SetDefaultCommand
+        {
+            get => setDefaultCommand ??= new McdocCommand(
+                () => McdocCollectionEditor.Default.SetDefault(this, Runtime),
+                () => Json is null && Parent is not null);
+            set => setDefaultCommand = value;
+        }
 
         /// <summary>数值行的 -/+（模板的数据上下文是节点，不是行）。</summary>
         // 命令按节点缓存：每次读取都新造一个对象的话，WPF 的可用性重问会一直换实例（按钮状态跟着抖）
@@ -77,7 +91,36 @@ namespace CBHK.Utility.Data.Mcdoc
             => increaseCommand ??= new McdocCommand(() => McdocCollectionEditor.Default.StepNumber(this, 1m));
 
         /// <summary>列表头部的 ⊕（插到 0）。</summary>
-        public System.Windows.Input.ICommand AddItemTopCommand { get; set; }
+        private System.Windows.Input.ICommand addItemTopCommand;
+        public System.Windows.Input.ICommand AddItemTopCommand
+        {
+            get => addItemTopCommand ??= new McdocCommand(
+                () => McdocCollectionEditor.Default.AddItem(this, Runtime, atTop: true), CanAppendItems);
+            set => addItemTopCommand = value;
+        }
+
+        /// <summary>追加可用性：map/struct 的 ⊕ 必须走"起键"（CommitEntry），按追加放行会变成按了没反应。</summary>
+        private bool CanAppendItems()
+            => Type?.IsListLike == true
+                || (UnionListLike && SelectedUnionMember?.IsListLike == true)
+                // any 的 list 分支：类型是 any、形状是数组，⊕ 同样要能加项
+                || (Type?.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe && Json?.Kind == McdocJsonKind.Array);
+
+        private bool CanDuplicate()
+            => Json is not null
+                && Parent?.Json is { Kind: McdocJsonKind.Array } list
+                && list.Items is not null
+                && Parent.Type?.Kind != McdocTypeKind.Tuple
+                && !(Parent.Type?.LengthRange is { Max: { } max } && list.Items.Count >= max);
+
+        private bool CanRemoveItem()
+            => Json is { Kind: McdocJsonKind.Array } list && list.Items is { Count: > 0 };
+
+        private bool CanRemoveField()
+            => !IsRequired
+                && Parent?.Json is { Kind: McdocJsonKind.Object } parent
+                && parent.Properties is not null
+                && parent.Properties.Any(pair => pair.Key == FieldName);
 
         /// <summary>列表条目的自身操作（misode ListItem 的 remove / move up / move down）。</summary>
         public System.Windows.Input.ICommand RemoveSelfCommand { get; set; }
@@ -96,7 +139,12 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         /// <summary>可选字段的"移除"（misode 的 unset）：把自己从父对象里删掉。</summary>
-        public System.Windows.Input.ICommand RemoveFieldCommand { get; set; }
+        private System.Windows.Input.ICommand removeFieldCommand;
+        public System.Windows.Input.ICommand RemoveFieldCommand
+        {
+            get => removeFieldCommand ??= new McdocCommand(() => McdocCollectionEditor.Default.RemoveField(this), CanRemoveField);
+            set => removeFieldCommand = value;
+        }
 
         private string editingKey = "";
         /// <summary>
@@ -233,10 +281,22 @@ namespace CBHK.Utility.Data.Mcdoc
         public Action<McdocJsonValue> ReplaceRoot { get; set; }
 
         /// <summary>列表的"+"：追加一个默认项。</summary>
-        public System.Windows.Input.ICommand AddItemCommand { get; set; }
+        private System.Windows.Input.ICommand addItemCommand;
+        public System.Windows.Input.ICommand AddItemCommand
+        {
+            get => addItemCommand ??= new McdocCommand(
+                () => McdocCollectionEditor.Default.AddItem(this, Runtime), CanAppendItems);
+            set => addItemCommand = value;
+        }
 
         /// <summary>列表的"−"：删掉最后一项（逐项删除走右键/后续菜单）。</summary>
-        public System.Windows.Input.ICommand RemoveItemCommand { get; set; }
+        private System.Windows.Input.ICommand removeItemCommand;
+        public System.Windows.Input.ICommand RemoveItemCommand
+        {
+            get => removeItemCommand ??= new McdocCommand(
+                () => McdocCollectionEditor.Default.RemoveLastItem(this), CanRemoveItem);
+            set => removeItemCommand = value;
+        }
 
         /// <summary>结构被改动（增删项）时回调宿主：需要整体重排文本并重建树。</summary>
         public Action<McdocTreeNode> StructureChanged { get; set; }
@@ -325,8 +385,15 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>JSON 里有、schema 里没声明的键（misode 的 UnknownField）。</summary>
         public bool IsUnknownField { get; set; }
 
+        /// <summary>
+        /// 空诊断清单的**共享哨兵**：校验器每轮把"没有诊断"的节点指回这一份，先攒后分配。
+        /// 每节点一个 List 在 1MB 档是 18 万次分配，量出来占 doc.validate 的九成（时间几乎全落在 GC 上）。
+        /// 共享只读安全：写入方（McdocValidator.Add）发现是哨兵会先换成自己的新列表，不会写进这份。
+        /// </summary>
+        public static readonly List<string> EmptyDiagnostics = new(0);
+
         /// <summary>结构诊断（McdocValidator 写入）。</summary>
-        public List<string> Diagnostics = [];
+        public List<string> Diagnostics = EmptyDiagnostics;
 
         /// <summary>求值失败的原因：不抛给上层，挂在节点上由行显示（misode 的 ErrorIndicator）。</summary>
         public string Error { get; set; }
@@ -412,8 +479,13 @@ namespace CBHK.Utility.Data.Mcdoc
             RefreshChildren?.Invoke();
         }
 
-        public System.Windows.Input.ICommand ShowMoreCommand { get; set; }
-        public System.Windows.Input.ICommand ShowAllCommand { get; set; }
+        private System.Windows.Input.ICommand showMoreCommand;
+        public System.Windows.Input.ICommand ShowMoreCommand
+            => showMoreCommand ??= new McdocCommand(() => ItemsShown += Math.Max(1, McdocRowProjector.PageSize));
+
+        private System.Windows.Input.ICommand showAllCommand;
+        public System.Windows.Input.ICommand ShowAllCommand
+            => showAllCommand ??= new McdocCommand(() => ItemsShown = int.MaxValue);
 
         /// <summary>行描述（misode 的 Head）：由 presenter 族产出，视图层不再判断类型。</summary>
         public McdocNodeHead Head => McdocPresenterRegistry.Default.Describe(this);

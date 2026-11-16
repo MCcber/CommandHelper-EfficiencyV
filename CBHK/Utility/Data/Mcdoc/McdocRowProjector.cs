@@ -118,8 +118,15 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             for (var i = 0; i < count; i++)
             {
-                byNode.Remove(Rows[index + i].Node);
-                Rows[index + i].Detach();
+                var row = Rows[index + i];
+                // More / AddTail 行借用父容器节点的身份（McdocRow 的 Node 就是那个列表节点），
+                // 丢掉它们不等于父行没了：只注销"登记在案的那一行"，否则父行还留在 Rows 里、
+                // Find 却已经找不到 → 下一次结构变更 RefreshAround 必然失败 → 整表 Reset。
+                if (row.Node is not null && byNode.TryGetValue(row.Node, out var mapped) && ReferenceEquals(mapped, row))
+                {
+                    byNode.Remove(row.Node);
+                }
+                row.Detach();
             }
             Rows.RemoveRange(index, count);
         }
@@ -179,9 +186,18 @@ namespace CBHK.Utility.Data.Mcdoc
         public bool RefreshAround(McdocTreeNode node)
         {
             var parent = node?.Parent;
-            if (parent is null) return false;
+            if (parent is null)
+            {
+                McdocWriteTrace.Trace("refresh-around-miss", "why=no-parent path=" + (node?.JsonPath ?? "?"));
+                return false;
+            }
             var row = Find(parent);
-            if (row is null) return false;
+            if (row is null)
+            {
+                McdocWriteTrace.Trace("refresh-around-miss", "why=no-row path=" + (node?.JsonPath ?? "?")
+                    + " parent=" + (parent.JsonPath ?? "?") + " rows=" + Rows.Count);
+                return false;
+            }
             SpliceSubtree(row);
             return true;
         }

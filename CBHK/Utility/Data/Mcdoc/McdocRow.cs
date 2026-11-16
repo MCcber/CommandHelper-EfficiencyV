@@ -459,12 +459,15 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>More 行：还有多少项没展示。</summary>
         public int MoreRemaining => Math.Max(0, McdocPresenterRegistry.Default.Children(Node).Count - Node.ItemsShown);
         public string MoreLabel => "还有 " + MoreRemaining + " 项";
-        public System.Windows.Input.ICommand ShowMoreCommand => new McdocCommand(() =>
+        // 同样是"读一次就造一个"的死角：WPF 的可用性重问会把 getter 叫很多次
+        private System.Windows.Input.ICommand showMoreCommand;
+        public System.Windows.Input.ICommand ShowMoreCommand => showMoreCommand ??= new McdocCommand(() =>
         {
             Node.ItemsShown += Math.Max(1, McdocRowProjector.PageSize);
             projector?.SpliceSubtree(OwnerRow());
         });
-        public System.Windows.Input.ICommand ShowAllCommandRow => new McdocCommand(() =>
+        private System.Windows.Input.ICommand showAllCommandRow;
+        public System.Windows.Input.ICommand ShowAllCommandRow => showAllCommandRow ??= new McdocCommand(() =>
         {
             Node.ItemsShown = int.MaxValue;
             projector?.SpliceSubtree(OwnerRow());

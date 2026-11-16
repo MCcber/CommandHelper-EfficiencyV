@@ -98,10 +98,50 @@ namespace CBHK.Utility.Data.Mcdoc
             return result;
         }
 
+        /// <summary>
+        /// 候选清单 → 值集合，按**候选集合实例**缓存：同一份 (文档,版本,registry) 的候选是同一个
+        /// <see cref="McdocIdSpec"/> 共享出来的 ObservableCollection，所以每个 item 注册表节点不必再扫一遍。
+        /// 不复用的话 1MB 档是 2.7 万个节点 × 1657 项 Convert.ToString，实测光是这层枚举扫描就 322ms。
+        /// Count 变了就重建（建树期 Insert(0) 挂"候选外的值"会改集合）。
+        /// </summary>
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<
+            System.Collections.ObjectModel.ObservableCollection<MinecraftLanguageModelLibrary.Data.EnumMember>,
+            CandidateBucket> candidateCache = new();
+
+        private sealed class CandidateBucket
+        {
+            public int Count = -1;
+            public HashSet<string> Set;
+        }
+
+        private static bool HasCandidate(object candidates, string text, McdocTreeNode node)
+        {
+            if (candidates is not System.Collections.ObjectModel.ObservableCollection<MinecraftLanguageModelLibrary.Data.EnumMember> list)
+            {
+                return false;
+            }
+            var bucket = candidateCache.GetValue(list, static _ => new CandidateBucket());
+            if (bucket.Set is null || bucket.Count != list.Count)
+            {
+                var set = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var option in list)
+                {
+                    var value = Convert.ToString(option.Value?.LiteralValue);
+                    if (value is not null) set.Add(value);
+                }
+                bucket.Set = set;
+                bucket.Count = list.Count;
+            }
+            return bucket.Set.Contains(text);
+        }
+
         private static void ValidateNodeCore(McdocTreeNode node, HashSet<string> missed, List<McdocDiagnostic> result,
             IMcdocRegistryOptions registryOptions = null, string version = null)
         {
-            node.Diagnostics = [];
+            if (!ReferenceEquals(node.Diagnostics, McdocTreeNode.EmptyDiagnostics))
+            {
+                node.Diagnostics = McdocTreeNode.EmptyDiagnostics;
+            }
 
                 if (node.IsRequired && node.Json is null && node.Parent is not null)
                 {
@@ -155,12 +195,13 @@ namespace CBHK.Utility.Data.Mcdoc
                     && node.EnumOptionList is { Count: > 0 } candidates
                     && node.Json is { Kind: McdocJsonKind.String } text
                     && !string.IsNullOrEmpty(text.StringValue)
-                    && candidates.All(option => Convert.ToString(option.Value?.LiteralValue) != text.StringValue))
+                    && !HasCandidate(candidates, text.StringValue, node))
                 {
                     Add(node, "warn", "值不在候选内：" + text.StringValue);
                 }
 
-                if (!node.IsDynamicKey && !node.IsMapEntry && !McdocTypeMatcher.MatchesValueDomain(node.Type, node.Json))
+                var domainOk = node.IsDynamicKey || node.IsMapEntry || McdocTypeMatcher.MatchesValueDomain(node.Type, node.Json);
+                if (!domainOk)
                 {
                     Add(node, "error", "值不在取值域：" + (node.Type?.Kind.ToString() ?? "?") + " ← "
                         + (node.Json?.Kind == McdocJsonKind.String ? node.Json.StringValue : node.Json?.Kind.ToString()));
@@ -169,6 +210,10 @@ namespace CBHK.Utility.Data.Mcdoc
 
             void Add(McdocTreeNode node, string severity, string message)
             {
+                if (ReferenceEquals(node.Diagnostics, McdocTreeNode.EmptyDiagnostics))
+                {
+                    node.Diagnostics = new List<string>(2);
+                }
                 node.Diagnostics.Add(message);
                 result.Add(new McdocDiagnostic { Path = node.JsonPath ?? "$", Severity = severity, Message = message });
             }

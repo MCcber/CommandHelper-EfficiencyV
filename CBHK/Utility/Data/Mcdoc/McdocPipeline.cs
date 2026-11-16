@@ -163,7 +163,8 @@ namespace CBHK.Utility.Data.Mcdoc
             // —— 现场就是「删掉 $.tset 之后 JSON 没了、左侧那行还在，再点就是幽灵行」。
             if (Document.FlattenedRoot && string.Equals(node.JsonPath ?? "", "$", StringComparison.Ordinal))
             {
-                McdocWriteTrace.Trace("structure-root", "rows=" + Projector.Rows.Count + " resets=" + Projector.ResetCount);
+                McdocWriteTrace.Trace("structure-root", "rows=" + Projector.Rows.Count + " resets=" + Projector.ResetCount
+                    + McdocWriteTrace.CallerSuffix());
                 Reload();
                 return;
             }

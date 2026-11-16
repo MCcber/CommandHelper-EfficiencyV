@@ -94,6 +94,9 @@ namespace CBHK.Utility.Data.Mcdoc
             return "{" + string.Join(",", value.Properties.ConvertAll(pair => pair.Key).ToArray()) + "}";
         }
 
+        /// <summary>给 Trace 的现场补调用栈（关着时零开销）：只看"这一步是谁点着的"。</summary>
+        public static string CallerSuffix() => Enabled ? Caller() : "";
+
         private static string Caller()
         {
             var frames = new StackTrace(2, false).GetFrames();

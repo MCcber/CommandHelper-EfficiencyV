@@ -85,7 +85,12 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 if (context.TypeMapping.TryGetValue(typeDef.Path, out var mapped) && mapped != null)
                 {
-                    return new McdocSimplifyResult(mapped, true);
+                    // 映射到的往往是"原始类型图"（Concrete 的实参、dispatch 的目标都还没求值过）：
+                    // 直接把它当结果返回，里面的 Reference / Spread / Dispatcher 一条都消不掉 ——
+                    // 现场：...TriggerBase 原样留在字段表里，变成一个没有名字的字段（界面上是"新键"行，
+                    // 真正的 player 永远不出现）。必须按当前上下文再求值一次。
+                    return new McdocSimplifyResult(
+                        HasSpreadField(mapped) ? SimplifyMappedTarget(typeDef.Path, mapped, context) : mapped, true);
                 }
                 // 模板形参引用可能带模块前缀（::mod::T）或与 mapping 的键写法不一致：
                 // 按最后一段再匹配一次，否则 Mapped/Concrete 里的 T 会解不开（字段退化成 Mapped 包装 → 文本框）
@@ -96,7 +101,9 @@ namespace CBHK.Utility.Data.Mcdoc
                     if (string.Equals(pair.Key, lastSegment, StringComparison.Ordinal)
                         || string.Equals(LastSegment(pair.Key), lastSegment, StringComparison.Ordinal))
                     {
-                        return new McdocSimplifyResult(pair.Value, true);
+                        // 同上：只有带 spread 的结构才在这里求值
+                        return new McdocSimplifyResult(
+                            HasSpreadField(pair.Value) ? SimplifyMappedTarget(pair.Key, pair.Value, context) : pair.Value, true);
                     }
                 }
             }
@@ -143,6 +150,36 @@ namespace CBHK.Utility.Data.Mcdoc
                 result = new McdocSimplifyResult(clone, result.DynamicData);
             }
             return result;
+        }
+
+        /// <summary>
+        /// 映射目标里有没有 spread 字段：有就必须现在求值 —— spread 只能靠 SimplifyStruct 摊平，
+        /// 原样塞回字段表会变成一个没有名字的字段（界面上的"新键"行，真正的成员永远不出现）。
+        /// 没有 spread 的目标保持懒映射（动态索引要留到消费方节点上再求值）。
+        /// </summary>
+        private static bool HasSpreadField(McdocType type, int depth = 0)
+        {
+            if (type is null || depth > 8) return false;
+            if (type.Kind == McdocTypeKind.Struct && (type.Fields ?? []).Any(field => field?.IsSpread == true)) return true;
+            return HasSpreadField(type.Item, depth + 1);
+        }
+
+        /// <summary>求值一个"映射目标"。用合成键打断环形映射（T → T 之类），否则会栈溢出。</summary>
+        private static McdocType SimplifyMappedTarget(string mappingKey, McdocType mapped, McdocSimplifyContext context)
+        {
+            var guard = "map:" + (mappingKey ?? "");
+            if (!context.ResolvingReferences.Add(guard))
+            {
+                return McdocType.Any();
+            }
+            try
+            {
+                return Simplify(mapped, context).TypeDef;
+            }
+            finally
+            {
+                context.ResolvingReferences.Remove(guard);
+            }
         }
 
         private static McdocSimplifyResult SimplifyDispatcher(McdocType typeDef, McdocSimplifyContext context)

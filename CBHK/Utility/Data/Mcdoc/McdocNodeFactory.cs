@@ -390,7 +390,8 @@ namespace CBHK.Utility.Data.Mcdoc
             };
             // 只在"**静默**解不出来"时自报：已经有诊断（形状不符 / 未解开的包装）的降级是**有意**的，
             // 再记一条 resolved=False 会让 --check-trace 把"非法文档的诚实降级"当成求解失败。
-            if (evaluationError is null && declaredType?.Kind is McdocTypeKind.Dispatcher or McdocTypeKind.Indexed)
+            if (McdocWriteTrace.Enabled
+                && evaluationError is null && declaredType?.Kind is McdocTypeKind.Dispatcher or McdocTypeKind.Indexed)
         {
             // 靠兄弟键/调度器解出来的类型：解不出来时求值退成 any —— 行上就是空下拉或动态键占位
             McdocWriteTrace.Trace("index-resolve", "path=" + (jsonPath ?? "?")
@@ -398,41 +399,9 @@ namespace CBHK.Utility.Data.Mcdoc
                 + " resolved=" + (type?.Kind is not (McdocTypeKind.Any or McdocTypeKind.Unsafe))
                 + " kind=" + (type?.Kind.ToString() ?? "null"));
         }
-        var editor = McdocCollectionEditor.Default;
-            // 只有"列表语义"的节点才有列表追加：map/struct 的 ⊕ 必须走"起键"（CommitEntry），
-            // 否则按下一个永远 CanExecute=true 的按钮，什么都写不出来（表现是"按了没反应/结果不对"）
-            bool CanAppendItems() => node.Type?.IsListLike == true
-                || (node.UnionListLike && node.SelectedUnionMember?.IsListLike == true)
-                // any 的 list 分支：类型是 any、形状是数组，⊕ 同样要能加项
-                || (node.Type?.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe
-                    && node.Json?.Kind == McdocJsonKind.Array);
-            // 追加与"在顶部新增"必须是同一个出口：AppendItem 那条旧路既不揭开新项、也不记展开态，
-            // 于是"点了 ⊕，右侧 JSON 多了一条、左侧树什么都不动"（新项被折叠的列表挡住）。
-            node.AddItemCommand = new McdocCommand(() => editor.AddItem(node, runtime), CanAppendItems);
-            node.AddItemTopCommand = new McdocCommand(() => editor.AddItem(node, runtime, atTop: true), CanAppendItems);
-            // ⊕ 的判据只有"还没有值"：必选字段缺值是非法文档，那一行同样要有一个起值入口
-            // （必选容器既不能删、又没有编辑器，⊕ 是它唯一的出口；可选/必选的差别由删除入口自己守）。
-            node.SetDefaultCommand = new McdocCommand(() => editor.SetDefault(node, runtime),
-                () => node.Json is null && node.Parent is not null);
-            node.ShowMoreCommand = new McdocCommand(() => node.ItemsShown += Math.Max(1, McdocRowProjector.PageSize));
-            node.ShowAllCommand = new McdocCommand(() => node.ItemsShown = int.MaxValue);
-            node.RemoveItemCommand = new McdocCommand(() => editor.RemoveLastItem(node),
-                () => node.Json is { Kind: McdocJsonKind.Array } list && list.Items is { Count: > 0 });
-            node.DuplicateCommand = new McdocCommand(() => editor.DuplicateItem(node),
-                () => node.Json is not null
-                    && node.Parent?.Json is { Kind: McdocJsonKind.Array } list
-                    && list.Items is not null
-                    && node.Parent.Type?.Kind != McdocTypeKind.Tuple
-                    && !(node.Parent.Type?.LengthRange is { Max: { } max } && list.Items.Count >= max));
-            node.RemoveFieldCommand = new McdocCommand(() => editor.RemoveField(node),
-                // 必选字段删了就是非法文档：删除原语自己就得拒绝（行上的按钮与 union 的 unset 都已按可选性收口）
-                () => !node.IsRequired
-                    && node.Parent?.Json is { Kind: McdocJsonKind.Object } parent
-                    && parent.Properties is not null
-                    && parent.Properties.Any(pair => pair.Key == node.FieldName));
 
-            budget ??= new McdocNodeBudget(MaxNodes);
-            visiting ??= [];
+        budget ??= new McdocNodeBudget(MaxNodes);
+        visiting ??= [];
             var context = new McdocBuildContext
             {
                 Runtime = runtime,
@@ -452,14 +421,14 @@ namespace CBHK.Utility.Data.Mcdoc
             // 行自身状态必须在任何早退之前备好：深度/预算/环只省"子级"，不能省"这行用什么控件/显示什么值"
             registry.For(node).Prepare(node, type, json, context);
             // 取证：声明是枚举/带候选，却一个候选都没建出来 —— 首次建树"哑下拉"的现场特征
-            if (node.DeclaredType?.Kind == McdocTypeKind.Enum
+            if (McdocWriteTrace.Enabled && node.DeclaredType?.Kind == McdocTypeKind.Enum
                 && (node.EnumOptionList is null || node.EnumOptionList.Count == 0))
             {
                 McdocWriteTrace.Trace("enum-empty", "path=" + (node.JsonPath ?? "?")
                     + " declared=" + node.DeclaredType.Kind + " values=" + (node.DeclaredType.EnumValues?.Count ?? 0));
             }
             // 取证：把行上现存的提醒原文记下来（哪条消息让感叹号下不去）
-            if (!string.IsNullOrEmpty(node.Error) || node.Diagnostics is { Count: > 0 })
+            if (McdocWriteTrace.Enabled && (!string.IsNullOrEmpty(node.Error) || node.Diagnostics is { Count: > 0 }))
             {
                 McdocWriteTrace.Trace("diag", "path=" + (node.JsonPath ?? "?")
                     + " err=" + (node.Error ?? "")
@@ -472,7 +441,7 @@ namespace CBHK.Utility.Data.Mcdoc
             if (json is null && !budget.TryConsume()) return node;
 
             // 类型级环检测：按**声明类型**判环（simplify 每次都造新对象，按求值后类型判必然失效）
-            if (declaredType is not null && visiting.Any(item => ReferenceEquals(item, declaredType))) return node;
+            if (declaredType is not null && visiting.Contains(declaredType)) return node;
             if (declaredType is not null) visiting.Add(declaredType);
             try
             {

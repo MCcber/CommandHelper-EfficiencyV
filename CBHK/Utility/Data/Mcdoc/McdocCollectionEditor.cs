@@ -75,6 +75,10 @@ namespace CBHK.Utility.Data.Mcdoc
             // union 行：行上显示着某个成员，文档里却没有它的值 —— 按"所见即所得"把成员默认结构落盘。
             // 不落盘的话，行上选着 block_state_property、文档里没有 condition，同层就没有 Block/Properties
             // （调度器也因为没有可索引的键而解不出成员）。落盘后本轮 Load 会把它连同必填键一起解出来。
+            // 注意这条**不是**"补默认值"，而是自洽：行上已经摊开某一支 = 界面与会话都认为这一支在用，
+            // 文档里就必须有它的值，否则那棵子树是脱挂的（改了不落盘、删了键还在）。
+            // 可选项要守住的是"没人选过就不落"——没有选中支时下面这个条件根本不成立，所以不必额外判 Optional。
+            // （曾经在这里加过 IsRequired 收口，结果就是上面那种脱挂子树。）
             if (node.Type?.Kind == McdocTypeKind.Union && node.Json is null
                 && node.SelectedUnionMember is { } displayedMember && !McdocUnionSwitch.IsUnsetOption(node.SelectedUnionTypeName))
             {
@@ -106,7 +110,9 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
                 // 数字 / bool / union 的标量支：只在"载入渲染完毕"这一路补（includeDisplayedDefaults），
                 // 结构变更后不补 —— 否则编辑时会被凭空插进一堆默认键，把"只删这一个键"搞脏。
-                else if (includeDisplayedDefaults && node.Json is null && DisplayedScalar(node) is { } displayed)
+                // 且只补**必填**：可选节点保留一行让用户自己填，JSON 里不许出现"用户没设过的键"
+                // （可选 bool 尤其明显：默认值 false 一旦落盘就再也分不清"用户选了 false"和"从没设过"）。
+                else if (includeDisplayedDefaults && node.IsRequired && node.Json is null && DisplayedScalar(node) is { } displayed)
                 {
                     WriteDisplayed(node, displayed);
                 }

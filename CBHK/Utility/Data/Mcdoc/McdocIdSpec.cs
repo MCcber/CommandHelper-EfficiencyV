@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 using System.Collections.ObjectModel;
 using MinecraftLanguageModelLibrary.Data;
@@ -303,20 +304,65 @@ namespace CBHK.Utility.Data.Mcdoc
             // 自由输入 + 候选提示）。两种都挂候选，差别只在"允不允许输入候选外的值"。
             node.UseSelect = McdocSelectRegistries.IsSelect(spec.Registry, runtime.GameVersion ?? "1.21");
             node.AllowCustomValue = !node.UseSelect;
-            node.EnumOptionList = new ObservableCollection<EnumMember>();
-            foreach (var option in options)
-            {
-                node.EnumOptionList.Add(new EnumMember
-                {
-                    Name = option,
-                    Value = new MetaValue { LiteralValue = option },
-                });
-            }
+            var sharedOptions = SharedOptions(options);
             var current = node.Json is { Kind: McdocJsonKind.String } ? node.Json.StringValue : null;
-            node.SelectedEnumOption = current is null
-                ? node.EnumOptionList.FirstOrDefault()
-                : node.EnumOptionList.FirstOrDefault(item => item.Name == current) ?? node.EnumOptionList.FirstOrDefault();
+            var selected = current is null ? null : Array.Find(sharedOptions, item => item.Name == current);
+            if (current is not null && selected is null)
+            {
+                // 文档里的值不在候选内（旧版本写的 / 手改过的键）：把它本身当成一个候选项挂上并选中。
+                // **不能**回落到 FirstOrDefault —— 那一项可能是「（未设置）」哨兵，选中即删键；
+                // 也不能不选：行上显示的值必须等于文档里的值（否则就是"行说没设、文档里有"）。
+                selected = new EnumMember { Name = current, Value = new MetaValue { LiteralValue = current } };
+                // 这一份是**该节点私有**的：候选外的值只属于它自己，写进共享集合会污染别的节点
+                var own = new ObservableCollection<EnumMember>(sharedOptions);
+                own.Insert(0, selected);
+                node.EnumOptionList = own;
+            }
+            else
+            {
+                node.EnumOptionList = SharedCollection(sharedOptions);
+            }
+            // 建树期**静默**落选中项：走属性 setter 会触发 ValueChanged → 整条编辑管线（诊断/依赖重建/
+            // 物化/写回文本）在建树中途对这份 JSON 再跑一遍。实测这条在 1657 项的 item 注册表上
+            // 每个节点 5~75ms，S0 的 doc.build 里 41.5/51.6ms 全花在这儿，而且哨兵回落会把用户的键删掉。
+            node.SetEnumOptionSilently(selected ?? node.EnumOptionList.FirstOrDefault());
         }
+
+        /// <summary>
+        /// 候选实例按「候选列表实例」缓存：同一份 (文档, 版本, registry) 的 IdMembers 是同一个列表
+        /// （<see cref="McdocIdSpaceService"/> 按 key 缓存解析结果），所以跨节点可以复用同一批 EnumMember。
+        /// 不缓存的话每建一个 item 注册表节点就新建 1657 个 EnumMember + MetaValue，实测 Apply 正常
+        /// 0.1ms、偶发 6~15ms 的尖峰全是 GC（S0 的 doc.build 里一半时间耗在这批分配上）。
+        /// 共享是安全的：全仓没有就地改 EnumMember.Name/Value 的代码，换值一律是新建实例。
+        /// </summary>
+        private static readonly ConditionalWeakTable<IReadOnlyList<string>, EnumMember[]> optionCache = new();
+
+        private static EnumMember[] SharedOptions(IReadOnlyList<string> options)
+        {
+            return optionCache.GetValue(options, static list =>
+            {
+                var members = new EnumMember[list.Count];
+                for (var index = 0; index < list.Count; index++)
+                {
+                    members[index] = new EnumMember
+                    {
+                        Name = list[index],
+                        Value = new MetaValue { LiteralValue = list[index] },
+                    };
+                }
+                return members;
+            });
+        }
+
+        /// <summary>
+        /// 候选集合本身也共享：每节点 <c>new ObservableCollection&lt;EnumMember&gt;(sharedOptions)</c> 是一次
+        /// 1657 元素的数组拷贝，1MB 档 5.4 万个节点量出来是 prepare.options 725ms，几乎全在 GC。
+        /// **只读约定**：挂"候选外的值"的节点必须自己 new 一份（见上），谁都不许往共享集合里 Add/Remove。
+        /// </summary>
+        private static readonly ConditionalWeakTable<EnumMember[], ObservableCollection<EnumMember>> collectionCache = new();
+
+        private static ObservableCollection<EnumMember> SharedCollection(EnumMember[] options)
+            => collectionCache.GetValue(options, static list => new ObservableCollection<EnumMember>(list));
 
         /// <summary>
         /// #[dispatcherkey="&lt;registry&gt;"]：候选 = 该 dispatcher 的成员键（去掉 % 开头的兜底项 + 过属性过滤），
