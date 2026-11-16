@@ -52,6 +52,7 @@ namespace CBHK.Probe
                     "--case rebuild-semantics" => Gates.RebuildSemantics(),
                     "--case legacy-delete" => Gates.LegacyDelete(),
                     "--case legacy-delete-top" => Gates.LegacyDeleteTop(),
+                    "--case clear-unknown-fields" => Gates.ClearUnknownFields(),
                     "--case no-selfstart" => Gates.NoSelfStart(),
 
                     "--case projector-idle" => Gates.ProjectorIdle(),

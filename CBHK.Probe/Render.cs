@@ -92,7 +92,7 @@ namespace CBHK.Probe
             document.NodeValueChanged = node => pipeline.OnValueChanged(node);
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             document.Load(rootType, McdocJsonParser.Parse("{ }"));
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             Pump();
 
             DumpRows(projector, "加键之前");
@@ -183,7 +183,7 @@ namespace CBHK.Probe
             document.NodeValueChanged = node => pipeline.OnValueChanged(node);
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             document.Load(McdocHelpers.GetRootType("dimension_type"), McdocJsonParser.Parse("{ \"attributes\": {} }"));
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             Pump();
             var attributes = document.FindNode("$.attributes");
             attributes?.EnsureChildren();

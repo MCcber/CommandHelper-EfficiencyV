@@ -64,8 +64,10 @@ namespace CBHK.Utility.Data.Mcdoc
             var row = new McdocRow(node, depth, this, index, listChild);
             byNode[node] = row;
             into.Add(row);
-            // 缺省字段（可选 + 文档里没有）只留一行 ⊕：即使折叠状态是脏的，也不许把子级拼进列表
-            if (!node.IsExpanded || (!node.IsRequired && node.Json is null)) return;
+            // 缺省字段（可选 + 文档里没有）只留一行 ⊕：即使折叠状态是脏的，也不许把子级拼进列表。
+            // 保留区是合成容器（自己没有 JSON），展开时必须照常拼它的子级。
+            if (!node.IsExpanded) return;
+            if (!node.IsRequired && node.Json is null && !node.IsPreservedGroup) return;
             node.EnsureChildren();
             CollectChildren(node, depth, into);
         }

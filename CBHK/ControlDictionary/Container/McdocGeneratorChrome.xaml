@@ -29,6 +29,16 @@
                 ToolTip="切换游戏版本：按新版本的 #[since]/#[until] 重新求值，文档内容保留" />
             <VectorButton:VectorTextButton
                 Height="35"
+                Margin="6,0,0,0"
+                Padding="10,0"
+                VerticalAlignment="Center"
+                Command="{Binding ClearUnknownFieldsCommand}"
+                OriginBottomHeight="3"
+                Style="{DynamicResource VectorTextButtonStyle}"
+                Text="清理遗留键"
+                ToolTip="清空当前版本不存在的键（先弹窗确认，会从 JSON 里删除）" />
+            <VectorButton:VectorTextButton
+                Height="35"
                 Margin="8,0,0,0"
                 Padding="10,0"
                 VerticalAlignment="Center"

@@ -87,6 +87,41 @@ namespace CBHK.Utility.Data.Mcdoc
         };
     }
 
+    /// <summary>
+    /// 保留区容器行（"当前版本不存在（N）"）：一个虚拟节点把当前版本 schema 里没有的键收拢在一处。
+    /// 它只有展开箭头与标题 —— 没有编辑器、没有增删按钮；里面的键各行仍是原来的未知键行（可单独删除）。
+    /// </summary>
+    public sealed class PreservedGroupPresenter : McdocNodePresenter
+    {
+        public override bool CanPresent(McdocType type) => false;
+
+        /// <summary>只有真的收了残留键才给箭头：空保留区不该在树顶挂一个点不开的占位行</summary>
+        public override bool CanHaveChildren(McdocTreeNode node) => node?.Children.Count > 0;
+
+        public override IReadOnlyList<McdocTreeNode> Children(McdocTreeNode node)
+            => node?.Children ?? (IReadOnlyList<McdocTreeNode>)[];
+
+        public override bool IsListLike => false;
+
+        /// <summary>容器是文档合成的，不参与求值：子级只由工厂搬移残留键时填</summary>
+        public override void PopulateChildren(McdocTreeNode node, McdocType type, McdocJsonValue json, McdocBuildContext context)
+        {
+        }
+
+        public override McdocNodeHead Describe(McdocTreeNode node) => new()
+        {
+            // 数量写进标题：折叠状态下也要能一眼看出"这个版本里还留着几个不属于它的键"
+            Label = "当前版本不存在（" + (node?.Children.Count ?? 0) + "）",
+            Documentation = "这些键在当前版本的 schema 里不存在，值原样保留在右侧 JSON（导出一并带上）。展开可逐个查看或删除，也可以用上方「清理」按钮一次删除。",
+            RowKind = McdocRowKind.Preserved,
+            EditorKind = McdocEditorKind.None,
+            IsRawKey = true,
+            CanAddTop = false,
+            CanAddBottom = false,
+            CanSetDefault = false,
+        };
+    }
+
     /// <summary>标量行：string / enum / 数值 / bool / literal。map 条目与新增占位行也落在这里（行形状由标志决定）。</summary>
     public class ScalarNodePresenter : McdocNodePresenter
     {

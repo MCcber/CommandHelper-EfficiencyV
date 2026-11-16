@@ -23,12 +23,18 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>未声明键（版本更迭后遗留）：只按节点分派，不参与类型竞争。</summary>
         private static readonly UnknownFieldPresenter UnknownFields = new();
 
+        /// <summary>保留区合成容器（"当前版本不存在（N）"）：同样只按节点分派。</summary>
+        private static readonly PreservedGroupPresenter PreservedGroups = new();
+
         public McdocNodePresenter For(McdocType type)
             => presenters.FirstOrDefault(presenter => presenter.CanPresent(type)) ?? presenters[^1];
 
         /// <summary>按节点解析表现器：未声明键走专用表现器，其余仍按求值类型分派。</summary>
         public McdocNodePresenter For(McdocTreeNode node)
-            => node?.IsUnknownField == true ? UnknownFields : For(node?.Type);
+            => node is null ? For((McdocType)null)
+                : node.IsPreservedGroup ? PreservedGroups
+                : node.IsUnknownField ? UnknownFields
+                : For(node.Type);
 
         public McdocNodeHead Describe(McdocTreeNode node) => For(node).Describe(node);
 

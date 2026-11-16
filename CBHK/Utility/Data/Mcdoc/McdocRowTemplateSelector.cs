@@ -13,6 +13,9 @@ namespace CBHK.Utility.Data.Mcdoc
         public DataTemplate MoreRow { get; set; }
         public DataTemplate AddTailRow { get; set; }
 
+        /// <summary>保留区容器行（"当前版本不存在（N）"）：没有编辑器、没有动作按钮，只有展开箭头。</summary>
+        public DataTemplate PreservedRow { get; set; }
+
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
             => item is McdocRow row
                 ? row.Kind switch
@@ -22,6 +25,8 @@ namespace CBHK.Utility.Data.Mcdoc
                     McdocRowKind.Placeholder => PlaceholderRow,
                     McdocRowKind.More => MoreRow,
                     McdocRowKind.AddTail => AddTailRow,
+                    // 探针/预览没给保留区模板时回落普通行：行形状绝不能让模板选择器抛异常
+                    McdocRowKind.Preserved => PreservedRow ?? PlainRow,
                     _ => PlainRow,
                 }
                 : null;

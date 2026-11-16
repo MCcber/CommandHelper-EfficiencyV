@@ -473,7 +473,7 @@ namespace CBHK.ViewModel.Generator
                 if (parentRebuilds > 0 || droppedDerivedContainers > 0)
                 {
                     // 派生容器/父级形状换了：局部拼接不足以换掉已展开子行与行命令，整表对账。
-                    projector.Reset(document.Nodes.ToList());
+                    projector.Reset(document.ProjectionRoots);
                 }
                 textPendingSync = false;
                 textParseFailed = false;
@@ -806,7 +806,7 @@ namespace CBHK.ViewModel.Generator
                     loading = wasLoading;
                 }
                 MaterializeUntilStable();
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 SyncJsonText();     // 最后排版：Reformat 一次并记下"已同步的那一代"
                 EnsureProjectionMatchesDocument();
                 MdocStatus = "右侧 JSON 有语法错误，已按左侧对齐脏区域（" + dirty.Path + "）并排版";
@@ -908,7 +908,7 @@ namespace CBHK.ViewModel.Generator
             {
                 // 行指向的节点已经不在文档树里：只有整表重投影能把它清掉
                 McdocWriteTrace.Log("投影里有不在树上的行", null, "行数=" + projector.Rows.Count + " 节点=" + visited.Count);
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 return;
             }
             foreach (var node in document.Nodes) Walk(node);
@@ -923,7 +923,7 @@ namespace CBHK.ViewModel.Generator
                     parent.SelectedUnionChildren.Remove(node);
                     parent.ChildrenBuilt = false;
                 }
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 return;
             }
             if (repaired == 0) return;
@@ -1014,6 +1014,57 @@ namespace CBHK.ViewModel.Generator
         // [RelayCommand] 生成的是 IRelayCommand，接口要求 ICommand，这里显式转发
         System.Windows.Input.ICommand IMcdocDocumentActions.CopyJsonCommand => CopyJsonCommand;
         System.Windows.Input.ICommand IMcdocDocumentActions.SaveJsonCommand => SaveJsonCommand;
+
+        /// <summary>
+        /// 清空"当前版本不存在"的遗留键：全层级扫描 → 弹窗确认（文案列数量）→
+        /// 按路径从活文档里逐个删键 → 整篇重建、回写文本。
+        /// **不走文本消化**（不调用 McdocSyncEngine）：文本由模型反推并压回显，
+        /// 删掉的键不会被"再解析一遍右侧文本"装回来。
+        /// </summary>
+        [CommunityToolkit.Mvvm.Input.RelayCommand]
+        public void ClearUnknownFields()
+        {
+            // 点按钮这一拍先补跑被推迟的消化：扫的必须是"屏幕这一代"的树
+            FlushDeferredRebuild();
+            var target = document;
+            if (target is null) return;
+            var leftovers = target.FindUnknownFields();
+            if (leftovers.Count == 0)
+            {
+                MdocStatus = "当前版本不存在的键：0 个";
+                return;
+            }
+            var listed = string.Join("、", leftovers.Take(8).Select(node => node.JsonPath ?? node.FieldName ?? "?"));
+            if (leftovers.Count > 8) listed += " 等";
+            var confirmed = MessageBox.Show(
+                "将要清理 " + leftovers.Count + " 个当前版本不支持的遗留键：\n" + listed
+                + "\n\n这些键会从右侧 JSON 里删除（不可撤销）。",
+                "清空当前版本不存在节点",
+                MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK;
+            if (!confirmed) return;
+
+            var wasLoading = loading;
+            loading = true;
+            int removed;
+            try
+            {
+                // 父路径从活的 RootJson 解析（不认节点缓存的那份父级 JSON）
+                removed = target.RemoveAllUnknownFields();
+            }
+            finally
+            {
+                loading = wasLoading;
+            }
+            // 整篇重建：一次删干净之后树/投影/文本必须是同一代
+            target.Load(CurrentRootType(), target.RootJson);
+            projector.Reset(target.ProjectionRoots);
+            SyncJsonText();
+            EnsureProjectionMatchesDocument();
+            var left = target.CountUnknownFields();
+            MdocStatus = "已清理 " + removed + " 个当前版本不存在的键"
+                + (left > 0 ? "，仍有 " + left + " 个的位置解析不到（保留在 JSON 里）" : "");
+        }
+
 
         /// <summary>把当前 JSON 写到指定路径；探针走这条，避免依赖剪贴板/对话框。</summary>
         public bool WriteJsonFile(string path)
@@ -1527,14 +1578,14 @@ namespace CBHK.ViewModel.Generator
             }
             if (!projector.RefreshAround(rebuilt))
             {
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
             }
             // 派发器刚解出来的成员里可能有"必填 + 闭合候选"的字段：不在这里补物化，
             // 这一行就会停在"行上有值、文档里没有"（type_specific.variant 就是这么丢的）。
             // 写过值说明文档已被重新 Load，旧行全部作废，必须整表重投影。
             if (MaterializeUntilStable() > 0)
             {
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
             }
             SyncJsonText();
             EnsureProjectionMatchesDocument();
@@ -1556,7 +1607,7 @@ namespace CBHK.ViewModel.Generator
                 loading = wasLoading;
             }
             MaterializeUntilStable();
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             SyncJsonText();
         }
 
@@ -1837,7 +1888,7 @@ namespace CBHK.ViewModel.Generator
             // 必填闭合下拉的"默认选中"落盘 + 重建：依赖它的 spread/调度器才会展开（advancement.criteria.*.trigger）。
             // 这一次是"渲染完毕"：行上显示的数字/bool/union 标量默认值也一起落盘（所见即所得）
             var materializedOnLoad = MaterializeUntilStable(includeDisplayedDefaults: true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             // 投影会把"记住的展开态"里的子树就地建出来（补物化的钩子只在**展开手势**那条路上跑），
             // 于是载入这一拍是"行上已经显示、物化还没跑"：派发器成员解出的必填字段（type_specific.variant）
             // 只在行上。这里再跑一次不动点，才算真的"渲染完毕"→ 文本也才是所见即所得。
@@ -1845,7 +1896,7 @@ namespace CBHK.ViewModel.Generator
             if (materializedAfterProjection > 0)
             {
                 materializedOnLoad += materializedAfterProjection;
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
             }
             // 物化写过键：物化改的是 AST，编辑器里的文本还是旧的 —— 必须以根 JSON 为准推一次，
             // 否则右侧 JSON 视图看不到刚落的默认值（"渲染完毕但 JSON 没有"就是这么来的）。

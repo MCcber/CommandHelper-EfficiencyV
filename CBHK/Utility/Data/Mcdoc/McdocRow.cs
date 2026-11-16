@@ -165,6 +165,8 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             get
             {
+                // 保留区合成容器：没有 JSON、也不参与求值，箭头只看它真的收着几个残留键
+                if (Node.IsPreservedGroup) return Node.Children.Count > 0;
                 // 文档里没有这个键、也不是必选：只有一行 ⊕，不许有展开按钮（缺省字段不摊开子级）
                 if (!Node.IsRequired && Node.Json is null) return false;
                 var presenter = McdocPresenterRegistry.Default;
@@ -497,7 +499,7 @@ namespace CBHK.Utility.Data.Mcdoc
                     // 这里做一次结构对账，让新 Head/按钮从当前文档重新生成。
                     if (projector?.Document is { } document)
                     {
-                        projector.Reset(document.Nodes.ToList());
+                        projector.Reset(document.ProjectionRoots);
                     }
                     McdocWriteTrace.Trace("row-set-default", "path=" + (Node.JsonPath ?? "?")
                         + " json=" + (Node.Json?.Kind.ToString() ?? "<null>")

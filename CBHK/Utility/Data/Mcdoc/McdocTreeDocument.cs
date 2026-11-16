@@ -118,7 +118,54 @@ namespace CBHK.Utility.Data.Mcdoc
                 foreach (var child in node.SelectedUnionChildren) Walk(child);
             }
             foreach (var root in Nodes) Walk(root);
+            // 未声明键现在收在保留区里（不在任何 Node 之下）：状态栏的计数必须一起算
+            if (PreservedGroup is not null)
+            {
+                foreach (var child in PreservedGroup.Children)
+                {
+                    if (child?.Json is not null) count++;
+                }
+            }
             return count;
+        }
+
+        /// <summary>
+        /// 清空"当前版本不存在"的键（保留区里的 + 树上残留的），返回删掉的个数。
+        /// 全层级扫描 → 每个键按 JsonPath 从活 RootJson 里删；**不碰文本消化**（调用方自己整篇重建 + 回写文本）。
+        /// </summary>
+        public int RemoveAllUnknownFields()
+        {
+            var removed = 0;
+            foreach (var node in FindUnknownFields())
+            {
+                if (TryRemoveLegacyOrGhost(node, out _) != LegacyDeleteOutcome.NotFound) removed++;
+            }
+            return removed;
+        }
+
+        /// <summary>全层级找出"当前版本不存在且有值"的键：树上残留的 + 保留区里的（去重，顺序稳定）。</summary>
+        public List<McdocTreeNode> FindUnknownFields()
+        {
+            var targets = new List<McdocTreeNode>();
+            var seen = new HashSet<McdocTreeNode>();
+            void Walk(McdocTreeNode node)
+            {
+                if (node is null || !seen.Add(node)) return;
+                if (node.IsUnknownField)
+                {
+                    if (node.Json is not null) targets.Add(node);
+                    return;   // 未知键的子级不解析：不必往下走
+                }
+                foreach (var child in node.Children) Walk(child);
+                foreach (var item in node.Items) Walk(item);
+                foreach (var item in node.SelectedUnionChildren) Walk(item);
+            }
+            foreach (var node in Nodes) Walk(node);
+            if (PreservedGroup is not null)
+            {
+                foreach (var node in PreservedGroup.Children) Walk(node);
+            }
+            return targets;
         }
 
         /// <summary>
@@ -166,11 +213,13 @@ namespace CBHK.Utility.Data.Mcdoc
             liveParent.Items.Remove(node);
             liveParent.SelectedUnionChildren.Remove(node);
             node.Parent = null;
+            PreservedGroup?.Children.Remove(node);
+            nodeIndex = null;
             return ReferenceEquals(liveParent.Json, parentObject)
                 ? LegacyDeleteOutcome.Notified
                 : LegacyDeleteOutcome.NeedsReload;
 
-            static void Detach(McdocTreeNode detached)
+            void Detach(McdocTreeNode detached)
             {
                 detached.Json = null;
                 detached.Children.Clear();
@@ -179,6 +228,10 @@ namespace CBHK.Utility.Data.Mcdoc
                 detached.ChildrenBuilt = true;
                 detached.SyncScalarFromJson();
                 detached.Parent = null;
+                // 搬进保留区的键：摘掉时也要从那里注销，否则会留一行指向空路径的幽灵行
+                PreservedGroup?.Children.Remove(detached);
+                // 索引也是「还能找到这个键」的地方：不失效就会出现「文档里没了、FindNode 还命中」
+                nodeIndex = null;
             }
         }
 
@@ -195,6 +248,8 @@ namespace CBHK.Utility.Data.Mcdoc
             // RefreshChildren 捕获的是建节点那一刻的 type：dispatcher/indexed 的形状由**兄弟键**决定，
             // 复用它等于永远按旧值重建子级（切方块后旧属性行不走、按钮身份也不对）。这类节点只能重新求值。
             node.RefreshChildren?.Invoke();
+            // 这一层重建会把它的未声明键搬进保留区；键被删掉的旧保留条目在这里一起清
+            PrunePreserved();
             Validate();
             return false;
         }
@@ -293,7 +348,7 @@ namespace CBHK.Utility.Data.Mcdoc
             if (node is null) return false;
             var top = node;
             for (var steps = 0; steps < 256 && top.Parent is not null; steps++) top = top.Parent;
-            return Nodes.Contains(top) || ReferenceEquals(top, rootNode);
+            return Nodes.Contains(top) || ReferenceEquals(top, rootNode) || ReferenceEquals(top, PreservedGroup);
         }
 
         private Dictionary<string, McdocTreeNode> BuildNodeIndex()
@@ -312,6 +367,17 @@ namespace CBHK.Utility.Data.Mcdoc
                 foreach (var child in node.SelectedUnionChildren) Walk(child);
             }
             foreach (var node in Nodes) Walk(node);
+            // 保留区里的键同样是文档节点（只是父容器是合成的）：按路径依旧要能找回来 —
+            // 同步引擎、删除落点、投影对账全靠这条索引。它们不建子级，一层就够。
+            if (PreservedGroup is not null)
+            {
+                if (!map.ContainsKey(PreservedGroup.JsonPath)) map[PreservedGroup.JsonPath] = PreservedGroup;
+                foreach (var child in PreservedGroup.Children)
+                {
+                    if (child is null || string.IsNullOrEmpty(child.JsonPath)) continue;
+                    if (!map.ContainsKey(child.JsonPath)) map[child.JsonPath] = child;
+                }
+            }
             return map;
         }
 
@@ -326,7 +392,7 @@ namespace CBHK.Utility.Data.Mcdoc
             // 没有求值现场（ValueNode）的节点重建出来必然没有键身份：%key 落 %none → 成员退化成 any。
             // 让调用方回退整树重建，而不是把匿名空壳摆成条目行。
             if (node.ValueNode is null) return null;
-            var factory = new McdocNodeFactory();
+            var factory = new McdocNodeFactory { PreservedGroup = PreservedGroup };
             var rebuildRuntime = CreateRuntime();
             if (node.UnionSelectionExplicit && node.Type?.Members is { } unionMembers && node.SelectedUnionMember is not null)
             {
@@ -472,6 +538,66 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>构建期造出的合成根（摊平根时它不进 Nodes，但仍是顶层节点的父容器）。</summary>
         public McdocTreeNode RootNode => rootNode;
 
+        /// <summary>
+        /// 保留区合成容器（"当前版本不存在（N）"）：未声明键从原父级搬到这里，主视图因此不会到处冒黄叹号行。
+        /// 它**不在 Nodes、也不在 rootNode.Children 里** —— 顶层成员表、文本同步、条目排序都看不到它；
+        /// 行只由投影器在整棵树之后追加一条。子级仍保留各自的 JsonPath，删除照旧按活文档解析。
+        /// </summary>
+        public McdocTreeNode PreservedGroup { get; private set; }
+
+        /// <summary>
+        /// 投影根：顶层节点 + 保留区容器（真的有残留键时）。投影、VM、探针都用这一份列表 ——
+        /// 谁再自己拼 <c>Nodes.ToList()</c>，保留区那一行就会在某条路径上凭空消失。
+        /// </summary>
+        public IReadOnlyList<McdocTreeNode> ProjectionRoots
+        {
+            get
+            {
+                var roots = new List<McdocTreeNode>(Nodes.Count + 1);
+                roots.AddRange(Nodes);
+                if (PreservedGroup is { Children.Count: > 0 }) roots.Add(PreservedGroup);
+                return roots;
+            }
+        }
+
+        /// <summary>保留区每个文档一份，只在整树重建时换新（展开状态跟着搬）。</summary>
+        private void ResetPreservedGroup(bool expanded)
+        {
+            PreservedGroup = new McdocTreeNode
+            {
+                FieldName = "当前版本不存在",
+                Key = "当前版本不存在",
+                JsonPath = "$.__preserved",
+                Depth = 0,
+                Type = McdocType.Any(),
+                IsRequired = false,
+                Json = null,
+                ChildrenBuilt = true,
+                IsPreservedGroup = true,
+                Runtime = CreateRuntime(),
+                StructureChanged = NodeStructureChanged,
+                ValueChanged = NodeValueChanged,
+                // 必须在 Json=null 之后：那个 setter 会把"可选且没值"的节点折叠回去
+                IsExpanded = expanded,
+            };
+        }
+
+        /// <summary>
+        /// 摘掉保留区里"文档里已经没有这个键"的陈旧条目：未声明键是子级重建时搬进来的，
+        /// 键在文本侧被删掉时没人会通知保留区 —— 不清就会留一行指向空路径的幽灵行。
+        /// </summary>
+        internal void PrunePreserved()
+        {
+            if (PreservedGroup is null) return;
+            for (var index = PreservedGroup.Children.Count - 1; index >= 0; index--)
+            {
+                var child = PreservedGroup.Children[index];
+                if (child is not null && ResolvePath(RootJson, child.JsonPath) is not null) continue;
+                if (child is not null) child.Parent = null;
+                PreservedGroup.Children.RemoveAt(index);
+            }
+        }
+
         /// <summary>根是 struct 且子级直接摊进 Nodes（misode 的 McdocRoot 摊平分支）。</summary>
         public bool FlattenedRoot => rootNode is not null && !Nodes.Contains(rootNode);
 
@@ -505,7 +631,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 var context = new McdocBuildContext
                 {
                     Runtime = CreateRuntime(),
-                    Factory = new McdocNodeFactory(),
+                    Factory = new McdocNodeFactory { PreservedGroup = PreservedGroup },
                     Self = rootNode.ValueNode,
                     KeyNode = rootNode.ValueNode?.RuntimeKey,
                     Depth = rootNode.Depth,
@@ -646,7 +772,9 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 // 模块没显式给定时用根类型登记的模块：相对名解析不该取决于调用方有没有记得设置
                 ModulePath ??= rootType?.Module;
-                var factory = new McdocNodeFactory();
+                // 保留区先于建树就位：建子级的唯一出口（RefreshChildren）要把未声明键搬进来
+                ResetPreservedGroup(PreservedGroup?.IsExpanded == true);
+                var factory = new McdocNodeFactory { PreservedGroup = PreservedGroup };
                 System.Collections.ObjectModel.ObservableCollection<McdocTreeNode> built;
                 using (McdocWriteTrace.Stage("doc.build"))
                 {
@@ -673,6 +801,7 @@ namespace CBHK.Utility.Data.Mcdoc
                     foreach (var child in node.SelectedUnionChildren) Restore(child);
                 }
                 foreach (var node in Nodes) Restore(node);
+                PrunePreserved();
 
                 // 把"查不到的类型名"暴露出来：界面上一眼能看到，不用再猜
                 if (Symbols.MissedReferences.Count > 0)

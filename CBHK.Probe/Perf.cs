@@ -175,7 +175,7 @@ namespace CBHK.Probe
                 document.Load(rootType, McdocJsonParser.Parse("{ }"));
                 var loadMs = buildWatch.ElapsedMilliseconds;
                 buildWatch.Restart();
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 var projectMs = buildWatch.ElapsedMilliseconds;
                 buildWatch.Restart();
                 var text = document.RootJson is null ? "" : McdocJsonFormatter.Format(document.RootJson);

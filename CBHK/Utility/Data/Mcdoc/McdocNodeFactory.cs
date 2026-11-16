@@ -42,6 +42,12 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>最近一次 BuildResult 造出的合成根节点：摊平后它不进 Nodes，但仍是顶层节点的父容器。</summary>
         public McdocTreeNode RootNode { get; private set; }
 
+        /// <summary>
+        /// 保留区合成容器（"当前版本不存在（N）"）：由文档在 Load 时创建并注入每个工厂实例。
+        /// 未声明键在这里被搬走 —— 它们不进 Nodes、也不进 rootNode.Children，主视图因此不会到处冒黄叹号行。
+        /// </summary>
+        public McdocTreeNode PreservedGroup { get; set; }
+
         /// <summary>只构建根节点（不摊平）。narrow=false 供"纯 simplify"对拍使用。</summary>
         public McdocTreeNode BuildRoot(McdocType rootType, McdocJsonValue json, McdocRuntime runtime,
             bool narrow = true, Action<McdocTreeNode> onValueChanged = null, Action<McdocTreeNode> onStructureChanged = null)
@@ -66,6 +72,35 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             result.Add(rootNode);
             return result;
+        }
+
+        /// <summary>
+        /// 把 <paramref name="node"/> 里刚建出的未声明键搬进保留区。子级构建（饿建与懒建）只有 RefreshChildren 一个出口，
+        /// 所以这里挂一次就覆盖全部路径。同一 JsonPath 的旧实例先摘掉（节点重建会换实例），
+        /// 倒序插到最前面 —— 与文档里的原始相对顺序一致。
+        /// </summary>
+        private void PreserveUnknownChildren(McdocTreeNode node)
+        {
+            if (PreservedGroup is null || node is null || node.IsPreservedGroup || node.IsUnknownField) return;
+            for (var index = node.Children.Count - 1; index >= 0; index--)
+            {
+                var child = node.Children[index];
+                if (child is null || !child.IsUnknownField) continue;
+                node.Children.RemoveAt(index);
+                if (!string.IsNullOrEmpty(child.JsonPath))
+                {
+                    for (var existing = PreservedGroup.Children.Count - 1; existing >= 0; existing--)
+                    {
+                        if (string.Equals(PreservedGroup.Children[existing]?.JsonPath, child.JsonPath, StringComparison.Ordinal))
+                        {
+                            PreservedGroup.Children[existing].Parent = null;
+                            PreservedGroup.Children.RemoveAt(existing);
+                        }
+                    }
+                }
+                child.Parent = PreservedGroup;
+                PreservedGroup.Children.Insert(0, child);
+            }
         }
 
         /// <summary>
@@ -457,6 +492,8 @@ namespace CBHK.Utility.Data.Mcdoc
                     foreach (var item in node.Items) item.Parent = node;
                     foreach (var item in node.SelectedUnionChildren) item.Parent = node;
                     node.ChildrenBuilt = true;
+                    // 未声明键搬进保留区：必须在 Parent 全部写好之后（这时才知道谁是被摘下来的那一批）
+                    PreserveUnknownChildren(node);
                 };
 
                 // 懒建：越深的子树越晚构建；union 例外（分支名在 Head 里要用）。

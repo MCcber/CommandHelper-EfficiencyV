@@ -386,6 +386,12 @@ namespace CBHK.Utility.Data.Mcdoc
         public bool IsUnknownField { get; set; }
 
         /// <summary>
+        /// 保留区合成容器：当前版本不存在的键全都挂在这一个虚拟节点下（不在 Nodes、也不在 rootNode 里），
+        /// 主视图因此不会到处冒黄叹号行；它的子级仍然是各自的 JsonPath，删除照旧按活文档解析。
+        /// </summary>
+        public bool IsPreservedGroup { get; set; }
+
+        /// <summary>
         /// 空诊断清单的**共享哨兵**：校验器每轮把"没有诊断"的节点指回这一份，先攒后分配。
         /// 每节点一个 List 在 1MB 档是 18 万次分配，量出来占 doc.validate 的九成（时间几乎全落在 GC 上）。
         /// 共享只读安全：写入方（McdocValidator.Add）发现是哨兵会先换成自己的新列表，不会写进这份。

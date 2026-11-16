@@ -4,7 +4,7 @@ using MinecraftLanguageModelLibrary.Data;
 namespace CBHK.Utility.Data.Mcdoc
 {
     /// <summary>行的形状（misode 的 Head 分派结果），视图只认这个枚举，不看类型。</summary>
-    public enum McdocRowKind { Plain, Union, Keyed, Placeholder, More, AddTail }
+    public enum McdocRowKind { Plain, Union, Keyed, Placeholder, More, AddTail, Preserved }
 
     /// <summary>值编辑器的种类（misode 各 *Head 的编辑控件），模板选择器只认这个枚举。</summary>
     public enum McdocEditorKind { None, Text, Number, Bool, Enum, Raw, InlineTuple }

@@ -84,7 +84,7 @@ namespace CBHK.Probe
             if (wireChildBuiltHook) projector.AfterChildrenBuilt = node => pipeline.NoteChildrenBuilt(node);
             beforeLoad?.Invoke(document);
             document.Load(rootType, McdocJsonTextParser.Parse(json).Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             return (document, projector, pipeline);
         }
 
@@ -114,7 +114,7 @@ namespace CBHK.Probe
                 var document = new McdocTreeDocument(new McdocTypeIndex());
                 document.Load(Fixtures.RootType(), McdocJsonTextParser.Parse(text).Root);
                 var projector = new McdocRowProjector();
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 var baselineResets = projector.ResetCount;
 
                 var newRoot = McdocJsonTextParser.Parse(edited).Root;
@@ -258,7 +258,7 @@ namespace CBHK.Probe
             var document = new McdocTreeDocument(new McdocTypeIndex());
             document.Load(Fixtures.UnionHostType(), McdocJsonTextParser.Parse("{ \"u\": { \"b\": 1 } }").Root);
             var projector = new McdocRowProjector();
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             var checks = new Checks();
 
             var node = document.FindNode("$.u");
@@ -287,7 +287,7 @@ namespace CBHK.Probe
             // 连做 3 轮：每轮重新投影（新实例）后再回推，JSON 必须一动不动
             for (var round = 1; round <= 3; round++)
             {
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 var freshRow = projector.Find(document.FindNode("$.u"));
                 if (freshRow is null) { checks.That(false, "第 " + round + " 轮拿到行", ""); break; }
                 var current = freshRow.SelectedUnionOption;
@@ -343,28 +343,71 @@ namespace CBHK.Probe
             const string json = "{ \"a\": 1, \"b\": { \"b1\": 1, \"bKeep\": { \"deep\": 1 } } }";
             var document = new McdocTreeDocument(new McdocTypeIndex());
             document.Load(Fixtures.LegacyHostType(), McdocJsonTextParser.Parse(json).Root);
-            var projector = new McdocRowProjector();
-            projector.Reset(document.Nodes.ToList());
+            // 真实宿主会把 Document 装配给投影器；删键入口要靠它从活文档按路径删（不是从父级缓存）
+            var projector = new McdocRowProjector { Document = document };
+            projector.Reset(document.ProjectionRoots);
+
+            ExpandPreserved(document, projector);
 
             var checks = new Checks();
             var node = document.FindNode("$.b.bKeep");
-            var parent = node?.Parent;
-            checks.That(node is not null && node.RemoveFieldCommand?.CanExecute(null) == true, "遗留键走『删键』入口",
-                node is null ? "找不到节点" : "CanExecute=" + (node.RemoveFieldCommand?.CanExecute(null) ?? false));
-            if (node is null || parent is null) return checks.Finish("--case legacy-delete");
+            var parent = document.FindNode("$.b");
+            var row = node is null ? null : projector.Find(node);
+            checks.That(row?.UnknownDeleteVisibility == System.Windows.Visibility.Visible, "遗留键走『删键』入口",
+                row is null ? "没有行" : "visibility=" + row.UnknownDeleteVisibility);
+            if (node is null || parent is null || row is null) return checks.Finish("--case legacy-delete");
 
-            node.RemoveFieldCommand.Execute(null);
+            // 真实 UI 走的就是这条：按 JsonPath 在活文档里删键，再通知活父级（不是行上的父级缓存）
+            row.UnknownDeleteCommand.Execute(null);
             checks.That(parent.Json?.Get("bKeep") is null, "JSON 里这个键被删掉", "parentKeys=" + KeyPaths(document.RootJson));
 
-            // VM 在 StructureChanged 里做的就是这两步：刷新父级、重投影
             document.RefreshNode(parent);
-            projector.Reset(document.Nodes.ToList());
-            checks.That(!parent.Children.Contains(node), "父级子级里没有这个节点", "children=" + parent.Children.Count);
+            projector.Reset(document.ProjectionRoots);
+            checks.That(!parent.Children.Contains(node) && document.PreservedGroup.Children.All(c => !ReferenceEquals(c, node)),
+                "父级与保留区里都没有这个节点",
+                "children=" + parent.Children.Count + " 保留区=" + document.PreservedGroup.Children.Count);
             checks.That(document.FindNode("$.b.bKeep") is null, "按路径再也找不到", "");
             checks.That(projector.Rows.All(row => !ReferenceEquals(row.Node, node)), "投影里没有这一行",
                 "行数=" + projector.Rows.Count);
             checks.That(document.CountUnknownFields() == 0, "遗留键计数归零", document.CountUnknownFields().ToString());
             return checks.Finish("--case legacy-delete");
+        }
+
+        // ── 「清理遗留键」按钮的落点：全层级扫描 → 按路径删 → 重建后没有幽灵行 ──────
+        public static int ClearUnknownFields()
+        {
+            Deterministic();
+            const string json = "{ \"a\": 1, \"b\": { \"b1\": 1, \"bKeep\": { \"deep\": 1 } }, \"tset\": { \"deep\": 1 } }";
+            var document = new McdocTreeDocument(new McdocTypeIndex());
+            document.Load(Fixtures.LegacyHostType(), McdocJsonTextParser.Parse(json).Root);
+            var reloads = 0;
+            var projector = new McdocRowProjector { Document = document, RequestReload = () => reloads++ };
+            projector.Reset(document.ProjectionRoots);
+            ExpandPreserved(document, projector);
+
+            var checks = new Checks();
+            var found = document.FindUnknownFields();
+            checks.That(found.Count == document.CountUnknownFields(), "扫描到的键数 == 计数", "扫=" + found.Count + " 计=" + document.CountUnknownFields());
+            checks.That(found.Count == 2, "顶层与嵌套遗留键都被扫到", "count=" + found.Count + " paths=" + string.Join(",", found.Select(node => node.JsonPath)));
+
+            var before = document.CountUnknownFields();
+            var removed = document.RemoveAllUnknownFields();
+            checks.That(removed == before, "删掉的个数 == 扫到的个数", "removed=" + removed + " 扫=" + before);
+            checks.That(document.RootJson.Get("tset") is null && document.RootJson.Get("b")?.Get("bKeep") is null,
+                "JSON 里两个遗留键都没了", "keys=" + KeyPaths(document.RootJson));
+            checks.That(document.CountUnknownFields() == 0, "计数归零", document.CountUnknownFields().ToString());
+            checks.That(reloads == 0, "全程没有触发整篇重载（不走文本消化那条路）", "reloads=" + reloads);
+
+            // 按钮点完之后 VM 做的事：按同一份 RootJson 整篇重建，再重投影
+            document.Load(Fixtures.LegacyHostType(), document.RootJson);
+            projector.Reset(document.ProjectionRoots);
+            checks.That(document.PreservedGroup?.Children.Count is null or 0, "重建后保留区是空的",
+                "count=" + (document.PreservedGroup?.Children.Count.ToString() ?? "<null>"));
+            checks.That(projector.Rows.All(row => row.Node is null || !row.Node.IsPreservedGroup), "没有「当前版本不存在」容器行",
+                "rows=" + projector.Rows.Count);
+            checks.That(document.FindNode("$.b.b1") is not null, "同层还在的键没被误删", "");
+            Contracts(checks, document, projector, "清空遗留键");
+            return checks.Finish("--case clear-unknown-fields");
         }
 
         // ── BlockState 资产 → mcdoc:block_states 成员（判据比对真资产文件，不写死）─────
@@ -499,7 +542,7 @@ namespace CBHK.Probe
                 pipeline.RebuildTargetedOrFallback(node);
             };
             document.Load(Fixtures.UnionHostType(), McdocJsonTextParser.Parse("{ \"u\": { \"b\": 1 } }").Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var checks = new Checks();
             var before = projector.ResetCount + projector.SpliceCount;
@@ -530,10 +573,10 @@ namespace CBHK.Probe
             // 钩子只许在"子级刚建出来"那一拍触发：重复投影不许再喊（现场 100 次循环的真正驱动源）
             var fired = 0;
             projector.AfterChildrenBuilt = _ => fired++;
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             var firedAfterFirst = fired;
-            projector.Reset(document.Nodes.ToList());
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
+            projector.Reset(document.ProjectionRoots);
             checks.That(fired == firedAfterFirst, "重复投影不再触发补建回调",
                 "第一次=" + firedAfterFirst + " 三次后=" + fired);
             projector.AfterChildrenBuilt = node =>
@@ -578,7 +621,7 @@ namespace CBHK.Probe
             };
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             document.Load(Fixtures.UnionWithUnresolvedHostType(), McdocJsonTextParser.Parse("{ \"u\": { \"a\": 1 } }").Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var checks = new Checks();
             var node = document.FindNode("$.u");
@@ -704,7 +747,7 @@ namespace CBHK.Probe
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             // 现场顺序：先把 properties 建出来（此时 block 还没有值），再给 block 落值
             document.Load(rootType, McdocJsonTextParser.Parse(@"{ ""properties"": {} }").Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var before = DescribeProperties(document);
             var blockNode = document.FindNode("$.block");
@@ -945,7 +988,7 @@ namespace CBHK.Probe
             node.SelectedUnionTypeName = node.UnionTypeNameList[0];
             pipeline.Materializer.MaterializeUntilStable(true);
             // 物化会整篇 Load（换一代节点）：投影必须跟着重排，否则残骸行就是"上一代的行"
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             var after = document.FindNode("$.u");
             checks.That(after?.Json is { Kind: McdocJsonKind.Object }, "显示着成员 → 文档里落出该成员的默认结构",
                 "u=" + (after?.Json?.Kind.ToString() ?? "<null>"));
@@ -958,7 +1001,7 @@ namespace CBHK.Probe
             after = document.FindNode("$.u") ?? node;
             after.SelectedUnionTypeName = after.UnionTypeNameList![1];
             pipeline.Materializer.MaterializeUntilStable(true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             var swapped = document.RootJson?.Get("u");
             checks.That(swapped is { Kind: McdocJsonKind.Object } swappedJson
                 && swappedJson.Properties?.Any(pair => pair.Key == "a") != true,
@@ -1078,7 +1121,7 @@ namespace CBHK.Probe
                     doc.RegistryOptions = new BlockRegistryStub();
                 });
             pipeline.Materializer.MaterializeUntilStable(includeDisplayedDefaults: true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var value = document.RootJson?.Get("infiniburn");
             var text = value is { Kind: McdocJsonKind.String } ? value.StringValue ?? "" : "<" + (value?.Kind.ToString() ?? "null") + ">";
@@ -1209,10 +1252,10 @@ namespace CBHK.Probe
             if (ghostList?.Json is { Kind: McdocJsonKind.Array } ghostArray && ghostArray.Items is not null)
             {
                 ghostArray.Items.Clear();
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 var rowsBefore = projector.Rows.Count(row => row.Node?.JsonPath?.StartsWith("$.distribution[", StringComparison.Ordinal) == true);
                 McdocCollectionEditor.Default.RemoveItemAt(ghostList, 0);
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 var rowsAfter = projector.Rows.Count(row => row.Node?.JsonPath?.StartsWith("$.distribution[", StringComparison.Ordinal) == true);
                 Console.WriteLine("[信息] 幽灵行：清前=" + rowsBefore + " 清后=" + rowsAfter + " 节点项数=" + ghostList.Items.Count);
                 checks.That(ghostList.Items.Count == 0 || rowsAfter < rowsBefore,
@@ -1954,7 +1997,7 @@ namespace CBHK.Probe
             var listType = new McdocType { Kind = McdocTypeKind.List, Item = McdocType.Create(McdocTypeKind.Int) };
             var rootType = Struct(("items", listType));
             var (document, projector, _) = Harness(index, rootType, "{ \"items\": [1, 2] }");
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             var list = document.FindNode("$.items");
             checks.That(list is not null, "列表节点存在", "$.items");
             if (list is null) return checks.Finish("--case list-item-commands");
@@ -2353,6 +2396,8 @@ namespace CBHK.Probe
                 + " 文档=" + FormatOneLine(document.RootJson?.Get("pick"))
                 + " type=" + (icon.Type?.Kind.ToString() ?? "<null>"));
             PumpDispatcher();
+            // 切支剪掉的键会被搬进保留区，默认收起：要看它们的行，先展开再重投影
+            ExpandPreserved(document, projector);
             var after = document.FindNode("$.display.icon");
             after?.EnsureChildren();
             var member = after?.SelectedUnionMember;
@@ -2710,7 +2755,7 @@ namespace CBHK.Probe
             document.NodeValueChanged = node => pipeline.OnValueChanged(node);
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             document.Load(rootType, McdocJsonTextParser.Parse("{ }").Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var root = document.Nodes.FirstOrDefault();
             if (root is not null) root.DependsOnRuntimeData = true;   // 钉住"运行期依赖父级"这条分支
@@ -3086,7 +3131,7 @@ namespace CBHK.Probe
             };
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             document.Load(rootType, McdocJsonTextParser.Parse(@"{ ""block"": ""minecraft:acacia_button"", ""properties"": {} }").Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var blockNode = document.FindNode("$.block");
             checks.That(blockNode is not null, "拿到 block 节点", blockNode is null ? "没有节点" : "");
@@ -3225,7 +3270,7 @@ namespace CBHK.Probe
             for (var round = 1; round <= 3; round++)
             {
                 // 每投影一次，表现器都会把候选表整体重建一遍
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 var node = Reach(document, "$.block") ?? document.FindNode("$.block");
                 var options = node?.EnumOptionList;
                 checks.That(options is { Count: > 1 } && McdocUnionSwitch.IsUnsetOption(options[0]),
@@ -3295,7 +3340,7 @@ namespace CBHK.Probe
             // ① 先按 ⊕ 把 conditions 建出来
             McdocCollectionEditor.Default.SetDefault(conditions, document.CreateRuntime());
             pipeline.Materializer.MaterializeUntilStable(true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             conditions = document.FindNode("$.criteria.a.conditions") ?? conditions;
             conditions.EnsureChildren();
             var jsonAfterFirst = McdocTreeDocument.ResolvePath(document.RootJson, "$.criteria.a.conditions");
@@ -3310,7 +3355,7 @@ namespace CBHK.Probe
                 stateNode.EnsureChildren();
                 McdocCollectionEditor.Default.SetDefault(stateNode, document.CreateRuntime());
                 pipeline.Materializer.MaterializeUntilStable(true);
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
             }
             var jsonAfterSecond = McdocTreeDocument.ResolvePath(document.RootJson, "$.criteria.a.conditions");
             var conditionsNow = document.FindNode("$.criteria.a.conditions");
@@ -3345,7 +3390,7 @@ namespace CBHK.Probe
             checks.That(node.RemoveFieldCommand is not null, "可选字段有删除入口", node.RemoveFieldCommand is null ? "没有" : "");
             node.RemoveFieldCommand?.Execute(null);
             pipeline.Materializer.MaterializeUntilStable(true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var keyGone = McdocTreeDocument.ResolvePath(document.RootJson, "$.c") is null;
             var after = document.FindNode("$.c");
@@ -3424,7 +3469,7 @@ namespace CBHK.Probe
             // 点 ⊕ 建出这一层（与界面同一个出口）
             McdocCollectionEditor.Default.SetDefault(conditions, document.CreateRuntime());
             pipeline.Materializer.MaterializeUntilStable(true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             conditions = document.FindNode("$.criteria.a.conditions") ?? conditions;
             conditions?.EnsureChildren();
             var pickedKey = McdocTreeDocument.ResolvePath(document.RootJson, "$.criteria.a.conditions") is not null;
@@ -3467,7 +3512,7 @@ namespace CBHK.Probe
             {
                 conditions.RemoveFieldCommand.Execute(null);
                 pipeline.Materializer.MaterializeUntilStable(true);
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 var removedKey = McdocTreeDocument.ResolvePath(document.RootJson, "$.criteria.a.conditions") is not null;
                 var leftover = document.FindNode("$.criteria.a.conditions");
                 var leftoverChildren = leftover is null ? [] : McdocPresenterRegistry.Default.Children(leftover).ToList();
@@ -3501,7 +3546,7 @@ namespace CBHK.Probe
             // 程序里给选中项赋了值（非用户手势、也没有写值）：这一步以前会被当成"用户选了这一支"
             node.SelectedUnionTypeName = node.UnionTypeNameList![0];
             pipeline.Materializer.MaterializeUntilStable(true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var after = document.FindNode("$.u");
             var children = after is null ? [] : McdocPresenterRegistry.Default.Children(after).ToList();
@@ -3553,7 +3598,7 @@ namespace CBHK.Probe
 
             // 载入这一路（includeDisplayedDefaults = true）正是以前会把默认值写进文档的入口
             pipeline.Materializer.MaterializeUntilStable(true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             checks.That(document.RootJson?.Get("flag") is null, "可选 bool 不落 false",
                 "flag=" + (document.RootJson?.Get("flag")?.Kind.ToString() ?? "<null>"));
@@ -3573,7 +3618,7 @@ namespace CBHK.Probe
             {
                 McdocUnionSwitch.SwitchTo(reopened, reopened.UnionTypeNameList[0]);
                 pipeline.Materializer.MaterializeUntilStable(true);
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 checks.That(document.RootJson?.Get("u") is { Kind: McdocJsonKind.Object }, "用户显式选支后仍然落盘",
                     "u=" + (document.RootJson?.Get("u")?.Kind.ToString() ?? "<null>"));
             }
@@ -3665,7 +3710,7 @@ namespace CBHK.Probe
             // 界面序列：切到 block_state_property 后 properties 是空的 {}，字段行这一次建出来就得能用
             document.Load(rootType,
                 McdocJsonTextParser.Parse("{ \"condition\": { \"block\": \"minecraft:acacia_button\", \"properties\": {} } }").Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             foreach (var pair in expected)
             {
@@ -3711,7 +3756,7 @@ namespace CBHK.Probe
             };
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             document.Load(rootType, McdocJsonTextParser.Parse("{ \"u\": { \"terms\": 1, \"keep\": 2 } }").Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var checks = new Checks();
             var unionNode = document.FindNode("$.u");
@@ -3792,7 +3837,7 @@ namespace CBHK.Probe
  };
  document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
  document.Load(rootType, McdocJsonTextParser.Parse("{ \"u\": { \"terms\": 1, \"properties\": { \"face\": \"wall\" } } }").Root);
- projector.Reset(document.Nodes.ToList());
+ projector.Reset(document.ProjectionRoots);
 
  var checks = new Checks();
  var unionNode = document.FindNode("$.u");
@@ -3885,7 +3930,7 @@ namespace CBHK.Probe
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             document.Load(Fixtures.RequiredEnumHostType(),
                 McdocJsonTextParser.Parse("{ \"mode\": { \"level\": \"zzz\" } }").Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var checks = new Checks();
             // 叶子：枚举取值域不合法
@@ -3936,7 +3981,7 @@ namespace CBHK.Probe
             };
             document.Load(Fixtures.CriteriaLikeHostType(),
                 McdocJsonTextParser.Parse("{ \"criteria\": { \"test\": { \"conditions\": { \"location\": [ { \"condition\": { \"a\": 1 } }, { \"condition\": { \"b\": 1 } } ] } } } }").Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var checks = new Checks();
             var rows = projector.Rows.Count;
@@ -3947,7 +3992,7 @@ namespace CBHK.Probe
             var spliceBefore = projector.SpliceCount;
             var generationBefore = document.Generation;
             var nodesBefore = document.Nodes.Count;
-            for (var tick = 0; tick < 30; tick++) projector.Reset(document.Nodes.ToList());
+            for (var tick = 0; tick < 30; tick++) projector.Reset(document.ProjectionRoots);
             checks.That(document.Generation == generationBefore, "空转 30 拍没有换代（没偷偷重建文档）",
                 "Δ=" + (document.Generation - generationBefore));
             checks.That(document.Nodes.Count == nodesBefore, "空转后顶层节点数不变", "Δ=" + (document.Nodes.Count - nodesBefore));
@@ -4006,7 +4051,7 @@ namespace CBHK.Probe
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             document.Load(Fixtures.EntryWithUnionHostType(),
                 McdocJsonTextParser.Parse("{ \"items\": [ { \"condition\": { \"a\": 1 } }, { \"condition\": { \"b\": 1 } }, { \"condition\": { \"a\": 1 } } ] }").Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var checks = new Checks();
             var entry = document.FindNode("$.items[0]");
@@ -4062,7 +4107,7 @@ namespace CBHK.Probe
             Deterministic();
             const string json = "{ \"a\": 1, \"tset\": { \"deep\": 1 } }";
             var document = new McdocTreeDocument(new McdocTypeIndex());
-            var projector = new McdocRowProjector();
+            var projector = new McdocRowProjector { Document = document };
             var pipeline = new McdocPipeline
             {
                 Document = document,
@@ -4074,15 +4119,17 @@ namespace CBHK.Probe
             // 必须在 Load 之前挂：每个节点在构建期就把这个回调存进自己的 StructureChanged
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
             document.Load(Fixtures.LegacyHostType(), McdocJsonTextParser.Parse(json).Root);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
+            ExpandPreserved(document, projector);
 
             var checks = new Checks();
             var node = document.FindNode("$.tset");
-            checks.That(node is not null && node.RemoveFieldCommand?.CanExecute(null) == true, "$.tset 走删键入口",
-                node is null ? "找不到节点" : "field=" + (node.FieldName ?? "<空>"));
-            if (node is null) return checks.Finish("--case legacy-delete-top");
+            var row = node is null ? null : projector.Find(node);
+            checks.That(row?.UnknownDeleteVisibility == System.Windows.Visibility.Visible, "$.tset 走删键入口",
+                node is null ? "找不到节点" : row is null ? "没有行" : "field=" + (node.FieldName ?? "<空>"));
+            if (node is null || row is null) return checks.Finish("--case legacy-delete-top");
 
-            node.RemoveFieldCommand.Execute(null);
+            row.UnknownDeleteCommand.Execute(null);
             checks.That(document.RootJson.Get("tset") is null, "JSON 里删掉了", "");
             checks.That(document.FindNode("$.tset") is null, "树里没有这个节点了", "");
             checks.That(projector.Rows.All(row => !ReferenceEquals(row.Node, node)), "投影里没有这一行",
@@ -4102,7 +4149,7 @@ namespace CBHK.Probe
 
             var checks = new Checks();
             var projector = new McdocRowProjector();
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             Check("$.map.k1", isMapEntry: true);
             Check("$.list[0]", isMapEntry: false);
@@ -4123,7 +4170,7 @@ namespace CBHK.Probe
                     checks.That(false, path + " · 能重建", "RebuildNode 返回 null");
                     return;
                 }
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
                 var after = Snapshot(projector, rebuilt);
                 checks.That(after == before, path + " · 重建后行语义一字不差", "前=" + before + " 后=" + after);
                 checks.That(rebuilt.IsMapEntry == isMapEntry, path + " · IsMapEntry 正确",
@@ -4203,7 +4250,8 @@ namespace CBHK.Probe
             var document = new McdocTreeDocument(new McdocTypeIndex());
             document.Load(Fixtures.LegacyHostType(), McdocJsonTextParser.Parse(json).Root);
             var projector = new McdocRowProjector();
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
+            ExpandPreserved(document, projector);
             var registry = McdocPresenterRegistry.Default;
 
             foreach (var key in keys.Take(3))
@@ -4304,6 +4352,7 @@ namespace CBHK.Probe
 
             var (document, projector, _) = Harness(index, rootType, json,
                 document => { document.GameVersion = "1.20.5"; });
+            ExpandPreserved(document, projector);
             var node = document.FindNode(path);
             checks.That(node?.IsUnknownField == true, "display.icon.item 是遗留键",
                 node is null ? "找不到节点" : "type=" + (node.Type?.Kind.ToString() ?? "?")
@@ -4322,6 +4371,7 @@ namespace CBHK.Probe
             // 26.3：icon = ItemStackTemplate(ItemStack | string)，同样不能把旧 item 预写回来
             var (modern, modernProjector, _) = Harness(index, rootType, json,
                 document => { document.GameVersion = "26.3"; });
+            ExpandPreserved(modern, modernProjector);
             var modernNode = modern.FindNode(path);
             checks.That(modernNode?.IsUnknownField == true, "26.3 下 display.icon.item 仍是遗留键",
                 modernNode is null ? "找不到节点" : "unknown=" + modernNode.IsUnknownField);
@@ -4336,6 +4386,7 @@ namespace CBHK.Probe
             // 父节点已经换代、旧未知节点还挂在缓存父级上：删除仍要落到活文档
             var (stale, staleProjector, _) = Harness(index, rootType, json,
                 document => { document.GameVersion = "1.20.5"; });
+            ExpandPreserved(stale, staleProjector);
             var staleNode = stale.FindNode(path);
             var oldParent = stale.FindNode("$.display.icon");
             var staleRow = staleNode is null ? null : staleProjector.Find(staleNode);
@@ -4349,8 +4400,14 @@ namespace CBHK.Probe
                 checks.That(McdocTreeDocument.ResolvePath(stale.RootJson, path) is null,
                     "stale 父级下删除仍落到活文档",
                     "key=" + (McdocTreeDocument.ResolvePath(stale.RootJson, path)?.Kind.ToString() ?? "<null>"));
-                checks.That(staleProjector.Rows.All(row => !string.Equals(row.Node?.JsonPath, path, StringComparison.Ordinal)),
-                    "stale 父级下旧行不再回来", "rows=" + staleProjector.Rows.Count);
+                var staleHits = staleProjector.Rows
+                    .Where(row => string.Equals(row.Node?.JsonPath, path, StringComparison.Ordinal)).ToList();
+                checks.That(staleHits.Count == 0, "stale 父级下旧行不再回来",
+                    "rows=" + staleProjector.Rows.Count + " 命中=" + string.Join(",", staleHits.Select(row =>
+                        row.Kind + "/unknown=" + row.Node?.IsUnknownField + "/json=" + (row.Node?.Json?.Kind.ToString() ?? "<null>")
+                        + "/parent=" + (row.Node?.Parent?.JsonPath ?? "<null>") + "/attached="
+                        + stale.IsAttached(row.Node))) 
+                    + " group=" + string.Join(",", stale.PreservedGroup.Children.Select(c => (c?.JsonPath ?? "?") + "/json=" + (c?.Json?.Kind.ToString() ?? "<null>") + "/parent=" + (c?.Parent?.JsonPath ?? "<null>"))));
             }
             return checks.Finish("--case legacy-delete-live");
         }
@@ -4624,9 +4681,21 @@ namespace CBHK.Probe
         }
 
         // ── 契约 ───────────────────────────────────────────────────────────
+        // 保留区默认收起（主视图不许乱）：探针要看残留键的行，就先展开它再整表重投影一次。
+        private static void ExpandPreserved(McdocTreeDocument document, McdocRowProjector projector)
+        {
+            if (document?.PreservedGroup is not { Children.Count: > 0 } group) return;
+            group.IsExpanded = true;
+            projector?.Reset(document.ProjectionRoots);
+        }
+
         private static void Contracts(Checks checks, McdocTreeDocument document, McdocRowProjector projector, string label)
         {
+            // 保留区是合成容器：它自己与它的子级都不在 Nodes 里 —— 对账时按「有行」补上
+            // （只在展开时才有行：收起时连容器行都不投影）
             var nodes = CountNodes(document.Nodes);
+            if (document.PreservedGroup is { Children.Count: > 0, IsExpanded: true } preserved)
+                nodes += 1 + CountNodes(preserved.Children);
             var rows = projector.Rows.ToList();
             var withRow = rows.Where(row => row.Node is not null).Select(row => row.Node).Distinct().Count();
             checks.That(withRow == nodes, label + " · 行数 == 节点数", "节点=" + nodes + " 有行节点=" + withRow + " 行=" + rows.Count);
@@ -4653,7 +4722,9 @@ namespace CBHK.Probe
             var expected = new List<string>();
             CollectKeys(document.RootJson, "$", expected);
             var actual = new HashSet<string>(keyed.Select(row => row.Node.JsonPath ?? ""), StringComparer.Ordinal);
-            var missing = expected.Where(path => !actual.Contains(path)).ToList();
+            // 保留区收起时，当前版本不存在的键由「当前版本不存在（N）」那一行代表，不单独出行
+            var missing = expected.Where(path => !actual.Contains(path))
+                .Where(path => document.FindNode(path)?.IsUnknownField != true).ToList();
             checks.That(missing.Count == 0, label + " · 每个键都有行",
                 missing.Count == 0 ? "" : "缺 " + missing.Count + " 个，首个=" + missing[0]);
 
@@ -4853,7 +4924,7 @@ namespace CBHK.Probe
                 + " 同对象=" + ReferenceEquals(entryLive?.Json, McdocTreeDocument.ResolvePath(document.RootJson, entryPath)));
             pipeline.OnValueChanged(condition);
             pipeline.Materializer.MaterializeUntilStable();
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var entryAfter = Reach(document, entryPath);
             entryAfter?.EnsureChildren();
@@ -4967,7 +5038,7 @@ namespace CBHK.Probe
             document.GameVersion = "1.21.11";
             pipeline.Materializer.MaterializeUntilStable(includeDisplayedDefaults: true);
             pipeline.Reload();
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var data = Reach(document, "$.monster_spawn_light_level.distribution[0].data");
             data?.EnsureChildren();
@@ -5099,7 +5170,7 @@ namespace CBHK.Probe
             var (document, projector, pipeline) = Harness(index, rootType, screenshotJson,
                 document => { document.GameVersion = "1.20.5"; });
             var written = pipeline.Materializer.MaterializeUntilStable(includeDisplayedDefaults: true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             Console.WriteLine("[信息] 载入期物化 written=" + written);
 
             var node = Reach(document, "$.monster_spawn_light_level");
@@ -5355,7 +5426,7 @@ namespace CBHK.Probe
                 entry.IsExpanded = true;
                 using (pipeline.BeginRebuilding())
                 {
-                    projector.Reset(document.Nodes.ToList());
+                    projector.Reset(document.ProjectionRoots);
                 }
                 pipeline.DrainPendingChildBuilds();
 
@@ -5464,13 +5535,13 @@ namespace CBHK.Probe
                 "{ \"pools\": [ { \"rolls\": 0, \"entries\": [ { \"type\": \"\" } ] } ] }",
                 doc => doc.GameVersion = "1.20.5");
             pipeline.Materializer.MaterializeUntilStable(includeDisplayedDefaults: true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             AssertEntry("载入", "$.pools[0].entries[0]");
 
             // 同一个"添加条目"手势：新条目必须当场落描别键、当场解出兄弟 spread
             document.FindNode("$.pools[0].entries")?.AddItemCommand?.Execute(null);
             pipeline.Materializer.MaterializeUntilStable(includeDisplayedDefaults: true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             AssertEntry("追加", "$.pools[0].entries[1]");
             return checks.Finish("--case loot-entry-load");
 
@@ -6495,7 +6566,7 @@ namespace CBHK.Probe
             var rootType = UnionOf(list, McdocType.Create(McdocTypeKind.String));
             var (document, projector, _) = Harness(new McdocTypeIndex(), rootType,
                 "[ { \"name\": \"a\" }, { \"name\": \"b\" } ]");
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var root = document.Nodes.FirstOrDefault();
             root?.EnsureChildren();
@@ -6830,7 +6901,7 @@ namespace CBHK.Probe
                 "{ \"function\": \"minecraft:apply_bonus\" }",
                 doc => doc.GameVersion = "1.20.5");
             pipeline.Materializer.MaterializeUntilStable(includeDisplayedDefaults: true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var before = RootBranchFields(document);
             Console.WriteLine("[信息] Object 支字段=" + string.Join(",", before));
@@ -6937,7 +7008,7 @@ namespace CBHK.Probe
                 "[ { \"function\": \"minecraft:apply_bonus\" } ]",
                 doc => doc.GameVersion = "1.20.5");
             pipeline.Materializer.MaterializeUntilStable(includeDisplayedDefaults: true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             var root = document.Nodes.FirstOrDefault();
             root?.EnsureChildren();
@@ -6999,7 +7070,7 @@ namespace CBHK.Probe
                 + "\"conditions\": [ { \"condition\": \"minecraft:block_state_property\", \"block\": \"minecraft:basalt\" } ] } ] } ] }",
                 doc => doc.GameVersion = "1.20.5");
             pipeline.Materializer.MaterializeUntilStable(includeDisplayedDefaults: true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             string State(string label)
             {
@@ -7044,7 +7115,7 @@ namespace CBHK.Probe
 
             // 用户现场：Properties **展开着**（有 axis 子行）再切到无属性方块 → 行会变成"点不动"
             Expand(document.FindNode(BlockStatePropsPath));
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             SwitchBlock("minecraft:stone");
             Console.WriteLine("[信息] " + State("切到 stone"));
             var afterStone = document.FindNode(BlockStatePropsPath);
@@ -7052,7 +7123,7 @@ namespace CBHK.Probe
                 "切到无属性方块后 properties 的空对象被丢掉",
                 "json=" + FormatOneLine(McdocTreeDocument.ResolvePath(document.RootJson, BlockStatePropsPath)));
             // 行级判据：properties 下面不许再有任何"值行"（旧的 face/facing/powered 必须消失）
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             var stalePropertyRows = projector.Rows
                 .Where(row => (row.Node?.JsonPath ?? "").StartsWith(BlockStatePropsPath + ".", StringComparison.Ordinal))
                 .Select(row => row.Node?.FieldName).ToList();
@@ -7109,7 +7180,7 @@ namespace CBHK.Probe
             SwitchBlock2("minecraft:acacia_button");
             var afterButton = document.FindNode(BlockStatePropsPath);
             Expand(afterButton);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             var staleAxisRow = projector.Rows.FirstOrDefault(row =>
                 string.Equals(row.Node?.JsonPath, BlockStatePropsPath + ".axis", StringComparison.Ordinal));
             Console.WriteLine("[信息] 换方块后 properties json=" + FormatOneLine(McdocTreeDocument.ResolvePath(document.RootJson, BlockStatePropsPath))
@@ -7122,7 +7193,7 @@ namespace CBHK.Probe
             // 展开之后，行必须是**当前方块**的属性（acacia_button = face/facing/powered），
             // 而且绝不能残留上一个方块的属性行（axis / east / north …）。
             Expand(document.FindNode(BlockStatePropsPath));
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             var fieldRows = projector.Rows
                 .Where(row => (row.Node?.JsonPath ?? "").StartsWith(BlockStatePropsPath + ".", StringComparison.Ordinal))
                 .Select(row => row.Node?.FieldName).ToList();
@@ -7156,7 +7227,7 @@ namespace CBHK.Probe
                 + "\"block\": \"minecraft:acacia_button\" } ] } ] } ] }",
                 doc => doc.GameVersion = "1.20.5");
             pipeline.Materializer.MaterializeUntilStable(includeDisplayedDefaults: true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             void Expand(McdocTreeNode node)
             {
@@ -7171,7 +7242,7 @@ namespace CBHK.Probe
             }
             var entry = Reach(document, basePath);
             Expand(entry);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             void SwitchBlock(string literal)
             {
@@ -7268,7 +7339,7 @@ namespace CBHK.Probe
                 + "\"block\": \"minecraft:acacia_button\", \"properties\": {} } ] }",
                 doc => doc.GameVersion = "1.20.5");
             pipeline.Materializer.MaterializeUntilStable(includeDisplayedDefaults: true);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
 
             void Expand(McdocTreeNode node)
             {
@@ -7294,7 +7365,7 @@ namespace CBHK.Probe
             checks.That(props is not null, "前置：properties 节点存在", propsPath);
             if (props is null) return checks.Finish("--case item-modifier-blockstate-expanded");
             Expand(props);
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             checks.That(Reach(document, propsPath + ".face") is not null,
                 "前置：acacia_button 已解出属性行",
                 "face=" + (Reach(document, propsPath + ".face") is null ? "no" : "yes"));
@@ -7413,7 +7484,7 @@ namespace CBHK.Probe
             var rootType = Struct(("map", map));
             var (document, projector, _) = Harness(new McdocTypeIndex(), rootType,
                 "{ \"map\": { \"alpha\": { \"value\": \"a\" }, \"beta\": { \"value\": \"b\" } } }");
-            projector.Reset(document.Nodes.ToList());
+            projector.Reset(document.ProjectionRoots);
             var entry = document.FindNode("$.map.alpha");
             checks.That(entry is not null, "map 条目节点存在", "$.map.alpha");
             if (entry is null) return checks.Finish("--case map-entry-has-no-list-item-commands");

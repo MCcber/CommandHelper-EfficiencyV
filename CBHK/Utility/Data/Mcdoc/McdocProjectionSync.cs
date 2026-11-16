@@ -21,13 +21,13 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 if (!projector.RefreshAround(node) && !splicedTopLevel)
                 {
-                    projector.Reset(document.Nodes.ToList());
+                    projector.Reset(document.ProjectionRoots);
                 }
             }
             // 重建了节点却没拿到对应的行（局部拼接没覆盖到）：整表重置，绝不让投影停在上一代
             if (!splicedTopLevel && stats.RebuiltNodes > 0 && stats.RebuiltNodeList.Count != stats.RebuiltNodes)
             {
-                projector.Reset(document.Nodes.ToList());
+                projector.Reset(document.ProjectionRoots);
             }
         }
     }

@@ -147,7 +147,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (written > 0)
                 {
                     McdocWriteTrace.Trace("children-built-drain", "nodes=" + nodes.Count + " written=" + written);
-                    Projector?.Reset(Document.Nodes.ToList());
+                    Projector?.Reset(Document.ProjectionRoots);
                     TextDirty?.Invoke();
                 }
             }
@@ -168,14 +168,31 @@ namespace CBHK.Utility.Data.Mcdoc
         private void EnsureProjectionCurrent()
         {
             if (Document is null || Projector is null) return;
+            // 保留区的陈旧条目先清：运行期重建那条支路不经过 RefreshNode，键删了没人通知保留区。
+            // 清理改变条目数就整表重投影 —— 容器行自己也得跟着走（清空后这一行必须消失）。
+            var preservedBefore = Document.PreservedGroup?.Children.Count ?? 0;
+            Document.PrunePreserved();
+            if ((Document.PreservedGroup?.Children.Count ?? 0) != preservedBefore)
+            {
+                McdocWriteTrace.Trace("projection-stale", "preserved-pruned rows=" + Projector.Rows.Count);
+                Projector.Reset(Document.ProjectionRoots);
+                return;
+            }
             foreach (var row in Projector.Rows)
             {
                 var path = row.Node?.JsonPath;
                 if (row.Node is null || string.IsNullOrEmpty(path) || path == "$") continue;
+                // 行上的节点已经不在树上（遗留键被删、保留区条目被摘）——投影过期，跟路径对不上一样处理
+                if (!Document.IsAttached(row.Node))
+                {
+                    McdocWriteTrace.Trace("projection-stale", "detached path=" + path + " rows=" + Projector.Rows.Count);
+                    Projector.Reset(Document.ProjectionRoots);
+                    return;
+                }
                 var current = Document.FindNode(path);
                 if (current is null || ReferenceEquals(current, row.Node)) continue;
                 McdocWriteTrace.Trace("projection-stale", "path=" + path + " rows=" + Projector.Rows.Count);
-                Projector.Reset(Document.Nodes.ToList());
+                Projector.Reset(Document.ProjectionRoots);
                 return;
             }
         }
@@ -223,7 +240,7 @@ namespace CBHK.Utility.Data.Mcdoc
                     node.EnsureChildren();
                     if (!Projector.RefreshAround(node))
                     {
-                        Projector.Reset(Document.Nodes.ToList());
+                        Projector.Reset(Document.ProjectionRoots);
                     }
                     Diagnostics.Refresh(node, refreshHead: true);
                     McdocWriteTrace.Trace("structure-runtime-splice", "path=" + (node.JsonPath ?? "?"));
@@ -250,7 +267,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 Materializer.MaterializeUntilStable();
                 if (!Projector.RefreshAround(node))
                 {
-                    Projector.Reset(Document.Nodes.ToList());
+                    Projector.Reset(Document.ProjectionRoots);
                 }
                 Diagnostics.Refresh(node, refreshHead: true);
                 EnsureProjectionCurrent();
@@ -297,7 +314,7 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 McdocWriteTrace.Trace("union-branch-materialize", "path=" + (node.JsonPath ?? "?") + " written=" + written);
                 EnsureProjectionCurrent();
-                if (!Projector.RefreshAround(node)) Projector.Reset(Document.Nodes.ToList());
+                if (!Projector.RefreshAround(node)) Projector.Reset(Document.ProjectionRoots);
                 TextDirty?.Invoke();
             }
             // **无论有没有写过值**都要按当前文档把这一支重解一次：切支会把 union 的 Json 换成新对象
@@ -339,11 +356,11 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
                 if (!Projector.RefreshAround(rebuilt))
                 {
-                    Projector.Reset(Document.Nodes.ToList());
+                    Projector.Reset(Document.ProjectionRoots);
                 }
                 if (Materializer.MaterializeUntilStable() > 0)
                 {
-                    Projector.Reset(Document.Nodes.ToList());
+                    Projector.Reset(Document.ProjectionRoots);
                 }
                 EnsureProjectionCurrent();
                 TextDirty?.Invoke();
@@ -408,7 +425,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 dependent.EnsureChildren();
                 if (!forceProjectionReconcile && !Projector.RefreshAround(dependent))
                 {
-                    Projector.Reset(Document.Nodes.ToList());
+                    Projector.Reset(Document.ProjectionRoots);
                 }
                 Diagnostics.Refresh(dependent, refreshHead: true);
             }
@@ -416,7 +433,7 @@ namespace CBHK.Utility.Data.Mcdoc
             var materialized = rebuilt.Count > 0 ? Materializer.MaterializeUntilStable() : 0;
             if (forceProjectionReconcile || materialized > 0)
             {
-                Projector.Reset(Document.Nodes.ToList());
+                Projector.Reset(Document.ProjectionRoots);
             }
 
             // 模型可能被重建写过：文本必须跟上，否则"视图同代"当场破（这条出口原先漏了）
@@ -909,7 +926,7 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 Document.Load(rootType, Document.RootJson);
                 Materializer.MaterializeUntilStable();
-                Projector.Reset(Document.Nodes.ToList());
+                Projector.Reset(Document.ProjectionRoots);
                 TextDirty?.Invoke();
             }
             finally

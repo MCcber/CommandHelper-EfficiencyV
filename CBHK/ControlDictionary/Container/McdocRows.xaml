@@ -1445,6 +1445,41 @@
         </Grid>
     </DataTemplate>
 
+    <!--  保留区容器行（"当前版本不存在（N）"）：只有展开箭头与标题，没有编辑器、没有增删按钮。  -->
+    <!--  里面的键各自仍是普通未知键行（可单独删除），整体清理走公共模板区的「清理」按钮。  -->
+    <DataTemplate x:Key="McdocPreservedRow">
+        <Grid
+            MinHeight="38"
+            Margin="{Binding Indent}"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="34" />
+                <ColumnDefinition Width="34" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ContentControl
+                Grid.Column="0"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocRowMarkerTemplate}" />
+            <ContentControl
+                Grid.Column="1"
+                Content="{Binding}"
+                ContentTemplate="{StaticResource MdocRowExpander}" />
+            <TextBlock
+                Grid.Column="2"
+                Margin="6,0"
+                VerticalAlignment="Center"
+                FontSize="13"
+                FontWeight="SemiBold"
+                Foreground="{DynamicResource CommonForeground}"
+                Opacity="0.9"
+                Text="{Binding DisplayLabel}"
+                ToolTip="{Binding Tooltip}" />
+        </Grid>
+    </DataTemplate>
+
     <data:McdocRowTemplateSelector
         x:Key="McdocRowTemplateSelector"
         AddTailRow="{StaticResource McdocAddTailRow}"
@@ -1452,6 +1487,7 @@
         MoreRow="{StaticResource McdocMoreRow}"
         PlaceholderRow="{StaticResource McdocPlaceholderRow}"
         PlainRow="{StaticResource McdocPlainRow}"
+        PreservedRow="{StaticResource McdocPreservedRow}"
         UnionRow="{StaticResource McdocUnionRow}" />
 </ResourceDictionary>
 
