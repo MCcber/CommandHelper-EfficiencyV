@@ -31,6 +31,18 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         public bool Rebuilding;
 
+        /// <summary>物化：把缺掉的必填值写进文档、再定向重解被写的那一层，直到不动点。</summary>
+        public McdocMaterializer Materializer { get; }
+
+        /// <summary>诊断调度：重算校验并刷新行上的徽标（规则本体在 <see cref="McdocValidator"/>）。</summary>
+        public McdocDiagnostics Diagnostics { get; }
+
+        public McdocPipeline()
+        {
+            Materializer = new McdocMaterializer(this);
+            Diagnostics = new McdocDiagnostics(this);
+        }
+
         /// <summary>
         /// 重建闸门里"刚建出子级"的节点。投影在【刷新 → 物化 → 投影】这一段里首次建出的子树，
         /// 补物化必须等闸门结束再跑 —— 闸门里写值要么抬出自己被早退的结构通知，要么换掉正在投影的行。
@@ -52,7 +64,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
                 return;
             }
-            var written = MaterializeChildDefaults(node);
+            var written = Materializer.MaterializeChildDefaults(node);
             if (written > 0)
             {
                 // 写进去的是 AST：文本还是载入那一刻的那份。不在这里推一次，
@@ -85,7 +97,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 foreach (var node in nodes)
                 {
                     if (node is null || !Document.IsAttached(node)) continue;
-                    written += MaterializeChildDefaults(node);
+                    written += Materializer.MaterializeChildDefaults(node);
                     anchor ??= node.RebuildAnchor ?? node;
                 }
                 if (written > 0)
@@ -121,25 +133,6 @@ namespace CBHK.Utility.Data.Mcdoc
                 McdocWriteTrace.Trace("projection-stale", "path=" + path + " rows=" + Projector.Rows.Count);
                 Projector.Reset(Document.Nodes.ToList());
                 return;
-            }
-        }
-
-        private int MaterializeChildDefaults(McdocTreeNode node)
-        {
-            if (node is null || Document?.IsAttached(node) != true) return 0;
-            var wasLoading = GetLoading?.Invoke() ?? false;
-            SetLoading?.Invoke(true);
-            try
-            {
-                return McdocCollectionEditor.Default.MaterializeRequiredSelections([node], false, Document.CreateRuntime());
-            }
-            catch (Exception)
-            {
-                return 0;
-            }
-            finally
-            {
-                SetLoading?.Invoke(wasLoading);
             }
         }
 
@@ -188,7 +181,7 @@ namespace CBHK.Utility.Data.Mcdoc
                     {
                         Projector.Reset(Document.Nodes.ToList());
                     }
-                    RefreshDiagnostics(node, refreshHead: true);
+                    Diagnostics.Refresh(node, refreshHead: true);
                     McdocWriteTrace.Trace("structure-runtime-splice", "path=" + (node.JsonPath ?? "?"));
                 }
                 finally
@@ -210,12 +203,12 @@ namespace CBHK.Utility.Data.Mcdoc
             try
             {
                 Document.RefreshNode(node);
-                MaterializeUntilStable();
+                Materializer.MaterializeUntilStable();
                 if (!Projector.RefreshAround(node))
                 {
                     Projector.Reset(Document.Nodes.ToList());
                 }
-                RefreshDiagnostics(node, refreshHead: true);
+                Diagnostics.Refresh(node, refreshHead: true);
                 EnsureProjectionCurrent();
                 TextDirty?.Invoke();
             }
@@ -249,7 +242,7 @@ namespace CBHK.Utility.Data.Mcdoc
             var written = 0;
             try
             {
-                written = MaterializeUntilStable();
+                written = Materializer.MaterializeUntilStable();
             }
             finally
             {
@@ -278,101 +271,6 @@ namespace CBHK.Utility.Data.Mcdoc
             }
         }
 
-        public int MaterializeUntilStable(bool includeDisplayedDefaults = false, int maxPasses = 3)
-        {
-            var total = 0;
-            for (var pass = 0; pass < maxPasses; pass++)
-            {
-                // includeDisplayedDefaults 只对第一轮有效：之后是"重建新长出来的字段"，不是载入补默认值
-                var written = MaterializeOnce(includeDisplayedDefaults && pass == 0);
-                if (written == 0) return total;
-                total += written;
-            }
-            McdocWriteTrace.Log("物化未收敛", null, "已写 " + total + " 个键，到达 " + maxPasses + " 轮上限");
-            return total;
-        }
-
-        /// <summary>
-        /// 物化写值之后只重解"被写了值的那一层"（默认）。设 <c>MCDOC_TARGETED_MATERIALIZE=0</c>
-        /// 退回"每轮整篇 Load"的旧行为 —— 定向重建是性能改动，这是它的一键逃生阀。
-        /// </summary>
-        public static bool TargetedMaterialize { get; set; } = !string.Equals(
-            Environment.GetEnvironmentVariable("MCDOC_TARGETED_MATERIALIZE"), "0", StringComparison.Ordinal);
-
-        public int MaterializeOnce(bool includeDisplayedDefaults)
-        {
-            var wasLoading = GetLoading?.Invoke() ?? false;
-            SetLoading?.Invoke(true);
-            try
-            {
-                int materialized;
-                var writtenNodes = new List<McdocMaterializeWrite>();
-                using (McdocWriteTrace.Stage("mat.walk"))
-                {
-                    materialized = McdocCollectionEditor.Default.MaterializeRequiredSelections(
-                        Document.Nodes, includeDisplayedDefaults, Document.CreateRuntime(), writtenNodes);
-                }
-                if (materialized == 0) return 0;
-                if (!TargetedMaterialize)
-                {
-                    using (McdocWriteTrace.Stage("mat.load")) Document.Load(RootType?.Invoke(), Document.RootJson);
-                    return materialized;
-                }
-                RebuildWritten(writtenNodes);
-                return materialized;
-            }
-            finally
-            {
-                SetLoading?.Invoke(wasLoading);
-            }
-        }
-
-        /// <summary>
-        /// 物化写完之后：只重解**被写了值的那一层**，而不是整篇 <see cref="McdocTreeDocument.Load"/>。
-        /// 写值只是改文档，重建才会让派发器/动态索引按新键析出新的必填字段；
-        /// 不动点由 MaterializeUntilStable 的多轮保证。先浅后深（祖先重建会连带子孙），
-        /// 任何一个重解不出来就回落整篇 Load —— 语义与"每轮全量重解"等价，只是范围更小。
-        /// </summary>
-        private void RebuildWritten(List<McdocMaterializeWrite> writtenNodes)
-        {
-            if (writtenNodes.Count == 0 || Document is null) return;
-            var ordered = writtenNodes
-                .Where(write => write?.Node is not null && Document.IsAttached(write.Node))
-                .OrderBy(write => (write.Node.JsonPath ?? "").Length)
-                .ToList();
-            var rebuiltPaths = new List<string>();
-            foreach (var write in ordered)
-            {
-                // 只重解**被写了值的那一层**：上提到父容器看到起来更"安全"，
-                // 但实测会把"根列表唯一元素删除"这类删除手势吃掉（父容器的 Json 还是删之前那一代），
-                // 兄弟分支的依赖由 RebuildDependents 那条既有出口负责，不在这里兜。
-                var path = write.Node.JsonPath ?? "";
-                if (rebuiltPaths.Any(ancestor => IsBelow(path, ancestor))) continue;
-                if (Document.RebuildNode(write.Node) is null)
-                {
-                    using (McdocWriteTrace.Stage("mat.load")) Document.Load(RootType?.Invoke(), Document.RootJson);
-                    return;
-                }
-                rebuiltPaths.Add(path);
-            }
-            // 空壳是这一笔补出来的：新节点要按"建节点时的默认展开口径"撑开（depth < 默认深度 + 有值），
-            // 否则定向重建会把整篇 Load 那条路默认会展开的新容器建出来却是折叠的（行上少一整片子行）。
-            foreach (var write in ordered.Where(write => write.WasEmpty))
-            {
-                var node = Document.FindNode(write.Node.JsonPath ?? "");
-                if (node is null || node.Json is null || node.IsExpanded) continue;
-                if (node.Depth < McdocNodeFactory.DefaultExpandDepth && McdocPresenterRegistry.Default.CanHaveChildren(node))
-                {
-                    node.IsExpanded = true;
-                }
-            }
-        }
-
-        private static bool IsBelow(string path, string ancestor)
-            => !string.IsNullOrEmpty(ancestor) && path.Length > ancestor.Length
-               && path.StartsWith(ancestor, StringComparison.Ordinal)
-               && (path[ancestor.Length] == '.' || path[ancestor.Length] == '[');
-
         /// <summary>按锚点重建一棵子树；锚点找不到就整篇重载。重建后补物化，写过值就整表重投影。</summary>
         public void RebuildTargetedOrFallback(McdocTreeNode anchor)
         {
@@ -399,7 +297,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     Projector.Reset(Document.Nodes.ToList());
                 }
-                if (MaterializeUntilStable() > 0)
+                if (Materializer.MaterializeUntilStable() > 0)
                 {
                     Projector.Reset(Document.Nodes.ToList());
                 }
@@ -415,55 +313,13 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         /// <summary>
-        /// 改完一个值之后重算诊断，并把**行上的快照**刷掉。
-        /// 行的徽标读的是 Head（构造/RefreshHead 时算的），只调 Document.ValidateNode 的话
-        /// 文档级清单变了、行上那个黄色/红色感叹号却还在（现场就是这么卡住的）。
-        /// </summary>
-        public void RefreshDiagnostics(McdocTreeNode node, bool refreshHead = false)
-        {
-            if (node is null || Document is null) return;
-            using var stage = McdocWriteTrace.Stage("diag.refresh");
-            // 自己这一行一定刷；祖先行只在"文字真的变了"时继续往上（必填缺键那类记在父行上）
-            var current = node;
-            for (var depth = 0; current is not null && depth < 64; depth++)
-            {
-                var row = Projector?.Find(current);
-                var before = row?.DiagnosticSummary;
-                Document.ValidateNode(current);
-                if (row is null)
-                {
-                    current = current.Parent;
-                    continue;
-                }
-                if (refreshHead) row.RefreshHead(); else row.RefreshDiagnosticsOnly();
-                if (depth >= 1 && string.Equals(before, row.DiagnosticSummary, StringComparison.Ordinal)) break;
-                current = current.Parent;
-            }
-            // 子树里的行也要重读：ValidateNode 现在连子树一起算，子行不刷就还挂着旧提醒
-            var stack = new System.Collections.Generic.Stack<McdocTreeNode>();
-            stack.Push(node);
-            var guard = 0;
-            while (stack.Count > 0 && guard++ < 20000)
-            {
-                var child = stack.Pop();
-                foreach (var next in McdocPresenterRegistry.Default.Children(child)) stack.Push(next);
-                if (!ReferenceEquals(child, node))
-                {
-                    var row = Projector?.Find(child);
-                    if (row is null) continue;
-                    if (refreshHead) row.RefreshHead(); else row.RefreshDiagnosticsOnly();
-                }
-            }
-        }
-
-        /// <summary>
         /// 用户在行内编辑框里连续键入时走的值路径：只刷诊断与文本，不重建依赖。
         /// 依赖重建由调用方按"这个键是否真的参与索引"延后到失焦补跑 —— 同步重建会把承载光标的行换掉。
         /// </summary>
         public void RefreshValueOnly(McdocTreeNode node)
         {
             if (node is null || Document is null) return;
-            RefreshDiagnostics(node);
+            Diagnostics.Refresh(node);
             TextDirty?.Invoke();
         }
 
@@ -494,7 +350,7 @@ namespace CBHK.Utility.Data.Mcdoc
 
         private void OnValueChangedCore(McdocTreeNode node)
         {
-            RefreshDiagnostics(node);
+            Diagnostics.Refresh(node);
             var rebuilt = RebuildDependents([node], out var parentRebuilds, out var droppedDerivedContainers);
             // 父级重建/派生容器被摘掉时，子行集合和行命令都换代了：局部 RefreshAround 在
             // 嵌套 list/union 的已展开子树上不保证覆盖（现场：item_modifier 的 Properties 展开着切
@@ -510,10 +366,10 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     Projector.Reset(Document.Nodes.ToList());
                 }
-                RefreshDiagnostics(dependent, refreshHead: true);
+                Diagnostics.Refresh(dependent, refreshHead: true);
             }
             // 重建会把"必填 + 闭合候选"的判别键写进文档（工厂的判别键物化），写过就得重排一次
-            var materialized = rebuilt.Count > 0 ? MaterializeUntilStable() : 0;
+            var materialized = rebuilt.Count > 0 ? Materializer.MaterializeUntilStable() : 0;
             if (forceProjectionReconcile || materialized > 0)
             {
                 Projector.Reset(Document.Nodes.ToList());
@@ -1008,7 +864,7 @@ namespace CBHK.Utility.Data.Mcdoc
             try
             {
                 Document.Load(rootType, Document.RootJson);
-                MaterializeUntilStable();
+                Materializer.MaterializeUntilStable();
                 Projector.Reset(Document.Nodes.ToList());
                 TextDirty?.Invoke();
             }

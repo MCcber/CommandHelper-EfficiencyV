@@ -1290,7 +1290,7 @@ namespace CBHK.ViewModel.Generator
         /// </summary>
         private int MaterializeUntilStable(bool includeDisplayedDefaults = false, int maxPasses = 3)
         {
-            return pipeline?.MaterializeUntilStable(includeDisplayedDefaults, maxPasses) ?? 0;
+            return pipeline?.Materializer.MaterializeUntilStable(includeDisplayedDefaults, maxPasses) ?? 0;
         }
 
         /// <summary>
