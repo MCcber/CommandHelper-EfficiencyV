@@ -8,29 +8,29 @@ namespace CBHK.Utility.Data.Mcdoc
     /// </summary>
     public sealed class McdocDiagnostics
     {
-        private readonly McdocPipeline pipeline;
+        private readonly IMcdocPipelineHost host;
 
-        internal McdocDiagnostics(McdocPipeline pipeline)
+        internal McdocDiagnostics(IMcdocPipelineHost host)
         {
-            this.pipeline = pipeline;
+            this.host = host;
         }
 
         /// <summary>
         /// 重算诊断，并把**行上的快照**刷掉。
-        /// 行的徽标读的是 Head（构造/RefreshHead 时算的），只调 pipeline.Document.ValidateNode 的话
+        /// 行的徽标读的是 Head（构造/RefreshHead 时算的），只调 host.Document.ValidateNode 的话
         /// 文档级清单变了、行上那个黄色/红色感叹号却还在（现场就是这么卡住的）。
         /// </summary>
         public void Refresh(McdocTreeNode node, bool refreshHead = false)
         {
-            if (node is null || pipeline.Document is null) return;
+            if (node is null || host.Document is null) return;
             using var stage = McdocWriteTrace.Stage("diag.refresh");
             // 自己这一行一定刷；祖先行只在"文字真的变了"时继续往上（必填缺键那类记在父行上）
             var current = node;
             for (var depth = 0; current is not null && depth < 64; depth++)
             {
-                var row = pipeline.Projector?.Find(current);
+                var row = host.Projector?.Find(current);
                 var before = row?.DiagnosticSummary;
-                pipeline.Document.ValidateNode(current);
+                host.Document.ValidateNode(current);
                 if (row is null)
                 {
                     current = current.Parent;
@@ -50,7 +50,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 foreach (var next in McdocPresenterRegistry.Default.Children(child)) stack.Push(next);
                 if (!ReferenceEquals(child, node))
                 {
-                    var row = pipeline.Projector?.Find(child);
+                    var row = host.Projector?.Find(child);
                     if (row is null) continue;
                     if (refreshHead) row.RefreshHead(); else row.RefreshDiagnosticsOnly();
                 }

@@ -7,29 +7,73 @@ namespace CBHK.Utility.Data.Mcdoc
     /// <summary>
     /// 界面那条同步时序的**唯一实现**：结构/值变更之后该做什么（刷新哪一层、物化到不动点、什么时候整表重投影）。
     /// VM 与探针都拿这一份 —— 探针如果自己手抄一遍时序，它绿了也不能说明界面绿（上一轮就是这么翻车的）。
-    /// 这里不持有文档：文档、投影、根类型、loading 都由调用方注入，VM 与探针各用自己的那一份。
+    /// 状态在构造时注入、之后只读：VM 与探针各注入自己那一份，换版本换的是整条 pipeline。
+    /// 物化 / 诊断不持有它，只拿 <see cref="IMcdocPipelineHost"/> 这份只读视图（反向依赖到此为止）。
     /// </summary>
-    public sealed class McdocPipeline
+    /// <summary>
+    /// 物化 / 诊断只依赖这份只读契约：它们能读文档、投影、根类型与 loading 闸门，
+    /// 但拿不到写权，也改不了 Pipeline 的接线 —— 反向依赖到此为止（不再 new 一个具体类互指）。
+    /// </summary>
+    internal interface IMcdocPipelineHost
     {
-        public McdocTreeDocument Document;
-        public McdocRowProjector Projector;
+        McdocTreeDocument Document { get; }
+        McdocRowProjector Projector { get; }
+        Func<McdocType> RootType { get; }
+        Func<bool> GetLoading { get; }
+        Action<bool> SetLoading { get; }
+    }
+
+    public sealed class McdocPipeline : IMcdocPipelineHost
+    {
+        // ── 状态：构造时注入，之后只读（谁都不许把别人的文档塞进来）──
+        public McdocTreeDocument Document { get; init; }
+        public McdocRowProjector Projector { get; init; }
         /// <summary>重建文档时用的根类型（换版本会换它）。</summary>
-        public Func<McdocType> RootType;
+        public Func<McdocType> RootType { get; init; }
         /// <summary>VM 的 loading 闸门：建树/物化期间不许把赋值当用户编辑。</summary>
-        public Func<bool> GetLoading;
-        public Action<bool> SetLoading;
+        public Func<bool> GetLoading { get; init; }
+        public Action<bool> SetLoading { get; init; }
+        // ── 接线口：往哪里回调。运行期可换（探针靠它注入替身），但它不参与内部状态不变量 ──
         /// <summary>文档被改动，需要把 RootJson 回写到编辑器（VM 接 SyncJsonText；探针可为空）。</summary>
-        public Action TextDirty;
+        public Action TextDirty { get; set; }
         /// <summary>重建失败时的回退（VM 用"不重解析文本的重载"，探针用整篇 Load）。</summary>
-        public Action Fallback;
+        public Action Fallback { get; set; }
         /// <summary>运行期依赖触发"延后一拍重建"的出口（VM 接 ScheduleRebuild）。</summary>
-        public Action<McdocTreeNode> ScheduleRebuild;
+        public Action<McdocTreeNode> ScheduleRebuild { get; set; }
         /// <summary>
         /// 正在做重建/刷新。期间投影会去 EnsureChildren，从而触发"刚建出子级"的钩子；
         /// 那个钩子本来只为"用户点开懒建节点"服务，如果它也参与重建，就会自我驱动：
         /// 重建 → 新节点 → 懒建子级 → 钩子 → 再重建（现场：proj-splice/proj-reset 各 118 次、structure 只有 2 次，UI 线程被占死）。
         /// </summary>
-        public bool Rebuilding;
+        public bool Rebuilding { get; private set; }
+
+        /// <summary>
+        /// 把"正在重建"这段窗口显式框起来。生产代码自己在 try/finally 里置位；
+        /// 探针要模拟这个窗口时用 scope —— 恢复原值交给 Dispose，没有公开 setter 可写。
+        /// </summary>
+        public RebuildingScope BeginRebuilding()
+        {
+            var scope = new RebuildingScope(this, Rebuilding);
+            Rebuilding = true;
+            return scope;
+        }
+
+        public readonly struct RebuildingScope : IDisposable
+        {
+            private readonly McdocPipeline owner;
+            private readonly bool wasRebuilding;
+
+            internal RebuildingScope(McdocPipeline owner, bool wasRebuilding)
+            {
+                this.owner = owner;
+                this.wasRebuilding = wasRebuilding;
+            }
+
+            public void Dispose()
+            {
+                if (owner is not null) owner.Rebuilding = wasRebuilding;
+            }
+        }
 
         /// <summary>物化：把缺掉的必填值写进文档、再定向重解被写的那一层，直到不动点。</summary>
         public McdocMaterializer Materializer { get; }

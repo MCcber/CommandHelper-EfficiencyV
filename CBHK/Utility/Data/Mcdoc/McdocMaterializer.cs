@@ -11,11 +11,11 @@ namespace CBHK.Utility.Data.Mcdoc
     /// </summary>
     public sealed class McdocMaterializer
     {
-        private readonly McdocPipeline pipeline;
+        private readonly IMcdocPipelineHost host;
 
-        internal McdocMaterializer(McdocPipeline pipeline)
+        internal McdocMaterializer(IMcdocPipelineHost host)
         {
-            this.pipeline = pipeline;
+            this.host = host;
         }
 
         public int MaterializeUntilStable(bool includeDisplayedDefaults = false, int maxPasses = 3)
@@ -41,8 +41,8 @@ namespace CBHK.Utility.Data.Mcdoc
 
         public int MaterializeOnce(bool includeDisplayedDefaults)
         {
-            var wasLoading = pipeline.GetLoading?.Invoke() ?? false;
-            pipeline.SetLoading?.Invoke(true);
+            var wasLoading = host.GetLoading?.Invoke() ?? false;
+            host.SetLoading?.Invoke(true);
             try
             {
                 int materialized;
@@ -50,12 +50,12 @@ namespace CBHK.Utility.Data.Mcdoc
                 using (McdocWriteTrace.Stage("mat.walk"))
                 {
                     materialized = McdocCollectionEditor.Default.MaterializeRequiredSelections(
-                        pipeline.Document.Nodes, includeDisplayedDefaults, pipeline.Document.CreateRuntime(), writtenNodes);
+                        host.Document.Nodes, includeDisplayedDefaults, host.Document.CreateRuntime(), writtenNodes);
                 }
                 if (materialized == 0) return 0;
                 if (!TargetedMaterialize)
                 {
-                    using (McdocWriteTrace.Stage("mat.load")) pipeline.Document.Load(pipeline.RootType?.Invoke(), pipeline.Document.RootJson);
+                    using (McdocWriteTrace.Stage("mat.load")) host.Document.Load(host.RootType?.Invoke(), host.Document.RootJson);
                     return materialized;
                 }
                 RebuildWritten(writtenNodes);
@@ -63,7 +63,7 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             finally
             {
-                pipeline.SetLoading?.Invoke(wasLoading);
+                host.SetLoading?.Invoke(wasLoading);
             }
         }
 
@@ -75,9 +75,9 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         private void RebuildWritten(List<McdocMaterializeWrite> writtenNodes)
         {
-            if (writtenNodes.Count == 0 || pipeline.Document is null) return;
+            if (writtenNodes.Count == 0 || host.Document is null) return;
             var ordered = writtenNodes
-                .Where(write => write?.Node is not null && pipeline.Document.IsAttached(write.Node))
+                .Where(write => write?.Node is not null && host.Document.IsAttached(write.Node))
                 .OrderBy(write => (write.Node.JsonPath ?? "").Length)
                 .ToList();
             var rebuiltPaths = new List<string>();
@@ -88,9 +88,9 @@ namespace CBHK.Utility.Data.Mcdoc
                 // 兄弟分支的依赖由 RebuildDependents 那条既有出口负责，不在这里兜。
                 var path = write.Node.JsonPath ?? "";
                 if (rebuiltPaths.Any(ancestor => IsBelow(path, ancestor))) continue;
-                if (pipeline.Document.RebuildNode(write.Node) is null)
+                if (host.Document.RebuildNode(write.Node) is null)
                 {
-                    using (McdocWriteTrace.Stage("mat.load")) pipeline.Document.Load(pipeline.RootType?.Invoke(), pipeline.Document.RootJson);
+                    using (McdocWriteTrace.Stage("mat.load")) host.Document.Load(host.RootType?.Invoke(), host.Document.RootJson);
                     return;
                 }
                 rebuiltPaths.Add(path);
@@ -99,7 +99,7 @@ namespace CBHK.Utility.Data.Mcdoc
             // 否则定向重建会把整篇 Load 那条路默认会展开的新容器建出来却是折叠的（行上少一整片子行）。
             foreach (var write in ordered.Where(write => write.WasEmpty))
             {
-                var node = pipeline.Document.FindNode(write.Node.JsonPath ?? "");
+                var node = host.Document.FindNode(write.Node.JsonPath ?? "");
                 if (node is null || node.Json is null || node.IsExpanded) continue;
                 if (node.Depth < McdocNodeFactory.DefaultExpandDepth && McdocPresenterRegistry.Default.CanHaveChildren(node))
                 {
@@ -111,12 +111,12 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>只给一个节点写它缺的必填值（投影刚给它建出子级时补跑）。返回写了几个键。</summary>
         public int MaterializeChildDefaults(McdocTreeNode node)
         {
-            if (node is null || pipeline.Document?.IsAttached(node) != true) return 0;
-            var wasLoading = pipeline.GetLoading?.Invoke() ?? false;
-            pipeline.SetLoading?.Invoke(true);
+            if (node is null || host.Document?.IsAttached(node) != true) return 0;
+            var wasLoading = host.GetLoading?.Invoke() ?? false;
+            host.SetLoading?.Invoke(true);
             try
             {
-                return McdocCollectionEditor.Default.MaterializeRequiredSelections([node], false, pipeline.Document.CreateRuntime());
+                return McdocCollectionEditor.Default.MaterializeRequiredSelections([node], false, host.Document.CreateRuntime());
             }
             catch (Exception)
             {
@@ -124,7 +124,7 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             finally
             {
-                pipeline.SetLoading?.Invoke(wasLoading);
+                host.SetLoading?.Invoke(wasLoading);
             }
         }
 

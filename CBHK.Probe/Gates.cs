@@ -520,14 +520,9 @@ namespace CBHK.Probe
             // 闸门契约：管线内部阶段（投影里 EnsureChildren）把钩子叫起来时，不许再排重建。
             // 上一轮的循环就是因为这段窗口在闸门外 —— 这条直接把契约钉住，不依赖具体场景。
             var inside = projector.ResetCount + projector.SpliceCount;
-            pipeline.Rebuilding = true;
-            try
+            using (pipeline.BeginRebuilding())
             {
                 projector.AfterChildrenBuilt?.Invoke(union);
-            }
-            finally
-            {
-                pipeline.Rebuilding = false;
             }
             checks.That(projector.ResetCount + projector.SpliceCount == inside,
                 "闸门内：钩子不许排重建", "Δ=" + (projector.ResetCount + projector.SpliceCount - inside));
@@ -551,14 +546,9 @@ namespace CBHK.Probe
             var scheduled = 0;
             pipeline.ScheduleRebuild = _ => scheduled++;
             var guardCounts = projector.ResetCount + projector.SpliceCount;
-            pipeline.Rebuilding = true;
-            try
+            using (pipeline.BeginRebuilding())
             {
                 pipeline.OnStructureChanged(union);
-            }
-            finally
-            {
-                pipeline.Rebuilding = false;
             }
             checks.That(projector.ResetCount + projector.SpliceCount == guardCounts,
                 "重建期间的再入通知不刷新投影", "Δ=" + (projector.ResetCount + projector.SpliceCount - guardCounts));
@@ -5363,10 +5353,10 @@ namespace CBHK.Probe
 
                 // 现场：展开这个条目 → 投影在闸门内首次建出它的子级（描别键就在这一层）
                 entry.IsExpanded = true;
-                var wasRebuilding = pipeline.Rebuilding;
-                pipeline.Rebuilding = true;
-                projector.Reset(document.Nodes.ToList());
-                pipeline.Rebuilding = wasRebuilding;
+                using (pipeline.BeginRebuilding())
+                {
+                    projector.Reset(document.Nodes.ToList());
+                }
                 pipeline.DrainPendingChildBuilds();
 
                 entry = document.FindNode("$.pool.entries[0]");
