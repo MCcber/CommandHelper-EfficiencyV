@@ -4100,6 +4100,192 @@ namespace CBHK.Probe
             return checks.Finish("--case key-select-after-add");
         }
 
+        // ── 可选 bool 行取消 False/True 选中：行必须回到（未设置），不许与 JSON 各说一套 ──────────
+        public static int OptionalBoolRow()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            var blockStateDir = LocateBlockStateDirectory();
+            if (blockStateDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\Registries\\BlockState（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
+
+            var dimension = new CBHK.ViewModel.Generator.DimensionTypeViewModel(resource);
+            SelectVersion(dimension, "26.3");
+            dimension.LoadMcdocTree("{ \"attributes\": {} }");
+            var document = DocumentOf(dimension);
+            checks.That(document is not null, "文档建出来了", "<null>");
+            if (document is null) return checks.Finish("--case optional-bool-row");
+
+            const string key = "minecraft:audio/firefly_bush_sounds";
+            var map = document.FindNode("$.attributes");
+            map?.EnsureChildren();
+            var placeholder = map?.Children.FirstOrDefault(child => child.IsDynamicKey);
+            checks.That(placeholder is not null, "attributes 有新键占位行", "<无>");
+            if (placeholder is null) return checks.Finish("--case optional-bool-row");
+            placeholder.EditingKey = key;
+            placeholder.AddEntryCommand?.Execute(null);
+            PumpDispatcher();
+
+            var mapAfter = document.FindNode("$.attributes");
+            mapAfter?.EnsureChildren();
+            var entry = mapAfter?.Children.FirstOrDefault(child => child.IsMapEntry && child.FieldName == key);
+            checks.That(entry is not null, "条目节点建出来了", "$.attributes." + key);
+            if (entry is null) return checks.Finish("--case optional-bool-row");
+            entry.EnsureChildren();
+            DumpShape(entry, 0, 2);
+            var row = RowOf(dimension, null, entry);
+            Console.WriteLine("[前置] 行=" + (row?.Kind.ToString() ?? "<无>")
+                + " 行分支=" + (row?.SelectedUnionOption?.Name ?? "<null>")
+                + " 行候选=" + string.Join("|", (row?.Head?.BranchOptions ?? []).Select(option => option?.Name ?? "?"))
+                + " 编辑器=" + (row?.Node?.ScalarEditorKind ?? "<null>")
+                + " isTrue=" + entry.IsTrue + " isFalse=" + entry.IsFalse);
+
+            // 编辑器控件由"行模板 + 值编辑器模板"两层选出来，而内容控件只在 Content 换实例时重选：
+            // 清空值之后行上还能看到 False/True，就是因为行实例没换（Content 还是同一个节点）。
+            // 这条断言守的就是模型侧的换行：换不了行实例，模板一定不会重选。
+            checks.That(row is not null, "取消选中前拿得到行", "<无>");
+
+
+            // 现场动作：先落一个 True，再把唯一点中的那个点掉 = 两个按钮都不选（unset 语义）
+            entry.IsTrue = true;
+            PumpDispatcher();
+            Console.WriteLine("[点 True] json=" + (entry.Json?.Kind.ToString() ?? "<null>")
+                + " 文档=" + (document.FindNode("$.attributes")?.Json is { } attributes
+                    ? McdocJsonFormatter.Format(attributes).Replace("\r", "").Replace("\n", "") : "<null>"));
+            entry.IsTrue = false;
+            PumpDispatcher();
+
+            var attributesNode = document.FindNode("$.attributes");
+            var hasKey = attributesNode?.Json is { Kind: McdocJsonKind.Object } attributesObject
+                && (attributesObject.Properties ?? []).Any(pair => pair.Key == key);
+            Console.WriteLine("[收尾] 文档=" + (attributesNode?.Json is { } final
+                    ? McdocJsonFormatter.Format(final).Replace("\r", "").Replace("\n", "") : "<null>")
+                + " 节点json=" + (entry.Json?.Kind.ToString() ?? "<null>")
+                + " isTrue=" + entry.IsTrue + " isFalse=" + entry.IsFalse
+                + " 分支=" + (entry.SelectedUnionTypeName?.Name ?? "<null>")
+                + " 分支子级=" + entry.SelectedUnionChildren.Count);
+            var rowAfter = RowOf(dimension, null, entry);
+            Console.WriteLine("[收尾] 行=" + (rowAfter?.Kind.ToString() ?? "<无>")
+                + " 行分支=" + (rowAfter?.SelectedUnionOption?.Name ?? "<null>")
+                + " 行候选=" + string.Join("|", (rowAfter?.Head?.BranchOptions ?? []).Select(option => option?.Name ?? "?"))
+                + " 编辑器=" + (rowAfter?.Node?.ScalarEditorKind ?? "<null>")
+                + " hasChildren=" + (rowAfter?.HasChildren ?? false));
+
+            checks.That(!hasKey, "取消选中后键从文档里删掉", "$.attributes." + key);
+            checks.That(entry.Json is null, "取消选中后节点值回到空", entry.Json?.Kind.ToString() ?? "<null>");
+            checks.That(McdocUnionSwitch.IsUnsetOption(rowAfter?.SelectedUnionOption),
+                "取消选中后行上的分支下拉回到（未设置）", rowAfter?.SelectedUnionOption?.Name ?? "<null>");
+            checks.That(rowAfter?.Node?.ScalarEditorKind is null,
+                "取消选中后行上不再挂 Bool 编辑器（False/True 消失）",
+                rowAfter?.Node?.ScalarEditorKind ?? "<null>");
+            checks.That(rowAfter is not null && !ReferenceEquals(row, rowAfter),
+                "取消选中后行换了实例（内容控件才会重选编辑器模板）",
+                ReferenceEquals(row, rowAfter) ? "同一个行实例" : "新行实例");
+            return checks.Finish("--case optional-bool-row");
+        }
+
+        // ── 可选枚举条目回（未设置）：仍是"值路径换编辑器种类"，下拉必须跟着换代 ──────────────
+        public static int OptionalEnumRow()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            var blockStateDir = LocateBlockStateDirectory();
+            if (blockStateDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\Registries\\BlockState（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
+
+            var dimension = new CBHK.ViewModel.Generator.DimensionTypeViewModel(resource);
+            SelectVersion(dimension, "26.3");
+            dimension.LoadMcdocTree("{ \"attributes\": {} }");
+            var document = DocumentOf(dimension);
+            if (document is null)
+            {
+                checks.That(false, "文档建出来了", "<null>");
+                return checks.Finish("--case optional-enum-row");
+            }
+
+            const string key = "minecraft:visual/moon_phase";
+            var map = document.FindNode("$.attributes");
+            map?.EnsureChildren();
+            var placeholder = map?.Children.FirstOrDefault(child => child.IsDynamicKey);
+            placeholder.EditingKey = key;
+            placeholder.AddEntryCommand?.Execute(null);
+            PumpDispatcher();
+
+            var mapAfter = document.FindNode("$.attributes");
+            mapAfter?.EnsureChildren();
+            var entry = mapAfter?.Children.FirstOrDefault(child => child.IsMapEntry && child.FieldName == key);
+            checks.That(entry is not null, "枚举属性条目建出来了", "$.attributes." + key);
+            if (entry is null) return checks.Finish("--case optional-enum-row");
+            entry.EnsureChildren();
+
+            // 候选来自 moon_phase 枚举：先选一个成员把值落进文档，行上应该是枚举下拉
+            var options = entry.EnumOptionList;
+            Console.WriteLine("[候选] " + (options?.Count ?? 0) + " 项："
+                + string.Join("|", (options ?? []).Take(4).Select(option => option?.Name)));
+            var member = options?.FirstOrDefault(option => !McdocUnionSwitch.IsUnsetOption(option));
+            checks.That(member is not null, "枚举条目挑得出可选项", (options?.Count ?? 0).ToString());
+            if (member is null) return checks.Finish("--case optional-enum-row");
+
+            entry.SelectedEnumOption = member;
+            PumpDispatcher();
+            var filled = RowOf(dimension, null, entry);
+            Console.WriteLine("[前置] 选中=" + member.Name + " 值=" + (entry.Json?.Kind.ToString() ?? "<null>")
+                + " 编辑器=" + (entry.ScalarEditorKind ?? "<null>")
+                + " 行编辑器=" + (filled?.Head?.EditorKind.ToString() ?? "<无>")
+                + " 文档=" + (mapAfter?.Json is { } attributes
+                    ? McdocJsonFormatter.Format(attributes).Replace("\r", "").Replace("\n", "") : "<null>"));
+            checks.That(filled?.Head?.EditorKind == McdocEditorKind.Enum, "枚举条目的编辑器是下拉",
+                filled?.Head?.EditorKind.ToString() ?? "<无>");
+            checks.That(entry.Json is not null, "选中成员后值落进文档", entry.Json?.Kind.ToString() ?? "<null>");
+
+            // 下拉里选（未设置）= 可选节点回空：键要删、编辑器种类要没、行必须换代
+            entry.SelectedEnumOption = McdocNodePresenter.UnsetOption;
+            PumpDispatcher();
+
+            var attributesNode = document.FindNode("$.attributes");
+            var hasKey = attributesNode?.Json is { Kind: McdocJsonKind.Object } attributesObject
+                && (attributesObject.Properties ?? []).Any(pair => pair.Key == key);
+            var rowAfter = RowOf(dimension, null, entry);
+            Console.WriteLine("[收尾] 文档=" + (attributesNode?.Json is { } final
+                    ? McdocJsonFormatter.Format(final).Replace("\r", "").Replace("\n", "") : "<null>")
+                + " 节点json=" + (entry.Json?.Kind.ToString() ?? "<null>")
+                + " 镜像编辑器=" + (entry.ScalarEditorKind ?? "<null>")
+                + " 行编辑器=" + (rowAfter?.Head?.EditorKind.ToString() ?? "<无>"));
+
+            checks.That(!hasKey, "回（未设置）后键从文档里删掉", "$.attributes." + key);
+            checks.That(entry.Json is null, "回（未设置）后节点值回到空", entry.Json?.Kind.ToString() ?? "<null>");
+            checks.That(rowAfter?.Head?.EditorKind != McdocEditorKind.Enum, "回（未设置）后行上不再挂枚举下拉",
+                rowAfter?.Head?.EditorKind.ToString() ?? "<无>");
+            checks.That(rowAfter is not null && !ReferenceEquals(filled, rowAfter),
+                "回（未设置）后行换了实例（内容控件才会重选编辑器模板）",
+                ReferenceEquals(filled, rowAfter) ? "同一个行实例" : "新行实例");
+            return checks.Finish("--case optional-enum-row");
+        }
+
         private static void ExpandAll(IEnumerable<McdocTreeNode> nodes)
         {
             foreach (var node in nodes ?? [])

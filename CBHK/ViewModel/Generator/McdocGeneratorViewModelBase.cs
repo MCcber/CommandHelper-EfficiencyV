@@ -670,6 +670,12 @@ namespace CBHK.ViewModel.Generator
         }
 
 
+        /// <summary>
+        /// 值编辑之后补一拍"行形状对账"：形状变了行就换实例（内容控件才会重选编辑器模板）。
+        /// 形状没变时只刷 Head —— 否则每敲一个字符都把承载光标的行换掉。
+        /// </summary>
+        private void RefreshRowShape(McdocTreeNode node) => projector.Find(node)?.RefreshEditorShape();
+
         /// <summary>树 → 文本：一拍内只允许一次整篇写回，写回过程中再来的请求合并到收尾那一次。</summary>
         private void SyncJsonText()
         {
@@ -1402,6 +1408,9 @@ namespace CBHK.ViewModel.Generator
                             "span=" + slot.Start + "+" + slot.Length);
                         return;
                     }
+                    // 值变空（可选节点被清空）会把编辑器种类换掉：行自己不知道模型已换代，
+                    // Content 又是同一个节点实例 —— 不在这里补一拍，False/True 那套编辑器会留在行上。
+                    RefreshRowShape(node);
                     // 手术式落地失败（值变成容器/多行/锚点丢失）：AST 已经写过，走整篇回写即可，不再二次 ApplyNodeValue
                     McdocWriteTrace.Log("值编辑退回整篇", node, "路径=" + (node.JsonPath ?? "?"));
                     SyncJsonText();
@@ -1416,6 +1425,8 @@ namespace CBHK.ViewModel.Generator
                         "捕获定位失败 路径=" + (node.JsonPath ?? "?") + " 值=" + node.Json.Kind);
                 }
                 if (!unionStructuralBranch) McdocCollectionEditor.Default.ApplyNodeValue(node);
+                // 与快路径同一拍：可选节点被清空 / union 回（未设置）时编辑器种类换代，必须换行实例。
+                RefreshRowShape(node);
                 // 右侧有语法错误 / 还没消化：先用"最小完整容器"把它收敛成合法的一份（值已经落进模型了），
                 // 成功后文本与树同代，这次编辑也就同时进了右侧 —— 不再停在"只改树、文本冻结"。
                 if (!textReady && TryResolveDirtyText(node.Parent ?? node)) return;

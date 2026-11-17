@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
@@ -69,6 +70,7 @@ namespace CBHK.Utility.Data.Mcdoc
             IsListChild = listChild;
 
             this.kindOverride = kindOverride;
+            editorShape = EditorShape();
             node.PropertyChanged += OnNodePropertyChanged;
         }
 
@@ -91,6 +93,9 @@ namespace CBHK.Utility.Data.Mcdoc
         public int Index { get; }
         public bool IsListChild { get; }
         private readonly McdocRowKind? kindOverride;
+
+        /// <summary>上一次算 Head 时的形状快照：只用来判"编辑器种类是不是换代了"。</summary>
+        private string editorShape;
 
         /// <summary>
         /// 行的形状跟着 Head 走（union 的 Head 每次重算，切分支后 RowKind 会变）。
@@ -820,6 +825,29 @@ namespace CBHK.Utility.Data.Mcdoc
             OnPropertyChanged(nameof(HasChildren));
             OnPropertyChanged(nameof(ExpanderVisibility));
             OnPropertyChanged(nameof(IsExpanded));
+        }
+
+        /// <summary>
+        /// 行模板与值编辑器模板都是按"形状"选的，而内容控件只在 Content 换实例时重选模板
+        /// —— 光抬 Head 通知换不掉已经生成的编辑器（现场：union 回到（未设置）后 False/True 还挂着）。
+        /// 形状真的变了就换一个行实例（与切分支同一条规则）；没变只刷 Head，别把正在输入的编辑器换掉。
+        /// </summary>
+        public void RefreshEditorShape()
+        {
+            RefreshHead();
+            var now = EditorShape();
+            var before = editorShape;
+            editorShape = now;
+            if (before is null || string.Equals(before, now, StringComparison.Ordinal)) return;
+            projector?.ReplaceRow(this);
+        }
+
+        private string EditorShape()
+        {
+            var head = Head;
+            return string.Concat(((int)Kind).ToString(CultureInfo.InvariantCulture), "/",
+                ((int)head.EditorKind).ToString(CultureInfo.InvariantCulture), "/",
+                head.IsColorPicker ? "1" : "0", "/", head.IsIconSelect ? "1" : "0", "/", head.ColorKind ?? "");
         }
 
         /// <summary>重算 Head（union 切分支 / 结构变化后必须调用），并通知所有绑定重读。</summary>
