@@ -18,13 +18,15 @@ namespace CBHK.Utility.Data.Mcdoc
             this.host = host;
         }
 
-        public int MaterializeUntilStable(bool includeDisplayedDefaults = false, int maxPasses = 3)
+        /// <param name="writtenNodes">被写了值的节点收在这里（可选）：调用方据此判断"这一笔有没有写到脏子树之外"。</param>
+        public int MaterializeUntilStable(bool includeDisplayedDefaults = false, int maxPasses = 3,
+            List<McdocTreeNode> writtenNodes = null)
         {
             var total = 0;
             for (var pass = 0; pass < maxPasses; pass++)
             {
                 // includeDisplayedDefaults 只对第一轮有效：之后是"重建新长出来的字段"，不是载入补默认值
-                var written = MaterializeOnce(includeDisplayedDefaults && pass == 0);
+                var written = MaterializeOnce(includeDisplayedDefaults && pass == 0, writtenNodes);
                 if (written == 0) return total;
                 total += written;
             }
@@ -39,26 +41,33 @@ namespace CBHK.Utility.Data.Mcdoc
         public static bool TargetedMaterialize { get; set; } = !string.Equals(
             Environment.GetEnvironmentVariable("MCDOC_TARGETED_MATERIALIZE"), "0", StringComparison.Ordinal);
 
-        public int MaterializeOnce(bool includeDisplayedDefaults)
+        public int MaterializeOnce(bool includeDisplayedDefaults, List<McdocTreeNode> writtenNodes = null)
         {
             var wasLoading = host.GetLoading?.Invoke() ?? false;
             host.SetLoading?.Invoke(true);
             try
             {
                 int materialized;
-                var writtenNodes = new List<McdocMaterializeWrite>();
+                var writes = new List<McdocMaterializeWrite>();
                 using (McdocWriteTrace.Stage("mat.walk"))
                 {
                     materialized = McdocCollectionEditor.Default.MaterializeRequiredSelections(
-                        host.Document.Nodes, includeDisplayedDefaults, host.Document.CreateRuntime(), writtenNodes);
+                        host.Document.Nodes, includeDisplayedDefaults, host.Document.CreateRuntime(), writes);
                 }
                 if (materialized == 0) return 0;
+                if (writtenNodes is not null)
+                {
+                    foreach (var write in writes)
+                    {
+                        if (write?.Node is not null) writtenNodes.Add(write.Node);
+                    }
+                }
                 if (!TargetedMaterialize)
                 {
                     using (McdocWriteTrace.Stage("mat.load")) host.Document.Load(host.RootType?.Invoke(), host.Document.RootJson);
                     return materialized;
                 }
-                RebuildWritten(writtenNodes);
+                RebuildWritten(writes);
                 return materialized;
             }
             finally

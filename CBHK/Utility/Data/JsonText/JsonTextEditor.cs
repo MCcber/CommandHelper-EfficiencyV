@@ -48,6 +48,10 @@ namespace CBHK.Utility.Data.JsonText
         public bool SpliceModelText(string text, System.Collections.Generic.IDictionary<McdocJsonValue, McdocJsonSpan> spans)
             => State.SpliceModelText(text, spans);
 
+        /// <summary>只重排一个子树并只替换它自己那段文本（结构编辑的常规路径）。</summary>
+        public bool SpliceSubtree(McdocJsonValue modelRoot, McdocJsonValue node, int indentSize = 2)
+            => State.SpliceSubtree(modelRoot, node, indentSize);
+
         /// <summary>编辑器文本已不代表模型（根换支 / 被顶回）：写同步并把 State 的 Root 指向模型。</summary>
         public bool AdoptModel(McdocJsonValue root, string text, System.Collections.Generic.IDictionary<McdocJsonValue, McdocJsonSpan> spans)
             => State.AdoptModel(root, text, spans);

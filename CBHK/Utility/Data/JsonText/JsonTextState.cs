@@ -51,7 +51,12 @@ namespace CBHK.Utility.Data.JsonText
         {
             if (!anchorsTrusted || e.Offset != 0) return;
             var before = document.TextLength - e.InsertionLength + e.RemovalLength;
-            if (before > 0 && e.RemovalLength >= before) anchorsTrusted = false;
+            if (before <= 0 || e.RemovalLength < before) return;
+            anchorsTrusted = false;
+            // 有人整篇写了文本（Document.Text = … / Load）：锚点全塌在替换边界上，这一刻只能降级。
+            // 留一条 WARN，以后"某个地方卡了一下"能顺着日志直接点出是谁干的好事。
+            McdocWriteTrace.Log("[WARN] anchors dropped, fallback to span rebuild", null,
+                "整篇替换 offset=" + e.Offset + " 删=" + e.RemovalLength + " 增=" + e.InsertionLength);
         }
 
         public TextDocument Document => document;
@@ -530,6 +535,96 @@ namespace CBHK.Utility.Data.JsonText
         /// </summary>
         public bool AdoptModel(McdocJsonValue root, string text, IDictionary<McdocJsonValue, McdocJsonSpan> targetSpans)
             => ApplySplice(text, targetSpans, adoptRoot: root);
+
+        /// <summary>
+        /// 子树级定向写回：只重排**一个子树**、只替换它自己那段文本，其余文本与锚点原地不动。
+        /// 结构编辑（加一条列表项、切一个分支）只脏一层子树，没必要为它跑整篇格式化 —— 1MB 档那是 5.4 万个节点。
+        /// 三条前置条件（同一批 AST 对象 / 文本与 AST 同代 / 锚点可信）任一不成立就返回 false，调用方回落整篇路径。
+        /// </summary>
+        /// <param name="modelRoot">模型根，必须与 <see cref="Root"/> 是同一个实例（同一代 AST）。</param>
+        /// <param name="node">被改的那棵子树的根，必须仍挂在模型上且自己的区间锚点还在。</param>
+        public bool SpliceSubtree(McdocJsonValue modelRoot, McdocJsonValue node, int indentSize = 2)
+        {
+            if (writing || node is null || indentSize <= 0) return false;
+            if (!anchorsTrusted || !ReferenceEquals(Root, modelRoot) || !IsInStepWithDocument) return false;
+            if (!TryGetCurrentSpan(node, out var valueStart, out var valueLength)) return false;
+            var valueEnd = valueStart + valueLength;
+            if (valueStart < 0 || valueEnd > document.TextLength) return false;
+
+            var localSpans = new Dictionary<McdocJsonValue, McdocJsonSpan>();
+            var target = McdocJsonFormatter.FormatAt(node, IndentLevelAt(valueStart, indentSize), indentSize, localSpans);
+            // 脏区间里"这一代不再存在"的锚点必须在写之前按旧偏移点出来：写完它们会被 AvalonEdit 平移，
+            // 再按偏移判重叠就会把区间之后的锚点误当成旧的删掉
+            var stale = CollectRegionAnchors(valueStart, valueEnd, localSpans);
+
+            var current = document.Text.Substring(valueStart, valueLength);
+            var prefix = CommonPrefixLength(current, target);
+            var suffix = CommonSuffixLength(current, target, prefix);
+            var removed = current.Length - prefix - suffix;
+            var inserted = target.Length - prefix - suffix;
+            var caret = CaretOffsetProvider?.Invoke() ?? -1;
+            if (removed > 0 || inserted > 0)
+            {
+                var wasWriting = writing;
+                writing = true;
+                try
+                {
+                    document.Replace(valueStart + prefix, removed, target.Substring(prefix, inserted));
+                }
+                finally
+                {
+                    writing = wasWriting;
+                }
+            }
+            SpliceCount++;
+            LastSpliceLength = removed + inserted;
+            if (stale is not null)
+            {
+                foreach (var key in stale) anchors.Remove(key);
+            }
+            // 子树里的每个节点都按"局部区间 + 子树起点"重新登记：偏移全变了，且新增节点此前根本没有锚点
+            foreach (var pair in localSpans)
+            {
+                var span = pair.Value;
+                anchors[pair.Key] = CreateNodeAnchors(span.ValueStart + valueStart, span.ValueEnd + valueStart,
+                    span.PairStart + valueStart, span.PairEnd + valueStart);
+            }
+            RootText = document.Text;
+            Generation++;
+            RestoreSplicedCaret(caret, valueStart + prefix, removed, inserted);
+            McdocWriteTrace.Log("子树写回", null, "起=" + valueStart + " 删=" + removed + " 增=" + inserted
+                + " 子树长=" + target.Length + " 节点=" + localSpans.Count);
+            return string.Equals(document.Text, RootText, StringComparison.Ordinal);
+        }
+
+        /// <summary>写之前先把"落在区间里、但这一代已经不在目标集合里"的锚点名字点出来。</summary>
+        private List<McdocJsonValue> CollectRegionAnchors(int start, int end,
+            IDictionary<McdocJsonValue, McdocJsonSpan> targetSpans)
+        {
+            List<McdocJsonValue> stale = null;
+            foreach (var pair in anchors)
+            {
+                var anchor = pair.Value;
+                if (anchor is null || !anchor.IsValid) continue;
+                if (anchor.ValueEnd.Offset < start || anchor.ValueStart.Offset > end) continue;
+                if (targetSpans.ContainsKey(pair.Key)) continue;
+                (stale ??= []).Add(pair.Key);
+            }
+            return stale;
+        }
+
+        /// <summary>某个偏移所在行的缩进层（前导空格 / indentSize）：子树重排必须按它本来所在的层出文本。</summary>
+        private int IndentLevelAt(int offset, int indentSize)
+        {
+            var text = document.Text ?? "";
+            if (indentSize <= 0 || text.Length == 0) return 0;
+            var from = Math.Max(0, Math.Min(offset, text.Length) - 1);
+            var lineStart = text.LastIndexOf('\n', from);
+            lineStart = lineStart < 0 ? 0 : lineStart + 1;
+            var spaces = 0;
+            while (lineStart + spaces < text.Length && text[lineStart + spaces] == ' ') spaces++;
+            return spaces / indentSize;
+        }
 
         private bool ApplySplice(string text, IDictionary<McdocJsonValue, McdocJsonSpan> targetSpans, McdocJsonValue adoptRoot)
         {

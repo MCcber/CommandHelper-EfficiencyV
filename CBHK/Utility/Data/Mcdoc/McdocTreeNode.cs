@@ -459,7 +459,18 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (depth == 0) continue;
                 if (parent.Json.Kind == McdocJsonKind.Object)
                 {
-                    if ((parent.Json.Properties ?? []).All(pair => pair.Key != child.FieldName))
+                    // 手写循环：物化每拍要对 9 万个节点各查一遍，LINQ 的闭包在 1MB 档能吃掉 20~130ms
+                    var found = false;
+                    if (parent.Json.Properties is { } properties)
+                    {
+                        for (var i = 0; i < properties.Count; i++)
+                        {
+                            if (properties[i].Key != child.FieldName) continue;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
                     {
                         brokenAt = parent.JsonPath;
                         return false;

@@ -91,6 +91,9 @@
 **定向写回（splice）**
 模型 → 编辑器的写回：只替换公共前后缀之间那一段（`ReplaceRegion`），脏区间外的文本与锚点原地不动，光标一次算术落位。判据是 `WholeWriteCount` 不涨、`SpliceCount` 涨一次。
 
+**子树写回（subtree splice）**
+结构编辑的写回通道：只给「离脏节点最近的仍有锚点的祖先」出一段局部文本（`McdocJsonFormatter.FormatAt`），在该节点的文本区间里做一次公共前后缀裁剪后拼接，区间外的锚点一个都不动。判据是 `WholeWriteCount` 不涨而 `SpliceCount` 涨、脏区间远小于全文；前置条件（同根 / 同代 / 锚点可信）不成立时退回整篇排版。
+
 **整篇接管（whole write）**
 换一代文本（`Reload` / 页面载入）的唯一出口：物理写回同样只动真正变过的那一段，但随后全文重解析、Root 换成文本里的那棵树、锚点整表重建。计数 `WholeWriteCount`，门禁断言「树侧编辑一次都不涨」。
 

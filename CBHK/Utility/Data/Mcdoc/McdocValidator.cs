@@ -87,6 +87,26 @@ namespace CBHK.Utility.Data.Mcdoc
             return result;
         }
 
+        /// <summary>
+        /// 子树会不会超过 <see cref="ValidateSubtree"/> 的 20000 节点守卫。超了子树校验就会静默截断，
+        /// 调用方必须退回整篇校验，否则超限那部分的旧诊断会一直挂在行上。
+        /// 数到 limit 就返回，正常小树只看它自己那几个节点。
+        /// </summary>
+        public static bool SubtreeExceeds(McdocTreeNode root, int limit = 20000)
+        {
+            if (root is null) return false;
+            var stack = new Stack<McdocTreeNode>();
+            stack.Push(root);
+            var counted = 0;
+            while (stack.Count > 0)
+            {
+                if (++counted > limit) return true;
+                var node = stack.Pop();
+                foreach (var child in McdocPresenterRegistry.Default.Children(node)) stack.Push(child);
+            }
+            return false;
+        }
+
         public static IReadOnlyList<McdocDiagnostic> ValidateNode(McdocTreeNode node,
             IReadOnlyCollection<string> missedReferences = null,
             IMcdocRegistryOptions registryOptions = null, string version = null)

@@ -24,6 +24,19 @@ namespace CBHK.Utility.Data.Mcdoc
             return builder.ToString();
         }
 
+        /// <summary>
+        /// 只出一个子树的文本：<paramref name="level"/> 是它在整篇里的缩进层，产出与整篇 Format 中这段值逐字相同的文本
+        /// （值自身的首行不带缩进 —— 整篇里那一行的缩进是父级写的）。<paramref name="spans"/> 里的区间**相对这段文本**，
+        /// 调用方负责平移到全文。结构编辑只脏一层子树，没必要为它跑整篇格式化（1MB 档 = 5.4 万个节点）。
+        /// </summary>
+        public static string FormatAt(McdocJsonValue value, int level, int indentSize,
+            IDictionary<McdocJsonValue, McdocJsonSpan> spans)
+        {
+            var builder = new StringBuilder();
+            Write(builder, value, Math.Max(0, level), indentSize, spans);
+            return builder.ToString();
+        }
+
         private static void Write(StringBuilder builder, McdocJsonValue value, int indent, int indentSize,
             IDictionary<McdocJsonValue, McdocJsonSpan> spans)
         {

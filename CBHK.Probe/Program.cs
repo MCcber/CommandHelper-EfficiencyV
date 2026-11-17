@@ -136,6 +136,7 @@ namespace CBHK.Probe
                     "--case sync-typing" => Gates.SyncTyping(),
                     "--case sync-indent" => Gates.SyncIndent(),
                     "--case sync-fallback-reasons" => Gates.SyncFallbackReasons(),
+            "--case big-structure" => Gates.BigStructure(),
             "--case build-profile" => Gates.BuildProfile(),
                     "--case number-step-quiet" => Gates.NumberStepQuiet(),
                     "--case item-custom-tag-entry" => Gates.ItemCustomTagEntry(),

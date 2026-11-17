@@ -735,6 +735,16 @@ namespace CBHK.ViewModel.Generator
                 {
                     // 整篇替换会让语法波浪线的锚点失效（下一次绘制直接抛异常），先摘掉
                     syntaxOverlay?.Clear();
+                    // 结构编辑只脏一层子树时，只重排那段子树、只替换它自己那段字符（1MB 档整篇格式化是 5.4 万个节点）
+                    if (TrySpliceDirtySubtree())
+                    {
+                        JsonText = jsonEditor.Text;
+                        lastSyncedText = JsonText;
+                        EnsureProjectionMatchesDocument(lastSplicedNode);
+                        lastSplicedNode = null;
+                        VerifyJsonTextGeneration("SyncJsonText(子树)");
+                        return;
+                    }
                     // 模型根被**整篇替换**过时（根 union 切支 / 根标量编辑走 ReplaceRoot），
                     // 编辑器里还是上一代 AST —— 直接 Reformat 只会把旧文本重排一遍，右侧就停在旧形状上。
                     // 这里按"视图同代"先对账：不一致就先把模型这一代灌进编辑器。
@@ -758,8 +768,10 @@ namespace CBHK.ViewModel.Generator
                     var reconciled = false;
                     using (McdocWriteTrace.Stage("text.reconcile"))
                     {
-                        reconciled = !McdocJsonParser.TryParse(jsonEditor.Text ?? "", out var editorRoot, out _)
-                            || !string.Equals(McdocJsonFormatter.Format(editorRoot), modelText, StringComparison.Ordinal);
+                        // 锚点就是坐标：编辑器 AST 与模型是同一批对象、文本也与 AST 同代 ⇒ 两边必然同代。
+                        // 不再整篇 Parse 一遍比文本（1MB 档那是 80ms + 5.4 万条区间）。
+                        reconciled = !ReferenceEquals(jsonEditor.State.Root, document.RootJson)
+                            || !jsonEditor.State.IsInStepWithDocument;
                     }
                     if (reconciled)
                     {
@@ -794,6 +806,35 @@ namespace CBHK.ViewModel.Generator
             lastSyncedText = JsonText;
         }
 
+
+        /// <summary>
+        /// 子树级写回：结构编辑（加一条列表项、切一个分支）只脏一层子树时，只重排那段子树、只替换它自己那段字符。
+        /// 前置条件任一不成立（没有脏标记 / 物化写到了别处 / 锚点不在 / 编辑器文本不同代）就返回 false，
+        /// 调用方照旧走整篇格式化 —— 那条路永远是正确性兜底，只是贵。
+        /// </summary>
+        private McdocTreeNode lastSplicedNode;
+
+        private bool TrySpliceDirtySubtree()
+        {
+            if (jsonEditor is null || document is null) return false;
+            var dirty = document.TakeTextDirtyNode();
+            if (dirty is null) return false;
+            var state = jsonEditor.State;
+            // 脏节点自己可能刚被重建（换成了新的 AST 对象，还没有锚点）：往上爬到最近一个有锚点的祖先，
+            // 那一层的文本区间一定包含这次变化
+            var node = dirty;
+            while (node is not null && node.Json is not null
+                && !state.TryGetCurrentSpan(node.Json, out _, out _))
+            {
+                node = node.Parent;
+            }
+            if (node?.Json is null) return false;
+            if (!state.SpliceSubtree(document.RootJson, node.Json)) return false;
+            lastSplicedNode = node;
+            McdocWriteTrace.Log("子树写回命中", null,
+                "path=" + (node.JsonPath ?? "?") + " dirty=" + (dirty.JsonPath ?? "?"));
+            return true;
+        }
 
         /// <summary>
         /// 树侧操作撞上右侧语法错误时的唯一修复出口（README §2.7 的契约）：
@@ -910,7 +951,7 @@ namespace CBHK.ViewModel.Generator
         /// 文档（RootJson）是唯一来源 —— 局部拼接漏掉一次，行上就会留着上一代的残骸
         /// （现象：行有值、文档里没有）；这里只在"证明确实不同代"时动手，正常路径零开销。
         /// </summary>
-        private void EnsureProjectionMatchesDocument()
+        private void EnsureProjectionMatchesDocument(McdocTreeNode from = null)
         {
             var root = document?.RootJson;
             if (root is null) return;
@@ -947,24 +988,19 @@ namespace CBHK.ViewModel.Generator
                 foreach (var child in node.Items) Walk(child);
                 foreach (var child in node.SelectedUnionChildren) Walk(child);
             }
-            var visited = new HashSet<McdocTreeNode>();
-            void Collect(McdocTreeNode node)
-            {
-                if (node is null || !visited.Add(node)) return;
-                foreach (var child in node.Children) Collect(child);
-                foreach (var child in node.Items) Collect(child);
-                foreach (var child in node.SelectedUnionChildren) Collect(child);
-            }
-            foreach (var node in document.Nodes) Collect(node);
-            var orphans = projector.Rows.Any(row => row.Node is not null && !visited.Contains(row.Node));
-            if (orphans)
+            // 孤行按行问（77 行 × 父链 ≤256 步）：以前把整棵树装进 HashSet（1MB 档 9.4 万个节点），
+            // 每拍光这一遍就是几十毫秒，而它要回答的问题只有"这些行还挂在树上吗"
+            var orphan = projector.Rows.FirstOrDefault(row => row.Node is not null && !document.IsAttached(row.Node));
+            if (orphan is not null)
             {
                 // 行指向的节点已经不在文档树里：只有整表重投影能把它清掉
-                McdocWriteTrace.Log("投影里有不在树上的行", null, "行数=" + projector.Rows.Count + " 节点=" + visited.Count);
+                McdocWriteTrace.Log("投影里有不在树上的行", null, "行数=" + projector.Rows.Count + " 路径=" + (orphan.Node.JsonPath ?? "?"));
                 projector.Reset(document.ProjectionRoots);
                 return;
             }
-            foreach (var node in document.Nodes) Walk(node);
+            // 知道是哪棵子树脏了就只查它（局部拼接只动那一层）；不知道才整篇走
+            if (from is not null && document.IsAttached(from)) Walk(from);
+            else foreach (var node in document.Nodes) Walk(node);
             if (staleNodes.Count > 0)
             {
                 foreach (var node in staleNodes)

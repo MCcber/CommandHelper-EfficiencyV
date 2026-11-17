@@ -116,6 +116,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 // 第二次载入后展开 type_specific 正是这条路（载入时子级还没建，物化没得写；
                 // 展开时才补写，而补写过去只排了重建、没同步文本）。
                 // 投影不在这里动（钩子就在投影里跑，Reset 会自激），交给排出去的这一拍重建收口。
+                // 补建出来的必填值可能落在任意节点上，文本不能按"只脏了某棵子树"处理
+                MarkTextDirty(null);
                 TextDirty?.Invoke();
                 ScheduleRebuild?.Invoke(node.RebuildAnchor ?? node);
             }
@@ -148,6 +150,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     McdocWriteTrace.Trace("children-built-drain", "nodes=" + nodes.Count + " written=" + written);
                     Projector?.Reset(Document.ProjectionRoots);
+                    MarkTextDirty(null);
                     TextDirty?.Invoke();
                 }
             }
@@ -251,6 +254,7 @@ namespace CBHK.Utility.Data.Mcdoc
                     Rebuilding = wasDeferredRebuilding;
                 }
                 ScheduleRebuild?.Invoke(node.RebuildAnchor);
+                MarkTextDirty(null);
                 TextDirty?.Invoke();
                 DrainPendingChildBuilds();
                 return;
@@ -264,13 +268,13 @@ namespace CBHK.Utility.Data.Mcdoc
             try
             {
                 Document.RefreshNode(node);
-                Materializer.MaterializeUntilStable();
-                if (!Projector.RefreshAround(node))
-                {
-                    Projector.Reset(Document.ProjectionRoots);
-                }
-                Diagnostics.Refresh(node, refreshHead: true);
+                var writes = new List<McdocTreeNode>();
+                Materializer.MaterializeUntilStable(writtenNodes: writes);
+                if (!Projector.RefreshAround(node)) { Projector.Reset(Document.ProjectionRoots); }
+                // RefreshNode 刚把这棵子树的诊断整篇重算过，这里只刷行、不再算第二遍
+                Diagnostics.Refresh(node, refreshHead: true, nodeValidated: true);
                 EnsureProjectionCurrent();
+                MarkTextDirty(node, writes);
                 TextDirty?.Invoke();
             }
             finally
@@ -315,6 +319,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 McdocWriteTrace.Trace("union-branch-materialize", "path=" + (node.JsonPath ?? "?") + " written=" + written);
                 EnsureProjectionCurrent();
                 if (!Projector.RefreshAround(node)) Projector.Reset(Document.ProjectionRoots);
+                MarkTextDirty(node);
                 TextDirty?.Invoke();
             }
             // **无论有没有写过值**都要按当前文档把这一支重解一次：切支会把 union 的 Json 换成新对象
@@ -358,11 +363,13 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     Projector.Reset(Document.ProjectionRoots);
                 }
-                if (Materializer.MaterializeUntilStable() > 0)
+                var writes = new List<McdocTreeNode>();
+                if (Materializer.MaterializeUntilStable(writtenNodes: writes) > 0)
                 {
                     Projector.Reset(Document.ProjectionRoots);
                 }
                 EnsureProjectionCurrent();
+                MarkTextDirty(rebuilt, writes);
                 TextDirty?.Invoke();
             }
             finally
@@ -374,6 +381,43 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         /// <summary>
+        /// 给文本侧留一次"只脏了这棵子树"的标记：文本可以只重排这段子树、只替换它自己那段字符。
+        /// <paramref name="written"/> 是这一笔物化写过的节点 —— 只要有一个落在子树之外，整篇文本都可能变，
+        /// 标记必须退回 null（宁可整篇格式化一次，也不许文本与模型对不上）。
+        /// </summary>
+        private void MarkTextDirty(McdocTreeNode node, List<McdocTreeNode> written = null)
+        {
+            if (Document is null) return;
+            if (node is null)
+            {
+                Document.TextDirtyNode = null;
+                return;
+            }
+            if (written is not null)
+            {
+                foreach (var other in written)
+                {
+                    if (other?.Json is null) continue;
+                    if (!IsSameOrBelow(other.JsonPath, node.JsonPath))
+                    {
+                        Document.TextDirtyNode = null;
+                        return;
+                    }
+                }
+            }
+            Document.TextDirtyNode = node;
+        }
+
+        /// <summary>路径相等或在其之下（下一个字符必须是 <c>.</c> 或 <c>[</c>，否则 $.ab 会算成 $.a 的子级）。</summary>
+        private static bool IsSameOrBelow(string path, string rootPath)
+        {
+            if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(rootPath)) return false;
+            if (string.Equals(path, rootPath, StringComparison.Ordinal)) return true;
+            return path.Length > rootPath.Length && path.StartsWith(rootPath, StringComparison.Ordinal)
+                && (path[rootPath.Length] == '.' || path[rootPath.Length] == '[');
+        }
+
+        /// <summary>
         /// 用户在行内编辑框里连续键入时走的值路径：只刷诊断与文本，不重建依赖。
         /// 依赖重建由调用方按"这个键是否真的参与索引"延后到失焦补跑 —— 同步重建会把承载光标的行换掉。
         /// </summary>
@@ -381,6 +425,7 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             if (node is null || Document is null) return;
             Diagnostics.Refresh(node);
+            MarkTextDirty(node);
             TextDirty?.Invoke();
         }
 
@@ -430,13 +475,15 @@ namespace CBHK.Utility.Data.Mcdoc
                 Diagnostics.Refresh(dependent, refreshHead: true);
             }
             // 重建会把"必填 + 闭合候选"的判别键写进文档（工厂的判别键物化），写过就得重排一次
-            var materialized = rebuilt.Count > 0 ? Materializer.MaterializeUntilStable() : 0;
+            var dirtyWrites = new List<McdocTreeNode>();
+            var materialized = rebuilt.Count > 0 ? Materializer.MaterializeUntilStable(writtenNodes: dirtyWrites) : 0;
             if (forceProjectionReconcile || materialized > 0)
             {
                 Projector.Reset(Document.ProjectionRoots);
             }
 
             // 模型可能被重建写过：文本必须跟上，否则"视图同代"当场破（这条出口原先漏了）
+            MarkTextDirty(node, dirtyWrites);
             TextDirty?.Invoke();
         }
 
@@ -927,6 +974,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 Document.Load(rootType, Document.RootJson);
                 Materializer.MaterializeUntilStable();
                 Projector.Reset(Document.ProjectionRoots);
+                MarkTextDirty(null);
                 TextDirty?.Invoke();
             }
             finally

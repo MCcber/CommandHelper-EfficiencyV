@@ -85,6 +85,20 @@ namespace CBHK.Utility.Data.Mcdoc
         private McdocJsonValue rootJson;
         private McdocTreeNode rootNode;
 
+        /// <summary>
+        /// 最近一次编辑"只脏了这一棵子树"的目标：文本侧据此只重排那段子树（结构编辑别整篇格式化）。
+        /// null = 这次变动可能落在任何位置（整篇 Load / 补建子级 / 物化写到别处），文本必须走整篇路径。
+        /// </summary>
+        public McdocTreeNode TextDirtyNode { get; set; }
+
+        /// <summary>取走脏子树标记（取走即清：一次脏标记只配一次回写）。</summary>
+        public McdocTreeNode TakeTextDirtyNode()
+        {
+            var node = TextDirtyNode;
+            TextDirtyNode = null;
+            return node;
+        }
+
         /// <summary>最近一次结构校验得到的诊断。</summary>
         public IReadOnlyList<McdocDiagnostic> Diagnostics { get; private set; } = [];
         public int DiagnosticsCount => Diagnostics.Count;
@@ -241,16 +255,35 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         public bool RefreshNode(McdocTreeNode node)
         {
-            // 子级被重建了：路径索引必须失效，否则 FindNode 会把刚被删掉/换掉的旧节点捞回来
-            // （表现是"JSON 里键没了、树侧那一行却还在"，因为按路径重建又把它装回去了）
-            nodeIndex = null;
-            if (node is null) return false;
+            if (node is null)
+            {
+                nodeIndex = null;
+                return false;
+            }
+            // 子级要被重建：路径索引按这棵子树局部失效（否则 FindNode 会把刚被删掉/换掉的旧节点捞回来，
+            // 表现是"JSON 里键没了、树侧那一行却还在"）。不整体置 null —— 那是全树 9.4 万个节点的重建。
+            var localIndex = nodeIndex is not null;
+            if (localIndex) DropIndexSubtree(node);
+            // 重建期间的子级回调不补索引：这一层由下面那一次 IndexSubtree 统一装回去
+            suppressIndexPatch = true;
             // RefreshChildren 捕获的是建节点那一刻的 type：dispatcher/indexed 的形状由**兄弟键**决定，
             // 复用它等于永远按旧值重建子级（切方块后旧属性行不走、按钮身份也不对）。这类节点只能重新求值。
-            node.RefreshChildren?.Invoke();
+            try
+            {
+                node.RefreshChildren?.Invoke();
+            }
+            finally
+            {
+                suppressIndexPatch = false;
+            }
             // 这一层重建会把它的未声明键搬进保留区；键被删掉的旧保留条目在这里一起清
             PrunePreserved();
-            Validate();
+            // 结构变更只脏这一层：整篇 Validate 在 1MB 档要 84~562ms。诊断严格按节点本地写
+            // （ValidateNodeCore 只碰 node.Diagnostics），所以只重算这棵子树等价 —— 除非子树大到
+            // 会撞 ValidateSubtree 的 20000 节点守卫，那种情况宁可整篇也不许诊断停在半路。
+            if (McdocValidator.SubtreeExceeds(node, 20000)) Validate();
+            else ValidateNode(node);
+            if (localIndex && nodeIndex is not null) IndexSubtree(node);
             return false;
         }
 
@@ -271,8 +304,24 @@ namespace CBHK.Utility.Data.Mcdoc
                 .ToList();
         }
 
+        /// <summary>
+        /// 只重算**这一个节点**的诊断（不走进子树）：结构变更后要刷的是祖先那几行，
+        /// 对祖先走子树的代价是"每级都按整棵子树重算一遍"（1MB 档在根上就是 9.4 万节点）。
+        /// 子树自己的诊断由脏节点那次 <see cref="ValidateNode"/> 负责。
+        /// </summary>
+        public void ValidateSelf(McdocTreeNode node)
+        {
+            if (node is null) return;
+            var fresh = McdocValidator.ValidateNode(node, MissedReferences, RegistryOptions, GameVersion);
+            var path = node.JsonPath ?? "$";
+            Diagnostics = (Diagnostics ?? [])
+                .Where(item => !string.Equals(item.Path, path, StringComparison.Ordinal))
+                .Concat(fresh)
+                .ToList();
+        }
+
         /// <summary>诊断路径是否落在该子树里（"$.a" 与其 "a[0]" / "a.b" 都算）。</summary>
-        private static bool SameOrBelow(string itemPath, string rootPath)
+        internal static bool SameOrBelow(string itemPath, string rootPath)
         {
             if (string.IsNullOrEmpty(itemPath) || string.IsNullOrEmpty(rootPath)) return false;
             if (string.Equals(itemPath, rootPath, StringComparison.Ordinal)) return true;
@@ -298,12 +347,25 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         private Dictionary<string, McdocTreeNode> nodeIndex;
 
+        /// <summary>RefreshNode 重建子级期间的抑制闸：那一层的索引由调用方统一装回去。</summary>
+        private bool suppressIndexPatch;
+
         /// <summary>按 JsonPath 找节点（同步引擎用）。索引随 Load/RebuildNode 失效。</summary>
         public McdocTreeNode FindNode(string jsonPath)
         {
             if (string.IsNullOrEmpty(jsonPath)) return null;
             nodeIndex ??= BuildNodeIndex();
             return nodeIndex.TryGetValue(jsonPath, out var node) ? node : null;
+        }
+
+        /// <summary>
+        /// 懒建把子级建出来时补索引：EnsureChildren 不走 RefreshNode，漏补的后果是
+        /// "界面上刚展开的条目，FindNode 说它不存在"（结构编辑落点、删除落点、投影对账全靠这条索引）。
+        /// </summary>
+        private void IndexChildrenBuilt(McdocTreeNode node)
+        {
+            if (nodeIndex is null || suppressIndexPatch) return;
+            IndexSubtree(node);
         }
 
         /// <summary>
@@ -351,6 +413,49 @@ namespace CBHK.Utility.Data.Mcdoc
             return Nodes.Contains(top) || ReferenceEquals(top, rootNode) || ReferenceEquals(top, PreservedGroup);
         }
 
+        /// <summary>
+        /// 索引的局部失效：先按**旧**子树把它覆盖的路径从索引里丢掉，调用方重建完子级后再把新子树装回去。
+        /// 整体置 null 会让下一次 FindNode 重建全树索引（1MB 档 9.4 万个节点 ≈ 50~140ms），
+        /// 而结构变更真正动过的只有这一层。
+        /// </summary>
+        private void DropIndexSubtree(McdocTreeNode node)
+        {
+            if (nodeIndex is null || node is null) return;
+            var path = node.JsonPath;
+            if (string.IsNullOrEmpty(path))
+            {
+                nodeIndex = null;
+                return;
+            }
+            List<string> stale = null;
+            foreach (var key in nodeIndex.Keys)
+            {
+                if (SameOrBelow(key, path)) (stale ??= []).Add(key);
+            }
+            if (stale is null) return;
+            foreach (var key in stale) nodeIndex.Remove(key);
+        }
+
+        /// <summary>把一棵（刚重建的）子树装回路径索引；键已存在的按先写优先跳过。</summary>
+        private void IndexSubtree(McdocTreeNode node)
+        {
+            if (nodeIndex is null || node is null) return;
+            var stack = new Stack<McdocTreeNode>();
+            stack.Push(node);
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                if (current is null) continue;
+                if (!(current.IsDynamicKey && current.Json is null) && !nodeIndex.ContainsKey(current.JsonPath))
+                {
+                    nodeIndex[current.JsonPath] = current;
+                }
+                foreach (var child in current.Children) stack.Push(child);
+                foreach (var child in current.Items) stack.Push(child);
+                foreach (var child in current.SelectedUnionChildren) stack.Push(child);
+            }
+        }
+
         private Dictionary<string, McdocTreeNode> BuildNodeIndex()
         {
             var map = new Dictionary<string, McdocTreeNode>(StringComparer.Ordinal);
@@ -392,7 +497,7 @@ namespace CBHK.Utility.Data.Mcdoc
             // 没有求值现场（ValueNode）的节点重建出来必然没有键身份：%key 落 %none → 成员退化成 any。
             // 让调用方回退整树重建，而不是把匿名空壳摆成条目行。
             if (node.ValueNode is null) return null;
-            var factory = new McdocNodeFactory { PreservedGroup = PreservedGroup };
+            var factory = new McdocNodeFactory { PreservedGroup = PreservedGroup, OnChildrenBuilt = IndexChildrenBuilt };
             var rebuildRuntime = CreateRuntime();
             if (node.UnionSelectionExplicit && node.Type?.Members is { } unionMembers && node.SelectedUnionMember is not null)
             {
@@ -631,7 +736,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 var context = new McdocBuildContext
                 {
                     Runtime = CreateRuntime(),
-                    Factory = new McdocNodeFactory { PreservedGroup = PreservedGroup },
+                    Factory = new McdocNodeFactory { PreservedGroup = PreservedGroup, OnChildrenBuilt = IndexChildrenBuilt },
                     Self = rootNode.ValueNode,
                     KeyNode = rootNode.ValueNode?.RuntimeKey,
                     Depth = rootNode.Depth,
@@ -774,7 +879,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 ModulePath ??= rootType?.Module;
                 // 保留区先于建树就位：建子级的唯一出口（RefreshChildren）要把未声明键搬进来
                 ResetPreservedGroup(PreservedGroup?.IsExpanded == true);
-                var factory = new McdocNodeFactory { PreservedGroup = PreservedGroup };
+                var factory = new McdocNodeFactory { PreservedGroup = PreservedGroup, OnChildrenBuilt = IndexChildrenBuilt };
                 System.Collections.ObjectModel.ObservableCollection<McdocTreeNode> built;
                 using (McdocWriteTrace.Stage("doc.build"))
                 {

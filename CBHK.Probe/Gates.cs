@@ -4821,8 +4821,13 @@ namespace CBHK.Probe
                 Console.WriteLine("[红] 夹具里找不到 $.pools[0].entries[0].weight");
                 return 1;
             }
-            // 预热：紧凑夹具第一次写回会把整篇重排成标准排版，那不是「改一个值」，先排完再量
+            // 预热：夹具是紧凑 JSON。真机上第一拍就是"排版接管"（AdoptModel 一次性把模型文本灌进编辑器），
+            // 这里做同一件事 —— 否则①量的是"紧凑文本里改一个值"，③量的是"整篇数组被重排"，都不是要守的契约。
             weight.Value = 5L;
+            PumpDispatcher();
+            var warmSpans = new Dictionary<McdocJsonValue, McdocJsonSpan>();
+            var warmText = McdocJsonFormatter.Format(document.RootJson, 2, warmSpans);
+            state.AdoptModel(document.RootJson, warmText, warmSpans);
             PumpDispatcher();
 
             // ① 值编辑：脏区间在光标之前 —— 只动那一个值，光标按增删量平移，落点还是同一个节点
@@ -4893,6 +4898,138 @@ namespace CBHK.Probe
             failures += Assert("整篇接管 · 文本与 AST 同代", state.IsInStepWithDocument, "");
             Console.WriteLine(failures == 0 ? "[绿] --gate caret 全绿" : "[红] --gate caret 红 " + failures + " 条");
             return failures == 0 ? 0 : 1;
+        }
+
+        // ── 1MB 编辑成本画像（只打点、不判红）：量清"出文本"这一侧还剩多少 ──
+        public static int BigStructure()
+        {
+            if (RealSchema.LocateMcdocRoot() is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var vm = CreateLootVm(out var document);
+            if (document is null)
+            {
+                Console.WriteLine("[红] VM 建不出文档");
+                return 1;
+            }
+            var editor = new CBHK.Utility.Data.JsonText.JsonTextEditor();
+            vm.AttachJsonEditor(editor);
+            PumpDispatcher();
+            vm.LoadMcdocTree(LootTableTextOfSize(1024 * 1024));
+            PumpDispatcher();
+            var state = editor.State;
+            var entries = document.FindNode("$.pools[0].entries");
+            if (entries is null)
+            {
+                Console.WriteLine("[红] 夹具里找不到 $.pools[0].entries");
+                return 1;
+            }
+            var weight = FindDescendant(entries, node => node.FieldName == "weight" && node.Json is not null);
+            Console.WriteLine("[信息] 1MB 夹具：文本=" + editor.Text.Length + " JSON节点=" + CountJsonNodes(document.RootJson)
+                + " 树节点=" + CountNodes(document.Nodes) + " 行=" + vm.Rows.Count + " 锚点=" + state.Anchors.Count);
+            // 只读基线：全量 Format 本身多贵（带区间 / 不带区间）
+            var sw = Stopwatch.StartNew();
+            var plain = McdocJsonFormatter.Format(document.RootJson, 2);
+            var plainMs = sw.Elapsed.TotalMilliseconds;
+            var spans = new Dictionary<McdocJsonValue, McdocJsonSpan>();
+            sw.Restart();
+            var withSpans = McdocJsonFormatter.Format(document.RootJson, 2, spans);
+            var spanMs = sw.Elapsed.TotalMilliseconds;
+            Console.WriteLine("[信息] 全量 Format：无区间=" + plainMs.ToString("0.0") + "ms 带区间=" + spanMs.ToString("0.0")
+                + "ms 区间项=" + spans.Count + " 两次同文=" + string.Equals(plain, withSpans, StringComparison.Ordinal));
+            // 第 1 拍是"载入后的首次排版归一"（夹具是紧凑 JSON，模型文本是标准排版），整篇换一次是应该的；
+            // 从第 2 拍起必须全是子树拼接 —— 这才是"结构编辑不再全量 Format"的可执行契约。
+            var structuralFailures = RunEditProbe("结构编辑·加条目", () => entries.AddItemCommand?.Execute(null), editor, state, 1);
+            if (weight is null)
+            {
+                Console.WriteLine("[红] 夹具里找不到 $.pools[0].entries[0].weight");
+                return 1;
+            }
+            var next = 1L;
+            RunEditProbe("值编辑·改 weight", () => weight.Value = ++next, editor, state);
+            Console.WriteLine("[信息] 收尾：整篇写回=" + state.WholeWriteCount + " 定向写回=" + state.SpliceCount
+                + " 文本长=" + editor.Text.Length + " 同代=" + state.IsInStepWithDocument);
+            if (structuralFailures > 0)
+            {
+                Console.WriteLine("[红] 结构编辑退化成整篇重排：" + structuralFailures + " 拍没走子树拼接");
+                return 1;
+            }
+            Console.WriteLine("[绿] 1MB 结构编辑全程子树拼接（整篇写回不涨、脏区间不越半篇）");
+            return 0;
+        }
+
+        private static readonly string[] EditProbeStages =
+        {
+            "pipeline.structure", "text.sync", "text.format", "text.reconcile", "text.splice",
+            "mat.walk", "mat.load", "diag.refresh", "proj.reset", "doc.load", "doc.build", "doc.validate"
+        };
+
+        /// <summary>
+        /// 跑同一笔编辑 5 拍并逐拍打点。<paramref name="localFrom"/> 之后的拍必须走子树拼接：
+        /// 整篇写回不许再涨、脏区间不许超过文本一半（整篇重排时它就是整篇）。
+        /// </summary>
+        private static int RunEditProbe(string label, Action edit, CBHK.Utility.Data.JsonText.JsonTextEditor editor, JsonTextState state,
+            int localFrom = -1)
+        {
+            var samples = new List<double>();
+            var failures = 0;
+            var wholeBase = state.WholeWriteCount;
+            for (var i = 0; i < 5; i++)
+            {
+                var before = new Dictionary<string, double>();
+                foreach (var name in EditProbeStages) before[name] = McdocWriteTrace.StageMs(name);
+                var text = editor.Text;
+                var sw = Stopwatch.StartNew();
+                edit();
+                PumpDispatcher();
+                sw.Stop();
+                samples.Add(sw.Elapsed.TotalMilliseconds);
+                var parts = new List<string>();
+                foreach (var name in EditProbeStages)
+                {
+                    var delta = McdocWriteTrace.StageMs(name) - before[name];
+                    if (delta >= 0.05) parts.Add(name + "=" + delta.ToString("0.0"));
+                }
+                var dirty = DirtyRegionLength(text, editor.Text);
+                Console.WriteLine("[拍] " + label + " #" + (i + 1) + " 墙钟=" + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms"
+                    + " 脏=" + dirty + " 整篇=" + state.WholeWriteCount
+                    + " | " + string.Join(" ", parts));
+                if (i == localFrom) wholeBase = state.WholeWriteCount;
+                if (localFrom >= 0 && i > localFrom)
+                {
+                    if (state.WholeWriteCount != wholeBase)
+                    {
+                        Console.WriteLine("[红] " + label + " #" + (i + 1) + " 整篇写回 " + wholeBase + " → " + state.WholeWriteCount);
+                        failures++;
+                    }
+                    if (dirty > editor.Text.Length / 2)
+                    {
+                        Console.WriteLine("[红] " + label + " #" + (i + 1) + " 脏区间=" + dirty + " 超过半篇（整篇重排）");
+                        failures++;
+                    }
+                }
+            }
+            samples.Sort();
+            Console.WriteLine("[信息] " + label + " p50=" + samples[samples.Count / 2].ToString("0.0") + "ms");
+            return failures;
+        }
+
+        private static int CountJsonNodes(McdocJsonValue value)
+        {
+            if (value is null) return 0;
+            var total = 1;
+            if (value.Kind == McdocJsonKind.Object)
+            {
+                foreach (var pair in value.Properties ?? []) total += CountJsonNodes(pair.Value);
+            }
+            else if (value.Kind == McdocJsonKind.Array)
+            {
+                foreach (var item in value.Items ?? []) total += CountJsonNodes(item);
+            }
+            return total;
         }
 
         /// <summary>两段文本真正不同的那段长度（脏区间 = 两侧被替换掉的字符数之和）。</summary>

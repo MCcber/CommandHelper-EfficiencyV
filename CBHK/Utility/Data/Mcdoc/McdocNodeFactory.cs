@@ -48,6 +48,12 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         public McdocTreeNode PreservedGroup { get; set; }
 
+        /// <summary>
+        /// 子级构建完成的回调（饿建与懒建都会经过这里）。文档用它把刚建出来的子树补进路径索引 ——
+        /// 懒建不走 RefreshNode，索引不补的话"界面上刚展开的子级在 FindNode 里是不存在的"。
+        /// </summary>
+        public Action<McdocTreeNode> OnChildrenBuilt { get; set; }
+
         /// <summary>只构建根节点（不摊平）。narrow=false 供"纯 simplify"对拍使用。</summary>
         public McdocTreeNode BuildRoot(McdocType rootType, McdocJsonValue json, McdocRuntime runtime,
             bool narrow = true, Action<McdocTreeNode> onValueChanged = null, Action<McdocTreeNode> onStructureChanged = null)
@@ -494,6 +500,7 @@ namespace CBHK.Utility.Data.Mcdoc
                     node.ChildrenBuilt = true;
                     // 未声明键搬进保留区：必须在 Parent 全部写好之后（这时才知道谁是被摘下来的那一批）
                     PreserveUnknownChildren(node);
+                    OnChildrenBuilt?.Invoke(node);
                 };
 
                 // 懒建：越深的子树越晚构建；union 例外（分支名在 Head 里要用）。
