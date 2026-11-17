@@ -6361,6 +6361,209 @@ namespace CBHK.Probe
             return 0;
         }
 
+        /// <summary>文本通道击键门禁：大文档末尾连打，每拍都必须是快路径（0 整篇重建 / 0 重投影）且在档内。</summary>
+        public static int SyncTyping()
+        {
+            if (RealSchema.LocateMcdocRoot() is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var failures = 0;
+            var vm = CreateLootVm(out var document);
+            if (document is null)
+            {
+                Console.WriteLine("[红] VM 建不出文档");
+                return 1;
+            }
+            var editor = new CBHK.Utility.Data.JsonText.JsonTextEditor();
+            vm.AttachJsonEditor(editor);
+            PumpDispatcher();
+            var wasStats = McdocWriteTrace.StatsEnabled;
+            McdocWriteTrace.StatsEnabled = true;
+            McdocWriteTrace.ResetStages();
+            try
+            {
+                foreach (var size in new[] { 64 * 1024, 1024 * 1024 })
+                {
+                    var text = LootTableTextOfSize(size);
+                    vm.LoadMcdocTree(text);
+                    PumpDispatcher();
+                    const string seed = "minecraft:stone";
+                    var at = editor.Text.LastIndexOf(seed, StringComparison.Ordinal);
+                    if (at < 0)
+                    {
+                        failures += Assert("击键：编辑器里找得到插入点", false, "size=" + size);
+                        continue;
+                    }
+                    var big = size >= 1024 * 1024;
+                    var ticks = big ? 20 : 40;
+                    var p50Limit = big ? 500.0 : 30.0;
+                    // p95 吃的是 LOH GC 尾巴（实测 64KB 65~96ms、1MB 992~1163ms）：按 p50 判手感，p95 只兜"没退化到秒级"
+                    var p95Limit = big ? 1500.0 : 150.0;
+                    var samples = new List<double>();
+                    var fallbacks = 0;
+                    var resets = 0;
+                    var rowsMoved = 0;
+                    for (var i = 0; i < ticks; i++)
+                    {
+                        editor.Document.Insert(at + seed.Length, "a");
+                        vm.OnJsonEditorTextChanged(editor.Text);
+                        var loadsBefore = McdocWriteTrace.StageCount("doc.load");
+                        var resetsBefore = McdocWriteTrace.StageCount("proj.reset");
+                        var rowsBefore = vm.Rows.Count;
+                        var started = Stopwatch.GetTimestamp();
+                        vm.SyncTextToTree();
+                        samples.Add((Stopwatch.GetTimestamp() - started) * 1000.0 / Stopwatch.Frequency);
+                        PumpDispatcher();
+                        if (McdocWriteTrace.StageCount("doc.load") != loadsBefore) fallbacks++;
+                        if (McdocWriteTrace.StageCount("proj.reset") != resetsBefore) resets++;
+                        if (vm.Rows.Count != rowsBefore) rowsMoved++;
+                    }
+                    var p50 = Percentile(samples, 0.50);
+                    var p95 = Percentile(samples, 0.95);
+                    var scale = big ? "1MB" : "64KB";
+                    Console.WriteLine("[信息] 击键(" + scale + ") 体量=" + text.Length + " 拍=" + ticks
+                        + " p50=" + p50.ToString("0.0") + " p95=" + p95.ToString("0.0")
+                        + " 整篇重建=" + fallbacks + " reset=" + resets + " 行数变动=" + rowsMoved
+                        + " | " + vm.SyncDebugSuffix);
+                    failures += Assert("击键(" + scale + ") 0 次整篇重建", fallbacks == 0, fallbacks.ToString());
+                    failures += Assert("击键(" + scale + ") 0 次整表重投影", resets == 0, resets.ToString());
+                    failures += Assert("击键(" + scale + ") 行数不抖动", rowsMoved == 0, rowsMoved.ToString());
+                    failures += Assert("击键(" + scale + ") p50 ≤ " + p50Limit.ToString("0") + "ms", p50 <= p50Limit, p50.ToString("0.0"));
+                    failures += Assert("击键(" + scale + ") p95 ≤ " + p95Limit.ToString("0") + "ms", p95 <= p95Limit, p95.ToString("0.0"));
+                }
+            }
+            finally
+            {
+                McdocWriteTrace.StatsEnabled = wasStats;
+            }
+            Console.WriteLine(failures == 0 ? "[绿] --case sync-typing 击键门禁全绿" : "[红] --case sync-typing 击键门禁红 " + failures + " 条");
+            return failures == 0 ? 0 : 1;
+        }
+
+        private static double Percentile(List<double> samples, double q)
+        {
+            if (samples is null || samples.Count == 0) return 0;
+            var sorted = samples.OrderBy(value => value).ToList();
+            var index = (int)Math.Ceiling(q * sorted.Count) - 1;
+            return sorted[Math.Clamp(index, 0, sorted.Count - 1)];
+        }
+
+        /// <summary>文本侧"只改排版"门禁：整篇缩进 2→4 空格，结构 100% 未变，必须 0 重建 / 0 重投影 / 文本与光标不动。</summary>
+        public static int SyncIndent()
+        {
+            if (RealSchema.LocateMcdocRoot() is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var failures = 0;
+            var vm = CreateLootVm(out var document);
+            if (document is null)
+            {
+                Console.WriteLine("[红] VM 建不出文档");
+                return 1;
+            }
+            var editor = new CBHK.Utility.Data.JsonText.JsonTextEditor();
+            vm.AttachJsonEditor(editor);
+            PumpDispatcher();
+            var text = LootTableTextOfSize(64 * 1024);
+            vm.LoadMcdocTree(text);
+            PumpDispatcher();
+            var valuesBefore = McdocJsonFormatter.Format(document.RootJson);
+            var rowsBefore = vm.Rows.Count;
+            var nodesBefore = CountNodes(document);
+            var reindented = System.Text.RegularExpressions.Regex.Replace(text, "(?m)^( +)", match => match.Value + match.Value);
+            failures += Assert("缩进：改写确实改了排版", !string.Equals(reindented, text, StringComparison.Ordinal), reindented.Length.ToString());
+            editor.Document.Text = reindented;
+            editor.CaretOffset = 4096;
+            var loadsBefore = McdocWriteTrace.StageCount("doc.load");
+            var resetsBefore = McdocWriteTrace.StageCount("proj.reset");
+            vm.OnJsonEditorTextChanged(reindented);
+            vm.SyncTextToTree();
+            PumpDispatcher();
+            var loads = McdocWriteTrace.StageCount("doc.load") - loadsBefore;
+            var resets = McdocWriteTrace.StageCount("proj.reset") - resetsBefore;
+            Console.WriteLine("[信息] 缩进 2→4 体量=" + text.Length + " 重建=" + loads + " reset=" + resets
+                + " 行=" + rowsBefore + "→" + vm.Rows.Count + " 节点=" + nodesBefore + "→" + CountNodes(document)
+                + " 光标=" + editor.CaretOffset + " | " + vm.SyncDebugSuffix);
+            failures += Assert("缩进：0 次整篇重建", loads == 0, loads.ToString());
+            failures += Assert("缩进：0 次整表重投影", resets == 0, resets.ToString());
+            failures += Assert("缩进：值一个都没变", string.Equals(valuesBefore, McdocJsonFormatter.Format(document.RootJson), StringComparison.Ordinal), "format比较");
+            failures += Assert("缩进：行数与节点数不变", rowsBefore == vm.Rows.Count && nodesBefore == CountNodes(document), rowsBefore + "→" + vm.Rows.Count);
+            failures += Assert("缩进：编辑器文本保持用户输入（没被排版回去）", string.Equals(editor.Text, reindented, StringComparison.Ordinal), (editor.Text?.Length ?? -1).ToString());
+            failures += Assert("缩进：光标偏移不变", editor.CaretOffset == 4096, editor.CaretOffset.ToString());
+            Console.WriteLine(failures == 0 ? "[绿] --case sync-indent 全绿" : "[红] --case sync-indent 红 " + failures + " 条");
+            return failures == 0 ? 0 : 1;
+        }
+
+        /// <summary>回落必须带原因：任何一次放弃增量都要能说清是哪条出口（安全网不许静默命中）。</summary>
+        public static int SyncFallbackReasons()
+        {
+            if (RealSchema.LocateMcdocRoot() is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var failures = 0;
+            var vm = CreateLootVm(out var document);
+            if (document is null)
+            {
+                Console.WriteLine("[红] VM 建不出文档");
+                return 1;
+            }
+            var editor = new CBHK.Utility.Data.JsonText.JsonTextEditor();
+            vm.AttachJsonEditor(editor);
+            PumpDispatcher();
+            var baseText = LootTableTextOfSize(64 * 1024);
+            vm.LoadMcdocTree(baseText);
+            PumpDispatcher();
+            var families = new List<(string Name, Func<string, string> Edit)>
+            {
+                ("末尾加一个键", source => source.TrimEnd().TrimEnd('}') + ",\"x-probe\": 1}"),
+                ("删掉一个顶层键", source => new System.Text.RegularExpressions.Regex("\\s*\"type\"\\s*:\\s*\"[^\"]*\"\\s*,").Replace(source, "", 1)),
+                ("整段覆盖粘贴", source => "{\"type\": \"minecraft:block\", \"pools\": []}"),
+                ("缩进重排", source => System.Text.RegularExpressions.Regex.Replace(source, "(?m)^( +)", match => match.Value + match.Value))
+            };
+            var fast = 0;
+            var fallback = 0;
+            foreach (var (name, edit) in families)
+            {
+                // 每个场景都从同一份基线文本起跳，否则前一次的编辑会污染下一次（缩进重排就变成 no-op）
+                editor.Document.Text = baseText;
+                vm.OnJsonEditorTextChanged(baseText);
+                vm.SyncTextToTree();
+                PumpDispatcher();
+                var edited = edit(baseText);
+                if (string.Equals(edited, baseText, StringComparison.Ordinal))
+                {
+                    failures += Assert("回落原因(" + name + ")：确实改了文本", false, "no-op");
+                    continue;
+                }
+                editor.Document.Text = edited;
+                vm.OnJsonEditorTextChanged(edited);
+                var fallbacksBefore = vm.SyncFallbackCount;
+                vm.SyncTextToTree();
+                PumpDispatcher();
+                var suffix = vm.SyncDebugSuffix ?? "";
+                var isFallback = vm.SyncFallbackCount > fallbacksBefore;
+                if (isFallback) fallback++; else fast++;
+                Console.WriteLine("[信息] 回落原因(" + name + ") " + suffix);
+                if (isFallback)
+                {
+                    failures += Assert("回落原因(" + name + ")：带 why=", suffix.Contains(" why=", StringComparison.Ordinal), suffix);
+                    failures += Assert("回落原因(" + name + ")：不是安全网出口", !suffix.Contains("作废子树未被覆盖", StringComparison.Ordinal), suffix);
+                }
+            }
+            Console.WriteLine("[信息] 回落原因抽样 快路径=" + fast + " 回落=" + fallback);
+            Console.WriteLine(failures == 0 ? "[绿] --case sync-fallback-reasons 全绿" : "[红] --case sync-fallback-reasons 红 " + failures + " 条");
+            return failures == 0 ? 0 : 1;
+        }
+
         private static int CountNodes(McdocTreeDocument document)
         {
             var count = 0;

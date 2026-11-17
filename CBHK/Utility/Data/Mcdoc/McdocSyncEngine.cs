@@ -10,10 +10,14 @@ namespace CBHK.Utility.Data.Mcdoc
     public sealed class McdocSyncStats
     {
         public int ValuePatches;
+        /// <summary>值补丁落到"懒建树下还没建出来"的节点：树上没有行可更新，跳过即可（不算放弃）。</summary>
+        public int UnbuiltPatches;
         public int StructureAnchors;
         public int RebuiltNodes;
         /// <summary>补丁太多/路径对不上：调用方应回退整树重建。</summary>
         public bool Fallback;
+        /// <summary>放弃增量的原因（诊断用：fallback 目前只有 trace 能看到，得有个可读的标签）。</summary>
+        public string FallbackReason;
         public long ElapsedMs;
         /// <summary>被就地改值的节点（行需要 RefreshHead）。</summary>
         public List<McdocTreeNode> PatchedNodes = [];
@@ -63,6 +67,7 @@ namespace CBHK.Utility.Data.Mcdoc
             if (deepest.Count > MaxAnchors || deepest.Count > nodeCount * MaxAnchorRatio)
             {
                 stats.Fallback = true;
+                stats.FallbackReason = "锚点过多 anchors=" + deepest.Count + " nodes=" + nodeCount;
                 stats.ElapsedMs = ElapsedMs(started);
                 return false;
             }
@@ -74,6 +79,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 && !TryApplyRootMembers(document, newRoot, addedMembers, removedMembers, coverage, stats))
             {
                 stats.Fallback = true;
+                stats.FallbackReason = "根层成员差分失败 added=" + addedMembers.Count + " removed=" + removedMembers.Count;
                 stats.ElapsedMs = ElapsedMs(started);
                 return false;
             }
@@ -81,9 +87,17 @@ namespace CBHK.Utility.Data.Mcdoc
             foreach (var patch in valuePatches)
             {
                 var node = document.FindNode(patch.Path);
-                if (node is null || node.Type?.IsDirective == true)
+                if (node is null)
+                {
+                    // 懒建树：这条路径还没建出节点，树上没有行要刷新。重指之后新展开会按新 AST 建树，
+                    // 所以这里不是"对不上"，只是"还没长出来"——回落整篇会让每次击键都重来一遍（1MB 实测 ~1s）。
+                    stats.UnbuiltPatches++;
+                    continue;
+                }
+                if (node.Type?.IsDirective == true)
                 {
                     stats.Fallback = true;
+                    stats.FallbackReason = "补丁节点是指令 path=" + patch.Path;
                     stats.ElapsedMs = ElapsedMs(started);
                     return false;
                 }
@@ -105,6 +119,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 // 作废的子树不在任何锚点里：局部拼接保证不了行与文档一一对应，交给整树重建
                 document.AdoptRoot(newRoot);
                 stats.Fallback = true;
+                stats.FallbackReason = "作废子树未被锚点覆盖 anchors=" + deepest.Count + " coverage=" + coverage.Count;
                 stats.ElapsedMs = ElapsedMs(started);
                 return false;
             }
@@ -116,6 +131,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (node is null)
                 {
                     stats.Fallback = true;
+                    stats.FallbackReason = "锚点节点缺失 path=" + anchorPath;
                     stats.ElapsedMs = ElapsedMs(started);
                     return false;
                 }
@@ -127,6 +143,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (rebuilt is null)
                 {
                     stats.Fallback = true;
+                    stats.FallbackReason = "锚点重建失败 path=" + anchorPath;
                     stats.ElapsedMs = ElapsedMs(started);
                     return false;
                 }

@@ -82,6 +82,31 @@ namespace CBHK.ViewModel.Generator
         private int lastTextGeneration = -1;
         private int lastProjectionGeneration = -1;
 
+        /// <summary>文本通道走了多少次快路径 / 回落（常开计数，状态栏与探针共用）。</summary>
+        private int syncFastCount;
+        private int syncFallbackCount;
+        private string syncDebugSuffix = "";
+
+        /// <summary>最近一次文本通道的结果摘要（探针与状态栏调试后缀都读它）。</summary>
+        public string SyncDebugSuffix => syncDebugSuffix;
+
+        public int SyncFastCount => syncFastCount;
+
+        public int SyncFallbackCount => syncFallbackCount;
+
+        /// <summary>文本通道此刻处于哪个阶段（只读派生，不改变任何既有闸门的行为）。</summary>
+        public McdocSyncPhase SyncPhase
+        {
+            get
+            {
+                if (syncInFlight || digestingText) return McdocSyncPhase.Digesting;
+                if (loading || rebuildScheduled) return McdocSyncPhase.Rebuilding;
+                if (syncDeferred || rebuildDeferred || textPendingSync) return McdocSyncPhase.Deferred;
+                if (suppressReload || resolvingText) return McdocSyncPhase.Pushing;
+                return McdocSyncPhase.Idle;
+            }
+        }
+
         /// <summary>正在把"右侧脏区域"对齐成合法文本：期间不再触发新的修复/同步。</summary>
         private bool resolvingText;
 
@@ -490,10 +515,27 @@ namespace CBHK.ViewModel.Generator
                     PushJsonText(jsonEditor?.Text ?? text);
                     lastSyncedText = JsonText;
                 }
+                RecordSync(stats);
                 return;
             }
+            RecordSync(stats);
             LoadMcdocTree(text);
             lastSyncedText = JsonText;
+        }
+
+        /// <summary>文本通道结果记账：常开计数 + 一行可读摘要（回落原因不再只藏在 trace 里）。</summary>
+        private void RecordSync(McdocSyncStats stats)
+        {
+            if (stats is null) return;
+            if (stats.Fallback) syncFallbackCount++;
+            else syncFastCount++;
+            syncDebugSuffix = "sync fast#" + syncFastCount + " fallback#" + syncFallbackCount
+                + " anchors#" + stats.StructureAnchors + " rebuilt#" + stats.RebuiltNodes
+                + " patch#" + stats.ValuePatches + " unbuilt#" + stats.UnbuiltPatches
+                + " ms#" + stats.ElapsedMs + " phase=" + SyncPhase
+                + (stats.Fallback && !string.IsNullOrEmpty(stats.FallbackReason) ? " why=" + stats.FallbackReason : "");
+            McdocWriteTrace.Log("sync 结果", null, syncDebugSuffix);
+            if (McdocWriteTrace.StatsEnabled) MdocStatus = syncDebugSuffix;
         }
 
         private bool EnsureTimer()
