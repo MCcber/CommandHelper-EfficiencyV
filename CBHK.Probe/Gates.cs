@@ -4286,6 +4286,93 @@ namespace CBHK.Probe
             return checks.Finish("--case optional-enum-row");
         }
 
+        /// <summary>
+        /// 版本下拉与文档版本必须同步：页面在注册表到位前建过文档时 document.GameVersion 停在兜底版本上，
+        /// 数据到位后只换下拉不换文档 ⇒ #[since]/#[until] 按老版本过滤，
+        /// 表现就是"下拉写着 26.3、树上还是老版本那套字段"。
+        /// </summary>
+        public static int VersionFollowsRuntime()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            var blockStateDir = LocateBlockStateDirectory();
+            if (blockStateDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\Registries\\BlockState（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);          // 只有符号表：模拟注册表还没到位
+            var vm = new CBHK.ViewModel.Generator.DimensionTypeViewModel(resource);
+            var editor = new CBHK.Utility.Data.JsonText.JsonTextEditor();
+            vm.AttachJsonEditor(editor);
+            var coldVersion = DocumentOf(vm)?.GameVersion;
+            var coldAttributes = DocumentOf(vm)?.FindNode("$.attributes") is not null;
+            Console.WriteLine("[信息] 构造后：文档版本=" + (coldVersion ?? "<null>")
+                + " 下拉=" + (vm.SelectedGameVersionOption?.Name ?? "<null>")
+                + " attributes 行=" + coldAttributes
+                + " 文本长度=" + (vm.JsonText ?? "").Length);
+            checks.That(!string.IsNullOrEmpty(coldVersion), "构造后文档带版本号", "版本=" + (coldVersion ?? "<null>"));
+            checks.That(coldAttributes, "构造后按当前资产版本求值（attributes 行在）", "attributes 行=" + coldAttributes);
+            var defaultField = typeof(CBHK.ViewModel.Generator.McdocGeneratorViewModelBase)
+                .GetField("defaultDocumentText", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var defaultText = defaultField?.GetValue(vm) as string;
+            Console.WriteLine("[信息] 默认文档快照长度=" + (defaultText?.Length ?? -1)
+                + " 当前文本长度=" + (vm.JsonText?.Length ?? -1)
+                + " 相等=" + string.Equals(defaultText, vm.JsonText, StringComparison.Ordinal));
+            // 前置：把下拉落到另一个版本但**不重建**（页面早于注册表到位时 document 就停在兜底版本上）
+            // "用户没动过文档"这条分支要求文本与载入时逐字相同：夹具里物化会把缺省值补进去（文本变长），
+            // 这里把快照对齐成当前文本，等价于"载入后一拍没改"。
+            defaultField?.SetValue(vm, vm.JsonText);
+            var adopt = typeof(CBHK.ViewModel.Generator.McdocGeneratorViewModelBase)
+                .GetMethod("AdoptGameVersion", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            checks.That(adopt is not null, "版本下拉落位入口存在", "AdoptGameVersion");
+            adopt?.Invoke(vm, ["1.20.5"]);
+            var staleName = vm.SelectedGameVersionOption?.Name;
+            var staleVersion = DocumentOf(vm)?.GameVersion;
+            Console.WriteLine("[信息] 只换下拉：下拉=" + (staleName ?? "<null>") + " 文档版本=" + (staleVersion ?? "<null>"));
+            checks.That(!string.Equals(staleName, staleVersion, StringComparison.Ordinal),
+                "前置：下拉与文档版本已不一致（就是页面早于数据到位时的状态）",
+                "下拉=" + (staleName ?? "<null>") + " 文档=" + (staleVersion ?? "<null>"));
+            resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
+            var refresh = typeof(CBHK.ViewModel.Generator.McdocGeneratorViewModelBase)
+                .GetMethod("RefreshWithReadyRuntime", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            checks.That(refresh is not null, "运行数据就绪后的刷新入口存在", "RefreshWithReadyRuntime");
+            refresh?.Invoke(vm, null);
+            PumpDispatcher();
+            var warmDoc = DocumentOf(vm);
+            var warmVersion = warmDoc?.GameVersion;
+            var dropName = vm.SelectedGameVersionOption?.Name;
+            Console.WriteLine("[信息] 数据到位后：下拉=" + (dropName ?? "<null>")
+                + " 文档版本=" + (warmVersion ?? "<null>")
+                + " attributes 行=" + (warmDoc?.FindNode("$.attributes") is not null));
+            checks.That(string.Equals(dropName, warmVersion, StringComparison.Ordinal),
+                "数据到位后 document.GameVersion 跟上下拉（版本过滤读的是它，不许各说各的）",
+                "下拉=" + (dropName ?? "<null>") + " 文档=" + (warmVersion ?? "<null>"));
+            checks.That(warmDoc?.FindNode("$.attributes") is null,
+                "文档换到 1.20.5 后 #[since=1.21.11] 的 attributes 行不再出现（版本过滤真的按新版本跑）",
+                "attributes 行存在=" + (warmDoc?.FindNode("$.attributes") is not null));
+            var top = vm.GameVersionOptions.FirstOrDefault(item => item?.Name == "26.3");
+            checks.That(top is not null, "下拉候选里有 26.3", "候选数=" + vm.GameVersionOptions.Count);
+            vm.SelectedGameVersionOption = top;
+            PumpDispatcher();
+            var backDoc = DocumentOf(vm);
+            Console.WriteLine("[信息] 切回 26.3：下拉=" + (vm.SelectedGameVersionOption?.Name ?? "<null>")
+                + " 文档版本=" + (backDoc?.GameVersion ?? "<null>")
+                + " attributes 行=" + (backDoc?.FindNode("$.attributes") is not null));
+            checks.That(backDoc is not null && string.Equals(backDoc.GameVersion, "26.3", StringComparison.Ordinal),
+                "切回 26.3 后文档版本跟着换", "版本=" + (backDoc?.GameVersion ?? "<null>"));
+            checks.That(backDoc?.FindNode("$.attributes") is not null,
+                "切回 26.3 后 attributes 行回来了", "attributes 行缺失");
+            return checks.Finish("--case version-follows-runtime");
+        }
+
         private static void ExpandAll(IEnumerable<McdocTreeNode> nodes)
         {
             foreach (var node in nodes ?? [])

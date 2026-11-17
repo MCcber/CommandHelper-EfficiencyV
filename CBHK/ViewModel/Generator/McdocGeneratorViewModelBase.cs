@@ -150,8 +150,11 @@ namespace CBHK.ViewModel.Generator
         /// <summary>dispatcher 入口名（如 advancement / dimension_type / loot_table）。</summary>
         public string EntryId { get; private set; }
 
-        /// <summary>没选过版本时的兜底（与旧默认一致）。</summary>
-        private const string DefaultGameVersion = "1.20.5";
+        /// <summary>
+        /// 没选过版本时的兜底：注册表一个都没读到时（<c>Resource.Init</c> 失败或资产缺失）页面也得按
+        /// 当前资产所处的版本求值 —— 退回 1.20.5 会让 #[until] 的老字段出现、#[since] 的新字段静默消失。
+        /// </summary>
+        private const string DefaultGameVersion = "26.3";
 
         /// <summary>
         /// 当前版本名：**唯一状态是 <see cref="SelectedGameVersionOption"/>**，这里只是它的投影。
@@ -320,19 +323,30 @@ namespace CBHK.ViewModel.Generator
             needsRuntimeRefresh = false;
             defaultDocumentDegraded = false;
             FillGameVersionOptions();
+            // 页面在注册表到位前建过文档时，document.GameVersion 停在兜底版本上；这里下拉已经换成注册表版本。
+            // 版本过滤读的是 document.GameVersion，只换下拉不换文档就是"下拉写着新版本、树上还是老字段"
+            // （#[until] 该隐的没隐、#[since] 该出的没出）—— 版本一变就必须重来一遍文档。
+            var versionChanged = !string.Equals(SelectedGameVersionName, document?.GameVersion, StringComparison.Ordinal);
             var untouched = string.IsNullOrWhiteSpace(JsonText)
                 || (defaultDocumentText is not null && string.Equals(JsonText, defaultDocumentText, StringComparison.Ordinal));
-            if (untouched)
+            if (untouched && !versionChanged)
             {
                 // 入口文件就是这份文档：按同一份来源重来（换成 LoadDefault 会把文件内容换成代数默认值）
                 if (defaultDocumentText is not null) LoadMcdocTree(defaultDocumentText);
                 else LoadDefault();
                 return;
             }
+            // 用户没动过文档：换了版本就按同一份来源重新起一份（别把老默认文档当用户数据重放一遍）
+            var target = untouched ? defaultDocumentText : JsonText;
+            if (string.IsNullOrWhiteSpace(target))
+            {
+                LoadDefault();
+                return;
+            }
             CreateDocument();
             try
             {
-                LoadMcdocTree(JsonText);
+                LoadMcdocTree(target);
             }
             catch (Exception error)
             {
