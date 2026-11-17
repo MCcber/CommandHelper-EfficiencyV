@@ -58,24 +58,28 @@
   <ItemGroup>
     <Compile Remove="Common\**" />
     <Compile Remove="CustomControl\VectorTabItem\**" />
+    <Compile Remove="Properties\**" />
     <Compile Remove="Utility\Displayer\**" />
     <Compile Remove="Model\CustomControl\**" />
     <Compile Remove="Utility\Event\**" />
     <Compile Remove="纹理\**" />
     <EmbeddedResource Remove="Common\**" />
     <EmbeddedResource Remove="CustomControl\VectorTabItem\**" />
+    <EmbeddedResource Remove="Properties\**" />
     <EmbeddedResource Remove="Utility\Displayer\**" />
     <EmbeddedResource Remove="Model\CustomControl\**" />
     <EmbeddedResource Remove="Utility\Event\**" />
     <EmbeddedResource Remove="纹理\**" />
     <None Remove="Common\**" />
     <None Remove="CustomControl\VectorTabItem\**" />
+    <None Remove="Properties\**" />
     <None Remove="Utility\Displayer\**" />
     <None Remove="Model\CustomControl\**" />
     <None Remove="Utility\Event\**" />
     <None Remove="纹理\**" />
     <Page Remove="Common\**" />
     <Page Remove="CustomControl\VectorTabItem\**" />
+    <Page Remove="Properties\**" />
     <Page Remove="Utility\Displayer\**" />
     <Page Remove="Model\CustomControl\**" />
     <Page Remove="Utility\Event\**" />
@@ -470,6 +474,5 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Model\Generator\Entity\" />
-    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>
