@@ -3783,6 +3783,109 @@ namespace CBHK.Probe
             return exists ? 0 : 1;
         }
 
+        // ── 诊断：26.3 advance/enter_block 的 conditions（player / block / state）求解成什么形状 ──
+        public static int EnterBlockDump()
+        {
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            var blockStateDir = LocateBlockStateDirectory();
+            var fixtures = new (string Label, string Json)[]
+            {
+                ("conditions 空对象", @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": {} } } }"),
+                ("player 空对象", @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": { ""player"": {} } } } }"),
+                ("player 旧式 type", @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": { ""player"": { ""type"": ""minecraft:player"" } } } } }"),
+                ("player 单条条件对象", @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": { ""player"": { ""damage_source_properties"": { ""predicate"": {} } } } } } }"),
+                ("player 条件数组", @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": { ""player"": [ { ""condition"": ""minecraft:damage_source_properties"", ""predicate"": { ""is_direct"": true } } ] } } } }"),
+                ("player 26.3 键", @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": { ""player"": { ""minecraft:type_specific/player"": { ""gamemode"": ""creative"" } } } } } }")
+            };
+            foreach (var fixture in fixtures)
+            {
+                Console.WriteLine("== " + fixture.Label + " ==");
+                var (document, projector, pipeline) = Harness(index, McdocHelpers.GetRootType("advancement"), fixture.Json,
+                    doc =>
+                    {
+                        doc.GameVersion = "26.3";
+                        if (blockStateDir is not null) doc.RegistryOptions = RegistryOptionsFor(blockStateDir);
+                    });
+                var conditions = document.FindNode("$.criteria.a.conditions");
+                conditions?.EnsureChildren();
+                if (conditions is null)
+                {
+                    Console.WriteLine("[红] 没有 conditions 节点");
+                    return 1;
+                }
+                DumpShape(conditions, 0, 4);
+                var playerNode = McdocPresenterRegistry.Default.Children(conditions)
+                    .FirstOrDefault(child => string.Equals(child?.FieldName, "player", StringComparison.Ordinal));
+                if (playerNode?.UnionTypeNameList is { Count: > 0 } options)
+                {
+                    Console.WriteLine("[分支] 选项=" + string.Join("|", options.Select(option => option?.Name ?? "?")));
+                    foreach (var option in options)
+                    {
+                        playerNode.SelectedUnionTypeName = option;
+                        playerNode.EnsureChildren();
+                        var member = playerNode.SelectedUnionMember;
+                        var branchChildren = McdocPresenterRegistry.Default.Children(playerNode)
+                            .Select(child => (child?.FieldName ?? "?") + ":" + (child?.Type?.Kind.ToString() ?? "?"))
+                            .Take(8);
+                        Console.WriteLine("[分支] " + (option?.Name ?? "?")
+                            + " → 成员=" + (member?.Kind.ToString() ?? "<null>")
+                            + " 成员路径=" + (member?.Path ?? "<无>")
+                            + " json=" + (playerNode.Json?.Kind.ToString() ?? "<null>")
+                            + " 子级=" + string.Join(",", branchChildren));
+                    }
+                }
+                ExpandAll(document.Nodes);
+                projector.Reset(document.ProjectionRoots);
+                foreach (var row in projector.Rows)
+                {
+                    Console.WriteLine("[行] indent=" + row.Indent.Left
+                        + " kind=" + row.Kind
+                        + " label=[" + row.DisplayLabel + "]"
+                        + " branch=" + (row.Node?.SelectedUnionTypeName?.Name ?? "<null>"));
+                }
+                Console.WriteLine();
+            }
+            return 0;
+        }
+
+        private static void ExpandAll(IEnumerable<McdocTreeNode> nodes)
+        {
+            foreach (var node in nodes ?? [])
+            {
+                if (node is null) continue;
+                node.EnsureChildren();
+                node.IsExpanded = true;
+                ExpandAll(McdocPresenterRegistry.Default.Children(node));
+            }
+        }
+
+        private static void DumpShape(McdocTreeNode node, int depth, int maxDepth)
+        {
+            var head = McdocPresenterRegistry.Default.Describe(node);
+            Console.WriteLine("[形状] " + new string(' ', depth * 2)
+                + (head?.Label ?? "?")
+                + " key=" + (node.Key ?? "<null>")
+                + " field=" + (node.FieldName ?? "<null>")
+                + " type=" + (node.Type?.Kind.ToString() ?? "<null>")
+                + " json=" + (node.Json?.Kind.ToString() ?? "<null>")
+                + " row=" + (head?.RowKind.ToString() ?? "?")
+                + " editor=" + (head?.EditorKind.ToString() ?? "?")
+                + " branch=" + (node.SelectedUnionTypeName?.Name ?? "<null>")
+                + " 分支数=" + (node.UnionTypeNameList?.Count ?? 0));
+            if (depth >= maxDepth) return;
+            node.EnsureChildren();
+            foreach (var child in McdocPresenterRegistry.Default.Children(node)) DumpShape(child, depth + 1, maxDepth);
+        }
+
+
         private static void DumpNode(string label, McdocTreeNode node, int depth)
         {
             if (node is null || depth > 2) return;
