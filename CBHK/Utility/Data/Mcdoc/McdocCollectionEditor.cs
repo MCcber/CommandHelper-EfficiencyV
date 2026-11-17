@@ -202,7 +202,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     if (!ReferenceEquals(map.Properties[i].Value, row.Json)) continue;
                     map.Properties[i] = new KeyValuePair<string, McdocJsonValue>(key, map.Properties[i].Value);
-                    mapNode.StructureChanged?.Invoke(mapNode);
+                    NotifyStructure(mapNode);
                     return;
                 }
                 return;
@@ -222,8 +222,15 @@ namespace CBHK.Utility.Data.Mcdoc
             map.Properties.Insert(insertIndex, new KeyValuePair<string, McdocJsonValue>(key, inserted));
             // 新条目此刻还没有节点（要等重建）：把"展开"记在它的路径上，重建建出来就是展开的
             McdocExpandState.Set(mapNode.JsonPath + "." + key, true);
-            mapNode.StructureChanged?.Invoke(mapNode);
-            RevealCreated(mapNode);
+            // 通知只发一次，且目标是真正承载 JSON 的那一层：union 分支壳不在树上，
+            // 通知它等于重建一个脱挂的壳（行照样不出现）。
+            NotifyStructure(mapNode);
+            var host = JsonHost(mapNode);
+            if (host is not null)
+            {
+                host.IsExpanded = true;
+                McdocExpandState.Set(host.JsonPath, true);
+            }
         }
 
         /// <summary>⊕ 是否可用：键非空、没被占用；已有行还要求键确实变了。</summary>
@@ -638,16 +645,24 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 // 值已经被（未设置）清掉：键早就不在文档里了，这里只把这一行摘掉。
                 // 走父级重建会把同一父级下**其它行**一起换掉（幽灵行的老坑），所以只摘行 + 让投影重拼父行。
-                mapNode.Children.Remove(row);
-                mapNode.Items.Remove(row);
-                mapNode.SelectedUnionChildren.Remove(row);
+                // 行可能已经被 union 分支上提到 union 行上（Parent 不是这个 map 壳）：
+                // 只从壳里摘的话，界面上那一行会留在原处，右侧 JSON 里却已经没有它了。
+                var owners = row.Parent is { } lifted && !ReferenceEquals(lifted, mapNode)
+                    ? new[] { mapNode, lifted }
+                    : new[] { mapNode };
+                foreach (var owner in owners)
+                {
+                    owner.Children.Remove(row);
+                    owner.Items.Remove(row);
+                    owner.SelectedUnionChildren.Remove(row);
+                }
                 row.Parent = null;
-                mapNode.StructureChanged?.Invoke(mapNode);
+                NotifyStructure(mapNode);
                 return;
             }
-            if (mapNode.Json is not { Kind: McdocJsonKind.Object } map || map.Properties is null) return;
+            if (JsonHost(mapNode)?.Json is not { Kind: McdocJsonKind.Object } map || map.Properties is null) return;
             map.Properties.RemoveAll(pair => ReferenceEquals(pair.Value, row.Json));
-            mapNode.StructureChanged?.Invoke(mapNode);
+            NotifyStructure(mapNode);
         }
 
         /// <summary>
@@ -1063,16 +1078,42 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>节点还没有 JSON 时（如可选字段缺省），先在父对象里把容器建出来。</summary>
         public McdocJsonValue EnsureContainer(McdocTreeNode node, McdocJsonKind kind)
         {
-            if (node is null) return null;
-            if (node.Json is { } existing) return existing.Kind == kind ? existing : null;
-            if (node.Parent?.Json is not { Kind: McdocJsonKind.Object } parent || string.IsNullOrEmpty(node.FieldName))
+            var host = JsonHost(node);
+            if (host is null) return null;
+            if (host.Json is { } existing) return existing.Kind == kind ? existing : null;
+            if (host.Parent?.Json is not { Kind: McdocJsonKind.Object } parent || string.IsNullOrEmpty(host.FieldName))
             {
                 return null;
             }
             var created = kind == McdocJsonKind.Array ? McdocJsonValue.Array() : McdocJsonValue.Object();
-            parent.Add(node.FieldName, created);
-            node.Json = created;
+            parent.Add(host.FieldName, created);
+            host.Json = created;
             return created;
+        }
+
+        /// <summary>
+        /// JSON 落点：union 摊平出来的分支壳自己没有值（ApplyBranch 里 branchNode.Json ??= node.Json，
+        /// 可选项没值时就是 null），而它的 Parent 又正是那个没值的 union 行 —— 在壳上建容器等于
+        /// "往一个没有父对象的键上写"，EnsureContainer 只能返回 null，⊕ 于是变成静默空操作
+        /// （现场：advancement 的 player → 结构分支 → 动态键，点 ⊕ 什么都不发生）。
+        /// 只沿**同名直通壳**上溯：可选字段缺省不是壳，把它的子键提到祖先上会写错位置（不变量 25）。
+        /// </summary>
+        private static McdocTreeNode JsonHost(McdocTreeNode node)
+        {
+            var current = node;
+            for (var guard = 0; current is not null && guard < 32; guard++)
+            {
+                if (current.Json is not null) return current;
+                if (current.Parent is { Json: { Kind: McdocJsonKind.Object } } && !string.IsNullOrEmpty(current.FieldName))
+                {
+                    return current;
+                }
+                var parent = current.Parent;
+                if (parent is null) return current;
+                if (!string.Equals(current.FieldName, parent.FieldName, StringComparison.Ordinal)) return current;
+                current = parent;
+            }
+            return current;
         }
 
         /// <summary>键为空时自动挑一个：优先注册表里第一个没被占用的候选，否则 key / key2 / key3…</summary>

@@ -38,6 +38,28 @@ namespace CBHK.Utility.Data.Mcdoc
             }
         }
 
+        /// <summary>异常落盘：不受 MCDOC_TRACE_WRITE 闸门影响 —— 出了错用户必须能直接把证据文件拿走。</summary>
+        public static string ErrorPath { get; } = System.IO.Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory ?? "", "Logs", "mcdoc-error.log");
+
+        /// <summary>记一条异常（上下文 + 完整调用栈）。落盘失败也不许影响主流程。</summary>
+        public static void Error(string context, Exception error)
+        {
+            var line = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + " [mcdoc-error] " + context
+                + " " + (error?.GetType().FullName ?? "<null>") + ": " + (error?.Message ?? "<null>");
+            Console.WriteLine(line);
+            try
+            {
+                var directory = System.IO.Path.GetDirectoryName(ErrorPath);
+                if (!string.IsNullOrEmpty(directory)) System.IO.Directory.CreateDirectory(directory);
+                System.IO.File.AppendAllText(ErrorPath, line + Environment.NewLine + error + Environment.NewLine);
+            }
+            catch
+            {
+                // 落盘失败不影响主流程
+            }
+        }
+
         /// <summary>结构化现场：一条动作 + 关键状态，复现日志靠它定位「哪一步把行/按钮吃掉了」。</summary>
         public static void Trace(string tag, string detail)
         {

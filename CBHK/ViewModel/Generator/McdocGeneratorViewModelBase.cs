@@ -198,6 +198,7 @@ namespace CBHK.ViewModel.Generator
             catch (Exception error)
             {
                 // 文本正在编辑中（非法 JSON）时切版本不能把页面打崩：保住旧树，只报状态
+                McdocWriteTrace.Error("切换版本 " + version, error);
                 MdocStatus = "切换到 " + version + " 失败：" + error.Message;
             }
         }
@@ -335,6 +336,7 @@ namespace CBHK.ViewModel.Generator
             }
             catch (Exception error)
             {
+                McdocWriteTrace.Error("运行数据就绪后重建", error);
                 MdocStatus = "运行数据就绪后重建失败：" + error.Message;
             }
         }
@@ -554,6 +556,7 @@ namespace CBHK.ViewModel.Generator
                 }
                 catch (Exception error)
                 {
+                    McdocWriteTrace.Error("解析文本", error);
                     MdocStatus = "解析失败：" + error.Message;
                 }
             };
@@ -1626,8 +1629,9 @@ namespace CBHK.ViewModel.Generator
                     RebuildTargetedOrFallback(target);
                 }), System.Windows.Threading.DispatcherPriority.Background);
             }
-            catch (Exception)
+            catch (Exception error)
             {
+                McdocWriteTrace.Error("定向重建调度", error);
                 rebuildScheduled = false;
                 pendingRebuildAnchor = null;
             }
@@ -1787,6 +1791,7 @@ namespace CBHK.ViewModel.Generator
             catch (Exception error)
             {
                 defaultDocumentDegraded = true;
+                McdocWriteTrace.Error("建树", error);
                 MdocStatus = "建树失败：" + error.Message;
                 return;
             }
@@ -1876,6 +1881,7 @@ namespace CBHK.ViewModel.Generator
             }
             catch (Exception error)
             {
+                McdocWriteTrace.Error("入口文件读取 " + source, error);
                 source = "入口文件读取失败：" + source + "（" + error.Message + "）";
                 return false;
             }

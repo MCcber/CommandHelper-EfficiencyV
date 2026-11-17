@@ -159,9 +159,11 @@ namespace CBHK
             // 全局异常监控
             AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
             {
-                if ((ev.ExceptionObject as Exception).Message.Trim().Length > 0)
+                var fatal = ev.ExceptionObject as Exception;
+                if (fatal?.Message.Trim().Length > 0)
                 {
-                    Log.Fatal(ev.ExceptionObject as Exception, ev.ExceptionObject.ToString());
+                    Log.Fatal(fatal, fatal.ToString());
+                    // 进程马上就要结束：这是最后一次落盘机会
                     Log.CloseAndFlush();
                 }
             };
@@ -169,11 +171,13 @@ namespace CBHK
             // 异常捕获监控
             DispatcherUnhandledException += (s, ev) =>
             {
+                // 分闸落一份带调用栈的证据：Serilog 只留 Error 以上，mcdoc 现场还要看得见是哪条链路
+                CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Error("DispatcherUnhandledException", ev.Exception);
                 if (ev.Exception.Message.Trim().Length > 0)
                 {
                     Log.Error(ev.Exception, ev.Exception.Message);
                     ev.Handled = true;
-                    Log.CloseAndFlush();
+                    // 不许在这里 CloseAndFlush：关掉之后第二次异常一条都记不下来（日志静默失效）
                 }
             };
         }

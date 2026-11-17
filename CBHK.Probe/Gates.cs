@@ -3592,6 +3592,220 @@ namespace CBHK.Probe
         }
 
 
+        // ── 诊断：advancement conditions.player（CompositeEntity 可选 union）当前求解成什么形状 ──
+        public static int PlayerResolveDump()
+        {
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            var blockStateDir = LocateBlockStateDirectory();
+            var (document, projector, pipeline) = Harness(index, McdocHelpers.GetRootType("advancement"),
+                @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": {} } } }",
+                doc =>
+                {
+                    doc.GameVersion = "26.3";
+                    if (blockStateDir is not null) doc.RegistryOptions = RegistryOptionsFor(blockStateDir);
+                });
+
+            var host = Reach(document, "$.criteria.a");
+            host?.EnsureChildren();
+            var conditions = document.FindNode("$.criteria.a.conditions");
+            conditions?.EnsureChildren();
+            if (conditions is null) { Console.WriteLine("[红] 没有 conditions 节点"); return 1; }
+            conditions.EnsureChildren();
+            var player = McdocPresenterRegistry.Default.Children(conditions)
+                .FirstOrDefault(child => string.Equals(child?.FieldName, "player", StringComparison.Ordinal));
+            if (player is null) { Console.WriteLine("[红] conditions 下没有 player 行"); return 1; }
+            DumpNode("player", player, 0);
+            player.EnsureChildren();
+            Console.WriteLine("[信息] built=" + player.ChildrenBuilt
+                + " 分支选项=" + (player.UnionTypeNameList is null ? "<null>" : player.UnionTypeNameList.Count.ToString())
+                + " → " + (player.UnionTypeNameList is null ? "<null>" : string.Join(",", player.UnionTypeNameList.Select(option => option?.Name ?? "?")))
+                + " 选中=" + (player.SelectedUnionTypeName?.Name ?? "<null>")
+                + " 成员=" + (player.SelectedUnionMember?.Kind.ToString() ?? "<null>")
+                + " 分支子级=" + player.SelectedUnionChildren.Count
+                + " 标量=" + (player.ScalarEditorKind ?? "<null>"));
+            for (var branchIndex = 0; branchIndex < (player.UnionTypeNameList?.Count ?? 0); branchIndex++)
+            {
+                var option = player.UnionTypeNameList[branchIndex];
+                player.SelectedUnionTypeName = option;
+                player.EnsureChildren();
+                var member = player.SelectedUnionMember;
+                var branchChildren = McdocPresenterRegistry.Default.Children(player).Select(child => (child?.FieldName ?? "?") + ":" + (child?.Type?.Kind.ToString() ?? "?")).ToList();
+                Console.WriteLine("[信息] 切到[" + branchIndex + "] " + (option?.Name ?? "?")
+                    + " → 成员=" + (member?.Kind.ToString() ?? "<null>")
+                    + " Json=" + (player.Json?.Kind.ToString() ?? "<null>")
+                    + " 分支子级=" + player.SelectedUnionChildren.Count
+                    + " 子级=" + string.Join(",", branchChildren.Take(12)));
+                var objectChild = player.SelectedUnionChildren.FirstOrDefault();
+                if (objectChild is null) continue;
+                var head = McdocPresenterRegistry.Default.For(objectChild)?.Describe(objectChild);
+                Console.WriteLine("[信息]   子级明细 IsDynamicKey=" + objectChild.IsDynamicKey + " Key=" + (objectChild.Key ?? "<null>")
+                    + " RowKind=" + (head?.RowKind.ToString() ?? "?")
+                    + " KeySelect=" + objectChild.UseKeySelect
+                    + " 键候选=" + (objectChild.KeyOptionList is null ? "<null>" : objectChild.KeyOptionList.Count.ToString())
+                    + " 候选前几个=" + (objectChild.KeyOptionList is null ? "<null>" : string.Join("|", objectChild.KeyOptionList.Take(5).Select(item => item?.Name ?? "?")))
+                    + " EditingKey=" + (objectChild.EditingKey ?? "<null>")
+                    + " Watermark=" + (objectChild.Watermark ?? "<null>")
+                    + " Desc=" + (objectChild.Desc ?? "<null>")
+                    + " Type=" + (objectChild.Type?.Kind.ToString() ?? "<null>")
+                    + " Declared=" + (objectChild.DeclaredType?.Kind.ToString() ?? "<null>"));
+                Console.WriteLine("[信息]   父链 Parent==player?" + ReferenceEquals(objectChild.Parent, player)
+                    + " parentField=" + (objectChild.Parent?.FieldName ?? "<null>")
+                    + " parentJson=" + (objectChild.Parent?.Json?.Kind.ToString() ?? "<null>")
+                    + " grandField=" + (objectChild.Parent?.Parent?.FieldName ?? "<null>")
+                    + " grandJson=" + (objectChild.Parent?.Parent?.Json?.Kind.ToString() ?? "<null>")
+                    + " playerField=" + (player.FieldName ?? "<null>")
+                    + " playerParentJson=" + (player.Parent?.Json?.Kind.ToString() ?? "<null>"));
+                if (branchIndex != 0) continue;
+
+                // 端到端：在「新键」占位行上选 minecraft:player 再点 ⊕，看建出来的值是什么
+                Console.WriteLine("[信息] 全部键候选=" + string.Join("|", objectChild.KeyOptionList?.Select(option => option?.Name) ?? []));
+                // 26.3 的子谓词键是 type_specific/<mob>：老的 player 在 26.2 就废了（#[until="26.2"]），
+                // 拿它做端到端只会验到"版本已移除"，验不到"选完键能不能摊出字段"。
+                objectChild.EditingKey = "minecraft:type_specific/player";
+                objectChild.SelectedKey = objectChild.KeyOptionList?.FirstOrDefault(item => item?.Name == "minecraft:type_specific/player");
+                Console.WriteLine("[信息] 提交前 CanCommitEntry=" + (objectChild.AddEntryCommand?.CanExecute(null) ?? false));
+                objectChild.AddEntryCommand?.Execute(null);
+                Console.WriteLine("[信息] 提交后 playerJson="
+                    + (player.Json is null ? "<null>" : McdocJsonFormatter.Format(player.Json).Replace("\r", "").Replace("\n", " ")));
+                // 结构变更会重建这一层：手上这份 player 已经是脱挂实例，必须按路径重新取
+                var fresh = document.FindNode("$.criteria.a.conditions.player");
+                Console.WriteLine("[信息] 提交后 同实例=" + ReferenceEquals(fresh, player)
+                    + " 在树上=" + (fresh is not null)
+                    + " 子级=" + string.Join(",", fresh is null ? [] : McdocPresenterRegistry.Default.Children(fresh).Select(child => (child?.FieldName ?? "?") + ":" + (child?.Type?.Kind.ToString() ?? "?"))));
+                fresh?.EnsureChildren();
+                var created = fresh is null
+                    ? null
+                    : McdocPresenterRegistry.Default.Children(fresh)
+                        .FirstOrDefault(child => string.Equals(child?.FieldName, "minecraft:type_specific/player", StringComparison.Ordinal));
+                if (created is null)
+                {
+                    Console.WriteLine("[红] 提交后没有 type_specific/player 行");
+                    return 1;
+                }
+                created.EnsureChildren();
+                var createdChildren = McdocPresenterRegistry.Default.Children(created).ToList();
+                Console.WriteLine("[信息] 新条目 Type=" + (created.Type?.Kind.ToString() ?? "<null>")
+                    + " Declared=" + (created.DeclaredType?.Kind.ToString() ?? "<null>")
+                    + " Json=" + (created.Json is null ? "<null>" : McdocJsonFormatter.Format(created.Json).Replace("\r", "").Replace("\n", " "))
+                    + " 子级=" + string.Join(",", createdChildren.Select(child => (child?.FieldName ?? "?") + ":" + (child?.Type?.Kind.ToString() ?? "?"))));
+                Console.WriteLine("[信息] 新条目 Error=" + (created.Error ?? "<null>"));
+                var createdResolved = created.Type?.Kind == McdocTypeKind.Struct
+                    && createdChildren.Any(child => string.Equals(child?.FieldName, "advancements", StringComparison.Ordinal));
+                if (!createdResolved)
+                {
+                    Console.WriteLine("[红] 新建条目没有解成 PlayerPredicate（Type=" + (created.Type?.Kind.ToString() ?? "<null>") + "）");
+                }
+                return createdResolved ? 0 : 1;
+            }
+            return 1;
+        }
+
+        public static int PlayerValueResolve()
+        {
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            var blockStateDir = LocateBlockStateDirectory();
+            var traceCount = 0;
+            var traceHits = new List<string>();
+            McdocSimplifier.IndexTrace = line =>
+            {
+                traceCount++;
+                if (line.Contains("player", StringComparison.Ordinal)) traceHits.Add(line);
+            };
+            var (document, projector, pipeline) = Harness(index, McdocHelpers.GetRootType("advancement"),
+                @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": { ""player"": { ""type_specific/player"": { ""gamemode"": ""creative"" } } } } } }",
+                doc =>
+                {
+                    doc.GameVersion = "26.3";
+                    if (blockStateDir is not null) doc.RegistryOptions = RegistryOptionsFor(blockStateDir);
+                });
+            var conditions = document.FindNode("$.criteria.a.conditions");
+            conditions?.EnsureChildren();
+            var player = conditions is null
+                ? null
+                : McdocPresenterRegistry.Default.Children(conditions)
+                    .FirstOrDefault(child => string.Equals(child?.FieldName, "player", StringComparison.Ordinal));
+            if (player is null)
+            {
+                Console.WriteLine("[红] 没有 player 节点");
+                return 1;
+            }
+            player.EnsureChildren();
+            var rows = McdocPresenterRegistry.Default.Children(player).ToList();
+            Console.WriteLine("[信息] player 行=" + string.Join(",", rows.Select(row => (row?.FieldName ?? "?") + ":" + (row?.Type?.Kind.ToString() ?? "?") + (row?.IsMapEntry == true ? "(entry)" : ""))));
+            var entry = rows.FirstOrDefault(row => string.Equals(row?.FieldName, "type_specific/player", StringComparison.Ordinal));
+            if (entry is null)
+            {
+                Console.WriteLine("[红] 没有 type_specific/player 条目行");
+                return 1;
+            }
+            McdocSimplifier.IndexTrace = null;
+            Console.WriteLine("[信息] trace 总数=" + traceCount + " 命中=" + traceHits.Count);
+            foreach (var line in traceHits) Console.WriteLine("[idx] " + line);
+            DumpNode("entry", entry, 0);
+            entry.ChildrenBuilt = false;
+            entry.EnsureChildren();
+            var fields = McdocPresenterRegistry.Default.Children(entry).ToList();
+            Console.WriteLine("[信息] 条目 Type=" + (entry.Type?.Kind.ToString() ?? "<null>")
+                + " Declared=" + (entry.DeclaredType?.Kind.ToString() ?? "<null>")
+                + " 字段=" + fields.Count
+                + " → " + string.Join(",", fields.Take(20).Select(field => (field?.FieldName ?? "?") + ":" + (field?.Type?.Kind.ToString() ?? "?"))));
+            Console.WriteLine("[信息] 条目 Error=" + (entry.Error ?? "<null>"));
+            // 判据必须咬住"解成了哪个结构"，不能只看"有几个子行"：
+            // 退化成 any 时也会有一个 any 子行，字段数 > 0 会把失败判成绿。
+            var resolved = entry.Type?.Kind == McdocTypeKind.Struct
+                && fields.Any(field => string.Equals(field?.FieldName, "advancements", StringComparison.Ordinal))
+                && fields.Any(field => string.Equals(field?.FieldName, "recipes", StringComparison.Ordinal));
+            if (!resolved) Console.WriteLine("[红] 条目没有解成 PlayerPredicate（Type=" + (entry.Type?.Kind.ToString() ?? "<null>") + "）");
+            return resolved ? 0 : 1;
+        }
+
+        public static int ErrorSinkSelfTest()
+        {
+            McdocWriteTrace.Error("自检", new InvalidOperationException("error-sink-selftest"));
+            var exists = System.IO.File.Exists(McdocWriteTrace.ErrorPath);
+            Console.WriteLine("[信息] ErrorPath=" + McdocWriteTrace.ErrorPath + " exists=" + exists);
+            return exists ? 0 : 1;
+        }
+
+        private static void DumpNode(string label, McdocTreeNode node, int depth)
+        {
+            if (node is null || depth > 2) return;
+            var children = McdocPresenterRegistry.Default.Children(node).ToList();
+            Console.WriteLine("[信息] " + new string(' ', depth * 2) + label
+                + " Declared=" + (node.DeclaredType?.Kind.ToString() ?? "?")
+                + " Type=" + (node.Type?.Kind.ToString() ?? "?")
+                + " Json=" + (node.Json?.Kind.ToString() ?? "<null>")
+                + " Required=" + node.IsRequired
+                + " UnionListLike=" + node.UnionListLike
+                + " Items=" + node.Items.Count
+                + " SelectedUnion=" + node.SelectedUnionChildren.Count
+                + " Children=" + string.Join(",", children.Select(child => (child?.FieldName ?? "<null>") + ":" + (child?.Type?.Kind.ToString() ?? "?")))
+                + " TypePath=" + (node.Type?.Path ?? "<无>")
+                + " TypeModule=" + (node.Type?.Module ?? "<无>")
+                + " Members=" + (node.Type?.Members is { Count: > 0 } members
+                    ? string.Join("|", members.Select(member => member?.Kind.ToString() + (member?.Path is { Length: > 0 } mp ? ":" + mp : "")))
+                    : "<无>")
+                + " Fields=" + (node.Type?.Fields?.Count ?? 0) + "/" + (node.DeclaredType?.Members?.Count ?? 0));
+            foreach (var child in children) DumpNode(child?.FieldName ?? "?", child, depth + 1);
+        }
+
+
         // ── 删掉一个"已经有子行"的可选结构字段：键没了，子结构也不许还挂在那儿 ──────
         public static int DeleteFieldClearsChildren()
         {

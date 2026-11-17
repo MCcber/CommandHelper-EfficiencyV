@@ -261,6 +261,7 @@ namespace CBHK.Model.Constant
             catch (Exception e)
             {
                 // 配置坏了也不能退出应用：把原因摆到状态栏，页面照常打开
+                CBHK.Utility.Data.Mcdoc.McdocWriteTrace.Error("mcdoc 索引构建", e);
                 McdocIndexFailures = ["mcdoc 索引构建失败：" + e.Message];
                 MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
