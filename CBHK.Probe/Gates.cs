@@ -4384,6 +4384,72 @@ namespace CBHK.Probe
             }
         }
 
+        /// <summary>
+        /// 维度类型页面的"默认文档"来自 Resource\Configs\DimensionType\Data\Template\empty.json（入口文件就是文档本身），
+        /// 这份模板是手写的、版本一换就整片过时。这里打印 26.3 的代数默认值长什么样，
+        /// 再把现场模板丢进 26.3 的求值里数"当前版本不存在的键"。
+        /// </summary>
+        public static int DimensionTemplate()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var blockStateDir = LocateBlockStateDirectory();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            if (blockStateDir is not null)
+            {
+                resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
+            }
+            var rootType = McdocHelpers.GetRootType("dimension_type");
+            var document = new McdocTreeDocument(resource.McdocTypes)
+            {
+                GameVersion = "26.3",
+                RegistryOptions = new CBHK.Utility.Data.MdocRegistryOptions(resource),
+            };
+            var value = McdocDefaults.Resolve(rootType, document.CreateRuntime());
+            var algebraText = McdocJsonFormatter.Format(McdocDefaults.CanMaterialize(value) ? value : McdocJsonValue.Object());
+            Console.WriteLine("[代数默认] 26.3 的 dimension_type：");
+            foreach (var line in algebraText.Split('\n'))
+            {
+                Console.WriteLine("[代数默认] " + line.TrimEnd('\r'));
+            }
+
+            var resourceDir = System.IO.Directory.GetParent(rootDir)?.FullName;
+            var templatePath = resourceDir is null
+                ? null
+                : System.IO.Path.Combine(resourceDir, "Configs", "DimensionType", "Data", "Template", "empty.json");
+            checks.That(templatePath is not null && System.IO.File.Exists(templatePath), "现场模板存在", templatePath ?? "<null>");
+            if (templatePath is null || !System.IO.File.Exists(templatePath))
+            {
+                return checks.Finish("--case dimension-template");
+            }
+            var templateText = System.IO.File.ReadAllText(templatePath);
+            var (tDoc, _, _) = Harness(resource.McdocTypes, rootType, templateText, docs =>
+            {
+                docs.GameVersion = "26.3";
+                docs.RegistryOptions = new CBHK.Utility.Data.MdocRegistryOptions(resource);
+            });
+            var unknown = tDoc.CountUnknownFields();
+            var kept = (tDoc.PreservedGroup?.Children ?? []).Select(child => child.JsonPath ?? "?").ToList();
+            var anyPaths = tDoc.Nodes
+                .Where(node => node.Type?.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe)
+                .Select(node => node.JsonPath ?? "?")
+                .ToList();
+            Console.WriteLine("[模板] 路径=" + templatePath
+                + " 字节=" + new System.IO.FileInfo(templatePath).Length
+                + " 26.3 下当前版本不存在的键=" + unknown + " → " + string.Join(",", kept)
+                + " 解成 any 的节点=" + anyPaths.Count + " → " + string.Join(",", anyPaths.Take(10)));
+            checks.That(unknown == 0, "模板里没有当前版本不存在的键", "计数=" + unknown + " 键=" + string.Join(",", kept));
+            checks.That(anyPaths.Count == 0, "模板每一行都解出了具体类型", "any 节点=" + string.Join(",", anyPaths.Take(10)));
+            return checks.Finish("--case dimension-template");
+        }
+
         private static void DumpShape(McdocTreeNode node, int depth, int maxDepth)
         {
             var head = McdocPresenterRegistry.Default.Describe(node);
