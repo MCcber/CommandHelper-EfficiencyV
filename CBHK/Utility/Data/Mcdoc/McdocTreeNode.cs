@@ -280,6 +280,12 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>根节点的值被编辑时替换整份文档 JSON（根标量没有父容器可写）。</summary>
         public Action<McdocJsonValue> ReplaceRoot { get; set; }
 
+        /// <summary>
+        /// 刚被删掉的那一条的 AST 实例（一次性）：模型里已经没有它，但文本里还留着它的字，
+        /// 条目级写回要靠它自己的锚点定位要抹掉的那一段。管线取走后清空。
+        /// </summary>
+        public McdocJsonValue TextRemovedItem { get; set; }
+
         /// <summary>列表的"+"：追加一个默认项。</summary>
         private System.Windows.Input.ICommand addItemCommand;
         public System.Windows.Input.ICommand AddItemCommand

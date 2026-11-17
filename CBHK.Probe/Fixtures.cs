@@ -95,6 +95,42 @@ namespace CBHK.Probe
             return builder.ToString();
         }
 
+        /// <summary>大数组档：单个条目数组（条目级操作在 1MB 规模下的语义门禁用）。</summary>
+        public static McdocType BigListRootType()
+        {
+            var item = McdocType.Create(McdocTypeKind.Struct);
+            item.Fields =
+            [
+                Static("id", McdocType.Create(McdocTypeKind.String)),
+                Static("weight", McdocType.Create(McdocTypeKind.Double))
+            ];
+            var list = McdocType.Create(McdocTypeKind.List);
+            list.Item = item;
+            var root = McdocType.Create(McdocTypeKind.Struct);
+            root.Fields = [ Static("items", list) ];
+            return root;
+        }
+
+        /// <summary>大数组的第 i 条文本块（不含分隔逗号）。</summary>
+        public static string BigItemBlock(int index)
+            => "    {\n"
+               + "      \"id\": \"i" + index + "\",\n"
+               + "      \"weight\": 1.5\n"
+               + "    }";
+
+        public static string BigListText(int count)
+        {
+            var builder = new StringBuilder();
+            builder.Append("{\n  \"items\": [\n");
+            for (var index = 0; index < count; index++)
+            {
+                builder.Append(BigItemBlock(index));
+                builder.Append(index == count - 1 ? "\n" : ",\n");
+            }
+            builder.Append("  ]\n}\n");
+            return builder.ToString();
+        }
+
         /// <summary>必填枚举用例：必填结构 → 里面一个必填枚举（带闭合候选）；靠它的兄弟节点按值索引。</summary>
         public static McdocType RequiredEnumHostType()
         {

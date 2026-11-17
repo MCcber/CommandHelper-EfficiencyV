@@ -978,6 +978,29 @@ namespace CBHK.Utility.Data.Mcdoc
                 context.Editor.AttachListItemCommands(node, item);
             }
         }
+
+        /// <summary>
+        /// 建单个条目（数组尾部增删用）：与 <see cref="PopulateChildren"/> 同一份配方，
+        /// 命令由调用方在挂进 Items 之后再挂（CanExecute 要问 Items.IndexOf）。
+        /// </summary>
+        public McdocTreeNode CreateItemNode(McdocTreeNode container, McdocType type, McdocJsonValue itemJson, int index,
+            McdocBuildContext context)
+        {
+            if (container is null || context is null || index < 0) return null;
+            var itemType = McdocHelpers.GetItemType(type);
+            if (itemType is null) return null;
+            var itemKeyNode = new McdocRuntimeNode(index, new McdocType
+            {
+                Kind = McdocTypeKind.Literal,
+                LiteralKind = McdocLiteralKind.Int,
+                Value = index
+            });
+            var item = context.Child(index.ToString(), itemType, itemJson, itemKeyNode,
+                context.Depth + 1, context.JsonPath + "[" + index + "]");
+            if (item is null) return null;
+            item.Parent = container;
+            return item;
+        }
     }
 
     /// <summary>元组 / 原始数组行：定长元素，同样走 Items。</summary>

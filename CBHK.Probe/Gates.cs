@@ -141,8 +141,8 @@ namespace CBHK.Probe
                     "reset 增 " + (projector.ResetCount - baselineResets));
                 checks.That(stats.ElapsedMs <= (op.Structural ? 150 : 20), label + " · 耗时达标（" + (op.Structural ? "≤150ms" : "≤20ms") + "）",
                     stats.ElapsedMs + "ms");
-                if (op.Structural) checks.That(stats.RebuiltNodes > 0 || stats.MemberOps > 0, label + " · 有节点被局部重建",
-                    "rebuilt=" + stats.RebuiltNodes + " memberOps=" + stats.MemberOps);
+                if (op.Structural) checks.That(stats.RebuiltNodes > 0 || stats.MemberOps > 0 || stats.ItemOps > 0, label + " · 有节点被局部重建",
+                    "rebuilt=" + stats.RebuiltNodes + " memberOps=" + stats.MemberOps + " itemOps=" + stats.ItemOps);
                 Contracts(checks, document, projector, label);
             }
 
@@ -4900,6 +4900,298 @@ namespace CBHK.Probe
             return failures == 0 ? 0 : 1;
         }
 
+        /// <summary>
+        /// 条目级写回（模型 → 编辑器）：列表尾部加/删一条时，文本里只插入或抹掉这一条 ——
+        /// 不许重排整个数组（1MB / 934 条的数组重排一次就是一次全文格式化）。
+        /// 正确性红线是"写完仍然逐字等于整篇排版的结果"：条目级拼接必须落出同一份文本，否则下一拍就要整篇接管。
+        /// </summary>
+        public static int TextItemSplice()
+        {
+            if (RealSchema.LocateMcdocRoot() is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var failures = 0;
+            var vm = CreateLootVm(out var document);
+            if (document is null)
+            {
+                Console.WriteLine("[红] VM 建不出文档");
+                return 1;
+            }
+            var editor = new CBHK.Utility.Data.JsonText.JsonTextEditor();
+            vm.AttachJsonEditor(editor);
+            PumpDispatcher();
+            vm.LoadMcdocTree(BigLootTableText(6, 2));
+            PumpDispatcher();
+            var state = editor.State;
+            var entries = document.FindNode("$.pools[0].entries");
+            if (entries is null)
+            {
+                Console.WriteLine("[红] 夹具里找不到 $.pools[0].entries");
+                return 1;
+            }
+            // 预热：夹具是紧凑 JSON，先让排版接管一次（真机首拍也是同一件事），之后每次编辑都该是定向写回
+            var warmSpans = new Dictionary<McdocJsonValue, McdocJsonSpan>();
+            var warmText = McdocJsonFormatter.Format(document.RootJson, 2, warmSpans);
+            state.AdoptModel(document.RootJson, warmText, warmSpans);
+            PumpDispatcher();
+
+            // 条目数看 JSON：Items 是懒建的，节点自己的集合在没建之前不能当计数用
+            static int JsonCount(McdocTreeNode node) => node?.Json?.Items?.Count ?? 0;
+
+            // ① 尾部加一条
+            var before = editor.Text;
+            var wholeBefore = state.WholeWriteCount;
+            var countBefore = JsonCount(entries);
+            entries.AddItemCommand?.Execute(null);
+            PumpDispatcher();
+            var added = document.FindNode("$.pools[0].entries");
+            var inserted = editor.Text.Length - before.Length;
+            var dirty = DirtyRegionLength(before, editor.Text);
+            var tail = added?.Json?.Items is { Count: > 0 } itemsAfterAdd ? itemsAfterAdd[^1] : null;
+            var tailHasAnchor = tail is not null && state.TryGetCurrentSpan(tail, out _, out _);
+            var insertedCanonical = editor.Text == McdocJsonFormatter.Format(document.RootJson, 2);
+            Console.WriteLine("[信息] 尾部加一条：脏区间=" + dirty + " 增字=" + inserted
+                + " 整篇写回=" + state.WholeWriteCount + "/" + wholeBefore + " 条目=" + countBefore + "→" + JsonCount(added)
+                + " 同一实例=" + ReferenceEquals(entries, added)
+                + " 新条目有锚点=" + tailHasAnchor + " 文本=整篇排版 " + insertedCanonical);
+            failures += Assert("尾部加一条 · 不整篇写回", state.WholeWriteCount == wholeBefore, state.WholeWriteCount + "/" + wholeBefore);
+            failures += Assert("尾部加一条 · 条目数 +1", JsonCount(added) == countBefore + 1, JsonCount(added) + "/" + countBefore);
+            failures += Assert("尾部加一条 · 只插入这一条（脏区间 ≤ 增字）", inserted > 0 && dirty <= inserted + 2, dirty + "/" + inserted);
+            failures += Assert("尾部加一条 · 新条目拿到锚点", tailHasAnchor, tail is null ? "没有新条目" : "无锚点");
+            failures += Assert("尾部加一条 · 文本逐字等于整篇排版", insertedCanonical, "不比");
+            failures += Assert("尾部加一条 · 文本与 AST 同代", state.IsInStepWithDocument, "");
+
+            // ② 尾部删一条（列表的 −）
+            var tailJson = added?.Json?.Items is { Count: > 0 } itemsBeforeDelete ? itemsBeforeDelete[^1] : null;
+            before = editor.Text;
+            wholeBefore = state.WholeWriteCount;
+            countBefore = JsonCount(added);
+            added?.RemoveItemCommand?.Execute(null);
+            PumpDispatcher();
+            var shrunk = document.FindNode("$.pools[0].entries");
+            dirty = DirtyRegionLength(before, editor.Text);
+            var removedChars = before.Length - editor.Text.Length;
+            var tailAnchorGone = tailJson is null || !state.Anchors.ContainsKey(tailJson);
+            var removedCanonical = editor.Text == McdocJsonFormatter.Format(document.RootJson, 2);
+            Console.WriteLine("[信息] 尾部删一条：脏区间=" + dirty + " 删字=" + removedChars
+                + " 整篇写回=" + state.WholeWriteCount + "/" + wholeBefore + " 条目=" + countBefore + "→" + JsonCount(shrunk)
+                + " 旧锚点已注销=" + tailAnchorGone + " 文本=整篇排版 " + removedCanonical);
+            failures += Assert("尾部删一条 · 不整篇写回", state.WholeWriteCount == wholeBefore, state.WholeWriteCount + "/" + wholeBefore);
+            failures += Assert("尾部删一条 · 条目数 -1", JsonCount(shrunk) == countBefore - 1, JsonCount(shrunk) + "/" + countBefore);
+            failures += Assert("尾部删一条 · 只抹掉这一段（脏区间 ≤ 删字）", removedChars > 0 && dirty <= removedChars + 2, dirty + "/" + removedChars);
+            failures += Assert("尾部删一条 · 被删条目的锚点已注销", tailAnchorGone, "仍在");
+            failures += Assert("尾部删一条 · 文本逐字等于整篇排版", removedCanonical, "不比");
+            failures += Assert("尾部删一条 · 文本与 AST 同代", state.IsInStepWithDocument, "");
+
+            Console.WriteLine(failures == 0 ? "[绿] 条目级写回：尾部增删只动那一条，文本仍等于整篇排版" : "[红] 条目级写回 红 " + failures + " 条");
+            return failures == 0 ? 0 : 1;
+        }
+
+        // ── §八-9：diff 细粒度（数组尾部单条目 / 任意容器单键）──────────────
+        // 冻结口径（README §八-9）：只有"尾部追加/删除一条"与"单键增删"下沉到结构操作；
+        // 中间插入/删除会让后面的项全部挪位，键序变化也一样 —— 那些必须仍走整段锚点。
+        private static (McdocTreeDocument Document, McdocRowProjector Projector, McdocJsonValue Root, McdocSyncStats Stats, bool Applied, int ResetDelta)
+            ApplyFineGrained(string edited)
+        {
+            var document = new McdocTreeDocument(new McdocTypeIndex());
+            document.Load(Fixtures.RootType(), McdocJsonTextParser.Parse(Fixtures.Text()).Root);
+            var projector = new McdocRowProjector();
+            projector.Reset(document.ProjectionRoots);
+            var baseline = projector.ResetCount;
+            var root = McdocJsonTextParser.Parse(edited).Root;
+            var applied = McdocSyncEngine.TryApply(document, root, out var stats);
+            if (applied) McdocProjectionSync.Apply(projector, document, stats);
+            document.Validate();
+            return (document, projector, root, stats, applied, projector.ResetCount - baseline);
+        }
+
+        private static string StatsText(McdocSyncStats stats)
+            => "itemOps=" + stats.ItemOps + " memberOps=" + stats.MemberOps + " anchors=" + stats.StructureAnchors
+               + " rebuilt=" + stats.RebuiltNodes + " patches=" + stats.ValuePatches + " ms=" + stats.ElapsedMs
+               + (stats.Fallback ? " fallback=" + stats.FallbackReason : "");
+
+        public static int SyncTailInsert()
+        {
+            Deterministic();
+            var text = Fixtures.Text();
+            var checks = new Checks();
+            var last = Fixtures.ListItems - 1;
+
+            // 正例：尾部追加一条
+            var (document, projector, root, stats, applied, resetDelta) = ApplyFineGrained(
+                text.Replace(Fixtures.ItemBlock(last), Fixtures.ItemBlock(last) + ",\n" + Fixtures.ItemBlock(Fixtures.ListItems)));
+            const string label = "尾部加一条（list[60]）";
+            checks.That(applied && !stats.Fallback, label + " · 不回落整篇", StatsText(stats));
+            checks.That(stats.ItemOps == 1 && stats.MemberOps == 0 && stats.StructureAnchors == 0 && stats.RebuiltNodes == 0,
+                label + " · 走条目级操作（不是整段数组锚点）", StatsText(stats));
+            checks.That(resetDelta == 0, label + " · 整表重投影 = 0", "reset 增 " + resetDelta);
+            if (applied)
+            {
+                Contracts(checks, document, projector, label);
+                var node = document.FindNode("$.list[60]");
+                checks.That(node is not null && ReferenceEquals(node.Json, root.Get("list").Items[60]),
+                    label + " · 新条目挂在新 AST 的同一个实例上",
+                    node is null ? "节点不存在" : "json=" + (node.Json is null ? "null" : node.Json.Kind.ToString()));
+                checks.That(ReferenceEquals(document.FindNode("$.list")?.Json, root.Get("list")),
+                    label + " · 容器指向新数组实例", "");
+            }
+
+            // 反例：中间插入会让后面所有条目挪位 —— 必须整段锚点，不许悄悄走条目级
+            var (middleDocument, middleProjector, _, middleStats, middleApplied, _) = ApplyFineGrained(
+                text.Replace(Fixtures.ItemBlock(0) + ",\n", Fixtures.ItemBlock(Fixtures.ListItems) + ",\n" + Fixtures.ItemBlock(0) + ",\n"));
+            const string counter = "中间插一条（list[0] 前）";
+            checks.That(middleApplied && !middleStats.Fallback, counter + " · 不回落整篇", StatsText(middleStats));
+            checks.That(middleStats.ItemOps == 0 && middleStats.StructureAnchors == 1 && middleStats.RebuiltNodes == 1
+                    && middleStats.RebuiltNodeList.Count == 1 && middleStats.RebuiltNodeList[0].JsonPath == "$.list",
+                counter + " · 必须整段数组锚点", StatsText(middleStats) + " rebuiltPath="
+                    + (middleStats.RebuiltNodeList.Count > 0 ? middleStats.RebuiltNodeList[0].JsonPath : "-"));
+            if (middleApplied) Contracts(checks, middleDocument, middleProjector, counter);
+
+            // 规模档（约 1MB、2 万条）：条目级操作不许把整棵树/整张投影带进来
+            const int bigCount = 20000;
+            var bigText = Fixtures.BigListText(bigCount);
+            var bigDocument = new McdocTreeDocument(new McdocTypeIndex());
+            bigDocument.Load(Fixtures.BigListRootType(), McdocJsonTextParser.Parse(bigText).Root);
+            var bigProjector = new McdocRowProjector();
+            bigProjector.Reset(bigDocument.ProjectionRoots);
+            var bigBaseline = bigProjector.ResetCount;
+            var bigEdited = bigText.Replace(Fixtures.BigItemBlock(bigCount - 1),
+                Fixtures.BigItemBlock(bigCount - 1) + ",\n" + Fixtures.BigItemBlock(bigCount));
+            var bigApplied = McdocSyncEngine.TryApply(bigDocument, McdocJsonTextParser.Parse(bigEdited).Root, out var bigStats);
+            if (bigApplied) McdocProjectionSync.Apply(bigProjector, bigDocument, bigStats);
+            bigDocument.Validate();
+            const string bigLabel = "规模档（1MB / 2 万条）尾部加一条";
+            Console.WriteLine("[信息] " + bigLabel + " 文本=" + bigText.Length + " 树节点=" + CountNodes(bigDocument.Nodes) + " 行=" + bigProjector.Rows.Count);
+            checks.That(bigApplied && !bigStats.Fallback, bigLabel + " · 不回落整篇", StatsText(bigStats));
+            checks.That(bigStats.ItemOps == 1 && bigStats.RebuiltNodes == 0 && bigStats.StructureAnchors == 0,
+                bigLabel + " · 走条目级操作", StatsText(bigStats));
+            checks.That(bigProjector.ResetCount == bigBaseline, bigLabel + " · 整表重投影 = 0",
+                "reset 增 " + (bigProjector.ResetCount - bigBaseline));
+            if (bigApplied) Contracts(checks, bigDocument, bigProjector, bigLabel);
+
+            return checks.Finish("--case sync-tail-insert");
+        }
+
+        public static int SyncTailDelete()
+        {
+            Deterministic();
+            var text = Fixtures.Text();
+            var checks = new Checks();
+            var last = Fixtures.ListItems - 1;
+
+            // 正例：尾部删一条
+            var (document, projector, _, stats, applied, resetDelta) = ApplyFineGrained(
+                text.Replace(",\n" + Fixtures.ItemBlock(last), ""));
+            const string label = "尾部删一条（list[59]）";
+            checks.That(applied && !stats.Fallback, label + " · 不回落整篇", StatsText(stats));
+            checks.That(stats.ItemOps == 1 && stats.MemberOps == 0 && stats.StructureAnchors == 0 && stats.RebuiltNodes == 0,
+                label + " · 走条目级操作", StatsText(stats));
+            checks.That(resetDelta == 0, label + " · 整表重投影 = 0", "reset 增 " + resetDelta);
+            if (applied)
+            {
+                checks.That(document.FindNode("$.list").Items.Count == Fixtures.ListItems - 1,
+                    label + " · 容器条目数跟着少一条", "items=" + document.FindNode("$.list").Items.Count);
+                checks.That(document.FindNode("$.list[59]") is null, label + " · 旧条目节点已注销", "");
+                Contracts(checks, document, projector, label);
+            }
+
+            // 反例：删中间那条会让后面全部挪位 —— 必须整段锚点
+            var (middleDocument, middleProjector, _, middleStats, middleApplied, _) = ApplyFineGrained(
+                text.Replace(Fixtures.ItemBlock(0) + ",\n", ""));
+            const string counter = "删中间那条（list[0]）";
+            checks.That(middleApplied && !middleStats.Fallback, counter + " · 不回落整篇", StatsText(middleStats));
+            checks.That(middleStats.ItemOps == 0 && middleStats.StructureAnchors == 1 && middleStats.RebuiltNodes == 1
+                    && middleStats.RebuiltNodeList.Count == 1 && middleStats.RebuiltNodeList[0].JsonPath == "$.list",
+                counter + " · 必须整段数组锚点", StatsText(middleStats));
+            if (middleApplied) Contracts(checks, middleDocument, middleProjector, counter);
+
+            return checks.Finish("--case sync-tail-delete");
+        }
+
+        public static int SyncMemberAdd()
+        {
+            Deterministic();
+            var text = Fixtures.Text();
+            var checks = new Checks();
+            var lastKey = "\"k" + (Fixtures.NestedEntries - 1) + "\": " + (Fixtures.NestedEntries - 1);
+
+            // 正例：非根容器加一个键（map 条目）
+            var (document, projector, root, stats, applied, resetDelta) = ApplyFineGrained(
+                text.Replace(lastKey, lastKey + ",\n    \"kNew\": 7"));
+            const string label = "嵌套容器加键（nested.kNew）";
+            checks.That(applied && !stats.Fallback, label + " · 不回落整篇", StatsText(stats));
+            checks.That(stats.MemberOps == 1 && stats.ItemOps == 0 && stats.StructureAnchors == 0 && stats.RebuiltNodes == 0,
+                label + " · 走单键操作（不是整段容器锚点）", StatsText(stats));
+            checks.That(resetDelta == 0, label + " · 整表重投影 = 0", "reset 增 " + resetDelta);
+            if (applied)
+            {
+                Contracts(checks, document, projector, label);
+                var node = document.FindNode("$.nested.kNew");
+                checks.That(node is not null && ReferenceEquals(node.Json, root.Get("nested").Get("kNew")),
+                    label + " · 新成员挂在新 AST 的同一个实例上",
+                    node is null ? "节点不存在" : "json=" + (node.Json is null ? "null" : node.Json.Kind.ToString()));
+            }
+
+            // 反例：键序变化会改掉所有成员的排行 —— 必须整段容器锚点
+            var (reorderDocument, reorderProjector, _, reorderStats, reorderApplied, _) = ApplyFineGrained(
+                text.Replace("\"one\": 1,\n    \"two\": 2", "\"two\": 2,\n    \"one\": 1"));
+            const string counter = "键序变化（one/two 互换）";
+            checks.That(reorderApplied && !reorderStats.Fallback, counter + " · 不回落整篇", StatsText(reorderStats));
+            checks.That(reorderStats.MemberOps == 0 && reorderStats.ItemOps == 0 && reorderStats.StructureAnchors == 1
+                    && reorderStats.RebuiltNodeList.Count == 1 && reorderStats.RebuiltNodeList[0].JsonPath == "$.nested",
+                counter + " · 必须整段容器锚点", StatsText(reorderStats));
+            if (reorderApplied) Contracts(checks, reorderDocument, reorderProjector, counter);
+
+            return checks.Finish("--case sync-member-add");
+        }
+
+        public static int SyncMemberDelete()
+        {
+            Deterministic();
+            var text = Fixtures.Text();
+            var checks = new Checks();
+            // 容器子级里除了 3 个静态字段还有 map 的"待新增键"占位节点，所以基线要实测而不是数常量
+            var baseline = new McdocTreeDocument(new McdocTypeIndex());
+            baseline.Load(Fixtures.RootType(), McdocJsonTextParser.Parse(text).Root);
+            var nestedBefore = baseline.FindNode("$.nested").Children.Count;
+
+            // 正例：非根容器删一个键
+            var (document, projector, _, stats, applied, resetDelta) = ApplyFineGrained(text.Replace(",\n    \"k0\": 0", ""));
+            const string label = "嵌套容器删键（nested.k0）";
+            checks.That(applied && !stats.Fallback, label + " · 不回落整篇", StatsText(stats));
+            checks.That(stats.MemberOps == 1 && stats.ItemOps == 0 && stats.StructureAnchors == 0 && stats.RebuiltNodes == 0,
+                label + " · 走单键操作", StatsText(stats));
+            checks.That(resetDelta == 0, label + " · 整表重投影 = 0", "reset 增 " + resetDelta);
+            if (applied)
+            {
+                checks.That(document.FindNode("$.nested.k0") is null, label + " · 旧键节点已注销", "");
+                checks.That(document.FindNode("$.nested").Children.Count == nestedBefore - 1,
+                    label + " · 容器子级少一个", "children=" + document.FindNode("$.nested").Children.Count + "/" + nestedBefore);
+                Contracts(checks, document, projector, label);
+            }
+
+            // 反例：删静态字段要走"摘成 ⊕ 行"，不能把节点从 Children 里摘掉
+            var staticText = text.Replace("  \"alpha\": \"alpha-value\",\n", "");
+            var (staticDocument, staticProjector, _, staticStats, staticApplied, staticReset) = ApplyFineGrained(staticText);
+            const string counter = "根层删可选静态字段（alpha）";
+            checks.That(staticApplied && !staticStats.Fallback, counter + " · 不回落整篇", StatsText(staticStats));
+            checks.That(staticStats.MemberOps == 1 && staticStats.ItemOps == 0,
+                counter + " · 走单键操作", StatsText(staticStats));
+            checks.That(staticReset == 0, counter + " · 整表重投影 = 0", "reset 增 " + staticReset);
+            if (staticApplied)
+            {
+                var alpha = staticDocument.FindNode("$.alpha");
+                checks.That(alpha is not null && alpha.Json is null, counter + " · 静态字段摘成一行 ⊕（节点不摘掉）",
+                    alpha is null ? "节点不存在" : "json=" + (alpha.Json is null ? "null" : alpha.Json.Kind.ToString()));
+                Contracts(checks, staticDocument, staticProjector, counter);
+            }
+
+            return checks.Finish("--case sync-member-delete");
+        }
+
         // ── 1MB 编辑成本画像（只打点、不判红）：量清"出文本"这一侧还剩多少 ──
         public static int BigStructure()
         {
@@ -4939,10 +5231,12 @@ namespace CBHK.Probe
             var withSpans = McdocJsonFormatter.Format(document.RootJson, 2, spans);
             var spanMs = sw.Elapsed.TotalMilliseconds;
             Console.WriteLine("[信息] 全量 Format：无区间=" + plainMs.ToString("0.0") + "ms 带区间=" + spanMs.ToString("0.0")
-                + "ms 区间项=" + spans.Count + " 两次同文=" + string.Equals(plain, withSpans, StringComparison.Ordinal));
+                + "ms 区间项=" + spans.Count + " 两次同文=" + string.Equals(plain, withSpans, StringComparison.Ordinal)
+                + " 排版长=" + plain.Length + " 文本长=" + editor.Text.Length
+                + " 条目JSON=" + (entries.Json?.Items?.Count ?? 0) + " 末尾条目排版长=" + (entries.Json?.Items is { Count: > 0 } tailItems ? McdocJsonFormatter.Format(tailItems[^1], 2).Length : -1));
             // 第 1 拍是"载入后的首次排版归一"（夹具是紧凑 JSON，模型文本是标准排版），整篇换一次是应该的；
             // 从第 2 拍起必须全是子树拼接 —— 这才是"结构编辑不再全量 Format"的可执行契约。
-            var structuralFailures = RunEditProbe("结构编辑·加条目", () => entries.AddItemCommand?.Execute(null), editor, state, 1);
+            var structuralFailures = RunEditProbe("结构编辑·加条目", () => entries.AddItemCommand?.Execute(null), editor, state, 1, document);
             if (weight is null)
             {
                 Console.WriteLine("[红] 夹具里找不到 $.pools[0].entries[0].weight");
@@ -4950,14 +5244,21 @@ namespace CBHK.Probe
             }
             var next = 1L;
             RunEditProbe("值编辑·改 weight", () => weight.Value = ++next, editor, state);
+            var textMatchesModel = SameModelText(document, editor.Text);
             Console.WriteLine("[信息] 收尾：整篇写回=" + state.WholeWriteCount + " 定向写回=" + state.SpliceCount
-                + " 文本长=" + editor.Text.Length + " 同代=" + state.IsInStepWithDocument);
+                + " 文本长=" + editor.Text.Length + " 同代=" + state.IsInStepWithDocument
+                + " 文本与模型同义=" + textMatchesModel);
             if (structuralFailures > 0)
             {
                 Console.WriteLine("[红] 结构编辑退化成整篇重排：" + structuralFailures + " 拍没走子树拼接");
                 return 1;
             }
-            Console.WriteLine("[绿] 1MB 结构编辑全程子树拼接（整篇写回不涨、脏区间不越半篇）");
+            if (!textMatchesModel)
+            {
+                Console.WriteLine("[红] 写回把 JSON 写花了：编辑器文本与模型不再同义");
+                return 1;
+            }
+            Console.WriteLine("[绿] 1MB 结构编辑全程子树拼接（整篇写回不涨、脏区间不越半篇、文本与模型同义）");
             return 0;
         }
 
@@ -4968,11 +5269,23 @@ namespace CBHK.Probe
         };
 
         /// <summary>
+        /// 编辑器文本与模型是否语义一致：两边都排版成标准格式再逐字比。
+        /// 不能直接比"文本 == 整篇排版" —— 用户粘进来的紧凑 JSON 没被编辑过的那部分
+        /// 就该保持紧凑，写回只重排脏区间。
+        /// </summary>
+        private static bool SameModelText(McdocTreeDocument document, string text)
+        {
+            if (document is null || text is null) return false;
+            return McdocJsonFormatter.Format(McdocJsonTextParser.Parse(text).Root, 2)
+                == McdocJsonFormatter.Format(document.RootJson, 2);
+        }
+
+        /// <summary>
         /// 跑同一笔编辑 5 拍并逐拍打点。<paramref name="localFrom"/> 之后的拍必须走子树拼接：
         /// 整篇写回不许再涨、脏区间不许超过文本一半（整篇重排时它就是整篇）。
         /// </summary>
         private static int RunEditProbe(string label, Action edit, CBHK.Utility.Data.JsonText.JsonTextEditor editor, JsonTextState state,
-            int localFrom = -1)
+            int localFrom = -1, McdocTreeDocument document = null)
         {
             var samples = new List<double>();
             var failures = 0;
@@ -4994,9 +5307,16 @@ namespace CBHK.Probe
                     if (delta >= 0.05) parts.Add(name + "=" + delta.ToString("0.0"));
                 }
                 var dirty = DirtyRegionLength(text, editor.Text);
+                var same = document is null || SameModelText(document, editor.Text);
                 Console.WriteLine("[拍] " + label + " #" + (i + 1) + " 墙钟=" + sw.Elapsed.TotalMilliseconds.ToString("0.0") + "ms"
-                    + " 脏=" + dirty + " 整篇=" + state.WholeWriteCount
+                    + " 脏=" + dirty + " 长度=" + (text?.Length ?? 0) + "→" + (editor.Text?.Length ?? 0) + " 整篇=" + state.WholeWriteCount
+                    + (document is null ? "" : " 同义=" + same + " JSON节点=" + CountJsonNodes(document.RootJson))
                     + " | " + string.Join(" ", parts));
+                if (!same)
+                {
+                    Console.WriteLine("[红] " + label + " #" + (i + 1) + " 文本与模型脱钩（写回把 JSON 写花了）");
+                    failures++;
+                }
                 if (i == localFrom) wholeBase = state.WholeWriteCount;
                 if (localFrom >= 0 && i > localFrom)
                 {

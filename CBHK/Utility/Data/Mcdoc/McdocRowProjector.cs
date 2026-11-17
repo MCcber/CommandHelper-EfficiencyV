@@ -204,6 +204,18 @@ namespace CBHK.Utility.Data.Mcdoc
             return true;
         }
 
+        /// <summary>
+        /// 容器的子级集合变了、但容器节点本身没换（细粒度增删条目/成员）：只重拼这一行的子行。
+        /// 容器行自己必须留着 —— 换成 RefreshAround 会连它的行一起重拼，而且顶层容器没有父行可挂。
+        /// </summary>
+        public bool RefreshChildren(McdocTreeNode node)
+        {
+            var row = Find(node);
+            if (row is null) return RefreshAround(node);
+            SpliceSubtree(row);
+            return true;
+        }
+
         public void SpliceSubtree(McdocRow row, bool ensureExpanded = false)
         {
             if (row is null) return;

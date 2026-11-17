@@ -531,6 +531,7 @@ namespace CBHK.ViewModel.Generator
             else syncFastCount++;
             syncDebugSuffix = "sync fast#" + syncFastCount + " fallback#" + syncFallbackCount
                 + " anchors#" + stats.StructureAnchors + " rebuilt#" + stats.RebuiltNodes
+                + " item#" + stats.ItemOps + " member#" + stats.MemberOps
                 + " patch#" + stats.ValuePatches + " unbuilt#" + stats.UnbuiltPatches
                 + " ms#" + stats.ElapsedMs + " phase=" + SyncPhase
                 + (stats.Fallback && !string.IsNullOrEmpty(stats.FallbackReason) ? " why=" + stats.FallbackReason : "");
@@ -817,9 +818,25 @@ namespace CBHK.ViewModel.Generator
         private bool TrySpliceDirtySubtree()
         {
             if (jsonEditor is null || document is null) return false;
-            var dirty = document.TakeTextDirtyNode();
+            var dirty = document.TakeTextDirtyNode(out var removedItem);
             if (dirty is null) return false;
             var state = jsonEditor.State;
+            // 条目级：列表尾部增/删一条时文本里只需要插入或抹掉这一条 —— 重排整个数组在 1MB 档就是一次全文格式化
+            if (dirty.Json is not null)
+            {
+                if (removedItem is not null && state.SpliceItemDelete(document.RootJson, dirty.Json, removedItem))
+                {
+                    lastSplicedNode = dirty;
+                    McdocWriteTrace.Log("条目级写回命中", null, "path=" + (dirty.JsonPath ?? "?") + " 删除一条");
+                    return true;
+                }
+                if (state.SpliceItemInsert(document.RootJson, dirty.Json))
+                {
+                    lastSplicedNode = dirty;
+                    McdocWriteTrace.Log("条目级写回命中", null, "path=" + (dirty.JsonPath ?? "?") + " 追加一条");
+                    return true;
+                }
+            }
             // 脏节点自己可能刚被重建（换成了新的 AST 对象，还没有锚点）：往上爬到最近一个有锚点的祖先，
             // 那一层的文本区间一定包含这次变化
             var node = dirty;

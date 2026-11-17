@@ -91,11 +91,19 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         public McdocTreeNode TextDirtyNode { get; set; }
 
+        /// <summary>
+        /// 这一次结构编辑是"删掉了数组尾部一条"时，被删掉的那个 AST 实例（一次性）。
+        /// 它已经不在模型里，文本侧只能靠它自己的锚点定位要抹掉的那一段。
+        /// </summary>
+        public McdocJsonValue TextDirtyRemovedItem { get; set; }
+
         /// <summary>取走脏子树标记（取走即清：一次脏标记只配一次回写）。</summary>
-        public McdocTreeNode TakeTextDirtyNode()
+        public McdocTreeNode TakeTextDirtyNode(out McdocJsonValue removedItem)
         {
             var node = TextDirtyNode;
+            removedItem = TextDirtyRemovedItem;
             TextDirtyNode = null;
+            TextDirtyRemovedItem = null;
             return node;
         }
 
@@ -784,13 +792,149 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         public void ClearRootMember(McdocTreeNode node)
         {
+            ClearMember(node);
+            nodeIndex = null;
+        }
+
+        /// <summary>
+        /// 建一个**非根**容器里的成员节点（容器里出现了原本没有的键）。静态字段 / 动态条目 / 未声明字段
+        /// 三条分支仍由表现器那一份规则决定，与根层 CreateRootMember 同源。
+        /// </summary>
+        public McdocTreeNode CreateMemberNode(McdocTreeNode container, string key, McdocJsonValue containerJson)
+        {
+            if (container is null || string.IsNullOrEmpty(key)) return null;
+            var structType = container.Type;
+            if (structType?.Kind != McdocTypeKind.Struct) return null;
+            if (McdocPresenterRegistry.Default.For(structType) is not StructNodePresenter presenter) return null;
+            try
+            {
+                var context = new McdocBuildContext
+                {
+                    Runtime = CreateRuntime(),
+                    Factory = new McdocNodeFactory { PreservedGroup = PreservedGroup, OnChildrenBuilt = IndexChildrenBuilt },
+                    Self = container.ValueNode,
+                    KeyNode = container.ValueNode?.RuntimeKey,
+                    Depth = container.Depth,
+                    Narrow = true,
+                    JsonPath = container.JsonPath ?? "$",
+                    Visiting = [],
+                    Budget = new McdocNodeBudget(McdocNodeFactory.MaxNodes),
+                    OnValueChanged = NodeValueChanged,
+                    OnStructureChanged = NodeStructureChanged,
+                };
+                var node = presenter.CreateMemberNode(container, structType, containerJson ?? container.Json, key, context);
+                if (node is null) return null;
+                node.Parent = container;
+                node.JsonPath = (container.JsonPath ?? "$") + "." + key;
+                return node;
+            }
+            catch (Exception error)
+            {
+                Log.Add("[McdocTreeDocument] 成员构建失败: " + key + " — " + error.Message);
+                return null;
+            }
+        }
+
+        /// <summary>把一个成员挂进非根容器（按新 JSON 的键序插进子级），并补进路径索引。</summary>
+        public bool InsertMemberNode(McdocTreeNode container, McdocTreeNode node, IReadOnlyList<string> keyOrder)
+        {
+            if (container is null || node is null || container.Children.Contains(node)) return false;
+            node.Parent = container;
+            container.Children.Insert(MemberInsertIndex(container, node.FieldName, keyOrder), node);
+            IndexSubtree(node);
+            return true;
+        }
+
+        /// <summary>把一个成员从非根容器上摘掉（文档里没有这个键、schema 也没声明它）。</summary>
+        public bool RemoveMemberNode(McdocTreeNode container, McdocTreeNode node)
+        {
+            if (container is null || node is null || !container.Children.Remove(node)) return false;
+            node.Parent = null;
+            DropIndexSubtree(node);
+            return true;
+        }
+
+        /// <summary>
+        /// 文档里删掉了一个**声明过的**非根键：行必须留成一行 ⊕（与整树重建一致），子级整片作废。
+        /// </summary>
+        public void ClearMember(McdocTreeNode node)
+        {
             if (node is null) return;
             node.Json = null;
             node.Children.Clear();
             node.Items.Clear();
             node.SelectedUnionChildren.Clear();
             node.ChildrenBuilt = true;
-            nodeIndex = null;
+            DropIndexSubtree(node);
+        }
+
+        /// <summary>新成员在容器子级里的位置：按新 JSON 的键序，找不到后继就排到最后。</summary>
+        private static int MemberInsertIndex(McdocTreeNode container, string key, IReadOnlyList<string> keyOrder)
+        {
+            var rank = RankOf(key, keyOrder);
+            for (var index = 0; index < container.Children.Count; index++)
+            {
+                var child = container.Children[index];
+                if (child is null || string.IsNullOrEmpty(child.FieldName)) continue;
+                if (RankOf(child.FieldName, keyOrder) > rank) return index;
+            }
+            return container.Children.Count;
+        }
+
+        /// <summary>建一个数组条目节点（尾部追加用）：与 ListNodePresenter.PopulateChildren 同源。</summary>
+        public McdocTreeNode CreateItemNode(McdocTreeNode listNode, McdocJsonValue itemJson, int index)
+        {
+            if (listNode is null || index < 0) return null;
+            var listType = listNode.Type;
+            if (listType?.Kind != McdocTypeKind.List) return null;
+            if (McdocPresenterRegistry.Default.For(listType) is not ListNodePresenter presenter) return null;
+            try
+            {
+                var context = new McdocBuildContext
+                {
+                    Runtime = CreateRuntime(),
+                    Factory = new McdocNodeFactory { PreservedGroup = PreservedGroup, OnChildrenBuilt = IndexChildrenBuilt },
+                    Self = listNode.ValueNode,
+                    KeyNode = listNode.ValueNode?.RuntimeKey,
+                    Depth = listNode.Depth,
+                    Narrow = true,
+                    JsonPath = listNode.JsonPath ?? "$",
+                    Visiting = [],
+                    Budget = new McdocNodeBudget(McdocNodeFactory.MaxNodes),
+                    OnValueChanged = NodeValueChanged,
+                    OnStructureChanged = NodeStructureChanged,
+                };
+                var node = presenter.CreateItemNode(listNode, listType, itemJson, index, context);
+                if (node is null) return null;
+                node.Parent = listNode;
+                return node;
+            }
+            catch (Exception error)
+            {
+                Log.Add("[McdocTreeDocument] 条目构建失败: " + index + " — " + error.Message);
+                return null;
+            }
+        }
+
+        /// <summary>把条目挂进 Items（命令在挂上之后再挂：CanExecute 要问 Items.IndexOf）。</summary>
+        public bool InsertItemNode(McdocTreeNode listNode, McdocTreeNode item, int index)
+        {
+            if (listNode is null || item is null || listNode.Items.Contains(item)) return false;
+            if (index < 0 || index > listNode.Items.Count) index = listNode.Items.Count;
+            item.Parent = listNode;
+            listNode.Items.Insert(index, item);
+            McdocCollectionEditor.Default.AttachListItemCommands(listNode, item);
+            IndexSubtree(item);
+            return true;
+        }
+
+        /// <summary>把条目从 Items 上摘掉（尾部删除用）。</summary>
+        public bool RemoveItemNode(McdocTreeNode listNode, McdocTreeNode item)
+        {
+            if (listNode is null || item is null || !listNode.Items.Remove(item)) return false;
+            item.Parent = null;
+            DropIndexSubtree(item);
+            return true;
         }
 
         /// <summary>摊平根的顶层列表就是根的子级：换完成员后按同一顺序重排，投影以它为准。</summary>

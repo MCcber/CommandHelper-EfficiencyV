@@ -855,6 +855,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
                 return;
             }
+            node.TextRemovedItem = array.Items[index];
             array.Items.RemoveAt(index);
             NotifyItemCommandState(node);
             // 数组少了项：子级一律按当前文档重建（少了这一步，通知被吞掉时就会留下"文档里没有、行还在"的残影）
@@ -1025,6 +1026,7 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 return;
             }
+            node.TextRemovedItem = array.Items[array.Items.Count - 1];
             array.Items.RemoveAt(array.Items.Count - 1);
             NotifyStructure(node);
         }

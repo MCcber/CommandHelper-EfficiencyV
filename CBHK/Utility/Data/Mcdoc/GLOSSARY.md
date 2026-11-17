@@ -94,6 +94,15 @@
 **子树写回（subtree splice）**
 结构编辑的写回通道：只给「离脏节点最近的仍有锚点的祖先」出一段局部文本（`McdocJsonFormatter.FormatAt`），在该节点的文本区间里做一次公共前后缀裁剪后拼接，区间外的锚点一个都不动。判据是 `WholeWriteCount` 不涨而 `SpliceCount` 涨、脏区间远小于全文；前置条件（同根 / 同代 / 锚点可信）不成立时退回整篇排版。
 
+**条目级写回（item splice）**
+列表尾部增删一条时的写回通道：`JsonTextState.SpliceItemInsert` 在最后一条的锚点之后插 `,\n<缩进><这一条的排版>`，`SpliceItemDelete` 用被删条目的锚点定位、从闭合括号往回确认「它就是最后一条」后连同前面的逗号一起抹掉。前置条件是子树写回那套守卫再加一条「新条目还没有锚点、再前一条有锚点」。删掉的条目模型里已经没有了，靠 `McdocTreeNode.TextRemovedItem` 把锚点带过来；不满足就退回子树写回（仍是子树级，不整篇）。
+
+**条目操作 / 单键操作（item op / member op）**
+`McdocSyncEngine` 下沉到结构层的两种细粒度操作：数组**尾部**增删一条（`ItemOps`）与任意结构容器增删**一个键**（`MemberOps`）。中间插删与键序变化不在其列（`JsonPath` 会整体挪位，仍整段当锚点）。op 与锚点各受 `MaxAnchors = 20` 约束，不合计。
+
+**细粒度退化（fine-grained degrade）**
+单个 item/member op 走不下去时的出口：只把**该容器自己**记成锚点并写 `FallbackReason = 细粒度退化 …`，不整篇回落。只有锚点预算或覆盖判据不满足才退回整篇重建。
+
 **整篇接管（whole write）**
 换一代文本（`Reload` / 页面载入）的唯一出口：物理写回同样只动真正变过的那一段，但随后全文重解析、Root 换成文本里的那棵树、锚点整表重建。计数 `WholeWriteCount`，门禁断言「树侧编辑一次都不涨」。
 

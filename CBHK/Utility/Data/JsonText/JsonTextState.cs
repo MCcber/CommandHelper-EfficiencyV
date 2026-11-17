@@ -553,7 +553,82 @@ namespace CBHK.Utility.Data.JsonText
 
             var localSpans = new Dictionary<McdocJsonValue, McdocJsonSpan>();
             var target = McdocJsonFormatter.FormatAt(node, IndentLevelAt(valueStart, indentSize), indentSize, localSpans);
-            // 脏区间里"这一代不再存在"的锚点必须在写之前按旧偏移点出来：写完它们会被 AvalonEdit 平移，
+            return WriteSubtreeRegion(valueStart, valueLength, target, localSpans);
+        }
+
+        /// <summary>
+        /// 条目级定向写回（模型 → 编辑器）：数组尾部刚追加了一条，只把这一条的文本插进去 —— 不重排整个数组。
+        /// 934 条的 1MB 数组重排一次就是一次全文格式化，而追加只多出几十个字符。
+        /// 要求"新尾巴还没有锚点、再前一条有锚点"：不满足就说明变化不止一条（或文本里已经有这条），返回 false 让调用方回落。
+        /// </summary>
+        public bool SpliceItemInsert(McdocJsonValue modelRoot, McdocJsonValue container, int indentSize = 2)
+        {
+            if (writing || indentSize <= 0 || container?.Items is not { Count: > 0 } items) return false;
+            if (!anchorsTrusted || !ReferenceEquals(Root, modelRoot) || !IsInStepWithDocument) return false;
+            if (!TryGetCurrentSpan(container, out var containerStart, out _)) return false;
+            var item = items[^1];
+            if (item is null || TryGetAnchors(item, out _)) return false;
+            if (items.Count >= 2 && !TryGetAnchors(items[^2], out _)) return false;
+
+            var level = IndentLevelAt(containerStart, indentSize);
+            var localSpans = new Dictionary<McdocJsonValue, McdocJsonSpan>();
+            var itemText = McdocJsonFormatter.FormatAt(item, level + 1, indentSize, localSpans);
+            var indent = Indent(level + 1, indentSize);
+            if (items.Count >= 2)
+            {
+                if (!TryGetCurrentSpan(items[^2], out var prevStart, out var prevLength)) return false;
+                // 前一条的末尾正好是插入点：逗号、换行、缩进都是这一段新文本，条目本体从缩进后面开始
+                var target = ",\n" + indent + itemText;
+                return WriteSubtreeRegion(prevStart + prevLength, 0, target, localSpans, leadingOffset: 2 + indent.Length);
+            }
+            // 文本里此前是空数组（"[]"）：换行 + 条目 + 收尾换行一起补上
+            return WriteSubtreeRegion(containerStart + 1, 0, "\n" + indent + itemText + "\n" + Indent(level, indentSize),
+                localSpans, leadingOffset: 1 + indent.Length);
+        }
+
+        /// <summary>
+        /// 条目级定向写回（模型 → 编辑器）：数组尾部刚删掉一条，只把"上一条后面的逗号 + 这一条"抹掉。
+        /// <paramref name="removedItem"/> 必须是刚被删掉的那个 AST 实例（已经不在模型里，只能靠锚点定位）。
+        /// 删的不是尾部、或者这一条后面还有内容，返回 false 让调用方回落 —— 删中段会让后面所有下标错位。
+        /// </summary>
+        public bool SpliceItemDelete(McdocJsonValue modelRoot, McdocJsonValue container, McdocJsonValue removedItem,
+            int indentSize = 2)
+        {
+            if (writing || indentSize <= 0 || container is null || removedItem is null) return false;
+            if (!anchorsTrusted || !ReferenceEquals(Root, modelRoot) || !IsInStepWithDocument) return false;
+            if (!TryGetCurrentSpan(container, out var containerStart, out var containerLength)) return false;
+            if (!TryGetCurrentSpan(removedItem, out var itemStart, out var itemLength)) return false;
+            var text = document.Text ?? "";
+            var closing = containerStart + containerLength - 1;
+            var itemEnd = itemStart + itemLength;
+            if (closing <= containerStart || closing >= text.Length || itemEnd > closing) return false;
+            // 这一条之后必须只剩空白：后面还有条目就不能条目级删（下标全要挪）
+            var cursor = closing - 1;
+            while (cursor > containerStart && char.IsWhiteSpace(text[cursor])) cursor--;
+            if (cursor + 1 != itemEnd) return false;
+            // 前面是逗号 → 连逗号一起删；前面是开括号 → 只剩这一条，把括号之间整段清空（空数组排版就是 "[]"）
+            var comma = itemStart - 1;
+            while (comma > containerStart && char.IsWhiteSpace(text[comma])) comma--;
+            if (comma > containerStart && text[comma] == ',')
+                return WriteSubtreeRegion(comma, itemEnd - comma, "", NoSpans);
+            return WriteSubtreeRegion(containerStart + 1, closing - containerStart - 1, "", NoSpans);
+        }
+
+        private static readonly Dictionary<McdocJsonValue, McdocJsonSpan> NoSpans = new();
+
+        private static string Indent(int level, int indentSize)
+            => level <= 0 ? "" : new string(' ', level * indentSize);
+
+        /// <summary>
+        /// 这一段文本重排后的落笔：算公共前后缀、只替换中间变过的字符，再把这一段里的节点按
+        /// "局部区间 + 段起点"重新登记锚点。所有定向写回（整棵子树 / 数组尾条目增删）共用这一段算术。
+        /// <paramref name="leadingOffset"/> = 目标文本里第一个值之前那段前缀的长度（条目插入时那是逗号与缩进）。
+        /// </summary>
+        private bool WriteSubtreeRegion(int valueStart, int valueLength, string target,
+            Dictionary<McdocJsonValue, McdocJsonSpan> localSpans, int leadingOffset = 0)
+        {
+            var valueEnd = valueStart + valueLength;
+            // 区间里"这一代不再存在"的锚点必须在写之前按旧偏移点出来：写完它们会被 AvalonEdit 平移，
             // 再按偏移判重叠就会把区间之后的锚点误当成旧的删掉
             var stale = CollectRegionAnchors(valueStart, valueEnd, localSpans);
 
@@ -582,22 +657,26 @@ namespace CBHK.Utility.Data.JsonText
             {
                 foreach (var key in stale) anchors.Remove(key);
             }
-            // 子树里的每个节点都按"局部区间 + 子树起点"重新登记：偏移全变了，且新增节点此前根本没有锚点
+            // 这一段里的每个节点都按"局部区间 + 段起点"重新登记：偏移全变了，且新增节点此前根本没有锚点
+            var origin = valueStart + leadingOffset;
             foreach (var pair in localSpans)
             {
                 var span = pair.Value;
-                anchors[pair.Key] = CreateNodeAnchors(span.ValueStart + valueStart, span.ValueEnd + valueStart,
-                    span.PairStart + valueStart, span.PairEnd + valueStart);
+                anchors[pair.Key] = CreateNodeAnchors(span.ValueStart + origin, span.ValueEnd + origin,
+                    span.PairStart + origin, span.PairEnd + origin);
             }
             RootText = document.Text;
             Generation++;
             RestoreSplicedCaret(caret, valueStart + prefix, removed, inserted);
             McdocWriteTrace.Log("子树写回", null, "起=" + valueStart + " 删=" + removed + " 增=" + inserted
-                + " 子树长=" + target.Length + " 节点=" + localSpans.Count);
+                + " 段长=" + target.Length + " 节点=" + localSpans.Count);
             return string.Equals(document.Text, RootText, StringComparison.Ordinal);
         }
 
-        /// <summary>写之前先把"落在区间里、但这一代已经不在目标集合里"的锚点名字点出来。</summary>
+        /// <summary>
+        /// 写之前先把"整段落在区间里、但这一代已经不在目标集合里"的锚点名字点出来。
+        /// 判据是**完全包含**而不是相交：区间端点常常贴着容器边界，用相交会把容器自己的锚点也当成旧的删掉。
+        /// </summary>
         private List<McdocJsonValue> CollectRegionAnchors(int start, int end,
             IDictionary<McdocJsonValue, McdocJsonSpan> targetSpans)
         {
@@ -606,7 +685,7 @@ namespace CBHK.Utility.Data.JsonText
             {
                 var anchor = pair.Value;
                 if (anchor is null || !anchor.IsValid) continue;
-                if (anchor.ValueEnd.Offset < start || anchor.ValueStart.Offset > end) continue;
+                if (anchor.ValueStart.Offset < start || anchor.ValueEnd.Offset > end) continue;
                 if (targetSpans.ContainsKey(pair.Key)) continue;
                 (stale ??= []).Add(pair.Key);
             }

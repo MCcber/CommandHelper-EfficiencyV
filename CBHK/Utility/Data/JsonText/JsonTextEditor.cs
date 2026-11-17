@@ -52,6 +52,15 @@ namespace CBHK.Utility.Data.JsonText
         public bool SpliceSubtree(McdocJsonValue modelRoot, McdocJsonValue node, int indentSize = 2)
             => State.SpliceSubtree(modelRoot, node, indentSize);
 
+        /// <summary>数组尾部追加了一条：只把这一条插进文本（不重排整个数组）。</summary>
+        public bool SpliceItemInsert(McdocJsonValue modelRoot, McdocJsonValue container, int indentSize = 2)
+            => State.SpliceItemInsert(modelRoot, container, indentSize);
+
+        /// <summary>数组尾部删掉了一条：只把这一条连它前面的逗号抹掉。</summary>
+        public bool SpliceItemDelete(McdocJsonValue modelRoot, McdocJsonValue container, McdocJsonValue removedItem,
+            int indentSize = 2)
+            => State.SpliceItemDelete(modelRoot, container, removedItem, indentSize);
+
         /// <summary>编辑器文本已不代表模型（根换支 / 被顶回）：写同步并把 State 的 Root 指向模型。</summary>
         public bool AdoptModel(McdocJsonValue root, string text, System.Collections.Generic.IDictionary<McdocJsonValue, McdocJsonSpan> spans)
             => State.AdoptModel(root, text, spans);

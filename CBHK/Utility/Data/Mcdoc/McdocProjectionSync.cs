@@ -24,6 +24,12 @@ namespace CBHK.Utility.Data.Mcdoc
                     projector.Reset(document.ProjectionRoots);
                 }
             }
+            // 细粒度结构操作改的是容器子级本身（没重建节点）：必须把这一段的行重拼一遍，
+            // 否则新条目/新成员没有行（节点比行多），删掉的条目还会留下残骸行。
+            foreach (var node in stats.RefreshedNodeList)
+            {
+                if (!projector.RefreshChildren(node)) projector.Reset(document.ProjectionRoots);
+            }
             // 重建了节点却没拿到对应的行（局部拼接没覆盖到）：整表重置，绝不让投影停在上一代
             if (!splicedTopLevel && stats.RebuiltNodes > 0 && stats.RebuiltNodeList.Count != stats.RebuiltNodes)
             {

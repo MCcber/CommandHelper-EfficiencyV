@@ -388,9 +388,13 @@ namespace CBHK.Utility.Data.Mcdoc
         private void MarkTextDirty(McdocTreeNode node, List<McdocTreeNode> written = null)
         {
             if (Document is null) return;
+            // 条目级删除要带出"被删掉的那个值"（模型里已经没有它，文本侧只能靠它的锚点定位）
+            var removedItem = node?.TextRemovedItem;
+            if (node is not null) node.TextRemovedItem = null;
             if (node is null)
             {
                 Document.TextDirtyNode = null;
+                Document.TextDirtyRemovedItem = null;
                 return;
             }
             if (written is not null)
@@ -401,11 +405,13 @@ namespace CBHK.Utility.Data.Mcdoc
                     if (!IsSameOrBelow(other.JsonPath, node.JsonPath))
                     {
                         Document.TextDirtyNode = null;
+                        Document.TextDirtyRemovedItem = null;
                         return;
                     }
                 }
             }
             Document.TextDirtyNode = node;
+            Document.TextDirtyRemovedItem = removedItem;
         }
 
         /// <summary>路径相等或在其之下（下一个字符必须是 <c>.</c> 或 <c>[</c>，否则 $.ab 会算成 $.a 的子级）。</summary>
