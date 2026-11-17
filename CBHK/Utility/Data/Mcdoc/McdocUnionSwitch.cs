@@ -66,6 +66,15 @@ namespace CBHK.Utility.Data.Mcdoc
             if (node is null) return false;
             if (IsUnsetOption(option))
             {
+                // 幂等：已经处在"干净的未设置"（键没了、分支子级与分支壳都清空了）就报"没变化"。
+                // 这条是防栈溢出的兜底：ComboBox 的双向绑定会无条件把选中项写回 setter，
+                // 若每次 unset 都报 true，setter 里的通知会再触发一次重读/写回，同步递归到栈溢出
+                // （StackOverflowException CLR 捕获不到，日志里一个字都留不下）。
+                if (IsUnsetOption(node.SelectedUnionTypeName) && node.Json is null
+                    && node.SelectedUnionChildren.Count == 0 && node.SelectedUnionBranchNode is null)
+                {
+                    return false;
+                }
                 // unset 语义 = "这个键不存在"：删键 + 清分支子级 + 清行内镜像（编辑器/候选/形态后缀）+ 折叠。
                 // 只删键是不够的：ScalarEditorKind / EnumOptionList 是分支镜像，留着就会在行上留一个
                 // 写着旧值、点不动的死编辑器（"选了未设置，行里还有 minecraft:allay"）。
@@ -79,11 +88,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 var entryUnset = node.IsMapEntry;
                 if (entryUnset) McdocCollectionEditor.Default.UnsetEntryValue(node);
                 else node.RemoveFieldCommand?.Execute(null);
-                node.SetUnionTypeSilently(new EnumMember
-                {
-                    Name = McdocNodePresenter.UnsetLabel,
-                    Value = new MetaValue { LiteralValue = -1 },
-                });
+                node.SetUnionTypeSilently(McdocNodePresenter.UnsetOption);
                 node.ClearUnionBranch();
                 node.UnionSelectionExplicit = false;
                 node.IsExpanded = false;
@@ -125,11 +130,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 // 并挂可见诊断。否则行上会留下一个"看着有编辑器、其实写不出合法值"的死分支。
                 if (IsUnresolvedMember(node, node.SelectedUnionMember) || IsUnresolvedBranch(node))
                 {
-                    node.SetUnionTypeSilently(new EnumMember
-                    {
-                        Name = McdocNodePresenter.UnsetLabel,
-                        Value = new MetaValue { LiteralValue = -1 },
-                    });
+                    node.SetUnionTypeSilently(McdocNodePresenter.UnsetOption);
                     node.ClearUnionBranch();
                     node.Error = "该分支的类型解不出来（当前上下文缺所需键），已回到未设置";
                     reverted = true;

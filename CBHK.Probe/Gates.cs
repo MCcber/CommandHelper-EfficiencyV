@@ -3950,6 +3950,156 @@ namespace CBHK.Probe
             return checks.Finish("--case player-branch-add");
         }
 
+/// <summary>
+        /// 回归「player 选回（未设置）→ StackOverflowException」：ComboBox 双向绑定的重读/写回环，
+        /// 只要 unset 分支不幂等，就会一路递归到栈溢出（且捕获不到、日志里什么都留不下）。
+        /// </summary>
+        public static int UnionUnsetRecursion()
+        {
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            var blockStateDir = LocateBlockStateDirectory();
+            const string json = @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": { ""player"": { ""minecraft:type_specific/player"": {} } } } } }";
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("advancement"), json,
+                doc =>
+                {
+                    doc.GameVersion = "26.3";
+                    if (blockStateDir is not null) doc.RegistryOptions = RegistryOptionsFor(blockStateDir);
+                });
+            var checks = new Checks();
+            var conditions = document.FindNode("$.criteria.a.conditions");
+            conditions?.EnsureChildren();
+            var playerNode = McdocPresenterRegistry.Default.Children(conditions)
+                .FirstOrDefault(child => string.Equals(child?.FieldName, "player", StringComparison.Ordinal));
+            checks.That(playerNode is not null, "conditions 下有 player 行");
+            if (playerNode is null) return checks.Finish("--case union-unset-recursion");
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+            var row = projector.Find(playerNode);
+            checks.That(row is not null, "player 行已投影");
+            if (row is null) return checks.Finish("--case union-unset-recursion");
+            var unset = row.UnionOptions?.FirstOrDefault(McdocUnionSwitch.IsUnsetOption);
+            checks.That(unset is not null, "分支下拉里有（未设置）",
+                string.Join("|", (row.UnionOptions ?? []).Select(option => option?.Name ?? "?")));
+            if (unset is null) return checks.Finish("--case union-unset-recursion");
+
+            // 模拟 WPF ComboBox 的双向绑定：源抬通知 → 目标重读 → 实例不同就写回源。
+            // 真机上这条环直接递归到栈溢出（截图断在 McdocRow.OnPropertyChanged）。
+            var rounds = 0;
+            var last = row.SelectedUnionOption;
+            System.ComponentModel.PropertyChangedEventHandler sink = (_, args) =>
+            {
+                if (args.PropertyName is not ("" or "SelectedUnionOption" or "Kind" or "Head")) return;
+                var option = row.SelectedUnionOption;
+                if (ReferenceEquals(option, last)) return;
+                last = option;
+                if (++rounds > 20) return;   // 环路保护：真递归会在这里被截断，靠断言判红
+                row.SelectedUnionOption = option;
+            };
+            row.PropertyChanged += sink;
+            try
+            {
+                row.SelectedUnionOption = unset;
+            }
+            finally
+            {
+                row.PropertyChanged -= sink;
+            }
+
+            checks.That(rounds <= 3, "（未设置）写回不会无限递归", "重读轮数=" + rounds);
+            checks.That(playerNode.Json is null, "键已从文档里删掉",
+                "json=" + (playerNode.Json?.Kind.ToString() ?? "<null>"));
+            checks.That(playerNode.SelectedUnionChildren.Count == 0, "分支子级清空了",
+                "子级=" + playerNode.SelectedUnionChildren.Count);
+            var stored = document.RootJson?.Get("criteria")?.Get("a")?.Get("conditions")?.Get("player");
+            checks.That(stored is null, "文档里 player 键确实没了",
+                "json=" + (stored?.Kind.ToString() ?? "<null>"));
+            checks.That(!McdocUnionSwitch.SwitchTo(playerNode, unset), "已经未设置时再切（未设置）报\"没变化\"");
+            return checks.Finish("--case union-unset-recursion");
+        }
+
+        /// <summary>
+        /// 回归「被 Tuple 解出来的动态键节点点 ⊕ 后，枚举下拉应选中下一位成员而不是空白」：
+        /// 用掉的成员已从候选里剔掉，占位行重建后必须落到它的下一位（绕回开头）。
+        /// </summary>
+        public static int KeySelectAfterAdd()
+        {
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            var blockStateDir = LocateBlockStateDirectory();
+            const string json = @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": {} } } }";
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("advancement"), json,
+                doc =>
+                {
+                    doc.GameVersion = "26.3";
+                    if (blockStateDir is not null) doc.RegistryOptions = RegistryOptionsFor(blockStateDir);
+                });
+            var checks = new Checks();
+            var conditions = document.FindNode("$.criteria.a.conditions");
+            conditions?.EnsureChildren();
+            var playerNode = McdocPresenterRegistry.Default.Children(conditions)
+                .FirstOrDefault(child => string.Equals(child?.FieldName, "player", StringComparison.Ordinal));
+            checks.That(playerNode is not null, "conditions 下有 player 行");
+            if (playerNode is null) return checks.Finish("--case key-select-after-add");
+            var objectOption = (playerNode.UnionTypeNameList ?? [])
+                .FirstOrDefault(option => string.Equals(option?.Name, "Object", StringComparison.Ordinal));
+            checks.That(objectOption is not null, "Object 分支存在");
+            if (objectOption is null || !McdocUnionSwitch.SwitchTo(playerNode, objectOption))
+                return checks.Finish("--case key-select-after-add");
+
+            var placeholder = McdocPresenterRegistry.Default.Children(playerNode)
+                .FirstOrDefault(child => child?.IsDynamicKey == true);
+            checks.That(placeholder is not null, "Object 分支下有动态键占位行");
+            if (placeholder is null) return checks.Finish("--case key-select-after-add");
+            // 此时文档里还没有任何键 ⇒ 候选 = 完整声明序，用来算"下一位"的期望值
+            var order = (placeholder.KeyOptionList ?? []).Select(option => option?.Name).ToList();
+            checks.That(order.Count > 2, "键候选取到了注册表成员", "候选数=" + order.Count);
+            if (order.Count <= 2) return checks.Finish("--case key-select-after-add");
+            // 故意选中间那一项：证明是"用掉的那一项的下一位"，不是"候选里的第一项"
+            var used = placeholder.KeyOptionList[1];
+            placeholder.SelectedKey = used;
+            checks.That(placeholder.AddEntryCommand?.CanExecute(null) == true, "选中键后 ⊕ 可用", "键=[" + placeholder.EditingKey + "]");
+            placeholder.AddEntryCommand.Execute(null);
+            checks.That(document.FindNode("$.criteria.a.conditions.player." + used.Name) is not null,
+                "⊕ 真的把键写进了文档", "path=$.criteria.a.conditions.player." + used.Name);
+
+            var live = document.FindNode("$.criteria.a.conditions.player");
+            live?.EnsureChildren();
+            var refreshed = McdocPresenterRegistry.Default.Children(live)
+                .FirstOrDefault(child => child?.IsDynamicKey == true);
+            checks.That(refreshed is not null, "重建后还有占位行");
+            if (refreshed is null) return checks.Finish("--case key-select-after-add");
+            var expected = order[2];
+            checks.That(refreshed.SelectedKey is not null, "新占位行的下拉不是空白",
+                "selected=" + (refreshed.SelectedKey?.Name ?? "<null>") + " editing=[" + refreshed.EditingKey + "]");
+            checks.That(string.Equals(refreshed.SelectedKey?.Name, expected, StringComparison.Ordinal),
+                "选中项落到用掉那一项的下一位",
+                "期望=" + expected + " 实际=" + (refreshed.SelectedKey?.Name ?? "<null>")
+                + " 用掉=" + used.Name + " 候选=" + string.Join("|", (refreshed.KeyOptionList ?? []).Take(3).Select(option => option?.Name)));
+            checks.That(string.Equals(refreshed.EditingKey, expected, StringComparison.Ordinal),
+                "编辑框里的键跟着下拉走", "editing=[" + refreshed.EditingKey + "]");
+            checks.That((refreshed.KeyOptionList ?? []).All(option => option?.Name != used.Name),
+                "用掉的成员已从候选里剔除", "候选数=" + (refreshed.KeyOptionList?.Count ?? 0));
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+            Contracts(checks, document, projector, "键下拉下一位");
+            return checks.Finish("--case key-select-after-add");
+        }
+
         private static void ExpandAll(IEnumerable<McdocTreeNode> nodes)
         {
             foreach (var node in nodes ?? [])

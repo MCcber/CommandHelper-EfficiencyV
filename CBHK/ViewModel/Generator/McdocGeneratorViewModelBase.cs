@@ -1222,6 +1222,7 @@ namespace CBHK.ViewModel.Generator
             projector.AfterChildrenBuilt = OnChildrenBuilt;
             // 折叠状态是页面级静态表：换入口必须清掉，否则上一个页面的展开状态会串过来
             McdocExpandState.BeginSession(EntryId, this);
+            McdocKeyMemory.Reset();
             FillGameVersionOptions();
             AdoptGameVersion(gameVersion);
             if (json is not null)
@@ -1287,6 +1288,7 @@ namespace CBHK.ViewModel.Generator
             // 版本只是"选中项"，这里落值不触发重建（紧接着就会 CreateDocument + Load）
             AdoptGameVersion(gameVersion);
             McdocExpandState.BeginSession(EntryId, this);
+            McdocKeyMemory.Reset();
             CreateDocument();
             if (json is not null)
             {

@@ -72,6 +72,8 @@ namespace CBHK.Probe
                     "--case real-advancement-conditions-attached" => Gates.RealAdvancementConditionsAttached(),
                     "--case player-resolve-dump" => Gates.PlayerResolveDump(),
                     "--case player-branch-add" => Gates.PlayerBranchAdd(),
+                    "--case union-unset-recursion" => Gates.UnionUnsetRecursion(),
+                    "--case key-select-after-add" => Gates.KeySelectAfterAdd(),
                 "--case enter-block-dump" => Gates.EnterBlockDump(),
             "--case player-value-resolve" => Gates.PlayerValueResolve(),
                     "--case error-sink-selftest" => Gates.ErrorSinkSelfTest(),

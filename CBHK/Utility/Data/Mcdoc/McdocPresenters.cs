@@ -455,6 +455,8 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             McdocSelectOptions.ApplyKeyOptions(placeholder, keyType, context.Runtime,
                 (json?.Properties ?? []).Select(pair => pair.Key).ToList());
+            // 刚被 ⊕ 用掉的成员已经从候选里剔掉了：选中项落到它的下一位，别留一个空下拉
+            McdocSelectOptions.PreselectNextKey(placeholder, keyType, McdocKeyMemory.Lookup(placeholder.JsonPath));
             placeholder.AddEntryCommand = new McdocCommand(
                 () => context.Editor.CommitEntry(container, placeholder, context.Runtime),
                 () => context.Editor.CanCommitEntry(container, placeholder));
@@ -592,7 +594,7 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 branches = new System.Collections.ObjectModel.ObservableCollection<EnumMember>
                 {
-                    new() { Name = UnsetLabel, Value = new MetaValue { LiteralValue = -1 } }
+                    McdocNodePresenter.UnsetOption
                 };
                 foreach (var item in node.UnionTypeNameList ?? []) branches.Add(item);
             }

@@ -2,6 +2,7 @@ using System;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MinecraftLanguageModelLibrary.Data;
 
 namespace CBHK.Utility.Data.Mcdoc
 {
@@ -13,6 +14,17 @@ namespace CBHK.Utility.Data.Mcdoc
     {
         /// <summary>union 下拉里的"未设置"项（misode 的 unset）。</summary>
         public const string UnsetLabel = "（未设置）";
+
+        /// <summary>
+        /// 未设置项的**唯一**实例。union 行的 Head 每次重读都重算 Describe，若每算一次就新建一个哨兵，
+        /// 绑定的 SelectedItem 就永远"换了个对象"→ 反复写回 setter（曾递归到栈溢出）。只读描述对象，跨行共享安全。
+        /// </summary>
+        public static readonly EnumMember UnsetOption = new()
+        {
+            Name = UnsetLabel,
+            Value = new MetaValue { LiteralValue = -1 },
+        };
+
         public abstract bool CanPresent(McdocType type);
 
         public abstract McdocNodeHead Describe(McdocTreeNode node);

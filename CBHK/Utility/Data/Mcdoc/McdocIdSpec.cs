@@ -503,6 +503,40 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         /// <summary>
+        /// 占位行的键下拉预选：从上一次用 ⊕ 起出来的键的下一位开始，取第一个还在候选里的成员（绕回开头）。
+        /// 没有记忆就从第一个候选开始 —— 点完添加不该让用户对着一个空下拉（候选刚刚被用掉一项）。
+        /// </summary>
+        public static void PreselectNextKey(McdocTreeNode row, McdocType keyType, string lastKey)
+        {
+            if (row?.KeyOptionList is not { Count: > 0 } options) return;
+            if (!string.IsNullOrEmpty(row.EditingKey)) return;   // 已经有键就不抢
+            var order = keyType?.IdMembers;
+            var start = 0;
+            if (order is { Count: > 0 } && !string.IsNullOrEmpty(lastKey))
+            {
+                for (var i = 0; i < order.Count; i++)
+                {
+                    if (!string.Equals(order[i], lastKey, StringComparison.Ordinal)) continue;
+                    start = (i + 1) % order.Count;
+                    break;
+                }
+            }
+            var pick = options[0];
+            if (order is { Count: > 0 })
+            {
+                for (var step = 0; step < order.Count; step++)
+                {
+                    var name = order[(start + step) % order.Count];
+                    var hit = row.KeyOptionList.FirstOrDefault(item => string.Equals(item.Name, name, StringComparison.Ordinal));
+                    if (hit is null) continue;
+                    pick = hit;
+                    break;
+                }
+            }
+            row.SelectedKey = pick;
+        }
+
+        /// <summary>
         /// 从属性里取 #[id] 规格（简单形式 / 复合形式 / #[tree{registry}]）。
         /// 引用/别名（例如 `type PersistentDataComponent = #[id(registry=...)] string`）上没有属性，
         /// 必须按符号表解析出目标类型再看，否则 `DataComponentPatch` 这类"动态键用别名声明"的字段拿不到候选。

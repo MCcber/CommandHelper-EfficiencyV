@@ -225,6 +225,8 @@ namespace CBHK.Utility.Data.Mcdoc
             map.Properties.Insert(insertIndex, new KeyValuePair<string, McdocJsonValue>(key, inserted));
             // 新条目此刻还没有节点（要等重建）：把"展开"记在它的路径上，重建建出来就是展开的
             McdocExpandState.Set(mapNode.JsonPath + "." + key, true);
+            // 记住这个键：占位行重建后"新键"下拉要落到它的下一位成员上，而不是空白
+            McdocKeyMemory.Remember(row?.JsonPath, key);
             // 通知只发一次，且目标是真正承载 JSON 的那一层：union 分支壳不在树上，
             // 通知它等于重建一个脱挂的壳（行照样不出现）。
             NotifyStructure(mapNode);
@@ -337,11 +339,7 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 if (node.Parent?.Json is not { Kind: McdocJsonKind.Object }) return false;
                 var unset = node.UnionTypeNameList?.FirstOrDefault(McdocUnionSwitch.IsUnsetOption)
-                    ?? new EnumMember
-                    {
-                        Name = McdocNodePresenter.UnsetLabel,
-                        Value = new MetaValue { LiteralValue = -1 }
-                    };
+                    ?? McdocNodePresenter.UnsetOption;
                 return McdocUnionSwitch.SwitchTo(node, unset);
             }
             if (node.Json is not { Kind: McdocJsonKind.Boolean }) return false;
