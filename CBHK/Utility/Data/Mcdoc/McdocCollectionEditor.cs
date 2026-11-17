@@ -196,7 +196,10 @@ namespace CBHK.Utility.Data.Mcdoc
                 return;
             }
 
-            if (row.Json is not null)
+            // 动态键占位行永远是"新增"：它的 Json 只有在管线把 union 的 JSON 错写到它身上时才非空，
+            // 那时按引用找 map 条目必然找不到，⊕ 会静默变成空操作（按钮亮着、什么也不发生）。
+            var placeholder = row is not null && row.IsDynamicKey && !row.IsMapEntry;
+            if (!placeholder && row.Json is not null)
             {
                 for (var i = 0; i < map.Properties.Count; i++)
                 {
@@ -241,7 +244,10 @@ namespace CBHK.Utility.Data.Mcdoc
             if (string.IsNullOrEmpty(key)) return false;
             if (mapNode.Json is null) return true;
             if (mapNode.Json is not { Kind: McdocJsonKind.Object } map || map.Properties is null) return false;
-            if (row.Json is null) return map.Properties.All(pair => pair.Key != key);
+            if (row.Json is null || (row.IsDynamicKey && !row.IsMapEntry))
+            {
+                return map.Properties.All(pair => pair.Key != key);
+            }
             return row.FieldName != key && map.Properties.All(pair => pair.Key != key);
         }
 
@@ -631,6 +637,7 @@ namespace CBHK.Utility.Data.Mcdoc
             node.Children.Clear();
             node.Items.Clear();
             node.SelectedUnionChildren.Clear();
+            node.SelectedUnionBranchNode = null;
             node.ChildrenBuilt = true;
             // 值也跟着断：不然 bool 行的 True/False 还挂着上一份镜像（删掉键了，行上却仍有一个选中）
             node.SyncScalarFromJson();
@@ -678,6 +685,7 @@ namespace CBHK.Utility.Data.Mcdoc
             node.Children.Clear();
             node.Items.Clear();
             node.SelectedUnionChildren.Clear();
+            node.SelectedUnionBranchNode = null;
             node.ChildrenBuilt = true;      // 键不在了：子级不重建（与 RemoveField 同一口径）
             node.SyncScalarFromJson();
             McdocWriteTrace.Log("条目（未设置）只删键", node, "parentKeys=" + McdocWriteTrace.Keys(parent));

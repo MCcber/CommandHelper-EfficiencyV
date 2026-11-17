@@ -691,6 +691,7 @@ namespace CBHK.Utility.Data.Mcdoc
             // 不先清掉就会在旧状态上叠加（现场：切到 block_state_property 后 terms 与 block 同时存在）。
             node.Children.Clear();
             node.SelectedUnionChildren.Clear();
+            node.SelectedUnionBranchNode = null;
             var memberNames = members
                 .Select((member, index) => FormatUnionMember(member, members.Where((_, other) => other != index).ToList()))
                 .ToList();
@@ -746,6 +747,7 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             if (node is null) return;
             node.SelectedUnionChildren.Clear();
+            node.SelectedUnionBranchNode = null;
             node.ScalarEditorKind = null;
             node.UnionListLike = false;
             node.MirrorIconSelect = false;
@@ -759,6 +761,8 @@ namespace CBHK.Utility.Data.Mcdoc
         public override void ApplyBranch(McdocTreeNode node, McdocTreeNode branchNode)
         {
             if (branchNode is null) return;
+            // 分支节点本体不一定进 SelectedUnionChildren（结构/列表支只上提子级），显式记下来
+            node.SelectedUnionBranchNode = branchNode;
             // 分支节点自己也要挂到 union 上：列表/结构分支的子级会上提到 union（子级 Parent=node），
             // 但分支节点本体没被 Add，Parent 一直是 null —— 条目按钮上的"删这一项"捕获的是分支节点，
             // 它抬 StructureChanged 时宿主顺着 Parent 找不到能重建的祖先，于是"右侧 JSON 少了、左侧树不动"。

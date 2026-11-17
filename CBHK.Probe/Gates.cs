@@ -3856,6 +3856,100 @@ namespace CBHK.Probe
             return 0;
         }
 
+        /// <summary>
+        /// 复现用户现场：enter_block 的 conditions.player 处在"未设置"，切成 Object 支后
+        /// 占位行的形状、键下拉选中后 ⊕ 的可用性、提交后树与模型文本是否一致。
+        /// </summary>
+        /// <summary>
+        /// union 分支落到"动态键 map"上时的完整交互链：切分支 → 选键 → ⊕ → 行/JSON 一致。
+        /// 回归的是 RefreshUnionBranchMirror 把 union 的 JSON 写到分支第一个字段行上（占位行）导致
+        /// ⊕ 走进重命名分支变空操作、占位行被渲染成带 Any 下拉的 Keyed 行。
+        /// </summary>
+        public static int PlayerBranchAdd()
+        {
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            var blockStateDir = LocateBlockStateDirectory();
+            const string json = @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": {} } } }";
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("advancement"), json,
+                doc =>
+                {
+                    doc.GameVersion = "26.3";
+                    if (blockStateDir is not null) doc.RegistryOptions = RegistryOptionsFor(blockStateDir);
+                });
+            var checks = new Checks();
+            var conditions = document.FindNode("$.criteria.a.conditions");
+            conditions?.EnsureChildren();
+            // 缺省的可选字段不一定进得了路径索引：按父级子级取（用户点的那一行就是这么来的）
+            var playerNode = McdocPresenterRegistry.Default.Children(conditions)
+                .FirstOrDefault(child => string.Equals(child?.FieldName, "player", StringComparison.Ordinal));
+            checks.That(playerNode is not null, "conditions 下有 player 行");
+            if (playerNode is null) return checks.Finish("--case player-branch-add");
+            var options = playerNode?.UnionTypeNameList ?? [];
+            var objectOption = options.FirstOrDefault(option => string.Equals(option?.Name, "Object", StringComparison.Ordinal));
+            checks.That(objectOption is not null, "Object 分支存在", string.Join("|", options.Select(option => option?.Name ?? "?")));
+            if (objectOption is null) return checks.Finish("--case player-branch-add");
+
+            var switched = McdocUnionSwitch.SwitchTo(playerNode, objectOption);
+            checks.That(switched, "切到 Object 分支", "选中=" + (playerNode.SelectedUnionTypeName?.Name ?? "<null>"));
+            var placeholder = McdocPresenterRegistry.Default.Children(playerNode)
+                .FirstOrDefault(child => child?.IsDynamicKey == true);
+            checks.That(placeholder is not null, "Object 分支下有动态键占位行");
+            if (placeholder is null) return checks.Finish("--case player-branch-add");
+
+            // ① 分支节点的 JSON 不许镜像到占位行上：一旦非空，⊕ 会走进"重命名"分支静默失败
+            checks.That(placeholder.Json is null, "占位行没有被写上 union 的 JSON",
+                "json=" + (placeholder.Json?.Kind.ToString() ?? "<null>") + " 分支=" + (playerNode.SelectedUnionTypeName?.Name ?? "?"));
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+            checks.That(projector.Find(placeholder)?.Kind == McdocRowKind.Placeholder, "占位行按 Placeholder 渲染（不带 Any 下拉）",
+                "kind=" + (projector.Find(placeholder)?.Kind.ToString() ?? "<无行>")
+                + " anyOptions=" + (placeholder.AnyTypeOptions?.Count ?? 0));
+
+            // ② 选键后 ⊕ 必须真的能提交
+            var target = placeholder.KeyOptionList?.FirstOrDefault(option =>
+                string.Equals(option?.Name, "minecraft:type_specific/player", StringComparison.Ordinal));
+            placeholder.SelectedKey = target;
+            var canCommit = placeholder.AddEntryCommand?.CanExecute(null) == true;
+            checks.That(canCommit, "选中键后 ⊕ 可用", "键=[" + placeholder.EditingKey + "]");
+            if (canCommit) placeholder.AddEntryCommand.Execute(null);
+
+            var expectedPath = "$.criteria.a.conditions.player.minecraft:type_specific/player";
+            var entry = document.FindNode(expectedPath);
+            checks.That(entry is not null, "⊕ 把键写进了文档", "path=" + expectedPath);
+            checks.That(entry?.Type?.Kind == McdocTypeKind.Struct, "新条目解成 Struct（26.3 的 PlayerPredicate）",
+                "type=" + (entry?.Type?.Kind.ToString() ?? "<null>")
+                + " 字段=" + string.Join(",", (entry?.Type?.Fields ?? []).Select(field => field?.Name)));
+            checks.That(entry?.Type?.Fields?.Any(field => string.Equals(field?.Name, "advancements", StringComparison.Ordinal)) == true,
+                "新条目带 PlayerPredicate 的 advancements 字段");
+            // 脱钩判据：节点上挂的 JSON 必须**就是**文档里那一份（不是拷贝、不是上一代）
+            var liveEntryJson = McdocTreeDocument.ResolvePath(document.RootJson, expectedPath);
+            checks.That(ReferenceEquals(entry?.Json, liveEntryJson), "新条目的 JSON 就是文档里那一份",
+                "node=" + (entry?.Json?.Kind.ToString() ?? "<null>") + " live=" + (liveEntryJson?.Kind.ToString() ?? "<null>"));
+            checks.That(McdocJsonFormatter.Format(document.RootJson).Contains("\"minecraft:type_specific/player\"", StringComparison.Ordinal),
+                "模型 JSON 里出现了新键",
+                McdocJsonFormatter.Format(document.RootJson).Replace("\r", "").Replace("\n", " ").Trim());
+
+            // ③ 行、节点、文档三者不许脱钩
+            var live = document.FindNode("$.criteria.a.conditions.player");
+            live?.EnsureChildren();
+            var refreshedPlaceholder = McdocPresenterRegistry.Default.Children(live)
+                .FirstOrDefault(child => child?.IsDynamicKey == true);
+            checks.That(refreshedPlaceholder?.Json is null, "重建后新的占位行也没有 JSON",
+                "json=" + (refreshedPlaceholder?.Json?.Kind.ToString() ?? "<null>"));
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+            Contracts(checks, document, projector, "player 分支加键");
+            return checks.Finish("--case player-branch-add");
+        }
+
         private static void ExpandAll(IEnumerable<McdocTreeNode> nodes)
         {
             foreach (var node in nodes ?? [])

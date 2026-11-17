@@ -493,6 +493,7 @@ namespace CBHK.Utility.Data.Mcdoc
                     node.Children.Clear();
                     node.Items.Clear();
                     node.SelectedUnionChildren.Clear();
+                    node.SelectedUnionBranchNode = null;   // 重组后由 ApplyBranch 重新记
                     registry.For(node).PopulateChildren(node, type, node.Json, context);
                     foreach (var child in node.Children) child.Parent = node;
                     foreach (var item in node.Items) item.Parent = node;

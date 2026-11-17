@@ -571,6 +571,13 @@ namespace CBHK.Utility.Data.Mcdoc
         public ObservableCollection<McdocTreeNode> Children { get; set; } = [];
         public ObservableCollection<McdocTreeNode> Items { get; set; } = [];
         public ObservableCollection<McdocTreeNode> SelectedUnionChildren { get; set; } = [];
+
+        /// <summary>
+        /// 当前选中分支的那个分支节点本体。结构/列表支的子级会被上提进 SelectedUnionChildren，
+        /// 分支节点自己不在里面 —— 拿 SelectedUnionChildren[0] 当分支会把 union 的 JSON 写到第一个字段行上
+        /// （现场：动态键占位行拿到 {} 后，⊕ 走进重命名分支变空操作，行还被渲染成带 Any 下拉的 Keyed 行）。
+        /// </summary>
+        internal McdocTreeNode SelectedUnionBranchNode { get; set; }
         public ObservableCollection<EnumMember> EnumOptionList { get; set; }
         public ObservableCollection<EnumMember> UnionTypeNameList { get; set; }
 
@@ -969,8 +976,9 @@ namespace CBHK.Utility.Data.Mcdoc
             SuppressValueNotifications = true;   // 这不是用户编辑
             try
             {
-                // 结构分支：分支节点有自己的 JSON，派生完再镜像过来
-                if (SelectedUnionChildren.FirstOrDefault() is { } branch)
+                // 结构/列表/any 分支：分支节点有自己的 JSON，派生完再镜像过来。
+                // 标量分支（ScalarEditorKind 非空）没有分支子行，镜像落在这个 return 之后的枚举挑选上。
+                if (ScalarEditorKind is null && SelectedUnionBranchNode is { } branch)
                 {
                     if (branch.Json is null && Json is not null) branch.Json = Json;
                     branch.SyncScalarFromJson();
