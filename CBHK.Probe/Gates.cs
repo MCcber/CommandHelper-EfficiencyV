@@ -724,6 +724,21 @@ namespace CBHK.Probe
             return string.Join(",", McdocPresenterRegistry.Default.Children(node).Select(c => c.FieldName));
         }
 
+        private static string LocateAppOutputDirectory()
+        {
+            var directory = new System.IO.DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            while (directory is not null)
+            {
+                if (System.IO.File.Exists(System.IO.Path.Combine(directory.FullName, "CBHK.sln")))
+                {
+                    var built = System.IO.Path.Combine(directory.FullName, "CBHK", "bin", "Debug", "net8.0-windows10.0.22621.0");
+                    return System.IO.File.Exists(System.IO.Path.Combine(built, "Configuration.json")) ? built : null;
+                }
+                directory = directory.Parent;
+            }
+            return null;
+        }
+
         private static string LocateBlockStateDirectory()
         {
             var directory = new System.IO.DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
@@ -4382,6 +4397,128 @@ namespace CBHK.Probe
                 node.IsExpanded = true;
                 ExpandAll(McdocPresenterRegistry.Default.Children(node));
             }
+        }
+
+        /// <summary>
+        /// 所有生成器的入口模板一起体检：模板是手写资产、不在版本门控的可见面上（页面只会"看起来像老版本"）。
+        /// 逐个按当前版本求值，报"当前版本不存在的键"与解成 any 的行；
+        /// 硬判据只有两条（模板坏了页面会整页退化成任何行，那是真事故）：文件可解析、根形状与声明一致。
+        /// </summary>
+        public static int AllTemplates()
+        {
+            var checks = new Checks();
+            // 真机输出目录（CBHK 项目的 bin\Debug\net8...）：Configuration.json 只在这里，
+            // 探针自己的 bin 里没有配置，只有一份被拷过来的 Resource。
+            var appDir = LocateAppOutputDirectory();
+            if (appDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 CBHK 输出目录下的 Configuration.json（退出码 2）");
+                return 2;
+            }
+            var configPath = System.IO.Path.Combine(appDir, "Configuration.json");
+            var rootDir = System.IO.Path.Combine(appDir, "Resource", "vanilla-mcdoc");
+            if (!System.IO.Directory.Exists(rootDir))
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）：" + rootDir);
+                return 2;
+            }
+            Deterministic();
+            var blockStateDir = LocateBlockStateDirectory();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            if (blockStateDir is not null)
+            {
+                resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
+            }
+            var config = McdocJsonTextParser.Parse(System.IO.File.ReadAllText(configPath)).Root;
+            var generatorPair = (config?.Properties ?? [])
+                .FirstOrDefault(pair => string.Equals(pair.Key, "Generator", StringComparison.Ordinal));
+            var generator = generatorPair.Value;
+            var entries = (generator?.Properties ?? [])
+                .Where(pair => pair.Value?.Kind == McdocJsonKind.String)
+                .ToList();
+            Console.WriteLine("[配置] " + configPath + " 入口=" + entries.Count);
+            checks.That(entries.Count > 0, "配置里至少有一个生成器入口", "入口=" + entries.Count);
+            var stale = new List<string>();
+            var loaded = 0;
+
+            void Inspect(string entryId, string full)
+            {
+                if (!System.IO.File.Exists(full))
+                {
+                    Console.WriteLine("[跳过] " + entryId + " 入口不存在：" + full);
+                    return;
+                }
+                var raw = System.IO.File.ReadAllText(full);
+                if (string.IsNullOrWhiteSpace(raw))
+                {
+                    Console.WriteLine("[跳过] " + entryId + " 空文件（按未配置处理）：" + full);
+                    return;
+                }
+                if (!McdocJsonParser.TryParse(raw, out var parsed, out var syntaxError))
+                {
+                    checks.That(false, entryId + " 入口是合法 JSON", syntaxError?.Message ?? "<未知>");
+                    return;
+                }
+                loaded++;
+                var rootType = McdocHelpers.GetRootType(entryId);
+                var (tDoc, _, _) = Harness(resource.McdocTypes, rootType, raw, docs =>
+                {
+                    docs.GameVersion = "26.3";
+                    docs.RegistryOptions = new CBHK.Utility.Data.MdocRegistryOptions(resource);
+                });
+                var declared = McdocDefaults.ResolveType(rootType, tDoc.CreateRuntime(), McdocDefaults.DefaultNode());
+                var shapeOk = declared is null || declared.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe
+                    || McdocHelpers.RootShapeMatches(parsed, declared, out _);
+                var unknown = tDoc.CountUnknownFields();
+                var kept = (tDoc.PreservedGroup?.Children ?? []).Select(child => child.JsonPath ?? "?").ToList();
+                var anyPaths = tDoc.Nodes
+                    .Where(node => node.Type?.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe)
+                    .Select(node => node.JsonPath ?? "?")
+                    .ToList();
+                Console.WriteLine("[模板] " + entryId
+                    + " 字节=" + raw.Length
+                    + " 根形状=" + (shapeOk ? "对" : "不符")
+                    + " 遗留键=" + unknown + (unknown > 0 ? " → " + string.Join(",", kept) : "")
+                    + " any 行=" + anyPaths.Count + (anyPaths.Count > 0 ? " → " + string.Join(",", anyPaths.Take(5)) : ""));
+                checks.That(shapeOk, entryId + " 模板根形状与声明一致", full);
+                if (unknown > 0) stale.Add(entryId + "(" + unknown + ")");
+            }
+
+            foreach (var pair in entries)
+            {
+                var full = System.IO.Path.Combine(appDir, pair.Value.StringValue ?? "");
+                if (System.IO.Directory.Exists(full)) full = System.IO.Path.Combine(full, "empty.json");
+                Inspect(pair.Key, full);
+            }
+
+            // 世界生成那一族不走 Configuration.json：入口由 CustomWorldGeneratorViewModel 扫目录 + 前缀映射得来，
+            // 两条对不上的（PlaceFeature / FlatWorldPreset）在那边是显式覆盖表，这里照抄同一张表。
+            var worldgenRoot = System.IO.Path.Combine(appDir, "Resource", "Configs", "CustomWorldGenerator");
+            if (System.IO.Directory.Exists(worldgenRoot))
+            {
+                var overrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["PlaceFeature"] = "worldgen/placed_feature",
+                    ["FlatWorldPreset"] = "worldgen/flat_level_generator_preset",
+                };
+                var names = System.IO.Directory.GetDirectories(worldgenRoot)
+                    .Select(System.IO.Path.GetFileName)
+                    .Where(name => name is not ("Data" or "Image"))
+                    .OrderBy(name => name, StringComparer.Ordinal)
+                    .ToList();
+                Console.WriteLine("[配置] 世界生成入口=" + names.Count + "（" + worldgenRoot + "）");
+                foreach (var name in names)
+                {
+                    var entryId = overrides.TryGetValue(name, out var overridden)
+                        ? overridden
+                        : "worldgen/" + CBHK.Utility.Data.StringTool.ConvertCamelCaseToSnakeCase(name);
+                    Inspect(entryId, System.IO.Path.Combine(worldgenRoot, name, "Data", "Template", "empty.json"));
+                }
+            }
+
+            Console.WriteLine("[汇总] 已载入模板=" + loaded + " 有遗留键的入口：" + (stale.Count == 0 ? "无" : string.Join(",", stale)));
+            return checks.Finish("--case all-templates");
         }
 
         /// <summary>
