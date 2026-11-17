@@ -378,6 +378,14 @@ namespace CBHK.Utility.Data.Mcdoc
             var from = ReadRangeValue(features, prefix + "From");
             var to = ReadRangeValue(features, prefix + "To");
             if (from == null && to == null) return null;
+            // 只有上限的 @ ..N：服务器编成"仅 LengthFrom=N、连 LengthTo 键都不写"；只有下限的 @ N..
+            // 反而会写一个空串 LengthTo。照字面当 Min 取，上限就成了下限 —— biome.features 的 @ ..11
+            // 曾报"列表长度 0 < 下限 11"，代数默认值还按这条假下限种出 11 个空项。
+            if (prefix == "Length" && from != null && to == null
+                && features != null && !features.ContainsKey(prefix + "To"))
+            {
+                return new McdocRange { Min = null, Max = from };
+            }
             return new McdocRange { Min = from, Max = to };
         }
 

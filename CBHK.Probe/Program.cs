@@ -80,6 +80,7 @@ namespace CBHK.Probe
             "--case worldgen-entry-document" => Gates.WorldgenEntryDocument(),
             "--case dimension-template" => Gates.DimensionTemplate(),
             "--case all-templates" => Gates.AllTemplates(),
+            "--case length-bounds" => Gates.LengthBounds(),
                 "--case enter-block-dump" => Gates.EnterBlockDump(),
             "--case player-value-resolve" => Gates.PlayerValueResolve(),
                     "--case error-sink-selftest" => Gates.ErrorSinkSelfTest(),

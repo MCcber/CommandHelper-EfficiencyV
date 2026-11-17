@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -4466,6 +4466,97 @@ namespace CBHK.Probe
                 node.IsExpanded = true;
                 ExpandAll(McdocPresenterRegistry.Default.Children(node));
             }
+        }
+
+        /// <summary>
+        /// 长度区间的四种写法在服务器 JSON 里长得不一样：`@ 0..3` 两端都给、`@ 1..` 给一个空串 LengthTo、
+        /// `@ ..N` 只给 LengthFrom（连 LengthTo 键都不写）、`@ 3` 两端相等。把"只有 LengthFrom"
+        /// 当 Min 读，上限就成了下限：biome.features 的 `@ ..11` 曾报"列表长度 0 < 下限 11"，
+        /// 代数默认值还照这条假下限种出 11 个空项。这里先用自造的 MetaType 钉死四种形态，
+        /// 再用真 schema 复核 biome 的 features 分支与代数默认值。
+        /// </summary>
+        public static int LengthBounds()
+        {
+            var checks = new Checks();
+            Deterministic();
+
+            static McdocType Build(string from, string to)
+            {
+                var list = new MetaType { Kind = MetaTypeKind.List, ElementType = new MetaType { Kind = MetaTypeKind.Int } };
+                list.AttributeList = new Dictionary<string, MetaValue>(StringComparer.Ordinal);
+                if (from is not null) list.AttributeList["LengthFrom"] = new MetaValue { LiteralValue = from };
+                if (to is not null) list.AttributeList["LengthTo"] = new MetaValue { LiteralValue = to };
+                return McdocBridge.FromMetaType(list);
+            }
+
+            void Expect(McdocType type, decimal? min, decimal? max, string label)
+            {
+                var range = type?.LengthRange;
+                var actual = range is null
+                    ? "LengthRange=<null>"
+                    : "下限=" + (range.Min?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无")
+                      + " 上限=" + (range.Max?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无");
+                checks.That(range is not null && range.Min == min && range.Max == max, label, actual);
+            }
+
+            Expect(Build("0", "3"), 0m, 3m, "@ 0..3 读成 0..3");
+            Expect(Build("1", ""), 1m, null, "@ 1.. 读成下限 1、无上限");
+            Expect(Build("11", null), null, 11m, "@ ..11 读成无下限、上限 11");
+            Expect(Build("3", "3"), 3m, 3m, "@ 3 读成定长 3");
+
+            var appDir = LocateAppOutputDirectory();
+            if (appDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 CBHK 输出目录下的 Configuration.json（退出码 2）");
+                return 2;
+            }
+            var rootDir = System.IO.Path.Combine(appDir, "Resource", "vanilla-mcdoc");
+            var blockStateDir = LocateBlockStateDirectory();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            if (blockStateDir is not null)
+            {
+                resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
+            }
+            var templatePath = System.IO.Path.Combine(appDir, "Resource", "Configs", "CustomWorldGenerator", "Biome", "Data", "Template", "empty.json");
+            if (!System.IO.File.Exists(templatePath))
+            {
+                Console.WriteLine("[环境缺失] 找不到 biome 模板（退出码 2）：" + templatePath);
+                return 2;
+            }
+            var template = System.IO.File.ReadAllText(templatePath);
+            var (document, _, _) = Harness(resource.McdocTypes, McdocHelpers.GetRootType("worldgen/biome"), template, docs =>
+            {
+                docs.GameVersion = "26.3";
+                docs.RegistryOptions = new CBHK.Utility.Data.MdocRegistryOptions(resource);
+            });
+            var members = document.FindNode("$.features")?.DeclaredType?.Members ?? [];
+            Console.WriteLine("[分支] features 成员=" + members.Count + " → " + string.Join(" | ", members.Select(member =>
+                member.Kind + " 下限=" + (member.LengthRange?.Min?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无")
+                + " 上限=" + (member.LengthRange?.Max?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无"))));
+            checks.That(members.Count >= 2
+                && members[0].LengthRange is { Min: null, Max: 10m }
+                && members[1].LengthRange is { Min: null, Max: 11m },
+                "biome.features 两个分支都是只有上限（..10 / ..11）",
+                string.Join(" | ", members.Select(member => member.LengthRange is null ? "<null>"
+                    : (member.LengthRange.Min?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无") + ".."
+                      + (member.LengthRange.Max?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无"))));
+
+            var diagnostics = document.Nodes
+                .Where(node => node.Diagnostics is { Count: > 0 })
+                .SelectMany(node => node.Diagnostics.Select(message => (node.JsonPath ?? "?") + " " + message))
+                .ToList();
+            Console.WriteLine("[诊断] " + diagnostics.Count + " 条" + (diagnostics.Count == 0 ? "" : "：" + string.Join(" / ", diagnostics)));
+            checks.That(diagnostics.Count == 0, "biome 模板在 26.3 下零诊断（占位行不再被当成静默降级、上限不再被读成下限）",
+                string.Join(" / ", diagnostics));
+
+            var defaults = McdocDefaults.Resolve(McdocHelpers.GetRootType("worldgen/biome"), document.CreateRuntime());
+            var featuresPair = (defaults?.Properties ?? []).FirstOrDefault(pair => string.Equals(pair.Key, "features", StringComparison.Ordinal));
+            var featuresCount = featuresPair.Value is { Kind: McdocJsonKind.Array } featuresArray ? featuresArray.Items?.Count ?? 0 : -1;
+            Console.WriteLine("[默认] features 项数=" + featuresCount);
+            checks.That(featuresCount == 0, "代数默认值的 features 不再按假下限种空项", "项数=" + featuresCount);
+
+            return checks.Finish("--case length-bounds");
         }
 
         /// <summary>

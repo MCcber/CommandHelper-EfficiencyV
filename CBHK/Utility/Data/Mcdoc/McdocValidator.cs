@@ -174,7 +174,10 @@ namespace CBHK.Utility.Data.Mcdoc
                 // 声明不是 any、求值却退成 any：这就是"静默降级"。最典型的现场是**靠同级/父级键取值的
                 // dispatcher**（`minecraft:block[[BlockState.Name]]`、`mcdoc:block_item_states[[%parent.id]]`）
                 // 在根上求值 —— 解不出来是诚实的，但用户必须看得见，否则就是"这一行退成原始 JSON、没有任何提示"。
-                if (node.Type?.Kind == McdocTypeKind.Any
+                // 没有值就没有"降级成的任何值"可报：动态键占位行的 Type 按设计就是 any（DeclaredType 才是
+                // 候选值类型），行上根本没有编辑器，把它算成静默降级只会给每个 map 挂两条假警告。
+                if (node.Json is not null
+                    && node.Type?.Kind == McdocTypeKind.Any
                     && node.DeclaredType is { Kind: not (McdocTypeKind.Any or McdocTypeKind.Unsafe) }
                     && string.IsNullOrEmpty(node.Error)
                     && node.Diagnostics.Count == 0)
