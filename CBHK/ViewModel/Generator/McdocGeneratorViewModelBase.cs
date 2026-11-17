@@ -139,6 +139,13 @@ namespace CBHK.ViewModel.Generator
         /// <summary>最近一次生成默认文档的文本：用来判断用户有没有动过内容（动过就不许顶掉）。</summary>
         private string defaultDocumentText;
 
+        /// <summary>
+        /// 入口文档的显式路径（同 <see cref="TryLoadEntryDocument"/> 的语义：文件，或目录则拼 empty.json）。
+        /// 默认 null，按 <c>Configuration.json</c> 的 <c>Generator.&lt;EntryId&gt;</c> 查。同一页有多种入口时由页面设定：
+        /// 世界生成页的 EntryId 恒为 minecraft:resource，模板却散在各生成器目录下，配置表里没法表达。
+        /// </summary>
+        protected string EntryDocumentPathOverride { get; set; }
+
         /// <summary>等运行数据就绪的轮询定时器（每个页面只挂一个）。</summary>
         private System.Windows.Threading.DispatcherTimer runtimeRefreshTimer;
         #endregion
@@ -1868,7 +1875,10 @@ namespace CBHK.ViewModel.Generator
         private bool TryLoadEntryDocument(out string text, out string source)
         {
             text = null;
-            var configured = LookupEntryPath(EntryId);
+            // 页面显式给的路径优先（世界生成页按选中的生成器切模板），否则查配置表
+            var configured = string.IsNullOrWhiteSpace(EntryDocumentPathOverride)
+                ? LookupEntryPath(EntryId)
+                : EntryDocumentPathOverride;
             if (string.IsNullOrWhiteSpace(configured))
             {
                 source = "入口文件未配置（Generator." + EntryId + "）";

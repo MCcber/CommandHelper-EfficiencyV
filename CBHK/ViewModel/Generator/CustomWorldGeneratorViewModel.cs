@@ -63,9 +63,18 @@ namespace CBHK.ViewModel.Generator
             {
                 return;
             }
+            // 每个生成器目录下都有自己的入口模板（<目录>\Data\Template\empty.json）：
+            // 不显式指定的话，入口会退回代数默认值，页面一进来就是"空壳"，与左侧选中的生成器无关。
+            EntryDocumentPathOverride = TemplatePathOf(SelectedGenerator?.Text);
             OpenMcdocTreeFromDispatcher(version, "minecraft:resource",
                 McdocIndex.Static(generatorName), resource.McdocTypes);
         }
+
+        /// <summary>生成器目录名 → 该页的入口模板路径（与 Configuration.json 的 Generator 段同语义）。</summary>
+        private static string TemplatePathOf(string generatorName)
+            => string.IsNullOrEmpty(generatorName)
+                ? null
+                : Path.Combine(GeneratorFolderPath, generatorName, "Data", "Template", "empty.json");
 
         /// <summary>
         /// 目录名 → minecraft:resource 的 dispatcher 成员键。

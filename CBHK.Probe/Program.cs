@@ -77,6 +77,7 @@ namespace CBHK.Probe
                     "--case optional-bool-row" => Gates.OptionalBoolRow(),
             "--case optional-enum-row" => Gates.OptionalEnumRow(),
             "--case version-follows-runtime" => Gates.VersionFollowsRuntime(),
+            "--case worldgen-entry-document" => Gates.WorldgenEntryDocument(),
             "--case dimension-template" => Gates.DimensionTemplate(),
             "--case all-templates" => Gates.AllTemplates(),
                 "--case enter-block-dump" => Gates.EnterBlockDump(),

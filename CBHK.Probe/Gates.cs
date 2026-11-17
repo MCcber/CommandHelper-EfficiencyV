@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -4388,6 +4388,75 @@ namespace CBHK.Probe
             return checks.Finish("--case version-follows-runtime");
         }
 
+        /// <summary>
+        /// 世界生成页的入口文档必须跟着选中的生成器走：EntryId 恒为 minecraft:resource，
+        /// Configuration.json 里没有这些模板的位置，页面不显式指定就只会落到代数默认值（进去是空壳）。
+        /// </summary>
+        public static int WorldgenEntryDocument()
+        {
+            var checks = new Checks();
+            var appDir = LocateAppOutputDirectory();
+            if (appDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 CBHK 输出目录下的 Configuration.json（退出码 2）");
+                return 2;
+            }
+            var rootDir = System.IO.Path.Combine(appDir, "Resource", "vanilla-mcdoc");
+            var blockStateDir = LocateBlockStateDirectory();
+            if (!System.IO.Directory.Exists(rootDir) || blockStateDir is null)
+            {
+                Console.WriteLine("[环境缺失] 缺 vanilla-mcdoc 或 Registries 目录（退出码 2）");
+                return 2;
+            }
+            var template = System.IO.Path.Combine(appDir, "Resource", "Configs", "CustomWorldGenerator",
+                "Biome", "Data", "Template", "empty.json");
+            checks.That(System.IO.File.Exists(template), "biome 模板存在", template);
+            Deterministic();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
+            var vm = new CBHK.ViewModel.Generator.CustomWorldGeneratorViewModel(resource);
+            vm.AttachJsonEditor(new CBHK.Utility.Data.JsonText.JsonTextEditor());
+            var overrideProperty = typeof(CBHK.ViewModel.Generator.McdocGeneratorViewModelBase).GetProperty(
+                "EntryDocumentPathOverride",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            checks.That(overrideProperty is not null, "入口文档覆盖入口存在", "EntryDocumentPathOverride");
+            overrideProperty?.SetValue(vm, template);
+            vm.OpenMcdocTreeFromDispatcher("26.3", "minecraft:resource",
+                McdocIndex.Static("worldgen/biome"), resource.McdocTypes);
+            PumpDispatcher();
+            var doc = DocumentOf(vm);
+            Console.WriteLine("[信息] 载入后 版本=" + (doc?.GameVersion ?? "<null>")
+                + " 文本长度=" + (vm.JsonText?.Length ?? -1)
+                + " 状态=" + (vm.MdocStatus ?? "<null>"));
+            checks.That(doc?.FindNode("$.effects") is not null, "树来自 biome 模板（effects 行在）",
+                "文本=" + (vm.JsonText ?? "").Replace("\r", "").Replace("\n", " "));
+            checks.That(doc?.FindNode("$.temperature") is not null,
+                "模板内容没有被代数默认值顶掉（temperature 行在）", "temperature 行缺失");
+            checks.That((vm.MdocStatus ?? "").Contains("入口文件", StringComparison.Ordinal),
+                "状态栏点名了入口文件", "状态=" + (vm.MdocStatus ?? "<null>"));
+            checks.That(doc is not null && doc.CountUnknownFields() == 0,
+                "模板在 26.3 下没有遗留键", "遗留键=" + (doc?.CountUnknownFields() ?? -1));
+            var templateText = vm.JsonText;
+            foreach (var diagnostic in doc?.Validate() ?? [])
+            {
+                Console.WriteLine("[诊断] " + diagnostic.Path + " " + diagnostic.Severity + " " + diagnostic.Message);
+            }
+
+            overrideProperty?.SetValue(vm, null);
+            vm.OpenMcdocTreeFromDispatcher("26.3", "minecraft:resource",
+                McdocIndex.Static("worldgen/biome"), resource.McdocTypes);
+            PumpDispatcher();
+            var bare = DocumentOf(vm);
+            Console.WriteLine("[信息] 对照（不给入口）：文本长度=" + (vm.JsonText?.Length ?? -1)
+                + " 状态=" + (vm.MdocStatus ?? "<null>"));
+            checks.That(bare is not null && !string.Equals(vm.JsonText, templateText, StringComparison.Ordinal)
+                    && (vm.MdocStatus ?? "").Contains("代数默认值", StringComparison.Ordinal),
+                "不给入口时退回代数默认值（对照：文本与模板不同、状态栏写明按默认值生成）",
+                "状态=" + (vm.MdocStatus ?? "<null>"));
+            return checks.Finish("--case worldgen-entry-document");
+        }
+
         private static void ExpandAll(IEnumerable<McdocTreeNode> nodes)
         {
             foreach (var node in nodes ?? [])
@@ -4520,6 +4589,7 @@ namespace CBHK.Probe
             Console.WriteLine("[汇总] 已载入模板=" + loaded + " 有遗留键的入口：" + (stale.Count == 0 ? "无" : string.Join(",", stale)));
             return checks.Finish("--case all-templates");
         }
+
 
         /// <summary>
         /// 维度类型页面的"默认文档"来自 Resource\Configs\DimensionType\Data\Template\empty.json（入口文件就是文档本身），

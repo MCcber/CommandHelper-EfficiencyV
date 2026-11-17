@@ -174,25 +174,27 @@ namespace CBHK.Utility.Data.Mcdoc
                 : new Dictionary<string, McdocType>(bindings, StringComparer.Ordinal);
 
         private static McdocType WalkDeclaredHost(McdocType declaredType, McdocJsonValue json, McdocRuntime runtime,
-            Dictionary<string, McdocType> bindings, List<McdocType> pendingArgs, int depth)
+            Dictionary<string, McdocType> bindings, List<McdocType> pendingArgs, int depth, bool exact = false)
         {
             if (declaredType is null || depth > 12) return null;
             switch (declaredType.Kind)
             {
                 case McdocTypeKind.Struct:
-                    return declaredType;
+                    // 精确模式（union 里挑宿主）只认"能原样装下 JSON 现有键"的结构；
+                    // 顶层按声明找宿主时不受限，保持原有语义。
+                    return !exact || StructDeclaresExactly(declaredType, json, runtime) ? declaredType : null;
                 case McdocTypeKind.Mapped:
                 {
                     var merged = MergeBindings(bindings);
                     foreach (var pair in declaredType.Mapping ?? []) merged[pair.Key] = pair.Value;
-                    return WalkDeclaredHost(declaredType.Item, json, runtime, merged, null, depth + 1);
+                    return WalkDeclaredHost(declaredType.Item, json, runtime, merged, null, depth + 1, exact);
                 }
                 case McdocTypeKind.Concrete:
                     // 实参登记一次，交给紧接着的 Template 绑形参（与求值期的 TypeArgs 同一条规则）
-                    return WalkDeclaredHost(declaredType.Item, json, runtime, bindings, declaredType.Items, depth + 1);
+                    return WalkDeclaredHost(declaredType.Item, json, runtime, bindings, declaredType.Items, depth + 1, exact);
                 case McdocTypeKind.Indexed:
                     // Indexed 不清实参（README §2.3：Concrete{Item=Indexed(Dispatcher)} 靠它传参）
-                    return WalkDeclaredHost(declaredType.Item, json, runtime, bindings, pendingArgs, depth + 1);
+                    return WalkDeclaredHost(declaredType.Item, json, runtime, bindings, pendingArgs, depth + 1, exact);
                 case McdocTypeKind.Template:
                 {
                     var merged = MergeBindings(bindings);
@@ -201,14 +203,14 @@ namespace CBHK.Utility.Data.Mcdoc
                     {
                         merged[parameters[i]] = pendingArgs[i];
                     }
-                    return WalkDeclaredHost(declaredType.Item, json, runtime, merged, null, depth + 1);
+                    return WalkDeclaredHost(declaredType.Item, json, runtime, merged, null, depth + 1, exact);
                 }
                 case McdocTypeKind.Reference:
                 {
                     if (bindings is not null && declaredType.Path is { Length: > 0 } name
                         && bindings.TryGetValue(name, out var bound))
                     {
-                        return WalkDeclaredHost(bound, json, runtime, bindings, pendingArgs, depth + 1);
+                        return WalkDeclaredHost(bound, json, runtime, bindings, pendingArgs, depth + 1, exact);
                     }
                     McdocType target = null;
                     try
@@ -225,20 +227,27 @@ namespace CBHK.Utility.Data.Mcdoc
                     }
                     return target is null
                         ? null
-                        : WalkDeclaredHost(target, json, runtime, bindings, pendingArgs, depth + 1);
+                        : WalkDeclaredHost(target, json, runtime, bindings, pendingArgs, depth + 1, exact);
                 }
                 case McdocTypeKind.Union:
                 {
                     if (json is not { Kind: McdocJsonKind.Object }) return null;
-                    foreach (var member in declaredType.Members ?? [])
+                    // 两轮挑宿主：先找"能原样装下 JSON 现有键"的成员，找不到才退回"第一个结构成员"。
+                    // 只做第一轮会漏判别键（"必选 type + 同层 spread"的结构接不住空对象以外的形状）；
+                    // 只做第二轮会给 {"absolute": 0} 挑中 HeightProvider 的 { type, ... } 宿主、凭空写进 type。
+                    for (var pass = 0; pass < (exact ? 1 : 2); pass++)
                     {
-                        // 按声明找宿主也必须过版本门控：旧成员（#[until]）在当前版本已经不存在，
-                        // 拿它当宿主会把旧字段名预写回文档（AdvancementIcon.item 就是这样复活的）。
-                        if (member is null) continue;
-                        if (runtime?.Attributes is { } unionAttributes
-                            && !unionAttributes.ShouldKeep(member.Attributes, runtime)) continue;
-                        var host = WalkDeclaredHost(member, json, runtime, bindings, pendingArgs, depth + 1);
-                        if (host is { Kind: McdocTypeKind.Struct }) return host;
+                        var wantExact = exact || pass == 0;
+                        foreach (var member in declaredType.Members ?? [])
+                        {
+                            // 按声明找宿主也必须过版本门控：旧成员（#[until]）在当前版本已经不存在，
+                            // 拿它当宿主会把旧字段名预写回文档（AdvancementIcon.item 就是这样复活的）。
+                            if (member is null) continue;
+                            if (runtime?.Attributes is { } unionAttributes
+                                && !unionAttributes.ShouldKeep(member.Attributes, runtime)) continue;
+                            var host = WalkDeclaredHost(member, json, runtime, bindings, pendingArgs, depth + 1, wantExact);
+                            if (host is { Kind: McdocTypeKind.Struct }) return host;
+                        }
                     }
                     return null;
                 }
@@ -246,6 +255,39 @@ namespace CBHK.Utility.Data.Mcdoc
                     return null;
             }
         }
+        /// <summary>
+        /// 这个结构能不能**原样**装下 JSON 现有的键：不许靠 spread（什么键都能接，等于证明不了形状）、
+        /// 不许有动态键字段（同样什么键都能接），且每个键都对得上一条版本门控放行的字段名。
+        /// 判别键预写靠它挑宿主：HeightProvider 首支是 <c>{ type, ...minecraft:height_provider[[type]] }</c>，
+        /// 不分形状就选它，会给 <c>{"absolute": 0}</c> 平白写进一个 type —— 而那一支根本声明不了 type，
+        /// 于是它被当成"当前版本不存在的键"收进保留区（现场：structure 模板 start_height）。
+        /// </summary>
+        private static bool StructDeclaresExactly(McdocType structType, McdocJsonValue json, McdocRuntime runtime)
+        {
+            if (json is not { Kind: McdocJsonKind.Object }) return false;
+            var fields = structType.Fields ?? [];
+            foreach (var field in fields)
+            {
+                if (field is null) continue;
+                if (field.IsSpread || field.Type is { Kind: McdocTypeKind.Tuple }) return false;
+            }
+            foreach (var pair in json.Properties)
+            {
+                var declared = false;
+                foreach (var field in fields)
+                {
+                    if (field is null || field.IsSpread || string.IsNullOrEmpty(field.Name)) continue;
+                    if (!string.Equals(field.Name, pair.Key, StringComparison.Ordinal)) continue;
+                    if (field.Attributes is { Count: > 0 } && runtime?.Attributes is { } attributes
+                        && !attributes.ShouldKeep(field.Attributes, runtime)) continue;
+                    declared = true;
+                    break;
+                }
+                if (!declared) return false;
+            }
+            return true;
+        }
+
         /// <summary>按**声明**把"必填 + 有闭合候选"的判别键先写进 JSON。</summary>
         private static int WriteDeclarationDiscriminators(McdocType declaredType, McdocJsonValue json, McdocRuntime runtime)
         {
