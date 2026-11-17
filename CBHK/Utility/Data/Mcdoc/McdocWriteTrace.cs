@@ -69,7 +69,7 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 记录一次整篇写回：调用方 + 前后长度 + 落盘后文本能否解析成单个根。
         /// 只在开关打开时解析，平时只有一次自增。
         /// </summary>
-        public static void LogWholeWrite(string tag, int oldLength, string documentText, bool keepRootIdentity, bool repaired = false)
+        public static void LogWholeWrite(string tag, int oldLength, string documentText, bool repaired = false)
         {
             WholeWriteCount++;
             if (!Enabled) return;
@@ -81,7 +81,7 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             Console.WriteLine("[mcdoc-write] whole#" + WholeWriteCount + " " + tag
                 + " old=" + oldLength + " target=" + (documentText?.Length ?? 0)
-                + " keepRoot=" + keepRootIdentity + " singleRoot=" + singleRoot
+                + " singleRoot=" + singleRoot
                 + (repaired ? " repaired" : "")
                 + (singleRoot ? "" : " err=" + error?.Message) + Caller());
         }

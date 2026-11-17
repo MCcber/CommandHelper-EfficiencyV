@@ -41,6 +41,17 @@ namespace CBHK.Utility.Data.JsonText
         /// <summary>物理整篇写回次数（诊断 / 门禁用）。</summary>
         public int WholeWriteCount => State.WholeWriteCount;
 
+        /// <summary>定向写回次数（只替换真正变过的那一段）。</summary>
+        public int SpliceCount => State.SpliceCount;
+
+        /// <summary>把模型这一代定向写回编辑器：只换真正变过的字符段，锚点与光标自动跟着走。</summary>
+        public bool SpliceModelText(string text, System.Collections.Generic.IDictionary<McdocJsonValue, McdocJsonSpan> spans)
+            => State.SpliceModelText(text, spans);
+
+        /// <summary>编辑器文本已不代表模型（根换支 / 被顶回）：写同步并把 State 的 Root 指向模型。</summary>
+        public bool AdoptModel(McdocJsonValue root, string text, System.Collections.Generic.IDictionary<McdocJsonValue, McdocJsonSpan> spans)
+            => State.AdoptModel(root, text, spans);
+
         /// <summary>按节点改值：只替换该节点的文本片段，其余内容与光标位置不受影响。</summary>
         public void ReplaceValue(McdocJsonValue node, McdocJsonValue newValue) => State.ReplaceValue(node, newValue);
 

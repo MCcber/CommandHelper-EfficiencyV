@@ -739,9 +739,12 @@ namespace CBHK.ViewModel.Generator
                     // 编辑器里还是上一代 AST —— 直接 Reformat 只会把旧文本重排一遍，右侧就停在旧形状上。
                     // 这里按"视图同代"先对账：不一致就先把模型这一代灌进编辑器。
                     string modelText;
+                    // 同一遍输出顺带拿到"每个节点在目标文本里的区间"：写回时靠它把锚点落到正确位置，
+                    // 不用写完再全文解析一遍
+                    var modelSpans = new Dictionary<McdocJsonValue, McdocJsonSpan>();
                     using (McdocWriteTrace.Stage("text.format"))
                     {
-                        modelText = McdocJsonFormatter.Format(document.RootJson);
+                        modelText = McdocJsonFormatter.Format(document.RootJson, 2, modelSpans);
                     }
                     // 模型这一代格式化后与"上次落到屏幕上的那份文本"逐字相同 ⇒ 右侧已经是同代文本，
                     // 不必再全文 Parse 一遍对账、也不必 Reformat（实测这两步占每次交互 2–7ms）。
@@ -760,10 +763,18 @@ namespace CBHK.ViewModel.Generator
                     }
                     if (reconciled)
                     {
-                        McdocWriteTrace.Log("编辑器文本落后于模型，按模型重灌", null, "model=" + modelText.Length);
-                        jsonEditor.Reload(modelText);
+                        // 编辑器这一代已经不代表模型（形状不同）：写同步 + 把状态的 Root 直接指向模型
+                        McdocWriteTrace.Log("编辑器文本落后于模型，按模型整篇同步", null, "model=" + modelText.Length);
+                        jsonEditor.AdoptModel(document.RootJson, modelText, modelSpans);
                     }
-                    using (McdocWriteTrace.Stage("text.reformat")) jsonEditor.Reformat();
+                    else
+                    {
+                        // 只换真正变过的那一段：其余文本、锚点、波浪线、滚动位置全部原地不动
+                        using (McdocWriteTrace.Stage("text.splice"))
+                        {
+                            jsonEditor.SpliceModelText(modelText, modelSpans);
+                        }
+                    }
                     JsonText = jsonEditor.Text;
                 }
                 finally

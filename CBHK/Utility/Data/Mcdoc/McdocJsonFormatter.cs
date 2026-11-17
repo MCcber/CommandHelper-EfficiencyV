@@ -10,14 +10,22 @@ namespace CBHK.Utility.Data.Mcdoc
 {
     public static class McdocJsonFormatter
     {
-        public static string Format(McdocJsonValue value, int indentSize = 2)
+        public static string Format(McdocJsonValue value, int indentSize = 2) => Format(value, indentSize, null);
+
+        /// <summary>
+        /// 与 <see cref="Format(McdocJsonValue, int)"/> 同一遍输出，顺带记下每个节点在结果文本里的区间
+        /// （值区间 + 键区间，与 <see cref="McdocJsonSpan"/> 同语义）。写回时用它把锚点直接落到正确位置，
+        /// 免掉"写完整篇再重解析一遍"的第二套坐标。
+        /// </summary>
+        public static string Format(McdocJsonValue value, int indentSize, IDictionary<McdocJsonValue, McdocJsonSpan> spans)
         {
             var builder = new StringBuilder();
-            Write(builder, value, 0, indentSize);
+            Write(builder, value, 0, indentSize, spans);
             return builder.ToString();
         }
 
-        private static void Write(StringBuilder builder, McdocJsonValue value, int indent, int indentSize)
+        private static void Write(StringBuilder builder, McdocJsonValue value, int indent, int indentSize,
+            IDictionary<McdocJsonValue, McdocJsonSpan> spans)
         {
             if (value is null)
             {
@@ -25,6 +33,17 @@ namespace CBHK.Utility.Data.Mcdoc
                 return;
             }
 
+            var start = builder.Length;
+            WriteBody(builder, value, indent, indentSize, spans);
+            if (spans is not null)
+            {
+                spans[value] = new McdocJsonSpan(start, builder.Length, start, builder.Length);
+            }
+        }
+
+        private static void WriteBody(StringBuilder builder, McdocJsonValue value, int indent, int indentSize,
+            IDictionary<McdocJsonValue, McdocJsonSpan> spans)
+        {
             switch (value.Kind)
             {
                 case McdocJsonKind.Object:
@@ -39,8 +58,14 @@ namespace CBHK.Utility.Data.Mcdoc
                     for (var i = 0; i < properties.Count; i++)
                     {
                         Indent(builder, indent + 1, indentSize);
+                        var pairStart = builder.Length;
                         builder.Append(JsonSerializer.Serialize(properties[i].Key)).Append(": ");
-                        Write(builder, properties[i].Value, indent + 1, indentSize);
+                        var valueStart = builder.Length;
+                        Write(builder, properties[i].Value, indent + 1, indentSize, spans);
+                        if (spans is not null && properties[i].Value is not null)
+                        {
+                            spans[properties[i].Value] = new McdocJsonSpan(valueStart, builder.Length, pairStart, builder.Length);
+                        }
                         if (i < properties.Count - 1) builder.Append(',');
                         builder.Append('\n');
                     }
@@ -61,7 +86,7 @@ namespace CBHK.Utility.Data.Mcdoc
                     for (var i = 0; i < items.Count; i++)
                     {
                         Indent(builder, indent + 1, indentSize);
-                        Write(builder, items[i], indent + 1, indentSize);
+                        Write(builder, items[i], indent + 1, indentSize, spans);
                         if (i < items.Count - 1) builder.Append(',');
                         builder.Append('\n');
                     }

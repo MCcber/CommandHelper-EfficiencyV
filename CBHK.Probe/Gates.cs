@@ -159,8 +159,11 @@ namespace CBHK.Probe
 
             var state = new JsonTextState(new TextDocument(text));
             var before = TopLevel(state.Root);
-            var edited = text.Replace("\"format_version\": 1,", "\"format_version\": 2,");
-            state.Document.Text = edited;
+            // 用户敲一个字符：只替换那一位。整篇赋值（Document.Text = …）是 Load 的语义，
+            // 锚点会被一次性拍到替换边界、状态层直接降级不认锚点 —— 那种改动本来就该走整篇重解析。
+            var valueAt = DrivenValueOffset(text);
+            var edited = text.Remove(valueAt, 1).Insert(valueAt, "2");
+            state.Document.Replace(valueAt, 1, "2");
 
             var incremental = state.TryIncrementalReparse(edited);
             if (!incremental) state.Reparse();
@@ -173,9 +176,11 @@ namespace CBHK.Probe
                 "复用 " + reused + "/" + Math.Max(0, before.Count - 1));
 
             // 反向判据：跨成员改动必须回落整篇（否则"永远走增量"会假绿）
-            var crossEdited = text.Replace("  \"alpha\": \"alpha-value\",\n", "");
+            var crossLine = "  \"alpha\": \"alpha-value\",\n";
+            var crossAt = text.IndexOf(crossLine, StringComparison.Ordinal);
+            var crossEdited = text.Remove(crossAt, crossLine.Length);
             var crossState = new JsonTextState(new TextDocument(text));
-            crossState.Document.Text = crossEdited;
+            crossState.Document.Replace(crossAt, crossLine.Length, "");
             var crossIncremental = crossState.TryIncrementalReparse(crossEdited);
             checks.That(!crossIncremental, "增删顶层成员 · 必须回落整篇解析", "TryIncrementalReparse=" + crossIncremental);
 
@@ -186,6 +191,10 @@ namespace CBHK.Probe
 
             return checks.Finish("--gate parse");
         }
+
+        /// <summary>夹具里 format_version 那一位数字的偏移（"改一个值"的落点）。</summary>
+        private static int DrivenValueOffset(string text)
+            => text.IndexOf("\"format_version\": 1,", StringComparison.Ordinal) + "\"format_version\": ".Length;
 
         private static List<McdocJsonValue> TopLevel(McdocJsonValue root)
             => (root?.Properties ?? []).Select(pair => pair.Value).ToList();
@@ -213,7 +222,7 @@ namespace CBHK.Probe
             for (var round = 0; round < rounds; round++)
             {
                 var state = new JsonTextState(new TextDocument(text));
-                state.Document.Text = edited;
+                state.Document.Replace(DrivenValueOffset(text), 1, "2");
                 var started = Stopwatch.GetTimestamp();
                 var fast = state.TryIncrementalReparse(edited);
                 var elapsed = (Stopwatch.GetTimestamp() - started) * 1000.0 / Stopwatch.Frequency;
@@ -4783,37 +4792,119 @@ namespace CBHK.Probe
             return checks.Finish("--case memory");
         }
 
-        // ── 整篇写回必须保住光标（覆盖"锚点读取改走区间表"那条路径）──────────
+        // ── 写回必须保住光标与文本树：值编辑只动那一个值，结构编辑只拼接，整篇接管才换代 ──
         public static int Caret()
         {
+            if (RealSchema.LocateMcdocRoot() is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
             Deterministic();
-            var text = Fixtures.Text();
-            // 加空行让 Reformat 真的重写文本（否则写回目标与原文相同，光标映射等于没测）
-            var source = text.Replace("\n", "\n\n");
-            var state = new JsonTextState(new TextDocument(source));
-            // 取**最后一个列表项的 label**：加空行后它在新文本里的位置会整体前移 ~570 字符，
-            // 于是"不做映射、直接把原偏移夹进去"会落到别的节点上 —— 判据才有约束
-            var origin = source.LastIndexOf("\"L" + (Fixtures.ListItems - 1) + "\"", StringComparison.Ordinal) + 2;
-            var hostBefore = InnermostSpan(state, origin, out _);
-            var coordsBefore = hostBefore is null ? "<null>" : hostBefore.Start + ".." + hostBefore.End;
+            var failures = 0;
+            var vm = CreateLootVm(out var document);
+            if (document is null)
+            {
+                Console.WriteLine("[红] VM 建不出文档");
+                return 1;
+            }
+            var editor = new CBHK.Utility.Data.JsonText.JsonTextEditor();
+            vm.AttachJsonEditor(editor);
+            PumpDispatcher();
+            vm.LoadMcdocTree(BigLootTableText(12, 4));
+            PumpDispatcher();
+            var state = editor.State;
+            var weight = FindDescendant(document.FindNode("$.pools[0]"),
+                node => node.FieldName == "weight" && node.Json is not null && node.Parent?.Parent is not null);
+            if (weight is null)
+            {
+                Console.WriteLine("[红] 夹具里找不到 $.pools[0].entries[0].weight");
+                return 1;
+            }
+            // 预热：紧凑夹具第一次写回会把整篇重排成标准排版，那不是「改一个值」，先排完再量
+            weight.Value = 5L;
+            PumpDispatcher();
 
-            var restored = -1;
-            state.CaretOffsetProvider = () => origin;
-            state.CaretOffsetRestorer = offset => restored = offset;
-            var aliveBefore = AliveAnchors(state);
-            state.Reformat();
-            var aliveAfter = AliveAnchors(state);
-            Console.WriteLine("[信息] 整篇写回前存活锚点 " + aliveBefore + "，写回后 " + aliveAfter + "（总数 " + state.Anchors.Count + "）");
+            // ① 值编辑：脏区间在光标之前 —— 只动那一个值，光标按增删量平移，落点还是同一个节点
+            var caret = Math.Max(0, editor.Text.Length - 20);
+            editor.CaretOffset = caret;
+            var hostBefore = InnermostSpan(state, caret, out _);
+            var keptNode = document.FindNode("$.type")?.Json;
+            var keptAnchor = keptNode is not null && state.Anchors.TryGetValue(keptNode, out var anchor) ? anchor : null;
+            var wholeBefore = state.WholeWriteCount;
+            var textBefore = editor.Text;
+            weight.Value = 123456L;
+            PumpDispatcher();
+            var dirty = DirtyRegionLength(textBefore, editor.Text);
+            var caretDelta = editor.Text.Length - textBefore.Length;
+            var hostAfter = InnermostSpan(state, editor.CaretOffset, out _);
+            var keptAfter = keptNode is not null && state.Anchors.TryGetValue(keptNode, out var anchorAfter) ? anchorAfter : null;
+            Console.WriteLine("[信息] 值编辑：光标 " + caret + "→" + editor.CaretOffset
+                + " 脏区间=" + dirty + " 整篇写回=" + state.WholeWriteCount + "/" + wholeBefore
+                + " 锚点存活=" + AliveAnchors(state) + "/" + state.Anchors.Count);
+            failures += Assert("值编辑 · 不整篇写回", state.WholeWriteCount == wholeBefore,
+                state.WholeWriteCount + "/" + wholeBefore);
+            failures += Assert("值编辑 · 只动被改的那几个字符", dirty <= 8, dirty.ToString());
+            failures += Assert("值编辑 · 光标按脏区间的增删量平移", editor.CaretOffset == caret + caretDelta,
+                "期望=" + (caret + caretDelta) + " 实得=" + editor.CaretOffset);
+            failures += Assert("值编辑 · 光标还在同一个节点里", hostBefore is not null && ReferenceEquals(hostBefore, hostAfter),
+                "前=" + Describe(hostBefore) + " 后=" + Describe(hostAfter));
+            failures += Assert("值编辑 · 脏区间外的锚点原样存活（没被重建）",
+                keptAnchor is not null && keptAfter is not null && ReferenceEquals(keptAnchor.ValueStart, keptAfter.ValueStart),
+                keptAnchor is null || keptAfter is null ? "取不到锚点" : keptAnchor.ValueStart.Offset + "→" + keptAfter.ValueStart.Offset);
+            failures += Assert("值编辑 · 文本与 AST 同代", state.IsInStepWithDocument, "");
 
-            var checks = new Checks();
-            checks.That(restored >= 0, "整篇写回后光标被放回", "restored=" + restored);
-            var hostAfter = restored >= 0 ? InnermostSpan(state, restored, out _) : null;
-            checks.That(hostBefore is not null && ReferenceEquals(hostBefore, hostAfter), "光标落回同一个节点",
-                hostBefore is null ? "原文里找不到宿主节点" : "原文区间=" + coordsBefore + " origin=" + origin + " restored=" + restored + " after=" + Describe(hostAfter));
-            checks.That(restored >= 0 && restored < state.Document.Text.Length, "光标没有夹到文末",
-                "restored=" + restored + " 文本长=" + state.Document.Text.Length);
-            checks.That(state.IsInStepWithDocument, "写回后文本与 AST 同代", "");
-            return checks.Finish("--gate caret");
+            // ② 脏区间在光标之后：光标一动不动（一次算术，没有节点级二次定位）
+            var early = 8;
+            editor.CaretOffset = early;
+            weight.Value = 9L;
+            PumpDispatcher();
+            Console.WriteLine("[信息] 光标在脏区间之前：" + early + "→" + editor.CaretOffset);
+            failures += Assert("脏区间在光标之后 · 光标一动不动", editor.CaretOffset == early,
+                "期望=" + early + " 实得=" + editor.CaretOffset);
+
+            // ③ 结构编辑（加一个条目）：整篇重排走定向拼接，依然不整篇替换
+            var spliceBefore = state.SpliceCount;
+            var wholeBefore3 = state.WholeWriteCount;
+            var textBefore3 = editor.Text;
+            document.FindNode("$.pools[0].entries")?.AddItemCommand?.Execute(null);
+            PumpDispatcher();
+            var dirty3 = DirtyRegionLength(textBefore3, editor.Text);
+            Console.WriteLine("[信息] 结构编辑：脏区间=" + dirty3 + " 整篇写回=" + state.WholeWriteCount + "/" + wholeBefore3
+                + " 定向写回=" + state.SpliceCount + "/" + spliceBefore + " 文本长=" + editor.Text.Length);
+            failures += Assert("结构编辑 · 不整篇写回", state.WholeWriteCount == wholeBefore3,
+                state.WholeWriteCount + "/" + wholeBefore3);
+            failures += Assert("结构编辑 · 走一次定向拼接", state.SpliceCount > spliceBefore,
+                state.SpliceCount + "/" + spliceBefore);
+            failures += Assert("结构编辑 · 只动新增的那一块", dirty3 <= 120, dirty3.ToString());
+            failures += Assert("结构编辑 · 文本与 AST 同代", state.IsInStepWithDocument, "");
+
+            // ④ 整篇接管（换一代文本）：记一次整篇写回，光标不越界，AST 与文本同代
+            var other = McdocJsonFormatter.Format(document.RootJson).Replace("\"weight\": 9", "\"weight\": 7", StringComparison.Ordinal);
+            editor.CaretOffset = 6;
+            var wholeBefore4 = state.WholeWriteCount;
+            state.Reload(other);
+            Console.WriteLine("[信息] 整篇接管：光标=" + editor.CaretOffset + " 文本长=" + editor.Text.Length
+                + " 整篇写回=" + state.WholeWriteCount + "/" + wholeBefore4);
+            failures += Assert("整篇接管 · 记一次整篇写回", state.WholeWriteCount == wholeBefore4 + 1,
+                state.WholeWriteCount + "/" + wholeBefore4);
+            failures += Assert("整篇接管 · 光标不越界", editor.CaretOffset >= 0 && editor.CaretOffset <= editor.Text.Length,
+                editor.CaretOffset + "/" + editor.Text.Length);
+            failures += Assert("整篇接管 · 文本与 AST 同代", state.IsInStepWithDocument, "");
+            Console.WriteLine(failures == 0 ? "[绿] --gate caret 全绿" : "[红] --gate caret 红 " + failures + " 条");
+            return failures == 0 ? 0 : 1;
+        }
+
+        /// <summary>两段文本真正不同的那段长度（脏区间 = 两侧被替换掉的字符数之和）。</summary>
+        private static int DirtyRegionLength(string before, string after)
+        {
+            if (before is null || after is null) return int.MaxValue;
+            var limit = Math.Min(before.Length, after.Length);
+            var prefix = 0;
+            while (prefix < limit && before[prefix] == after[prefix]) prefix++;
+            var suffix = 0;
+            while (suffix < limit - prefix && before[before.Length - 1 - suffix] == after[after.Length - 1 - suffix]) suffix++;
+            return (before.Length - prefix - suffix) + (after.Length - prefix - suffix);
         }
 
         private static string AliveAnchors(JsonTextState state)
@@ -6614,6 +6705,20 @@ namespace CBHK.Probe
             => typeof(CBHK.ViewModel.Generator.McdocGeneratorViewModelBase)
                 .GetField("projector", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
                 ?.GetValue(vm) as McdocRowProjector;
+
+        /// <summary>按谓词找第一个后代（顺带按需建子级）：懒建树下比按路径查稳。</summary>
+        private static McdocTreeNode FindDescendant(McdocTreeNode node, Func<McdocTreeNode, bool> match)
+        {
+            if (node is null) return null;
+            if (match(node)) return node;
+            node.EnsureChildren();
+            foreach (var child in McdocPresenterRegistry.Default.Children(node))
+            {
+                var hit = FindDescendant(child, match);
+                if (hit is not null) return hit;
+            }
+            return null;
+        }
 
         /// <summary>第一个有值的布尔节点路径：用来量一次 True/False 切换。</summary>
         private static string FindBoolPath(McdocTreeDocument document)
