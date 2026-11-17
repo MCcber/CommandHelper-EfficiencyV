@@ -1,0 +1,478 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <!--
+      XAML 里用的是绝对 pack URI（/CBHK;component/...），解析目标就是"名为 CBHK 的程序集"。
+      不写这一行时程序集名按工程文件名推断为 cbhk（小写），在 Windows 上靠大小写不敏感侥幸成立；
+      显式声明后与验证副本 cbhk.verify.csproj 完全一致，避免换平台/换构建工具时资源解析失败。
+    -->
+    <AssemblyName>CBHK</AssemblyName>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>True</UseWindowsForms>
+    <UseWPF>True</UseWPF>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+    <PackageIcon></PackageIcon>
+    <ApplicationIcon>cb.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <NoStdLib>true</NoStdLib>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <NoStdLib>true</NoStdLib>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Common\**" />
+    <Compile Remove="CustomControl\VectorTabItem\**" />
+    <Compile Remove="Properties\**" />
+    <Compile Remove="Utility\Displayer\**" />
+    <Compile Remove="Model\CustomControl\**" />
+    <Compile Remove="Utility\Event\**" />
+    <Compile Remove="纹理\**" />
+    <EmbeddedResource Remove="Common\**" />
+    <EmbeddedResource Remove="CustomControl\VectorTabItem\**" />
+    <EmbeddedResource Remove="Properties\**" />
+    <EmbeddedResource Remove="Utility\Displayer\**" />
+    <EmbeddedResource Remove="Model\CustomControl\**" />
+    <EmbeddedResource Remove="Utility\Event\**" />
+    <EmbeddedResource Remove="纹理\**" />
+    <None Remove="Common\**" />
+    <None Remove="CustomControl\VectorTabItem\**" />
+    <None Remove="Properties\**" />
+    <None Remove="Utility\Displayer\**" />
+    <None Remove="Model\CustomControl\**" />
+    <None Remove="Utility\Event\**" />
+    <None Remove="纹理\**" />
+    <Page Remove="Common\**" />
+    <Page Remove="CustomControl\VectorTabItem\**" />
+    <Page Remove="Properties\**" />
+    <Page Remove="Utility\Displayer\**" />
+    <Page Remove="Model\CustomControl\**" />
+    <Page Remove="Utility\Event\**" />
+    <Page Remove="纹理\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="cb.ico" />
+    <Resource Include="Resource\CBHK\Image\Generator\Advancement.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Armorstand.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Datapack.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Dimension.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Entity.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Firework.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Item.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Loottable.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Ooc.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Recipe.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Spawner.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Tag.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Villager.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Writtenbook.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\CustomWorld.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\DamageType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\分类.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Sign.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\ItemModifier.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\DimensionType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\ChatType.png" />
+    <Resource Include="Resource\CBHK\Image\Generator\Predicate.png" />
+    <Resource Include="Resource\Common\Image\Datapack\Command1.png" />
+    <Resource Include="Resource\Common\Image\Datapack\Command2.png" />
+    <Resource Include="Resource\Common\Image\Datapack\Command3.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconArrowLeft.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconArrowRight.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconDataPack.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconFolder.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconLink.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconNew.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconProject.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmall1.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmall2.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmall3.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmallLocked.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmallPlus.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmallYes.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconTemplate.png" />
+    <Resource Include="Resource\Common\Image\Recipe\Cell.png" />
+    <Resource Include="Resource\Common\Image\Recipe\CraftingTable.png" />
+    <Resource Include="Resource\Common\Image\Recipe\Arrow.png" />
+    <Resource Include="Resource\Common\Image\Recipe\BlastFurnace.png" />
+    <Resource Include="Resource\Common\Image\Recipe\Furnace.png" />
+    <Resource Include="Resource\Common\Image\Recipe\SmithingTable.png" />
+    <Resource Include="Resource\Common\Image\Recipe\Smoker.png" />
+    <Resource Include="Resource\CBHK\Image\Error.png">
+      <CopyToOutputDirectory></CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\CBHK\Image\eyeHide.png" />
+    <Resource Include="Resource\CBHK\Image\eyeShow.png" />
+    <Resource Include="Resource\CBHK\Image\IconMore.png" />
+    <Resource Include="Resource\CBHK\Image\IconSetting.png" />
+    <Resource Include="Resource\CBHK\Image\IconTeach.png" />
+    <Resource Include="Resource\CBHK\Image\IconUser.png" />
+    <Resource Include="Resource\CBHK\Image\Info.png">
+      <CopyToOutputDirectory></CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\CBHK\Image\More\github.png" />
+    <Resource Include="Resource\Common\Fonts\MinecraftAE.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\CBHK\Image\cbhk_group.jpg" />
+    <Resource Include="Resource\CBHK\Image\my_qq.png" />
+    <Resource Include="Resource\CBHK\Image\special_thanks.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="IWshRuntimeLibrary">
+      <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\CBHK\Image\CommandClasses\advance.png" />
+    <Resource Include="Resource\CBHK\Image\CommandClasses\basic.png" />
+    <Resource Include="Resource\CBHK\Image\CommandClasses\original_edition_mod.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\CBHK\Image\More\conversation_group.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.8">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.8 %28x86 和 x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+    <PackageReference Include="CommunityToolkit.Mvvm">
+      <Version>8.4.2</Version>
+    </PackageReference>
+    <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.27.3" />
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.161" />
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="Prism.Core" Version="9.0.537" />
+    <PackageReference Include="Prism.DryIoc" Version="9.0.537" />
+    <PackageReference Include="Prism.Wpf" Version="9.0.537" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="SharpNBT" Version="1.3.1" />
+    <PackageReference Include="VirtualizingWrapPanel" Version="2.5.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\CBHK\Image\empty.png" />
+    <Resource Include="Resource\Common\Image\Add.png" />
+    <Resource Include="Resource\Common\Image\Attribute.png" />
+    <Resource Include="Resource\Common\Image\BlackEdit.png" />
+    <Resource Include="Resource\Common\Image\Boots.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Common\Image\Chestplate.png" />
+    <Resource Include="Resource\Common\Image\ColorPicker.png" />
+    <Resource Include="Resource\Common\Image\Copy.png" />
+    <Resource Include="Resource\Common\Image\CopyAll.png" />
+    <Resource Include="Resource\Common\Image\Cut.png" />
+    <Resource Include="Resource\Common\Image\Delete.png" />
+    <Resource Include="Resource\Common\Image\ButtonNormal.png" />
+    <Resource Include="Resource\Common\Image\ButtonPressed.png" />
+    <Resource Include="Resource\Common\Image\TextEditBox.png" />
+    <Resource Include="Resource\Common\Image\TextToggleButtonNormal.png" />
+    <Resource Include="Resource\Common\Image\TextToggleButtonPressed.png" />
+    <Resource Include="Resource\Common\Image\eyeHide.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\Common\Image\eyeShow.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\Common\Image\Fold.png" />
+    <Resource Include="Resource\Common\Image\Frame.png" />
+    <Resource Include="Resource\Common\Image\Helmet.png" />
+    <Resource Include="Resource\Common\Image\History.png" />
+    <Resource Include="Resource\Common\Image\IconFree.png" />
+    <Resource Include="Resource\Common\Image\IconFresh.png" />
+    <Resource Include="Resource\Common\Image\IconGaze.png" />
+    <Resource Include="Resource\Common\Image\IconInvisible.png" />
+    <Resource Include="Resource\Common\Image\IconPlay.png" />
+    <Resource Include="Resource\Common\Image\IconReset.png" />
+    <Resource Include="Resource\Common\Image\IconShouder.png" />
+    <Resource Include="Resource\Common\Image\IconThirdPerson.png" />
+    <Resource Include="Resource\Common\Image\IconVisible.png" />
+    <Resource Include="Resource\Common\Image\itemFrame.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\Common\Image\Leggings.png" />
+    <Resource Include="Resource\Common\Image\Open.png" />
+    <Resource Include="Resource\Common\Image\Open2.png" />
+    <Resource Include="Resource\Common\Image\OpenTerminal.png" />
+    <Resource Include="Resource\Common\Image\Paste.png" />
+    <Resource Include="Resource\Common\Image\Revoke.png" />
+    <Resource Include="Resource\Common\Image\Save.png" />
+    <Resource Include="Resource\Common\Image\SaveAs.png" />
+    <Resource Include="Resource\Common\Image\Slot.png" />
+    <Resource Include="Resource\Common\Image\SmithingTemplate.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconAdvancement.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconDimension.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconEntity.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconFirework.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconItem.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconRecipe.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconTag.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconVillager.png" />
+    <Resource Include="Resource\Common\Image\spyglass_scope.png" />
+    <Resource Include="Resource\Common\Image\Submit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Common\Image\Switch.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Common\Image\TrimMaterial.png" />
+    <Resource Include="Resource\Common\Image\WhiteEdit.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\Common\Image\Maxmize.png" />
+    <Resource Include="Resource\Common\Image\MaxmizeHover.png" />
+    <Resource Include="Resource\Common\Image\Minimize.png" />
+    <Resource Include="Resource\Common\Image\MinimizeHover.png" />
+    <Resource Include="Resource\Common\Image\Window.png" />
+    <Resource Include="Resource\Common\Image\WindowHover.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Common\Image\TradeRightArrow.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconArmorStand.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconBiome.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconCommandBlock.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconSpawner.png" />
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconWrittenBook.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Common\Image\Issue.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconDataPack.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Common\Image\IconArrowLeft.png" />
+    <Resource Include="Resource\Common\Image\IconArrowRight.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\CBHK\Image\IconHome.png" />
+    <Resource Include="Resource\CBHK\Image\IconLink.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\CBHK\Image\More\Thanks\1.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\1Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\2.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\2Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\3.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\3Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\4.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\4Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\5.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\5Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\6.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\6Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\7.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\7Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\8.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\8Hover.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\9.png" />
+    <Resource Include="Resource\CBHK\Image\More\Thanks\9Hover.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Common\Image\Datapack\dataPackIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\folderIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\mcfIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\lockIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\plusIcon.png" />
+    <Resource Include="Resource\Common\Image\Datapack\IconSmallUnlocked.png" />
+    <Resource Include="Resource\Common\Image\Datapack\editedIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="IWshRuntimeLibrary\IWshShell.cs" />
+    <Compile Remove="IWshRuntimeLibrary\IWshShell2.cs" />
+    <Compile Remove="IWshRuntimeLibrary\IWshShell3.cs" />
+    <Compile Remove="IWshRuntimeLibrary\IWshShortcut.cs" />
+    <Compile Remove="IWshRuntimeLibrary\WshShell.cs" />
+    <Compile Remove="System.Diagnostics.CodeAnalysi\NotNullAttribute.cs" />
+    <Compile Remove="System.Diagnostics.CodeAnalysi\NotNullIfNotNullAttribute.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="cb.ico" />
+    <None Remove="Resource\CBHK\Image\Generator\advancement.png" />
+    <None Remove="Resource\CBHK\Image\Generator\armorstand.png" />
+    <None Remove="Resource\CBHK\Image\Generator\datapack.png" />
+    <None Remove="Resource\CBHK\Image\Generator\Entities.png" />
+    <None Remove="Resource\CBHK\Image\Generator\Entity.png" />
+    <None Remove="Resource\CBHK\Image\Generator\firework.png" />
+    <None Remove="Resource\CBHK\Image\Generator\item.png" />
+    <None Remove="Resource\CBHK\Image\Generator\loottable.png" />
+    <None Remove="Resource\CBHK\Image\Generator\recipe.png" />
+    <None Remove="Resource\CBHK\Image\Generator\spawner.png" />
+    <None Remove="Resource\CBHK\Image\Generator\tag.png" />
+    <None Remove="Resource\CBHK\Image\Generator\villager.png" />
+    <None Remove="Resource\CBHK\Image\Generator\writtenbook.png" />
+    <None Remove="Resource\CBHK\Image\Generator\分类.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconAdvancement.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconDimension.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconEntity.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconFirework.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconItem.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconRecipe.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconSign.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconTag.png" />
+    <None Remove="Resource\Common\Image\SpawnerIcon\IconVillager.png" />
+    <None Remove="Utility\jsonReader - v1.3.js" />
+    <None Remove="Resource\CBHK\Image\Error.png" />
+    <None Remove="Resource\CBHK\Image\eyeHide.png" />
+    <None Remove="Resource\CBHK\Image\eyeShow.png" />
+    <None Remove="Resource\CBHK\Image\GeneratorButtonBackground.png" />
+    <None Remove="Resource\CBHK\Image\IconMore.png" />
+    <None Remove="Resource\CBHK\Image\IconSetting.png" />
+    <None Remove="Resource\CBHK\Image\IconTeach.png" />
+    <None Remove="Resource\CBHK\Image\IconUser.png" />
+    <None Remove="Resource\CBHK\Image\Info.png" />
+    <None Remove="Resource\CBHK\Image\login.jpg" />
+    <None Remove="Resource\CBHK\Image\LoginMinimize.png" />
+    <None Remove="Resource\CBHK\Image\LoginText.png" />
+    <None Remove="Resource\CBHK\Image\LoginX.png" />
+    <None Remove="Resource\CBHK\Image\More\github.png" />
+    <None Remove="Resource\CBHK\Image\SigninBackground.png" />
+    <None Remove="Resource\Common\Image\Add.png" />
+    <None Remove="Resource\Common\Image\Attribute.png" />
+    <None Remove="Resource\Common\Image\BlackEdit.png" />
+    <None Remove="Resource\Common\Image\Boots.png" />
+    <None Remove="Resource\Common\Image\ButtonFrame.png" />
+    <None Remove="Resource\Common\Image\ButtonNormalBottom.png" />
+    <None Remove="Resource\Common\Image\ButtonNormalLeft.png" />
+    <None Remove="Resource\Common\Image\ButtonNormalRight.png" />
+    <None Remove="Resource\Common\Image\ButtonNormalTop.png" />
+    <None Remove="Resource\Common\Image\ButtonPressedBottom.png" />
+    <None Remove="Resource\Common\Image\ButtonPressedLeft.png" />
+    <None Remove="Resource\Common\Image\ButtonPressedRight.png" />
+    <None Remove="Resource\Common\Image\ButtonPressedTop.png" />
+    <None Remove="Resource\Common\Image\Chestplate.png" />
+    <None Remove="Resource\Common\Image\ColorPicker.png" />
+    <None Remove="Resource\Common\Image\Copy.png" />
+    <None Remove="Resource\Common\Image\CopyAll.png" />
+    <None Remove="Resource\Common\Image\Cut.png" />
+    <None Remove="Resource\Common\Image\Delete.png" />
+    <None Remove="Resource\Common\Image\ButtonNormal.png" />
+    <None Remove="Resource\Common\Image\ButtonPressed.png" />
+    <None Remove="Resource\Common\Image\TextEditBox.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonNormal.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonPressed.png" />
+    <None Remove="Resource\Common\Image\eyeHide.png" />
+    <None Remove="Resource\Common\Image\eyeShow.png" />
+    <None Remove="Resource\Common\Image\Fold.png" />
+    <None Remove="Resource\Common\Image\Helmet.png" />
+    <None Remove="Resource\Common\Image\History.png" />
+    <None Remove="Resource\Common\Image\IconFree.png" />
+    <None Remove="Resource\Common\Image\IconFresh.png" />
+    <None Remove="Resource\Common\Image\IconGaze.png" />
+    <None Remove="Resource\Common\Image\IconInvisible.png" />
+    <None Remove="Resource\Common\Image\IconPlay.png" />
+    <None Remove="Resource\Common\Image\IconReset.png" />
+    <None Remove="Resource\Common\Image\IconShouder.png" />
+    <None Remove="Resource\Common\Image\IconThirdPerson.png" />
+    <None Remove="Resource\Common\Image\IconVisible.png" />
+    <None Remove="Resource\Common\Image\itemFrame.png" />
+    <None Remove="Resource\Common\Image\Leggings.png" />
+    <None Remove="Resource\Common\Image\Open.png" />
+    <None Remove="Resource\Common\Image\Open2.png" />
+    <None Remove="Resource\Common\Image\OpenTerminal.png" />
+    <None Remove="Resource\Common\Image\Paste.png" />
+    <None Remove="Resource\Common\Image\Revoke.png" />
+    <None Remove="Resource\Common\Image\Save.png" />
+    <None Remove="Resource\Common\Image\SaveAs.png" />
+    <None Remove="Resource\Common\Image\SelectedTabItemLeft.png" />
+    <None Remove="Resource\Common\Image\SelectedTabItemRight.png" />
+    <None Remove="Resource\Common\Image\SelectedTabItemTop.png" />
+    <None Remove="Resource\Common\Image\Slot.png" />
+    <None Remove="Resource\Common\Image\SmithingTemplate.png" />
+    <None Remove="Resource\Common\Image\spyglass_scope.png" />
+    <None Remove="Resource\Common\Image\Submit.png" />
+    <None Remove="Resource\Common\Image\TabItemLeft.png" />
+    <None Remove="Resource\Common\Image\TabItemRight.png" />
+    <None Remove="Resource\Common\Image\TabItemTop.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonFalseBottomFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonFalseFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonFalseLeftFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonFalseRightFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonFalseTopFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonTrueBottomFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonTrueFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonTrueLeftFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonTrueRightFrame.png" />
+    <None Remove="Resource\Common\Image\TextToggleButtonTrueTopFrame.png" />
+    <None Remove="Resource\Common\Image\TrimMaterial.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Common\Image\SpawnerIcon\IconSign.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+    <!-- 运行期配置（Registries/Generator/ItemTextures）由部署目录提供，项目源码不携带 Configuration.json -->
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 只放注册表与 mcdoc 都没有的命令枚举；注册表数据由 RegistryDataService 直接读部署目录 -->
+    <Content Include="Resource\CBHK\Data\SupplementalData.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\MinecraftLanguageModelLibrary\MinecraftLanguageModelLibrary.csproj" />
+    <ProjectReference Include="..\CBHK.Domain\CBHK.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Model\Generator\Entity\" />
+  </ItemGroup>
+</Project>
