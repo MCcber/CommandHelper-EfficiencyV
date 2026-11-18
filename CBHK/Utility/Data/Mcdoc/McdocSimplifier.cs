@@ -1,4 +1,4 @@
-// mcdoc 类型求值器 —— 逐函数移植自 SpyglassMC/Spyglass
+﻿// mcdoc 类型求值器 —— 逐函数移植自 SpyglassMC/Spyglass
 // packages/mcdoc/src/runtime/checker/index.ts 的 simplify 部分（L803-1362）。
 // 与原实现的差异只在"如何拿到符号"：spyglass 走 SymbolUtil 查询，这里走 IMcdocSymbols。
 // 方法数与 spyglass 一一对应，不再额外分层（避免类/方法爆炸）。
@@ -184,7 +184,7 @@ namespace CBHK.Utility.Data.Mcdoc
 
         private static McdocSimplifyResult SimplifyDispatcher(McdocType typeDef, McdocSimplifyContext context)
         {
-            var members = context.Runtime.Symbols?.GetDispatcherMembers(typeDef.Registry, context.Runtime.DocumentUri);
+            var members = context.Runtime.Symbols?.GetDispatcherMembers(typeDef.Registry, context.Runtime.DocumentUri, context.Runtime.GameVersion);
             if (members == null)
             {
                 context.Runtime.Report("Tried to access unknown dispatcher " + typeDef.Registry);
@@ -419,59 +419,84 @@ namespace CBHK.Utility.Data.Mcdoc
                         foreach (var pair in symbolMap) PushValue(pair.Key, pair.Value);
                         continue;
                     }
-                    var possibilities = new List<(McdocValueNode value, McdocRuntimeNode key)>
+                    // 成员作用域（union 成员 / spread）按"自己是 self"起步；但字段声明的联合（现场：
+                    // 26.3 的 state?: (block_states[[block]] | block_states[[blocks]])）成员是**字段类型本身**，
+                    // 兄弟键 blocks 在父对象上 —— 从 self 起步一个孩子都没有，于是退成 %none、行上只剩自由键。
+                    // 所以：self 起步走空时，按父对象的兄弟键再走一遍（self 优先，parent 只兜底）。
+                    List<(McdocValueNode value, McdocRuntimeNode key)> Walk((McdocValueNode value, McdocRuntimeNode key) start)
                     {
-                        context.IsMember
-                            ? (context.Node, context.Node?.RuntimeKey)
-                            : (context.Node?.Parent, context.Node?.RuntimeKey)
-                    };
-                    foreach (var entry in index.Accessor ?? [])
-                    {
-                        if (entry == "%parent")
+                        var nodes = new List<(McdocValueNode value, McdocRuntimeNode key)> { start };
+                        foreach (var entry in index.Accessor ?? [])
                         {
-                            possibilities = possibilities.Select(p => (p.value?.Parent, p.value?.RuntimeKey)).ToList();
-                        }
-                        else if (entry == "%key")
-                        {
-                            possibilities = possibilities.Select(p => p.key == null
-                                ? ((McdocValueNode)null, (McdocRuntimeNode)null)
-                                : (McdocValueNode.Of(p.key, p.value, p.key), (McdocRuntimeNode)null)).ToList();
-                            break;
-                        }
-                        else if (!entry.StartsWith("%", StringComparison.Ordinal))
-                        {
-                            var next = new List<(McdocValueNode, McdocRuntimeNode)>();
-                            foreach (var node in possibilities)
+                            if (entry == "%parent")
                             {
-                                if (node.value == null)
-                                {
-                                    next.Add((null, null));
-                                    continue;
-                                }
-                                var childContext = context.Clone();
-                                childContext.Node = node.value;
-                                var inferred = node.value.Node?.InferredType ?? McdocType.Any();
-                                var simplified = Simplify(inferred, childContext).TypeDef;
-                                var accessor = context.Runtime.Accessor;
-                                if (accessor == null) continue;
-                                foreach (var pair in accessor.GetChildren(node.value.Node?.OriginalNode, simplified))
-                                {
-                                    var keyType = pair?.Key?.InferredType;
-                                    if (keyType == null || keyType.Kind != McdocTypeKind.Literal
-                                        || keyType.LiteralKind != McdocLiteralKind.String
-                                        || !Equals(keyType.Value, entry)) continue;
-                                    foreach (var value in pair.PossibleValues ?? [])
-                                        next.Add((McdocValueNode.Of(value, node.value, pair.Key), null));
-                                }
+                                nodes = nodes.Select(p => (p.value?.Parent, p.value?.RuntimeKey)).ToList();
                             }
-                            possibilities = next;
+                            else if (entry == "%key")
+                            {
+                                nodes = nodes.Select(p => p.key == null
+                                    ? ((McdocValueNode)null, (McdocRuntimeNode)null)
+                                    : (McdocValueNode.Of(p.key, p.value, p.key), (McdocRuntimeNode)null)).ToList();
+                                break;
+                            }
+                            else if (!entry.StartsWith("%", StringComparison.Ordinal))
+                            {
+                                var next = new List<(McdocValueNode, McdocRuntimeNode)>();
+                                foreach (var node in nodes)
+                                {
+                                    if (node.value == null)
+                                    {
+                                        next.Add((null, null));
+                                        continue;
+                                    }
+                                    var childContext = context.Clone();
+                                    childContext.Node = node.value;
+                                    var inferred = node.value.Node?.InferredType ?? McdocType.Any();
+                                    var simplified = Simplify(inferred, childContext).TypeDef;
+                                    var accessor = context.Runtime.Accessor;
+                                    if (accessor == null) continue;
+                                    foreach (var pair in accessor.GetChildren(node.value.Node?.OriginalNode, simplified))
+                                    {
+                                        var keyType = pair?.Key?.InferredType;
+                                        if (keyType == null || keyType.Kind != McdocTypeKind.Literal
+                                            || keyType.LiteralKind != McdocLiteralKind.String
+                                            || !Equals(keyType.Value, entry)) continue;
+                                        foreach (var value in pair.PossibleValues ?? [])
+                                            next.Add((McdocValueNode.Of(value, node.value, pair.Key), null));
+                                    }
+                                }
+                                nodes = next;
+                            }
+                            else
+                            {
+                                return null;
+                            }
                         }
-                        else
-                        {
-                            lookup.Add("%none");
-                            bailedOut = true;
-                            break;
-                        }
+                        return nodes;
+                    }
+                    // 起步点只看访问器第一段是**谁身上的键**：自己身上有就走自己（spread 的兄弟键），
+                    // 没有就说明它是外层结构的兄弟键（state → blocks），直接从父对象起步。
+                    // 这里用 JSON 键名判，不做第二次求值 —— 全展开时每多走一遍都是白花的毫秒。
+                    var firstSegment = (index.Accessor ?? []).FirstOrDefault();
+                    var selfCarries = !context.IsMember
+                        || (firstSegment is null || firstSegment.StartsWith("%", StringComparison.Ordinal)
+                            || (context.Node?.Node?.OriginalNode is McdocJsonValue selfJson
+                                && selfJson.Kind == McdocJsonKind.Object
+                                && (selfJson.Properties ?? []).Any(pair => pair.Key == firstSegment)));
+                    var start = context.IsMember && selfCarries
+                        ? (context.Node, context.Node?.RuntimeKey)
+                        : (context.Node?.Parent, context.Node?.RuntimeKey);
+                    var possibilities = Walk(start);
+                    if (context.IsMember && selfCarries && (possibilities is null || possibilities.Count == 0)
+                        && context.Node?.Parent is not null)
+                    {
+                        IndexTrace?.Invoke("[" + (context.Tag ?? "?") + "] self 起步没孩子 -> 退回父对象再走一遍");
+                        possibilities = Walk((context.Node.Parent, context.Node?.RuntimeKey)) ?? possibilities;
+                    }
+                    if (possibilities is null)
+                    {
+                        lookup.Add("%none");
+                        bailedOut = true;
                     }
                     if (!bailedOut)
                     {
@@ -898,7 +923,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     // 三参重载：模块必填——真索引里全限定名也要参考模块才能命中（两参在真 schema 上返回 null，
                     // 于是"带动态索引"判不出来，实参又被打回容器层求值）。
-                    target = runtime?.Symbols?.GetTypeDef(type.Path, runtime.DocumentUri ?? "",
+                    // Peek 不记账：形参名 T 在这里查不到是正常的，不许污染状态栏的"未解析"
+                    target = runtime?.Symbols?.PeekTypeDef(type.Path, runtime.DocumentUri ?? "",
                         string.IsNullOrEmpty(type.Module) ? runtime.ModulePath : type.Module);
                 }
                 catch (Exception)

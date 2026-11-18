@@ -371,7 +371,7 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         private static void ApplyDispatcherKey(McdocTreeNode node, string registry, McdocRuntime runtime)
         {
-            var members = runtime?.Symbols?.GetDispatcherMembers(registry, runtime.DocumentUri ?? "");
+            var members = runtime?.Symbols?.GetDispatcherMembers(registry, runtime.DocumentUri ?? "", runtime.GameVersion);
             if (members is null || members.Count == 0) return;
 
             var options = new List<string>();
@@ -397,10 +397,28 @@ namespace CBHK.Utility.Data.Mcdoc
                     Value = new MetaValue { LiteralValue = option },
                 });
             }
-            var current = node.Json is { Kind: McdocJsonKind.String } ? node.Json.StringValue : null;
-            node.SelectedEnumOption = current is null
-                ? node.EnumOptionList.FirstOrDefault()
-                : node.EnumOptionList.FirstOrDefault(item => item.Name == current) ?? node.EnumOptionList.FirstOrDefault();
+            SelectCurrent(node, node.Json is { Kind: McdocJsonKind.String } ? node.Json.StringValue : null);
+        }
+
+        /// <summary>
+        /// 建树期落选中项，且**行上显示的值必须等于文档里的值**：文档里的值不在候选内（旧版本写的 /
+        /// 手改过的 / 注册表里没有的自定义 id）时把它本身挂成一项并选中；回落 FirstOrDefault 会让
+        /// 行上显示**另一个值**，用户以为文档里写的就是那个。静默落项：走 setter 会在建树中途触发
+        /// ValueChanged → 整条编辑管线（诊断/依赖重建/物化/写回文本）对这份还没建完的 JSON 再跑一遍。
+        /// </summary>
+        private static void SelectCurrent(McdocTreeNode node, string current, string match = null)
+        {
+            if (node?.EnumOptionList is not { Count: > 0 } options) return;
+            var selected = current is null
+                ? null
+                : options.FirstOrDefault(item => item.Name == (match ?? current));
+            if (current is not null && selected is null)
+            {
+                // 这一份是**该节点私有**的（调用点的候选集合本来就按节点新建），插进去不会污染别的节点
+                selected = new EnumMember { Name = current, Value = new MetaValue { LiteralValue = current } };
+                options.Insert(0, selected);
+            }
+            node.SetEnumOptionSilently(selected ?? options.FirstOrDefault());
         }
 
         /// <summary>
@@ -441,10 +459,9 @@ namespace CBHK.Utility.Data.Mcdoc
                 });
             }
             var current = node.Json is { Kind: McdocJsonKind.String } ? node.Json.StringValue : null;
-            var normalized = current is null ? null : McdocIdSpec.LengthenResourceLocation(current);
-            node.SelectedEnumOption = normalized is null
-                ? node.EnumOptionList.FirstOrDefault()
-                : node.EnumOptionList.FirstOrDefault(item => item.Name == normalized) ?? node.EnumOptionList.FirstOrDefault();
+            // 候选项是加长过的（minecraft: 前缀），文档里的值可能没写前缀：比对用加长形态，
+            // 挂"候选外的值"时仍挂文档原文，行上显示的值才等于 JSON。
+            SelectCurrent(node, current, current is null ? null : McdocIdSpec.LengthenResourceLocation(current));
         }
 
         /// <summary>
@@ -474,18 +491,18 @@ namespace CBHK.Utility.Data.Mcdoc
             }
         }
 
-        /// <summary>动态键行的键候选：键类型带 #[id] 且注册表取得到值时，把键变成下拉。</summary>
+        /// <summary>
+        /// 动态键行的键候选：键类型带 #[id] 且注册表取得到值（开放键），或键是闭合枚举（[MobCategory]）时，把键变成下拉。
+        /// </summary>
         public static void ApplyKeyOptions(McdocTreeNode row, McdocType keyType, McdocRuntime runtime,
             IReadOnlyCollection<string> exclude = null)
         {
             if (row is null || keyType is null || runtime is null) return;
-            var spec = Resolve(keyType, runtime);
-            if (string.IsNullOrEmpty(spec?.Registry)) return;
-
-            var options = keyType.IdMembers;
+            var options = KeyOrder(keyType);
             if (options is not { Count: > 0 }) return;
 
             row.UseKeySelect = true;
+            row.KeySpaceOpen = !KeySpaceClosed(keyType);
             row.KeyOptionList = new ObservableCollection<EnumMember>();
             foreach (var option in options)
             {
@@ -496,10 +513,47 @@ namespace CBHK.Utility.Data.Mcdoc
                     Value = new MetaValue { LiteralValue = option },
                 });
             }
-            if (!string.IsNullOrEmpty(row.EditingKey))
+            var current = row.IsMapEntry ? row.FieldName : row.EditingKey;
+            if (!string.IsNullOrEmpty(current))
             {
-                row.SelectedKey = row.KeyOptionList.FirstOrDefault(item => item.Name == row.EditingKey);
+                var selected = row.KeyOptionList.FirstOrDefault(item => string.Equals(item.Name, current, StringComparison.Ordinal));
+                if (selected is null && row.IsMapEntry)
+                {
+                    // 文档里的键可能不在候选表里（旧版本写的 / 手改的），补一条顶上去，别让下拉空着
+                    selected = new EnumMember { Name = current, Value = new MetaValue { LiteralValue = current } };
+                    row.KeyOptionList.Insert(0, selected);
+                }
+                row.SelectedKey = selected;
             }
+        }
+
+        /// <summary>键空间是否闭合（键只能是枚举成员）：闭合枚举为真，带 #[id] 的注册表键为假。</summary>
+        public static bool KeySpaceClosed(McdocType keyType) => Unwrap(keyType)?.Kind == McdocTypeKind.Enum;
+
+        /// <summary>拆掉指令壳（#[id]、#[since] 之类）取里面的形状。</summary>
+        private static McdocType Unwrap(McdocType keyType)
+        {
+            var shape = keyType;
+            for (var depth = 0; shape?.IsDirective == true && shape.Item is not null && depth < 8; depth++)
+            {
+                shape = shape.Item;
+            }
+            return shape;
+        }
+
+        /// <summary>键候选的排序依据：带 #[id] 的用注册表成员表，闭合枚举键用枚举成员值。</summary>
+        private static IReadOnlyList<string> KeyOrder(McdocType keyType)
+        {
+            if (keyType?.IdMembers is { Count: > 0 } members) return members;
+            var shape = Unwrap(keyType);
+            if (shape?.Kind != McdocTypeKind.Enum) return null;
+            var values = new List<string>();
+            foreach (var value in shape.EnumValues ?? [])
+            {
+                var text = Convert.ToString(value?.Value);
+                if (!string.IsNullOrEmpty(text)) values.Add(text);
+            }
+            return values;
         }
 
         /// <summary>
@@ -510,7 +564,7 @@ namespace CBHK.Utility.Data.Mcdoc
         {
             if (row?.KeyOptionList is not { Count: > 0 } options) return;
             if (!string.IsNullOrEmpty(row.EditingKey)) return;   // 已经有键就不抢
-            var order = keyType?.IdMembers;
+            var order = KeyOrder(keyType);
             var start = 0;
             if (order is { Count: > 0 } && !string.IsNullOrEmpty(lastKey))
             {

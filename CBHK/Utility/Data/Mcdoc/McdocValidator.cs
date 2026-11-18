@@ -155,6 +155,22 @@ namespace CBHK.Utility.Data.Mcdoc
             return bucket.Set.Contains(text);
         }
 
+        /// <summary>
+        /// <see cref="McdocTreeNode.UndeclaredKeys"/> 是建树时的快照；键被清掉之后（文本编辑不走重建、
+        /// 值补丁也不重建子树）名单会留着旧键，必须按活文档重新过滤，否则删干净了黄叹号还挂着。
+        /// </summary>
+        private static List<string> LiveUndeclaredKeys(McdocJsonValue json, List<string> names)
+        {
+            var present = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var pair in json.Properties ?? []) present.Add(pair.Key);
+            var live = new List<string>(names.Count);
+            foreach (var name in names)
+            {
+                if (present.Contains(name)) live.Add(name);
+            }
+            return live;
+        }
+
         private static void ValidateNodeCore(McdocTreeNode node, HashSet<string> missed, List<McdocDiagnostic> result,
             IMcdocRegistryOptions registryOptions = null, string version = null)
         {
@@ -170,6 +186,19 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (node.IsUnknownField)
                 {
                     Add(node, "warn", "未在 schema 中声明的键：" + node.FieldName);
+                }
+                // 整层形状掉进保留区（26.3 把条件对象从 condition 键换成 type 键，老形状一个键都对不上）：
+                // 保留区容器只给总数，父行上一条提示都没有 —— 用户看到的是"子级凭空少了一半 + 一个必填项报错"，
+                // 没法把这两件事联系起来。名单由建树期 PreserveUnknownChildren 记，这里只按活文档过滤后报出来。
+                if (!node.IsUnknownField && node.EffectiveUndeclaredKeys is { Count: > 0 } undeclared
+                    && node.Json is { Kind: McdocJsonKind.Object })
+                {
+                    var live = LiveUndeclaredKeys(node.Json, undeclared);
+                    if (live.Count > 0)
+                    {
+                        Add(node, "warn", "这些键当前版本不存在：" + string.Join("、", live)
+                            + "（已收进「当前版本不存在」）");
+                    }
                 }
                 // 声明不是 any、求值却退成 any：这就是"静默降级"。最典型的现场是**靠同级/父级键取值的
                 // dispatcher**（`minecraft:block[[BlockState.Name]]`、`mcdoc:block_item_states[[%parent.id]]`）

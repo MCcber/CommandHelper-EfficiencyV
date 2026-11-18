@@ -317,14 +317,54 @@
                                         <ColumnDefinition Width="1" />
                                         <ColumnDefinition Width="1" />
                                     </Grid.ColumnDefinitions>
-                                    <Rectangle Grid.Row="3" Grid.Column="0" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
-                                    <Rectangle Grid.Row="4" Grid.Column="1" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
-                                    <Rectangle Grid.Row="5" Grid.Column="2" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
-                                    <Rectangle Grid.Row="4" Grid.Column="3" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
-                                    <Rectangle Grid.Row="3" Grid.Column="4" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
-                                    <Rectangle Grid.Row="2" Grid.Column="5" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
-                                    <Rectangle Grid.Row="1" Grid.Column="6" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
-                                    <Rectangle Grid.Row="0" Grid.Column="7" Width="2" Height="2" Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle
+                                        Grid.Row="3"
+                                        Grid.Column="0"
+                                        Width="2"
+                                        Height="2"
+                                        Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle
+                                        Grid.Row="4"
+                                        Grid.Column="1"
+                                        Width="2"
+                                        Height="2"
+                                        Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle
+                                        Grid.Row="5"
+                                        Grid.Column="2"
+                                        Width="2"
+                                        Height="2"
+                                        Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle
+                                        Grid.Row="4"
+                                        Grid.Column="3"
+                                        Width="2"
+                                        Height="2"
+                                        Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle
+                                        Grid.Row="3"
+                                        Grid.Column="4"
+                                        Width="2"
+                                        Height="2"
+                                        Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle
+                                        Grid.Row="2"
+                                        Grid.Column="5"
+                                        Width="2"
+                                        Height="2"
+                                        Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle
+                                        Grid.Row="1"
+                                        Grid.Column="6"
+                                        Width="2"
+                                        Height="2"
+                                        Fill="{DynamicResource CommonForeground}" />
+                                    <Rectangle
+                                        Grid.Row="0"
+                                        Grid.Column="7"
+                                        Width="2"
+                                        Height="2"
+                                        Fill="{DynamicResource CommonForeground}" />
                                 </Grid>
                             </Viewbox>
                             <Image

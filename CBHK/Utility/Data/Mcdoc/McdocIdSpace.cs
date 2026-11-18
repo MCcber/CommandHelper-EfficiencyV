@@ -133,13 +133,13 @@ namespace CBHK.Utility.Data.Mcdoc
             if (symbols is null) return [];
             try
             {
-                var members = symbols.GetDispatcherMembers("minecraft:" + spec.Registry, runtime.DocumentUri)
-                    ?? symbols.GetDispatcherMembers(spec.Registry, runtime.DocumentUri);
+                var members = symbols.GetDispatcherMembers("minecraft:" + spec.Registry, runtime.DocumentUri, runtime.GameVersion)
+                    ?? symbols.GetDispatcherMembers(spec.Registry, runtime.DocumentUri, runtime.GameVersion);
                 if (members is null && spec.Registry.EndsWith("_type", StringComparison.Ordinal))
                 {
                     var stripped = spec.Registry.Substring(0, spec.Registry.Length - "_type".Length);
-                    members = symbols.GetDispatcherMembers("minecraft:" + stripped, runtime.DocumentUri)
-                        ?? symbols.GetDispatcherMembers(stripped, runtime.DocumentUri);
+                    members = symbols.GetDispatcherMembers("minecraft:" + stripped, runtime.DocumentUri, runtime.GameVersion)
+                        ?? symbols.GetDispatcherMembers(stripped, runtime.DocumentUri, runtime.GameVersion);
                 }
                 if (members is null) return [];
 

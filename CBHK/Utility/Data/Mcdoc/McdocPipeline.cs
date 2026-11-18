@@ -96,6 +96,18 @@ namespace CBHK.Utility.Data.Mcdoc
         private readonly List<McdocTreeNode> pendingChildBuilds = [];
         private const int MaxPendingChildBuilds = 64;
 
+        /// <summary>
+        /// 切支判废删掉的路径。删的是键、行要留在树上，可**必填容器在空值处会被物化补一个空壳**（{} / []）——
+        /// 那个壳不是用户写进去的值，留着等于把刚删掉的值又写回一行（行上立刻挂回“值不属于任何一支”）。
+        /// 物化之后按这张表把空壳再摘一次；路径上重新有了真值（用户自己填进去）就出表。
+        /// 记路径而不是节点：切支会把节点按新类型重建成新实例，路径才是跨代稳定的身份。
+        /// </summary>
+        private readonly HashSet<string> staleUnsetPaths = new(StringComparer.Ordinal);
+        private const int MaxStaleUnsetPaths = 256;
+
+        /// <summary>这一拍里有“判废删除”（键被摘掉）：文本不能只脏一棵子树，否则删掉的键留在文本里。</summary>
+        private bool staleValueDropped;
+
         /// <summary>投影刚给某个节点建出子级：闸门外立刻补物化，闸门内先登记（排空时补跑）。</summary>
         public void NoteChildrenBuilt(McdocTreeNode node)
         {
@@ -269,12 +281,14 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 Document.RefreshNode(node);
                 var writes = new List<McdocTreeNode>();
+                var shellsBefore = SnapshotEmptyStalePaths();
                 Materializer.MaterializeUntilStable(writtenNodes: writes);
-                if (!Projector.RefreshAround(node)) { Projector.Reset(Document.ProjectionRoots); }
+                var purgedShells = PurgeStaleShells(shellsBefore, writes);
+                if (purgedShells > 0 || !Projector.RefreshAround(node)) { Projector.Reset(Document.ProjectionRoots); }
                 // RefreshNode 刚把这棵子树的诊断整篇重算过，这里只刷行、不再算第二遍
                 Diagnostics.Refresh(node, refreshHead: true, nodeValidated: true);
                 EnsureProjectionCurrent();
-                MarkTextDirty(node, writes);
+                MarkTextDirtyAfterSync(node, writes);
                 TextDirty?.Invoke();
             }
             finally
@@ -307,7 +321,8 @@ namespace CBHK.Utility.Data.Mcdoc
             var written = 0;
             try
             {
-                written = Materializer.MaterializeUntilStable();
+                var shellsBefore = SnapshotEmptyStalePaths();
+                written = Materializer.MaterializeUntilStable() + PurgeStaleShells(shellsBefore, null);
             }
             finally
             {
@@ -319,7 +334,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 McdocWriteTrace.Trace("union-branch-materialize", "path=" + (node.JsonPath ?? "?") + " written=" + written);
                 EnsureProjectionCurrent();
                 if (!Projector.RefreshAround(node)) Projector.Reset(Document.ProjectionRoots);
-                MarkTextDirty(node);
+                MarkTextDirtyAfterSync(node, null);
                 TextDirty?.Invoke();
             }
             // **无论有没有写过值**都要按当前文档把这一支重解一次：切支会把 union 的 Json 换成新对象
@@ -364,12 +379,13 @@ namespace CBHK.Utility.Data.Mcdoc
                     Projector.Reset(Document.ProjectionRoots);
                 }
                 var writes = new List<McdocTreeNode>();
-                if (Materializer.MaterializeUntilStable(writtenNodes: writes) > 0)
+                var shellsBefore = SnapshotEmptyStalePaths();
+                if (Materializer.MaterializeUntilStable(writtenNodes: writes) + PurgeStaleShells(shellsBefore, writes) > 0)
                 {
                     Projector.Reset(Document.ProjectionRoots);
                 }
                 EnsureProjectionCurrent();
-                MarkTextDirty(rebuilt, writes);
+                MarkTextDirtyAfterSync(rebuilt, writes);
                 TextDirty?.Invoke();
             }
             finally
@@ -412,6 +428,21 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             Document.TextDirtyNode = node;
             Document.TextDirtyRemovedItem = removedItem;
+        }
+
+        /// <summary>
+        /// 同步收尾的文本标记：这一拍若摘过“判废删除”的键，动的是**另一棵子树**里的键，
+        /// 只脏这一棵会把删掉的键留在文本里 —— 退回整篇对账。
+        /// </summary>
+        private void MarkTextDirtyAfterSync(McdocTreeNode node, List<McdocTreeNode> written)
+        {
+            if (staleValueDropped)
+            {
+                staleValueDropped = false;
+                MarkTextDirty(null);
+                return;
+            }
+            MarkTextDirty(node, written);
         }
 
         /// <summary>路径相等或在其之下（下一个字符必须是 <c>.</c> 或 <c>[</c>，否则 $.ab 会算成 $.a 的子级）。</summary>
@@ -460,8 +491,18 @@ namespace CBHK.Utility.Data.Mcdoc
             DrainPendingChildBuilds();
         }
 
+        private const string ShapeMismatchPrefix = "值与类型不符";
+
         private void OnValueChangedCore(McdocTreeNode node)
         {
+            // 这次写入换掉了"值的形状"：建树时按旧值下的错配诊断必须跟着重解，否则行上留着一条
+            // 描述旧值的黄叹号（现场：枚举行上原本是 {}，选了候选项后还在说"实际 Object"）。
+            if (node?.Error?.StartsWith(ShapeMismatchPrefix, StringComparison.Ordinal) == true
+                && Document.RebuildNode(node) is { } healed)
+            {
+                node = healed;
+                if (!Projector.RefreshAround(healed)) Projector.Reset(Document.ProjectionRoots);
+            }
             Diagnostics.Refresh(node);
             var rebuilt = RebuildDependents([node], out var parentRebuilds, out var droppedDerivedContainers);
             // 父级重建/派生容器被摘掉时，子行集合和行命令都换代了：局部 RefreshAround 在
@@ -482,14 +523,16 @@ namespace CBHK.Utility.Data.Mcdoc
             }
             // 重建会把"必填 + 闭合候选"的判别键写进文档（工厂的判别键物化），写过就得重排一次
             var dirtyWrites = new List<McdocTreeNode>();
+            var shellsBefore = SnapshotEmptyStalePaths();
             var materialized = rebuilt.Count > 0 ? Materializer.MaterializeUntilStable(writtenNodes: dirtyWrites) : 0;
+            materialized += PurgeStaleShells(shellsBefore, dirtyWrites);
             if (forceProjectionReconcile || materialized > 0)
             {
                 Projector.Reset(Document.ProjectionRoots);
             }
 
             // 模型可能被重建写过：文本必须跟上，否则"视图同代"当场破（这条出口原先漏了）
-            MarkTextDirty(node, dirtyWrites);
+            MarkTextDirtyAfterSync(node, dirtyWrites);
             TextDirty?.Invoke();
         }
 
@@ -596,6 +639,26 @@ namespace CBHK.Utility.Data.Mcdoc
         /// 文档里却还留着 6 —— 行上只能挂"值与类型不符：期望 Struct，实际 Number"，用户看着就是"解析错了"。
         /// misode 的 getChange 在这里把 6 包成 { value: 6 }。
         /// </summary>
+        /// <summary>
+        /// 包装宿主判定用的类型：先沿 Item 拆掉指令壳（Mapped/Concrete/Reference 这些"怎么算"不是"算出来是什么"），
+        /// 解不出来的形态一律当成"判不了"返回 null。
+        /// 以前直接拿声明判 ValueFits，而它对未知 kind 返回 true —— 现场：blend_to_gray 的 brightness: float @ 0..1
+        /// 声明是 Mapped，数组被当成"吃得下 float"，整个数组被塞进 { "brightness": [...] }。
+        /// </summary>
+        private static McdocType ShapeConclusiveType(McdocType declared)
+        {
+            for (var depth = 0; declared?.IsDirective == true && declared.Item is not null && depth < 8; depth++)
+            {
+                declared = declared.Item;
+            }
+            if (declared is null) return null;
+            return declared.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe or McdocTypeKind.Union
+                or McdocTypeKind.Reference or McdocTypeKind.Concrete or McdocTypeKind.Template
+                or McdocTypeKind.Mapped or McdocTypeKind.Indexed or McdocTypeKind.Dispatcher
+                ? null
+                : declared;
+        }
+
         private void ReshapeDependentValue(string path, McdocType oldType)
         {
             if (Document is null || string.IsNullOrEmpty(path)) return;
@@ -603,8 +666,14 @@ namespace CBHK.Utility.Data.Mcdoc
             if (fresh?.Json is null) return;
             // 判据要用**声明重新求值**出来的类型：节点上的 Type 在"值与类型不符"时已经降级成 any，
             // 拿它判 ValueFits 恒真，整形永远不会发生（现场：argument 明明该是 FloatWithAlpha）。
-            var target = McdocDefaults.ResolveType(fresh.DeclaredType, Document.CreateRuntime(), fresh.ValueNode);
+            var runtime = Document.CreateRuntime();
+            var target = McdocDefaults.ResolveType(fresh.DeclaredType, runtime, fresh.ValueNode);
             if (target is null || target.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe) return;
+            if (target.Kind == McdocTypeKind.Union)
+            {
+                ReshapeUnionValue(fresh, target, oldType, runtime);
+                return;
+            }
             if (McdocHelpers.ValueFits(fresh.Json, target)) return;
             // 旧类型优先用重建前那个；它常常已经退化成 any（值本来就不合法）——
             // 那时用**值自己的形状**当旧类型，getChange 的 X→{k:X} 才认得出来（6 → { value: 6 }）。
@@ -619,7 +688,8 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 var host = (target.Fields ?? []).FirstOrDefault(field => field is not null && !field.Optional
                     && !field.IsSpread && !string.IsNullOrEmpty(field.Name)
-                    && McdocHelpers.ValueFits(fresh.Json, field.Type));
+                    && ShapeConclusiveType(field.Type) is { } fieldShape
+                    && McdocHelpers.ValueFits(fresh.Json, fieldShape));
                 if (host is not null)
                 {
                     var wrapped = McdocJsonValue.Object();
@@ -653,6 +723,117 @@ namespace CBHK.Utility.Data.Mcdoc
             // 值换了形状：这一支要按新值重新求值一次，行上的类型才会跟着变成 FloatWithAlpha
             Document.RebuildNode(fresh);
         }
+
+        /// <summary>
+        /// 目标求值成联合时的整形：**一支都装不下就清掉**（用户口径），但只清"切支后失效的旧值"。
+        /// 判据不能再用 <see cref="McdocHelpers.ValueFits"/>：它对联合恒真（落到默认那一支），
+        /// "值不属于这个联合的任何一支"的现场在它那里就先退了，永远走不到整形。
+        /// 现场：modifier 从 blend_to_gray 切到 alpha_blend，argument 留着 {brightness,factor}，
+        /// 行上只能把旧值挂成一条「原始 JSON」子行 —— 那是"值本来就不属于任何一支"的兜底，
+        /// 不是"数据该留"。
+        /// 与「外来值」的分界只有一条：值在**切换前那一版**类型下确实成立（能证明它曾是这一支的数据）。
+        /// 判不了（旧类型是联合/any，或值本来就对不上旧类型）就不删，仍然挂「原始 JSON」。
+        /// </summary>
+        private void ReshapeUnionValue(McdocTreeNode fresh, McdocType target, McdocType oldType, McdocRuntime runtime)
+        {
+            var context = new McdocSimplifyContext { Runtime = runtime, Node = fresh.ValueNode };
+            // 与渲染层同一条判据：有没有一支吃得下（SelectMember 认"唯一命中"，AnyMemberFitsShape 认"形状对得上"）
+            if (McdocTypeMatcher.SelectMember(target, fresh.Json, context, preferShapeOverAny: true) is not null
+                || McdocTypeMatcher.AnyMemberFitsShape(target, fresh.Json, context)) return;
+            var stale = ValueFitsSwitchedOldType(fresh.Json, oldType, context);
+            McdocWriteTrace.Trace("dependents-stale", "path=" + (fresh.JsonPath ?? "?")
+                + " kind=" + fresh.Json.Kind + " old=" + (oldType?.Kind.ToString() ?? "null")
+                + " stale=" + (stale?.ToString() ?? "?"));
+            if (stale != true) return;
+            // 只剪键、行留在树上（= map 条目（未设置）那一档）：结构变更会把父级按 JSON 重建，这一行就没了
+            DropStaleValue(fresh);
+            McdocWriteTrace.Trace("dependents-reshape", "path=" + (fresh.JsonPath ?? "?") + " stale-drop");
+        }
+
+        /// <summary>
+        /// 这个值当初在**旧类型**下成立吗。返回 null 表示判不了（旧类型是联合/any/解不完的指令壳）——
+        /// 判不了就不许当成"旧值"删掉：手改 JSON 塞进来的外来值必须继续走「原始 JSON」兜底。
+        /// </summary>
+        private static bool? ValueFitsSwitchedOldType(McdocJsonValue value, McdocType oldType,
+            McdocSimplifyContext context)
+        {
+            var shape = ShapeConclusiveType(oldType);
+            if (shape is null || value is null) return null;
+            return McdocTypeMatcher.Matches(shape, value, context);
+        }
+
+        /// <summary>
+        /// 判废的旧值：摘掉键、行留在树上，并收回“值不属于这个联合的任何一支”那条判词。
+        /// 路径记进 <see cref="staleUnsetPaths"/> —— 必填容器随后会被物化补一个空壳，壳要等物化之后再摘一次。
+        /// </summary>
+        private void DropStaleValue(McdocTreeNode node)
+        {
+            if (node is null) return;
+            if (!string.IsNullOrEmpty(node.JsonPath) && staleUnsetPaths.Count < MaxStaleUnsetPaths)
+            {
+                staleUnsetPaths.Add(node.JsonPath);
+            }
+            node.Error = null;
+            McdocCollectionEditor.Default.UnsetEntryValue(node);
+            staleValueDropped = true;
+        }
+
+        /// <summary>
+        /// 物化前给“判废删除”的路径拍一次快照：只有这一刻**确实没值**的路径才可能被物化补出空壳。
+        /// 拍在物化之前是硬要求 —— 拍在之后分不清“物化补的壳”和“用户刚选进来的空容器”。
+        /// </summary>
+        private List<string> SnapshotEmptyStalePaths()
+        {
+            if (staleUnsetPaths.Count == 0 || Document is null) return null;
+            List<string> empty = null;
+            foreach (var path in staleUnsetPaths)
+            {
+                if (Document.FindNode(path)?.Json is null) (empty ??= []).Add(path);
+            }
+            return empty;
+        }
+
+        /// <summary>
+        /// 物化之后给“判废删除”的路径收口：必填容器在空值处会被补出空壳（{} / []），
+        /// 那个壳既不是用户写的值、也不属于任何一支，留着等于把刚删掉的值又写回一行。
+        /// 判据是双条件：物化前没值（快照）+ 物化后是空壳。路径上一旦有真值就出表。
+        /// </summary>
+        private int PurgeStaleShells(List<string> emptyBeforeMaterialize, List<McdocTreeNode> written)
+        {
+            if (emptyBeforeMaterialize is null || emptyBeforeMaterialize.Count == 0 || Document is null) return 0;
+            var purged = 0;
+            foreach (var path in emptyBeforeMaterialize)
+            {
+                var node = Document.FindNode(path);
+                if (node is null || !Document.IsAttached(node))
+                {
+                    staleUnsetPaths.Remove(path);
+                    continue;
+                }
+                if (node.Json is null) continue;                                  // 这一趟没补壳：还是（未设置）
+                if (!IsMaterializedShell(node.Json))
+                {
+                    staleUnsetPaths.Remove(path);                                 // 有真值了：这条不再管它
+                    continue;
+                }
+                node.Error = null;
+                McdocCollectionEditor.Default.UnsetEntryValue(node);
+                written?.Add(node);
+                staleValueDropped = true;
+                purged++;
+                McdocWriteTrace.Trace("dependents-reshape", "path=" + path + " stale-shell-drop");
+            }
+            return purged;
+        }
+
+        /// <summary>空壳：物化给“必填容器没有值”补的那个占位（空对象 / 空数组）。</summary>
+        private static bool IsMaterializedShell(McdocJsonValue json)
+            => json.Kind switch
+            {
+                McdocJsonKind.Object => json.Properties is not { Count: > 0 },
+                McdocJsonKind.Array => json.Items is not { Count: > 0 },
+                _ => false,
+            };
 
         /// <summary>
         /// 这个键的值变了，是否**真的**需要"重新求值依赖方"。

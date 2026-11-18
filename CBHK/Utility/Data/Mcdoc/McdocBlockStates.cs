@@ -22,6 +22,15 @@ namespace CBHK.Utility.Data.Mcdoc
         private static readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, McdocType>> Cache =
             new(StringComparer.OrdinalIgnoreCase);
 
+        private static readonly object Gate = new();
+
+        /// <summary>
+        /// 上一次在各索引里注册过的方块 id。RegisterDispatch 只 merge 不清，换版本时上一版独有、
+        /// 这一版没有的 id 会留在表里（1.21.8 的 chain 到 1.21.9 已改名），所以这里记着再摘掉。
+        /// 不能整表清空：schema 自己也往 mcdoc:block_states dispatch（block_state.mcdoc 的 %unknown/%none）。
+        /// </summary>
+        private static readonly Dictionary<(McdocTypeIndex Index, string Registry), HashSet<string>> RegisteredIds = new();
+
         /// <summary>运行期资产目录：与 Resource 里的拼法一致（相对 exe，不写绝对路径）。</summary>
         public static string DefaultDirectory =>
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resource", "Registries", "BlockState");
@@ -38,18 +47,35 @@ namespace CBHK.Utility.Data.Mcdoc
             return Cache.GetOrAdd(versionFile, file => Parse(file));
         }
 
-        /// <summary>把每个方块的属性结构注册进调度器表（同 id 覆盖，天然幂等）。返回注册数量。</summary>
+        /// <summary>
+        /// 把每个方块的属性结构注册进调度器表（同 id 覆盖，天然幂等）。返回注册数量。
+        /// 注册到按版本分开的空间（mcdoc:block_states@&lt;版本&gt;）：两个不同版本的生成器页同时开着时，
+        /// 后建文档的那份不能把前一份的方块结构冲掉；查表按 runtime 的 GameVersion 挑版本。
+        /// </summary>
         public static int Register(McdocTypeIndex index, string gameVersion, string blockStateDir = null)
         {
             if (index is null) return 0;
             var members = Load(gameVersion, blockStateDir);
-            var registered = 0;
-            foreach (var pair in members)
+            var registry = McdocTypeIndex.VersionedRegistry(Registry, gameVersion);
+            lock (Gate)
             {
-                index.RegisterDispatch(Registry, pair.Key, pair.Value);
-                registered++;
+                if (!RegisteredIds.TryGetValue((index, registry), out var previous))
+                {
+                    previous = new HashSet<string>(StringComparer.Ordinal);
+                    RegisteredIds[(index, registry)] = previous;
+                }
+                foreach (var staleId in previous.Where(id => !members.ContainsKey(id)).ToList())
+                {
+                    index.UnregisterDispatch(registry, staleId);
+                }
+                previous.Clear();
+                foreach (var pair in members)
+                {
+                    index.RegisterDispatch(registry, pair.Key, pair.Value);
+                    previous.Add(pair.Key);
+                }
             }
-            return registered;
+            return members.Count;
         }
 
         /// <summary>版本选择：精确 → 不高于当前版本的最近一份 → 最高可用（与注册表数据的回退口径一致）。</summary>

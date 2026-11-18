@@ -623,6 +623,16 @@ namespace CBHK.Utility.Data.Mcdoc
             }
         }
 
+        /// <summary>摘掉某个 dispatch 成员（只摘调用方自己注册的；schema 里的 dispatch 成员用不到这个口子）。</summary>
+        public bool UnregisterDispatch(string registry, string memberIndex)
+        {
+            if (string.IsNullOrEmpty(registry) || string.IsNullOrEmpty(memberIndex)) return false;
+            lock (gate)
+            {
+                return dispatchers.TryGetValue(registry, out var members) && members.Remove(memberIndex);
+            }
+        }
+
         /// <summary>从语言服务器返回的 mcdoc 类型列表建立索引（dispatch 语句进 dispatcher 表，其余进类型表）。</summary>
         public void RegisterAll(IEnumerable<(string Path, MetaType Type)> entries)
         {
@@ -689,6 +699,12 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
             }
             return resolved;
+        }
+
+        /// <summary>只查不记账：启发式探测用，查不到也不许往界面的"未解析"里塞名字。</summary>
+        public McdocType PeekTypeDef(string path, string documentUri, string modulePath = null)
+        {
+            return ResolveTypeDef(path, documentUri, modulePath);
         }
 
         private McdocType ResolveTypeDef(string path, string documentUri, string modulePath = null)
@@ -863,15 +879,32 @@ namespace CBHK.Utility.Data.Mcdoc
             return index <= 0 ? "" : modulePath.Substring(0, index);
         }
 
-        public IReadOnlyDictionary<string, McdocType> GetDispatcherMembers(string registry, string documentUri)
+        /// <summary>
+        /// 版本化的 dispatch 空间名。资产注入的空间（mcdoc:block_states）按版本各存一份表，
+        /// 否则两个不同版本的生成器页同时开着时，后建文档的那份会把前一份的方块结构冲掉。
+        /// </summary>
+        public static string VersionedRegistry(string registry, string gameVersion) =>
+            string.IsNullOrEmpty(gameVersion) ? registry : registry + "@" + gameVersion;
+
+        public IReadOnlyDictionary<string, McdocType> GetDispatcherMembers(string registry, string documentUri, string gameVersion = null)
         {
             if (string.IsNullOrEmpty(registry)) return null;
-            // 返回快照：调用方（求值器）会枚举它，不能和并行注册共用同一份可变字典
+            // 返回快照：调用方（求值器）会枚举它，不能和并行注册共用同一份可变字典。
+            // 合并两层：schema 自己的成员（%unknown/%none 这类，通用）+ 该版本的资产表（同名时版本表赢）。
             lock (gate)
             {
-                return dispatchers.TryGetValue(registry, out var members)
-                    ? new Dictionary<string, McdocType>(members, StringComparer.Ordinal)
-                    : null;
+                Dictionary<string, McdocType> snapshot = null;
+                if (dispatchers.TryGetValue(registry, out var shared))
+                {
+                    snapshot = new Dictionary<string, McdocType>(shared, StringComparer.Ordinal);
+                }
+                if (!string.IsNullOrEmpty(gameVersion)
+                    && dispatchers.TryGetValue(VersionedRegistry(registry, gameVersion), out var versioned))
+                {
+                    snapshot ??= new Dictionary<string, McdocType>(StringComparer.Ordinal);
+                    foreach (var pair in versioned) snapshot[pair.Key] = pair.Value;
+                }
+                return snapshot;
             }
         }
 

@@ -110,7 +110,7 @@
                 Style="{DynamicResource VectorTextButtonStyle}"
                 Text="从文件导入" />
             <VectorButton:VectorToggleIconTextButton
-                Foreground="White"
+                Margin="5,0,0,0"
                 IsChecked="{Binding ShowResult, Mode=OneWayToSource}"
                 Style="{DynamicResource VectorToggleIconTextButtonStyle}"
                 Text="显示结果" />

@@ -63,6 +63,7 @@ namespace CBHK.Utility.Data.Mcdoc
         public McdocRow(McdocTreeNode node, int depth, McdocRowProjector project, int index, bool listChild,
             McdocRowKind? kindOverride = null)
         {
+            McdocTreeNode.EnsureNumberCommitHook();
             Node = node;
             Depth = depth;
             projector = project;
@@ -106,7 +107,16 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>投影层显式指定的形状（More/AddTail 这类伪行）；为空表示跟随 Head。</summary>
         public McdocRowKind? KindOverride => kindOverride;
 
-        public Thickness Indent => new(Depth * 16.0, 0, 0, 0);
+        /// <summary>
+        /// 每层缩进一整个按钮列宽：层距比这更窄时（早先是 16px），子行的 ⊖/展开按钮会压到父行的键格下面，
+        /// 层级看着就"塌"成同一层。34 与行模板前两列的 ColumnDefinition 同宽，竖线也落在按钮列中间。
+        /// </summary>
+        private const double IndentUnit = 34.0;
+
+        /// <summary>键已被占用时的行上提示前缀（重名提交被拒后留在这一行，改名成功后收回）。</summary>
+        private const string KeyTakenPrefix = "键已被占用：";
+
+        public Thickness Indent => new(Depth * IndentUnit, 0, 0, 0);
 
         /// <summary>
         /// 祖先竖线的总宽度：每层占 16px（与 <see cref="Indent"/> 的层宽一致），
@@ -119,14 +129,14 @@ namespace CBHK.Utility.Data.Mcdoc
         /// </summary>
         public double AncestorLineWidth
             => Kind is McdocRowKind.AddTail or McdocRowKind.More
-                ? Math.Max(0, Depth - 1) * 16.0
-                : Depth * 16.0;
+                ? Math.Max(0, Depth - 1) * IndentUnit
+                : Depth * IndentUnit;
 
         /// <summary>
         /// 子级连线的横坐标：下一层竖线在"自己这一格"的右边一格（每格 16px，线在格中 7.5~8.5）。
         /// 父行亲自画"中线 → 行底"这半截，子行那条竖线才像是从父行中线接出来的，而不是凭空从行边界长出来。
         /// </summary>
-        public Thickness ChildGuideMargin => new(Depth * 16.0 + 7.5, 0, 0, 0);
+        public Thickness ChildGuideMargin => new(Depth * IndentUnit + IndentUnit / 2 - 0.5, 0, 0, 0);
 
         /// <summary>
         /// 子级连线只在"真的展开、且下面确实有子行"时画；折叠态下面什么都没有，不能留半截悬空的线。
@@ -228,7 +238,8 @@ namespace CBHK.Utility.Data.Mcdoc
             }
         }
 
-        public bool IsListLike => McdocPresenterRegistry.Default.IsListLike(Node);
+        /// <summary>列表行判据只认声明（presenter 的 IsListLikeFor），不走 registry 里 UnionListLike 镜像兜底的那条路。</summary>
+        public bool IsListLike => McdocPresenterRegistry.Default.For(Node)?.IsListLikeFor(Node) == true;
 
         /// <summary>列表行才显示 ⊕/⊖（misode 的 ListHead）；具体能不能加由 head 的能力位决定（tuple/定长两侧都 false）。</summary>
         public Visibility ListButtonsVisibility
@@ -710,12 +721,24 @@ namespace CBHK.Utility.Data.Mcdoc
         public Visibility DuplicateVisibility
             => Node.DuplicateCommand?.CanExecute(null) == true ? Visibility.Visible : Visibility.Collapsed;
 
+        /// <summary>
+        /// ▲▼ 的可见性：定长容器（元组 / #[length=N]）里换位就是改坏形状，整排收起来；
+        /// 真列表里仍然常显，只是首/末项那颗由命令 CanExecute 置灰。
+        /// </summary>
+        public Visibility MoveVisibility
+            => ItemActionsVisibility == Visibility.Visible
+                && !McdocCollectionEditor.Default.IsFixedContainer(Node.Parent)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
         /// <summary>列表/tuple 子行的"删掉这一项"（Node.RemoveSelfCommand → RemoveItemAt）。</summary>
         public Visibility RemoveSelfVisibility
         {
             get
             {
                 if (ItemActionsVisibility != Visibility.Visible) return Visibility.Collapsed;
+                // 定长容器里删一项就是改长度：直接收起来，不必走下面那条"命令说不能"的日志
+                if (McdocCollectionEditor.Default.IsFixedContainer(Node.Parent)) return Visibility.Collapsed;
                 if (Node.RemoveSelfCommand?.CanExecute(null) == true) return Visibility.Visible;
                 // 是列表子行、文档里也有值，却拿不到删除命令：这排按钮上一轮就是这么永久塌掉的。
                 // 让它自己进日志（只在 trace 打开时写），用户点一次即可由 --check-trace 判定。
@@ -784,9 +807,11 @@ namespace CBHK.Utility.Data.Mcdoc
                 ? Visibility.Visible
                 : Visibility.Collapsed;
 
-        /// <summary>键以只读标签显示（条目行）：键编辑框收起时必须有东西顶上去，否则整行没有键名。</summary>
+        /// <summary>键以只读标签显示（条目行）：键编辑框与候选下拉都收起时必须有东西顶上去，否则整行没有键名。</summary>
         public Visibility KeyLabelVisibility
-            => KeyTextVisibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+            => KeyTextVisibility == Visibility.Visible || KeyComboVisibility == Visibility.Visible
+                ? Visibility.Collapsed
+                : Visibility.Visible;
 
         /// <summary>"加入"按钮只在需要提交键时才有意义：新键占位行，或条目行正在重命名。</summary>
         public Visibility AddEntryVisibility
@@ -797,16 +822,26 @@ namespace CBHK.Utility.Data.Mcdoc
 
 
         /// <summary>
-        /// 条目行常驻"重命名"入口（键以只读标签显示，改名要点它）。
-        /// 但键来自**固定候选表**（<see cref="McdocTreeNode.UseKeySelect"/>，例如 components 的 component id、
-        /// attributes 的 environment_attribute）时不给：那种键代表的是"类型 / 注册表成员"，不是随便起的名字，
-        /// 改成任意文本当场就是非法文档（现场：minecraft:additional_trade_cost 这种条目行挂着改名铅笔）。
+        /// 改名入口只给"自由键"的条目行（<see cref="McdocTreeNode.UseKeySelect"/> 为假：键是随便起的名字，例如
+        /// item_type 页加出来的 my_tag）。有候选表的键不再挂铅笔：下拉常显，选中另一个成员即改名 ——
+        /// 铅笔和下位下拉摆在同一格里，等于给同一件事两个入口（用户原话「不应该出现铅笔按钮」）。
         /// </summary>
         public Visibility RenameVisibility
             => Node.IsMapEntry && !Node.UseKeySelect ? Visibility.Visible : Visibility.Collapsed;
-        /// <summary>键下拉只给"新键占位行"，以及条目行正在重命名的时候。</summary>
+        /// <summary>
+        /// 开放键空间（注册表外的键也合法，例如 <c>#[id="entity"] string</c>）的条目行：键已经落进文档，
+        /// 再摆下拉只是给"换键"多开一个入口 —— 按普通字段的只读键名标签走（用户要求）。
+        /// 加新键的占位行与闭合枚举键的条目行不受影响，仍在下拉里完成。
+        /// </summary>
+        private bool StaticKeyLabel => Node.IsMapEntry && Node.UseKeySelect && Node.KeySpaceOpen;
+
+        /// <summary>
+        /// 键下拉：占位行选新键、闭合枚举条目行换成员都在同一个格里完成。
+        /// 没有候选表的自由键是文本框（或只读标签 + 铅笔）；开放键的条目行走只读标签。
+        /// </summary>
         public Visibility KeyComboVisibility
-            => Node.UseKeySelect && (!Node.IsMapEntry || IsRenamingKey) ? Visibility.Visible : Visibility.Collapsed;
+            => Node.UseKeySelect && !StaticKeyLabel ? Visibility.Visible : Visibility.Collapsed;
+
         public IReadOnlyList<EnumMember> KeyOptions => Node.KeyOptionList;
 
         public EnumMember SelectedKey
@@ -815,9 +850,41 @@ namespace CBHK.Utility.Data.Mcdoc
             set
             {
                 if (ReferenceEquals(Node.SelectedKey, value)) return;
+                var previous = Node.SelectedKey;
                 Node.SelectedKey = value;
                 OnPropertyChanged();
+                if (CommitKeySelection(value)) return;
+                // 提交没成（键已被占用）：行不许停在新键上 —— 文档才是唯一事实，下位下拉显示的和文档里存的
+                // 必须是同一个键（现场：行上写 monster、文档里还是 ambient，一条提示都没有）。
+                Node.SelectedKey = previous;
+                OnPropertyChanged();
             }
+        }
+
+        /// <summary>
+        /// 条目行在下拉里换了成员 ⇒ 就地改名。下拉是常显的，没有"点铅笔再选"那一步，选中即提交。
+        /// 与文档里的键相同（含首次绑定、重建后回填）不算手势，直接放过。
+        /// </summary>
+        private bool CommitKeySelection(EnumMember value)
+        {
+            if (!Node.UseKeySelect || !Node.IsMapEntry) return true;
+            if (value is null || string.Equals(value.Name, Node.FieldName, StringComparison.Ordinal)) return true;
+            var previousKey = Node.EditingKey;
+            Node.EditingKey = value.Name;
+            if (!McdocCollectionEditor.Default.CanCommitEntry(Node.Parent, Node))
+            {
+                // 提交原语对重名是静默返回的（见 CommitEntry）：先问 CanCommitEntry，把"没成"变成看得见的提示，
+                // 而不是让下拉把行上的键改掉、文档却原地不动。
+                Node.EditingKey = previousKey;
+                Node.Error = KeyTakenPrefix + value.Name;
+                return false;
+            }
+            McdocCollectionEditor.Default.CommitEntry(Node.Parent, Node, Node.Runtime);
+            if (Node.Error is not null && Node.Error.StartsWith(KeyTakenPrefix, StringComparison.Ordinal))
+            {
+                Node.Error = null;
+            }
+            return true;
         }
 
         public void NotifyLayout()

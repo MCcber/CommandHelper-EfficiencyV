@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 
 namespace CBHK.Probe
@@ -26,6 +26,10 @@ namespace CBHK.Probe
             if (args.Length >= 1 && args[0] == "--render")
             {
                 return Render.Rows(args.Length >= 2 ? args[1] : null);
+            }
+            if (args.Length >= 1 && args[0] == "--render-dimension")
+            {
+                return Render.Dimension(args.Length >= 2 ? args[1] : null);
             }
             var mode = args.Length >= 2 ? args[0] + " " + args[1] : "";
             try
@@ -72,6 +76,20 @@ namespace CBHK.Probe
                     "--case real-advancement-conditions-attached" => Gates.RealAdvancementConditionsAttached(),
                     "--case player-resolve-dump" => Gates.PlayerResolveDump(),
                     "--case player-branch-add" => Gates.PlayerBranchAdd(),
+                "--case illegal-shape-diag" => Gates.IllegalShapeDiag(),
+            "--case dimension-shape" => Gates.DimensionShape(),
+            "--case enum-mismatch-candidates" => Gates.EnumMismatchCandidates(),
+            "--case enum-key-select" => Gates.EnumKeySelect(),
+                    "--case key-rename-duplicate" => Gates.KeyRenameDuplicate(),
+                    "--case mismatch-heal-paths" => Gates.MismatchHealPaths(),
+                    "--case key-cell-candidates-only" => Gates.KeyCellCandidatesOnly(),
+                    "--case blockstate-conditions-state" => Gates.BlockStateConditionsState(),
+            "--case id-value-outside-candidates" => Gates.IdValueOutsideCandidates(),
+            "--case union-no-branch" => Gates.UnionNoBranch(),
+            "--case union-branch-toggle" => Gates.UnionBranchToggle(),
+            "--case bool-unset-branch" => Gates.BoolUnsetBranch(),
+            "--case notify-storm" => Gates.NotifyStorm(),
+            "--case ls-document" => Gates.LsDocument(),
                     "--case union-unset-recursion" => Gates.UnionUnsetRecursion(),
                     "--case key-select-after-add" => Gates.KeySelectAfterAdd(),
                     "--case optional-bool-row" => Gates.OptionalBoolRow(),
@@ -111,7 +129,10 @@ namespace CBHK.Probe
                     "--case list-item-commands" => Gates.ListItemCommands(),
                     "--case root-union-branch" => Gates.RootUnionBranch(),
                     "--case editor-channel-writes" => Gates.EditorChannelWrites(),
-                    "--case loot-table-functions-move" => Gates.LootTableFunctionsMove(),
+                    "--case parse-scan" => Gates.ParseScan(),
+                    "--case registries-bundle" => Gates.RegistriesBundle(),
+                "--case blockstate-bundle" => Gates.BlockStateBundle(),
+            "--case loot-table-functions-move" => Gates.LootTableFunctionsMove(),
                     "--case block-properties-resolve" => Gates.BlockPropertiesResolve(),
  "--case unset-keeps-parent-shape" => Gates.UnsetKeepsParentShape(),
                     "--case blockstate-properties" => Gates.BlockstateProperties(),
@@ -161,6 +182,10 @@ namespace CBHK.Probe
                     "--case item-custom-tag-entry" => Gates.ItemCustomTagEntry(),
                     "--case external-command-parser" => Gates.ExternalCommandParser(),
                     "--case resource-dispatcher-keys" => Gates.ResourceDispatcherKeys(),
+                    "--case union-scalar-branch-buttons" => Gates.UnionScalarBranchButtons(),
+                    "--case required-error-refresh" => Gates.RequiredErrorRefresh(),
+                    "--case number-live-typing" => Gates.NumberLiveTyping(),
+                    "--case rename-pencil-key-select" => Gates.RenamePencilKeySelect(),
                     _ => Usage()
                 };
             }

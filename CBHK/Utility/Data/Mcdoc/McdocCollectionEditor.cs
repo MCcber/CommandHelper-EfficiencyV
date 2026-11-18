@@ -21,6 +21,9 @@ namespace CBHK.Utility.Data.Mcdoc
     {
         public static McdocCollectionEditor Default { get; } = new();
 
+        /// <summary>必填框被清空时的判词：写空时挂上，写回成功时按前缀摘掉（只摘这一条，不动别的错误）。</summary>
+        private const string EmptinessError = "必填字段不能清空（请输入值）";
+
         /// <summary>
         /// 把"必填 + 闭合下拉 + 已经替用户选好默认项、但 JSON 里还没有这个键"的值写进文档。
         /// 这些值界面上本来就是选中的，不落盘会出现"行上显示 minecraft:xxx、依赖它的调度器/spread 却是空的"
@@ -281,6 +284,10 @@ namespace CBHK.Utility.Data.Mcdoc
             // 值从"没有"变成"有"：删除字段时冻结的子级要放开，否则 ⊕ 之后看不到子行（结构回来了、行回不来）
             var wasAbsent = node.Json is null;
             EnsurePath(node);
+            // 写值成功 ⇒ 之前"必填字段不能清空"不成立。只摘这一条（:987/:1004 那类"类型没解出来"的错误与
+            // 空值与否无关，不能被顺手清掉）。必须写在 Json 赋值之前：McdocRow 只对 Json 的 PropertyChanged
+            // 重算 Head，先清再写，那一拍才会拿到干净的错误集。
+            if (node.Error?.StartsWith(EmptinessError, StringComparison.Ordinal) == true) node.Error = null;
             node.Json = value;
             if (wasAbsent) node.ChildrenBuilt = false;
             WriteIntoParent(node, value);
@@ -335,6 +342,9 @@ namespace CBHK.Utility.Data.Mcdoc
         private bool TryUnsetOptionalBool(McdocTreeNode node)
         {
             if (node is null || node.IsRequired || node.IsTrue || node.IsFalse) return false;
+            // 行上**有 bool 值**才谈得上"取消选中"：刚切到 bool 分支时文档里还没有值、镜像两个都不选中，
+            // 那是"新建的空分支"，不是用户手势 —— 这里放行会让切支的收尾通知把它自己退回（未设置）。
+            if (node.Json is not { Kind: McdocJsonKind.Boolean }) return false;
             if (node.Type?.Kind == McdocTypeKind.Union && node.ScalarEditorKind == "Bool")
             {
                 if (node.Parent?.Json is not { Kind: McdocJsonKind.Object }) return false;
@@ -386,7 +396,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 node.RemoveFieldCommand.Execute(null);
                 return;
             }
-            if (node.IsRequired) node.Error = "必填字段不能清空（请输入值）";
+            if (node.IsRequired) node.Error = EmptinessError;
         }
 
         private static McdocJsonValue ReadEditedValue(McdocTreeNode node)
@@ -693,10 +703,25 @@ namespace CBHK.Utility.Data.Mcdoc
         }
 
         /// <summary>列表动作的"元素类型来源"：union 用选中的成员类型，否则用节点自身的类型。</summary>
-        private static McdocType ItemOwnerType(McdocTreeNode node)
+        internal static McdocType ItemOwnerType(McdocTreeNode node)
             => node?.Type?.Kind == McdocTypeKind.Union && node.SelectedUnionMember is not null
                 ? node.SelectedUnionMember
                 : node?.Type;
+
+        /// <summary>
+        /// 定长容器：元组，或上下界相等的定长数组。它的长度是形状的一部分，加/删/复制/换位都会改坏它 ——
+        /// union 的列表分支上判据要看选中的成员类型（owner 自己 Type=Union，不带 LengthRange）。
+        /// </summary>
+        public bool IsFixedContainer(McdocTreeNode node)
+            => node is not null && ItemOwnerType(node) is { } shape
+                && (shape.Kind == McdocTypeKind.Tuple || McdocHelpers.IsFixedList(shape));
+
+        /// <summary>
+        /// 条目自己的按钮只说"这个形状允不允许"，靠 item 的父级判，**不靠** Locate 的成员身份：
+        /// 行可能还绑在刚被 RebuildNode 换掉的旧实例上（Items 里已没有它，CanExecute 会误判成不能），
+        /// 而"父级是不是定长容器"在重建前后同样成立。
+        /// </summary>
+        public static bool ShapeIsFixed(McdocTreeNode item) => Default.IsFixedContainer(item?.Parent);
 
         /// <summary>union 的列表分支：加/删条目后必须保持展开，否则重建出来的节点一折叠，条目行就整片消失。</summary>
         private static void KeepListBranchExpanded(McdocTreeNode node)
@@ -752,14 +777,16 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
                 return false;
             }
+            // 定长容器里这三颗都不成立（长度/下标是形状的一部分）：命令本身就说"不能"，
+            // 行上的 ▲▼/⊖ 才会跟着收起来（见 McdocRow.MoveVisibility / RemoveSelfVisibility）。
             item.RemoveSelfCommand = new McdocCommand(() =>
             {
                 if (Locate(out var owner, out var index)) RemoveItemAt(owner, index);
-            });
+            }, () => !ShapeIsFixed(item));
             item.MoveUpCommand = new McdocCommand(() =>
             {
                 if (Locate(out var owner, out var index) && index > 0) MoveItem(owner, index, index - 1);
-            }, () => Locate(out _, out var index) && index > 0);
+            }, () => Locate(out var owner, out var index) && index > 0 && !ShapeIsFixed(item));
             item.MoveDownCommand = new McdocCommand(() =>
             {
                 if (!Locate(out var owner, out var index)) return;
@@ -767,7 +794,7 @@ namespace CBHK.Utility.Data.Mcdoc
             }, () =>
             {
                 if (!Locate(out var owner, out var index)) return false;
-                return index >= 0 && index < ItemCount(owner) - 1;
+                return index >= 0 && index < ItemCount(owner) - 1 && !ShapeIsFixed(item);
             });
             item.RaiseListItemCommandStateChanged();
         }
@@ -831,9 +858,9 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>列表 ⊕（misode ListHead/ListBody 的 add_top / add_bottom）。</summary>
         public void AddItem(McdocTreeNode node, McdocRuntime runtime, bool atTop = false)
         {
-            if (node?.Type is null || node.Type.Kind == McdocTypeKind.Tuple) return;
+            if (node?.Type is null || IsFixedContainer(node)) return;
             if (EnsureContainer(node, McdocJsonKind.Array) is not { Kind: McdocJsonKind.Array } array) return;
-            if (node.Type?.LengthRange is { Max: { } max } && (array.Items?.Count ?? 0) >= max) return;
+            if (ItemOwnerType(node)?.LengthRange is { Max: { } max } && (array.Items?.Count ?? 0) >= max) return;
             // any 行的 list 分支：元素类型就是 any（GetItemType 的 default 已经是 any，这里只把语义写清）
             var itemType = node.Type.Kind is McdocTypeKind.Any or McdocTypeKind.Unsafe
                 ? McdocType.Any()
@@ -857,8 +884,8 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>删除指定下标的列表项；删空且不允许为空的可选列表时，整个字段一起移除。</summary>
         public void RemoveItemAt(McdocTreeNode node, int index)
         {
-            // tuple 是定长结构：删除会把长度改坏（AppendItem/AddItem 已拒绝，这里同样要守）
-            if (node?.Type?.Kind == McdocTypeKind.Tuple) return;
+            // 定长容器（元组 / #[length=N]）：删除会把长度改坏（AddItem 已拒绝，这里同样要守）
+            if (IsFixedContainer(node)) return;
             if (node?.Json is not { Kind: McdocJsonKind.Array } array || array.Items is null) return;
             if (index < 0 || index >= array.Items.Count)
             {
@@ -893,6 +920,8 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>列表项上移 / 下移。</summary>
         public void MoveItem(McdocTreeNode node, int from, int to)
         {
+            // 定长容器的下标就是语义（元组第 0 项是 x、第 1 项是 y）：换位等于把值写错地方
+            if (IsFixedContainer(node)) return;
             if (node?.Json is not { Kind: McdocJsonKind.Array } array || array.Items is null) return;
             if (from < 0 || from >= array.Items.Count || to < 0 || to >= array.Items.Count || from == to) return;
             var value = array.Items[from];
@@ -1061,8 +1090,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 return;
             }
             // 定长结构（tuple / #[length=N]）复制会改坏长度：与 AddItem / RemoveItemAt 同一判据
-            if (parent.Type?.Kind == McdocTypeKind.Tuple) return;
-            if (parent.Type?.LengthRange is { Max: { } max } && array.Items.Count >= max) return;
+            if (IsFixedContainer(parent)) return;
+            if (ItemOwnerType(parent)?.LengthRange is { Max: { } max } && array.Items.Count >= max) return;
             var index = array.Items.FindIndex(item => ReferenceEquals(item, node.Json));
             if (index < 0)
             {

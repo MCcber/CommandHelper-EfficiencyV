@@ -250,6 +250,24 @@ namespace CBHK.Utility.Data.Mcdoc
             return false;
         }
 
+        /// <summary>
+        /// 联合里**有没有**一支在形状上吃得下这个值（按 kind 判；解不开的成员保守算"吃得下"）。
+        /// 用来区分"并列不定"和"一支都对不上"：前者仍可退回声明序第一支保持渲染稳定，
+        /// 后者不许假装选中（现场：attribute 的 modifier 从 blend_to_gray 切到 alpha_blend 后，
+        /// argument 留着 {brightness,factor}，行上却挑了联合的 Int 分支，还多出一条重复的原始 JSON 行）。
+        /// </summary>
+        public static bool AnyMemberFitsShape(McdocType type, McdocJsonValue json, McdocSimplifyContext context)
+        {
+            if (type is null || json is null) return true;
+            foreach (var member in type.Members ?? [])
+            {
+                if (member is null) continue;
+                if (MatchesKind(member, json)) return true;
+                if (Matches(member, json, context)) return true;
+            }
+            return false;
+        }
+
         /// <summary>只看 JSON 形状对不对得上声明（不看必填键齐不齐），用于"精确匹配一个都没有"时的兜底选支。</summary>
         private static bool MatchesKind(McdocType type, McdocJsonValue json)
         {

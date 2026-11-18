@@ -88,11 +88,13 @@ namespace CBHK.Utility.Data.Mcdoc
         private void PreserveUnknownChildren(McdocTreeNode node)
         {
             if (PreservedGroup is null || node is null || node.IsPreservedGroup || node.IsUnknownField) return;
+            List<string> undeclared = null;
             for (var index = node.Children.Count - 1; index >= 0; index--)
             {
                 var child = node.Children[index];
                 if (child is null || !child.IsUnknownField) continue;
                 node.Children.RemoveAt(index);
+                if (!string.IsNullOrEmpty(child.FieldName)) (undeclared ??= new List<string>(2)).Insert(0, child.FieldName);
                 if (!string.IsNullOrEmpty(child.JsonPath))
                 {
                     for (var existing = PreservedGroup.Children.Count - 1; existing >= 0; existing--)
@@ -107,6 +109,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 child.Parent = PreservedGroup;
                 PreservedGroup.Children.Insert(0, child);
             }
+            // 重算而不是追加：重建后旧名单作废，键清干净了这条诊断要跟着消失。
+            node.UndeclaredKeys = undeclared;
         }
 
         /// <summary>
@@ -444,7 +448,10 @@ namespace CBHK.Utility.Data.Mcdoc
                 && json.Kind is McdocJsonKind.Object or McdocJsonKind.Array)
             {
                 evaluationError ??= "值与类型不符：期望 " + type.Kind + "，实际 " + json.Kind + "（在右侧 JSON 修正）";
-                type = McdocType.Any();
+                // 枚举是闭合候选：降成 any 会把候选一起丢掉，行上只剩一个"挑类型"的下拉（现场：
+                // 26.3 natural_mob_spawns.modifier = {}）。保留枚举让行给出真正的候选，选中即自愈；
+                // 诊断照挂，值仍留在 JSON 里，也绝不按声明摊开子级。
+                if (type.Kind != McdocTypeKind.Enum) type = McdocType.Any();
             }
 
             // misode：定长 list 当 tuple 处理（每个下标独立成节点）

@@ -110,8 +110,11 @@ namespace CBHK.Utility.Data.Mcdoc
             => Json is not null
                 && Parent?.Json is { Kind: McdocJsonKind.Array } list
                 && list.Items is not null
-                && Parent.Type?.Kind != McdocTypeKind.Tuple
-                && !(Parent.Type?.LengthRange is { Max: { } max } && list.Items.Count >= max);
+                // 判据看"有效容器类型"：union 列表支的父级是 union 节点（Type=Union、不带 LengthRange），
+                // 以前直接看 Parent.Type 会把定长/元组全部放过去 —— 定长列表上照样出现"复制这一项"
+                && !McdocCollectionEditor.Default.IsFixedContainer(Parent)
+                && !(McdocCollectionEditor.ItemOwnerType(Parent)?.LengthRange is { Max: { } max }
+                    && list.Items.Count >= max);
 
         private bool CanRemoveItem()
             => Json is { Kind: McdocJsonKind.Array } list && list.Items is { Count: > 0 };
@@ -178,8 +181,15 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>union 选中的是列表/元组分支：子行直接摊在 union 行下（不再多一层容器行）。</summary>
         public bool UnionListLike { get; set; }
 
-        /// <summary>键类型带 #[id] 且能取到候选值时，键用下拉而不是文本框。</summary>
+        /// <summary>键类型带 #[id]、或键是闭合枚举（[MobCategory]）时，键有候选表可挑。</summary>
         public bool UseKeySelect { get; set; }
+
+        /// <summary>
+        /// 键空间是开放的（<c>#[id="entity"] string</c>：注册表外的键也合法）。这种键的条目行不吃候选下拉 ——
+        /// 键已经有了，下拉只是给"换键"再开一个入口；键名以只读标签显示。加新键的占位行仍用下拉。
+        /// 闭合枚举键（[MobCategory]）反之：成员就那么多，条目行留着下拉换成员。
+        /// </summary>
+        public bool KeySpaceOpen { get; set; }
 
         /// <summary>供模板绑定的反向属性（文本框显隐用，省掉一个取反转换器）。</summary>
         public bool UseKeyText => !UseKeySelect;
@@ -392,6 +402,20 @@ namespace CBHK.Utility.Data.Mcdoc
         public bool IsUnknownField { get; set; }
 
         /// <summary>
+        /// 本节点 JSON 里被搬进保留区的键名（当前版本不存在的那几个）。保留区只报总数，
+        /// 行上必须说清"是这一层的哪些键"：26.3 把条件对象从 condition 键换成 type 键，
+        /// 老形状整层掉进保留区后，用户看到的只是子级凭空少了一半 + 一个必填项报错。
+        /// 由 <see cref="McdocNodeFactory"/> 每次重建时重算（null = 这一层没有）。
+        /// </summary>
+        public List<string> UndeclaredKeys { get; set; }
+
+        /// <summary>
+        /// 这一层"当前版本不存在"的键。union 行的 JSON 与子级都挂在分支节点上（结构支把子级上提到
+        /// union、分支本体不进 SelectedUnionChildren），名单也记在分支节点 —— 取不到就顺着分支找。
+        /// </summary>
+        internal List<string> EffectiveUndeclaredKeys => UndeclaredKeys ?? SelectedUnionBranchNode?.UndeclaredKeys;
+
+        /// <summary>
         /// 保留区合成容器：当前版本不存在的键全都挂在这一个虚拟节点下（不在 Nodes、也不在 rootNode 里），
         /// 主视图因此不会到处冒黄叹号行；它的子级仍然是各自的 JsonPath，删除照旧按活文档解析。
         /// </summary>
@@ -598,27 +622,72 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>
         /// 数字行绑定的文本（模板里的 TextBox 直接绑它）：空串/不可解析 = 没有值 ⇒ 可选字段删键。
         /// 行模板不再用带内置步进的数值控件（它只改自己的 Text，不通知绑定，JSON 永远不动）。
+        /// 逐键输入中的原文。绑定是 UpdateSourceTrigger=PropertyChanged，每敲一个字符就回写；
+        /// 但"能解析"不等于"敲完了"（"1." / "0." 都是合法 decimal，只是末尾那个小数点还得留着），
+        /// 所以原文先存这里，免得 getter 用规范化文本把刚敲的小数点抹掉。失焦时由 <see cref="CommitNumberText"/> 收掉。
         /// </summary>
+        private string numberDraft;
+
         public string NumberText
         {
-            get => value is null ? "" : Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture);
+            get => numberDraft ?? (value is null ? "" : Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture));
             set
             {
                 var text = (value ?? "").Trim();
                 if (text.Length == 0)
                 {
+                    numberDraft = null;
                     if (value is not null) Value = null;
                     return;
                 }
                 if (!decimal.TryParse(text, System.Globalization.NumberStyles.Float,
                         System.Globalization.CultureInfo.InvariantCulture, out var parsed))
                 {
-                    // 敲到一半的非法输入：不动文档，也不抹掉用户正在敲的内容
+                    // 敲到一半的非法输入（"." / "-" / "1e"）：不动文档，也不抹掉用户正在敲的内容
+                    numberDraft = text;
                     OnPropertyChanged(nameof(NumberText));
                     return;
                 }
+                // 值照旧即时生效（校验/越界告警都靠它），文本按原文留着
+                numberDraft = IsIncompleteNumberText(text) ? text : null;
                 Value = parsed == Math.Truncate(parsed) ? (object)(long)parsed : (double)parsed;
+                // 值没变时 Value setter 会提前返回、不发通知，这里补一下，绑定才看得到刚敲进来的小数点
+                if (numberDraft is not null) OnPropertyChanged(nameof(NumberText));
             }
+        }
+
+        // 末尾是小数点/正负号/指数符号：decimal 已经解析成功，但用户显然还要继续敲
+        private static bool IsIncompleteNumberText(string text)
+            => text.Length > 0 && text[text.Length - 1] is '.' or '+' or '-' or 'e' or 'E';
+
+        /// <summary>数字框失焦：收掉"正在敲"的原文，回到规范化文本（"0." → "0"、".5" → "0.5"）。</summary>
+        public void CommitNumberText()
+        {
+            if (numberDraft is null) return;
+            numberDraft = null;
+            OnPropertyChanged(nameof(NumberText));
+        }
+
+        private static bool numberCommitHookInstalled;
+
+        /// <summary>
+        /// 数字框失焦的收口。行模板里的 TextBox 在 McdocRows.xaml（DataTemplate，无 code-behind），
+        /// 于是按控件类挂一次钩子：只认真身是节点的框，其余 TextBox 一律放过。
+        /// </summary>
+        internal static void EnsureNumberCommitHook()
+        {
+            if (numberCommitHookInstalled) return;
+            numberCommitHookInstalled = true;
+            System.Windows.EventManager.RegisterClassHandler(
+                typeof(System.Windows.Controls.TextBox),
+                System.Windows.UIElement.LostKeyboardFocusEvent,
+                new System.Windows.Input.KeyboardFocusChangedEventHandler(OnNumberEditorLostKeyboardFocus),
+                handledEventsToo: true);
+        }
+
+        private static void OnNumberEditorLostKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs args)
+        {
+            if ((sender as System.Windows.FrameworkElement)?.DataContext is McdocTreeNode node) node.CommitNumberText();
         }
 
         // 缺省的 bool 行"两个都不选"：以前默认 isTrue=true，会在界面上伪装成 True 已选中
@@ -985,6 +1054,14 @@ namespace CBHK.Utility.Data.Mcdoc
                     SelectedEnumOption = branch.SelectedEnumOption;
                     return;
                 }
+                // bool 分支：切过去时文档里还没有值（分支是用 null 建的），两个按钮都是"没选中"；
+                // 值一旦落盘必须回填，否则值通道会把"两个都没选中"当成用户取消选中 →
+                // 刚选中的分支立刻被退回（未设置）（现场：attributes 的 bool 条目切不回 Boolean）。
+                if (ScalarEditorKind == "Bool" && Json is { Kind: McdocJsonKind.Boolean } booleanValue)
+                {
+                    SetBoolSilently(booleanValue.BooleanValue);
+                    return;
+                }
                 // 标量分支是镜像到本行的（没有分支子级）：直接按本行的值挑选中项，缺值就回（未设置）
                 if (EnumOptionList is not { Count: > 0 } options) return;
                 var text = Json is { Kind: McdocJsonKind.String } value ? value.StringValue : null;
@@ -1055,8 +1132,44 @@ namespace CBHK.Utility.Data.Mcdoc
             OnPropertyChanged(nameof(IsFalse));
         }
 
+        // 通知风暴的自保闸门：绑定层（双向 SelectedItem / IsChecked）收到通知就同步写回源属性，
+        // 写回又发通知 —— 两条路径一旦互相触发就是同步递归，最终 CLR 直接终止进程
+        // （StackOverflowException 捕获不到，用户那边连日志都留不下来）。超限时把调用栈记进
+        // Logs\mcdoc-error.log 然后**不再往外发**：宁可让界面停在旧值，也不要整个程序消失。
+        private const int NotifyDepthLimit = 64;
+        // 普通静态字段而不是 [ThreadStatic]：树的通知全在 UI 线程上发，TLS 访问每次都要过一次辅助调用，
+        // 而这里在 1MB 全展开档会被调用上百万次（perf-stages 直接把它量出来了）。
+        private static int notifyDepth;
+        private static bool notifyStormReported;
+
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        {
+            if (notifyDepth >= NotifyDepthLimit)
+            {
+                if (!notifyStormReported)
+                {
+                    notifyStormReported = true;
+                    // 栈只留前 48 行：足够看出"谁在通知谁"，又不至于一条记录灌几十 KB
+                    var stack = (Environment.StackTrace ?? "").Split('\n');
+                    var head = string.Join("\n", stack.Take(48));
+                    if (stack.Length > 48) head += "\n…（后面 " + (stack.Length - 48) + " 行省略）";
+                    McdocWriteTrace.Error("notify-storm depth=" + notifyDepth
+                        + " path=" + (JsonPath ?? "?") + " property=" + (propertyName ?? "<null>"),
+                        new InvalidOperationException(head));
+                }
+                return;
+            }
+            notifyDepth++;
+            try
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+            finally
+            {
+                notifyDepth--;
+                if (notifyDepth == 0) notifyStormReported = false;
+            }
+        }
 
         public override string ToString() => FieldName + " : " + (Type?.Kind.ToString() ?? "?");
     }

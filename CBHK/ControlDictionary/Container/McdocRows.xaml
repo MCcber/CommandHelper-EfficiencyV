@@ -57,8 +57,8 @@
                         CornerRadius="5">
                         <Grid>
                             <!--
-                                祖先竖线：McdocRow.Depth 决定要画几条，每条 16px 一层。
-                                用节距 16px 的斜接画刷一次铺出来，宽度绑 Depth*16，深度 0 时宽度为 0 自然不画。
+                                祖先竖线：McdocRow.Depth 决定要画几条，每条 34px 一层（与行首按钮列同宽）。
+                                用节距 34px 的斜接画刷一次铺出来，宽度绑 AncestorLineWidth，深度 0 时宽度为 0 自然不画。
                             -->
                             <Rectangle
                                 Width="{Binding AncestorLineWidth}"
@@ -69,7 +69,7 @@
                                     <DrawingBrush
                                         Stretch="None"
                                         TileMode="Tile"
-                                        Viewport="0,0,16,16"
+                                        Viewport="0,0,34,34"
                                         ViewportUnits="Absolute">
                                         <DrawingBrush.Drawing>
                                             <!--
@@ -77,9 +77,9 @@
                                                 只画一根 1px 灰线在那排按钮旁边就显得很"2D"。
                                             -->
                                             <DrawingGroup>
-                                                <GeometryDrawing Brush="{DynamicResource CommonForeground}" Geometry="M7.5,0 L8.5,0 L8.5,16 L7.5,16 Z" />
+                                                <GeometryDrawing Brush="{DynamicResource CommonForeground}" Geometry="M16.5,0 L17.5,0 L17.5,34 L16.5,34 Z" />
                                                 <DrawingGroup Opacity="0.35">
-                                                    <GeometryDrawing Brush="{DynamicResource CommonForeground}" Geometry="M8.5,0 L9.5,0 L9.5,16 L8.5,16 Z" />
+                                                    <GeometryDrawing Brush="{DynamicResource CommonForeground}" Geometry="M17.5,0 L18.5,0 L18.5,34 L17.5,34 Z" />
                                                 </DrawingGroup>
                                             </DrawingGroup>
                                         </DrawingBrush.Drawing>
@@ -873,7 +873,7 @@
                 IconWidth="15"
                 Style="{DynamicResource VectorFlatIconButtonStyle}"
                 ToolTip="上移"
-                Visibility="{Binding ItemActionsVisibility}" />
+                Visibility="{Binding MoveVisibility}" />
             <VectorButton:VectorFlatIconButton
                 Width="34"
                 Height="34"
@@ -887,7 +887,7 @@
                 IconWidth="15"
                 Style="{DynamicResource VectorFlatIconButtonStyle}"
                 ToolTip="下移"
-                Visibility="{Binding ItemActionsVisibility}" />
+                Visibility="{Binding MoveVisibility}" />
             <VectorButton:VectorFlatIconButton
                 Width="34"
                 Height="34"
@@ -1336,7 +1336,6 @@
                 <data:McdocKeyBox
                     Width="236"
                     Height="34"
-                    HorizontalAlignment="Stretch"
                     Style="{StaticResource MdocTransparentTextBoxStyle}"
                     Text="{Binding Node.EditingKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     ToolTip="新键：在这里敲名字，再点右侧 +"

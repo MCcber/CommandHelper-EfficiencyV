@@ -64,6 +64,10 @@ namespace CBHK.Utility.Data.Mcdoc
         public static bool SwitchTo(McdocTreeNode node, EnumMember option, McdocRuntime runtime = null)
         {
             if (node is null) return false;
+            // null 不是"选（未设置）"：那是绑定层把 ComboBox 的选择清空了（ItemsSource 换代、选中项
+            // 不在新集合里都会这么写回）。以前这里会当成一次切换：报 true、把 SelectedUnionTypeName
+            // 置成 null，而文档里的键还在 —— 行上选中变空白、值却留着，而且每写回一次就发一轮通知。
+            if (option is null) return false;
             if (IsUnsetOption(option))
             {
                 // 幂等：已经处在"干净的未设置"（键没了、分支子级与分支壳都清空了）就报"没变化"。
@@ -196,6 +200,39 @@ namespace CBHK.Utility.Data.Mcdoc
                     }
                     McdocCollectionEditor.Default.WriteIntoParent(node, array);
                     node.Json = array;
+                }
+                // 列表支刚落盘时元素可能是 JSON null（元素类型的默认值求不出）：null 条目不是文档值，
+                // 留着就是 "argument": [null,null,null] 配一串空 Entry。能解出元素形态就换默认值，
+                // 解不出就删掉这些位（短数组由校验器点名，比一排假值诚实）。
+                if (listBranch && node.Json is { Kind: McdocJsonKind.Array } listJson
+                    && listJson.Items is { } entries
+                    && entries.Exists(entry => entry is null || entry.Kind == McdocJsonKind.Null))
+                {
+                    var itemType = node.SelectedUnionMember is { } member
+                        ? McdocHelpers.GetItemType(member)
+                        : McdocHelpers.GetItemType(node.Type);
+                    var resolvedItem = itemType is null ? null : McdocDefaults.ResolveType(itemType, node.Runtime);
+                    var fallback = resolvedItem is null || resolvedItem.Kind == McdocTypeKind.Any
+                        ? null
+                        : McdocDefaults.Resolve(itemType, node.Runtime);
+                    var filled = 0;
+                    var removed = 0;
+                    for (var index = entries.Count - 1; index >= 0; index--)
+                    {
+                        if (entries[index] is { Kind: not McdocJsonKind.Null }) continue;
+                        if (fallback is not null)
+                        {
+                            entries[index] = fallback;
+                            filled++;
+                        }
+                        else
+                        {
+                            entries.RemoveAt(index);
+                            removed++;
+                        }
+                    }
+                    McdocWriteTrace.Trace("union-list-fill", "path=" + (node.JsonPath ?? "?")
+                        + " filled=" + filled + " removed=" + removed + " item=" + (resolvedItem?.Kind.ToString() ?? "<null>"));
                 }
                 // 非标量分支（结构 / 列表 / 元组 / any）切过去就直接展开：字段行、条目行要当场看得见。
                 // 这一步必须在分支落地之后判 ScalarEditorKind —— 切之前它还挂着上一支的标量镜像，

@@ -38,7 +38,13 @@ namespace CBHK.Utility.Data.Mcdoc
     public interface IMcdocSymbols
     {
         McdocType GetTypeDef(string path, string documentUri, string modulePath = null);
-        IReadOnlyDictionary<string, McdocType> GetDispatcherMembers(string registry, string documentUri);
+        /// <summary>
+        /// 只查不记账：给"要不要延后求值"这类启发式用。查不到不算未解析——
+        /// 探测路径会碰到泛型实参里残留的形参名（T 之类），那不是缺失的引用。
+        /// </summary>
+        McdocType PeekTypeDef(string path, string documentUri, string modulePath = null);
+        /// <param name="gameVersion">按版本注册的空间（如资产注入的 mcdoc:block_states）用；为空时只看通用成员。</param>
+        IReadOnlyDictionary<string, McdocType> GetDispatcherMembers(string registry, string documentUri, string gameVersion = null);
     }
 
     /// <summary>一次求值所需的全部外部依赖（等价 spyglass 的 McdocCheckerContext 的可移植子集）。</summary>

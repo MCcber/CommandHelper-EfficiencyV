@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -32,42 +33,9 @@ namespace CBHK.Probe
 
         public static int Rows(string outputDirectory)
         {
-            var rootDir = RealSchema.LocateMcdocRoot();
-            if (rootDir is null)
-            {
-                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
-                return 2;
-            }
-            outputDirectory ??= Path.Combine(Path.GetTempPath(), "mcdoc-render");
-            Directory.CreateDirectory(outputDirectory);
-
-            // 相对 pack URI（字典里 Sub-Dictionary 的 Source="/ControlDictionary/..."）按 ResourceAssembly 解析：
-            // 探针是入口程序集，不指回 CBHK 就会去 CBHK.Probe.dll 里找（"找不到资源 controldictionary/..."）。
-            // 必须在 Application 实例化之前设，之后它就已经被钉成入口程序集了。
-            var cbhkAssembly = typeof(CBHK.Utility.Data.Mcdoc.McdocRow).Assembly;
-            try { Application.ResourceAssembly = cbhkAssembly; }
-            catch (InvalidOperationException)
-            {
-                // 已经钉成入口程序集了：只能换私有字段（探针是独立 exe，正常宿主不会走到这里）
-                typeof(Application)
-                    .GetField("_resourceAssembly", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                    ?.SetValue(null, cbhkAssembly);
-            }
-            var app = Application.Current ?? new Application();
-            foreach (var path in Dictionaries)
-            {
-                app.Resources.MergedDictionaries.Add(new ResourceDictionary
-                {
-                    Source = new Uri("pack://application:,,,/CBHK;component/" + path, UriKind.Absolute),
-                });
-            }
-
-            McdocNodeFactory.LazyChildren = false;
-            McdocRowProjector.PageSize = int.MaxValue;
-            McdocRow.DeferEditors = false;
-
-            var index = new McdocTypeIndex();
-            RealSchema.Load(index, rootDir);
+            if (Prepare(outputDirectory) is not { } prepared) return 2;
+            var app = prepared.App;
+            var index = prepared.Index;
             var rootType = new McdocType
             {
                 Kind = McdocTypeKind.Dispatcher,
@@ -157,6 +125,104 @@ namespace CBHK.Probe
             RenderDimensionAttributes(app, index, outputDirectory);
             return 0;
         }
+
+        /// <summary>
+        /// 26.3 维度类型的真实行树（用户截图那份 JSON）：渲染整棵树，给缩进、按钮、分支下拉留外观证据。
+        /// </summary>
+        public static int Dimension(string outputDirectory)
+        {
+            var outputDir = outputDirectory ?? Path.Combine(Path.GetTempPath(), "mcdoc-render");
+            if (Prepare(outputDir) is not { } prepared) return 2;
+            var loading = false;
+            var document = new McdocTreeDocument(prepared.Index)
+            {
+                GameVersion = "26.3",
+                RegistryOptions = new RenderRegistryStub(),
+            };
+            var projector = new McdocRowProjector();
+            var pipeline = new McdocPipeline
+            {
+                Document = document,
+                Projector = projector,
+                RootType = () => McdocHelpers.GetRootType("dimension_type"),
+                GetLoading = () => loading,
+                SetLoading = value => loading = value,
+            };
+            pipeline.ScheduleRebuild = anchor => pipeline.RebuildTargetedOrFallback(anchor);
+            pipeline.Fallback = () => pipeline.Reload();
+            projector.Document = document;
+            projector.RequestReload = () => pipeline.Reload();
+            document.NodeValueChanged = node => pipeline.OnValueChanged(node);
+            document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
+            document.Load(McdocHelpers.GetRootType("dimension_type"), McdocJsonParser.Parse(DimensionJson));
+            projector.Reset(document.ProjectionRoots);
+            Pump();
+            foreach (var top in document.Nodes) top.EnsureChildren();
+            Pump();
+            // 展开到第四层：spawns_by_category 的键占位行（闭合枚举键的候选下拉）也要出现在证据里。
+            // union 分支的子级在 SelectedUnionChildren 里，用 presenter 的 Children 取，别只看 Children。
+            for (var level = 0; level < 3; level++)
+            {
+                var expandable = new List<McdocTreeNode>();
+                foreach (var top in document.Nodes.ToList()) CollectExpandable(top, expandable, 0);
+                if (expandable.Count == 0) break;
+                foreach (var node in expandable)
+                {
+                    node.IsExpanded = true;
+                    node.EnsureChildren();
+                }
+                Pump();
+            }
+            // 展开状态只改节点，不重排行：投影得重建一次才会把新子行算进来
+            projector.Reset(document.ProjectionRoots);
+            Pump();
+            var path = Path.Combine(outputDir, "dimension-tree.png");
+            Capture(prepared.App, projector, path);
+            Console.WriteLine("[信息] 已渲染 " + path + " 行数=" + projector.Rows.Count);
+            for (var i = 0; i < projector.Rows.Count; i++)
+            {
+                var row = projector.Rows[i];
+                var keyCell = row.Kind is McdocRowKind.Keyed or McdocRowKind.Placeholder
+                    ? " keySelect=" + row.Node?.UseKeySelect + " options=" + (row.Node?.KeyOptionList?.Count ?? 0)
+                      + " rename=" + row.RenameVisibility + " combo=" + row.KeyComboVisibility
+                    : "";
+                Console.WriteLine("[行] " + i + " depth=" + row.Depth + " indent=" + row.Indent.Left
+                    + " kind=" + row.Kind + " key='" + (row.Node?.FieldName ?? "") + "'" + keyCell);
+            }
+            return 0;
+        }
+
+        /// <summary>收集还没展开的节点（按 presenter 认得的孩子走，union 分支也算）。</summary>
+        private static void CollectExpandable(McdocTreeNode node, List<McdocTreeNode> into, int depth)
+        {
+            if (node is null || depth > 4) return;
+            node.EnsureChildren();
+            var children = McdocPresenterRegistry.Default.Children(node);
+            if (!node.IsExpanded && children.Count > 0) into.Add(node);
+            foreach (var child in children)
+            {
+                CollectExpandable(child, into, depth + 1);
+            }
+        }
+
+        private const string DimensionJson = @"{
+  ""attributes"": {
+    ""minecraft:visual/sky_color"": { ""modifier"": ""blend_to_gray"", ""argument"": { ""brightness"": 4, ""factor"": -1 } },
+    ""minecraft:visual/sky_fog_end_distance"": { ""modifier"": ""override"", ""argument"": 0 },
+    ""minecraft:gameplay/natural_mob_spawns"": { ""spawns_by_category"": {}, ""spawn_costs"": { ""cave_spider"": { ""energy_budget"": 0, ""charge"": 0 } } }
+  },
+  ""has_skylight"": true,
+  ""has_ceiling"": false,
+  ""has_ender_dragon_fight"": false,
+  ""coordinate_scale"": 1,
+  ""ambient_light"": 0,
+  ""logical_height"": 384,
+  ""infiniburn"": ""#minecraft:infiniburn_overworld"",
+  ""min_y"": -64,
+  ""height"": 384,
+  ""monster_spawn_light_level"": 0,
+  ""monster_spawn_block_light_limit"": 0
+}";
 
         /// <summary>候选键形态的占位行（dimension_type.attributes：键来自 environment_attribute 注册表）。</summary>
         private static void RenderDimensionAttributes(Application app, McdocTypeIndex index, string outputDirectory)
@@ -255,6 +321,47 @@ namespace CBHK.Probe
                 if (found is not null) return found;
             }
             return null;
+        }
+
+        /// <summary>渲染前的一次性准备：资源字典指回 CBHK 程序集、载入实 schema。找不到资产返回 null。</summary>
+        private static (Application App, McdocTypeIndex Index)? Prepare(string outputDirectory)
+        {
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return null;
+            }
+            Directory.CreateDirectory(outputDirectory);
+
+            // 相对 pack URI（字典里 Sub-Dictionary 的 Source="/ControlDictionary/..."）按 ResourceAssembly 解析：
+            // 探针是入口程序集，不指回 CBHK 就会去 CBHK.Probe.dll 里找（"找不到资源 controldictionary/..."）。
+            // 必须在 Application 实例化之前设，之后它就已经被钉成入口程序集了。
+            var cbhkAssembly = typeof(CBHK.Utility.Data.Mcdoc.McdocRow).Assembly;
+            try { Application.ResourceAssembly = cbhkAssembly; }
+            catch (InvalidOperationException)
+            {
+                // 已经钉成入口程序集了：只能换私有字段（探针是独立 exe，正常宿主不会走到这里）
+                typeof(Application)
+                    .GetField("_resourceAssembly", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                    ?.SetValue(null, cbhkAssembly);
+            }
+            var app = Application.Current ?? new Application();
+            foreach (var path in Dictionaries)
+            {
+                app.Resources.MergedDictionaries.Add(new ResourceDictionary
+                {
+                    Source = new Uri("pack://application:,,,/CBHK;component/" + path, UriKind.Absolute),
+                });
+            }
+
+            McdocNodeFactory.LazyChildren = false;
+            McdocRowProjector.PageSize = int.MaxValue;
+            McdocRow.DeferEditors = false;
+
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            return (app, index);
         }
 
         private static void Capture(Application app, McdocRowProjector projector, string path)

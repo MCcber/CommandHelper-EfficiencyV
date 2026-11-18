@@ -246,10 +246,27 @@ namespace CBHK.Utility.Data.Mcdoc
                         { Kind: McdocJsonKind.Boolean } => Convert.ToString(json.BooleanValue),
                         _ => null,
                     };
-                    node.SetEnumOptionSilently((text is null
-                        ? null
-                        : node.EnumOptionList.FirstOrDefault(o => Convert.ToString(o.Value?.LiteralValue) == text))
-                        ?? node.EnumOptionList.FirstOrDefault());
+                    // 值不是标量（非法文档，比如枚举键上挂了对象）时不假装选中第一项：
+                    // 位置还空着，行上留着错误徽标，选一个候选就把坏值换掉。
+                    // 候选外的标量值（旧版本写的 / 手改的）反过来必须挂上并选中：
+                    // 行上显示的值要等于 JSON 里的值 —— 不选是「行说没设、文档里有」，回落第一项是「行说另一个值」。
+                    if (text is null)
+                    {
+                        node.SetEnumOptionSilently(json is null ? node.EnumOptionList.FirstOrDefault() : null);
+                        break;
+                    }
+                    // 先按字面量原样比；再按 resource location 归一形态比（文档里常写 "overworld"，
+                    // 而枚举值写的是 "minecraft:overworld"）—— 命中真候选，行上显示成员名，值不写回。
+                    var selected = node.EnumOptionList.FirstOrDefault(o => Convert.ToString(o.Value?.LiteralValue) == text)
+                        ?? node.EnumOptionList.FirstOrDefault(o => string.Equals(
+                            McdocIdSpec.LengthenResourceLocation(Convert.ToString(o.Value?.LiteralValue)),
+                            McdocIdSpec.LengthenResourceLocation(text), StringComparison.Ordinal));
+                    if (selected is null)
+                    {
+                        selected = new EnumMember { Name = text, Value = new MetaValue { LiteralValue = text } };
+                        node.EnumOptionList.Insert(0, selected);
+                    }
+                    node.SetEnumOptionSilently(selected);
                     break;
 
                 case McdocTypeKind.Boolean:
@@ -580,7 +597,21 @@ namespace CBHK.Utility.Data.Mcdoc
     /// <summary>union 行：标签 + 分支下拉 + 当前分支的标量编辑器（misode 的 UnionHead 同款布局）。</summary>
     public sealed class UnionNodePresenter : McdocNodePresenter
     {
+        // 呈现层写进 node.Error 的判词前缀：切支成功时必须能认回来（见 ApplyBranch）
+        private const string NoBranchMessage = "值不属于这个联合的任何一支";
+
         public override bool CanPresent(McdocType type) => type?.Kind == McdocTypeKind.Union;
+
+        /// <summary>
+        /// "这一支是不是列表形"只看**选中的声明**（misode: selectedType.isListLike），
+        /// 不看行上的 <see cref="McdocTreeNode.UnionListLike"/> —— 那个是切支时写的镜像，标量支从不清它，
+        /// 拿它当判据就会在"列表支 → 标量支"之后把 ⊕ 留在行上。
+        /// Tuple 也算列表形：<see cref="McdocType.IsListLike"/> 只认 List/原生数组，而列表支的处理包含 Tuple。
+        /// </summary>
+        private static bool IsListBranchType(McdocType type)
+            => type is not null && (type.IsListLike || type.Kind == McdocTypeKind.Tuple);
+
+        public override bool IsListLikeFor(McdocTreeNode node) => IsListBranchType(node?.SelectedUnionMember);
 
         public override McdocNodeHead Describe(McdocTreeNode node)
         {
@@ -610,8 +641,8 @@ namespace CBHK.Utility.Data.Mcdoc
                         ? McdocRowKind.Union
                         : RowKindFor(node),
             // 列表分支的子级摊在 union 行下面：⊕ / 尾部追加也由这一行出（原来只有列表 presenter 会给能力位）
-            CanAddTop = node.UnionListLike && CanAppendToList(node),
-            CanAddBottom = node.UnionListLike && CanAppendToList(node),
+            CanAddTop = IsListBranchType(node.SelectedUnionMember) && CanAppendToList(node),
+            CanAddBottom = IsListBranchType(node.SelectedUnionMember) && CanAppendToList(node),
                 EditorKind = MirroredEditorKind(node),
                 // 颜色/候选/下拉都是**选中分支**的属性：结构/列表分支上必须收起，
                 // 否则会出现"切到元组支还显示色板"这种串味（分支切换后镜像状态没清干净）。
@@ -676,7 +707,10 @@ namespace CBHK.Utility.Data.Mcdoc
                     ? null
                     // 显示层挑默认分支：Any 成员不许压掉真正对得上的结构支（见 SelectMember 的 preferShapeOverAny）
                     : McdocTypeMatcher.SelectMember(type, json, context.SimplifyContext, preferShapeOverAny: true)
-                        ?? members[0];
+                        // 声明序兜底只在"确实有一支形状对得上"时才成立（并列不定 ⇒ 保留旧的渲染稳定）；
+                        // 一支都对不上时挑 members[0] 是**撒谎**：分支下拉显示 Int，文档里却是对象，
+                        // 分支节点还会带着"值与类型不符：期望 Int"再摊一层原始 JSON 行（现场：attribute 的 argument）。
+                        ?? (McdocTypeMatcher.AnyMemberFitsShape(type, json, context.SimplifyContext) ? members[0] : null);
             // 解不出来的成员（声明不是 any、求值却是 any）不当默认分支：
             // 否则文档里一个它解不了的值会把整行钉死在一个"看着能编辑、其实写不出合法值"的分支上。
             if (selected is not null && McdocUnionSwitch.IsUnresolvedMember(node, selected))
@@ -742,6 +776,17 @@ namespace CBHK.Utility.Data.Mcdoc
                 node.ApplyUnionBranch(context.Child(node.FieldName, selected, json,
                     context.KeyNode, context.Depth + 1, context.JsonPath));
             }
+            // 一支都对不上：下拉留"（未设置）"，但值不能从树上消失 —— 落一条原始 JSON 子行，
+            // 用户能看见也能改，诊断点名候选分支（不给"值与类型不符：期望 X"那种挑了一支的假话）。
+            if (selected is null && json is not null)
+            {
+                node.Error ??= NoBranchMessage + "（候选：" + string.Join(" / ", memberNames) + "）";
+                var orphan = context.Child(node.FieldName, McdocType.Any(), json,
+                    context.KeyNode, context.Depth + 1, context.JsonPath);
+                orphan.UnionBranchKind = "原始 JSON";
+                orphan.Parent = node;
+                node.SelectedUnionChildren.Add(orphan);
+            }
         }
 
         /// <summary>撤销分支：分支子级与镜像状态一并清掉，行回到"只是 union 下拉"的状态。</summary>
@@ -765,6 +810,12 @@ namespace CBHK.Utility.Data.Mcdoc
             if (branchNode is null) return;
             // 分支节点本体不一定进 SelectedUnionChildren（结构/列表支只上提子级），显式记下来
             node.SelectedUnionBranchNode = branchNode;
+            // 这一支已经落进文档：上一次"一支都对不上"的判词不再成立（PopulateChildren 写的，值落盘后必须收回去，
+            // 否则切支成功后行上永远挂着那条陈旧的错误）
+            if (node.Error?.StartsWith(NoBranchMessage, StringComparison.Ordinal) == true) node.Error = null;
+            // 镜像跟着声明走：以前只在列表/元组支置 true、切到标量支整段不复位，于是 union 行上留着 ⊕。
+            // 判据本身不看这个镜像（见 IsListBranchType），这里只是让它别撒谎（McdocCollectionEditor 等处仍读它）。
+            node.UnionListLike = IsListBranchType(branchNode.Type);
             // 分支节点自己也要挂到 union 上：列表/结构分支的子级会上提到 union（子级 Parent=node），
             // 但分支节点本体没被 Add，Parent 一直是 null —— 条目按钮上的"删这一项"捕获的是分支节点，
             // 它抬 StructureChanged 时宿主顺着 Parent 找不到能重建的祖先，于是"右侧 JSON 少了、左侧树不动"。
@@ -851,7 +902,6 @@ namespace CBHK.Utility.Data.Mcdoc
                     child.Parent = node;
                     node.SelectedUnionChildren.Add(child);
                 }
-                node.UnionListLike = true;
                 return;
             }
 

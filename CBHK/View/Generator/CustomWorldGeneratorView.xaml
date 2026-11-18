@@ -18,6 +18,7 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="#1B1B1B"
     IconMargin="5"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
     <behaviors:Interaction.Triggers>
