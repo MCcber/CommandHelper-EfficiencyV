@@ -1,0 +1,16 @@
+<Project>
+  <!--
+    探针（CBHK.Probe）用 dotnet build 构建时不需要重新跑 tlbimp：
+    传 /p:SkipComInterop=true 就丢掉 COMReference，直接引用 CBHK 项目已生成的 Interop 程序集。
+    用法（在仓库根目录）：
+      dotnet build CBHK.Probe\CBHK.Probe.csproj -c Debug /p:SkipComInterop=true `
+        /p:CustomBeforeMicrosoftCommonTargets="$PWD\CBHK.Probe\skip-com-interop.targets"
+  -->
+  <ItemGroup Condition="'$(SkipComInterop)' == 'true' and '$(MSBuildProjectName)' == 'CBHK'">
+    <COMReference Remove="@(COMReference)" />
+    <Reference Include="Interop.IWshRuntimeLibrary">
+      <HintPath>$(MSBuildProjectDirectory)\obj\$(Configuration)\net8.0-windows10.0.22621.0\Interop.IWshRuntimeLibrary.dll</HintPath>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+</Project>

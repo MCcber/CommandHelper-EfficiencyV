@@ -656,7 +656,8 @@ namespace CBHK.ViewModel.Generator
                     }
                 }
             }
-            MeetingPointDimension = HomeDimension = JobSiteDimension = DimensionTypeSource[0];
+            if (DimensionTypeSource.Count > 0)
+                MeetingPointDimension = HomeDimension = JobSiteDimension = DimensionTypeSource[0];
             #endregion
 
             #region 订阅事件

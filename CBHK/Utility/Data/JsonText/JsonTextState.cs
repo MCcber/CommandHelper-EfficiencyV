@@ -149,28 +149,10 @@ namespace CBHK.Utility.Data.JsonText
             if (string.Equals(text, oldText, StringComparison.Ordinal)) return true;
 
             var root = Root;
-            var isObject = root is not null && root.Kind == McdocJsonKind.Object;
-            var isArray = root is not null && root.Kind == McdocJsonKind.Array;
-            if (!isObject && !isArray) return false;
+            if (root is null || (root.Kind != McdocJsonKind.Object && root.Kind != McdocJsonKind.Array)) return false;
+            if (!TryGetSpan(root, out _)) return false;
 
-            var members = new List<McdocJsonValue>(isObject ? root.Properties?.Count ?? 0 : root.Items?.Count ?? 0);
-            if (isObject)
-            {
-                foreach (var pair in root.Properties ?? []) members.Add(pair.Value);
-            }
-            else
-            {
-                foreach (var item in root.Items ?? []) members.Add(item);
-            }
-            if (members.Count == 0) return false;
-            if (!TryGetSpan(root, out var rootSpan)) return false;
-            foreach (var member in members)
-            {
-                // 没有区间就拼不出新根：宁可回落整篇
-                if (member is null || !TryGetSpan(member, out _)) return false;
-            }
-
-            // 公共前后缀 → 旧脏区间 [prefix, oldDirtyEnd)；改动落在单个成员内部才有增量可言
+            // 公共前后缀 → 旧脏区间 [prefix, oldDirtyEnd)：一次算好，往下找容器时复用
             var oldLength = oldText.Length;
             var newLength = text.Length;
             var shared = Math.Min(oldLength, newLength);
@@ -180,6 +162,33 @@ namespace CBHK.Utility.Data.JsonText
             while (suffix < shared - prefix && oldText[oldLength - 1 - suffix] == text[newLength - 1 - suffix]) suffix++;
             var oldDirtyEnd = oldLength - suffix;
             var delta = newLength - oldLength;
+
+            // 改动落点所在的**最小容器**：从根往里走，只有"严格落在成员值内部"才下沉。
+            // 粒度越深，要重解析的片段与要重建的锚点越少 —— 1MB 文档的顶层成员可能就有整篇那么大。
+            var container = root;
+            var path = new List<(McdocJsonValue Parent, int Index)>();
+            while (TryGetContainerAt(container, prefix, oldDirtyEnd, out var memberIndex, out var member))
+            {
+                path.Add((container, memberIndex));
+                container = member;
+            }
+            var isObject = container.Kind == McdocJsonKind.Object;
+
+            var members = new List<McdocJsonValue>(isObject ? container.Properties?.Count ?? 0 : container.Items?.Count ?? 0);
+            if (isObject)
+            {
+                foreach (var pair in container.Properties ?? []) members.Add(pair.Value);
+            }
+            else
+            {
+                foreach (var item in container.Items ?? []) members.Add(item);
+            }
+            if (members.Count == 0) return false;
+            foreach (var member in members)
+            {
+                // 没有区间就拼不出新容器：宁可回落整篇
+                if (member is null || !TryGetSpan(member, out _)) return false;
+            }
 
             var first = -1;
             var last = -1;
@@ -208,7 +217,8 @@ namespace CBHK.Utility.Data.JsonText
             var runLength = last - first + 1;
             // 复用既有解析器：片段补上容器外壳就能整段解析，多出的一个字符由 pairStart-1 抵消
             var wrapped = (isObject ? "{" : "[") + text.Substring(runStart, newRunEnd - runStart) + (isObject ? "}" : "]");
-            var fragment = McdocJsonTextParser.Parse(wrapped);
+            McdocJsonParseResult fragment;
+            using (McdocWriteTrace.Stage("json.fragmentParse")) fragment = McdocJsonTextParser.Parse(wrapped);
             var fragmentRoot = fragment.Root;
             if (fragmentRoot is null || fragmentRoot.Kind != (isObject ? McdocJsonKind.Object : McdocJsonKind.Array)) return false;
             // 解析器很宽容（非法内容也能吐出一个值）；只有吃掉整段外壳才算语法成立
@@ -218,39 +228,42 @@ namespace CBHK.Utility.Data.JsonText
             // 成员数会变（增删成员）就不是"改一个值"，回落整篇
             if (parsedCount != runLength) return false;
 
-            var newRoot = isObject ? McdocJsonValue.Object() : McdocJsonValue.Array();
+            var rebuilt = isObject ? McdocJsonValue.Object() : McdocJsonValue.Array();
             var expectedKeys = new List<string>(members.Count);
-            for (var index = 0; index < first; index++) AppendMember(newRoot, isObject, root, index, members[index], expectedKeys);
+            for (var index = 0; index < first; index++) AppendMember(rebuilt, isObject, container, index, members[index], expectedKeys);
             for (var offset = 0; offset < parsedCount; offset++)
             {
                 if (isObject)
                 {
                     var pair = fragmentRoot.Properties[offset];
-                    newRoot.Properties.Add(new KeyValuePair<string, McdocJsonValue>(pair.Key, pair.Value));
+                    rebuilt.Properties.Add(new KeyValuePair<string, McdocJsonValue>(pair.Key, pair.Value));
                     expectedKeys.Add(pair.Key);
                 }
                 else
                 {
-                    newRoot.Items.Add(fragmentRoot.Items[offset]);
+                    rebuilt.Items.Add(fragmentRoot.Items[offset]);
                 }
             }
-            for (var index = last + 1; index < members.Count; index++) AppendMember(newRoot, isObject, root, index, members[index], expectedKeys);
+            for (var index = last + 1; index < members.Count; index++) AppendMember(rebuilt, isObject, container, index, members[index], expectedKeys);
 
             // 质量守卫：拼出来的键序列必须与"旧键 + 受影响成员解析结果"逐一相等（拼错一位就会在树里显形）
             if (isObject)
             {
-                if (newRoot.Properties.Count != expectedKeys.Count) return false;
+                if (rebuilt.Properties.Count != expectedKeys.Count) return false;
                 for (var index = 0; index < expectedKeys.Count; index++)
                 {
-                    if (!string.Equals(newRoot.Properties[index].Key, expectedKeys[index], StringComparison.Ordinal)) return false;
+                    if (!string.Equals(rebuilt.Properties[index].Key, expectedKeys[index], StringComparison.Ordinal)) return false;
                 }
             }
-            else if (newRoot.Items.Count != members.Count)
+            else if (rebuilt.Items.Count != members.Count)
             {
                 return false;
             }
 
             // 以下开始改状态：上面的判据全部成立才允许落地
+            // 容器**原地**换子列表：根与各级祖先的标识保持不变，它们的锚点已经跟着文档编辑平移过了
+            if (isObject) container.Properties = rebuilt.Properties;
+            else container.Items = rebuilt.Items;
             for (var index = first; index <= last; index++) DropSubtree(members[index]);
             if (delta != 0)
             {
@@ -273,17 +286,51 @@ namespace CBHK.Utility.Data.JsonText
                 if (ReferenceEquals(pair.Key, fragmentRoot)) continue;
                 anchors[pair.Key] = CreateNodeAnchors(pair.Value);
             }
-
-            anchors.Remove(root);
-            var newRootSpan = new McdocJsonSpan(rootSpan.ValueStart, rootSpan.ValueEnd + delta, rootSpan.PairStart, rootSpan.PairEnd + delta);
-            newRoot.Start = newRootSpan.ValueStart;
-            newRoot.End = newRootSpan.ValueEnd;
-            anchors[newRoot] = CreateNodeAnchors(newRootSpan);
+            // 容器自己与各级祖先的右边界随编辑走；它们在这一层之后的兄弟整体平移
+            if (container.End >= 0) container.End += delta;
+            foreach (var (parent, index) in path)
+            {
+                if (parent.End >= 0) parent.End += delta;
+                var count = parent.Kind == McdocJsonKind.Object ? parent.Properties?.Count ?? 0 : parent.Items?.Count ?? 0;
+                for (var sibling = index + 1; sibling < count; sibling++)
+                {
+                    var value = parent.Kind == McdocJsonKind.Object ? parent.Properties[sibling].Value : parent.Items[sibling];
+                    ShiftSubtree(value, delta, null);
+                }
+            }
 
             RootText = text;
             Generation++;
-            Root = newRoot;
+            Root = root;
             return true;
+        }
+
+        /// <summary>改动落点严格落在某个成员值内部时返回该成员（只认容器：对象/数组）。</summary>
+        private bool TryGetContainerAt(McdocJsonValue container, int from, int to, out int index, out McdocJsonValue member)
+        {
+            index = -1;
+            member = null;
+            var isObject = container.Kind == McdocJsonKind.Object;
+            var count = isObject ? container.Properties?.Count ?? 0 : container.Items?.Count ?? 0;
+            for (var i = 0; i < count; i++)
+            {
+                var candidate = isObject ? container.Properties[i].Value : container.Items[i];
+                if (candidate is null) continue;
+                if (candidate.Kind != McdocJsonKind.Object && candidate.Kind != McdocJsonKind.Array) continue;
+                if (!TryGetSpan(candidate, out var span)) continue;
+                // 碰成员自己的括号就说明改的是这一层，不能再往下走
+                if (span.ValueStart >= from || span.ValueEnd <= to) continue;
+                if (index >= 0)
+                {
+                    // 脏区间跨了两个成员：交给这一层处理
+                    index = -1;
+                    member = null;
+                    return false;
+                }
+                index = i;
+                member = candidate;
+            }
+            return index >= 0;
         }
 
         private static void AppendMember(McdocJsonValue target, bool isObject, McdocJsonValue oldRoot, int index,

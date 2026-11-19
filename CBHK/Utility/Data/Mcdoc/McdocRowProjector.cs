@@ -40,7 +40,9 @@ namespace CBHK.Utility.Data.Mcdoc
             McdocWriteTrace.LogText("整表重投影", "reset#" + ResetCount, withCaller: true);
             byNode.Clear();
             var rows = new List<McdocRow>();
-            foreach (var root in roots) Collect(root, 0, false, 0, rows);
+            // 顶层顺序照抄模型（McdocTreeDocument.Nodes 就是根的子级），这里不排；
+            // 投影自己再排一次会与文本同步的"第几个顶层行"错位。
+            foreach (var root in roots ?? []) Collect(root, 0, false, 0, rows);
             Rows.SetAll(rows);
         }
 
@@ -88,6 +90,8 @@ namespace CBHK.Utility.Data.Mcdoc
             if (justBuilt) AfterChildrenBuilt?.Invoke(node);
             var children = McdocPresenterRegistry.Default.Children(node);
             var childIsList = IsListLike(node);
+            // 结构字段的行序由模型给（StructNodePresenter.OrderChildren：文档序 + 未写字段的声明位）；
+            // 列表项必须保持下标序（排了就改坏 JSON）。
             // ItemsShown 是"这一行显示多少条"的用户意图（点"再显示"会 +PageSize，点"全部"设 MaxValue）；
             // PageSize == int.MaxValue 表示完全不分页（sweep 用它保持行数==节点数的不变量）。
             // 注意不要再和 PageSize 取 min：那样"再显示"永远加不出来。

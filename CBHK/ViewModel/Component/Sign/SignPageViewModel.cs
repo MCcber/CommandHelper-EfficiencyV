@@ -480,11 +480,12 @@ namespace CBHK.ViewModel.Component.Sign
             while (SignTextEditor.Document.Blocks.Count < 4)
                 SignTextEditor.Document.Blocks.Add(new Paragraph());
             int currentIndex = SignTextEditor.Document.Blocks.ToList().IndexOf(SignTextEditor.Selection.Start.Paragraph);
+            if (currentIndex < 0) return;
             int currentBlockCount = 4 - currentIndex;
             RichParagraph currentParagraph = SignTextEditor.Selection.Start.Paragraph as RichParagraph;
             List<RichParagraph> currentParagraphs = SignTextEditor.Document.Blocks.ToList().ConvertAll(item => item as RichParagraph);
             _ = currentParagraphs.Where(item => { item.Inlines.Clear(); return true; });
-            for (int i = 0; i < currentBlockCount; i++)
+            for (int i = 0; i < currentBlockCount && i < dataArray.Length; i++)
             {
                 RichParagraph paragraph = currentParagraphs[currentIndex + i];
                 paragraph.Inlines.Add(new Run() { Text = dataArray[i] });

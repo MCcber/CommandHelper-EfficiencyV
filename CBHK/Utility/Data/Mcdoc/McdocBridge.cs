@@ -1,4 +1,4 @@
-// 语言服务器模型 → mcdoc 类型模型的桥接（含符号索引）。
+﻿// 语言服务器模型 → mcdoc 类型模型的桥接（含符号索引）。
 // 存在的理由：语言服务器目前返回的是重排过的 MetaType 树，客户端新求值器需要原始 mcdoc 类型。
 // 有了这一层，今天就能用新求值器，而不必先改协议；后续语言服务器直接产出 mcdoc 类型后可逐步退役。
 using System;
@@ -79,7 +79,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 case MetaTypeKind.String:
                 {
                     var result = McdocType.Create(McdocTypeKind.String);
-                    result.LengthRange = ReadRange(type.AttributeList, "Length") ?? ToRange(type.MinLength, type.MaxLength);
+                    result.LengthRange = ReadLengthRange(type);
                     result.Attributes = FromAttributeList(type.AttributeList, type.BareAttributeList);
                     return result;
                 }
@@ -161,7 +161,7 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     var result = McdocType.Create(McdocTypeKind.List);
                     result.Item = FromMetaType(type.ElementType);
-                    result.LengthRange = ReadRange(type.AttributeList, "Length") ?? ToRange(type.MinLength, type.MaxLength);
+                    result.LengthRange = ReadLengthRange(type);
                     result.Attributes = FromAttributeList(type.AttributeList, type.BareAttributeList);
                     return result;
                 }
@@ -174,8 +174,15 @@ namespace CBHK.Utility.Data.Mcdoc
                         : type.Kind == MetaTypeKind.IntArray ? McdocTypeKind.IntArray
                         : McdocTypeKind.LongArray;
                     var result = McdocType.Create(kind);
-                    result.LengthRange = ReadRange(type.AttributeList, "Length") ?? ToRange(type.MinLength, type.MaxLength);
+                    result.LengthRange = ReadLengthRange(type);
                     result.Range = ReadRange(type.AttributeList, "Value") ?? ToRange(type.MemberMinValue, type.MemberMaxValue);
+                    // int[] @ 3 这种定长原生数组，解析库把长度记在 Value 属性里（上下界相等），不是 Length。
+                    // 不接回来的话 pos 认不出是三元组：类型停在 IntArray、行上没有三个数字框，是个死节点。
+                    if (result.LengthRange is null && result.Range is { Min: { } exact } valueRange
+                        && valueRange.Max == exact && !valueRange.MinExclusive && !valueRange.MaxExclusive)
+                    {
+                        result.LengthRange = McdocRange.Exact(exact);
+                    }
                     result.Attributes = FromAttributeList(type.AttributeList, type.BareAttributeList);
                     return result;
                 }
@@ -371,6 +378,32 @@ namespace CBHK.Utility.Data.Mcdoc
             var text = Convert.ToString(UnwrapLiteral(value.LiteralValue));
             if (string.IsNullOrWhiteSpace(text)) return null;
             return decimal.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsed) ? parsed : null;
+        }
+
+        /// <summary>
+        /// 长度区间：优先用解析库的 MinLength/MaxLength（本仓库这条解析路径从不填，保留兜底）。
+        /// 列表的单边长度在解析库里丢了方向：探针实测 [string] @ 1.. 与 [string] @ ..1 都是
+        /// 只写 LengthFrom=1、不给 LengthTo（字符串反而会给空 LengthTo，能分清），
+        /// 所以单边列表一律当"无约束"，见下面的分支说明。
+        /// </summary>
+        private static McdocRange ReadLengthRange(MetaType type)
+        {
+            var typed = ToRange(type.MinLength, type.MaxLength);
+            var annotated = ReadRange(type.AttributeList, "Length");
+            // 列表的单边长度在解析库里丢了方向：探针实测 [string] @ 1.. 与 [string] @ ..1 都是
+            // 只写 LengthFrom=1、不给 LengthTo（字符串反而会给空串 LengthTo，能分清）。
+            // 单边无方向时按"无约束"处理：当上限会把 requirements 的 @ 1.. 读成上限 1，
+            // 列表满 1 条以后行内 ⊕ 与尾部追加行全都不出现；当下限又给真 @ ..N 的列表种出一堆空项。
+            // 因此判据落在 ReadRange 读出来的形状上：只有一侧有值 = 方向不可信 = 无约束。
+            if (type.Kind == MetaTypeKind.List && annotated is not null
+                && (annotated.Min is null) != (annotated.Max is null))
+            {
+                return null;
+            }
+            if (typed is null) return annotated;
+            if (annotated is null) return typed;
+            // 两侧一致（真 @ ..N）：保留属性读法，它带着开闭区间语义
+            return annotated.Min == typed.Min && annotated.Max == typed.Max ? annotated : typed;
         }
 
         private static McdocRange ReadRange(Dictionary<string, MetaValue> features, string prefix)

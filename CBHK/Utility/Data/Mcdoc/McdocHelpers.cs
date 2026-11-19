@@ -439,15 +439,15 @@ namespace CBHK.Utility.Data.Mcdoc
             => type?.Items != null && type.Items.Count <= 4 && type.Items.All(item => item != null && item.IsNumeric);
 
         /// <summary>
-        /// 这一行能不能真的内联：类型够小、全是数值之外，文档里那份值也正好是那么多项。
-        /// 内联编辑器画的就是项节点，缺值或长度不符时一个框都画不出来，而内联又按设计不产子行 ——
-        /// 于是行上没有编辑器、没有展开箭头、也没有 ⊕（必填的 pos 定长三元组就是这行死节点）。
-        /// 这种值必须退回普通元组的元素行。
+        /// 这一行能不能真的内联：类型够小、全是数值之外，文档里那份值也不比项数多。
+        /// 值缺项（null / 短数组 / 空数组）照样内联 —— 项节点就是这一行的编辑器内容，
+        /// 少几项只是几个空框，写值时按需补位（pos: [] 的定长三元组必须有三个框可敲）。
+        /// 值比项数多才退回普通元组的元素行，否则多出来的元素在行上无处可去。
         /// </summary>
         public static bool IsInlineTuple(McdocTreeNode node)
             => node?.Type is { } type && IsInlineTuple(type)
-               && node.Json is { Kind: McdocJsonKind.Array } array
-               && (array.Items?.Count ?? 0) == (type.Items?.Count ?? 0);
+               && (node.Json is null
+                   || (node.Json.Kind == McdocJsonKind.Array && (node.Json.Items?.Count ?? 0) <= (type.Items?.Count ?? 0)));
 
         /// <summary>把固定长度 list 视为 tuple（每个下标独立成节点）。</summary>
         public static McdocType AsFixedTuple(McdocType type)

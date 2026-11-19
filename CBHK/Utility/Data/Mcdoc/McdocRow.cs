@@ -195,7 +195,95 @@ namespace CBHK.Utility.Data.Mcdoc
                 return !Node.ChildrenBuilt && presenter.CanHaveChildren(Node);
             }
         }
-        public Visibility ExpanderVisibility => HasChildren ? Visibility.Visible : Visibility.Hidden;
+        /// <summary>
+        /// 没有子级时收起（Collapsed）而不是 Hidden：Hidden 的元素照样参与布局与命中测试，
+        /// 每行白留一颗看不见的按钮（用户在视觉树里点名要清的就是这种占位）。
+        /// 列宽是固定 34，收起不会让同一层的行左右错位。
+        /// </summary>
+        public Visibility ExpanderVisibility => HasChildren ? Visibility.Visible : Visibility.Collapsed;
+
+        private bool isOverflowOpen;
+
+        /// <summary>
+        /// 行尾溢出菜单（⋮）是否展开。不常用的动作（加一项 / 设默认值 / 上移 / 下移 / 复制 / 删这一项）
+        /// 都收在这里：以前它们各自是一颗常驻按钮，哪怕 Visibility 是 Collapsed 也算一个实例 + 一套绑定。
+        /// 菜单内容是 DataTemplate，Popup 没展开之前一颗按钮都不会被实例化。
+        /// </summary>
+        public bool IsOverflowOpen
+        {
+            get => isOverflowOpen;
+            set
+            {
+                if (isOverflowOpen == value) return;
+                isOverflowOpen = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public System.Windows.Input.ICommand ToggleOverflowCommand
+            => new McdocCommand(() => IsOverflowOpen = !IsOverflowOpen);
+
+        /// <summary>
+        /// 可收动作的颗数：换位是一对（上移 + 下移），算两颗。
+        /// 用户口径：只剩一颗时**就地常驻**（"在顶部新增"这种高频动作藏进菜单要多点一次），两颗以上才收进 ⋮。
+        /// 两种形态共用同一颗按钮，行内不许留第二颗占位。
+        /// </summary>
+        private int OverflowActionCount
+            => (SetDefaultVisibility == Visibility.Visible ? 1 : 0)
+                + (MoveVisibility == Visibility.Visible ? 2 : 0)
+                + (DuplicateVisibility == Visibility.Visible ? 1 : 0)
+                + (RemoveSelfVisibility == Visibility.Visible ? 1 : 0);
+
+        /// <summary>这一行一项可收的动作都没有时，连按钮都不出现（不留一个点开是空白的菜单）。</summary>
+        public Visibility OverflowVisibility
+            => OverflowActionCount > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        /// <summary>两颗以上走菜单；只剩一颗时这颗按钮直接执行那个动作。</summary>
+        public bool HasOverflowMenu => OverflowActionCount > 1;
+
+        public System.Windows.Input.ICommand OverflowButtonCommand
+            => HasOverflowMenu ? ToggleOverflowCommand : SoleCommand;
+
+        public Geometry OverflowButtonIcon
+            => HasOverflowMenu ? RowGeometry("MdocMoreGeometry") : SoleGeometry;
+
+        public string OverflowButtonToolTip => HasOverflowMenu ? "更多动作" : SoleLabel;
+
+        /// <summary>只剩一颗时的那个动作，顺序与菜单项一致。</summary>
+        private System.Windows.Input.ICommand SoleCommand
+            => SetDefaultVisibility == Visibility.Visible ? SetDefaultCommand
+                : DuplicateVisibility == Visibility.Visible ? DuplicateCommand
+                : RemoveSelfVisibility == Visibility.Visible ? RemoveSelfCommand
+                : null;
+
+        private string SoleLabel
+            => SetDefaultVisibility == Visibility.Visible ? "设默认值"
+                : DuplicateVisibility == Visibility.Visible ? "复制这一项"
+                : RemoveSelfVisibility == Visibility.Visible ? "删除这一项"
+                : null;
+
+        private Geometry SoleGeometry
+            => SetDefaultVisibility == Visibility.Visible
+                ? RowGeometry("TreeNodePlusGeometry")
+                : DuplicateVisibility == Visibility.Visible ? RowGeometry("MdocDuplicateGeometry")
+                : RemoveSelfVisibility == Visibility.Visible ? RowGeometry("TreeNodeMinusGeometry")
+                : null;
+
+        private static Geometry RowGeometry(string key) => Application.Current?.TryFindResource(key) as Geometry;
+
+        /// <summary>菜单项：先收起菜单再执行原命令，菜单不会停在行上挡着看结果。</summary>
+        private System.Windows.Input.ICommand Overflow(System.Windows.Input.ICommand command)
+            => new McdocCommand(() =>
+            {
+                IsOverflowOpen = false;
+                if (command?.CanExecute(null) == true) command.Execute(null);
+            });
+
+        public System.Windows.Input.ICommand OverflowSetDefaultCommand => Overflow(SetDefaultCommand);
+        public System.Windows.Input.ICommand OverflowMoveUpCommand => Overflow(MoveUpCommand);
+        public System.Windows.Input.ICommand OverflowMoveDownCommand => Overflow(MoveDownCommand);
+        public System.Windows.Input.ICommand OverflowDuplicateCommand => Overflow(DuplicateCommand);
+        public System.Windows.Input.ICommand OverflowRemoveSelfCommand => Overflow(RemoveSelfCommand);
 
         /// <summary>
         /// 名称底色板只给"字段名"用：新键输入行（占位行）那一格显示的是"要新建的键"，旁边就是键输入框，
@@ -371,10 +459,33 @@ namespace CBHK.Utility.Data.Mcdoc
             if (projector?.Find(parent) is { } parentRow) projector.SpliceSubtree(parentRow);
         });
 
-        /// <summary>行尾的黄色感叹号：当前版本不存在该节点（管线不解析、不渲染它的子级）</summary>
+        /// <summary>
+        /// 行尾的黄色感叹号：当前版本不存在该节点（管线不解析、不渲染它的子级）。
+        /// 载入时就存在的版本外键（<see cref="McdocTreeNode.IsQuietUnknown"/>）不挂牌 ——
+        /// 打开一份老文档满屏黄点不是诊断，是噪音；用户自己切分支切掉的才挂牌。
+        /// </summary>
         public Visibility UnknownBadgeVisibility
-            => Node.IsUnknownField ? Visibility.Visible : Visibility.Collapsed;
+            => Node.IsUnknownField && !Node.IsQuietUnknown ? Visibility.Visible : Visibility.Collapsed;
         public Visibility ColorBadgeVisibility => Head.IsColorPicker || Head.IsColorEnum ? Visibility.Visible : Visibility.Collapsed;
+
+        /// <summary>
+        /// 行尾最右的红色感叹号：必填字段还没有值（null / 空数组）。
+        /// 空串**算有值**（用户明确口径：空字符串也是值，不起牌）。
+        /// 与上面那颗黄色感叹号不是一回事：那颗讲这个键在当前版本不存在，这颗讲这个必填项还空着。
+        /// </summary>
+        public Visibility RequiredBadgeVisibility
+            => Node is { IsRequired: true } && IsValueEmpty() ? Visibility.Visible : Visibility.Collapsed;
+
+        private bool IsValueEmpty()
+        {
+            var json = Node.Json;
+            if (json is null) return true;
+            return json.Kind switch
+            {
+                McdocJsonKind.Array => (json.Items?.Count ?? 0) == 0,
+                _ => false,
+            };
+        }
 
         /// <summary>ToolTip 摘要：不截断（弹层里也要看全部）。</summary>
         public string DiagnosticSummary => Diagnostics.Count > 0 ? string.Join("\n", Diagnostics) : "";
@@ -399,7 +510,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 if (node is null) return;
                 node.IsExpanded = expanded;
                 node.EnsureChildren();
-                foreach (var child in McdocPresenterRegistry.Default.Children(node)) Walk(child);
+                // 摊开子级会改集合（RefreshChildren 的 Clear、结构通知的重建）：先快照再走
+                foreach (var child in McdocPresenterRegistry.Default.Children(node).ToArray()) Walk(child);
             }
             Walk(Node);
             projector?.SpliceSubtree(this);
@@ -829,15 +941,15 @@ namespace CBHK.Utility.Data.Mcdoc
         public Visibility RenameVisibility
             => Node.IsMapEntry && !Node.UseKeySelect ? Visibility.Visible : Visibility.Collapsed;
         /// <summary>
-        /// 开放键空间（注册表外的键也合法，例如 <c>#[id="entity"] string</c>）的条目行：键已经落进文档，
-        /// 再摆下拉只是给"换键"多开一个入口 —— 按普通字段的只读键名标签走（用户要求）。
-        /// 加新键的占位行与闭合枚举键的条目行不受影响，仍在下拉里完成。
+        /// 条目行（映射里已经有键的那种）的键已经落进文档，再摆候选下拉只是给"换键"多开一个入口 ——
+        /// 一律按普通字段的只读键名标签走（用户要求：这种地方不要下拉框，直接写 FieldName 的文本）。
+        /// 键空间开不开放都一样；要换键就删了重加，加新键的占位行仍在下拉里完成。
         /// </summary>
-        private bool StaticKeyLabel => Node.IsMapEntry && Node.UseKeySelect && Node.KeySpaceOpen;
+        private bool StaticKeyLabel => Node.IsMapEntry && Node.UseKeySelect;
 
         /// <summary>
-        /// 键下拉：占位行选新键、闭合枚举条目行换成员都在同一个格里完成。
-        /// 没有候选表的自由键是文本框（或只读标签 + 铅笔）；开放键的条目行走只读标签。
+        /// 键下拉只留在"新键占位行"上；条目行一律只读标签（<see cref="StaticKeyLabel"/>）。
+        /// 没有候选表的自由键是文本框（或只读标签 + 铅笔）。
         /// </summary>
         public Visibility KeyComboVisibility
             => Node.UseKeySelect && !StaticKeyLabel ? Visibility.Visible : Visibility.Collapsed;
@@ -945,6 +1057,7 @@ namespace CBHK.Utility.Data.Mcdoc
             OnPropertyChanged(nameof(PreviewText));
             OnPropertyChanged(nameof(SetDefaultVisibility));
             OnPropertyChanged(nameof(ClearVisibility));
+            OnPropertyChanged(nameof(RequiredBadgeVisibility));
         }
 
         /// <summary>行被丢弃时退订，避免节点长期持有已死行。</summary>

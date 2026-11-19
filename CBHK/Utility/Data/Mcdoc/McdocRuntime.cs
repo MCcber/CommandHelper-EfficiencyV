@@ -74,6 +74,13 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>#[id] 候选空间解析器（注册表 / 调度器索引成员），缓存随 runtime 生命周期。</summary>
         public McdocIdSpaceService IdSpaces = new();
 
+        /// <summary>
+        /// 载入那一刻就已经是版本外键的 JsonPath（文档级集合，由 <see cref="McdocTreeDocument"/> 提供）。
+        /// 这些键是"打开文档时就摆在那里的历史残留"，行上不挂黄色感叹号；
+        /// 之后用户切分支/改值才被版本过滤掉的键不在集合里，照常挂牌。
+        /// </summary>
+        public System.Collections.Generic.ISet<string> QuietUnknownPaths;
+
         public void Report(string message) => Warn?.Invoke(message);
 
         /// <summary>复制一份运行时并切换模块上下文（用于"进入某个类型自己的命名空间"）。</summary>

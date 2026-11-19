@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -131,6 +131,24 @@ namespace CBHK.Probe
         /// </summary>
         public static int Dimension(string outputDirectory)
         {
+            // 夹具可换：MCDOC_PROBE_JSON 指向一个 JSON 文件时用它，方便把「用户那张截图」原样复现出来
+            var fixture = Environment.GetEnvironmentVariable("MCDOC_PROBE_JSON") is { Length: > 0 } custom && File.Exists(custom)
+                ? File.ReadAllText(custom)
+                : DimensionJson;
+            return RenderTree("dimension_type", fixture, "dimension-tree.png", outputDirectory);
+        }
+
+        /// <summary>26.3 进度编辑器的真实行树：行内元组（pos 三个数字框）与必填红叹号的外观证据。</summary>
+        public static int Advancement(string outputDirectory)
+            => RenderTree("advancement", AdvancementJson, "advancement-tree.png", outputDirectory);
+
+        private static int RenderTree(string rootTypeName, string fixture, string fileName, string outputDirectory)
+        {
+            // 夹具可用环境变量换（MCDOC_PROBE_JSON=夹具路径）：取证现场形状时不改代码
+            if (Environment.GetEnvironmentVariable("MCDOC_PROBE_JSON") is { Length: > 0 } custom && File.Exists(custom))
+            {
+                fixture = File.ReadAllText(custom);
+            }
             var outputDir = outputDirectory ?? Path.Combine(Path.GetTempPath(), "mcdoc-render");
             if (Prepare(outputDir) is not { } prepared) return 2;
             var loading = false;
@@ -154,7 +172,7 @@ namespace CBHK.Probe
             projector.RequestReload = () => pipeline.Reload();
             document.NodeValueChanged = node => pipeline.OnValueChanged(node);
             document.NodeStructureChanged = node => pipeline.OnStructureChanged(node);
-            document.Load(McdocHelpers.GetRootType("dimension_type"), McdocJsonParser.Parse(DimensionJson));
+            document.Load(McdocHelpers.GetRootType(rootTypeName), McdocJsonParser.Parse(fixture));
             projector.Reset(document.ProjectionRoots);
             Pump();
             foreach (var top in document.Nodes) top.EnsureChildren();
@@ -176,7 +194,7 @@ namespace CBHK.Probe
             // 展开状态只改节点，不重排行：投影得重建一次才会把新子行算进来
             projector.Reset(document.ProjectionRoots);
             Pump();
-            var path = Path.Combine(outputDir, "dimension-tree.png");
+            var path = Path.Combine(outputDir, fileName);
             Capture(prepared.App, projector, path);
             Console.WriteLine("[信息] 已渲染 " + path + " 行数=" + projector.Rows.Count);
             for (var i = 0; i < projector.Rows.Count; i++)
@@ -186,8 +204,13 @@ namespace CBHK.Probe
                     ? " keySelect=" + row.Node?.UseKeySelect + " options=" + (row.Node?.KeyOptionList?.Count ?? 0)
                       + " rename=" + row.RenameVisibility + " combo=" + row.KeyComboVisibility
                     : "";
+                var branchCell = row.Node is { IsMapEntry: true } || row.Node?.UnionTypeNameList is { Count: > 0 }
+                    ? " mapEntry=" + row.Node?.IsMapEntry + " req=" + row.Node?.IsRequired
+                      + " canUnset=" + row.Head?.CanUnset
+                      + " branches=[" + string.Join(",", (row.Head?.BranchOptions ?? []).Select(b => b.Name)) + "]"
+                    : "";
                 Console.WriteLine("[行] " + i + " depth=" + row.Depth + " indent=" + row.Indent.Left
-                    + " kind=" + row.Kind + " key='" + (row.Node?.FieldName ?? "") + "'" + keyCell);
+                    + " kind=" + row.Kind + " key='" + (row.Node?.FieldName ?? "") + "'" + keyCell + branchCell);
             }
             return 0;
         }
@@ -222,6 +245,25 @@ namespace CBHK.Probe
   ""height"": 384,
   ""monster_spawn_light_level"": 0,
   ""monster_spawn_block_light_limit"": 0
+}";
+
+        /// <summary>用户 m12984 截图那份 JSON：icon.id 空串、display.count 有值、pos 空数组。</summary>
+        private const string AdvancementJson = @"{
+  ""parent"": ""minecraft:adventure/adventuring_time"",
+  ""display"": {
+    ""icon"": {
+      ""id"": """",
+      ""count"": 10,
+      ""components"": {
+        ""minecraft:lodestone_tracker"": {
+          ""target"": { ""pos"": [], ""dimension"": ""minecraft:overworld"" }
+        }
+      }
+    },
+    ""title"": """",
+    ""description"": """"
+  },
+  ""criteria"": {}
 }";
 
         /// <summary>候选键形态的占位行（dimension_type.attributes：键来自 environment_attribute 注册表）。</summary>

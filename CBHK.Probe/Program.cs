@@ -31,6 +31,18 @@ namespace CBHK.Probe
             {
                 return Render.Dimension(args.Length >= 2 ? args[1] : null);
             }
+            if (args.Length >= 1 && args[0] == "--render-advancement")
+            {
+                return Render.Advancement(args.Length >= 2 ? args[1] : null);
+            }
+            if (args.Length >= 1 && args[0] == "--render-window")
+            {
+                return WindowPerf.Open(args.Length >= 2 ? args[1] : null);
+            }
+            if (args.Length >= 1 && args[0] == "--virtualization")
+            {
+                return WindowPerf.Virtualization(args.Length >= 2 ? args[1] : ".probe-tmp\\virtualization");
+            }
             var mode = args.Length >= 2 ? args[0] + " " + args[1] : "";
             try
             {
@@ -80,9 +92,17 @@ namespace CBHK.Probe
             "--case dimension-shape" => Gates.DimensionShape(),
             "--case enum-mismatch-candidates" => Gates.EnumMismatchCandidates(),
             "--case enum-key-select" => Gates.EnumKeySelect(),
+            "--case entry-key-label-and-unset" => Gates.EntryKeyLabelAndUnset(),
+            "--case order-and-required-badge" => Gates.OrderAndRequiredBadge(),
+            "--case components-add-entry" => Gates.ComponentsAddEntry(),
+            "--case id-field-degrade" => Gates.IdFieldDegrade(),
+            "--case id-space-sources" => Gates.IdSpaceSources(),
+            "--case predicate-tree-nesting" => Gates.PredicateTreeNesting(),
+            "--case list-add-buttons" => Gates.ListAddButtons(),
                     "--case key-rename-duplicate" => Gates.KeyRenameDuplicate(),
                     "--case mismatch-heal-paths" => Gates.MismatchHealPaths(),
                     "--case key-cell-candidates-only" => Gates.KeyCellCandidatesOnly(),
+                    "--case row-overflow-menu" => Gates.RowOverflowMenu(),
                     "--case blockstate-conditions-state" => Gates.BlockStateConditionsState(),
             "--case id-value-outside-candidates" => Gates.IdValueOutsideCandidates(),
             "--case union-no-branch" => Gates.UnionNoBranch(),
@@ -168,6 +188,7 @@ namespace CBHK.Probe
                     "--case text-invisible-whitespace" => Gates.TextInvisibleWhitespace(),
                     "--case map-entry-has-no-list-item-commands" => Gates.MapEntryHasNoListItemCommands(),
                     "--case perf-stages" => Gates.PerfStages(),
+                    "--case perf-dimension-open" => Gates.PerfDimensionOpen(),
                     "--case sync-typing" => Gates.SyncTyping(),
                     "--case sync-indent" => Gates.SyncIndent(),
                     "--case sync-fallback-reasons" => Gates.SyncFallbackReasons(),

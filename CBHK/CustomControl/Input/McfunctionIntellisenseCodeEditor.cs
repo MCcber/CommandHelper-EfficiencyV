@@ -2096,7 +2096,7 @@ namespace CBHK.CustomControl.Input
                             #region 更新大纲标题
                             if (currentLineTextLength > 0 && foldingSections.Count > 0)
                             {
-                                currentFoldingSection = foldingManager.GetFoldingsAt(currentLine.Offset).First();
+                                currentFoldingSection = foldingManager.GetFoldingsAt(currentLine.Offset).FirstOrDefault();
                                 if (currentFoldingSection is not null && dataContext.CurrentCode.Length > 7 && currentFoldingSection.StartOffset == currentLine.Offset)
                                     currentFoldingSection.Title = dataContext.CurrentCode.Length == 8 ? "#region" : dataContext.CurrentCode[8..];
                             }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -558,7 +558,7 @@ namespace CBHK.Probe
                         document.PreservedGroup.Children.Count == 0 && document.CountUnknownFields() == 0,
                         "round=" + round + " 保留区=" + document.PreservedGroup.Children.Count + " 计数=" + document.CountUnknownFields());
                     var order = document.RootJson.Properties?.Select(pair => pair.Key).ToList() ?? [];
-                    Probe("复活在原位置（键序 a,legacyExtra,b 不变）",
+                    Probe("复活在原位（a,legacyExtra,b：文本里的键序原样保留）",
                         order.Count == 3 && order[0] == "a" && order[1] == "legacyExtra" && order[2] == "b",
                         "round=" + round + " order=" + string.Join(",", order));
                     Probe("复活后值完全相同（嵌套列表 + 可选标量）",
@@ -3180,34 +3180,12 @@ namespace CBHK.Probe
             checks.That(exitsAfterRebuild == 1, label + "：重建之后新条目行仍然有删除出口",
                 "出口=" + exitsAfterRebuild + " 条目=" + (entryAfterRebuild?.FieldName ?? "<无>"));
 
-            // 条目的（未设置）：只把右侧 JSON 的键去掉，**行留在树上**（用户要能再选分支，或点行首删除）
+            // 映射条目不再给（未设置）哨兵：键在不在由条目本身表达，删除入口只有行首 ⊖
             var unsetOption = rowAfterRebuild?.UnionOptions?.FirstOrDefault(item => McdocUnionSwitch.IsUnsetOption(item));
-            if (rowAfterRebuild is null || unsetOption is null)
-            {
-                Console.WriteLine("[信息] " + label + " 不是可切（未设置）的 union 条目，跳过未设置这一段");
-                return;
-            }
-            rowAfterRebuild.SelectedUnionOption = unsetOption;
-            PumpDispatcher();
-            var keyName = entryAfterRebuild?.FieldName ?? "";
-            var mapNow = document.FindNode(mapPath) ?? document.Nodes.FirstOrDefault();
-            var keyGone = mapNow?.Json is not { Kind: McdocJsonKind.Object } box || box.Get(keyName) is null;
-            var rowStillThere = (vm?.Rows ?? onlyRows?.Rows ?? [])
-                .FirstOrDefault(item => item.Node?.IsMapEntry == true && item.Node?.FieldName == keyName);
-            var exitsAfterUnset = rowStillThere is null ? -1 : DeleteExits(rowStillThere);
-            Console.WriteLine("[信息] " + label + " 选（未设置）后：键在文档里=" + !keyGone
-                + " 行还在=" + (rowStillThere is not null)
-                + " exits=" + exitsAfterUnset);
-            checks.That(keyGone, label + "：（未设置）把右侧 JSON 的键去掉", "key=" + keyName);
-            checks.That(rowStillThere is not null, label + "：（未设置）之后行仍留在树视图里", "key=" + keyName);
-            checks.That(exitsAfterUnset == 1, label + "：空条目行仍有行首删除入口", "出口=" + exitsAfterUnset);
-            // 点行首删除：这一行消失，文档不被改动（键早就没了）
-            rowStillThere?.RemoveEntryCommand?.Execute(null);
-            PumpDispatcher();
-            var afterDelete = (vm?.Rows ?? onlyRows?.Rows ?? [])
-                .FirstOrDefault(item => item.Node?.IsMapEntry == true && item.Node?.FieldName == keyName);
-            checks.That(afterDelete is null, label + "：点行首删除后这一行消失",
-                "行还在=" + (afterDelete is not null));
+            var unsetNames = (rowAfterRebuild?.UnionOptions ?? []).Select(item => item?.Name ?? "<无>").ToList();
+            Console.WriteLine("[信息] " + label + " 条目分支候选=" + string.Join(",", unsetNames));
+            checks.That(unsetOption is null, label + "：映射条目的分支下拉里没有（未设置）",
+                "候选=" + string.Join(",", unsetNames));
         }
 
         /// <summary>可选结构体的 ⊕ 之后，新长出来的字段行也必须能删/能清。</summary>
@@ -4869,8 +4847,10 @@ namespace CBHK.Probe
             player.EnsureChildren();
             document.Validate();
 
-            checks.That(player.Diagnostics.Any(message => message.Contains("condition") && message.Contains("predicate")),
-                "player 行上点名这两个键",
+            // 口径（用户 2026-11-19 第 4 条 + 追加）：载入那一刻就被版本过滤掉的键静默进保留区，
+            // 行上不挂诊断角标、子行不挂黄色感叹号；只有用户在会话里切分支剪出来的才挂牌。
+            checks.That(!player.Diagnostics.Any(message => message.Contains("当前版本不存在")),
+                "载入期被版本过滤掉的两个键不挂诊断角标（player 行静默）",
                 player.Diagnostics.Count == 0 ? "一条诊断都没有" : string.Join(" | ", player.Diagnostics));
             var preserved = document.PreservedGroup is null
                 ? new List<string>()
@@ -4886,7 +4866,7 @@ namespace CBHK.Probe
                 string.Join("、", McdocPresenterRegistry.Default.Children(player).Select(child => child?.FieldName ?? "?")));
 
             // 夹具②：26.3 的 BlockStateConditions 没有 block，只有 blocks/state —— 键名消失在版本门控里。
-            var (document2, _, _) = Harness(index, McdocHelpers.GetRootType("advancement"),
+            var (document2, projector2, _) = Harness(index, McdocHelpers.GetRootType("advancement"),
                 @"{ ""criteria"": { ""a"": { ""trigger"": ""minecraft:enter_block"", ""conditions"": { ""block"": ""minecraft:stone"" } } } }",
                 doc =>
                 {
@@ -4896,10 +4876,28 @@ namespace CBHK.Probe
             var conditions2 = document2.FindNode("$.criteria.a.conditions");
             conditions2?.EnsureChildren();
             document2.Validate();
-            checks.That(conditions2?.Diagnostics.Any(message => message.Contains("block")) == true,
-                "conditions 行上点名不存在的键 block",
+            checks.That(conditions2?.Diagnostics.Any(message => message.Contains("当前版本不存在")) != true,
+                "载入期被版本过滤掉的 block 也不挂诊断角标",
                 conditions2 is null ? "没有 conditions 节点"
                     : conditions2.Diagnostics.Count == 0 ? "一条诊断都没有" : string.Join(" | ", conditions2.Diagnostics));
+            // 追加口径（用户 2026-11-19）：会话里才产生的版本外键照常挂牌
+            if (conditions2?.Json is { Kind: McdocJsonKind.Object } liveConditions)
+            {
+                liveConditions.Add("zzz_legacy", McdocJsonValue.String("x"));
+                conditions2.ChildrenBuilt = false;
+                conditions2.EnsureChildren();
+                document2.Validate();
+                var added = (document2.PreservedGroup?.Children ?? [])
+                    .FirstOrDefault(child => child?.IsUnknownField == true
+                        && string.Equals(child.FieldName, "zzz_legacy", StringComparison.Ordinal));
+                ExpandPreserved(document2, projector2);
+                var addedRow = added is null ? null : projector2.Find(added);
+                checks.That(added is { IsQuietUnknown: false }, "会话里新产生的版本外键不算静默",
+                    added is null ? "没有这一行" : "quiet=" + added.IsQuietUnknown);
+                checks.That(addedRow?.UnknownBadgeVisibility == System.Windows.Visibility.Visible,
+                    "会话里新产生的版本外键照常挂黄色感叹号",
+                    addedRow is null ? "没有行" : addedRow.UnknownBadgeVisibility.ToString());
+            }
             return checks.Finish("--case illegal-shape-diag");
         }
 
@@ -5615,10 +5613,21 @@ namespace CBHK.Probe
                 checks.That(range is not null && range.Min == min && range.Max == max, label, actual);
             }
 
+            void ExpectUnbounded(McdocType type, string label)
+            {
+                var range = type?.LengthRange;
+                checks.That(range is null, label, range is null
+                    ? "LengthRange=<null>"
+                    : "下限=" + (range.Min?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无")
+                      + " 上限=" + (range.Max?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无"));
+            }
+
             Expect(Build("0", "3"), 0m, 3m, "@ 0..3 读成 0..3");
-            Expect(Build("1", ""), 1m, null, "@ 1.. 读成下限 1、无上限");
-            Expect(Build("11", null), null, 11m, "@ ..11 读成无下限、上限 11");
             Expect(Build("3", "3"), 3m, 3m, "@ 3 读成定长 3");
+            // 列表的单边长度在解析层丢了方向（@ 1.. 与 @ ..N 编码完全相同），一律当无约束：
+            // 当上限会把 @ 1.. 读到满 1 条后按钮全消失，当下限会给 @ ..N 种出一堆空项。
+            ExpectUnbounded(Build("1", ""), "列表单边 @ 1.. 当无约束");
+            ExpectUnbounded(Build("11", null), "列表单边 @ ..11 当无约束（与 @ 1.. 编码相同）");
 
             var appDir = LocateAppOutputDirectory();
             if (appDir is null)
@@ -5651,9 +5660,9 @@ namespace CBHK.Probe
                 member.Kind + " 下限=" + (member.LengthRange?.Min?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无")
                 + " 上限=" + (member.LengthRange?.Max?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无"))));
             checks.That(members.Count >= 2
-                && members[0].LengthRange is { Min: null, Max: 10m }
-                && members[1].LengthRange is { Min: null, Max: 11m },
-                "biome.features 两个分支都是只有上限（..10 / ..11）",
+                && members[0].LengthRange is null
+                && members[1].LengthRange is null,
+                "biome.features 两个分支都是单边长度 → 一律当无约束（..10 / ..11）",
                 string.Join(" | ", members.Select(member => member.LengthRange is null ? "<null>"
                     : (member.LengthRange.Min?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无") + ".."
                       + (member.LengthRange.Max?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "无"))));
@@ -7461,14 +7470,14 @@ namespace CBHK.Probe
                     node is null ? "节点不存在" : "json=" + (node.Json is null ? "null" : node.Json.Kind.ToString()));
             }
 
-            // 反例：键序变化会改掉所有成员的排行 —— 必须整段容器锚点
+            // 键序在文本里就是行序：把 one/two 互换是一次真实重排 —— 允许重建那一层，
+            // 但不许整篇回落，也不许逐个成员去改（那等于把重排当值编辑）。
             var (reorderDocument, reorderProjector, _, reorderStats, reorderApplied, _) = ApplyFineGrained(
                 text.Replace("\"one\": 1,\n    \"two\": 2", "\"two\": 2,\n    \"one\": 1"));
-            const string counter = "键序变化（one/two 互换）";
+            const string counter = "文本里键序互换（现在算一次重排）";
             checks.That(reorderApplied && !reorderStats.Fallback, counter + " · 不回落整篇", StatsText(reorderStats));
-            checks.That(reorderStats.MemberOps == 0 && reorderStats.ItemOps == 0 && reorderStats.StructureAnchors == 1
-                    && reorderStats.RebuiltNodeList.Count == 1 && reorderStats.RebuiltNodeList[0].JsonPath == "$.nested",
-                counter + " · 必须整段容器锚点", StatsText(reorderStats));
+            checks.That(reorderStats.StructureAnchors <= 1 && reorderStats.MemberOps == 0 && reorderStats.ItemOps == 0,
+                counter + " · 只重建那一层，不逐个成员改", StatsText(reorderStats));
             if (reorderApplied) Contracts(checks, reorderDocument, reorderProjector, counter);
 
             return checks.Finish("--case sync-member-add");
@@ -9194,6 +9203,84 @@ namespace CBHK.Probe
             return failures == 0 ? 0 : 1;
         }
 
+
+        // ── 启动性能：26.3 维度类型默认模板 ───────────────────────────────────
+        /// <summary>
+        /// 用户现场：新建一份 26.3 维度类型默认模板（{12 个键}，约 300 字节）要 &gt;500ms，
+        /// 而 64KB 的 loot_table 首屏只要 20ms。这里把"打开这一页"拆成四段各自计时：
+        /// A schema 冷启动（App 里在 Resource.Init 的后台线程走索引缓存）、B 注册表载入（App 在 UI 线程同步做）、
+        /// C 建 VM、D 入口模板载入（App 里 D 发生在 C 内部），D 内部再按 McdocWriteTrace 的阶段拆。
+        /// 红判据 = D 的 p50 &gt; 500ms：先把用户的症状复现出来，再谈为什么慢。
+        /// </summary>
+        public static int PerfDimensionOpen()
+        {
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc 根目录（退出码 2）");
+                return 2;
+            }
+            var appBin = System.IO.Path.GetFullPath(System.IO.Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\CBHK\bin\Debug\net8.0-windows10.0.22621.0"));
+            var templatePath = System.IO.Path.Combine(appBin, @"Resource\Configs\DimensionType\Data\Template\empty.json");
+            if (!System.IO.File.Exists(templatePath))
+            {
+                Console.WriteLine("[环境缺失] 找不到维度类型入口模板：" + templatePath + "（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            McdocWriteTrace.StatsEnabled = true;
+            var template = System.IO.File.ReadAllText(templatePath);
+            Console.WriteLine("[信息] 入口模板 " + template.Length + " 字符 / "
+                + (template.Count(ch => ch == '\n') + 1) + " 行：" + ShowPath(templatePath)
+                + " | build=" + McdocWriteTrace.BuildMarker);
+            var checks = new Checks();
+
+            // A：schema 冷启动。App 走的是 McdocIndexCache（246 个 mcdoc 的解析结果落盘），
+            // 探针没有那份缓存，只能从源码解析 —— 这一段只用来给"假设 A"定量，不参与红判。
+            var resource = new CBHK.Model.Constant.Resource();
+            var stopwatch = Stopwatch.StartNew();
+            var typeCount = RealSchema.Load(resource.McdocTypes, rootDir);
+            Console.WriteLine("[计时] A schema 冷启动（从 mcdoc 源码解析）="
+                + stopwatch.Elapsed.TotalMilliseconds.ToString("0.0") + "ms 类型=" + typeCount);
+
+            // B：注册表载入。App 在 Init 里同步跑在调用线程上（多个版本的 Registries/*.json 全量 JObject.Parse）。
+            stopwatch.Restart();
+            var versionFiles = resource.LoadRegistries(System.IO.Path.Combine(appBin, "Resource", "Registries"));
+            Console.WriteLine("[计时] B 注册表载入（" + versionFiles + " 个版本文件）="
+                + stopwatch.Elapsed.TotalMilliseconds.ToString("0.0") + "ms");
+
+            // C：建 VM。探针没有 Configuration.json，所以这一遍落的是代数默认文档（App 里落的是入口模板）。
+            McdocWriteTrace.ResetStages();
+            stopwatch.Restart();
+            var vm = new CBHK.ViewModel.Generator.DimensionTypeViewModel(resource);
+            PumpDispatcher();
+            Console.WriteLine("[计时] C 建 VM（代数默认文档）="
+                + stopwatch.Elapsed.TotalMilliseconds.ToString("0.0") + "ms 行=" + vm.Rows.Count);
+            Console.WriteLine("[阶段] C " + McdocWriteTrace.StageReport());
+
+            var projector = ProjectorOf(vm);
+            // D：入口模板载入 —— 就是 App 构造期那一次 document.Load 的同一份工作量。
+            var load = MeasureScenario("D 入口模板载入（26.3 维度类型默认模板）", 5,
+                () => vm.LoadMcdocTree(template), projector);
+            McdocWriteTrace.ResetStages();
+            vm.LoadMcdocTree(template);
+            PumpDispatcher();
+            Console.WriteLine("[阶段] D " + McdocWriteTrace.StageReport());
+            Console.WriteLine("[信息] 载入后：行=" + vm.Rows.Count + " 字符=" + (vm.JsonText?.Length ?? 0));
+            checks.That(load.Failures == 0, "5 轮都载入成功", "失败=" + load.Failures);
+            checks.That(load.P50 <= 500.0, "入口模板载入 p50 ≤ 500ms（用户现场 > 500ms）",
+                "p50=" + load.P50.ToString("0.0") + "ms p95=" + load.P95.ToString("0.0") + "ms min=" + load.Min.ToString("0.0") + "ms");
+            return checks.Finish("--case perf-dimension-open");
+        }
+
+        /// <summary>把绝对路径显示成相对 BaseDirectory 的样子（日志太长没人看）。</summary>
+        private static string ShowPath(string fullPath)
+            => string.IsNullOrEmpty(fullPath) ? fullPath
+                : fullPath.StartsWith(AppDomain.CurrentDomain.BaseDirectory, StringComparison.OrdinalIgnoreCase)
+                    ? fullPath.Substring(AppDomain.CurrentDomain.BaseDirectory.Length)
+                    : fullPath;
+
         private static int Assert(string label, bool ok, string detail)
         {
             Console.WriteLine((ok ? "[绿] " : "[红] ") + label + " | " + detail);
@@ -9273,10 +9360,13 @@ namespace CBHK.Probe
                     }
                     var big = size >= 1024 * 1024;
                     var ticks = big ? 20 : 40;
-                    var p50Limit = big ? 500.0 : 30.0;
-                    // p95 吃的是 LOH GC 尾巴（实测 64KB 65~96ms、1MB 992~1163ms）：按 p50 判手感，p95 只兜"没退化到秒级"
-                    var p95Limit = big ? 1500.0 : 150.0;
+                    // 增量粒度已下沉到改动所在的最小容器（只重建那一段的锚点），阈值按实测收紧一档：p50 判手感，p95 兜退化
+                    var p50Limit = big ? 150.0 : 15.0;
+                    var p95Limit = big ? 400.0 : 60.0;
                     var samples = new List<double>();
+                    var pauses = new List<double>();
+                    var stageNames = new[] { "json.fragmentParse", "sync.incremental", "sync.reparse", "sync.normalize", "sync.parse", "sync.applyText" };
+                    var stageDeltas = stageNames.ToDictionary(name => name, _ => new List<double>());
                     var fallbacks = 0;
                     var resets = 0;
                     var rowsMoved = 0;
@@ -9287,14 +9377,31 @@ namespace CBHK.Probe
                         var loadsBefore = McdocWriteTrace.StageCount("doc.load");
                         var resetsBefore = McdocWriteTrace.StageCount("proj.reset");
                         var rowsBefore = vm.Rows.Count;
+                        var stageBefore = stageNames.ToDictionary(name => name, name => McdocWriteTrace.StageMs(name));
+                        var pauseBefore = GC.GetTotalPauseDuration().TotalMilliseconds;
                         var started = Stopwatch.GetTimestamp();
                         vm.SyncTextToTree();
                         samples.Add((Stopwatch.GetTimestamp() - started) * 1000.0 / Stopwatch.Frequency);
+                        pauses.Add(GC.GetTotalPauseDuration().TotalMilliseconds - pauseBefore);
+                        foreach (var name in stageNames) stageDeltas[name].Add(McdocWriteTrace.StageMs(name) - stageBefore[name]);
                         PumpDispatcher();
                         if (McdocWriteTrace.StageCount("doc.load") != loadsBefore) fallbacks++;
                         if (McdocWriteTrace.StageCount("proj.reset") != resetsBefore) resets++;
                         if (vm.Rows.Count != rowsBefore) rowsMoved++;
                     }
+                    var slowest = Enumerable.Range(0, samples.Count)
+                        .OrderByDescending(index => samples[index]).Take(3)
+                        .Select(index => samples[index].ToString("0.0") + "ms(GC " + pauses[index].ToString("0.0") + "ms)")
+                        .ToList();
+                    Console.WriteLine("[信息] 击键(" + (big ? "1MB" : "64KB") + ") 最慢三拍=" + string.Join(" ", slowest)
+                        + " GC 暂停合计=" + pauses.Sum().ToString("0.0") + "ms");
+                    var worstIndex = Enumerable.Range(0, samples.Count).OrderByDescending(index => samples[index]).First();
+                    Console.WriteLine("[信息] 最慢那一拍的分段=" + string.Join(" ",
+                        stageNames.Select(name => name + "=" + stageDeltas[name][worstIndex].ToString("0.0")).ToList())
+                        + " 其余=" + (samples[worstIndex] - stageNames.Sum(name => stageDeltas[name][worstIndex])).ToString("0.0"));
+                    Console.WriteLine("[信息] 各阶段平均=" + string.Join(" ",
+                        stageNames.Select(name => name + "=" + stageDeltas[name].Average().ToString("0.0")).ToList()));
+                    if (big) Console.WriteLine("[信息] 击键(1MB) 阶段表=" + McdocWriteTrace.StageReport());
                     var p50 = Percentile(samples, 0.50);
                     var p95 = Percentile(samples, 0.95);
                     var scale = big ? "1MB" : "64KB";
@@ -11739,7 +11846,7 @@ namespace CBHK.Probe
                 "A2 开放键条目以只读标签显示键名",
                 "keyLabel=" + (keyedRow?.KeyLabelVisibility.ToString() ?? "<无行>")
                 + " 显示=" + (keyedRow?.DisplayLabel ?? "<无行>"));
-            // 闭合枚举键的条目行才留着下拉（选中即改名）—— 那条链在 --case key-rename-duplicate 上验
+            // 条目行一律只读标签（开放键、闭合枚举键都一样）：候选下拉只留在占位行
             return checks.Finish("--case rename-pencil-key-select");
         }
 
@@ -11910,20 +12017,548 @@ namespace CBHK.Probe
             checks.That(document.RootJson?.Get("attributes")?.Get("minecraft:gameplay/natural_mob_spawns")
                 ?.Get("spawns_by_category")?.Get("creature") is not null,
                 "文档里落下了 spawns_by_category.creature", "<无>");
-            // 与开放键条目对照：闭合枚举的成员就那么多，条目行留着下拉换成员（这里不许变成只读标签）
+            // 键空间闭不闭合一个样：条目行的键已经落进文档，一律只读标签；候选下拉只留在占位行
             var addedRow = added is null ? null : projector.Find(added);
-            checks.That(addedRow?.KeyComboVisibility == System.Windows.Visibility.Visible,
-                "闭合枚举键的条目行仍留着候选下拉（换成员）",
+            checks.That(addedRow?.KeyComboVisibility == System.Windows.Visibility.Collapsed,
+                "闭合枚举键的条目行不摆候选下拉",
                 "keyCombo=" + (addedRow?.KeyComboVisibility.ToString() ?? "<无行>"));
-            checks.That(addedRow?.KeyLabelVisibility == System.Windows.Visibility.Collapsed,
-                "闭合枚举键的条目行不叠只读键名",
-                "keyLabel=" + (addedRow?.KeyLabelVisibility.ToString() ?? "<无行>"));
+            checks.That(addedRow?.KeyLabelVisibility == System.Windows.Visibility.Visible,
+                "闭合枚举键的条目行以只读标签显示键名",
+                "keyLabel=" + (addedRow?.KeyLabelVisibility.ToString() ?? "<无行>")
+                + " 显示=" + (addedRow?.DisplayLabel ?? "<无行>"));
             checks.That(addedRow?.RenameVisibility == System.Windows.Visibility.Collapsed,
-                "闭合枚举键的条目行不给铅笔（下拉即改名）",
+                "闭合枚举键的条目行不给铅笔（换键靠删了重加）",
                 "rename=" + (addedRow?.RenameVisibility.ToString() ?? "<无行>"));
             return checks.Finish("--case enum-key-select");
         }
 
+
+        // 门禁：映射条目的键格与（未设置）哨兵 —— 条目行只读键名、不给（未设置）；可选结构字段照旧给
+        // 现场：26.3 attributes 的 gameplay/natural_mob_spawns 条目行上摆着候选下拉，分支下拉里还多一个（未设置）。
+        // 门禁：映射容器加成员这条链不许在枚举父层 JSON 的过程中改那一层（现场：icon.components 选 break_sounds 按 ⊕ 抛 Collection was modified）
+        public static int ComponentsAddEntry()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null) { Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc（退出码 2）"); return 2; }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            const string json = @"{
+  ""parent"": ""minecraft:adventure/adventuring_time"",
+  ""display"": {
+    ""icon"": {
+      ""id"": """",
+      ""count"": 10,
+      ""components"": {
+        ""minecraft:lodestone_tracker"": { ""target"": { ""pos"": [], ""dimension"": ""minecraft:overworld"" } }
+      }
+    }
+  },
+  ""title"": """",
+  ""description"": """",
+  ""criteria"": { }
+}";
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("advancement"), json,
+                doc => doc.GameVersion = "26.3");
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+
+            var components = document.FindNode("$.display.icon.components");
+            checks.That(components is not null, "icon.components 在树上",
+                components is null ? "<无>" : "path=" + components.JsonPath);
+            if (components is null) return checks.Finish("--case components-add-entry");
+            components.EnsureChildren();
+            var placeholder = McdocPresenterRegistry.Default.Children(components).FirstOrDefault(child => child?.IsDynamicKey == true);
+            checks.That(placeholder is not null, "components 有可加成员的占位行",
+                placeholder is null ? "<无>" : "path=" + placeholder.JsonPath);
+            if (placeholder is null) return checks.Finish("--case components-add-entry");
+
+            placeholder.EditingKey = "minecraft:break_sounds";
+            Exception thrown = null;
+            try { placeholder.AddEntryCommand?.Execute(null); }
+            catch (Exception error) { thrown = error; }
+            checks.That(thrown is null, "按 ⊕ 加成员不抛（不在枚举父层 JSON 时改那一层）",
+                thrown is null ? "<无异常>" : thrown.GetType().Name + "：" + thrown.Message);
+
+            var after = document.FindNode("$.display.icon.components");
+            var keys = (after?.Json?.Properties ?? []).Select(pair => pair.Key).ToList();
+            checks.That(keys.Contains("minecraft:break_sounds") && keys.Contains("minecraft:lodestone_tracker"),
+                "新成员和原有成员都在文档里", "键=" + string.Join(",", keys));
+            Exception again = null;
+            var childCount = -1;
+            try { after?.EnsureChildren(); childCount = after?.Children.Count ?? -1; }
+            catch (Exception error) { again = error; }
+            checks.That(again is null, "加完再摊开这一层不抛",
+                again is null ? "子级=" + childCount : again.GetType().Name + "：" + again.Message);
+            checks.That(childCount >= 3, "摊开后是占位行 + 两个条目行", "子级=" + childCount);
+
+            // 真 VM（App 同一条管线）再跑一遍：节点提交只是模型侧，界面走的是 VM + Dispatcher
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            var registriesPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                "..", "..", "..", "..", "CBHK", "bin", "Debug", "net8.0-windows10.0.22621.0", "Resource", "Registries");
+            resource.LoadRegistries(registriesPath);
+            var vm = new CBHK.ViewModel.Generator.AdvancementViewModel(resource);
+            PinVersion(vm, "26.3");
+            vm.LoadMcdocTree(json);
+            var vmDocument = DocumentOf(vm);
+            vmDocument?.FindNode("$.display.icon.components")?.EnsureChildren();
+            var vmPlaceholder = McdocPresenterRegistry.Default.Children(vmDocument?.FindNode("$.display.icon.components"))
+                .FirstOrDefault(child => child?.IsDynamicKey == true);
+            checks.That(vmPlaceholder is not null, "VM 侧同样有可加成员的占位行",
+                vmPlaceholder is null ? "<无>" : "path=" + vmPlaceholder.JsonPath);
+            if (vmPlaceholder is not null)
+            {
+                vmPlaceholder.EditingKey = "minecraft:break_sounds";
+                Exception vmThrown = null;
+                try
+                {
+                    vmPlaceholder.AddEntryCommand?.Execute(null);
+                    PumpDispatcher();
+                }
+                catch (Exception error) { vmThrown = error; }
+                checks.That(vmThrown is null, "VM 侧按 ⊕ 也不抛",
+                    vmThrown is null ? "<无异常>" : vmThrown.GetType().Name + "：" + vmThrown.Message);
+                var vmKeys = (vmDocument?.FindNode("$.display.icon.components")?.Json?.Properties ?? [])
+                    .Select(pair => pair.Key).ToList();
+                checks.That(vmKeys.Contains("minecraft:break_sounds"), "VM 侧新成员落进文档",
+                    "键=" + string.Join(",", vmKeys));
+            }
+            return checks.Finish("--case components-add-entry");
+        }
+
+
+        // ── 候选表缺失的 #[id] 字段退成字符串文本框（用户口径：找不到数据源就变文本框），有数据的照旧给候选 ──
+
+        // #[id] 的候选有两个来源：本地注册表（Registries/*.json）与 mcdoc 调度器（dispatch ... 的索引成员）。
+        // 这里把优先级钉住：调度器覆盖注册表时用调度器，覆盖不了时仍用注册表，两个都没有就是"没有数据"。
+        public static int IdSpaceSources()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            var registriesDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(rootDir), "Registries");
+            if (System.IO.Directory.Exists(registriesDir)) resource.LoadRegistries(registriesDir);
+
+            var runtime = new McdocRuntime
+            {
+                DocumentUri = "file:///probe/idspace.json",
+                Symbols = index,
+                RegistryOptions = new CBHK.Utility.Data.MdocRegistryOptions(resource),
+                GameVersion = "26.3",
+            };
+            McdocIdSpaceResult Space(string name) => runtime.IdSpaces.Resolve(new McdocIdSpec { Registry = name }, runtime);
+
+            var dispatcherCount = resource.McdocTypes.DispatcherRegistries.Count;
+            checks.That(dispatcherCount > 0, "schema 里注册了调度器空间（候选的第二个来源）",
+                "空间数=" + dispatcherCount);
+
+            var environment = Space("environment_attribute");
+            checks.That(environment.Source == McdocIdSpaceSource.Dispatcher && environment.Members.Count > 0,
+                "注册表没有数据、只有调度器的空间（environment_attribute）走调度器",
+                "source=" + environment.Source + " 成员=" + environment.Members.Count);
+
+            var trigger = Space("trigger_type");
+            checks.That(trigger.Source == McdocIdSpaceSource.Dispatcher && trigger.Members.Count > 0,
+                "调度器覆盖注册表时用调度器（trigger_type 比本地注册表全）",
+                "source=" + trigger.Source + " 成员=" + trigger.Members.Count);
+
+            var component = Space("data_component");
+            checks.That(component.Source == McdocIdSpaceSource.Dispatcher && component.Members.Count > 0,
+                "data_component 的候选来自调度器",
+                "source=" + component.Source + " 成员=" + component.Members.Count);
+
+            var block = Space("block");
+            checks.That(block.Source == McdocIdSpaceSource.Registry && block.Members.Count > dispatcherCount,
+                "同名但不是一回事时仍用注册表（block 的调度器只有几百个）",
+                "source=" + block.Source + " 成员=" + block.Members.Count);
+
+            var item = Space("item");
+            checks.That(item.Source == McdocIdSpaceSource.Registry && item.Members.Count > 1000,
+                "item 用注册表", "source=" + item.Source + " 成员=" + item.Members.Count);
+
+            var soundEvent = Space("sound_event");
+            checks.That(soundEvent.Source == McdocIdSpaceSource.Registry && soundEvent.Members.Count > 0,
+                "sound_event 用注册表", "source=" + soundEvent.Source + " 成员=" + soundEvent.Members.Count);
+
+            // 这就是 break_sound.sound_id 退化成纯文本框的原因：注册表与调度器都没有这个空间
+            var weighed = Space("weighed_sound_event");
+            checks.That(weighed.Source == McdocIdSpaceSource.None && weighed.Members.Count == 0,
+                "weighed_sound_event 两个来源都没有数据（候选为空 → 行上退成文本框）",
+                "source=" + weighed.Source + " 成员=" + weighed.Members.Count);
+
+            return checks.Finish("--case id-space-sources");
+        }
+
+        public static int IdFieldDegrade()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null) { Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc（退出码 2）"); return 2; }
+            var blockStateDir = LocateBlockStateDirectory();
+            if (blockStateDir is null) { Console.WriteLine("[环境缺失] 找不到 Registries（退出码 2）"); return 2; }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            const string json = @"{ ""parent"": ""minecraft:adventure/avoid_vibration"", ""display"": { ""icon"": { ""id"": ""minecraft:stone"", ""count"": 1, ""components"": { ""minecraft:break_sound"": { ""sound_id"": ""minecraft:ambient.basalt_deltas.mood"", ""range"": 3 } } }, ""title"": ""a"", ""description"": ""b"" }, ""criteria"": { ""x"": { ""trigger"": ""minecraft:enter_block"" } } }";
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("advancement"), json, doc =>
+            {
+                doc.GameVersion = "26.3";
+                doc.RegistryOptions = RegistryOptionsFor(blockStateDir);
+            });
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+
+            var soundId = document.FindNode("$.display.icon.components.minecraft:break_sound.sound_id");
+            checks.That(soundId is not null, "break_sound.sound_id 在树上",
+                soundId is null ? "<无>" : "path=" + soundId.JsonPath);
+            if (soundId is null) return checks.Finish("--case id-field-degrade");
+            var soundRow = projector.Find(soundId);
+            checks.That((soundId.EnumOptionList?.Count ?? 0) == 0,
+                "weighed_sound_event 在注册表数据里没有条目（候选为空）",
+                "候选=" + (soundId.EnumOptionList?.Count ?? -1));
+            checks.That(soundRow?.Head.EditorKind == McdocEditorKind.Text,
+                "候选表缺失的 id 字段退成字符串文本框（不是半死的下拉）",
+                "kind=" + (soundRow?.Head.EditorKind.ToString() ?? "<无行>"));
+
+            var itemId = document.FindNode("$.display.icon.id");
+            checks.That(itemId is not null, "icon.id 在树上", itemId is null ? "<无>" : "path=" + itemId.JsonPath);
+            checks.That((itemId?.EnumOptionList?.Count ?? 0) > 0,
+                "有注册表数据的 #[id] 字段照旧给候选（退化只发生在缺数据时）",
+                "候选=" + (itemId?.EnumOptionList?.Count ?? -1));
+            return checks.Finish("--case id-field-degrade");
+        }
+
+        public static int EntryKeyLabelAndUnset()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 Resource\\vanilla-mcdoc（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            const string json = "{ \"attributes\": { \"minecraft:gameplay/natural_mob_spawns\": {"
+                + " \"spawns_by_category\": { \"monster\": [ { \"weight\": 0, \"type\": \"minecraft:acacia_boat\", \"count\": 0 } ] },"
+                + " \"spawn_costs\": {} } } }";
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("dimension_type"), json,
+                doc => doc.GameVersion = "26.3");
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+
+            var entry = FindNodeByField(document.Nodes, "minecraft:gameplay/natural_mob_spawns");
+            checks.That(entry is { IsMapEntry: true }, "attributes 下的条目节点在树上",
+                entry is null ? "<无>" : "path=" + entry.JsonPath + " mapEntry=" + entry.IsMapEntry);
+            if (entry is null) return checks.Finish("--case entry-key-label-and-unset");
+
+            var entryRow = projector.Find(entry);
+            checks.That(entryRow?.KeyComboVisibility == System.Windows.Visibility.Collapsed,
+                "条目行的键格不摆候选下拉",
+                "keyCombo=" + (entryRow?.KeyComboVisibility.ToString() ?? "<无行>"));
+            checks.That(entryRow?.KeyLabelVisibility == System.Windows.Visibility.Visible,
+                "条目行以只读标签显示键名",
+                "keyLabel=" + (entryRow?.KeyLabelVisibility.ToString() ?? "<无行>")
+                + " 显示=" + (entryRow?.DisplayLabel ?? "<无行>"));
+            checks.That(entry.Head?.CanUnset == false, "条目行不给（未设置）哨兵",
+                "canUnset=" + (entry.Head?.CanUnset.ToString() ?? "<无>"));
+            var entryBranches = (entry.Head?.BranchOptions ?? []).Select(item => item?.Name ?? "<无>").ToList();
+            checks.That(entryBranches.All(name => name != McdocNodePresenter.UnsetLabel),
+                "条目行分支下拉里没有（未设置）", "候选=" + string.Join(",", entryBranches));
+
+            // 反面：可选结构字段（timelines 没有值）仍要能从（未设置）切出去
+            var timelines = FindNodeByField(document.Nodes, "timelines");
+            checks.That(timelines is not null, "timelines 字段行在树上", timelines is null ? "<无>" : "path=" + timelines.JsonPath);
+            checks.That(timelines?.Head?.CanUnset == true, "可选结构字段照旧给（未设置）",
+                "canUnset=" + (timelines?.Head?.CanUnset.ToString() ?? "<无>"));
+            var timelineBranches = (timelines?.Head?.BranchOptions ?? []).Select(item => item?.Name ?? "<无>").ToList();
+            checks.That(timelineBranches.Any(name => name == McdocNodePresenter.UnsetLabel),
+                "可选结构字段的分支下拉首项是（未设置）", "候选=" + string.Join(",", timelineBranches));
+            return checks.Finish("--case entry-key-label-and-unset");
+        }
+
+        // 门禁：三个诉求一起守 —— ①成员顺序（树行与 JSON 都按文档自己的顺序；未写的声明字段留在声明位；新键按声明序插位，声明外追加末尾）②定长数值数组的行内数字框 ③必填空值的红色感叹号。
+        public static int OrderAndRequiredBadge()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc 根目录（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            const string json = "{ \"parent\": \"minecraft:adventure/adventuring_time\","
+                + " \"display\": { \"icon\": { \"id\": \"\", \"count\": 10,"
+                + " \"components\": { \"minecraft:lodestone_tracker\": { \"target\": { \"pos\": [], \"dimension\": \"minecraft:overworld\" } } } },"
+                + " \"title\": \"\", \"description\": \"\" },"
+                + " \"criteria\": {} }";
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("advancement"), json,
+                doc => doc.GameVersion = "26.3");
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+
+            List<string> KeyOrder(IEnumerable<string> keys)
+                => keys.OrderBy(key => key ?? "", StringComparer.OrdinalIgnoreCase).ToList();
+
+            List<string> ChildRowKeys(McdocTreeNode parent)
+            {
+                var result = new List<string>();
+                if (parent is null || projector.Find(parent) is not { } parentRow) return result;
+                var start = projector.Rows.IndexOf(parentRow);
+                for (var i = start + 1; i < projector.Rows.Count; i++)
+                {
+                    var row = projector.Rows[i];
+                    if (row.Depth <= parentRow.Depth) break;
+                    if (row.Depth != parentRow.Depth + 1) continue;
+                    if (row.Kind is McdocRowKind.Placeholder or McdocRowKind.More) continue;
+                    result.Add(row.Node?.FieldName ?? "");
+                }
+                return result;
+            }
+
+            // ① 顺序：树行与 JSON 都按文档自己的顺序（不排序），没写的声明字段留在声明位
+            var topKeys = projector.Rows.Where(row => row.Depth == 0).Select(row => row.Node?.FieldName ?? "").ToList();
+            checks.That(topKeys.SequenceEqual(new[] { "parent", "display", "criteria", "requirements", "rewards", "sends_telemetry_event" }),
+                "顶层行按文档键序（没写的声明字段跟在已写字段之后）",
+                "行序=" + string.Join(",", topKeys));
+            var icon = FindNodeByField(document.Nodes, "icon");
+            var iconKeys = ChildRowKeys(icon);
+            checks.That(iconKeys.SequenceEqual(new[] { "id", "count", "components" }), "icon 的子行按文档键序（count 不再被排到末尾）",
+                "子行=" + string.Join(",", iconKeys));
+            var displayKeys = ChildRowKeys(FindNodeByField(document.Nodes, "display"));
+            checks.That(displayKeys.SequenceEqual(new[] { "icon", "title", "description", "frame", "show_toast", "announce_to_chat", "hidden" }),
+                "没写的声明字段留在声明位", "display 子行=" + string.Join(",", displayKeys));
+            var jsonTop = (document.RootJson?.Properties ?? []).Select(pair => pair.Key).ToList();
+            checks.That(jsonTop.SequenceEqual(new[] { "parent", "display", "criteria" }), "JSON 键序不被改写",
+                "键序=" + string.Join(",", jsonTop));
+            var unsorted = McdocJsonParser.Parse("{ \"b\": 1, \"a\": 2 }");
+            var formatted = McdocJsonFormatter.Format(unsorted, 2);
+            checks.That(formatted.IndexOf("\"b\"", StringComparison.Ordinal) < formatted.IndexOf("\"a\"", StringComparison.Ordinal),
+                "写文本时保持输入顺序（不排序）", "文本=" + formatted.Replace("\n", " "));
+
+            // ② pos：int[] @ 3 解成三元组，行内三个数字框，敲数能补位写回
+            var pos = FindNodeByField(document.Nodes, "pos");
+            checks.That(pos?.Type?.Kind == McdocTypeKind.Tuple, "pos 解成三元组",
+                "type=" + (pos?.Type?.Kind.ToString() ?? "<无>"));
+            checks.That((pos?.Type?.Items?.Count ?? 0) == 3, "三元组有 3 个数值项", "items=" + (pos?.Type?.Items?.Count ?? 0));
+            var posRow = pos is null ? null : projector.Find(pos);
+            checks.That(posRow?.Head?.EditorKind == McdocEditorKind.InlineTuple, "pos 行走行内元组编辑器",
+                "editor=" + (posRow?.Head?.EditorKind.ToString() ?? "<无>"));
+            checks.That((pos?.Items?.Count ?? 0) == 3, "空数组也把 3 个框建出来", "项节点=" + (pos?.Items?.Count ?? 0));
+
+            // ③ 必填空值的红色感叹号（先看空值现场，再动值）
+            string Badge(string field) => FindNodeByField(document.Nodes, field) is { } node
+                ? (projector.Find(node)?.RequiredBadgeVisibility.ToString() ?? "<无行>") : "<无节点>";
+            checks.That(Badge("id") == "Collapsed", "必填字段的空串算有值、不挂红色感叹号", "icon.id=" + Badge("id"));
+            checks.That(Badge("count") == "Collapsed", "有值的必填字段不显示", "icon.count=" + Badge("count"));
+            checks.That(Badge("pos") == "Visible", "必填的空数组显示红色感叹号", "pos=" + Badge("pos"));
+            checks.That(Badge("dimension") == "Collapsed", "有值的必填字符串不显示", "dimension=" + Badge("dimension"));
+            checks.That(Badge("tracked") == "Collapsed", "非必填字段不显示", "tracked=" + Badge("tracked"));
+
+            // 往第 1、3 个框里敲数：空数组按需补位，写回后三项齐全
+            // 探针的 NodeValueChanged 只接通知，写回要照 VM 的顺序自己走 ApplyNodeValue
+            pos!.Items[0].NumberText = "5";
+            McdocCollectionEditor.Default.ApplyNodeValue(pos.Items[0]);
+            pos = FindNodeByField(document.Nodes, "pos");
+            pos!.Items[2].NumberText = "7";
+            McdocCollectionEditor.Default.ApplyNodeValue(pos.Items[2]);
+            var posJson = pos.Json;
+            checks.That(posJson is { Kind: McdocJsonKind.Array } array && (array.Items?.Count ?? 0) == 3
+                && Convert.ToString(array.Items[0]?.NumberValue) == "5"
+                && (array.Items[1] is null || array.Items[1].Kind == McdocJsonKind.Null)
+                && Convert.ToString(array.Items[2]?.NumberValue) == "7",
+                "三个框敲数后写回三项（缺项补 null）",
+                "pos=" + McdocJsonFormatter.Format(posJson, 0).Replace("\n", " "));
+
+            // 新键按 mcdoc 声明序落位；声明外的键（Any / 动态键）追加到末尾
+            var declaration = new List<string> { "parent", "display", "criteria", "requirements", "rewards", "sends_telemetry_event" };
+            var probeJson = McdocJsonParser.Parse("{ \"display\": {}, \"criteria\": {} }");
+            var probeIndex = McdocJsonOrder.InsertIndex(probeJson.Properties, "parent", declaration);
+            checks.That(probeIndex == 0, "新键插到声明序该在的位置（parent 在 display 之前）", "index=" + probeIndex);
+            var anyIndex = McdocJsonOrder.InsertIndex(probeJson.Properties, "zzz_any", null);
+            checks.That(anyIndex == probeJson.Properties.Count, "声明外的键（Any）追加到末尾",
+                "index=" + anyIndex + " count=" + probeJson.Properties.Count);
+            var requirements = FindNodeByField(document.Nodes, "requirements");
+            McdocCollectionEditor.SetMemberOrdered(document.RootJson, requirements, McdocJsonParser.Parse("{}"));
+            var addedKeys = (document.RootJson?.Properties ?? []).Select(pair => pair.Key).ToList();
+            checks.That(addedKeys.SequenceEqual(new[] { "parent", "display", "criteria", "requirements" }), "新加的键按声明序落到 JSON 里",
+                "键序=" + string.Join(",", addedKeys));
+            return checks.Finish("--case order-and-required-badge");
+        }
+
+        // 列表的添加入口：行内首部 ⊕ 插到 0 号位、尾部追加行加到末尾（用户口径：List 头部按钮插 0、尾部追加）
+        public static int ListAddButtons()
+        {
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc 根目录（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            const string json = "{ \"parent\": \"minecraft:adventure/avoid_vibration\","
+                + " \"display\": { \"icon\": { \"id\": \"minecraft:abandoned_camp_map\","
+                + " \"components\": { \"minecraft:break_sound\": { \"sound_id\": \"minecraft:ambient.basalt_deltas.mood\", \"range\": 3 } },"
+                + " \"count\": 2 }, \"title\": \"\", \"description\": \"\", \"background\": \"\" },"
+                + " \"criteria\": { \"sfads123\": { \"trigger\": \"minecraft:enter_block\","
+                + " \"conditions\": { \"player\": { \"type\": \"minecraft:damage_source_properties\", \"predicate\": {} } } } },"
+                + " \"requirements\": [ [ \"test\" ] ] }";
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("advancement"), json,
+                doc => doc.GameVersion = "26.3");
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+            var checks = new Checks();
+
+            var requirements = FindNodeByField(document.Nodes, "requirements");
+            checks.That(requirements is not null, "requirements 在树上", "path=" + (requirements?.JsonPath ?? "<null>"));
+            checks.That(requirements?.Type?.LengthRange is null, "单边长度注解不再被当成上限（@ 1.. 读成无约束）",
+                "len=" + (requirements?.Type?.LengthRange is { } outer ? (outer.Min?.ToString() ?? "-") + ".." + (outer.Max?.ToString() ?? "-") : "<无>"));
+            var row = requirements is null ? null : projector.Find(requirements);
+            checks.That(row?.ListButtonsVisibility == System.Windows.Visibility.Visible, "列表行行内有首部插入按钮",
+                "listBtns=" + (row?.ListButtonsVisibility.ToString() ?? "<无行>"));
+            checks.That(row?.AddTailVisibility == System.Windows.Visibility.Visible, "列表尾部有追加行",
+                "tail=" + (row?.AddTailVisibility.ToString() ?? "<无行>"));
+            checks.That(requirements?.AddItemTopCommand.CanExecute(null) == true, "首部插入按钮可执行",
+                "canExecute=" + (requirements?.AddItemTopCommand.CanExecute(null).ToString() ?? "<无>"));
+
+            var inner = requirements?.Items.FirstOrDefault();
+            checks.That(inner?.Type?.LengthRange is null, "子级列表同样无长度约束",
+                "len=" + (inner?.Type?.LengthRange is { } childLen ? (childLen.Min?.ToString() ?? "-") + ".." + (childLen.Max?.ToString() ?? "-") : "<无>"));
+            var innerRow = inner is null ? null : projector.Find(inner);
+            checks.That(innerRow?.ListButtonsVisibility == System.Windows.Visibility.Visible, "子级列表行内也有首部插入按钮",
+                "listBtns=" + (innerRow?.ListButtonsVisibility.ToString() ?? "<无行>"));
+            checks.That(innerRow?.AddTailVisibility == System.Windows.Visibility.Visible, "子级列表尾部也有追加行",
+                "tail=" + (innerRow?.AddTailVisibility.ToString() ?? "<无行>"));
+
+            inner?.AddItemTopCommand.Execute(null);
+            var innerJson = document.RootJson.Get("requirements")?.Items is { Count: > 0 } outerItems
+                ? outerItems[0]
+                : null;
+            var innerItems = innerJson?.Items;
+            checks.That(innerItems is { Count: 2 }
+                && Convert.ToString(innerItems[1]?.StringValue) == "test",
+                "行内首部 ⊕ 插在 0 号位（原有的那条后移）",
+                "items=" + McdocJsonFormatter.Format(innerJson, 0).Replace("\n", " "));
+
+            var innerAfter = FindNodeByField(document.Nodes, "requirements")?.Items.FirstOrDefault();
+            innerAfter?.AddItemCommand.Execute(null);
+            var appended = document.RootJson.Get("requirements")?.Items is { Count: > 0 } firstOuter ? firstOuter[0] : null;
+            checks.That(appended?.Items is { Count: 3 }, "尾部追加把它加到末尾",
+                "items=" + McdocJsonFormatter.Format(appended, 0).Replace("\n", " "));
+            return checks.Finish("--case list-add-buttons");
+        }
+
+        /// <summary>按键名在整棵树里找一个节点（union 分支子级也算）。</summary>
+        /// <summary>观察用例：谓词多层嵌套，看最里层还剩下哪些分支（临时，用完转门禁或删）。</summary>
+        public static int PredicateTreeNesting()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null) { Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc（退出码 2）"); return 2; }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            const string json = """
+                {
+                  "parent": "minecraft:adventure/avoid_vibration",
+                  "criteria": {
+                    "segsg": {
+                      "trigger": "minecraft:any_block_use",
+                      "conditions": {
+                        "player": { "type": "minecraft:all_of" },
+                        "location": {
+                          "type": "minecraft:all_of",
+                          "terms": {
+                            "type": "minecraft:all_of",
+                            "terms": { "type": "minecraft:all_of" }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "requirements": [ [ "segsg" ] ]
+                }
+                """;
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("advancement"), json, doc => doc.GameVersion = "26.3");
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+
+            const string basePath = "$.criteria.segsg.conditions.location.terms";
+            var second = document.FindNode(basePath);
+            var third = document.FindNode(basePath + ".terms");
+            var fourth = document.FindNode(basePath + ".terms.terms");
+            checks.That(second?.UnionTypeNameList?.Count == 3, "第二层 terms 有 3 个分支候选",
+                "branches=" + (second?.UnionTypeNameList?.Count ?? -1));
+            checks.That(second?.SelectedUnionMember is not null, "第二层 terms 按文档里的值选中了分支",
+                "sel=" + (second?.SelectedUnionMember?.Kind.ToString() ?? "<未设置>"));
+            checks.That(third?.UnionTypeNameList?.Count == 3, "第三层 terms 也有 3 个分支候选（曾经被类型级判环截断成 0）",
+                "branches=" + (third?.UnionTypeNameList?.Count ?? -1));
+            checks.That(third?.SelectedUnionMember is not null, "第三层 terms 选中了分支（行上有展开箭头）",
+                "sel=" + (third?.SelectedUnionMember?.Kind.ToString() ?? "<未设置>"));
+            checks.That(third?.UnionBranchBuilder is not null, "第三层 terms 的下拉能切支（分支构造器在）",
+                third?.UnionBranchBuilder is null ? "<无>" : "<在>");
+            checks.That(fourth?.UnionTypeNameList?.Count == 3, "缺值的第四层 terms 仍给出 3 个分支候选",
+                "branches=" + (fourth?.UnionTypeNameList?.Count ?? -1));
+            checks.That(fourth?.SelectedUnionMember is null, "缺值的第四层 terms 停在（未设置）",
+                "sel=" + (fourth?.SelectedUnionMember?.Kind.ToString() ?? "<未设置>"));
+            checks.That(fourth?.Error is { } missing && missing.Contains("缺少必填键"), "缺值的第四层 terms 挂必填诊断",
+                fourth?.Error ?? "<无>");
+
+            var leaf = "{ \"type\": \"minecraft:all_of\" }";
+            var nested = leaf;
+            for (var level = 0; level < 8; level++) nested = "{ \"type\": \"minecraft:all_of\", \"terms\": " + nested + " }";
+            var deepJson = "{ \"parent\": \"minecraft:adventure/avoid_vibration\", \"criteria\": { \"deep\": { \"trigger\": \"minecraft:any_block_use\", "
+                + "\"conditions\": { \"player\": " + nested + " } } } }";
+            var (deepDocument, deepProjector, _) = Harness(index, McdocHelpers.GetRootType("advancement"), deepJson, doc => doc.GameVersion = "26.3");
+            ExpandAll(deepDocument.Nodes);
+            deepProjector.Reset(deepDocument.ProjectionRoots);
+            var termsNodes = new List<McdocTreeNode>();
+            CollectFieldNodes(deepDocument.Nodes, "terms", termsNodes);
+            var deepest = termsNodes.OrderByDescending(node => node.JsonPath?.Length ?? 0).FirstOrDefault();
+            checks.That(termsNodes.Count >= 8, "9 层嵌套的谓词树一路建到底（递归被深度限住，不是被判环掐掉）",
+                "层数=" + termsNodes.Count);
+            checks.That(deepest?.UnionTypeNameList?.Count == 3, "最深那层 terms 仍有 3 个分支候选",
+                "branches=" + (deepest?.UnionTypeNameList?.Count ?? -1) + " path=" + (deepest?.JsonPath ?? "<无>"));
+            return checks.Finish("--case predicate-tree-nesting");
+        }
+
+        private static void CollectFieldNodes(IEnumerable<McdocTreeNode> nodes, string field, List<McdocTreeNode> found)
+        {
+            foreach (var node in nodes ?? [])
+            {
+                if (node is null) continue;
+                if (string.Equals(node.FieldName, field, StringComparison.Ordinal)) found.Add(node);
+                CollectFieldNodes(McdocPresenterRegistry.Default.Children(node), field, found);
+            }
+        }
+
+        private static McdocTreeNode FindNodeByField(IEnumerable<McdocTreeNode> nodes, string field)
+        {
+            foreach (var node in nodes ?? [])
+            {
+                if (node is null) continue;
+                if (string.Equals(node.FieldName, field, StringComparison.Ordinal)) return node;
+                var found = FindNodeByField(McdocPresenterRegistry.Default.Children(node), field);
+                if (found is not null) return found;
+            }
+            return null;
+        }
 
         // 门禁：条目行改键到已占用的键时，行与文档必须一致（重名不许让行上先改、文档不动）。
         public static int KeyRenameDuplicate()
@@ -11938,7 +12573,7 @@ namespace CBHK.Probe
             Deterministic();
             var index = new McdocTypeIndex();
             RealSchema.Load(index, rootDir);
-            const string json = @"{ ""attributes"": { ""minecraft:gameplay/natural_mob_spawns"": { ""spawns_by_category"": { ""monster"": [], ""creature"": [] } } } }";
+            const string json = @"{ ""attributes"": { ""minecraft:gameplay/natural_mob_spawns"": { ""spawns_by_category"": { ""monster"": [], ""creature"": [ { ""weight"": 1, ""type"": ""minecraft:stone"", ""count"": 1 } ] } } } }";
             var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("dimension_type"), json,
                 doc => doc.GameVersion = "26.3");
             document.Validate();
@@ -11971,10 +12606,27 @@ namespace CBHK.Probe
                 && !string.Equals(option.Name, "monster", StringComparison.Ordinal));
             checks.That(other is not null, "有一个可用的改名候选", "候选=" + (other?.Name ?? "<无>"));
             if (other is null) return checks.Finish("--case key-rename-duplicate");
+            row.IsExpanded = true;
+            PumpDispatcher();
             row.SelectedKey = other;
             PumpDispatcher();
             checks.That(DocumentKeys(document).Contains(other.Name), "改名提交后文档里有新键",
                 "文档键=" + string.Join(",", DocumentKeys(document)));
+
+            // 改名不折叠子结构（用户 2026-11-19 第 3 条）：键换掉之后展开态跟路径一起搬家
+            var renamedNode = document.FindNode(spawnsPath + "." + other.Name);
+            var renamedRow = renamedNode is null ? null : projector.Find(renamedNode);
+            checks.That(renamedNode?.JsonPath == spawnsPath + "." + other.Name,
+                "改名后节点路径跟着新键走（展开态才有地方搬）",
+                "path=" + (renamedNode?.JsonPath ?? "<无>"));
+            checks.That(renamedRow?.IsExpanded == true,
+                "改名后这一行仍然展开（铅笔改完不许折叠子结构）",
+                "expanded=" + (renamedRow?.IsExpanded.ToString() ?? "<无行>"));
+            renamedNode?.EnsureChildren();
+            var renamedChildren = renamedNode is null ? 0 : McdocPresenterRegistry.Default.Children(renamedNode).Count;
+            checks.That(renamedChildren > 0,
+                "改名后子结构还在（行不是空壳）",
+                "子级=" + renamedChildren + " 行数=" + projector.Rows.Count);
 
             // 手势B：下拉回灌一个已被占用的成员 → 不许把行改成新键、文档不动、行上给提示
             var liveName = other.Name;
@@ -11993,7 +12645,9 @@ namespace CBHK.Probe
                 "行上说的键与文档一致", "行上=" + (afterRow?.SelectedKey?.Name ?? "<null>") + " 节点=" + (after?.FieldName ?? "<无>"));
             checks.That(after?.Error is not null && after.Error.Contains("monster", StringComparison.Ordinal),
                 "行上留下看得见的提示", "error=" + (after?.Error ?? "<无>"));
-            checks.That(DocumentKeys(document).SequenceEqual(new[] { "monster", liveName }),
+            // 键按字母序存放：只比集合，不比先后（重名被拒时不该多出、也不该少掉键）
+            checks.That(DocumentKeys(document).OrderBy(key => key, StringComparer.Ordinal)
+                    .SequenceEqual(new[] { "monster", liveName }.OrderBy(key => key, StringComparer.Ordinal)),
                 "文档没被重名改动", "文档键=" + string.Join(",", DocumentKeys(document)));
             checks.That(document.FindNode(spawnsPath + ".monster") is not null
                 && document.FindNode(spawnsPath + "." + liveName) is not null,
@@ -12090,6 +12744,106 @@ namespace CBHK.Probe
                 "右侧 JSON 改对之后节点自己重解：类型回到 Int、诊断收回",
                 (liveC?.Type?.Kind.ToString() ?? "<无>") + " / " + (liveC?.Error ?? "<无>"));
             return checks.Finish("--case mismatch-heal-paths");
+        }
+
+        // 行内动作收敛（用户 m11947）：不常用的动作收进行尾 ⋮，行上常驻只留加入 / 删除 / 铅笔。
+        // 三条判据：真列表子行才有 ⋮、纯标量行连 ⋮ 都不出现；菜单是 ContentTemplate，没展开不实例化；
+        // 菜单项先收菜单再执行原命令，动作本身与以前逐字一致。
+        public static int RowOverflowMenu()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null)
+            {
+                Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc 根目录（退出码 2）");
+                return 2;
+            }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            const string json = @"{ ""display"": { ""frame"": ""task"" }, ""rewards"": { ""recipes"": [ ""minecraft:acacia_boat"", ""minecraft:apple"" ] } }";
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("advancement"), json,
+                doc => doc.GameVersion = "26.3");
+            ExpandAll(document.Nodes);
+            projector.Reset(document.ProjectionRoots);
+
+            List<string> Recipes() => (document.RootJson.Get("rewards")?.Get("recipes")?.Items ?? [])
+                .Select(item => item?.StringValue ?? "").ToList();
+            List<McdocRow> EntryRows() => projector.Rows
+                .Where(row => row.IsListChild && row.Kind is not (McdocRowKind.More or McdocRowKind.AddTail))
+                .ToList();
+
+            var entries = EntryRows();
+            checks.That(entries.Count == 2, "recipes 下两条列表子行", "子行=" + entries.Count);
+            if (entries.Count != 2) return checks.Finish("--case row-overflow-menu");
+            var first = entries[0];
+            var second = entries[1];
+            checks.That(first.OverflowVisibility == System.Windows.Visibility.Visible,
+                "真列表子行行尾有 ⋮", "overflow=" + first.OverflowVisibility);
+            checks.That(first.MoveVisibility == System.Windows.Visibility.Visible,
+                "换位动作还在，只是收进了菜单", "move=" + first.MoveVisibility);
+            checks.That(first.DuplicateVisibility == System.Windows.Visibility.Visible,
+                "复制这一项也在菜单里", "duplicate=" + first.DuplicateVisibility);
+            checks.That(!first.IsOverflowOpen && !second.IsOverflowOpen, "菜单默认收起",
+                "first=" + first.IsOverflowOpen + " second=" + second.IsOverflowOpen);
+            checks.That(first.HasOverflowMenu && first.OverflowButtonToolTip == "更多动作",
+                "两三颗动作才进菜单（按钮是 ⋮ + 更多动作）",
+                "menu=" + first.HasOverflowMenu + " tooltip=" + first.OverflowButtonToolTip);
+            // 图标要从资源字典取，无头 case 里没有 Application，取不到不代表界面里断（--render-window 里有实测）
+            if (System.Windows.Application.Current is not null)
+            {
+                checks.That(first.OverflowButtonIcon is not null,
+                    "菜单态的图标从资源字典取到了（绑定断了就是一颗空白按钮）",
+                    "icon=" + (first.OverflowButtonIcon?.ToString() ?? "<null>"));
+            }
+
+            second.ToggleOverflowCommand.Execute(null);
+            checks.That(second.IsOverflowOpen, "点 ⋮ 打开菜单", "isOverflowOpen=" + second.IsOverflowOpen);
+            second.OverflowMoveUpCommand.Execute(null);
+            PumpDispatcher();
+            checks.That(!second.IsOverflowOpen, "菜单项执行后菜单自己收起", "isOverflowOpen=" + second.IsOverflowOpen);
+            checks.That(string.Join(",", Recipes()) == "minecraft:apple,minecraft:acacia_boat",
+                "菜单里的上移真的改了文档顺序", "recipes=" + string.Join(",", Recipes()));
+
+            entries = EntryRows();
+            checks.That(entries.Count == 2, "换位后行数不变", "子行=" + entries.Count);
+            if (entries.Count == 0) return checks.Finish("--case row-overflow-menu");
+            entries[0].OverflowDuplicateCommand.Execute(null);
+            PumpDispatcher();
+            checks.That(Recipes().Count == 3, "菜单里的复制这一项真的加了一条", "recipes=" + string.Join(",", Recipes()));
+
+            entries = EntryRows();
+            if (entries.Count == 0) return checks.Finish("--case row-overflow-menu");
+            entries[0].OverflowRemoveSelfCommand.Execute(null);
+            PumpDispatcher();
+            checks.That(Recipes().Count == 2, "菜单里的删掉这一项真的少了一条", "recipes=" + string.Join(",", Recipes()));
+
+            var recipesNode = document.FindNode("$.rewards.recipes");
+            var recipesRow = recipesNode is null ? null : projector.Find(recipesNode);
+            // 列表行头部的 ⊕ 是常驻入口，不进 ⋮ 菜单（用户口径：两个添加按钮只留一个）
+            checks.That(recipesRow?.ListAddTopVisibility == System.Windows.Visibility.Visible,
+                "列表行头部的 ⊕ 常驻（不靠溢出菜单）",
+                "topVis=" + (recipesRow?.ListAddTopVisibility.ToString() ?? "<无行>"));
+            checks.That(recipesRow?.OverflowVisibility == System.Windows.Visibility.Collapsed,
+                "列表行没有别的可收动作时连 ⋮ 都不出现（新增不再重复进菜单）",
+                "overflow=" + (recipesRow?.OverflowVisibility.ToString() ?? "<无行>")
+                + " tooltip=" + (recipesRow?.OverflowButtonToolTip ?? "<无行>"));
+            var beforeAdd = Recipes().Count;
+            recipesRow?.Node?.AddItemTopCommand?.Execute(null);
+            PumpDispatcher();
+            checks.That(Recipes().Count == beforeAdd + 1 && recipesRow?.IsOverflowOpen == false,
+                "点行头那颗 ⊕ 真的加了一条（插到 0 号位、不经菜单）",
+                "recipes=" + string.Join(",", Recipes()) + " 首项=" + Recipes().FirstOrDefault());
+
+            var frame = document.FindNode("$.display.frame");
+            var frameRow = frame is null ? null : projector.Find(frame);
+            checks.That(frameRow?.OverflowVisibility == System.Windows.Visibility.Collapsed,
+                "没有可收动作的标量行连 ⋮ 都不出现", "overflow=" + (frameRow?.OverflowVisibility.ToString() ?? "<无行>"));
+            checks.That(frameRow?.ExpanderVisibility == System.Windows.Visibility.Collapsed,
+                "没有子级的行用 Collapsed 收起展开器（不留 Hidden 占位）",
+                "expander=" + (frameRow?.ExpanderVisibility.ToString() ?? "<无行>"));
+
+            return checks.Finish("--case row-overflow-menu");
         }
 
         // 键格只给候选下拉（用户裁定）：不为模组 id 留输入入口 —— mcdoc 资产本身就能加内容。

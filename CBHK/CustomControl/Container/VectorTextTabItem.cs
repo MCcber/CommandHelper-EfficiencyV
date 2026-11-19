@@ -93,6 +93,7 @@ namespace CBHK.CustomControl.Container
             {
                 targetBrush = UnSelectedBackground as SolidColorBrush;
             }
+            if (targetBrush is null) return;
             Color sideAndTopColor = ColorTool.Lighten(targetBrush.Color, 0.2f);
             Background = new SolidColorBrush(targetBrush.Color);
             SideBorderBrush = new SolidColorBrush(sideAndTopColor);

@@ -347,8 +347,46 @@ namespace CBHK.Utility.Data.Mcdoc
             Attributes = McdocAttributeRegistry.CreateDefault(GameVersion),
             RegistryOptions = RegistryOptions,
             GameVersion = GameVersion,
+            QuietUnknownPaths = quietUnknownPaths,
             Warn = message => Log.Add(message)
         };
+
+        /// <summary>
+        /// 载入那一刻文档里出现过的全部 JsonPath（对象成员与列表下标都算）。
+        /// 用来回答"这个版本外键是打开文档时就有的，还是用户刚切出来的"：
+        /// 前者静默（不挂牌、不进父行名单），后者照常报黄。
+        /// </summary>
+        private readonly HashSet<string> quietUnknownPaths = new(StringComparer.Ordinal);
+
+        private void CaptureLoadKeys()
+        {
+            quietUnknownPaths.Clear();
+            if (RootJson is null) return;
+            var stack = new Stack<(McdocJsonValue Value, string Path)>();
+            stack.Push((RootJson, "$"));
+            while (stack.Count > 0)
+            {
+                var (value, path) = stack.Pop();
+                if (value is null) continue;
+                if (value.Kind == McdocJsonKind.Object)
+                {
+                    foreach (var pair in value.Properties ?? [])
+                    {
+                        var childPath = path + "." + pair.Key;
+                        quietUnknownPaths.Add(childPath);
+                        if (pair.Value is not null) stack.Push((pair.Value, childPath));
+                    }
+                }
+                else if (value.Kind == McdocJsonKind.Array)
+                {
+                    var items = value.Items ?? [];
+                    for (var index = 0; index < items.Count; index++)
+                    {
+                        if (items[index] is not null) stack.Push((items[index], path + "[" + index + "]"));
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 用"已经解析好的 JSON AST"重建树（编辑器与树共用同一批节点时用，保证回写能按节点定位）。
@@ -937,7 +975,11 @@ namespace CBHK.Utility.Data.Mcdoc
             return true;
         }
 
-        /// <summary>摊平根的顶层列表就是根的子级：换完成员后按同一顺序重排，投影以它为准。</summary>
+        /// <summary>
+        /// 摊平根的顶层列表就是根的子级，顺序也照抄：行序只在模型里定一次
+        /// （StructNodePresenter.OrderChildren：文档序 + 未写字段的声明位），文本同步的
+        /// "第几个顶层行"也按它定位 —— 投影再排一次就会与它错位（行重复、键缺行）。
+        /// </summary>
         private void SyncTopLevelFromRoot()
         {
             if (rootNode is null || !FlattenedRoot) return;
@@ -999,9 +1041,13 @@ namespace CBHK.Utility.Data.Mcdoc
         public void Load(McdocType rootType, McdocJsonValue root)
         {
             using var stageTotal = McdocWriteTrace.Stage("doc.load");
+            // 成员顺序不在这里排：行序 = 文档序 + 未写字段的声明位（StructNodePresenter.OrderChildren），
+            // 文本按 AST 原序写出，新键按声明序插位（McdocJsonOrder.InsertIndex）—— 一处定序，别处只读。
             RootJson = root;
             nodeIndex = null;
             Generation++;
+            // 建树之前先记下"打开时就有哪些键"：静默判据要在第一个未声明节点建出来之前就位
+            CaptureLoadKeys();
             // 重建会换掉所有节点，而编辑时又频繁重建 —— 先把展开/选中状态按 JsonPath 记下来，
             // 建完再恢复，否则用户点了 ⊕ 或改了个值，整棵树就全折叠（截图里的现象）。
             var expandedPaths = new HashSet<string>(StringComparer.Ordinal);

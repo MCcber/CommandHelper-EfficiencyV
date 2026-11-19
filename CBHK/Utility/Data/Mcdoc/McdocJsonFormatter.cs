@@ -61,6 +61,7 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 case McdocJsonKind.Object:
                 {
+                    // 键按 AST 原序写出：顺序只在模型里定一次（见 McdocJsonOrder）。
                     var properties = value.Properties ?? [];
                     if (properties.Count == 0)
                     {

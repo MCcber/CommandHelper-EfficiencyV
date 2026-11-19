@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -69,8 +70,26 @@ namespace CBHK.Model.Constant
         /// 从对应版本的注册表数据里取指定注册表的成员，按英文字母 A-Z 排序。
         /// 不缓存副本：版本缺失时沿用 GetRegistriesData 的“回退到最高可用版本”规则。
         /// </summary>
+        /// <summary>
+        /// 建页期间下拉候选（#[id] 注册表成员表）被取用的规模：CBHK.Probe 的 --render-window 读这三个值，
+        /// 用来确认「打开页面不会去灌全量注册表成员」，以及将来的 UI 改动有没有把这笔开销带回来。
+        /// </summary>
+        public static int PerfGetIdsCalls;
+        public static long PerfGetIdsTicks;
+        public static readonly Dictionary<string, int> PerfGetIdsByRegistry = new(StringComparer.Ordinal);
+        public static readonly Dictionary<string, long> PerfGetIdsMsByRegistry = new(StringComparer.Ordinal);
+
+        public static void PerfResetGetIds()
+        {
+            PerfGetIdsCalls = 0;
+            PerfGetIdsTicks = 0;
+            PerfGetIdsByRegistry.Clear();
+            PerfGetIdsMsByRegistry.Clear();
+        }
+
         public IReadOnlyList<string> GetIds(string registry, string version)
         {
+            var perfWatch = Stopwatch.StartNew();
             JToken idsToken = null;
             if (!string.IsNullOrWhiteSpace(registry) && GetRegistriesData(version) is { } data)
             {
@@ -85,13 +104,30 @@ namespace CBHK.Model.Constant
             }
             if (idsToken is not JArray resultArray)
             {
+                PerfNoteGetIds(registry, perfWatch);
                 return [];
             }
-            return [.. resultArray
+            var perfResult = resultArray
                 .Select(item => item?.ToString())
                 .Where(id => !string.IsNullOrWhiteSpace(id))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(id => id, StringComparer.OrdinalIgnoreCase)];
+                .OrderBy(id => id, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            PerfNoteGetIds(registry, perfWatch);
+            return perfResult;
+        }
+
+        // 单次取用的记账：调用次数 + 累计耗时 + 逐个注册表。没开统计也会走，代价是两次 Stopwatch 读取
+        private static void PerfNoteGetIds(string registry, Stopwatch watch)
+        {
+            watch.Stop();
+            var key = registry ?? "<null>";
+            PerfGetIdsCalls++;
+            PerfGetIdsTicks += watch.ElapsedTicks;
+            PerfGetIdsByRegistry.TryGetValue(key, out int calls);
+            PerfGetIdsByRegistry[key] = calls + 1;
+            PerfGetIdsMsByRegistry.TryGetValue(key, out long ms);
+            PerfGetIdsMsByRegistry[key] = ms + watch.ElapsedMilliseconds;
         }
 
         /// <summary>

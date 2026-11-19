@@ -551,6 +551,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// </summary>
         private void AddItem()
         {
+            if (SolutionViewSelectedItem is null) return;
             if(Directory.Exists(SolutionViewSelectedItem.Uid))
             {
                 AddFileForm addFileForm = new();
@@ -592,6 +593,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// </summary>
         private void AddExistingItems()
         {
+            if (SolutionViewSelectedItem is null) return;
             Microsoft.Win32.OpenFileDialog openFileDialog = new()
             {
                 Filter = "Json文件|*.json;|Mcfunction文件|*.mcfunction;|Mcmeta文件|*.mcmeta;",
@@ -631,6 +633,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// </summary>
         private void AddFolder()
         {
+            if (SolutionViewSelectedItem is null) return;
             if(Directory.Exists(SolutionViewSelectedItem.Uid))
             {
                 string newUid = SolutionViewSelectedItem.Uid + (SolutionViewSelectedItem.Uid.EndsWith('\\') ? "" : "\\") + "新文件夹";
@@ -658,6 +661,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// </summary>
         private void Cut()
         {
+            if (SolutionViewSelectedItem is null) return;
             Clipboard.SetText(SolutionViewSelectedItem.Uid);
             BeCopyOrCutNode = SolutionViewSelectedItem;
             IsCuted = true;
@@ -669,6 +673,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// </summary>
         private void Copy()
         {
+            if (SolutionViewSelectedItem is null) return;
             Clipboard.SetText(SolutionViewSelectedItem.Uid);
             BeCopyOrCutNode = SolutionViewSelectedItem;
         }
@@ -679,6 +684,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// </summary>
         private void Paste()
         {
+            if (SolutionViewSelectedItem is null) return;
             string path = Clipboard.GetText();
             TreeViewItem currentParent;
             if (!Directory.Exists(SolutionViewSelectedItem.Uid) && File.Exists(SolutionViewSelectedItem.Uid) && SolutionViewSelectedItem.Parent is TreeViewItem)
@@ -695,10 +701,9 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
                         #region 操作被剪切的节点
                         if (BeCopyOrCutNode.Parent is TreeViewItem beCutParent)
                             beCutParent.Items.Remove(BeCopyOrCutNode);
-                        else
+                        else if (BeCopyOrCutNode.Parent is TreeView cutParent)
                         {
-                            TreeView parent = BeCopyOrCutNode.Parent as TreeView;
-                            parent.Items.Remove(BeCopyOrCutNode);
+                            cutParent.Items.Remove(BeCopyOrCutNode);
                         }
                         currentParent.Items.Add(BeCopyOrCutNode);
                         #endregion
@@ -741,6 +746,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// </summary>
         private void CopyFullPath()
         {
+            if (SolutionViewSelectedItem is null) return;
             Clipboard.SetText(SolutionViewSelectedItem.Uid);
         }
 
@@ -750,6 +756,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// </summary>
         private void OpenWithResourceManagement()
         {
+            if (SolutionViewSelectedItem is null) return;
             if (File.Exists(SolutionViewSelectedItem.Uid))
                 OpenFolderThenSelectFiles.ExplorerFile(SolutionViewSelectedItem.Uid);
             else
@@ -762,6 +769,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// </summary>
         private void ExcludeFromProject()
         {
+            if (SolutionViewSelectedItem is null) return;
             #region 编辑区对应标签页改为未保存
             foreach (VectorRichTabItem tab in FunctionModifyTabItems)
             {
@@ -772,15 +780,13 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
                 }
             }
             #endregion
-            if (SolutionViewSelectedItem.Parent is not null)
+            if (SolutionViewSelectedItem.Parent is TreeViewItem parent)
             {
-                TreeViewItem parent = SolutionViewSelectedItem.Parent as TreeViewItem;
                 parent.Items.Remove(SolutionViewSelectedItem);
             }
-            else
+            else if (SolutionViewSelectedItem.Parent is TreeView tree)
             {
-                TreeView parent = SolutionViewSelectedItem.Parent as TreeView;
-                parent.Items.Remove(SolutionViewSelectedItem);
+                tree.Items.Remove(SolutionViewSelectedItem);
             }
         }
 
@@ -801,6 +807,7 @@ namespace CBHK.ViewModel.Component.Datapack.EditPage
         /// </summary>
         private void Delete()
         {
+            if (SolutionViewSelectedItem is null) return;
             #region 删除文件或文件夹
             if (Directory.Exists(SolutionViewSelectedItem.Uid))
                 Directory.Delete(SolutionViewSelectedItem.Uid, true);

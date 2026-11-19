@@ -373,12 +373,75 @@ namespace CBHK.Utility.Data.Mcdoc
             }
 
             // 3) 已有条目：按 JSON 顺序；没有归属动态字段的键 → UnknownField
+            // 遍历键的快照、值取当时活的那份：建条目这一路会往这一层 JSON 里落键（union 分支落库、
+            // 派生容器清理都写父集合），直接枚举活集合就是 Collection was modified（现场：icon.components 加成员）。
             if (!isObject) return;
-            foreach (var pair in json.Properties ?? [])
+            var entryKeys = (json.Properties ?? []).Select(pair => pair.Key).ToList();
+            var seenEntries = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var key in entryKeys)
             {
-                if (consumed.Contains(pair.Key)) continue;
-                node.Children.Add(BuildEntry(node, pair.Key, pair.Value, dynamicFields, dynamicSpecs, json, context));
+                if (consumed.Contains(key) || !seenEntries.Add(key)) continue;
+                node.Children.Add(BuildEntry(node, key, json.Get(key), dynamicFields, dynamicSpecs, json, context));
             }
+            // 键集合在扫描期间被加/删过：这一次不抛了，但要把痕迹留下来，下一次现场能直接指认是谁改的
+            if (json.Properties is { } live && live.Count != entryKeys.Count)
+            {
+                McdocWriteTrace.Trace("entry-scan-mutated", "path=" + (node.JsonPath ?? "?")
+                    + " before=" + entryKeys.Count + " after=" + live.Count
+                    + " added=" + string.Join("|", live.Select(pair => pair.Key).Where(key => !entryKeys.Contains(key))));
+            }
+            OrderChildren(node, json, staticFields);
+        }
+
+        /// <summary>
+        /// 行序：文档里已经写了的键按文档自己的顺序；没写的声明字段留在声明位（声明序里它后面第一个已写字段之前）；
+        /// 动态键的"新键"行、条目、声明外的键排在已写字段之后，保持建树时的先后。
+        /// </summary>
+        private static void OrderChildren(McdocTreeNode node, McdocJsonValue json, List<McdocStructField> staticFields)
+        {
+            if (node.Children.Count < 2) return;
+            var positions = new Dictionary<string, int>(StringComparer.Ordinal);
+            if (json is { Kind: McdocJsonKind.Object } && json.Properties is { } properties)
+            {
+                for (var index = 0; index < properties.Count; index++) positions[properties[index].Key] = index;
+            }
+            var presentMax = positions.Count == 0 ? 0d : positions.Values.Max();
+            var declared = staticFields.Select(LiteralName).ToList();
+            var ranks = new Dictionary<McdocTreeNode, double>();
+            for (var index = 0; index < declared.Count; index++)
+            {
+                var name = declared[index];
+                if (name is null) continue;
+                var child = node.Children.FirstOrDefault(item => item is not null
+                    && string.Equals(item.FieldName, name, StringComparison.Ordinal));
+                if (child is null || ranks.ContainsKey(child)) continue;
+                if (positions.TryGetValue(name, out var position))
+                {
+                    ranks[child] = position;
+                    continue;
+                }
+                var next = -1;
+                for (var scan = index + 1; scan < declared.Count; scan++)
+                {
+                    if (declared[scan] is { } sibling && positions.TryGetValue(sibling, out var after))
+                    {
+                        next = after;
+                        break;
+                    }
+                }
+                ranks[child] = next >= 0 ? next - 0.5 : presentMax + 0.5;
+            }
+            for (var index = 0; index < node.Children.Count; index++)
+            {
+                var child = node.Children[index];
+                if (child is null || ranks.ContainsKey(child)) continue;
+                ranks[child] = presentMax + 1d + index;
+            }
+            var ordered = node.Children
+                .OrderBy(item => item is not null && ranks.TryGetValue(item, out var rank) ? rank : double.MaxValue)
+                .ToList();
+            node.Children.Clear();
+            foreach (var item in ordered) node.Children.Add(item);
         }
 
         /// <summary>
@@ -618,7 +681,10 @@ namespace CBHK.Utility.Data.Mcdoc
             // misode UnionHead：可选时下拉首项是 unset（选中即删除该字段）
             // misode UnionHead：{(!selectedType || optional) && <option value=SPECIAL_UNSET>}
             // 已经匹配到成员的可选/必选都不给 unset；必选但没匹配到时要给（并且默认就落在它上面）
-            var canUnset = node.Parent is not null && (!node.IsRequired || node.SelectedUnionMember is null);
+            // 映射条目不给 unset：条目本身就是"这个键在不在"，删掉它的入口是行首的删除标记；
+            // 再摆一个（未设置）等于给同一件事第二个入口（现场：attributes 的 natural_mob_spawns 条目）。
+            var canUnset = node.Parent is not null && !node.IsMapEntry
+                && (!node.IsRequired || node.SelectedUnionMember is null);
             // 空联合（文档里真的声明成 ()）也是合法形态：分支列表可能还没建出来，这里一律给非 null 集合
             var branches = node.UnionTypeNameList ?? new System.Collections.ObjectModel.ObservableCollection<EnumMember>();
             if (canUnset)

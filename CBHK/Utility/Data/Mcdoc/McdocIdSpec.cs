@@ -502,7 +502,6 @@ namespace CBHK.Utility.Data.Mcdoc
             if (options is not { Count: > 0 }) return;
 
             row.UseKeySelect = true;
-            row.KeySpaceOpen = !KeySpaceClosed(keyType);
             row.KeyOptionList = new ObservableCollection<EnumMember>();
             foreach (var option in options)
             {
@@ -526,9 +525,6 @@ namespace CBHK.Utility.Data.Mcdoc
                 row.SelectedKey = selected;
             }
         }
-
-        /// <summary>键空间是否闭合（键只能是枚举成员）：闭合枚举为真，带 #[id] 的注册表键为假。</summary>
-        public static bool KeySpaceClosed(McdocType keyType) => Unwrap(keyType)?.Kind == McdocTypeKind.Enum;
 
         /// <summary>拆掉指令壳（#[id]、#[since] 之类）取里面的形状。</summary>
         private static McdocType Unwrap(McdocType keyType)

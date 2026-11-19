@@ -471,7 +471,9 @@ namespace CBHK.ViewModel.Generator
                 }
                 // 增量优先：只重解析改动落点所在的顶层成员，其余 AST 原样复用；
                 // 跨成员 / 换形状 / 整篇替换由它自己回落成整篇解析
-                if (!jsonEditor.State.TryIncrementalReparse(text)) jsonEditor.State.Reparse();
+                bool incrementalOk;
+                using (McdocWriteTrace.Stage("sync.incremental")) incrementalOk = jsonEditor.State.TryIncrementalReparse(text);
+                if (!incrementalOk) using (McdocWriteTrace.Stage("sync.reparse")) jsonEditor.State.Reparse();
                 newRoot = jsonEditor.State.Root;
             }
 
@@ -620,7 +622,11 @@ namespace CBHK.ViewModel.Generator
                 MdocStatus = "已把 " + replacedInvisible + " 个不可见字符（BOM / 不换行空格 / 全角空格）按空格处理，树按归一后的文本更新";
             }
             // 语法检查用 System.Text.Json（TryParse 里就是它）：错误就只画波浪线 + 状态，树一动不动
-            if (!McdocJsonParser.TryParse(text, out var parsedText, out var syntaxError))
+            McdocJsonValue parsedText;
+            McdocJsonParser.SyntaxError syntaxError;
+            bool parsedOk;
+            using (McdocWriteTrace.Stage("sync.parse")) parsedOk = McdocJsonParser.TryParse(text, out parsedText, out syntaxError);
+            if (!parsedOk)
             {
                 ShowSyntaxError(syntaxError);
                 return false;
@@ -634,7 +640,7 @@ namespace CBHK.ViewModel.Generator
                 return false;
             }
             syntaxOverlay?.Clear();
-            ApplyTextToTree(text, parsedText);
+            using (McdocWriteTrace.Stage("sync.applyText")) ApplyTextToTree(text, parsedText);
             // 消化完最后一次落地：AST 与文本、投影与文档都必须同代
             EnsureTextGeneration();
             EnsureProjectionMatchesDocument();

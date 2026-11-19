@@ -97,6 +97,14 @@ namespace CBHK.Utility.Data.Mcdoc
         private const int MaxPendingChildBuilds = 64;
 
         /// <summary>
+        /// 值变更处理期间再进来的值通知。就地重入会把栈上那一层正在枚举的 JSON 改掉
+        /// （Collection was modified），所以一律排队、闸门外按到达顺序补跑，一条都不丢。
+        /// </summary>
+        private readonly List<McdocTreeNode> pendingValueChanges = [];
+        private const int MaxPendingValueChanges = 64;
+        private bool handlingValueChange;
+
+        /// <summary>
         /// 切支判废删掉的路径。删的是键、行要留在树上，可**必填容器在空值处会被物化补一个空壳**（{} / []）——
         /// 那个壳不是用户写进去的值，留着等于把刚删掉的值又写回一行（行上立刻挂回“值不属于任何一支”）。
         /// 物化之后按这张表把空壳再摘一次；路径上重新有了真值（用户自己填进去）就出表。
@@ -193,7 +201,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 Projector.Reset(Document.ProjectionRoots);
                 return;
             }
-            foreach (var row in Projector.Rows)
+            // 循环体里会 Reset（换掉整张行表）：枚举活集合等于赌"每一条 stale 都刚好是最后一条"
+            foreach (var row in Projector.Rows.ToArray())
             {
                 var path = row.Node?.JsonPath;
                 if (row.Node is null || string.IsNullOrEmpty(path) || path == "$") continue;
@@ -474,7 +483,40 @@ namespace CBHK.Utility.Data.Mcdoc
         public void OnValueChanged(McdocTreeNode node)
         {
             if (node is null || Document is null) return;
+            // 已经有一次值变更在栈上：这一条就地执行会把父层**正在枚举**的 JSON 集合改掉
+            // （现场：icon.components 加成员 → Collection was modified）。排到闸门外按到达顺序补跑。
+            if (handlingValueChange)
+            {
+                if (pendingValueChanges.Count < MaxPendingValueChanges && !pendingValueChanges.Contains(node))
+                {
+                    pendingValueChanges.Add(node);
+                    McdocWriteTrace.Trace("value-queued", "path=" + (node.JsonPath ?? "?"));
+                }
+                return;
+            }
             using var stage = McdocWriteTrace.Stage("pipeline.value");
+            handlingValueChange = true;
+            try
+            {
+                HandleValueChange(node);
+                // 排队期间可能又排进来新的：按到达顺序补跑，补跑自己再排的直接并进这一轮
+                for (var index = 0; index < pendingValueChanges.Count; index++)
+                {
+                    var pending = pendingValueChanges[index];
+                    if (pending is null || !Document.IsAttached(pending)) continue;
+                    HandleValueChange(pending);
+                }
+            }
+            finally
+            {
+                pendingValueChanges.Clear();
+                handlingValueChange = false;
+            }
+        }
+
+        /// <summary>一次值变更的完整一拍：诊断 + 依赖重建 + 子级懒建排空（不许在这里再进 OnValueChanged）。</summary>
+        private void HandleValueChange(McdocTreeNode node)
+        {
             var wasLoading = GetLoading?.Invoke() ?? false;
             var wasRebuilding = Rebuilding;
             Rebuilding = true;

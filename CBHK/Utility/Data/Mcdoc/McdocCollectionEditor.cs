@@ -121,7 +121,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 }
                 // 注意：这里**不能** EnsureChildren —— 物化是在每次 Load 之后跑的，
                 // 顺手展开会重建子树、把用户正在操作的行换成脱挂节点（表现为"选了候选 JSON 没变"）。
-                foreach (var child in McdocPresenterRegistry.Default.Children(node)) Walk(child);
+                // 同 SetExpandedDeep：物化期间写父容器会重建这一层，枚举活集合会被换掉
+                foreach (var child in McdocPresenterRegistry.Default.Children(node).ToArray()) Walk(child);
             }
 
             // 借容器规则（不变量 25）：只有 union 摊平出来的分支层可以往上找容器；
@@ -208,6 +209,9 @@ namespace CBHK.Utility.Data.Mcdoc
                 {
                     if (!ReferenceEquals(map.Properties[i].Value, row.Json)) continue;
                     map.Properties[i] = new KeyValuePair<string, McdocJsonValue>(key, map.Properties[i].Value);
+                    // 改名不换节点：先让整棵子树跟着新键搬路径（展开态按路径补记），
+                    // 随后这次重建才能把用户摊开的子级原样还原回来。
+                    row.RebaseKeyPath(key);
                     NotifyStructure(mapNode);
                     return;
                 }
@@ -223,9 +227,8 @@ namespace CBHK.Utility.Data.Mcdoc
             row.Error = McdocDefaults.IsUnresolved(row.DeclaredType, runtime, self)
                 ? "该键的值类型没解出来（已按 any 的首分支生成默认值）"
                 : null;
-            // 追加位置：紧跟"同一个动态字段的最后一个已有键"之后（该字段还没键时追加到末尾）。
-            var insertIndex = EntryInsertIndex(mapNode, row, map);
-            map.Properties.Insert(insertIndex, new KeyValuePair<string, McdocJsonValue>(key, inserted));
+            // 映射表的键都在声明外（Any / #[id]）：一律追加到末尾，不动已有键的先后。
+            map.Properties.Add(new KeyValuePair<string, McdocJsonValue>(key, inserted));
             // 新条目此刻还没有节点（要等重建）：把"展开"记在它的路径上，重建建出来就是展开的
             McdocExpandState.Set(mapNode.JsonPath + "." + key, true);
             // 记住这个键：占位行重建后"新键"下拉要落到它的下一位成员上，而不是空白
@@ -497,12 +500,12 @@ namespace CBHK.Utility.Data.Mcdoc
                 target.Properties[i] = new KeyValuePair<string, McdocJsonValue>(key, value);
                 return;
             }
-            target.Add(key, value);
+            target.Properties.Add(new KeyValuePair<string, McdocJsonValue>(key, value));
         }
 
         /// <summary>
-        /// 按"树序"写入成员：键已存在就原位替换；缺键时插到"树序上排在它后面、且已经在文档里"的兄弟之前。
-        /// 纯追加会让新键永远跑到末尾，和左侧树的相对顺序对不上。
+        /// 按声明序写入成员：键已存在就原位替换；缺键时插到声明序里它该在的位置（声明外的键之后不插）。
+        /// 成员顺序的口径收在 <see cref="McdocJsonOrder"/>。
         /// </summary>
         public static void SetMemberOrdered(McdocJsonValue target, McdocTreeNode node, McdocJsonValue value)
         {
@@ -514,47 +517,33 @@ namespace CBHK.Utility.Data.Mcdoc
                 target.Properties[i] = new KeyValuePair<string, McdocJsonValue>(node.FieldName, value);
                 return;
             }
-            var insertAt = SchemaInsertIndex(target, node);
-            var siblings = node.Parent?.Children;
-            if (siblings is not null)
-            {
-                var seenSelf = false;
-                foreach (var sibling in siblings)
-                {
-                    if (ReferenceEquals(sibling, node)) { seenSelf = true; continue; }
-                    if (!seenSelf || string.IsNullOrEmpty(sibling?.FieldName)) continue;
-                    var index = target.Properties.FindIndex(pair => pair.Key == sibling.FieldName);
-                    if (index >= 0) { insertAt = index; break; }
-                }
-            }
-            target.Properties.Insert(insertAt, new KeyValuePair<string, McdocJsonValue>(node.FieldName, value));
+            target.Properties.Insert(McdocJsonOrder.InsertIndex(target.Properties, node.FieldName, DeclaredKeyOrder(node)),
+                new KeyValuePair<string, McdocJsonValue>(node.FieldName, value));
         }
 
         /// <summary>
-        /// 树里找不到"排在它后面的已存在兄弟"时的退路：按结构声明序，插到"文档里已有的、声明序在它之后的第一个字段"之前。
-        /// 取不到声明序就返回末尾（追加）。
+        /// 宿主结构的声明序（misode 原文里的字面量字段名）：新键按它找位置。
+        /// 不是结构（映射表 / Any / 派发壳）就返回 null = 追加到末尾。
         /// </summary>
-        private static int SchemaInsertIndex(McdocJsonValue target, McdocTreeNode node)
+        private static IReadOnlyList<string> DeclaredKeyOrder(McdocTreeNode node)
         {
-            var count = target.Properties?.Count ?? 0;
-            var fields = node.Parent?.Type?.Fields;
-            if (fields is null || fields.Count == 0 || string.IsNullOrEmpty(node.FieldName)) return count;
-            var order = fields.Where(field => field?.Name is { Length: > 0 })
-                .Select(field => field.Name).ToList();
-            var self = order.IndexOf(node.FieldName);
-            if (self < 0) return count;
-            for (var i = self + 1; i < order.Count; i++)
+            var host = node?.Parent;
+            var fields = (host?.Type ?? host?.DeclaredType)?.Fields;
+            if (fields is not { Count: > 0 }) return null;
+            var order = new List<string>(fields.Count);
+            foreach (var field in fields)
             {
-                var index = target.Properties.FindIndex(pair => pair.Key == order[i]);
-                if (index >= 0) return index;
+                var name = field?.Name ?? (field?.Key is { Kind: McdocTypeKind.Literal } key ? key.LiteralText() : null);
+                if (!string.IsNullOrEmpty(name)) order.Add(name);
             }
-            return count;
+            return order.Count > 0 ? order : null;
         }
 
         /// <summary>把节点的值写进父对象/数组（已存在则替换，不产生重复键）。</summary>
         public void WriteIntoParent(McdocTreeNode node, McdocJsonValue value)
         {
-            if (node?.Parent is null)
+            if (node is null) return;
+            if (node.Parent is null)
             {
                 // 只有"文档根"才允许替换整份文档：其余没有父级的节点都是脱挂的陈旧节点，
                 // 让它们 ReplaceRoot 会把子树内容顶到根上（删 display 却出现 { title: x }）

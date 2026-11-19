@@ -269,7 +269,7 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>切到缺值的容器分支前，先把这一支的空壳写进文档（详见调用点注释）。</summary>
         private static void SeedContainerBranchValue(McdocTreeNode node, EnumMember option, McdocRuntime runtime)
         {
-            if (node?.Json is not null) return;
+            if (node is null || node.Json is not null) return;
             if (node.Parent?.Json is not { Kind: McdocJsonKind.Object }) return;
             var member = EvaluatedMemberAt(node, option);
             if (member is null) return;

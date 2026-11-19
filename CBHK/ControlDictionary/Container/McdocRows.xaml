@@ -1,4 +1,4 @@
-<ResourceDictionary
+﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
@@ -303,6 +303,7 @@
     <Geometry x:Key="MdocDuplicateGeometry">F1 M 0,0 L 8,0 L 8,8 L 0,8 Z M 4,4 L 12,4 L 12,12 L 4,12 Z</Geometry>
     <Geometry x:Key="MdocRenameGeometry">M 1,11 L 1,13 L 3,13 L 12,4 L 10,2 Z M 11,1 L 13,3 L 12,4 L 10,2 Z</Geometry>
     <Geometry x:Key="MdocTrashGeometry">F1 M 2,2 L 12,2 L 12,4 L 2,4 Z M 3,5 L 11,5 L 10,13 L 4,13 Z</Geometry>
+    <Geometry x:Key="MdocMoreGeometry">F1 M 4,2 L 8,2 L 8,6 L 4,6 Z M 4,7 L 8,7 L 8,11 L 4,11 Z M 4,12 L 8,12 L 8,16 L 4,16 Z</Geometry>
 
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     <data:MdocItemIconConverter x:Key="MdocItemIconConverter" />
@@ -919,6 +920,102 @@
         </StackPanel>
     </DataTemplate>
 
+    <!--
+        行尾溢出菜单（⋮）：不常用的动作收进来，行内只留常驻的那几颗（加入 / 删除这个键 / 铅笔）。
+        菜单内容是 ContentTemplate，Popup 没展开之前不会有按钮实例 —— 以前这一排是 6 颗常驻按钮实例，
+        哪怕 Visibility 全是 Collapsed 也各算一个元素 + 一套绑定（用户点名要清的就是这种占位）。
+        每一项仍绑原来的 Visibility：不在列表里的时候，菜单里只剩用得上的那几条。
+    -->
+    <DataTemplate x:Key="MdocRowOverflowMenu">
+        <Border
+            Padding="4"
+            Background="{DynamicResource CommonBackground}"
+            BorderBrush="{DynamicResource CommonForeground}"
+            BorderThickness="1"
+            CornerRadius="4">
+            <StackPanel Orientation="Vertical">
+                <Button
+                    Command="{Binding OverflowSetDefaultCommand}"
+                    Cursor="Hand"
+                    Style="{StaticResource MdocBareButtonStyle}"
+                    Visibility="{Binding SetDefaultVisibility}">
+                    <TextBlock
+                        Margin="6,3"
+                        FontSize="13"
+                        Foreground="{DynamicResource CommonForeground}"
+                        Text="设默认值" />
+                </Button>
+                <Button
+                    Command="{Binding OverflowMoveUpCommand}"
+                    Cursor="Hand"
+                    Style="{StaticResource MdocBareButtonStyle}"
+                    Visibility="{Binding MoveVisibility}">
+                    <TextBlock
+                        Margin="6,3"
+                        FontSize="13"
+                        Foreground="{DynamicResource CommonForeground}"
+                        Text="上移" />
+                </Button>
+                <Button
+                    Command="{Binding OverflowMoveDownCommand}"
+                    Cursor="Hand"
+                    Style="{StaticResource MdocBareButtonStyle}"
+                    Visibility="{Binding MoveVisibility}">
+                    <TextBlock
+                        Margin="6,3"
+                        FontSize="13"
+                        Foreground="{DynamicResource CommonForeground}"
+                        Text="下移" />
+                </Button>
+                <Button
+                    Command="{Binding OverflowDuplicateCommand}"
+                    Cursor="Hand"
+                    Style="{StaticResource MdocBareButtonStyle}"
+                    Visibility="{Binding DuplicateVisibility}">
+                    <TextBlock
+                        Margin="6,3"
+                        FontSize="13"
+                        Foreground="{DynamicResource CommonForeground}"
+                        Text="复制这一项" />
+                </Button>
+                <Button
+                    Command="{Binding OverflowRemoveSelfCommand}"
+                    Cursor="Hand"
+                    Style="{StaticResource MdocBareButtonStyle}"
+                    Visibility="{Binding RemoveSelfVisibility}">
+                    <TextBlock
+                        Margin="6,3"
+                        FontSize="13"
+                        Foreground="{DynamicResource CommonForeground}"
+                        Text="删除这一项" />
+                </Button>
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="MdocRowOverflow">
+        <Grid x:Name="OverflowAnchor">
+            <VectorButton:VectorFlatIconButton
+                Width="34"
+                Command="{Binding OverflowButtonCommand}"
+                Icon="{Binding OverflowButtonIcon}"
+                IconBrush="{DynamicResource CommonForeground}"
+                IconHeight="15"
+                IconMargin="5"
+                IconWidth="15"
+                Style="{DynamicResource VectorFlatIconButtonStyle}"
+                ToolTip="{Binding OverflowButtonToolTip}"
+                Visibility="{Binding OverflowVisibility}" />
+            <Popup
+                IsOpen="{Binding IsOverflowOpen, Mode=TwoWay}"
+                Placement="Bottom"
+                PlacementTarget="{Binding ElementName=OverflowAnchor}"
+                StaysOpen="False">
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource MdocRowOverflowMenu}" />
+            </Popup>
+        </Grid>
+    </DataTemplate>
+
     <DataTemplate x:Key="McdocAddTailRow">
         <Grid
             MinHeight="38"
@@ -1034,32 +1131,20 @@
                 Grid.Column="4"
                 Margin="{Binding ActionGroupMargin}"
                 Style="{StaticResource McdocActionGroupStyle}">
+                <!--  列表行：行内最前面的插入入口（列表头部 ⊕ 插到 0 号位，尾部追加在最后一行）  -->
                 <VectorButton:VectorFlatIconButton
                     Width="34"
                     Margin="0,0,4,0"
-                    Command="{Binding AddTopCommand}"
+                    Command="{Binding Node.AddItemTopCommand}"
                     Icon="{DynamicResource TreeNodePlusGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
                     IconHeight="15"
                     IconMargin="5"
                     IconWidth="15"
                     Style="{DynamicResource VectorFlatIconButtonStyle}"
-                    ToolTip="在顶部新增"
-                    Visibility="{Binding ListAddTopVisibility}" />
-                <!--  misode 的列表行只有一个 add（add_top）；追加到尾部走 AddBottomCommand，不占行的按钮位  -->
-                <VectorButton:VectorFlatIconButton
-                    Width="34"
-                    Margin="0,0,4,0"
-                    Command="{Binding SetDefaultCommand}"
-                    Icon="{DynamicResource TreeNodePlusGeometry}"
-                    IconBrush="{DynamicResource CommonForeground}"
-                    IconHeight="15"
-                    IconMargin="5"
-                    IconWidth="15"
-                    Style="{DynamicResource VectorFlatIconButtonStyle}"
-                    ToolTip="设默认值"
-                    Visibility="{Binding SetDefaultVisibility}" />
-                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource MdocListItemActions}" />
+                    ToolTip="在最前面插入一条"
+                    Visibility="{Binding ListButtonsVisibility}" />
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource MdocRowOverflow}" />
                 <!--  可选且编辑器自己清不空（容器 / 取色器 / Raw）：行尾只留这一个删除入口  -->
                 <VectorButton:VectorFlatIconButton
                     Width="34"
@@ -1082,6 +1167,16 @@
                     Text="!"
                     ToolTip="当前版本不存在该节点（版本更迭后遗留的键）：内容不解析、不渲染，可点行首按钮删除"
                     Visibility="{Binding UnknownBadgeVisibility}" />
+                <!--  必填字段还没有值：红色感叹号放在整行最右侧  -->
+                <TextBlock
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="13"
+                    FontWeight="Bold"
+                    Foreground="#D9534F"
+                    Text="!"
+                    ToolTip="必填字段还没有值：补上之后标记自己消失"
+                    Visibility="{Binding RequiredBadgeVisibility}" />
             </StackPanel>
         </Grid>
     </DataTemplate>
@@ -1135,16 +1230,26 @@
                 <VectorButton:VectorFlatIconButton
                     Width="34"
                     Margin="0,0,4,0"
-                    Command="{Binding Node.AddItemCommand}"
+                    Command="{Binding Node.AddItemTopCommand}"
                     Icon="{DynamicResource TreeNodePlusGeometry}"
                     IconBrush="{DynamicResource CommonForeground}"
                     IconHeight="15"
                     IconMargin="5"
                     IconWidth="15"
                     Style="{DynamicResource VectorFlatIconButtonStyle}"
-                    ToolTip="新增"
+                    ToolTip="在最前面插入一条"
                     Visibility="{Binding ListButtonsVisibility}" />
-                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource MdocListItemActions}" />
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource MdocRowOverflow}" />
+                <!--  必填字段还没有值：红色感叹号放在整行最右侧  -->
+                <TextBlock
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="13"
+                    FontWeight="Bold"
+                    Foreground="#D9534F"
+                    Text="!"
+                    ToolTip="必填字段还没有值：补上之后标记自己消失"
+                    Visibility="{Binding RequiredBadgeVisibility}" />
             </StackPanel>
         </Grid>
     </DataTemplate>
@@ -1251,17 +1356,7 @@
                 Margin="{Binding ActionGroupMargin}"
                 Style="{StaticResource McdocActionGroupStyle}">
                 <!--  any 行的 list 分支：⊕ 加一项（CanAddTop 只在"值是数组"时为真，别的条目行不显示）  -->
-                <VectorButton:VectorFlatIconButton
-                    Width="34"
-                    Command="{Binding AddTopCommand}"
-                    Icon="{DynamicResource TreeNodePlusGeometry}"
-                    IconBrush="{DynamicResource CommonForeground}"
-                    IconHeight="15"
-                    IconMargin="5"
-                    IconWidth="15"
-                    Style="{DynamicResource VectorFlatIconButtonStyle}"
-                    ToolTip="添加一项"
-                    Visibility="{Binding ListAddTopVisibility}" />
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource MdocRowOverflow}" />
                 <VectorButton:VectorFlatIconButton
                     Width="34"
                     Command="{Binding Node.AddEntryCommand}"
@@ -1285,6 +1380,16 @@
                     Style="{DynamicResource VectorFlatIconButtonStyle}"
                     ToolTip="重命名这个键"
                     Visibility="{Binding RenameVisibility}" />
+                <!--  必填字段还没有值：红色感叹号放在整行最右侧  -->
+                <TextBlock
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="13"
+                    FontWeight="Bold"
+                    Foreground="#D9534F"
+                    Text="!"
+                    ToolTip="必填字段还没有值：补上之后标记自己消失"
+                    Visibility="{Binding RequiredBadgeVisibility}" />
                 <!--  条目删除已挪到行首（MdocRowMarkerTemplate）：同一行只留一个删除入口  -->
             </StackPanel>
         </Grid>

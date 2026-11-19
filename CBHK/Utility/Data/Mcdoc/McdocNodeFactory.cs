@@ -94,7 +94,10 @@ namespace CBHK.Utility.Data.Mcdoc
                 var child = node.Children[index];
                 if (child is null || !child.IsUnknownField) continue;
                 node.Children.RemoveAt(index);
-                if (!string.IsNullOrEmpty(child.FieldName)) (undeclared ??= new List<string>(2)).Insert(0, child.FieldName);
+                // 载入时就存在的版本外键不进名单：父行那句"这些键当前版本不存在"会一次点出一串，
+                // 用户看到的是满屏黄字，而不是"我刚切分支切掉了什么"
+                if (!child.IsQuietUnknown && !string.IsNullOrEmpty(child.FieldName))
+                    (undeclared ??= new List<string>(2)).Insert(0, child.FieldName);
                 if (!string.IsNullOrEmpty(child.JsonPath))
                 {
                     for (var existing = PreservedGroup.Children.Count - 1; existing >= 0; existing--)
@@ -465,6 +468,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 FieldName = name,
                 // 未声明键要在 Prepare / 建子级之前就打上标记：表现器与工厂都按它改道
                 IsUnknownField = unknownField,
+                // 载入时就存在的版本外键静默：文档开着就有的一堆遗留键不该在每行挂黄点
+                IsQuietUnknown = unknownField && (runtime?.QuietUnknownPaths?.Contains(jsonPath ?? "") ?? false),
                 DeclaredType = declaredType,
                 Type = type,
                 ValueNode = self,
@@ -530,8 +535,18 @@ namespace CBHK.Utility.Data.Mcdoc
             // 否则导入大文件会变成"文件里有、树里没有"的静默丢数据
             if (json is null && !budget.TryConsume()) return node;
 
-            // 类型级环检测：按**声明类型**判环（simplify 每次都造新对象，按求值后类型判必然失效）
-            if (declaredType is not null && visiting.Contains(declaredType)) return node;
+            // 类型级环检测：按**声明类型**判环（simplify 每次都造新对象，按求值后类型判必然失效）。
+            // 只兜"缺省值递归合成"（json == null）：文档里真有值时递归深度由 JSON 自己限住，
+            // 谓词树 terms.terms.terms… 是合法的递归数据模型，按声明类型判环会在第 3 层把真数据当环，
+            // 行上只剩一个空下拉、连展开箭头都不给（现场 26.3 advancement 的 criteria.*.conditions）。
+            // 联合也不吃这道闸：缺值（json == null）的联合不会递归（不挑分支就不建子树），
+            // 但它的分支候选是"行的状态"——吞掉候选，用户连想填哪个分支都选不了。
+            if (json is null && declaredType is not null && type?.Kind != McdocTypeKind.Union
+                && visiting.Contains(declaredType))
+            {
+                if (McdocWriteTrace.Enabled) McdocWriteTrace.Trace("type-cycle", "path=" + (jsonPath ?? "?") + " declared=" + declaredType.Kind);
+                return node;
+            }
             if (declaredType is not null) visiting.Add(declaredType);
             try
             {

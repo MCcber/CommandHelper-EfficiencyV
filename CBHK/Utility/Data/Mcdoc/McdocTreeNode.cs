@@ -184,13 +184,6 @@ namespace CBHK.Utility.Data.Mcdoc
         /// <summary>键类型带 #[id]、或键是闭合枚举（[MobCategory]）时，键有候选表可挑。</summary>
         public bool UseKeySelect { get; set; }
 
-        /// <summary>
-        /// 键空间是开放的（<c>#[id="entity"] string</c>：注册表外的键也合法）。这种键的条目行不吃候选下拉 ——
-        /// 键已经有了，下拉只是给"换键"再开一个入口；键名以只读标签显示。加新键的占位行仍用下拉。
-        /// 闭合枚举键（[MobCategory]）反之：成员就那么多，条目行留着下拉换成员。
-        /// </summary>
-        public bool KeySpaceOpen { get; set; }
-
         /// <summary>供模板绑定的反向属性（文本框显隐用，省掉一个取反转换器）。</summary>
         public bool UseKeyText => !UseKeySelect;
 
@@ -402,6 +395,12 @@ namespace CBHK.Utility.Data.Mcdoc
         public bool IsUnknownField { get; set; }
 
         /// <summary>
+        /// 载入时就已存在的版本外键：仍然进保留区、仍然只保留一行，但行尾不挂黄色感叹号
+        /// （父行"这些键当前版本不存在"的名单也不点它的名）。
+        /// </summary>
+        public bool IsQuietUnknown { get; set; }
+
+        /// <summary>
         /// 本节点 JSON 里被搬进保留区的键名（当前版本不存在的那几个）。保留区只报总数，
         /// 行上必须说清"是这一层的哪些键"：26.3 把条件对象从 condition 键换成 type 键，
         /// 老形状整层掉进保留区后，用户看到的只是子级凭空少了一半 + 一个必填项报错。
@@ -414,6 +413,38 @@ namespace CBHK.Utility.Data.Mcdoc
         /// union、分支本体不进 SelectedUnionChildren），名单也记在分支节点 —— 取不到就顺着分支找。
         /// </summary>
         internal List<string> EffectiveUndeclaredKeys => UndeclaredKeys ?? SelectedUnionBranchNode?.UndeclaredKeys;
+
+        /// <summary>
+        /// 条目改名：把自己与**已经建好**的子树搬到新键的路径上，并把展开态按新路径补记一份。
+        /// 改名之后容器一定会重建（值类型可能按 %key 求值），重建会换掉节点实例、工厂按 JsonPath
+        /// 回读展开态 —— 路径不搬，用户手上摊开的子级就全折起来了（现场：铅笔改名回车后子结构折叠）。
+        /// 没建出来的后代不用管：它们将来按父级的新路径现算。
+        /// </summary>
+        internal void RebaseKeyPath(string newKey)
+        {
+            if (string.IsNullOrEmpty(newKey)) return;
+            var oldPath = JsonPath ?? "$";
+            var cut = oldPath.LastIndexOf('.');
+            var oldSuffix = cut >= 0 ? oldPath[(cut + 1)..] : oldPath;
+            FieldName = newKey;
+            Key = newKey;
+            if (string.Equals(oldSuffix, newKey, StringComparison.Ordinal)) return;
+            var newPath = (cut >= 0 ? oldPath[..cut] : oldPath) + "." + newKey;
+            RebasePathPrefix(oldPath, newPath);
+        }
+
+        private void RebasePathPrefix(string oldPrefix, string newPrefix)
+        {
+            var path = JsonPath ?? string.Empty;
+            if (path.Length >= oldPrefix.Length && path.StartsWith(oldPrefix, StringComparison.Ordinal))
+            {
+                JsonPath = newPrefix + path[oldPrefix.Length..];
+            }
+            McdocExpandState.Set(JsonPath ?? string.Empty, IsExpanded);
+            foreach (var child in Children) child?.RebasePathPrefix(oldPrefix, newPrefix);
+            foreach (var child in Items) child?.RebasePathPrefix(oldPrefix, newPrefix);
+            foreach (var child in SelectedUnionChildren) child?.RebasePathPrefix(oldPrefix, newPrefix);
+        }
 
         /// <summary>
         /// 保留区合成容器：当前版本不存在的键全都挂在这一个虚拟节点下（不在 Nodes、也不在 rootNode 里），

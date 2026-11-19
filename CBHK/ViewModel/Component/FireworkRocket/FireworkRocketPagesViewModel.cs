@@ -544,15 +544,15 @@ namespace CBHK.ViewModel.Component.FireworkRocket
                 JToken lifeTime = null;
                 JToken shotAtAngle = null;
 
-                if (Explosions.Count > 0)
+                if (Explosions is { Count: > 0 })
                     Explosion = Explosions[0] as JObject;
 
-                colors = Explosion.SelectToken("Colors") as JArray;
-                fadeColors = Explosion.SelectToken("FadeColorList") as JArray;
+                colors = Explosion?.SelectToken("Colors") as JArray;
+                fadeColors = Explosion?.SelectToken("FadeColorList") as JArray;
                 flight = ExternallyReadEntityData.SelectToken("itemView.Flight");
-                flicker = Explosion.SelectToken("Flicker");
-                trail = Explosion.SelectToken("Trail");
-                type = Explosion.SelectToken("Type");
+                flicker = Explosion?.SelectToken("Flicker");
+                trail = Explosion?.SelectToken("Trail");
+                type = Explosion?.SelectToken("Type");
                 life = ExternallyReadEntityData.SelectToken("itemView.Life");
                 lifeTime = ExternallyReadEntityData.SelectToken("itemView.LifeTime");
                 shotAtAngle = ExternallyReadEntityData.SelectToken("itemView.ShotAtAngle");
@@ -1206,9 +1206,10 @@ namespace CBHK.ViewModel.Component.FireworkRocket
         /// </summary>
         private void SelectedAllStructureColor(FrameworkElement obj)
         {
+            if (StructureColorGrid is null) return;
             foreach (var item in StructureColorGrid.Children)
             {
-                Button button = item as Button;
+                if (item is not Button button) continue;
                 StructureColor_Clicked(button, null);
             }
         }

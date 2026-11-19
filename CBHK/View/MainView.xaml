@@ -14,7 +14,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:utility="clr-namespace:CBHK.Utility.Visual"
-    Title="CommandHelper-EfficiencyV v26.4Preview2"
+    Title="CommandHelper-EfficiencyV v26.4Preview3"
     Width="1020"
     Height="800"
     MinWidth="1020"

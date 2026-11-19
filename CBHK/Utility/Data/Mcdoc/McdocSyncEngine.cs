@@ -48,6 +48,8 @@ namespace CBHK.Utility.Data.Mcdoc
             stats = new McdocSyncStats();
             if (document is null || newRoot is null) return false;
 
+            // 模型与文本同为文本序（两边都不排序），不需要归一：纯键序差异不会再被当成重排。
+
             // 顶层行没有可挂的父行（摊平后合成根不在 Rows 里）：任何一次同步都要记下"上一代顶层列表"，
             // 否则顶层字段被重建时 RefreshAround 必然失败 → 整表重投影（判据：结构变化也要 0 次）
             stats.PreviousTopLevel = document.Nodes.ToList();
