@@ -30,7 +30,9 @@ dotnet build CBHK.Probe\CBHK.Probe.csproj -c Debug /p:SkipComInterop=true `
 | `--check-trace <日志>` | 校验 `%TEMP%\mcdoc-trace.log` 的写入轨迹 |
 | `--render <目录>` / `--render-dimension <目录>` | 离屏渲染整棵树出 PNG（像素核对用） |
 | `--render-window <目录>` | 真窗口首帧计时：分档消融 + 视觉节点普查（见下） |
+| `--render-variant <目录> [ItemID]` | 数据包变种资源页整窗出图（可选停在哪一项） |
 | `--virtualization <目录>` | 大行数下量「实到容器数 / 视觉节点数」，验虚拟化与 Recycling |
+| `--render-combobox-popup <目录>` | 下拉弹层成员区四边边距剖面 + 放大裁图；四条边不同构即判失败 |
 | `--perf item` | 物品页建页耗时 |
 
 ## 性能回归怎么读

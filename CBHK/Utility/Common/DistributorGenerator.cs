@@ -33,6 +33,10 @@ namespace CBHK.Utility
             commandDictionary = new()
             {
                 { "Advancement",StartAdvancementGeneratorCommand },
+                { "BannerPattern", StartBannerPatternGeneratorCommand },
+                { "BlockSoundSet", StartBlockSoundSetGeneratorCommand },
+                { "BlockTransformer", StartBlockTransformerGeneratorCommand },
+                { "VariantResource", StartVariantResourceGeneratorCommand },
                 { "Ooc" , StartOnlyOneCommandGeneratorCommand},
                 { "DamageType" , StartDamageTypeGeneratorCommand},
                 { "Datapack" , StartDatapacksGeneratorCommand},
@@ -52,7 +56,27 @@ namespace CBHK.Utility
                 { "Entity" , StartEntitiesGeneratorCommand},
                 { "Sign" , StartSignCommand},
                 { "Dimension" , StartDimensionGeneratorCommand},
-                { "DimensionType" , StartDimensionTypeGeneratorCommand}
+                { "DimensionType" , StartDimensionTypeGeneratorCommand },
+                { "BlockStateProvider", StartBlockStateProviderGeneratorCommand },
+                { "ContextFloatProvider", StartContextFloatProviderGeneratorCommand },
+                { "ContextIntProvider", StartContextIntProviderGeneratorCommand },
+                { "DecoratedPotPattern", StartDecoratedPotPatternGeneratorCommand },
+                { "Dialog", StartDialogGeneratorCommand },
+                { "Enchantment", StartEnchantmentGeneratorCommand },
+                { "EnchantmentProvider", StartEnchantmentProviderGeneratorCommand },
+                { "Instrument", StartInstrumentGeneratorCommand },
+                { "JukeboxSong", StartJukeboxSongGeneratorCommand },
+                { "SlotSource", StartSlotSourceGeneratorCommand },
+                { "SulfurCubeArchetype", StartSulfurCubeArchetypeGeneratorCommand },
+                { "TestEnvironment", StartTestEnvironmentGeneratorCommand },
+                { "TestInstance", StartTestInstanceGeneratorCommand },
+                { "Timeline", StartTimelineGeneratorCommand },
+                { "TradeSet", StartTradeSetGeneratorCommand },
+                { "TrialSpawner", StartTrialSpawnerGeneratorCommand },
+                { "TrimMaterial", StartTrimMaterialGeneratorCommand },
+                { "TrimPattern", StartTrimPatternGeneratorCommand },
+                { "VillagerTrade", StartVillagerTradeGeneratorCommand },
+                { "WorldClock", StartWorldClockGeneratorCommand },
             };
         }
 
@@ -94,6 +118,33 @@ namespace CBHK.Utility
             SetCBHKState();
             advancementView.Show();
             advancementView.Focus();
+        }
+
+        [RelayCommand]
+        private void StartBannerPatternGenerator()
+        {
+            BannerPatternView bannerPatternView = container.Resolve<BannerPatternView>();
+            SetCBHKState();
+            bannerPatternView.Show();
+            bannerPatternView.Focus();
+        }
+
+        [RelayCommand]
+        public void StartBlockSoundSetGenerator()
+        {
+            BlockSoundSetView blockSoundSetView = container.Resolve<BlockSoundSetView>();
+            SetCBHKState();
+            blockSoundSetView.Show();
+            blockSoundSetView.Focus();
+        }
+
+        [RelayCommand]
+        public void StartBlockTransformerGenerator()
+        {
+            BlockTransformerView blockTransformerView = container.Resolve<BlockTransformerView>();
+            SetCBHKState();
+            blockTransformerView.Show();
+            blockTransformerView.Focus();
         }
 
         [RelayCommand]
@@ -335,6 +386,259 @@ namespace CBHK.Utility
             dimensionType.Focus();
             SetCBHKState();
         }
+        [RelayCommand]
+        /// <summary>
+        /// 启动方块状态提供商编辑器
+        /// </summary>
+        private void StartBlockStateProviderGenerator()
+        {
+            BlockStateProviderView blockStateProviderView = container.Resolve<BlockStateProviderView>();
+            SetCBHKState();
+            blockStateProviderView.Show();
+            blockStateProviderView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动数据包变种资源编辑器
+        /// </summary>
+        private void StartVariantResourceGenerator()
+        {
+            VariantResourceView variantResourceView = container.Resolve<VariantResourceView>();
+            SetCBHKState();
+            variantResourceView.Show();
+            variantResourceView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动浮点数数值提供器编辑器
+        /// </summary>
+        private void StartContextFloatProviderGenerator()
+        {
+            ContextFloatProviderView contextFloatProviderView = container.Resolve<ContextFloatProviderView>();
+            SetCBHKState();
+            contextFloatProviderView.Show();
+            contextFloatProviderView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动整数数值提供器编辑器
+        /// </summary>
+        private void StartContextIntProviderGenerator()
+        {
+            ContextIntProviderView contextIntProviderView = container.Resolve<ContextIntProviderView>();
+            SetCBHKState();
+            contextIntProviderView.Show();
+            contextIntProviderView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动饰纹陶罐图案编辑器
+        /// </summary>
+        private void StartDecoratedPotPatternGenerator()
+        {
+            DecoratedPotPatternView decoratedPotPatternView = container.Resolve<DecoratedPotPatternView>();
+            SetCBHKState();
+            decoratedPotPatternView.Show();
+            decoratedPotPatternView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动对话框编辑器
+        /// </summary>
+        private void StartDialogGenerator()
+        {
+            DialogView dialogView = container.Resolve<DialogView>();
+            SetCBHKState();
+            dialogView.Show();
+            dialogView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动魔咒编辑器
+        /// </summary>
+        private void StartEnchantmentGenerator()
+        {
+            EnchantmentView enchantmentView = container.Resolve<EnchantmentView>();
+            SetCBHKState();
+            enchantmentView.Show();
+            enchantmentView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动魔咒提供器编辑器
+        /// </summary>
+        private void StartEnchantmentProviderGenerator()
+        {
+            EnchantmentProviderView enchantmentProviderView = container.Resolve<EnchantmentProviderView>();
+            SetCBHKState();
+            enchantmentProviderView.Show();
+            enchantmentProviderView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动山羊角乐器编辑器
+        /// </summary>
+        private void StartInstrumentGenerator()
+        {
+            InstrumentView instrumentView = container.Resolve<InstrumentView>();
+            SetCBHKState();
+            instrumentView.Show();
+            instrumentView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动唱片机曲目编辑器
+        /// </summary>
+        private void StartJukeboxSongGenerator()
+        {
+            JukeboxSongView jukeboxSongView = container.Resolve<JukeboxSongView>();
+            SetCBHKState();
+            jukeboxSongView.Show();
+            jukeboxSongView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动槽位源编辑器
+        /// </summary>
+        private void StartSlotSourceGenerator()
+        {
+            SlotSourceView slotSourceView = container.Resolve<SlotSourceView>();
+            SetCBHKState();
+            slotSourceView.Show();
+            slotSourceView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动硫方怪原型编辑器
+        /// </summary>
+        private void StartSulfurCubeArchetypeGenerator()
+        {
+            SulfurCubeArchetypeView sulfurCubeArchetypeView = container.Resolve<SulfurCubeArchetypeView>();
+            SetCBHKState();
+            sulfurCubeArchetypeView.Show();
+            sulfurCubeArchetypeView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动测试环境编辑器
+        /// </summary>
+        private void StartTestEnvironmentGenerator()
+        {
+            TestEnvironmentView testEnvironmentView = container.Resolve<TestEnvironmentView>();
+            SetCBHKState();
+            testEnvironmentView.Show();
+            testEnvironmentView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动测试实例编辑器
+        /// </summary>
+        private void StartTestInstanceGenerator()
+        {
+            TestInstanceView testInstanceView = container.Resolve<TestInstanceView>();
+            SetCBHKState();
+            testInstanceView.Show();
+            testInstanceView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动时间线编辑器
+        /// </summary>
+        private void StartTimelineGenerator()
+        {
+            TimelineView timelineView = container.Resolve<TimelineView>();
+            SetCBHKState();
+            timelineView.Show();
+            timelineView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动交易集编辑器
+        /// </summary>
+        private void StartTradeSetGenerator()
+        {
+            TradeSetView tradeSetView = container.Resolve<TradeSetView>();
+            SetCBHKState();
+            tradeSetView.Show();
+            tradeSetView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动试炼刷怪笼配置编辑器
+        /// </summary>
+        private void StartTrialSpawnerGenerator()
+        {
+            TrialSpawnerView trialSpawnerView = container.Resolve<TrialSpawnerView>();
+            SetCBHKState();
+            trialSpawnerView.Show();
+            trialSpawnerView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动纹饰材料编辑器
+        /// </summary>
+        private void StartTrimMaterialGenerator()
+        {
+            TrimMaterialView trimMaterialView = container.Resolve<TrimMaterialView>();
+            SetCBHKState();
+            trimMaterialView.Show();
+            trimMaterialView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动纹饰图案编辑器
+        /// </summary>
+        private void StartTrimPatternGenerator()
+        {
+            TrimPatternView trimPatternView = container.Resolve<TrimPatternView>();
+            SetCBHKState();
+            trimPatternView.Show();
+            trimPatternView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动村民交易编辑器
+        /// </summary>
+        private void StartVillagerTradeGenerator()
+        {
+            VillagerTradeView villagerTradeView = container.Resolve<VillagerTradeView>();
+            SetCBHKState();
+            villagerTradeView.Show();
+            villagerTradeView.Focus();
+        }
+
+        [RelayCommand]
+        /// <summary>
+        /// 启动世界时钟编辑器
+        /// </summary>
+        private void StartWorldClockGenerator()
+        {
+            WorldClockView worldClockView = container.Resolve<WorldClockView>();
+            SetCBHKState();
+            worldClockView.Show();
+            worldClockView.Focus();
+        }
+
         #endregion
+
     }
 }

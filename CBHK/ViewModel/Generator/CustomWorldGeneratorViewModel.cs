@@ -9,6 +9,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace CBHK.ViewModel.Generator
 {
@@ -21,6 +23,10 @@ namespace CBHK.ViewModel.Generator
 
         private Resource resource = resource;
         private string generatorPrefixString = "worldgen/";
+
+        /// <summary>下拉成员图标的内嵌资源目录（与主面板生成器图标同目录，文件名 = 成员 Id）。</summary>
+        private const string GeneratorIconBasePath =
+            "pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/";
         #endregion
 
         #region Property
@@ -30,7 +36,7 @@ namespace CBHK.ViewModel.Generator
         /// 绑定求值之后再往集合里 Add 不会让转换器重跑 —— 在 Loaded 里填的表现就是"下拉永远没有成员"。
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<VectorTextComboBoxItem> generatorList = LoadGeneratorList();
+        private ObservableCollection<VectorIconTextComboBoxItem> generatorList = LoadGeneratorList();
 
         [ObservableProperty]
         private VectorTextComboBoxItem selectedGenerator = new();
@@ -104,9 +110,9 @@ namespace CBHK.ViewModel.Generator
         /// <summary>
         /// 扫配置目录得到候选（跳过 Data / Image 两个资源目录）。
         /// </summary>
-        private static ObservableCollection<VectorTextComboBoxItem> LoadGeneratorList()
+        private static ObservableCollection<VectorIconTextComboBoxItem> LoadGeneratorList()
         {
-            ObservableCollection<VectorTextComboBoxItem> result = [];
+            ObservableCollection<VectorIconTextComboBoxItem> result = [];
             if (!Directory.Exists(GeneratorFolderPath))
             {
                 return result;
@@ -120,14 +126,32 @@ namespace CBHK.ViewModel.Generator
                 {
                     continue;
                 }
-                result.Add(new VectorTextComboBoxItem
+                result.Add(new VectorIconTextComboBoxItem
                 {
                     Text = name,
-                    ItemID = name
+                    ItemID = name,
+                    Image = LoadGeneratorIcon(name)
                 });
             }
             return result;
-        } 
+        }
+
+        /// <summary>按成员 Id 加载内嵌图标；缺图或加载失败时静默回退为空图标。</summary>
+        private static ImageSource LoadGeneratorIcon(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return null;
+            }
+            try
+            {
+                return new BitmapImage(new Uri(GeneratorIconBasePath + id + ".png", UriKind.Absolute));
+            }
+            catch
+            {
+                return null;
+            }
+        }
         #endregion
     }
 }

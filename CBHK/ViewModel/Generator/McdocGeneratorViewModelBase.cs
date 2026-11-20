@@ -1,4 +1,5 @@
 using CBHK.Model.Constant;
+using CBHK.Model.Data;
 using CBHK.Utility.Data;
 using CBHK.Utility.Data.JsonText;
 using CBHK.Utility.Data.Mcdoc;
@@ -226,6 +227,7 @@ namespace CBHK.ViewModel.Generator
                 }
             }
             versions.Sort((left, right) => Version.Parse(right).CompareTo(Version.Parse(left)));
+            versions = NarrowByEntryVersionRange(versions);
             // 默认版本跟注册表走：写死 1.21 会把 #[since="1.21.x"] 的字段静默隐掉（页面看起来"少字段"）
             var desired = SelectedGameVersionOption?.Name;
             if (versions.Count > 0 && (string.IsNullOrEmpty(desired) || !versions.Contains(desired)))
@@ -253,12 +255,88 @@ namespace CBHK.ViewModel.Generator
         }
 
         /// <summary>
+        /// 按当前入口重算版本下拉。基类只在会话重置时填一次（见 ResetMcdocSession 的注释），
+        /// 一页收多个 dispatcher 入口时（数据包变种资源）各入口的 #[since] 不同，页面切入口后要自己再算一遍。
+        /// </summary>
+        protected void RefreshGameVersionOptions() => FillGameVersionOptions();
+
+        /// <summary>
+        /// 入口 dispatch 语句上的版本注解（#[since] / #[until]）：banner_pattern 就是 #[since=1.20.5]，
+        /// 更早的版本里这条 dispatch 根本不存在 —— 下拉里摆着老版本，只会让人选出一个整页 any 的版本。
+        /// 返回 (Since, Until)，null 表示该侧无约束；入口不是 dispatcher、或符号表还没到时返回 (null, null)。
+        /// </summary>
+        private (string Since, string Until) ReadEntryVersionRange()
+        {
+            var root = CurrentRootType();
+            var symbols = sessionSymbols ?? resource?.McdocTypes;
+            if (root is null || root.Kind != McdocTypeKind.Dispatcher || symbols is null) return (null, null);
+            var index = root.Indices?.FirstOrDefault(item => item is { Kind: McdocIndexKind.Static })?.Value;
+            if (string.IsNullOrEmpty(index)) return (null, null);
+            // 不传版本：这里要的是 dispatch 语句自己的注解，成员表本身不带版本过滤
+            var members = symbols.GetDispatcherMembers(root.Registry, null);
+            if (members is null || !members.TryGetValue(index, out var member) || member?.Attributes is null) return (null, null);
+            string since = null;
+            string until = null;
+            foreach (var attribute in member.Attributes)
+            {
+                if (attribute is null) continue;
+                if (string.Equals(attribute.Name, "since", StringComparison.Ordinal)) since = attribute.Value?.AsString();
+                else if (string.Equals(attribute.Name, "until", StringComparison.Ordinal)) until = attribute.Value?.AsString();
+            }
+            return (since, until);
+        }
+
+        /// <summary>mcdoc 的口径：since 含下限、until 不含上限（与 McdocAttributeRegistry 的过滤器同一套比较）。</summary>
+        private static bool IsInEntryVersionRange(string version, string since, string until)
+            => (string.IsNullOrEmpty(since) || McdocAttributeRegistry.CompareVersions(version, since) >= 0)
+            && (string.IsNullOrEmpty(until) || McdocAttributeRegistry.CompareVersions(version, until) < 0);
+
+        /// <summary>
+        /// 版本下拉收窄到入口 dispatch 的版本区间：区间内一个版本都没有时原样返回
+        /// （空下拉比多摆几个版本更糟 —— 宁可让用户自己看见这一版没有这个入口）。
+        /// </summary>
+        private List<string> NarrowByEntryVersionRange(List<string> versions)
+        {
+            if (versions.Count == 0) return versions;
+            var (since, until) = ReadEntryVersionRange();
+            if (string.IsNullOrEmpty(since) && string.IsNullOrEmpty(until)) return versions;
+            var kept = versions.Where(version => IsInEntryVersionRange(version, since, until)).ToList();
+            if (kept.Count == 0)
+            {
+                McdocWriteTrace.Trace("entry-version-range",
+                    "entry=" + EntryId + " since=" + since + " until=" + until + " kept=0 原样保留");
+                return versions;
+            }
+            McdocWriteTrace.Trace("entry-version-range",
+                "entry=" + EntryId + " since=" + since + " until=" + until
+                + " kept=" + kept.Count + " 首=" + kept[0] + " 末=" + kept[kept.Count - 1]);
+            return kept;
+        }
+
+        /// <summary>
+        /// 明确要落的版本落在区间外（旧文档带着老版本号）时夹到最近的合法版本：
+        /// 那条 dispatch 在那个版本里不存在，页面只会是一个空壳。区间里没有版本时原样返回。
+        /// </summary>
+        private string ClampToEntryVersionRange(string version)
+        {
+            var (since, until) = ReadEntryVersionRange();
+            if (IsInEntryVersionRange(version, since, until)) return version;
+            if (GameVersionOptions.Count == 0) return version;
+            // 下拉是倒序：比 since 还老 → 取最老的合法项（末项）；比 until 还新 → 取最新的合法项（首项）
+            var belowSince = !string.IsNullOrEmpty(since) && McdocAttributeRegistry.CompareVersions(version, since) < 0;
+            var fallback = belowSince ? GameVersionOptions[GameVersionOptions.Count - 1]?.Name : GameVersionOptions[0]?.Name;
+            if (string.IsNullOrWhiteSpace(fallback)) return version;
+            McdocWriteTrace.Trace("entry-version-clamp", "entry=" + EntryId + " from=" + version + " to=" + fallback);
+            return fallback;
+        }
+        /// <summary>
         /// 把版本落到下拉选中项上（唯一状态），**不触发重建**：调用方随后自己 CreateDocument。
         /// 候选里没有这个版本时补一个，保证下拉不空。
         /// </summary>
         private void AdoptGameVersion(string version)
         {
             if (string.IsNullOrWhiteSpace(version)) return;
+            version = ClampToEntryVersionRange(version);
             if (!GameVersionOptions.Any(option => string.Equals(option?.Name, version, StringComparison.Ordinal)))
             {
                 GameVersionOptions.Insert(0, new EnumMember

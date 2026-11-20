@@ -472,45 +472,30 @@
                                     </Input:VectorTextBox>
                                 </Grid>
                             </Border>
-                            <Container:VectorScrollViewer
-                                x:Name="DropDownScrollViewer"
+                            <Border
                                 Grid.Row="1"
-                                FocusVisualStyle="{x:Null}"
-                                HorizontalScrollBarVisibility="Auto"
-                                SnapsToDevicePixels="True"
-                                Style="{DynamicResource VectorScrollViewerStyle}"
-                                VerticalScrollBarVisibility="Auto">
-                                <Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*" />
-                                    </Grid.RowDefinitions>
-                                    <Border
-                                        Grid.Row="1"
-                                        Background="#8C8D90"
-                                        BorderBrush="Black"
-                                        BorderThickness="1" />
-                                    <!--<Canvas
-                                    x:Name="canvas"
-                                    Width="0"
-                                    Height="0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Top">
-                                    <Rectangle
-                                        x:Name="opaqueRect"
-                                        Width="{Binding ActualWidth, ElementName=dropDownBorder}"
-                                        Height="{Binding ActualHeight, ElementName=dropDownBorder}"
-                                        Fill="{Binding Background, ElementName=dropDownBorder}" />
-                                </Canvas>-->
-                                    <ItemsPresenter
-                                        x:Name="ItemsPresenter"
-                                        Grid.Row="1"
-                                        Margin="2,2,2,0"
-                                        HorizontalAlignment="Stretch"
-                                        VerticalAlignment="Center"
-                                        KeyboardNavigation.DirectionalNavigation="Contained"
-                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                                </Grid>
-                            </Container:VectorScrollViewer>
+                                Background="#8C8D90"
+                                BorderBrush="Black"
+                                BorderThickness="1">
+                                <Container:VectorScrollViewer
+                                    x:Name="DropDownScrollViewer"
+                                    Margin="2"
+                                    FocusVisualStyle="{x:Null}"
+                                    HorizontalScrollBarVisibility="Auto"
+                                    SnapsToDevicePixels="True"
+                                    Style="{DynamicResource VectorScrollViewerStyle}"
+                                    VerticalScrollBarVisibility="Auto">
+                                    <Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
+                                        <ItemsPresenter
+                                            x:Name="ItemsPresenter"
+                                            Margin="0"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"
+                                            KeyboardNavigation.DirectionalNavigation="Contained"
+                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                    </Grid>
+                                </Container:VectorScrollViewer>
+                            </Border>
                         </Grid>
                     </Border>
                 </theme:SystemDropShadowChrome>

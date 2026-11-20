@@ -44,6 +44,8 @@ namespace CBHK.Utility.Data.Mcdoc
                 runtime.GameVersion ?? "",
                 spec.Registry,
                 spec.Prefix ?? "",
+                spec.Path ?? "",
+                spec.Tags ?? "",
                 string.Join(",", spec.Include ?? []),
                 string.Join(",", spec.Exclude ?? []));
             if (cache.TryGetValue(key, out var cached)) return cached;

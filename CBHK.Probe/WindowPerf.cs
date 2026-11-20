@@ -36,6 +36,56 @@ namespace CBHK.Probe
             "ControlDictionary/ViewModel/Recipe.xaml",
         ];
 
+        /// <summary>
+        /// 数据包变种资源页的整窗外观：13 个变种收进一个下拉之后，下拉 + 树 + 右侧 JSON 的关系。
+        /// 第二个参数选要停在哪一项（ItemID，如 WolfSoundVariant），不给就留在默认的猫变种。
+        /// </summary>
+        public static int RenderVariant(string outputDirectory, string generator)
+        {
+            var outputDir = outputDirectory ?? Path.Combine(Path.GetTempPath(), "mcdoc-render");
+            Directory.CreateDirectory(outputDir);
+            EnsureApplication();
+            var resource = new Resource();
+            RealSchema.Load(resource.McdocTypes, RealSchema.LocateMcdocRoot());
+            resource.LoadRegistries(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                @"..\..\..\..\CBHK\bin\Debug\net8.0-windows10.0.22621.0\Resource\Registries"));
+            var vm = new CBHK.ViewModel.Generator.VariantResourceViewModel(resource);
+            if (!string.IsNullOrEmpty(generator))
+            {
+                var picked = vm.GeneratorList.FirstOrDefault(item => item?.ItemID == generator);
+                if (picked is null) Console.WriteLine("[警告] 没有这个变种入口：" + generator);
+                else vm.SelectedGenerator = picked;
+            }
+            var window = new CBHK.View.Generator.VariantResourceView
+            {
+                DataContext = vm,
+                Left = -4000,
+                Top = -4000,
+                ShowInTaskbar = false,
+            };
+            window.Show();
+            Pump();
+            Console.WriteLine("[信息] 变种资源页 " + window.ActualWidth + "x" + window.ActualHeight
+                + " 下拉=" + vm.GeneratorList.Count + " 选中=" + (vm.SelectedGenerator?.Text ?? "<null>")
+                + " entry=" + vm.EntryId + " rows=" + vm.Rows.Count
+                + " 版本=" + (vm.SelectedGameVersionOption?.Name ?? "<null>"));
+            var width = Math.Max(1, (int)Math.Ceiling(window.ActualWidth));
+            var height = Math.Max(1, (int)Math.Ceiling(window.ActualHeight));
+            var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            bitmap.Render(window);
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            var path = Path.Combine(outputDir, "variant-resource.png");
+            using (var stream = File.Create(path))
+            {
+                encoder.Save(stream);
+            }
+            Console.WriteLine("[信息] 已渲染 " + path + " 尺寸=" + width + "x" + height);
+            window.Close();
+            Pump();
+            return 0;
+        }
+
         public static int Open(string outputDirectory)
         {
             Directory.CreateDirectory(outputDirectory);
@@ -176,6 +226,7 @@ namespace CBHK.Probe
                 Console.WriteLine("   " + item.Label.PadRight(16, '　') + " = " + LayoutMs(item.Build) + "ms");
             }
 
+            MeasureJsonEditorScroll(outputDirectory);
             CensusRowVisuals(vm);
             CensusButtons(vm);
             MeasureRowGetters(vm);
@@ -183,6 +234,65 @@ namespace CBHK.Probe
             app = null;
             Console.WriteLine("[绿] --render-window 跑完");
             return 0;
+        }
+
+        /// <summary>
+        /// JSON 编辑器的滚动视图：换掉的（本地 VectorScrollViewer）与 AvalonEdit 默认两颗并排量一次，
+        /// 断言落点看 PART_ScrollViewer 的实例类型，外观落点看两张 PNG。
+        /// </summary>
+        private static void MeasureJsonEditorScroll(string outputDirectory)
+        {
+            var builder = new System.Text.StringBuilder();
+            builder.Append("{\n");
+            for (var index = 0; index < 60; index++)
+            {
+                if (index > 0) builder.Append(",\n");
+                builder.Append("  \"key").Append(index).Append("\": ").Append(index);
+            }
+            builder.Append("\n}");
+            var text = builder.ToString();
+
+            foreach (var (label, style) in new (string, Style)[]
+            {
+                ("Vector", null),
+                ("Avalon默认", new Style(typeof(CBHK.Utility.Data.JsonText.JsonTextEditor))),
+            })
+            {
+                var editor = new CBHK.Utility.Data.JsonText.JsonTextEditor { Text = text, WordWrap = false };
+                if (style is not null) editor.Style = style;
+                var window = new Window
+                {
+                    Width = 460,
+                    Height = 300,
+                    Left = -4000,
+                    Top = -4000,
+                    ShowInTaskbar = false,
+                    Content = editor,
+                };
+                window.Show();
+                Pump();
+
+                var part = editor.Template?.FindName("PART_ScrollViewer", editor) as ScrollViewer;
+                var scrolling = part as CBHK.CustomControl.Container.VectorScrollViewer;
+                Console.WriteLine("[JSON滚动条:" + label + "] PART_ScrollViewer=" + (part?.GetType().Name ?? "未取到")
+                    + " 竖向可见=" + (part?.ComputedVerticalScrollBarVisibility.ToString() ?? "-")
+                    + " 内容高=" + (part?.ExtentHeight.ToString("F0") ?? "-")
+                    + " 视口高=" + (part?.ViewportHeight.ToString("F0") ?? "-")
+                    + " IsAllowDragToScroll=" + (scrolling is null ? "-" : scrolling.IsAllowDragToScroll.ToString()));
+
+                var width = Math.Max(1, (int)Math.Ceiling(editor.ActualWidth));
+                var height = Math.Max(1, (int)Math.Ceiling(editor.ActualHeight));
+                var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+                bitmap.Render(editor);
+                var encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                var path = Path.Combine(outputDirectory, "json-editor-" + (label == "Vector" ? "vector" : "avalon") + ".png");
+                using (var stream = File.Create(path)) encoder.Save(stream);
+                Console.WriteLine("   已渲染 " + path + " " + width + "x" + height);
+
+                window.Close();
+                Pump();
+            }
         }
 
         private static string Ms(Stopwatch watch) => watch.Elapsed.TotalMilliseconds.ToString("F1");
@@ -720,7 +830,7 @@ namespace CBHK.Probe
             }
         }
 
-        private static Application EnsureApplication()
+        internal static Application EnsureApplication()
         {
             var cbhkAssembly = typeof(McdocRow).Assembly;
             try { Application.ResourceAssembly = cbhkAssembly; }

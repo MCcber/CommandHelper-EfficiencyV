@@ -1,0 +1,44 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:jsonText="clr-namespace:CBHK.Utility.Data.JsonText">
+
+    <!--
+        JSON 编辑器（AvalonEdit 的 TextEditor 派生）的滚动视图换成程序里的 Container:VectorScrollViewer：
+        模板照抄 AvalonEdit 6.3.1 的 TextEditor 模板，只把里面那颗 ScrollViewer 换掉。
+        AvalonEdit 只按名字取 PART_ScrollViewer 并当 ScrollViewer 用，换成子类照常工作；
+        于是滚动条、边框色、悬停才显形与全程序一致。
+    -->
+    <Style TargetType="{x:Type jsonText:JsonTextEditor}">
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}" />
+        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type jsonText:JsonTextEditor}">
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <Container:VectorScrollViewer
+                            x:Name="PART_ScrollViewer"
+                            Focusable="False"
+                            CanContentScroll="True"
+                            Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TextArea}"
+                            HorizontalContentAlignment="Left"
+                            HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}"
+                            Padding="{TemplateBinding Padding}"
+                            Style="{DynamicResource VectorScrollViewerStyle}"
+                            VerticalContentAlignment="Top"
+                            VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="WordWrap" Value="True">
+                            <Setter TargetName="PART_ScrollViewer" Property="HorizontalScrollBarVisibility" Value="Disabled" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

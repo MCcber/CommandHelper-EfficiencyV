@@ -44,7 +44,8 @@ namespace CBHK.Utility.Data
             var options = GetOptions(spec, version);
             if (options is null || options.Count == 0) return true;
             var key = version + "|" + spec.Registry + "|" + spec.Prefix + "|"
-                + string.Join(",", spec.Include ?? []) + "|" + (spec.Tags ?? "") + "|" + string.Join(",", spec.Exclude ?? []);
+                + string.Join(",", spec.Include ?? []) + "|" + (spec.Tags ?? "") + "|" + (spec.Path ?? "") + "|"
+                + string.Join(",", spec.Exclude ?? []);
             if (!sets.TryGetValue(key, out var set))
             {
                 // 注册表里存的是裸 id（acacia_button），界面里的值带命名空间（minecraft:acacia_button）：

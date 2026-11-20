@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 namespace CBHK.Probe
@@ -39,6 +39,14 @@ namespace CBHK.Probe
             {
                 return WindowPerf.Open(args.Length >= 2 ? args[1] : null);
             }
+            if (args.Length >= 1 && args[0] == "--render-variant")
+            {
+                return WindowPerf.RenderVariant(args.Length >= 2 ? args[1] : null, args.Length >= 3 ? args[2] : null);
+            }
+            if (args.Length >= 1 && args[0] == "--render-combobox-popup")
+            {
+                return ComboBoxPopup.Render(args.Length >= 2 ? args[1] : null);
+            }
             if (args.Length >= 1 && args[0] == "--virtualization")
             {
                 return WindowPerf.Virtualization(args.Length >= 2 ? args[1] : ".probe-tmp\\virtualization");
@@ -58,6 +66,9 @@ namespace CBHK.Probe
                     "--case number-range-warning" => Gates.NumberRangeWarning(),
                     "--case optional-bool-unset" => Gates.OptionalBoolUnset(),
                     "--case mcdoc-open-tree-public" => Gates.McdocOpenTreePublic(),
+                    "--case generator-entry-pages" => Gates.GeneratorEntryPages(),
+            "--case generator-view-load" => Gates.GeneratorViewLoad(),
+            "--case variant-resource" => Gates.VariantResource(),
                     "--case entity-startup-smoke" => Gates.EntityStartupSmoke(),
                     "--case list-drag-swap" => Gates.ListDragSwap(),
                     "--case real-predicate-condition-switch" => Gates.RealPredicateConditionSwitch(),
@@ -97,6 +108,8 @@ namespace CBHK.Probe
             "--case components-add-entry" => Gates.ComponentsAddEntry(),
             "--case id-field-degrade" => Gates.IdFieldDegrade(),
             "--case id-space-sources" => Gates.IdSpaceSources(),
+            "--case id-path-folder" => Gates.IdPathFolder(),
+            "--case entry-version-range" => Gates.EntryVersionRange(),
             "--case predicate-tree-nesting" => Gates.PredicateTreeNesting(),
             "--case list-add-buttons" => Gates.ListAddButtons(),
                     "--case key-rename-duplicate" => Gates.KeyRenameDuplicate(),

@@ -196,6 +196,29 @@ namespace CBHK.Utility.Data.Mcdoc
             return true;
         }
 
+        /// <summary>
+        /// 按 path 目录收窄注册表成员，并把目录前缀从 id 上省掉：
+        /// entity/banner/base + path=entity/banner/ → minecraft:base；不在该目录下返回 false（不进候选）。
+        /// </summary>
+        private static bool TryStripFolder(string id, string path, out string value)
+        {
+            value = id;
+            var folder = path.TrimEnd('/');
+            if (folder.Length == 0) return true;
+            if (folder.Contains(':', StringComparison.Ordinal))
+            {
+                if (!id.StartsWith(folder + "/", StringComparison.Ordinal)) return false;
+                value = id.Substring(folder.Length + 1);
+                return true;
+            }
+            var separator = id.IndexOf(':');
+            var head = separator >= 0 ? id.Substring(0, separator + 1) : "";
+            var local = separator >= 0 ? id.Substring(separator + 1) : id;
+            if (!local.StartsWith(folder + "/", StringComparison.Ordinal)) return false;
+            value = head + local.Substring(folder.Length + 1);
+            return true;
+        }
+
         private static bool SameId(string left, string right)
             => string.Equals(left, right, StringComparison.Ordinal)
                || string.Equals(Lengthen(left), Lengthen(right), StringComparison.Ordinal);
@@ -209,11 +232,11 @@ namespace CBHK.Utility.Data.Mcdoc
             {
                 var id = Lengthen(raw);
                 if (string.IsNullOrEmpty(id)) continue;
-                if (Path is { Length: > 0 } path && !id.Contains('/')
-                    && !id.EndsWith("/" + path.TrimEnd('/'), StringComparison.Ordinal))
+                if (Path is { Length: > 0 } path)
                 {
-                    // path 是"隐式路径"：只保留该路径下的成员
-                    id = Lengthen(path.TrimEnd('/') + "/" + raw);
+                    // path 是"值从哪个目录开始算"：注册表成员必须在这棵目录下，写进文档的值把目录省掉
+                    // （banner_pattern 的 asset_id：注册表 entity/banner/base ↔ 文档 minecraft:base）
+                    if (!TryStripFolder(id, path, out id)) continue;
                 }
                 if (Include is { Count: > 0 } && !Include.Any(item => Lengthen(item) == id)) continue;
                 if (Exclude is { Count: > 0 } && Exclude.Any(item => Lengthen(item) == id)) continue;

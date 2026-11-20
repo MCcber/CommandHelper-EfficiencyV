@@ -165,6 +165,19 @@ namespace CBHK.Model.Data
         Decimal
     }
 
+    public enum McdocSyncPhase
+    {
+        Idle,
+        /// <summary>正在把编辑器文本吃进树（TryApply / 树侧回写被抑制）。</summary>
+        Digesting,
+        /// <summary>建树 / 局部重建中（构建期赋值不许回写文本）。</summary>
+        Rebuilding,
+        /// <summary>用户还在打字，文本已记下、等失焦或 60ms 补跑（树暂时滞后）。</summary>
+        Deferred,
+        /// <summary>树 → 文本整篇回写中（期间不触发二次消化）。</summary>
+        Pushing
+    }
+
     /// <summary>
     /// JSON 节点类型，对应 JSON 的结构或值。
     /// </summary>

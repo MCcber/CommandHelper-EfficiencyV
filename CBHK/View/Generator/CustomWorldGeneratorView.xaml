@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
     xmlns:VectorComboBox="clr-namespace:CBHK.CustomControl.VectorComboBox"
-    xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:json="clr-namespace:CBHK.Utility.Data.JsonText"
@@ -16,7 +15,6 @@
     Width="1080"
     Height="700"
     prism:ViewModelLocator.AutoWireViewModel="True"
-    Background="#1B1B1B"
     IconMargin="5"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
@@ -37,19 +35,19 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <VectorComboBox:VectorTextComboBox
+        <VectorComboBox:VectorIconTextComboBox
             Grid.Row="0"
             Height="40"
             ItemsSource="{Binding GeneratorList}"
             SelectedIndex="0"
             SelectedItem="{Binding SelectedGenerator}"
-            Style="{StaticResource VectorTextComboBoxStyle}">
+            Style="{DynamicResource VectorIconTextComboBoxStyle}">
             <behaviors:Interaction.Triggers>
                 <behaviors:EventTrigger EventName="SelectionChanged">
                     <behaviors:CallMethodAction MethodName="GeneratorComboBox_SelectionChanged" TargetObject="{Binding}" />
                 </behaviors:EventTrigger>
             </behaviors:Interaction.Triggers>
-        </VectorComboBox:VectorTextComboBox>
+        </VectorComboBox:VectorIconTextComboBox>
         <DockPanel Grid.Row="1" Grid.Column="0">
             <ContentControl
                 Content="{Binding}"

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10163,6 +10163,262 @@ namespace CBHK.Probe
             return checks.Finish("--case mcdoc-open-tree-public");
         }
 
+        // ── mcdoc 生成器入口：入口 id 必须解出真实根类型（不是 any），页/视图/命令/目录必须接上 ──
+        // 判据刻意不用"默认文档非空"：根 struct 字段全可选时 {} 就是代数上的正确默认值
+        // （context_*_provider 这类更直接是标量 0）。真正要拦的是"入口 id 打错字 → dispatcher
+        // 解不开 → 根类型退化成 any"，所以判据落在根类型解析上；负控（乱写 id 必须解成 any）
+        // 挂在同一个解析器上，判据本身失效时它会先红。
+        private static readonly string[] Batch =
+        [
+            "BlockStateProvider",
+            "ContextFloatProvider", "ContextIntProvider", "DecoratedPotPattern", "Dialog",
+            "Enchantment", "EnchantmentProvider", "Instrument", "JukeboxSong",
+            "SlotSource", "SulfurCubeArchetype", "TestEnvironment", "TestInstance",
+            "Timeline", "TradeSet", "TrialSpawner", "TrimMaterial", "TrimPattern",
+            "VariantResource", "VillagerTrade", "WorldClock",
+        ];
+
+        public static int GeneratorEntryPages()
+        {
+            var checks = new Checks();
+            var root = RealSchema.LocateMcdocRoot();
+            if (root is null) { Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc（退出码 2）"); return 2; }
+            Deterministic();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, root);
+            resource.LoadRegistries(System.IO.Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                @"..\..\..\..\CBHK\bin\Debug\net8.0-windows10.0.22621.0\Resource\Registries"));
+            var document = new McdocTreeDocument(resource.McdocTypes);
+            var runtime = document.CreateRuntime();
+            McdocTypeKind RootKindOf(string entryId)
+            {
+                try { return McdocDefaults.ResolveType(McdocHelpers.GetRootType(entryId), runtime)?.Kind ?? McdocTypeKind.Any; }
+                catch (Exception) { return McdocTypeKind.Any; }
+            }
+
+            checks.That(RootKindOf("__no_such_entry__") == McdocTypeKind.Any,
+                "负控：不存在的入口 id 解成 any（判据有效）", "kind=" + RootKindOf("__no_such_entry__"));
+
+            var baseType = typeof(CBHK.ViewModel.Generator.McdocGeneratorViewModelBase);
+            var pages = baseType.Assembly.GetTypes()
+                .Where(type => type.IsClass && !type.IsAbstract
+                    && type.Namespace == "CBHK.ViewModel.Generator"
+                    && baseType.IsAssignableFrom(type))
+                .OrderBy(type => type.Name, StringComparer.Ordinal)
+                .ToList();
+            var entries = CBHK.Utility.GeneratorCatalog.Entries;
+            Console.WriteLine("[信息] 生成器页数=" + pages.Count + " 主页目录条数=" + entries.Count);
+            // 13 个变种页并成 VariantResource 之后页数从 46 降到 34：
+            // 门槛跟着现场走，别再让「页数够多」掩盖收编没做
+            checks.That(pages.Count >= 34, "mcdoc 生成器页数量", "pages=" + pages.Count);
+            checks.That(entries.Count >= 45, "主页目录条数", "entries=" + entries.Count);
+            int dispatched = 0;
+            foreach (var page in pages)
+            {
+                var id = page.Name.EndsWith("ViewModel", StringComparison.Ordinal)
+                    ? page.Name[..^"ViewModel".Length] : page.Name;
+                // 入口不是 1:1 对应 dispatcher 的页（CatalogEnum：catalog_enum 库里没有 dispatcher，
+                // 取值全由自己解析）不在这条判据的射程内，显式跳过而不是判红
+                var ctor = page.GetConstructor([typeof(CBHK.Model.Constant.Resource)]);
+                if (ctor is null)
+                {
+                    Console.WriteLine("[跳过] " + page.Name + " 没有 (Resource) 构造，入口不走 dispatcher 解析");
+                    continue;
+                }
+                try
+                {
+                    var vm = (CBHK.ViewModel.Generator.McdocGeneratorViewModelBase)ctor.Invoke([resource]);
+                    var entryId = vm.EntryId ?? "<null>";
+                    var json = vm.JsonText ?? "";
+                    var kind = RootKindOf(entryId);
+                    Console.WriteLine("[页面] " + page.Name + " entry=" + entryId + " root=" + kind
+                        + " rows=" + vm.Rows.Count + " len=" + json.Length);
+                    checks.That(vm.Rows.Count > 0, page.Name + " 建出树行",
+                        "entry=" + entryId + " rows=" + vm.Rows.Count);
+                    checks.That(json.Length > 0, page.Name + " 有默认文档", "entry=" + entryId);
+                    checks.That(kind != McdocTypeKind.Any, page.Name + " 入口 id 解出真实根类型",
+                        "entry=" + entryId + " root=" + kind);
+                    checks.That(vm.MdocStatus?.Contains("建树失败", StringComparison.Ordinal) != true,
+                        page.Name + " 建树没抛错", "status=" + (vm.MdocStatus ?? ""));
+                    if (Batch.Contains(id))
+                    {
+                        var viewName = "CBHK.View.Generator." + id + "View";
+                        checks.That(baseType.Assembly.GetType(viewName) is not null,
+                            page.Name + " 有对应视图", "type=" + viewName);
+                        var commandName = "Start" + id + "Generator";
+                        checks.That(typeof(CBHK.Utility.DistributorGenerator).GetMethod(
+                                commandName, System.Reflection.BindingFlags.Instance
+                                    | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic) is not null,
+                            page.Name + " 有入口命令", "method=" + commandName);
+                        var entry = entries.FirstOrDefault(item => item.Id == id);
+                        checks.That(entry is not null && !string.IsNullOrWhiteSpace(entry.Name),
+                            page.Name + " 在主页目录里（带中文名）", "id=" + id + " name=" + (entry?.Name ?? "<缺>"));
+                    }
+                    dispatched++;
+                }
+                catch (Exception ex)
+                {
+                    checks.That(false, page.Name + " 构造成功", ex.GetType().Name + ": " + ex.Message);
+                }
+            }
+            foreach (var id in Batch)
+            {
+                checks.That(pages.Any(page => page.Name == id + "ViewModel"),
+                    "本批入口 " + id + " 有视图模型", "type=" + id + "ViewModel");
+            }
+            Console.WriteLine("[信息] 按 dispatcher 解析的页数=" + dispatched + " 本批=" + Batch.Length);
+            return checks.Finish("--case generator-entry-pages");
+        }
+
+
+        // ── 本批 32 个视图：真建窗口（BAML + StaticResource 全走一遍），标题必须由 VM 的 Title 绑上 ──
+        public static int GeneratorViewLoad()
+        {
+            var checks = new Checks();
+            var root = RealSchema.LocateMcdocRoot();
+            if (root is null) { Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc（退出码 2）"); return 2; }
+            Deterministic();
+            WindowPerf.EnsureApplication();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, root);
+            resource.LoadRegistries(System.IO.Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                @"..\..\..\..\CBHK\bin\Debug\net8.0-windows10.0.22621.0\Resource\Registries"));
+            var assembly = typeof(CBHK.ViewModel.Generator.McdocGeneratorViewModelBase).Assembly;
+            var size = new System.Windows.Size(1080, 700);
+            foreach (var id in Batch)
+            {
+                var viewType = assembly.GetType("CBHK.View.Generator." + id + "View");
+                var vmType = assembly.GetType("CBHK.ViewModel.Generator." + id + "ViewModel");
+                if (viewType is null || vmType is null)
+                {
+                    checks.That(false, id + " 视图与视图模型都在", "view=" + (viewType?.Name ?? "<缺>") + " vm=" + (vmType?.Name ?? "<缺>"));
+                    continue;
+                }
+                try
+                {
+                    var vm = vmType.GetConstructor([typeof(CBHK.Model.Constant.Resource)])?.Invoke([resource]);
+                    var window = (System.Windows.Window)Activator.CreateInstance(viewType)!;
+                    window.DataContext = vm;
+                    window.Measure(size);
+                    window.Arrange(new System.Windows.Rect(0, 0, 1080, 700));
+                    System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(
+                        () => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                    var title = window.Title ?? "";
+                    Console.WriteLine("[窗口] " + id + " title=" + title + " rows="
+                        + (vm is CBHK.ViewModel.Generator.McdocGeneratorViewModelBase page ? page.Rows.Count.ToString() : "?"));
+                    checks.That(title.Trim().Length > 0, id + " 标题已由 VM 绑上", "title=" + title);
+                    checks.That(window.Width >= 1080 && window.Height >= 700, id + " 窗口尺寸与模板一致",
+                        window.Width + "x" + window.Height);
+                    window.Close();
+                }
+                catch (Exception ex)
+                {
+                    checks.That(false, id + " 视图能加载", ex.GetType().Name + ": " + ex.GetType().Name + " " + ex.Message);
+                }
+            }
+            return checks.Finish("--case generator-view-load");
+        }
+
+        // ── 数据包变种资源页：13 个变种生成器收进一个下拉，入口/版本/树必须跟着下拉走 ──
+        // 现场：这 13 个各自一个窗口（CatVariantView / CatSoundVariantViewModel …），主页目录里也各自一条；
+        // 收编之后程序集里不该再有它们，目录里只剩一条 VariantResource。
+        public static int VariantResource()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null) { Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc（退出码 2）"); return 2; }
+            var blockStateDir = LocateBlockStateDirectory();
+            if (blockStateDir is null) { Console.WriteLine("[环境缺失] 找不到 Registries（退出码 2）"); return 2; }
+            Deterministic();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
+
+            var expected = CBHK.Utility.GeneratorCatalog.VariantEntries;
+            checks.That(expected.Count == 13, "目录表里 13 个变种入口", "条数=" + expected.Count);
+
+            var vm = new CBHK.ViewModel.Generator.VariantResourceViewModel(resource);
+            var items = vm.GeneratorList.ToList();
+            checks.That(items.Count == expected.Count, "下拉项数与目录表一致", "下拉=" + items.Count);
+            var mismatched = new List<string>();
+            for (var index = 0; index < Math.Min(items.Count, expected.Count); index++)
+            {
+                if (items[index]?.ItemID != expected[index].Id || items[index]?.Text != expected[index].Name)
+                {
+                    mismatched.Add(items[index]?.ItemID + "/" + items[index]?.Text);
+                }
+            }
+            checks.That(items.Count == expected.Count && mismatched.Count == 0, "下拉项的 Id/中文名与目录表一一对应",
+                mismatched.Count == 0 ? "ok" : "不符=" + string.Join(",", mismatched));
+
+            vm.VariantResource_Loaded(null, null);
+            PumpDispatcher();
+            checks.That(vm.EntryId == "cat_variant", "进来默认开猫变种", "entry=" + vm.EntryId);
+            checks.That(vm.Rows.Count > 0, "默认入口建出树行", "rows=" + vm.Rows.Count);
+            checks.That(vm.MdocStatus?.Contains("建树失败", StringComparison.Ordinal) != true,
+                "默认入口建树没抛错", "status=" + (vm.MdocStatus ?? ""));
+
+            foreach (var entry in expected)
+            {
+                vm.SelectedGenerator = vm.GeneratorList.FirstOrDefault(candidate => candidate?.ItemID == entry.Id);
+                vm.GeneratorComboBox_SelectionChanged(null, null);
+                PumpDispatcher();
+                var wanted = CBHK.Utility.Data.StringTool.ConvertCamelCaseToSnakeCase(entry.Id);
+                checks.That(vm.EntryId == wanted, "切到「" + entry.Name + "」后入口名是 dispatch 键",
+                    "entry=" + (vm.EntryId ?? "<null>") + " 期望=" + wanted);
+                checks.That(vm.Rows.Count > 0, entry.Name + " 建出树行", "rows=" + vm.Rows.Count);
+                checks.That(vm.MdocStatus?.Contains("建树失败", StringComparison.Ordinal) != true,
+                    entry.Name + " 建树没抛错", "status=" + (vm.MdocStatus ?? ""));
+            }
+
+            var zombieVersions = vm.GameVersionOptions.Select(option => option?.Name).Where(name => name is not null).ToList();
+            checks.That(zombieVersions.Count > 0
+                    && zombieVersions.All(version => McdocAttributeRegistry.CompareVersions(version, "1.21.11") >= 0),
+                "僵尸鹦鹉螺变种的下拉只剩 1.21.11 起", "最老=" + zombieVersions.LastOrDefault() + " 条数=" + zombieVersions.Count);
+
+            vm.SelectedGenerator = vm.GeneratorList.FirstOrDefault(candidate => candidate?.ItemID == "CatVariant");
+            vm.GeneratorComboBox_SelectionChanged(null, null);
+            PumpDispatcher();
+            var catVersions = vm.GameVersionOptions.Select(option => option?.Name).Where(name => name is not null).ToList();
+            checks.That(catVersions.Count > 0
+                    && catVersions.All(version => McdocAttributeRegistry.CompareVersions(version, "1.21.5") >= 0),
+                "猫变种的下拉只剩 1.21.5 起", "最老=" + catVersions.LastOrDefault() + " 条数=" + catVersions.Count);
+            checks.That(catVersions.Count > zombieVersions.Count, "切回猫变种后下拉按新入口放宽",
+                "猫=" + catVersions.Count + " 僵尸鹦鹉螺=" + zombieVersions.Count);
+            checks.That(catVersions.Contains("1.21.5"), "猫变种的下拉从 1.21.5 起有项", "最老=" + catVersions.LastOrDefault());
+
+            var assembly = typeof(CBHK.ViewModel.Generator.McdocGeneratorViewModelBase).Assembly;
+            // 画变种是这批里唯一带 #[id(..., path="painting/")] 的入口：目录收窄要一路走到页面上的行
+            vm.SelectedGenerator = vm.GeneratorList.FirstOrDefault(candidate => candidate?.ItemID == "PaintingVariant");
+            vm.GeneratorComboBox_SelectionChanged(null, null);
+            PumpDispatcher();
+            var paintingDocument = DocumentOf(vm);
+            var assetNode = paintingDocument is null ? null : Reach(paintingDocument, "$.asset_id");
+            var assetOptions = assetNode?.EnumOptionList?.Select(option => option?.Name ?? "").ToList() ?? [];
+            checks.That(assetOptions.Count is > 0 and < 200, "画变种的 asset_id 候选收在 painting 目录",
+                "候选=" + assetOptions.Count + " 首个=" + (assetOptions.FirstOrDefault() ?? "<空>"));
+            checks.That(assetOptions.All(name => !name.Contains("painting/", StringComparison.Ordinal)),
+                "候选里不带目录前缀", "首个=" + (assetOptions.FirstOrDefault() ?? "<空>"));
+            checks.That(assetNode?.SelectedEnumOption is not null
+                    && assetOptions.Contains(assetNode.SelectedEnumOption.Name ?? ""),
+                "默认文档的 asset_id 在候选里", "选中=" + (assetNode?.SelectedEnumOption?.Name ?? "<null>"));
+            var leftovers = expected.Select(entry => "CBHK.View.Generator." + entry.Id + "View")
+                .Concat(expected.Select(entry => "CBHK.ViewModel.Generator." + entry.Id + "ViewModel"))
+                .Where(name => assembly.GetType(name) is not null).ToList();
+            checks.That(leftovers.Count == 0, "程序集里不再有零散的变种窗口/视图模型", "残留=" + string.Join(",", leftovers));
+            var catalog = CBHK.Utility.GeneratorCatalog.Entries;
+            checks.That(catalog.All(entry => expected.All(variant => variant.Id != entry.Id)),
+                "主页目录里没有零散的变种入口", "条数=" + catalog.Count);
+            var catalogRows = catalog.Count(entry => entry.Id == "VariantResource");
+            checks.That(catalogRows == 1, "主页目录里恰好一条数据包变种资源", "条数=" + catalogRows);
+            var row = catalog.FirstOrDefault(entry => entry.Id == "VariantResource");
+            checks.That(row is not null && !string.IsNullOrWhiteSpace(row.Name), "目录项带中文名", "name=" + (row?.Name ?? "<缺>"));
+            return checks.Finish("--case variant-resource");
+        }
+
+
         // ── 列表项拖拽交换：同 owner 才允许；JSON 与右侧文本必须同序 ──────────────────
         public static int ListDragSwap()
         {
@@ -12197,6 +12453,155 @@ namespace CBHK.Probe
                 "source=" + weighed.Source + " 成员=" + weighed.Members.Count);
 
             return checks.Finish("--case id-space-sources");
+        }
+
+        // #[id(registry="texture", path="entity/banner/")]：path 是「值从哪个目录开始算」——
+        // 注册表成员必须在这棵目录下，写进文档的值把目录省掉（banner_pattern 的 asset_id：
+        // 注册表里是 entity/banner/base，文档里写 minecraft:base）。以前 path 被当成前缀拼上去，
+        // 整张 1500+ 的纹理表一个不落地进候选，真正的 base/border 反倒成了「候选外的值」。
+        public static int IdPathFolder()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null) { Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc（退出码 2）"); return 2; }
+            var blockStateDir = LocateBlockStateDirectory();
+            if (blockStateDir is null) { Console.WriteLine("[环境缺失] 找不到 Registries（退出码 2）"); return 2; }
+            Deterministic();
+            var index = new McdocTypeIndex();
+            RealSchema.Load(index, rootDir);
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
+
+            var runtime = new McdocRuntime
+            {
+                DocumentUri = "file:///probe/idpath.json",
+                Symbols = index,
+                RegistryOptions = new CBHK.Utility.Data.MdocRegistryOptions(resource),
+                GameVersion = "26.3",
+            };
+
+            // 先问一个别的目录，再问 banner：缓存键少了 path 的话两组候选会串
+            var decorated = runtime.IdSpaces.Resolve(new McdocIdSpec { Registry = "texture", Path = "entity/decorated_pot/" }, runtime);
+            var banner = runtime.IdSpaces.Resolve(new McdocIdSpec { Registry = "texture", Path = "entity/banner/" }, runtime);
+
+            checks.That(decorated.Members.Count > 0 && !decorated.Members.Contains("minecraft:base"),
+                "先解析的那棵目录不含 banner 的成员（缓存按 path 分开）", "成员=" + decorated.Members.Count);
+            checks.That(banner.Members.Count is > 0 and < 200,
+                "候选只剩 banner 目录下的纹理（不再把整张纹理表塞进下拉）", "成员=" + banner.Members.Count);
+            checks.That(banner.Members.Contains("minecraft:base") && banner.Members.Contains("minecraft:border"),
+                "候选是省掉目录后的相对 id", "前几项=" + string.Join(",", banner.Members.Take(4)));
+            checks.That(banner.Members.All(item => !item.Contains("entity/banner/", StringComparison.Ordinal)),
+                "候选里不再出现拼了两遍目录的 id", "首项=" + banner.Members.FirstOrDefault());
+            checks.That(!banner.Members.Contains("minecraft:block/acacia_door_bottom"),
+                "目录外的纹理不进候选", "成员=" + banner.Members.Count);
+
+            const string json = @"{ ""asset_id"": ""minecraft:base"", ""translation_key"": ""block.minecraft.banner.base"" }";
+            var (document, projector, _) = Harness(index, McdocHelpers.GetRootType("banner_pattern"), json, doc =>
+            {
+                doc.GameVersion = "26.3";
+                doc.RegistryOptions = new CBHK.Utility.Data.MdocRegistryOptions(resource);
+            });
+            projector.Reset(document.ProjectionRoots);
+            var asset = document.FindNode("$.asset_id") ?? Reach(document, "$.asset_id");
+            checks.That(asset is not null, "banner_pattern 的 asset_id 在树上", "行数=" + projector.Rows.Count);
+            if (asset is not null)
+            {
+                checks.That(asset.EnumOptionList is { Count: > 0 and < 200 },
+                    "行上的候选也只有这棵目录里的成员", "候选=" + (asset.EnumOptionList?.Count ?? 0));
+                checks.That(asset.EnumOptionList is not null && asset.EnumOptionList.Any(item => item.Name == "minecraft:base"),
+                    "文档里的 minecraft:base 落在候选内", "首项=" + (asset.EnumOptionList?.FirstOrDefault()?.Name ?? "<无>"));
+                checks.That(asset.SelectedEnumOption?.Name == "minecraft:base",
+                    "行上选中的就是文档里的值", "选中=" + (asset.SelectedEnumOption?.Name ?? "<空>"));
+            }
+            return checks.Finish("--case id-path-folder");
+        }
+
+        // 版本下拉只摆「这条 dispatch 在那个版本里真的存在」的版本：入口的 #[since]/#[until] 就是范围。
+        // 四种情况都要对：只有 since（banner_pattern）、只有 until（worldgen/configured_carver）、
+        // 两端都有（真实 mcdoc 里没有样本，用合成的 dispatch 验）、完全没有（advancement 原样不动）。
+        public static int EntryVersionRange()
+        {
+            var checks = new Checks();
+            var rootDir = RealSchema.LocateMcdocRoot();
+            if (rootDir is null) { Console.WriteLine("[环境缺失] 找不到 vanilla-mcdoc（退出码 2）"); return 2; }
+            var blockStateDir = LocateBlockStateDirectory();
+            if (blockStateDir is null) { Console.WriteLine("[环境缺失] 找不到 Registries（退出码 2）"); return 2; }
+            Deterministic();
+            var resource = new CBHK.Model.Constant.Resource();
+            RealSchema.Load(resource.McdocTypes, rootDir);
+            resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
+            var vm = new CBHK.ViewModel.Generator.DimensionTypeViewModel(resource);
+            var all = vm.GameVersionOptions.Select(option => option?.Name).ToList();
+            checks.That(all.Count > 0, "前置：注册表里读到了版本候选", "候选数=" + all.Count);
+
+            var plain = VersionsForEntry(vm, "advancement", "26.3", resource);
+            checks.That(plain.Count == all.Count, "没有版本注解的入口不收窄下拉",
+                "候选数=" + plain.Count + " 全量=" + all.Count);
+
+            var banner = VersionsForEntry(vm, "banner_pattern", "26.3", resource);
+            checks.That(banner.Count > 0 && banner.Count < all.Count, "只有 since 的入口收窄下拉",
+                "候选数=" + banner.Count + " 全量=" + all.Count);
+            checks.That(banner.All(version => McdocAttributeRegistry.CompareVersions(version, "1.20.5") >= 0),
+                "只有 since：低于 1.20.5 的版本全部消失", "最老=" + banner.LastOrDefault());
+            checks.That(all.Any(version => McdocAttributeRegistry.CompareVersions(version, "1.20.5") < 0),
+                "前置：全量候选里确实有低于 1.20.5 的版本", "全量最老=" + all.LastOrDefault());
+
+            var carver = VersionsForEntry(vm, "worldgen/configured_carver", "26.2", resource);
+            checks.That(carver.Count > 0 && carver.Count < all.Count, "只有 until 的入口收窄下拉",
+                "候选数=" + carver.Count + " 全量=" + all.Count);
+            checks.That(carver.All(version => McdocAttributeRegistry.CompareVersions(version, "26.3") < 0),
+                "只有 until：26.3 及更新的版本全部消失（until 不含上限）", "最新=" + carver.FirstOrDefault());
+            checks.That(McdocAttributeRegistry.CompareVersions(all[0], "26.3") >= 0,
+                "前置：全量候选里有 26.3 或更新的版本", "全量最新=" + all[0]);
+
+            var both = VersionsForSyntheticRange(vm, "1.20.5", "26.3");
+            checks.That(both.Count > 0, "两端都有：区间里还有版本", "候选数=" + both.Count);
+            checks.That(both.All(version => McdocAttributeRegistry.CompareVersions(version, "1.20.5") >= 0
+                    && McdocAttributeRegistry.CompareVersions(version, "26.3") < 0),
+                "两端都有：两条边界同时生效", "首=" + both.FirstOrDefault() + " 末=" + both.LastOrDefault());
+            checks.That(both.Count < banner.Count, "两端都有比只有 since 更窄",
+                "两端=" + both.Count + " 只有 since=" + banner.Count);
+
+            vm.GameVersionOptions.Clear();
+            vm.OpenMcdocTree("1.20.4", "banner_pattern", resource.McdocTypes, "{}");
+            PumpDispatcher();
+            var clamped = vm.SelectedGameVersionOption?.Name;
+            checks.That(clamped is not null && McdocAttributeRegistry.CompareVersions(clamped, "1.20.5") >= 0,
+                "旧文档带着区间外的版本号时夹到最近的合法版本", "请求 1.20.4 → 选中=" + clamped);
+            checks.That(DocumentOf(vm)?.GameVersion == clamped, "文档版本跟着夹后的选中项走",
+                "文档=" + (DocumentOf(vm)?.GameVersion ?? "<null>") + " 选中=" + clamped);
+            return checks.Finish("--case entry-version-range");
+        }
+
+        private static List<string> VersionsForEntry(CBHK.ViewModel.Generator.McdocGeneratorViewModelBase vm,
+            string entryId, string gameVersion, CBHK.Model.Constant.Resource resource)
+        {
+            // ResetMcdocSession 只在「下拉为空」时重填，所以换入口前要先清空，
+            // 让它按新入口的注解重新收窄一次。
+            vm.GameVersionOptions.Clear();
+            vm.OpenMcdocTree(gameVersion, entryId, resource.McdocTypes, "{}");
+            PumpDispatcher();
+            return vm.GameVersionOptions.Select(option => option?.Name).ToList();
+        }
+
+        private static List<string> VersionsForSyntheticRange(CBHK.ViewModel.Generator.McdocGeneratorViewModelBase vm,
+            string since, string until)
+        {
+            // 真实 mcdoc 里没有「同一条 dispatch 同时带 since 与 until」的样本，造一条来量两端。
+            var symbols = new McdocTypeIndex();
+            var member = McdocType.Create(McdocTypeKind.Struct);
+            member.Attributes =
+            [
+                new McdocAttribute { Name = "since", Value = McdocAttrValue.Of(since) },
+                new McdocAttribute { Name = "until", Value = McdocAttrValue.Of(until) },
+            ];
+            symbols.RegisterDispatch("minecraft:resource", "probe_version_range", member);
+            vm.GameVersionOptions.Clear();
+            vm.OpenMcdocTreeFromDispatcher("26.2", "minecraft:resource",
+                McdocIndex.Static("probe_version_range"), symbols, "{}");
+            PumpDispatcher();
+            return vm.GameVersionOptions.Select(option => option?.Name).ToList();
         }
 
         public static int IdFieldDegrade()
