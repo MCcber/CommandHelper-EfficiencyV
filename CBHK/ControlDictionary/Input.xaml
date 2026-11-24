@@ -13,5 +13,6 @@
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TimelineKeyFrame.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/TagRichTextBox.xaml" />
         <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/JsonTextEditor.xaml" />
+        <ResourceDictionary Source="/CBHK;component/ControlDictionary/Input/SearchBox.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

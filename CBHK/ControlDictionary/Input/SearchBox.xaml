@@ -1,0 +1,82 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Container="clr-namespace:CBHK.CustomControl.Container"
+    xmlns:Input="clr-namespace:CBHK.CustomControl.Input"
+    xmlns:VectorButton="clr-namespace:CBHK.CustomControl.VectorButton">
+    <Style x:Key="SearchBoxStyle" TargetType="Input:SearchBox">
+        <Style.Setters>
+            <!--
+                水印与顶部定位线的颜色都从主题底色派生（见 SearchBox.UpdateBorderColorByBackgroundColor）：
+                不设 ThemeBackground 时 WaterMarkerBrush/LocateLineBrush 一直是 null，两者都画不出来
+            -->
+            <Setter Property="ThemeBackground" Value="{DynamicResource CommonBackground}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Input:SearchBox">
+                        <Grid Background="{DynamicResource CommonBackground}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="5" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Rectangle
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Fill="{TemplateBinding LocateLineBrush}" />
+                            <Container:VectorScrollViewer
+                                x:Name="PART_ContentHost"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                VerticalAlignment="Stretch"
+                                Panel.ZIndex="1"
+                                Focusable="false"
+                                HorizontalScrollBarVisibility="Auto"
+                                IsAllowDragToScroll="False"
+                                Style="{DynamicResource VectorScrollViewerStyle}"
+                                VerticalScrollBarVisibility="Auto" />
+                            <TextBlock
+                                x:Name="waterMarker"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Margin="{TemplateBinding WaterMarkerMargin}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Panel.ZIndex="0"
+                                Background="Transparent"
+                                FontSize="{TemplateBinding FontSize}"
+                                Foreground="{TemplateBinding WaterMarkerBrush}"
+                                Text="{TemplateBinding WaterMarkerText}"
+                                TextAlignment="Center" />
+                            <VectorButton:VectorFlatIconButton
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Width="{TemplateBinding Height}"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Stretch"
+                                Command="{TemplateBinding SearchClick}"
+                                Icon="{TemplateBinding SearchIcon}"
+                                IconBrush="{TemplateBinding SearchIconBrush}"
+                                IconHeight="{TemplateBinding SearhIconHeight}"
+                                IconMargin="{TemplateBinding SearchIconMargin}"
+                                IconWidth="{TemplateBinding SearhIconWidth}"
+                                Style="{DynamicResource VectorFlatIconButtonStyle}" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasText" Value="False">
+                                <Setter TargetName="waterMarker" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="HasText" Value="True">
+                                <Setter TargetName="waterMarker" Property="Visibility" Value="Hidden" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style.Setters>
+    </Style>
+</ResourceDictionary>

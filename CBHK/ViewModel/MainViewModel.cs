@@ -58,6 +58,8 @@ namespace CBHK.ViewModel
         public WindowState windowState = WindowState.Normal;
         [ObservableProperty]
         private bool showInTaskBar = true;
+        [ObservableProperty]
+        private string searchString = string.Empty;
         #endregion
 
         #region Method
@@ -144,6 +146,39 @@ namespace CBHK.ViewModel
         /// 读取启动器配置
         /// </summary>
         private void ReadDataSource() => InitUIDataProgress.Report(0);
+
+        /// <summary>
+        /// 按当前的 CommonBackground 重算骨架屏两档颜色并重挂动画。
+        /// 颜色是代码算出来的（不是 DynamicResource），所以主题变化时只能主动重算。
+        /// </summary>
+        private void RefreshSkeletonColors()
+        {
+            if (SkeletonGrid is null
+                || Application.Current.Resources[Theme.CommonBackground] is not SolidColorBrush commonBackgroundBrush)
+            {
+                return;
+            }
+
+            SkeletonDarkerColor = ColorTool.Darken(commonBackgroundBrush.Color, 0.4f);
+            SkeletonLighterColor = ColorTool.Lighten(commonBackgroundBrush.Color, 0.4f);
+
+            for (int i = 0; i < SkeletonGrid.Children.Count; i++)
+            {
+                if (SkeletonGrid.Children[i] is not Rectangle rectangle)
+                {
+                    continue;
+                }
+
+                if (rectangle.Uid == "SkeletonBlock")
+                {
+                    rectangle.ApplyBreathAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
+                }
+                else if (rectangle.Uid == "SkeletonLine")
+                {
+                    rectangle.ApplySweepAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
+                }
+            }
+        }
         #endregion
 
         #region Event
@@ -343,38 +378,14 @@ namespace CBHK.ViewModel
             RefreshSkeletonColors();
         }
 
-        /// <summary>
-        /// 按当前的 CommonBackground 重算骨架屏两档颜色并重挂动画。
-        /// 颜色是代码算出来的（不是 DynamicResource），所以主题变化时只能主动重算。
-        /// </summary>
-        private void RefreshSkeletonColors()
+        [RelayCommand]
+        private void SearchGenerator()
         {
-            if (SkeletonGrid is null
-                || Application.Current.Resources[Theme.CommonBackground] is not SolidColorBrush commonBackgroundBrush)
+            if (string.IsNullOrWhiteSpace(SearchString))
             {
                 return;
             }
-
-            SkeletonDarkerColor = ColorTool.Darken(commonBackgroundBrush.Color, 0.4f);
-            SkeletonLighterColor = ColorTool.Lighten(commonBackgroundBrush.Color, 0.4f);
-
-            for (int i = 0; i < SkeletonGrid.Children.Count; i++)
-            {
-                if (SkeletonGrid.Children[i] is not Rectangle rectangle)
-                {
-                    continue;
-                }
-
-                if (rectangle.Uid == "SkeletonBlock")
-                {
-                    rectangle.ApplyBreathAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
-                }
-                else if (rectangle.Uid == "SkeletonLine")
-                {
-                    rectangle.ApplySweepAnimation(SkeletonLighterColor, SkeletonDarkerColor, new Duration(TimeSpan.FromSeconds(0.5)));
-                }
-            }
         }
-#endregion
+        #endregion
     }
 }

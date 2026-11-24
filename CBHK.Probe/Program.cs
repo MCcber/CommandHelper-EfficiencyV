@@ -220,6 +220,7 @@ namespace CBHK.Probe
                     "--case required-error-refresh" => Gates.RequiredErrorRefresh(),
                     "--case number-live-typing" => Gates.NumberLiveTyping(),
                     "--case rename-pencil-key-select" => Gates.RenamePencilKeySelect(),
+                    "--case searchbox-home" => SearchBoxHome.Run(args.Length >= 3 ? args[2] : null),
                     _ => Usage()
                 };
             }

@@ -14,11 +14,11 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:utility="clr-namespace:CBHK.Utility.Visual"
-    Title="CommandHelper-EfficiencyV v26.4Preview3"
-    Width="1020"
-    Height="800"
-    MinWidth="1020"
-    MinHeight="800"
+    Title="CommandHelper-EfficiencyV v26.4Preview4"
+    Width="1080"
+    Height="720"
+    MinWidth="1080"
+    MinHeight="720"
     prism:ViewModelLocator.AutoWireViewModel="True"
     FocusVisualStyle="{x:Null}"
     Icon="/cb.ico"
@@ -51,29 +51,82 @@
             TabStripPlacement="Left">
             <Container:VectorIconTextTabItem
                 HeaderImage="/CBHK;component/Resource/CBHK/Image/IconHome.png"
-                HeaderText="主页"
+                HeaderText="生成器"
                 Style="{StaticResource VectorIconTextTabItemStyle}">
                 <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Height="80">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Input:SearchBox
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Height="40"
+                            utility:TextSizeHelper.AutoFontSize="True"
+                            SearchClick="{Binding SearchGeneratorCommand}"
+                            SearchIcon="{DynamicResource Magnifier}"
+                            SearchIconBrush="{DynamicResource CommonForeground}"
+                            SearchIconMargin="2"
+                            SearhIconHeight="20"
+                            SearhIconWidth="20"
+                            Style="{DynamicResource SearchBoxStyle}"
+                            Text="{Binding SearchString}"
+                            WaterMarkerMargin="2 0 0 0"
+                            WaterMarkerText="搜索生成器" />
+                        <VectorButton:VectorFlatIconTextButton
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Icon="{DynamicResource UpDownArrow}"
+                            IconFillBrush="{DynamicResource CommonForeground}"
+                            IconHeight="20"
+                            IconMargin="5 0 0 0"
+                            IconWidth="20"
+                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                            Text="按英文字母从低到高" />
+                        <VectorButton:VectorFlatIconTextButton
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Height="40"
+                            HorizontalAlignment="Left"
+                            Icon="{DynamicResource Category}"
+                            IconFillBrush="{DynamicResource CommonForeground}"
+                            IconHeight="20"
+                            IconMargin="5 0 0 0"
+                            IconWidth="20"
+                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                            Text="按...分类" />
+                    </Grid>
                     <Container:VectorScrollViewer
+                        Grid.Row="1"
                         HorizontalScrollBarVisibility="Auto"
                         Style="{DynamicResource VectorScrollViewerStyle}"
                         VerticalScrollBarVisibility="Auto">
                         <Grid FocusVisualStyle="{x:Null}" Visibility="Collapsed">
                             <behaviors:Interaction.Triggers>
-                                <behaviors:EventTrigger>
+                                <behaviors:EventTrigger EventName="Loaded">
                                     <behaviors:InvokeCommandAction Command="{Binding GeneratorTableLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
                                 </behaviors:EventTrigger>
                             </behaviors:Interaction.Triggers>
                         </Grid>
                     </Container:VectorScrollViewer>
                     <Grid
-                        Margin="0,0,0,0"
+                        Grid.Row="1"
                         Panel.ZIndex="1"
                         Background="Transparent"
                         FocusVisualStyle="{x:Null}"
                         Visibility="Visible">
                         <behaviors:Interaction.Triggers>
-                            <behaviors:EventTrigger>
+                            <behaviors:EventTrigger EventName="Loaded">
                                 <behaviors:InvokeCommandAction Command="{Binding SkeletonGridLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" />
                             </behaviors:EventTrigger>
                         </behaviors:Interaction.Triggers>
