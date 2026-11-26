@@ -132,7 +132,6 @@ namespace CBHK.Model.Constant
 
         /// <summary>
         /// 取指定版本的注册表数据：版本键不存在时回退到最高可用版本。
-        /// 版本列表（VersionList.json）通常领先于 Registries 目录的覆盖范围，
         /// 不回退的话所有 #[id=...] 枚举都会空掉——界面上表现为一个只剩 "- unset -" 的下拉框加红色告警。
         /// </summary>
         public JToken GetRegistriesData(string version)

@@ -1,5 +1,6 @@
-﻿using CBHK.CustomControl.VectorComboBox;
+using CBHK.CustomControl.VectorComboBox;
 using CBHK.Model.Constant;
+using CBHK.Model.Data;
 using CBHK.Utility;
 using CBHK.Utility.Data;
 using CBHK.Utility.Data.Mcdoc;

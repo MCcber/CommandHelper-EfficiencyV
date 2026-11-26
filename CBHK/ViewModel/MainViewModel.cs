@@ -6,6 +6,7 @@ using CBHK.Domain.Model;
 using CBHK.Model.Constant;
 using CBHK.Model.Data;
 using CBHK.Utility;
+using CBHK.Utility.Data.Mcdoc;
 using CBHK.Utility.Visual;
 using CBHK.Utility.Visual.MessageTip;
 using CBHK.View.Common;
@@ -14,6 +15,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Prism.Ioc;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -33,6 +38,31 @@ namespace CBHK.ViewModel
         /// <summary>提示器要等窗口存在才建（AdornerLayer 挂在窗口上），构造期直接 new 会在启动阶段拿不到层。</summary>
         private MessagePopup messagePopup;
         private MessagePopup Messages => messagePopup ??= new MessagePopup(Application.Current?.MainWindow);
+        private int categoryKindIndex;
+        /// <summary>分类维度 → 标题、按钮工厂、过滤谓词。新增维度只往这里加一项。</summary>
+        private readonly Dictionary<int, CategoryStrategy> categoryStrategies;
+        /// <summary>当前分类维度下选中的过滤项；null/All 表示不筛选。</summary>
+        private string selectedCategoryId;
+        /// <summary>「全部」按钮的 Id，三个分类维度共用（版本维度也用它）。</summary>
+        private const string AllCategoryId = "All";
+
+        private sealed record CategoryStrategy(
+            string Title,
+            Func<List<CategoryButtonModel>> CreateButtons,
+            Func<GeneratorEntry, string, bool> Matches);
+
+        private int sortKindIndex;
+        /// <summary>排序维度 → 标题、排序键。新增排序只往这里加一项。</summary>
+        private readonly List<SortStrategy> sortStrategies;
+        /// <summary>
+        /// 拼音比较走 zh-CN 文化序：ChinaPinyin 填了就是字段本身的字母序，没填时退回中文名也还是拼音序。
+        /// </summary>
+        private static readonly StringComparer PinyinComparer =
+            StringComparer.Create(CultureInfo.GetCultureInfo("zh-CN"), ignoreCase: true);
+
+        private sealed record SortStrategy(
+            string Title,
+            Func<IEnumerable<GeneratorEntry>, IEnumerable<GeneratorEntry>> Order);
 
         private bool languageServerStartupTriggered;
         private bool startupFinished;
@@ -46,7 +76,6 @@ namespace CBHK.ViewModel
         private Grid SkeletonGrid;
         private Grid GeneratorTable;
         private Grid InnerGeneratorTable = new();
-        private IProgress<byte> SetGeneratorButtonProgress = null;
         /// <summary>
         /// 初始化界面数据
         /// </summary>
@@ -60,6 +89,12 @@ namespace CBHK.ViewModel
         private bool showInTaskBar = true;
         [ObservableProperty]
         private string searchString = string.Empty;
+        [ObservableProperty]
+        private ObservableCollection<CategoryButtonModel> categoryButtonList = [];
+        [ObservableProperty]
+        private string selectedCategoryTitle = string.Empty;
+        [ObservableProperty]
+        private string selectedSortTitle = string.Empty;
         #endregion
 
         #region Method
@@ -69,7 +104,278 @@ namespace CBHK.ViewModel
             resource = Resource;
             settingsService = SettingsService;
             dataRegistry = DataRegistry;
+            sortStrategies =
+            [
+                new("默认排序", entries => entries),
+                new("按英文字母升序", entries => entries.OrderBy(SortEnglish, StringComparer.OrdinalIgnoreCase)),
+                new("按英文字母降序", entries => entries.OrderByDescending(SortEnglish, StringComparer.OrdinalIgnoreCase)),
+                new("按中文拼音升序", entries => entries.OrderBy(SortPinyin, PinyinComparer)),
+                new("按中文拼音降序", entries => entries.OrderByDescending(SortPinyin, PinyinComparer))
+            ];
+            categoryStrategies = new()
+            {
+                [0] = new(
+                    "按功能分类",
+                    () => BuildCategoryButtons(
+                        ("实体", GeneratorCategory.Entity, "Creeper"),
+                        ("物品", GeneratorCategory.Item, "Diamond"),
+                        ("资源", GeneratorCategory.Resource, "ResourceChest"),
+                        ("世界", GeneratorCategory.World, "World"),
+                        ("数据包", GeneratorCategory.Datapack, "Folder"),
+                        ("命令", GeneratorCategory.Command, "Command")),
+                    (entry, id) => HasAnyCategory(entry.FunctionCategory, id)),
+                [1] = new(
+                    "按产出分类",
+                    () => BuildCategoryButtons(
+                        ("命令", GeneratorCategory.Command, "Command"),
+                        ("Json文件", GeneratorCategory.JsonFile, "JsonFile"),
+                        ("NBT文件", GeneratorCategory.NbtFile, "NBTFile")),
+                    (entry, id) => HasAnyCategory(entry.OutputCategory, id)),
+                [2] = new("按版本分类", BuildVersionCategoryButtons, IsAvailableInVersion)
+            };
+            ShowCategoryButtons();
+            ShowSortMode();
         }
+
+        private void ShowCategoryButtons()
+        {
+            CategoryStrategy strategy = categoryStrategies[categoryKindIndex];
+            SelectedCategoryTitle = strategy.Title;
+            selectedCategoryId = null;
+            CategoryButtonList = new(strategy.CreateButtons());
+            SyncCategoryButtonSelection();
+            RebuildGeneratorButtons();
+        }
+
+        private void ShowSortMode()
+        {
+            SelectedSortTitle = sortStrategies[sortKindIndex].Title;
+            RebuildGeneratorButtons();
+        }
+
+        /// <summary>
+        /// ToggleButton 会自行翻转被点的那一项，所以过滤状态变化后要统一回写：
+        /// 当前过滤项保持选中，其余项全部取消。没有具体过滤项时回到“全部”。
+        /// </summary>
+        private void SyncCategoryButtonSelection()
+        {
+            string targetId = string.IsNullOrEmpty(selectedCategoryId) ? AllCategoryId : selectedCategoryId;
+            CategoryButtonModel selected = CategoryButtonList.FirstOrDefault(
+                item => string.Equals(item.ID, targetId, StringComparison.Ordinal));
+            foreach (CategoryButtonModel item in CategoryButtonList)
+            {
+                item.IsChecked = ReferenceEquals(item, selected);
+            }
+        }
+
+        /// <summary>功能/产出两个维度共用「全部」按钮；其余按钮的 Id 就是枚举名。</summary>
+        private static List<CategoryButtonModel> BuildCategoryButtons(params (string Text, GeneratorCategory Category, string IconKey)[] definitions)
+            => [CreateCategoryButton("全部", AllCategoryId, "Category"),
+                .. definitions.Select(definition => CreateCategoryButton(definition.Text, definition.Category, definition.IconKey))];
+
+        /// <summary>
+        /// 版本按钮按“可用生成器集合完全相同”合并：连续且集合一致的版本显示成一个区间，
+        /// 集合只覆盖一个版本的仍单独显示，避免 19 个版本按钮铺满分类栏。
+        /// 区间的 ID 取区间内最低版本，过滤时用该版本判断即可（集合一致）。
+        /// </summary>
+        private List<CategoryButtonModel> BuildVersionCategoryButtons()
+        {
+            List<CategoryButtonModel> buttons = [CreateCategoryButton("全部", AllCategoryId, "Version")];
+            List<string> versions = [.. dataRegistry.Versions
+                .Where(version => !string.IsNullOrWhiteSpace(version))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(version => version, Comparer<string>.Create(McdocAttributeRegistry.CompareVersions))];
+
+            if (versions.Count == 0)
+            {
+                return buttons;
+            }
+
+            List<List<string>> groups = [];
+            List<string> currentGroup = null;
+            string currentSignature = null;
+            foreach (string version in versions)
+            {
+                string signature = string.Join("|", GeneratorCatalog.Entries
+                    .Where(entry => IsAvailableInVersion(entry, version))
+                    .Select(entry => entry.Id));
+                if (currentGroup is null || !string.Equals(signature, currentSignature, StringComparison.Ordinal))
+                {
+                    currentGroup = [];
+                    groups.Add(currentGroup);
+                    currentSignature = signature;
+                }
+                currentGroup.Add(version);
+            }
+
+            for (int i = groups.Count - 1; i >= 0; i--)
+            {
+                List<string> group = groups[i];
+                string text = group.Count == 1 ? group[0] : group[0] + " – " + group[^1];
+                buttons.Add(CreateCategoryButton(text, group[0], "Version"));
+            }
+            return buttons;
+        }
+
+        private static CategoryButtonModel CreateCategoryButton(string text, string id, string iconKey)
+            => new() { Text = text, ID = id, Icon = CategoryIcon(iconKey) };
+
+        private static CategoryButtonModel CreateCategoryButton(string text, GeneratorCategory category, string iconKey)
+            => CreateCategoryButton(text, category.ToString(), iconKey);
+
+        /// <summary>入口挂了多个类别时，任一类别的按钮都该列出它（魔咒既在资源下也在数据包下）。</summary>
+        private static bool HasAnyCategory(GeneratorCategory categories, string categoryId)
+            => Enum.TryParse(categoryId, out GeneratorCategory filter)
+                && (categories & filter) != GeneratorCategory.None;
+
+        /// <summary>英文单词没填时退回入口 Id（本身就是英文），空值不会全挤到最前面。</summary>
+        private static string SortEnglish(GeneratorEntry entry)
+            => string.IsNullOrWhiteSpace(entry.EnglishWord) ? entry.Id : entry.EnglishWord;
+
+        /// <summary>拼音没填时退回中文名，配合 zh-CN 文化序仍是拼音序。</summary>
+        private static string SortPinyin(GeneratorEntry entry)
+            => string.IsNullOrWhiteSpace(entry.ChinaPinyin) ? entry.Name : entry.ChinaPinyin;
+
+        private static ImageSource CategoryIcon(string key)
+            => Application.Current?.TryFindResource(key) as ImageSource;
+
+        /// <summary>
+        /// 按当前分类/版本重建生成器面板。分类切换和 mcdoc 索引就绪都会走到这里，
+        /// 所以必须先清空旧的 RowDefinition/按钮，不能像原来那样只追加一次。
+        /// </summary>
+        private void RebuildGeneratorButtons()
+        {
+            if (GeneratorTable is null || !dataRegistry.IsLoaded)
+            {
+                return;
+            }
+
+            if (!GeneratorTable.Children.Contains(InnerGeneratorTable))
+            {
+                GeneratorTable.Children.Add(InnerGeneratorTable);
+            }
+
+            InnerGeneratorTable.Children.Clear();
+            InnerGeneratorTable.RowDefinitions.Clear();
+            InnerGeneratorTable.ColumnDefinitions.Clear();
+            for (int i = 0; i < 4; i++)
+            {
+                InnerGeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            }
+
+            DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
+            string baseImagePath = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/";
+            int rowIndex = 0;
+            int columnIndex = 0;
+
+            IEnumerable<GeneratorEntry> entries = GeneratorCatalog.Entries.Where(MatchesSelectedCategory);
+            foreach (GeneratorEntry entry in sortStrategies[sortKindIndex].Order(entries))
+            {
+                if (columnIndex == 0)
+                {
+                    InnerGeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
+                }
+
+                GeneratorVectorButton button = new()
+                {
+                    Style = Application.Current.Resources["GeneratorVectorButtonStyle"] as Style,
+                    Title = entry.Name,
+                    SubTitle = entry.Id
+                };
+                try
+                {
+                    button.Icon = new BitmapImage(new Uri(baseImagePath + entry.Id + ".png", UriKind.Absolute));
+                }
+                catch
+                {
+                }
+                button.Command = generatorFunction.GetGeneratorClickCommand(entry.Id);
+
+                InnerGeneratorTable.Children.Add(button);
+                Grid.SetRow(button, rowIndex);
+                Grid.SetColumn(button, columnIndex);
+
+                columnIndex++;
+                if (columnIndex == InnerGeneratorTable.ColumnDefinitions.Count)
+                {
+                    columnIndex = 0;
+                    rowIndex++;
+                }
+            }
+        }
+
+        private bool MatchesSelectedCategory(GeneratorEntry entry)
+        {
+            if (string.IsNullOrEmpty(selectedCategoryId) || string.Equals(selectedCategoryId, AllCategoryId, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return categoryStrategies[categoryKindIndex].Matches(entry, selectedCategoryId);
+        }
+
+        private bool IsAvailableInVersion(GeneratorEntry entry, string version)
+        {
+            (string since, string until) = ResolveEntryVersionRange(entry);
+            return (string.IsNullOrEmpty(since) || McdocAttributeRegistry.CompareVersions(version, since) >= 0)
+                && (string.IsNullOrEmpty(until) || McdocAttributeRegistry.CompareVersions(version, until) < 0);
+        }
+
+        /// <summary>
+        /// 入口的版本区间。优先用 GeneratorCatalog 上的静态 since/until：主页启动时 mcdoc 索引可能还没就绪，
+        /// 而且部分入口的 dispatch 不在 minecraft:resource 下。没有静态元数据时才退回 mcdoc 索引。
+        /// since 是包含下限，until 是排除上限；都取不到时返回 (null, null) 并按所有版本可用处理。
+        /// </summary>
+        private (string Since, string Until) ResolveEntryVersionRange(GeneratorEntry entry)
+        {
+            if (!string.IsNullOrEmpty(entry.SinceVersion) || !string.IsNullOrEmpty(entry.UntilVersion))
+            {
+                return (entry.SinceVersion, entry.UntilVersion);
+            }
+
+            if (string.IsNullOrEmpty(entry.McdocEntryId) || resource?.McdocTypes is null)
+            {
+                return (null, null);
+            }
+
+            McdocType root = McdocHelpers.GetRootType(entry.McdocEntryId);
+            if (root is null || root.Kind != McdocTypeKind.Dispatcher)
+            {
+                return (null, null);
+            }
+
+            string index = root.Indices?.FirstOrDefault(item => item is { Kind: McdocIndexKind.Static })?.Value;
+            if (string.IsNullOrEmpty(index))
+            {
+                return (null, null);
+            }
+
+            IReadOnlyDictionary<string, McdocType> members = resource.McdocTypes.GetDispatcherMembers(root.Registry, null);
+            if (members is null || !members.TryGetValue(index, out McdocType member) || member?.Attributes is null)
+            {
+                return (null, null);
+            }
+
+            string since = null;
+            string until = null;
+            foreach (McdocAttribute attribute in member.Attributes)
+            {
+                if (attribute is null)
+                {
+                    continue;
+                }
+                if (string.Equals(attribute.Name, "since", StringComparison.Ordinal))
+                {
+                    since = attribute.Value?.AsString();
+                }
+                else if (string.Equals(attribute.Name, "until", StringComparison.Ordinal))
+                {
+                    until = attribute.Value?.AsString();
+                }
+            }
+            return (since, until);
+        }
+
 
         /// <summary>
         /// 发布版在后台把语言服务器拉起来（Debug 保持惰性启动，免得每次调试都多拉一个进程）。
@@ -194,60 +500,6 @@ namespace CBHK.ViewModel
             StartLanguageServerInBackground();
 #endif
 
-            #region 设置生成器按钮面板
-            SetGeneratorButtonProgress = new Progress<byte>((state) =>
-            {
-                DistributorGenerator generatorFunction = container.Resolve<DistributorGenerator>();
-                string baseImagePath = "pack://application:,,,/CBHK;component/Resource/CBHK/Image/Generator/";
-                int rowIndex = 0;
-                int columnIndex = 0;
-
-                InnerGeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
-                InnerGeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                InnerGeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                InnerGeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-                InnerGeneratorTable.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-
-                foreach (GeneratorEntry entry in GeneratorCatalog.Entries)
-                {
-                    GeneratorVectorButton button = new()
-                    {
-                        Style = Application.Current.Resources["GeneratorVectorButtonStyle"] as Style
-                    };
-                    // 清单钉在 GeneratorCatalog：Id 同时是命令表的键和图标名（大小写不敏感）
-                    string currentId = entry.Id;
-                    string currentName = entry.Name;
-                    string imagePath = baseImagePath + currentId + ".png";
-                    Uri uri = new(imagePath, UriKind.Absolute);
-                    try
-                    {
-                        button.Icon = new BitmapImage(uri);
-                    }
-                    catch {}
-                    if (currentId is not null)
-                    {
-                        button.Title = currentName;
-                    }
-                    if (currentName is not null)
-                    {
-                        button.SubTitle = currentId;
-                    }
-                    IRelayCommand behavior = generatorFunction.GetGeneratorClickCommand(currentId);
-                    button.Command = behavior;
-                    InnerGeneratorTable.Children.Add(button);
-                    if (columnIndex > InnerGeneratorTable.ColumnDefinitions.Count - 1)
-                    {
-                        InnerGeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
-                        columnIndex = 0;
-                        rowIndex++;
-                    }
-                    Grid.SetColumn(button, columnIndex);
-                    Grid.SetRow(button, rowIndex);
-                    columnIndex++;
-                }
-            });
-            #endregion
-
             #region 处理界面
             InitUIDataProgress = new Progress<byte>(async (number) =>
             {
@@ -266,24 +518,22 @@ namespace CBHK.ViewModel
                 }
 
                 #region 加载用户数据
-        //if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png"))
-        //{
-        //    UserHead = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png", UriKind.RelativeOrAbsolute));
-        //}
-        //if (UserData.TryGetValue("UserID", out string userID))
-        //    UserID = userID;
-        //if (UserData.TryGetValue("Description", out string Description))
-        //    UserDescription = Description;
-        //if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"))
-        //    UserBackground = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"));
-        #endregion
+                //if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png"))
+                //{
+                //    UserHead = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserHead.png", UriKind.RelativeOrAbsolute));
+                //}
+                //if (UserData.TryGetValue("UserID", out string userID))
+                //    UserID = userID;
+                //if (UserData.TryGetValue("Description", out string Description))
+                //    UserDescription = Description;
+                //if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"))
+                //    UserBackground = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"Resource\UserBackground.png"));
+                #endregion
 
                 #region 载入生成器按钮
-        if (dataRegistry.IsLoaded)
-        {
-            SetGeneratorButtonProgress.Report(0);
-        }
-        #endregion
+                // mcdoc 索引就绪后重算一次：版本分类要用到各入口 dispatch 的 since/until
+                RebuildGeneratorButtons();
+                #endregion
             });
             #endregion
 
@@ -339,6 +589,11 @@ namespace CBHK.ViewModel
             ThemeManager.ThemeChanged += RestoreCustomColors;
         }
 
+        public void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
         /// <summary>
         /// 主题字典被重建后，把设置里的自定义前景/背景重新写进新的 CustomTheme.xaml。
         /// 当前不是 Custom 主题时 ApplyCustomColors 自己会返回 false，不用额外判断。
@@ -357,11 +612,11 @@ namespace CBHK.ViewModel
         private void GeneratorTableLoaded(object sender)
         {
             GeneratorTable = sender as Grid;
-            //将内部
-            if (!GeneratorTable.Children.Contains(InnerGeneratorTable))
+            if (GeneratorTable is null)
             {
-                GeneratorTable.Children.Add(InnerGeneratorTable);
+                return;
             }
+            RebuildGeneratorButtons();
             TryFinishSkeleton();
         }
 
@@ -385,6 +640,37 @@ namespace CBHK.ViewModel
             {
                 return;
             }
+        }
+
+        [RelayCommand]
+        private void SwitchCategoryList()
+        {
+            categoryKindIndex = (categoryKindIndex + 1) % categoryStrategies.Count;
+            ShowCategoryButtons();
+        }
+
+        [RelayCommand]
+        private void SwitchSortList()
+        {
+            sortKindIndex = (sortKindIndex + 1) % sortStrategies.Count;
+            ShowSortMode();
+        }
+
+        [RelayCommand]
+        private void SwitchCategory(CategoryButtonModel model)
+        {
+            if (model?.ID is null)
+            {
+                return;
+            }
+
+            // 再点一次当前项等于取消过滤，省掉一个额外的“全部”状态。
+            selectedCategoryId = string.Equals(model.ID, AllCategoryId, StringComparison.Ordinal)
+                || string.Equals(selectedCategoryId, model.ID, StringComparison.Ordinal)
+                ? null
+                : model.ID;
+            SyncCategoryButtonSelection();
+            RebuildGeneratorButtons();
         }
         #endregion
     }

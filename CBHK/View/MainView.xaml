@@ -58,10 +58,9 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <Grid Grid.Row="0" Height="80">
+                    <Grid Grid.Row="0" MinHeight="80">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
@@ -81,30 +80,62 @@
                             SearhIconWidth="20"
                             Style="{DynamicResource SearchBoxStyle}"
                             Text="{Binding SearchString}"
-                            WaterMarkerMargin="2 0 0 0"
-                            WaterMarkerText="搜索生成器" />
+                            WaterMarkerMargin="5 0 0 0"
+                            WaterMarkerText="搜索生成器">
+                            <behaviors:Interaction.Triggers>
+                                <behaviors:EventTrigger EventName="TextChanged">
+                                    <behaviors:CallMethodAction MethodName="SearchBox_TextChanged" TargetObject="{Binding}" />
+                                </behaviors:EventTrigger>
+                            </behaviors:Interaction.Triggers>
+                        </Input:SearchBox>
                         <VectorButton:VectorFlatIconTextButton
                             Grid.Row="0"
                             Grid.Column="1"
+                            MinWidth="160"
+                            Command="{Binding SwitchSortListCommand}"
                             Icon="{DynamicResource UpDownArrow}"
                             IconFillBrush="{DynamicResource CommonForeground}"
                             IconHeight="20"
                             IconMargin="5 0 0 0"
                             IconWidth="20"
                             Style="{DynamicResource VectorFlatIconTextButtonStyle}"
-                            Text="按英文字母从低到高" />
-                        <VectorButton:VectorFlatIconTextButton
+                            Text="{Binding SelectedSortTitle}" />
+                        <DockPanel
                             Grid.Row="1"
                             Grid.Column="0"
-                            Height="40"
-                            HorizontalAlignment="Left"
-                            Icon="{DynamicResource Category}"
-                            IconFillBrush="{DynamicResource CommonForeground}"
-                            IconHeight="20"
-                            IconMargin="5 0 0 0"
-                            IconWidth="20"
-                            Style="{DynamicResource VectorFlatIconTextButtonStyle}"
-                            Text="按...分类" />
+                            Grid.ColumnSpan="2">
+                            <VectorButton:VectorFlatIconTextButton
+                                Height="40"
+                                HorizontalAlignment="Left"
+                                Command="{Binding SwitchCategoryListCommand}"
+                                Icon="{DynamicResource Category}"
+                                IconFillBrush="{DynamicResource CommonForeground}"
+                                IconHeight="20"
+                                IconMargin="5 0 5 0"
+                                IconStrokeBrush="{DynamicResource CommonForeground}"
+                                IconWidth="20"
+                                Style="{DynamicResource VectorFlatIconTextButtonStyle}"
+                                Text="{Binding SelectedCategoryTitle}" />
+                            <ItemsControl ItemsSource="{Binding CategoryButtonList}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <VectorButton:VectorToggleImageTextButton
+                                            Command="{Binding DataContext.SwitchCategoryCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+                                            CommandParameter="{Binding}"
+                                            Image="{Binding Icon}"
+                                            IsChecked="{Binding IsChecked}"
+                                            OriginBottomHeight="4"
+                                            Style="{DynamicResource VectorToggleImageTextButtonStyle}"
+                                            Text="{Binding Text}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DockPanel>
                     </Grid>
                     <Container:VectorScrollViewer
                         Grid.Row="1"

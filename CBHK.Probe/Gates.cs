@@ -10207,7 +10207,7 @@ namespace CBHK.Probe
                     && baseType.IsAssignableFrom(type))
                 .OrderBy(type => type.Name, StringComparer.Ordinal)
                 .ToList();
-            var entries = CBHK.Utility.GeneratorCatalog.Entries;
+            var entries = CBHK.Model.Data.GeneratorCatalog.Entries;
             Console.WriteLine("[信息] 生成器页数=" + pages.Count + " 主页目录条数=" + entries.Count);
             // 13 个变种页并成 VariantResource 之后页数从 46 降到 34：
             // 门槛跟着现场走，别再让「页数够多」掩盖收编没做
@@ -10336,7 +10336,7 @@ namespace CBHK.Probe
             RealSchema.Load(resource.McdocTypes, rootDir);
             resource.LoadRegistries(System.IO.Path.GetDirectoryName(blockStateDir));
 
-            var expected = CBHK.Utility.GeneratorCatalog.VariantEntries;
+            var expected = CBHK.Model.Data.GeneratorCatalog.VariantEntries;
             checks.That(expected.Count == 13, "目录表里 13 个变种入口", "条数=" + expected.Count);
 
             var vm = new CBHK.ViewModel.Generator.VariantResourceViewModel(resource);
@@ -10408,7 +10408,7 @@ namespace CBHK.Probe
                 .Concat(expected.Select(entry => "CBHK.ViewModel.Generator." + entry.Id + "ViewModel"))
                 .Where(name => assembly.GetType(name) is not null).ToList();
             checks.That(leftovers.Count == 0, "程序集里不再有零散的变种窗口/视图模型", "残留=" + string.Join(",", leftovers));
-            var catalog = CBHK.Utility.GeneratorCatalog.Entries;
+            var catalog = CBHK.Model.Data.GeneratorCatalog.Entries;
             checks.That(catalog.All(entry => expected.All(variant => variant.Id != entry.Id)),
                 "主页目录里没有零散的变种入口", "条数=" + catalog.Count);
             var catalogRows = catalog.Count(entry => entry.Id == "VariantResource");

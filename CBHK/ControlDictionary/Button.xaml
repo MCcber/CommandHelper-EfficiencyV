@@ -4,6 +4,7 @@
         <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorTextButton.xaml" />
         <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorToggleTextButton.xaml" />
         <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorToggleIconTextButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorToggleImageTextButton.xaml" />
         <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorTreeViewToggleButton.xaml" />
         <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorFlatImageButton.xaml" />
         <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorIconRepeatButton.xaml" />
@@ -12,7 +13,7 @@
         <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorFlatTextButton.xaml" />
         <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorFlatIconTextButton.xaml" />
         <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorSolidIconButton.xaml" />
-        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorFlatImageButton.xaml" />
+        <ResourceDictionary Source="/ControlDictionary/VectorButton/VectorFlatImageTextButton.xaml" />
         <ResourceDictionary Source="/ControlDictionary/VectorButton/TagBlock.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

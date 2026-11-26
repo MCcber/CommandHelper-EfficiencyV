@@ -35,7 +35,6 @@ namespace CBHK.Domain
         #region DataStructure
         private Dictionary<int, Dictionary<string, string>> ItemGroupByVersionDicionary = [];
         private Dictionary<int, Dictionary<string, string>> EnchantmentGroupByVersionDicionary = [];
-        private Dictionary<string, Tuple<string, string?>> BlockIDAndName = [];
         private Dictionary<int, Dictionary<string, string>> EntityGroupByVersionDictionary = [];
         #endregion
 
@@ -180,21 +179,6 @@ namespace CBHK.Domain
         public List<string> GetEntityIDList()
         {
             return EntityIDList;
-        }
-
-        /// <summary>
-        /// 获取物品ID与名称的字典(根据版本号分组)
-        /// </summary>
-        /// <returns></returns>
-        public Dictionary<int, Dictionary<string, string>> GetItemIDAndNameGroupByVersionMap() => ItemGroupByVersionDicionary;
-
-        /// <summary>
-        /// 获取实体ID与名称的字典(根据版本号分组)
-        /// </summary>
-        /// <returns></returns>
-        public Dictionary<int, Dictionary<string, string>> GetEntityIDAndNameGroupByVersionMap()
-        {
-            return EntityGroupByVersionDictionary;
         }
 
         /// <summary>
@@ -349,16 +333,6 @@ namespace CBHK.Domain
         {
             return ScoreboardTypeList;
         }
-
-        /// <summary>
-        /// 获取生物群系ID列表
-        /// </summary>
-        public List<string> GetBiomeIDList() => [.. registry.GetIds("biome")];
-
-        /// <summary>
-        /// 获取游戏事件标签列表
-        /// </summary>
-        public List<string> GetGameEventTagList() => [.. registry.GetIds("game_event_tag")];
 
         /// <summary>
         /// 获取记分板CustomID列表

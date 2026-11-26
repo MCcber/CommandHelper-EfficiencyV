@@ -1,8 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace CBHK.Domain
 {
@@ -26,7 +23,7 @@ namespace CBHK.Domain
         public IReadOnlyList<string> Versions { get; private set; } = [];
 
         /// <summary>最高可用版本；目录为空时为 null。</summary>
-        public string LatestVersion { get; private set; }
+        public string? LatestVersion { get; private set; }
 
         /// <summary>是否真的读到了注册表数据。界面用它决定要不要建生成器入口。</summary>
         public bool IsLoaded => Versions.Count > 0;
@@ -77,14 +74,14 @@ namespace CBHK.Domain
                     JObject data = JObject.Parse(File.ReadAllText(file));
                     versions[Path.GetFileNameWithoutExtension(file)] = data;
                 }
+                // 单个坏文件不该让整批注册表失效：跳过，其余照常可用
                 catch
                 {
-                    // 单个坏文件不该让整批注册表失效：跳过，其余照常可用
                 }
             }
 
             Versions = [.. versions.Keys.OrderBy(ParseVersionKey)];
-            LatestVersion = Versions.Count == 0 ? null : Versions[^1];
+            LatestVersion = Versions is not null && Versions.Count > 0 ? null : Versions[^1];
         }
 
         private static Version ParseVersionKey(string key)
@@ -99,7 +96,7 @@ namespace CBHK.Domain
         /// </summary>
         public IReadOnlyList<string> GetRegistryNames(string version)
         {
-            JObject versionData = null;
+            JObject? versionData = null;
             if (!string.IsNullOrEmpty(version))
             {
                 versions.TryGetValue(version, out versionData);
@@ -117,8 +114,7 @@ namespace CBHK.Domain
         }
 
         /// <summary>
-        /// 取指定版本下某个注册表的成员。版本键缺失时回落到最高可用版本，
-        /// 否则 VersionList.json 领先于注册表覆盖范围时所有下拉框会一起空掉。
+        /// 取指定版本下某个注册表的成员。版本键缺失时回落到最高可用版本
         /// </summary>
         public IReadOnlyList<string> GetIds(string registry, string version)
         {
@@ -127,7 +123,7 @@ namespace CBHK.Domain
                 return [];
             }
 
-            JObject versionData = null;
+            JObject? versionData = null;
             if (!string.IsNullOrEmpty(version))
             {
                 versions.TryGetValue(version, out versionData);

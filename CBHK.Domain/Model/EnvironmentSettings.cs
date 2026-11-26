@@ -1,7 +1,7 @@
 namespace CBHK.Domain.Model
 {
     /// <summary>
-    /// 界面/环境设置。字段名与取值域沿用旧的 Minecraft.db EnvironmentConfig 表
+    /// 界面/环境设置。
     /// （ThemeType/VisualType/CornerPreferenceType 是 CBHK.Model.Data 里的枚举名，Visibility 是
     /// "Visible"/"Hidden"/"Collapsed"，ShowNotice 是布尔字符串）。
     /// 默认值来自 Configuration.json 的 Environment 段，运行期改动落在同目录的
