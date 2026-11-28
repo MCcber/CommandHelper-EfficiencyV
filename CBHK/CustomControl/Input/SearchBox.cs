@@ -10,6 +10,15 @@ namespace CBHK.CustomControl.Input
     public class SearchBox : TextBox
     {
         #region Property
+        public Geometry ClearSearchButtonIcon
+        {
+            get { return (Geometry)GetValue(ClearSearchButtonIconProperty); }
+            set { SetValue(ClearSearchButtonIconProperty, value); }
+        }
+
+        public static readonly DependencyProperty ClearSearchButtonIconProperty =
+            DependencyProperty.Register(nameof(ClearSearchButtonIcon), typeof(Geometry), typeof(SearchBox), new PropertyMetadata(default(Geometry)));
+
         public string WaterMarkerText
         {
             get { return (string)GetValue(WaterMarkerTextProperty); }
@@ -112,6 +121,15 @@ namespace CBHK.CustomControl.Input
 
         public static readonly DependencyProperty SearchClickProperty =
             DependencyProperty.Register(nameof(SearchClick), typeof(IRelayCommand), typeof(SearchBox), new PropertyMetadata(default(IRelayCommand)));
+
+        public IRelayCommand ClearSearchClick
+        {
+            get { return (IRelayCommand)GetValue(ClearSearchClickProperty); }
+            set { SetValue(ClearSearchClickProperty, value); }
+        }
+
+        public static readonly DependencyProperty ClearSearchClickProperty =
+            DependencyProperty.Register(nameof(ClearSearchClick), typeof(IRelayCommand), typeof(SearchBox), new PropertyMetadata(default(IRelayCommand)));
         #endregion
 
         #region Method

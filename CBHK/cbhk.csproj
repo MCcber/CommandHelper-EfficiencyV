@@ -317,7 +317,6 @@
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconRecipe.png" />
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconTag.png" />
     <Resource Include="Resource\Common\Image\SpawnerIcon\IconVillager.png" />
-    <Resource Include="Resource\Common\Image\spyglass_scope.png" />
     <Resource Include="Resource\Common\Image\Submit.png" />
   </ItemGroup>
   <ItemGroup>
@@ -516,7 +515,6 @@
     <None Remove="Resource\Common\Image\SelectedTabItemTop.png" />
     <None Remove="Resource\Common\Image\Slot.png" />
     <None Remove="Resource\Common\Image\SmithingTemplate.png" />
-    <None Remove="Resource\Common\Image\spyglass_scope.png" />
     <None Remove="Resource\Common\Image\Submit.png" />
     <None Remove="Resource\Common\Image\TabItemLeft.png" />
     <None Remove="Resource\Common\Image\TabItemRight.png" />

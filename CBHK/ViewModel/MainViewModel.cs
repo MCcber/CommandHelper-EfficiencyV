@@ -62,7 +62,8 @@ namespace CBHK.ViewModel
 
         private sealed record SortStrategy(
             string Title,
-            Func<IEnumerable<GeneratorEntry>, IEnumerable<GeneratorEntry>> Order);
+            Func<IEnumerable<GeneratorEntry>, IEnumerable<GeneratorEntry>> Order,
+            string IconKey);
 
         private bool languageServerStartupTriggered;
         private bool startupFinished;
@@ -95,6 +96,8 @@ namespace CBHK.ViewModel
         private string selectedCategoryTitle = string.Empty;
         [ObservableProperty]
         private string selectedSortTitle = string.Empty;
+        [ObservableProperty]
+        private Geometry selectedSortIcon;
         #endregion
 
         #region Method
@@ -106,11 +109,11 @@ namespace CBHK.ViewModel
             dataRegistry = DataRegistry;
             sortStrategies =
             [
-                new("默认排序", entries => entries),
-                new("按英文字母升序", entries => entries.OrderBy(SortEnglish, StringComparer.OrdinalIgnoreCase)),
-                new("按英文字母降序", entries => entries.OrderByDescending(SortEnglish, StringComparer.OrdinalIgnoreCase)),
-                new("按中文拼音升序", entries => entries.OrderBy(SortPinyin, PinyinComparer)),
-                new("按中文拼音降序", entries => entries.OrderByDescending(SortPinyin, PinyinComparer))
+                new("默认排序", entries => entries, "UpArrow"),
+                new("按英文字母升序", entries => entries.OrderBy(SortEnglish, StringComparer.OrdinalIgnoreCase), "UpArrow"),
+                new("按英文字母降序", entries => entries.OrderByDescending(SortEnglish, StringComparer.OrdinalIgnoreCase), "DownArrow"),
+                new("按中文拼音升序", entries => entries.OrderBy(SortPinyin, PinyinComparer), "UpArrow"),
+                new("按中文拼音降序", entries => entries.OrderByDescending(SortPinyin, PinyinComparer), "DownArrow")
             ];
             categoryStrategies = new()
             {
@@ -149,7 +152,9 @@ namespace CBHK.ViewModel
 
         private void ShowSortMode()
         {
-            SelectedSortTitle = sortStrategies[sortKindIndex].Title;
+            SortStrategy strategy = sortStrategies[sortKindIndex];
+            SelectedSortTitle = strategy.Title;
+            SelectedSortIcon = SortIcon(strategy.IconKey);
             RebuildGeneratorButtons();
         }
 
@@ -239,11 +244,15 @@ namespace CBHK.ViewModel
         private static ImageSource CategoryIcon(string key)
             => Application.Current?.TryFindResource(key) as ImageSource;
 
+        private static Geometry SortIcon(string key)
+            => Application.Current?.TryFindResource(key) as Geometry;
+
         /// <summary>
         /// 按当前分类/版本重建生成器面板。分类切换和 mcdoc 索引就绪都会走到这里，
         /// 所以必须先清空旧的 RowDefinition/按钮，不能像原来那样只追加一次。
+        /// <paramref name="searchText">搜索文本</paramref>
         /// </summary>
-        private void RebuildGeneratorButtons()
+        private void RebuildGeneratorButtons(string searchText = "")
         {
             if (GeneratorTable is null || !dataRegistry.IsLoaded)
             {
@@ -271,6 +280,10 @@ namespace CBHK.ViewModel
             IEnumerable<GeneratorEntry> entries = GeneratorCatalog.Entries.Where(MatchesSelectedCategory);
             foreach (GeneratorEntry entry in sortStrategies[sortKindIndex].Order(entries))
             {
+                if (!string.IsNullOrEmpty(searchText) && !entry.Name.StartsWith(searchText, StringComparison.OrdinalIgnoreCase) && !entry.Id.StartsWith(searchText, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
                 if (columnIndex == 0)
                 {
                     InnerGeneratorTable.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(80, GridUnitType.Pixel) });
@@ -286,9 +299,7 @@ namespace CBHK.ViewModel
                 {
                     button.Icon = new BitmapImage(new Uri(baseImagePath + entry.Id + ".png", UriKind.Absolute));
                 }
-                catch
-                {
-                }
+                catch { }
                 button.Command = generatorFunction.GetGeneratorClickCommand(entry.Id);
 
                 InnerGeneratorTable.Children.Add(button);
@@ -589,11 +600,6 @@ namespace CBHK.ViewModel
             ThemeManager.ThemeChanged += RestoreCustomColors;
         }
 
-        public void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
-        }
-
         /// <summary>
         /// 主题字典被重建后，把设置里的自定义前景/背景重新写进新的 CustomTheme.xaml。
         /// 当前不是 Custom 主题时 ApplyCustomColors 自己会返回 false，不用额外判断。
@@ -633,13 +639,23 @@ namespace CBHK.ViewModel
             RefreshSkeletonColors();
         }
 
+        /// <summary>
+        /// 搜索生成器
+        /// </summary>
         [RelayCommand]
         private void SearchGenerator()
         {
-            if (string.IsNullOrWhiteSpace(SearchString))
-            {
-                return;
-            }
+            RebuildGeneratorButtons(SearchString);
+        }
+
+        /// <summary>
+        /// 清空搜索文本
+        /// </summary>
+        [RelayCommand]
+        private void ClearSearch()
+        {
+            SearchString = string.Empty;
+            RebuildGeneratorButtons();
         }
 
         [RelayCommand]

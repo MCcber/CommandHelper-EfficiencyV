@@ -72,6 +72,8 @@
                             Grid.Column="0"
                             Height="40"
                             utility:TextSizeHelper.AutoFontSize="True"
+                            ClearSearchButtonIcon="{DynamicResource CloseMark}"
+                            ClearSearchClick="{Binding ClearSearchCommand}"
                             SearchClick="{Binding SearchGeneratorCommand}"
                             SearchIcon="{DynamicResource Magnifier}"
                             SearchIconBrush="{DynamicResource CommonForeground}"
@@ -81,19 +83,13 @@
                             Style="{DynamicResource SearchBoxStyle}"
                             Text="{Binding SearchString}"
                             WaterMarkerMargin="5 0 0 0"
-                            WaterMarkerText="搜索生成器">
-                            <behaviors:Interaction.Triggers>
-                                <behaviors:EventTrigger EventName="TextChanged">
-                                    <behaviors:CallMethodAction MethodName="SearchBox_TextChanged" TargetObject="{Binding}" />
-                                </behaviors:EventTrigger>
-                            </behaviors:Interaction.Triggers>
-                        </Input:SearchBox>
+                            WaterMarkerText="搜索生成器" />
                         <VectorButton:VectorFlatIconTextButton
                             Grid.Row="0"
                             Grid.Column="1"
                             MinWidth="160"
                             Command="{Binding SwitchSortListCommand}"
-                            Icon="{DynamicResource UpDownArrow}"
+                            Icon="{Binding SelectedSortIcon}"
                             IconFillBrush="{DynamicResource CommonForeground}"
                             IconHeight="20"
                             IconMargin="5 0 0 0"
@@ -105,8 +101,8 @@
                             Grid.Column="0"
                             Grid.ColumnSpan="2">
                             <VectorButton:VectorFlatIconTextButton
-                                Height="40"
                                 HorizontalAlignment="Left"
+                                VerticalAlignment="Stretch"
                                 Command="{Binding SwitchCategoryListCommand}"
                                 Icon="{DynamicResource Category}"
                                 IconFillBrush="{DynamicResource CommonForeground}"

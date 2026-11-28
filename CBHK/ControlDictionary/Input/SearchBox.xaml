@@ -52,19 +52,33 @@
                                 Foreground="{TemplateBinding WaterMarkerBrush}"
                                 Text="{TemplateBinding WaterMarkerText}"
                                 TextAlignment="Center" />
-                            <VectorButton:VectorFlatIconButton
+                            <DockPanel
                                 Grid.Row="1"
                                 Grid.Column="1"
-                                Width="{TemplateBinding Height}"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Stretch"
-                                Command="{TemplateBinding SearchClick}"
-                                Icon="{TemplateBinding SearchIcon}"
-                                IconBrush="{TemplateBinding SearchIconBrush}"
-                                IconHeight="{TemplateBinding SearhIconHeight}"
-                                IconMargin="{TemplateBinding SearchIconMargin}"
-                                IconWidth="{TemplateBinding SearhIconWidth}"
-                                Style="{DynamicResource VectorFlatIconButtonStyle}" />
+                                LastChildFill="False">
+                                <VectorButton:VectorFlatIconButton
+                                    Width="{TemplateBinding Height}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Stretch"
+                                    Command="{TemplateBinding ClearSearchClick}"
+                                    Icon="{TemplateBinding ClearSearchButtonIcon}"
+                                    IconBrush="{TemplateBinding SearchIconBrush}"
+                                    IconHeight="{TemplateBinding SearhIconHeight}"
+                                    IconMargin="{TemplateBinding SearchIconMargin}"
+                                    IconWidth="{TemplateBinding SearhIconWidth}"
+                                    Style="{DynamicResource VectorFlatIconButtonStyle}" />
+                                <VectorButton:VectorFlatIconButton
+                                    Width="{TemplateBinding Height}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Stretch"
+                                    Command="{TemplateBinding SearchClick}"
+                                    Icon="{TemplateBinding SearchIcon}"
+                                    IconBrush="{TemplateBinding SearchIconBrush}"
+                                    IconHeight="{TemplateBinding SearhIconHeight}"
+                                    IconMargin="{TemplateBinding SearchIconMargin}"
+                                    IconWidth="{TemplateBinding SearhIconWidth}"
+                                    Style="{DynamicResource VectorFlatIconButtonStyle}" />
+                            </DockPanel>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="HasText" Value="False">
